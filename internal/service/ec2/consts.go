@@ -225,7 +225,8 @@ func vpnConnectionType_Values() []string {
 }
 
 const (
-	AmazonIPv6PoolID = "Amazon"
+	amazonIPv6PoolID      = "Amazon"
+	ipamManagedIPv6PoolID = "IPAM Managed"
 )
 
 const (
@@ -280,4 +281,9 @@ func securityGroupRuleType_Values() []string {
 const (
 	ResInstance      = "Instance"
 	ResInstanceState = "Instance State"
+)
+
+const (
+	gatewayIDLocal      = "local"
+	gatewayIDVPCLattice = "VpcLattice"
 )

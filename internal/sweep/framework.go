@@ -10,7 +10,7 @@ import (
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -19,8 +19,10 @@ import (
 
 type FrameworkSupplementalAttribute struct {
 	Path  string
-	Value string
+	Value any
 }
+
+type FrameworkSupplementalAttributes []FrameworkSupplementalAttribute
 
 type SweepFrameworkResource struct {
 	factory func(context.Context) (fwresource.ResourceWithConfigure, error)
@@ -34,6 +36,19 @@ type SweepFrameworkResource struct {
 	supplementalAttributes []FrameworkSupplementalAttribute
 }
 
+func NewFrameworkSupplementalAttributes() FrameworkSupplementalAttributes {
+	return FrameworkSupplementalAttributes{}
+}
+
+func (f *FrameworkSupplementalAttributes) Add(path string, value any) {
+	item := FrameworkSupplementalAttribute{
+		Path:  path,
+		Value: value,
+	}
+
+	*f = append(*f, item)
+}
+
 func NewSweepFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}, supplementalAttributes ...FrameworkSupplementalAttribute) *SweepFrameworkResource {
 	return &SweepFrameworkResource{
 		factory:                factory,
@@ -44,31 +59,29 @@ func NewSweepFrameworkResource(factory func(context.Context) (fwresource.Resourc
 }
 
 func (sr *SweepFrameworkResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	err := tfresource.Retry(ctx, timeout, func() *resource.RetryError {
-		err := DeleteFrameworkResource(sr.factory, sr.id, sr.meta, sr.supplementalAttributes)
+	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
+		err := deleteFrameworkResource(ctx, sr.factory, sr.id, sr.meta, sr.supplementalAttributes)
 
 		if err != nil {
 			if strings.Contains(err.Error(), "Throttling") {
 				log.Printf("[INFO] While sweeping resource (%s), encountered throttling error (%s). Retrying...", sr.id, err)
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	}, optFns...)
 
 	if tfresource.TimedOut(err) {
-		err = DeleteFrameworkResource(sr.factory, sr.id, sr.meta, sr.supplementalAttributes)
+		err = deleteFrameworkResource(ctx, sr.factory, sr.id, sr.meta, sr.supplementalAttributes)
 	}
 
 	return err
 }
 
-func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}, supplementalAttributes []FrameworkSupplementalAttribute) error {
-	ctx := context.Background()
-
+func deleteFrameworkResource(ctx context.Context, factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}, supplementalAttributes []FrameworkSupplementalAttribute) error {
 	resource, err := factory(ctx)
 
 	if err != nil {

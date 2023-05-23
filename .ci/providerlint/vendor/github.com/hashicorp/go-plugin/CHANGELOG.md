@@ -1,3 +1,15 @@
+## v1.4.8
+
+BUG FIXES:
+
+* Fix windows build: [[GH-227](https://github.com/hashicorp/go-plugin/pull/227)]
+
+## v1.4.7
+
+ENHANCEMENTS:
+
+* More detailed error message on plugin start failure: [[GH-223](https://github.com/hashicorp/go-plugin/pull/223)]
+
 ## v1.4.6
 
 BUG FIXES:

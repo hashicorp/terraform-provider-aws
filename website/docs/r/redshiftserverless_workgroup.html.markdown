@@ -70,6 +70,14 @@ In addition to all arguments above, the following attributes are exported:
 * `private_ip_address` - The IPv4 address of the network interface within the subnet.
 * `subnet_id` - The unique identifier of the subnet.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `20m`)
+- `update` - (Default `20m`)
+- `delete` - (Default `20m`)
+
 ## Import
 
 Redshift Serverless Workgroups can be imported using the `workgroup_name`, e.g.,

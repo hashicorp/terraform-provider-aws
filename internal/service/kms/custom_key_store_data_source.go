@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_kms_custom_key_store")
 func DataSourceCustomKeyStore() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCustomKeyStoreRead,

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_lambda_code_signing_config")
 func DataSourceCodeSigningConfig() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCodeSigningConfigRead,

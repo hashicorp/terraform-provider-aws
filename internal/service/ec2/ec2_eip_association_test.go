@@ -3,13 +3,12 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -23,7 +22,7 @@ func TestAccEC2EIPAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
@@ -50,7 +49,7 @@ func TestAccEC2EIPAssociation_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
@@ -75,7 +74,7 @@ func TestAccEC2EIPAssociation_instance(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
@@ -98,7 +97,7 @@ func TestAccEC2EIPAssociation_networkInterface(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
@@ -129,7 +128,7 @@ func TestAccEC2EIPAssociation_spotInstance(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
@@ -164,14 +163,7 @@ func testAccCheckEIPAssociationExists(ctx context.Context, n string, v *ec2.Addr
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		var err error
-		var output *ec2.Address
-
-		if strings.HasPrefix(rs.Primary.ID, "eipassoc-") {
-			output, err = tfec2.FindEIPByAssociationID(ctx, conn, rs.Primary.ID)
-		} else {
-			output, err = tfec2.FindEIPByPublicIP(ctx, conn, rs.Primary.ID)
-		}
+		output, err := tfec2.FindEIPByAssociationID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -192,13 +184,7 @@ func testAccCheckEIPAssociationDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			var err error
-
-			if strings.HasPrefix(rs.Primary.ID, "eipassoc-") {
-				_, err = tfec2.FindEIPByAssociationID(ctx, conn, rs.Primary.ID)
-			} else {
-				_, err = tfec2.FindEIPByPublicIP(ctx, conn, rs.Primary.ID)
-			}
+			_, err := tfec2.FindEIPByAssociationID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

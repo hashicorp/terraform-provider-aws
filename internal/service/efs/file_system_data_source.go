@@ -15,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_efs_file_system")
 func DataSourceFileSystem() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFileSystemRead,
@@ -97,7 +98,7 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EFSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	describeEfsOpts := &efs.DescribeFileSystemsInput{}
 
@@ -125,7 +126,7 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 		var fileSystems []*efs.FileSystemDescription
 
 		for _, fileSystem := range describeResp.FileSystems {
-			tags := KeyValueTags(fileSystem.Tags)
+			tags := KeyValueTags(ctx, fileSystem.Tags)
 
 			if !tags.ContainsAll(tagsToMatch) {
 				continue
@@ -158,7 +159,7 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("size_in_bytes", fs.SizeInBytes.Value)
 	}
 
-	if err := d.Set("tags", KeyValueTags(fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -41,9 +41,9 @@ resource "aws_s3_bucket_cors_configuration" "example" {
 
 The following arguments are supported:
 
-* `bucket` - (Required, Forces new resource) The name of the bucket.
-* `expected_bucket_owner` - (Optional, Forces new resource) The account ID of the expected bucket owner.
-* `cors_rule` - (Required) Set of origins and methods (cross-origin access that you want to allow) [documented below](#cors_rule). You can configure up to 100 rules.
+* `bucket` - (Required, Forces new resource) Name of the bucket.
+* `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
+* `cors_rule` - (Required) Set of origins and methods (cross-origin access that you want to allow). [See below](#cors_rule). You can configure up to 100 rules.
 
 ### cors_rule
 
@@ -54,7 +54,7 @@ The `cors_rule` configuration block supports the following arguments:
 * `allowed_origins` - (Required) Set of origins you want customers to be able to access the bucket from.
 * `expose_headers` - (Optional) Set of headers in the response that you want customers to be able to access from their applications (for example, from a JavaScript `XMLHttpRequest` object).
 * `id` - (Optional) Unique identifier for the rule. The value cannot be longer than 255 characters.
-* `max_age_seconds` - (Optional) The time in seconds that your browser is to cache the preflight response for the specified resource.
+* `max_age_seconds` - (Optional) Time in seconds that your browser is to cache the preflight response for the specified resource.
 
 ## Attributes Reference
 

@@ -5,11 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusEndpoint(ctx context.Context, conn *dms.DatabaseMigrationService, id string) resource.StateRefreshFunc {
+func statusEndpoint(ctx context.Context, conn *dms.DatabaseMigrationService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindEndpointByID(ctx, conn, id)
 
@@ -25,7 +25,7 @@ func statusEndpoint(ctx context.Context, conn *dms.DatabaseMigrationService, id 
 	}
 }
 
-func statusReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, id string) resource.StateRefreshFunc {
+func statusReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindReplicationTaskByID(ctx, conn, id)
 

@@ -21,6 +21,7 @@ const (
 	ScramSecretBatchSize = 10
 )
 
+// @SDKResource("aws_msk_scram_secret_association")
 func ResourceScramSecretAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScramSecretAssociationCreate,

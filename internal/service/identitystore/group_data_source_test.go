@@ -8,39 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/identitystore"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
-
-func TestAccIdentityStoreGroupDataSource_filterDisplayName(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_identitystore_group.test"
-	dataSourceName := "data.aws_identitystore_group.test"
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupDataSourceConfig_filterDisplayName(name),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", "0"),
-				),
-			},
-		},
-	})
-}
 
 func TestAccIdentityStoreGroupDataSource_uniqueAttributeDisplayName(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -50,7 +22,7 @@ func TestAccIdentityStoreGroupDataSource_uniqueAttributeDisplayName(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
@@ -70,15 +42,11 @@ func TestAccIdentityStoreGroupDataSource_uniqueAttributeDisplayName(t *testing.T
 	})
 }
 
-func TestAccIdentityStoreGroupDataSource_filterDisplayNameAndGroupId(t *testing.T) {
+func TestAccIdentityStoreGroupDataSource_externalIDConflictsWithUniqueAttribute(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_identitystore_group.test"
-	dataSourceName := "data.aws_identitystore_group.test"
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
@@ -86,82 +54,20 @@ func TestAccIdentityStoreGroupDataSource_filterDisplayNameAndGroupId(t *testing.
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupDataSourceConfig_filterDisplayNameAndGroupId(name),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", "0"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccIdentityStoreGroupDataSource_nonExistent(t *testing.T) {
-	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccGroupDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`no Identity Store Group found matching criteria`),
-			},
-		},
-	})
-}
-
-func TestAccIdentityStoreGroupDataSource_groupIdFilterMismatch(t *testing.T) {
-	ctx := acctest.Context(t)
-	name1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	name2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccGroupDataSourceConfig_groupIdFilterMismatch(name1, name2),
-				ExpectError: regexp.MustCompile(`no Identity Store Group found matching criteria`),
-			},
-		},
-	})
-}
-
-func TestAccIdentityStoreGroupDataSource_externalIdConflictsWithUniqueAttribute(t *testing.T) {
-	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccGroupDataSourceConfig_externalIdConflictsWithUniqueAttribute,
+				Config:      testAccGroupDataSourceConfig_externalIDConflictsWithUniqueAttribute,
 				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})
 }
 
-func TestAccIdentityStoreGroupDataSource_filterConflictsWithUniqueAttribute(t *testing.T) {
+func TestAccIdentityStoreGroupDataSource_groupIDConflictsWithUniqueAttribute(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
@@ -169,20 +75,20 @@ func TestAccIdentityStoreGroupDataSource_filterConflictsWithUniqueAttribute(t *t
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccGroupDataSourceConfig_filterConflictsWithUniqueAttribute(name),
-				ExpectError: regexp.MustCompile(`Conflicting configuration arguments`),
+				Config:      testAccGroupDataSourceConfig_groupIDConflictsWithUniqueAttribute(name),
+				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})
 }
 
-func TestAccIdentityStoreGroupDataSource_groupIdConflictsWithUniqueAttribute(t *testing.T) {
+func TestAccIdentityStoreGroupDataSource_groupIDConflictsWithExternalID(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
@@ -190,50 +96,8 @@ func TestAccIdentityStoreGroupDataSource_groupIdConflictsWithUniqueAttribute(t *
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccGroupDataSourceConfig_groupIdConflictsWithUniqueAttribute(name),
-				ExpectError: regexp.MustCompile(`Conflicting configuration arguments`),
-			},
-		},
-	})
-}
-
-func TestAccIdentityStoreGroupDataSource_filterConflictsWithExternalId(t *testing.T) {
-	ctx := acctest.Context(t)
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccGroupDataSourceConfig_filterConflictsWithExternalId(name),
-				ExpectError: regexp.MustCompile(`Conflicting configuration arguments`),
-			},
-		},
-	})
-}
-
-func TestAccIdentityStoreGroupDataSource_groupIdConflictsWithExternalId(t *testing.T) {
-	ctx := acctest.Context(t)
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccGroupDataSourceConfig_groupIdConflictsWithExternalId(name),
-				ExpectError: regexp.MustCompile(`Conflicting configuration arguments`),
+				Config:      testAccGroupDataSourceConfig_groupIDConflictsWithExternalID(name),
+				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})
@@ -249,22 +113,6 @@ resource "aws_identitystore_group" "test" {
   description       = "Acceptance Test"
 }
 `, name)
-}
-
-func testAccGroupDataSourceConfig_filterDisplayName(name string) string {
-	return acctest.ConfigCompose(
-		testAccGroupDataSourceConfig_base(name),
-		`
-data "aws_identitystore_group" "test" {
-  filter {
-    attribute_path  = "DisplayName"
-    attribute_value = aws_identitystore_group.test.display_name
-  }
-
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-}
-`,
-	)
 }
 
 func testAccGroupDataSourceConfig_uniqueAttributeDisplayName(name string) string {
@@ -285,61 +133,7 @@ data "aws_identitystore_group" "test" {
 	)
 }
 
-func testAccGroupDataSourceConfig_filterDisplayNameAndGroupId(name string) string {
-	return acctest.ConfigCompose(
-		testAccGroupDataSourceConfig_base(name),
-		`
-data "aws_identitystore_group" "test" {
-  filter {
-    attribute_path  = "DisplayName"
-    attribute_value = aws_identitystore_group.test.display_name
-  }
-
-  group_id = aws_identitystore_group.test.group_id
-
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-}
-`,
-	)
-}
-
-const testAccGroupDataSourceConfig_nonExistent = `
-data "aws_ssoadmin_instances" "test" {}
-
-data "aws_identitystore_group" "test" {
-  filter {
-    attribute_path  = "DisplayName"
-    attribute_value = "does-not-exist"
-  }
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-}
-`
-
-func testAccGroupDataSourceConfig_groupIdFilterMismatch(name1, name2 string) string {
-	return acctest.ConfigCompose(
-		testAccGroupDataSourceConfig_base(name1),
-		fmt.Sprintf(`
-resource "aws_identitystore_group" "test2" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-  display_name      = %[1]q
-  description       = "Acceptance Test"
-}
-
-data "aws_identitystore_group" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-
-  filter {
-    attribute_path  = "DisplayName"
-    attribute_value = aws_identitystore_group.test.display_name
-  }
-
-  group_id = aws_identitystore_group.test2.group_id
-}
-`, name2),
-	)
-}
-
-const testAccGroupDataSourceConfig_externalIdConflictsWithUniqueAttribute = `
+const testAccGroupDataSourceConfig_externalIDConflictsWithUniqueAttribute = `
 data "aws_ssoadmin_instances" "test" {}
 
 data "aws_identitystore_group" "test" {
@@ -359,30 +153,7 @@ data "aws_identitystore_group" "test" {
 }
 `
 
-func testAccGroupDataSourceConfig_filterConflictsWithUniqueAttribute(name string) string {
-	return acctest.ConfigCompose(
-		testAccGroupDataSourceConfig_base(name),
-		`
-data "aws_identitystore_group" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-
-  alternate_identifier {
-    unique_attribute {
-      attribute_path  = "DisplayName"
-      attribute_value = aws_identitystore_group.test.display_name
-    }
-  }
-
-  filter {
-    attribute_path  = "DisplayName"
-    attribute_value = aws_identitystore_group.test.display_name
-  }
-}
-`,
-	)
-}
-
-func testAccGroupDataSourceConfig_groupIdConflictsWithUniqueAttribute(name string) string {
+func testAccGroupDataSourceConfig_groupIDConflictsWithUniqueAttribute(name string) string {
 	return acctest.ConfigCompose(
 		testAccGroupDataSourceConfig_base(name),
 		`
@@ -402,30 +173,7 @@ data "aws_identitystore_group" "test" {
 	)
 }
 
-func testAccGroupDataSourceConfig_filterConflictsWithExternalId(name string) string {
-	return acctest.ConfigCompose(
-		testAccGroupDataSourceConfig_base(name),
-		`
-data "aws_identitystore_group" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-
-  alternate_identifier {
-    external_id {
-      id     = "test"
-      issuer = "test"
-    }
-  }
-
-  filter {
-    attribute_path  = "DisplayName"
-    attribute_value = aws_identitystore_group.test.display_name
-  }
-}
-`,
-	)
-}
-
-func testAccGroupDataSourceConfig_groupIdConflictsWithExternalId(name string) string {
+func testAccGroupDataSourceConfig_groupIDConflictsWithExternalID(name string) string {
 	return acctest.ConfigCompose(
 		testAccGroupDataSourceConfig_base(name),
 		`

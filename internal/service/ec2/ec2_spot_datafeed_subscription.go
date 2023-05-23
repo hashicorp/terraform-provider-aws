@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_spot_datafeed_subscription")
 func ResourceSpotDataFeedSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSpotDataFeedSubscriptionCreate,

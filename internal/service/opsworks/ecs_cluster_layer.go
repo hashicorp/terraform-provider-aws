@@ -6,6 +6,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_opsworks_ecs_cluster_layer", name="ECS Cluster Layer")
+// @Tags(identifierAttribute="arn")
 func ResourceECSClusterLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:         opsworks.LayerTypeEcsCluster,

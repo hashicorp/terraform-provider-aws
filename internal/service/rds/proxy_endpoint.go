@@ -17,8 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_db_proxy_endpoint", name="DB Proxy Endpoint")
+// @Tags(identifierAttribute="arn")
 func ResourceProxyEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyEndpointCreate,
@@ -60,8 +63,8 @@ func ResourceProxyEndpoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -92,26 +95,22 @@ func ResourceProxyEndpoint() *schema.Resource {
 func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	dbProxyName := d.Get("db_proxy_name").(string)
 	dbProxyEndpointName := d.Get("db_proxy_endpoint_name").(string)
-
-	params := rds.CreateDBProxyEndpointInput{
+	input := rds.CreateDBProxyEndpointInput{
 		DBProxyName:         aws.String(dbProxyName),
 		DBProxyEndpointName: aws.String(dbProxyEndpointName),
 		TargetRole:          aws.String(d.Get("target_role").(string)),
 		VpcSubnetIds:        flex.ExpandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
-		Tags:                Tags(tags.IgnoreAWS()),
+		Tags:                GetTagsIn(ctx),
 	}
 
 	if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
-		params.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+		input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
-	_, err := conn.CreateDBProxyEndpointWithContext(ctx, &params)
-
+	_, err := conn.CreateDBProxyEndpointWithContext(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "Creating RDS DB Proxy Endpoint (%s/%s): %s", dbProxyName, dbProxyEndpointName, err)
 	}
@@ -128,8 +127,6 @@ func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, me
 func resourceProxyEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dbProxyEndpoint, err := FindDBProxyEndpoint(ctx, conn, d.Id())
 
@@ -171,23 +168,6 @@ func resourceProxyEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("vpc_subnet_ids", flex.FlattenStringSet(dbProxyEndpoint.VpcSubnetIds))
 	d.Set("vpc_security_group_ids", flex.FlattenStringSet(dbProxyEndpoint.VpcSecurityGroupIds))
 
-	tags, err := ListTags(ctx, conn, endpointArn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Proxy Endpoint (%s): %s", endpointArn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -211,14 +191,6 @@ func resourceProxyEndpointUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating RDS DB Proxy Endpoint (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
 	return append(diags, resourceProxyEndpointRead(ctx, d, meta)...)
 }
 
@@ -232,7 +204,6 @@ func resourceProxyEndpointDelete(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Delete DB Proxy Endpoint: %#v", params)
 	_, err := conn.DeleteDBProxyEndpointWithContext(ctx, &params)
-
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) || tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
 			return diags

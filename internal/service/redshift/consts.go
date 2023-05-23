@@ -21,6 +21,12 @@ const (
 )
 
 const (
+	clusterSnapshotStatusAvailable = "available"
+	clusterSnapshotStatusCreating  = "creating"
+	clusterSnapshotStatusDeleted   = "deleted"
+)
+
+const (
 	clusterTypeMultiNode  = "multi-node"
 	clusterTypeSingleNode = "single-node"
 )

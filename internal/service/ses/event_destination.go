@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ses_event_destination")
 func ResourceEventDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventDestinationCreate,

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ce_cost_allocation_tag")
 func ResourceCostAllocationTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCostAllocationTagUpdate,

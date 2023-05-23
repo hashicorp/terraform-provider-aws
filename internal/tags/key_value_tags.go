@@ -7,18 +7,23 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
+	"github.com/hashicorp/go-cty/cty"
+	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	awsTagKeyPrefix                             = `aws:` // nosemgrep:ci.aws-in-const-name,ci.aws-in-var-name
 	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
 	NameTagKey                                  = `Name`
-	RDSTagKeyPrefix                             = `rds:`
 	ServerlessApplicationRepositoryTagKeyPrefix = `serverlessrepo:`
 )
 
@@ -38,19 +43,6 @@ type IgnoreConfig struct {
 // its own Go struct type representing a resource tag. To standardize logic
 // across all these Go types, we convert them into this Go type.
 type KeyValueTags map[string]*TagData
-
-// IgnoreAWS returns non-AWS tag keys.
-func (tags KeyValueTags) IgnoreAWS() KeyValueTags { // nosemgrep:ci.aws-in-func-name
-	result := make(KeyValueTags)
-
-	for k, v := range tags {
-		if !strings.HasPrefix(k, awsTagKeyPrefix) {
-			result[k] = v
-		}
-	}
-
-	return result
-}
 
 // GetTags is convenience method that returns the DefaultConfig's Tags, if any
 func (dc *DefaultConfig) GetTags() KeyValueTags {
@@ -89,6 +81,19 @@ func (dc *DefaultConfig) TagsEqual(tags KeyValueTags) bool {
 	}
 
 	return dc.Tags.ContainsAll(tags)
+}
+
+// IgnoreAWS returns non-AWS tag keys.
+func (tags KeyValueTags) IgnoreAWS() KeyValueTags { // nosemgrep:ci.aws-in-func-name
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		if !strings.HasPrefix(k, awsTagKeyPrefix) {
+			result[k] = v
+		}
+	}
+
+	return result
 }
 
 // IgnoreConfig returns any tags not removed by a given configuration.
@@ -150,25 +155,6 @@ func (tags KeyValueTags) IgnorePrefixes(ignoreTagPrefixes KeyValueTags) KeyValue
 	return result
 }
 
-// IgnoreRDS returns non-AWS and non-RDS tag keys.
-func (tags KeyValueTags) IgnoreRDS() KeyValueTags {
-	result := make(KeyValueTags)
-
-	for k, v := range tags {
-		if strings.HasPrefix(k, awsTagKeyPrefix) {
-			continue
-		}
-
-		if strings.HasPrefix(k, RDSTagKeyPrefix) {
-			continue
-		}
-
-		result[k] = v
-	}
-
-	return result
-}
-
 // IgnoreServerlessApplicationRepository returns non-AWS and non-ServerlessApplicationRepository tag keys.
 func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
 	result := make(KeyValueTags)
@@ -186,6 +172,19 @@ func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
 	}
 
 	return result
+}
+
+// IgnoreAWS returns non-system tag keys.
+// The ignored keys vary on the specified service.
+func (tags KeyValueTags) IgnoreSystem(serviceName string) KeyValueTags {
+	switch serviceName {
+	case names.ElasticBeanstalk:
+		return tags.IgnoreElasticbeanstalk()
+	case names.ServerlessRepo:
+		return tags.IgnoreServerlessApplicationRepository()
+	default:
+		return tags.IgnoreAWS()
+	}
 }
 
 // Ignore returns non-matching tag keys.
@@ -425,6 +424,28 @@ func (tags KeyValueTags) ContainsAll(target KeyValueTags) bool {
 	return true
 }
 
+func (tags KeyValueTags) Difference(target KeyValueTags) KeyValueTags {
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		if val, ok := target[k]; !ok || (v.ValueString() != val.ValueString()) {
+			result[k] = v
+		}
+	}
+
+	return result
+}
+
+func (tags KeyValueTags) HasZeroValue() bool {
+	for _, v := range tags {
+		if v.ValueString() == "" {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Equal returns whether or two sets of key-value tags are equal.
 func (tags KeyValueTags) Equal(other KeyValueTags) bool {
 	if tags == nil && other == nil {
@@ -451,6 +472,10 @@ func (tags KeyValueTags) Equal(other KeyValueTags) bool {
 	}
 
 	return true
+}
+
+func (tags KeyValueTags) DeepEqual(target KeyValueTags) bool {
+	return reflect.DeepEqual(tags, target)
 }
 
 // Hash returns a stable hash value.
@@ -555,7 +580,7 @@ func (tags KeyValueTags) URLQueryString() string {
 // map[string]string, map[string]*string, map[string]interface{}, []interface{}, and types.Map.
 // When passed []interface{}, all elements are treated as keys and assigned nil values.
 // When passed KeyValueTags or its underlying type implementation, returns itself.
-func New(i interface{}) KeyValueTags {
+func New(ctx context.Context, i interface{}) KeyValueTags {
 	switch value := i.(type) {
 	case KeyValueTags:
 		return make(KeyValueTags).Merge(value)
@@ -616,7 +641,7 @@ func New(i interface{}) KeyValueTags {
 
 		return kvtm
 	case types.Map:
-		return New(flex.ExpandFrameworkStringValueMap(context.TODO(), value))
+		return New(ctx, flex.ExpandFrameworkStringValueMap(ctx, value))
 	default:
 		return make(KeyValueTags)
 	}
@@ -637,6 +662,14 @@ type TagData struct {
 
 	// Tag value.
 	Value *string
+}
+
+func (td *TagData) ValueString() string {
+	if td.Value == nil {
+		return ""
+	}
+
+	return *td.Value
 }
 
 func (td *TagData) Equal(other *TagData) bool {
@@ -707,6 +740,112 @@ func (td *TagData) String() string {
 	}
 
 	return fmt.Sprintf("TagData{%s}", strings.Join(fields, ", "))
+}
+
+// schemaResourceData is an interface that implements functions from schema.ResourceData
+type schemaResourceData interface {
+	GetRawConfig() cty.Value
+	GetRawPlan() cty.Value
+	GetRawState() cty.Value
+}
+
+func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, d schemaResourceData) KeyValueTags {
+	// remove default config.
+	t := tags.RemoveDefaultConfig(defaultConfig)
+
+	result := make(map[string]string)
+	for k, v := range t {
+		result[k] = v.ValueString()
+	}
+
+	configTags := make(map[string]string)
+	if config := d.GetRawPlan(); !config.IsNull() && config.IsKnown() {
+		c := config.GetAttr("tags")
+		if !c.IsNull() && c.IsKnown() {
+			for k, v := range c.AsValueMap() {
+				configTags[k] = v.AsString()
+			}
+		}
+	}
+
+	if config := d.GetRawConfig(); !config.IsNull() && config.IsKnown() {
+		c := config.GetAttr("tags")
+
+		// if the config is null just return the incoming tags
+		// no duplicates to calculate
+		if c.IsNull() {
+			return t
+		}
+
+		if !c.IsNull() && c.IsKnown() {
+			for k, v := range c.AsValueMap() {
+				if _, ok := configTags[k]; !ok {
+					configTags[k] = v.AsString()
+				}
+			}
+		}
+	}
+
+	if state := d.GetRawState(); !state.IsNull() && state.IsKnown() {
+		c := state.GetAttr("tags")
+		if !c.IsNull() {
+			for k, v := range c.AsValueMap() {
+				if _, ok := configTags[k]; !ok {
+					configTags[k] = v.AsString()
+				}
+			}
+		}
+	}
+
+	for k, v := range configTags {
+		if _, ok := result[k]; !ok {
+			if defaultConfig != nil {
+				if val, ok := defaultConfig.Tags[k]; ok && val.ValueString() == v {
+					result[k] = v
+				}
+			}
+		}
+	}
+
+	return New(ctx, result).IgnoreConfig(ignoreConfig)
+}
+
+func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, resp *resource.ReadResponse, diags fwdiag.Diagnostics) KeyValueTags {
+	// remove default config.
+	t := tags.RemoveDefaultConfig(defaultConfig)
+
+	var tagsAll types.Map
+	diags.Append(resp.State.GetAttribute(ctx, path.Root("tags"), &tagsAll)...)
+
+	if diags.HasError() {
+		return KeyValueTags{}
+	}
+
+	result := make(map[string]string)
+	for k, v := range t {
+		result[k] = v.ValueString()
+	}
+
+	for k, v := range tagsAll.Elements() {
+		if _, ok := result[k]; !ok {
+			if defaultConfig != nil {
+				s, err := strconv.Unquote(v.String()) // TODO rework to use Framework Map.Equals() value
+
+				if err != nil {
+					diags.AddError(
+						"unable to normalize string",
+						"unable to normalize string default value",
+					)
+				}
+
+				if val, ok := defaultConfig.Tags[k]; ok && val.ValueString() == s {
+					result[k] = s
+				}
+			}
+		}
+	}
+
+	return New(ctx, result).IgnoreConfig(ignoreConfig)
 }
 
 // ToSnakeCase converts a string to snake case.

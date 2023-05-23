@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_inspector_rules_packages")
 func DataSourceRulesPackages() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRulesPackagesRead,
@@ -33,7 +34,7 @@ func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, me
 	output, err := findRulesPackageARNs(ctx, conn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Inspector Rules Packages: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Rules Packages: %s", err)
 	}
 
 	arns := aws.StringValueSlice(output)

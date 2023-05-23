@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_proxy_protocol_policy")
 func ResourceProxyProtocolPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyProtocolPolicyCreate,

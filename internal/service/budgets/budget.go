@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +24,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// @SDKResource("aws_budgets_budget")
 func ResourceBudget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetCreate,
@@ -88,14 +89,6 @@ func ResourceBudget() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(budgets.BudgetType_Values(), false),
 			},
-			"cost_filters": {
-				Type:          schema.TypeMap,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"cost_filter"},
-				Deprecated:    "Use the attribute \"cost_filter\" instead.",
-			},
 			"cost_filter": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -115,7 +108,6 @@ func ResourceBudget() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"cost_filters"},
 			},
 			"cost_types": {
 				Type:     schema.TypeList,
@@ -364,12 +356,8 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("arn", arn.String())
 	d.Set("budget_type", budget.BudgetType)
 
-	// `cost_filters` should be removed in future releases
 	if err := d.Set("cost_filter", convertCostFiltersToMap(budget.CostFilters)); err != nil {
 		return diag.Errorf("setting cost_filter: %s", err)
-	}
-	if err := d.Set("cost_filters", convertCostFiltersToStringMap(budget.CostFilters)); err != nil {
-		return diag.Errorf("setting cost_filters: %s", err)
 	}
 	if err := d.Set("cost_types", flattenCostTypes(budget.CostTypes)); err != nil {
 		return diag.Errorf("setting cost_types: %s", err)
@@ -546,7 +534,7 @@ func FindBudgetByTwoPartKey(ctx context.Context, conn *budgets.Budgets, accountI
 	output, err := conn.DescribeBudgetWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -587,7 +575,7 @@ func findNotifications(ctx context.Context, conn *budgets.Budgets, accountID, bu
 	})
 
 	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -598,7 +586,7 @@ func findNotifications(ctx context.Context, conn *budgets.Budgets, accountID, bu
 	}
 
 	if len(output) == 0 {
-		return nil, &resource.NotFoundError{LastRequest: input}
+		return nil, &retry.NotFoundError{LastRequest: input}
 	}
 
 	return output, nil
@@ -629,7 +617,7 @@ func findSubscribers(ctx context.Context, conn *budgets.Budgets, accountID, budg
 	})
 
 	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -640,7 +628,7 @@ func findSubscribers(ctx context.Context, conn *budgets.Budgets, accountID, budg
 	}
 
 	if len(output) == 0 {
-		return nil, &resource.NotFoundError{LastRequest: input}
+		return nil, &retry.NotFoundError{LastRequest: input}
 	}
 
 	return output, nil
@@ -775,20 +763,6 @@ func convertCostFiltersToMap(costFilters map[string][]*string) []map[string]inte
 	return convertedCostFilters
 }
 
-func convertCostFiltersToStringMap(costFilters map[string][]*string) map[string]string {
-	convertedCostFilters := make(map[string]string)
-	for k, v := range costFilters {
-		filterValues := make([]string, 0)
-		for _, singleFilterValue := range v {
-			filterValues = append(filterValues, *singleFilterValue)
-		}
-
-		convertedCostFilters[k] = strings.Join(filterValues, ",")
-	}
-
-	return convertedCostFilters
-}
-
 func convertPlannedBudgetLimitsToSet(plannedBudgetLimits map[string]*budgets.Spend) []interface{} {
 	if plannedBudgetLimits == nil {
 		return nil
@@ -832,11 +806,6 @@ func expandBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
 			for _, filterValue := range element["values"].([]interface{}) {
 				budgetCostFilters[key] = append(budgetCostFilters[key], aws.String(filterValue.(string)))
 			}
-		}
-	} else if costFilters, ok := d.GetOk("cost_filters"); ok {
-		for k, v := range costFilters.(map[string]interface{}) {
-			filterValue := v.(string)
-			budgetCostFilters[k] = append(budgetCostFilters[k], aws.String(filterValue))
 		}
 	}
 

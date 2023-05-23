@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_db_subnet_group")
 func DataSourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetGroupRead,
@@ -55,7 +56,6 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).RDSConn()
 
 	v, err := FindDBSubnetGroupByName(ctx, conn, d.Get("name").(string))
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("RDS DB Subnet Group", err))
 	}

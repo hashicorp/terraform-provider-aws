@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_bucket_analytics_configuration")
 func ResourceBucketAnalyticsConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketAnalyticsConfigurationPut,
@@ -141,7 +142,7 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 
 	analyticsConfiguration := &s3.AnalyticsConfiguration{
 		Id:                   aws.String(name),
-		Filter:               ExpandAnalyticsFilter(d.Get("filter").([]interface{})),
+		Filter:               ExpandAnalyticsFilter(ctx, d.Get("filter").([]interface{})),
 		StorageClassAnalysis: ExpandStorageClassAnalysis(d.Get("storage_class_analysis").([]interface{})),
 	}
 
@@ -151,15 +152,15 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 		AnalyticsConfiguration: analyticsConfiguration,
 	}
 
-	err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 		_, err := conn.PutBucketAnalyticsConfigurationWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -203,7 +204,7 @@ func resourceBucketAnalyticsConfigurationRead(ctx context.Context, d *schema.Res
 		return diags
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
 		log.Printf("[WARN] S3 Bucket Analytics Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -217,7 +218,7 @@ func resourceBucketAnalyticsConfigurationRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket Analytics Configuration (%s): empty response", d.Id())
 	}
 
-	if err := d.Set("filter", FlattenAnalyticsFilter(output.AnalyticsConfiguration.Filter)); err != nil {
+	if err := d.Set("filter", FlattenAnalyticsFilter(ctx, output.AnalyticsConfiguration.Filter)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
 
@@ -267,7 +268,7 @@ func BucketAnalyticsConfigurationParseID(id string) (string, string, error) {
 	return bucket, name, nil
 }
 
-func ExpandAnalyticsFilter(l []interface{}) *s3.AnalyticsFilter {
+func ExpandAnalyticsFilter(ctx context.Context, l []interface{}) *s3.AnalyticsFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -281,7 +282,7 @@ func ExpandAnalyticsFilter(l []interface{}) *s3.AnalyticsFilter {
 
 	var tags []*s3.Tag
 	if v, ok := m["tags"]; ok {
-		tags = Tags(tftags.New(v).IgnoreAWS())
+		tags = Tags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	if prefix == "" && len(tags) == 0 {
@@ -361,7 +362,7 @@ func expandAnalyticsBucketDestination(bdl []interface{}) *s3.AnalyticsS3BucketDe
 	return result
 }
 
-func FlattenAnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]interface{} {
+func FlattenAnalyticsFilter(ctx context.Context, analyticsFilter *s3.AnalyticsFilter) []map[string]interface{} {
 	if analyticsFilter == nil {
 		return nil
 	}
@@ -372,7 +373,7 @@ func FlattenAnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]in
 			result["prefix"] = aws.StringValue(and.Prefix)
 		}
 		if and.Tags != nil {
-			result["tags"] = KeyValueTags(and.Tags).IgnoreAWS().Map()
+			result["tags"] = KeyValueTags(ctx, and.Tags).IgnoreAWS().Map()
 		}
 	} else if analyticsFilter.Prefix != nil {
 		result["prefix"] = aws.StringValue(analyticsFilter.Prefix)
@@ -380,7 +381,7 @@ func FlattenAnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]in
 		tags := []*s3.Tag{
 			analyticsFilter.Tag,
 		}
-		result["tags"] = KeyValueTags(tags).IgnoreAWS().Map()
+		result["tags"] = KeyValueTags(ctx, tags).IgnoreAWS().Map()
 	} else {
 		return nil
 	}
@@ -444,15 +445,15 @@ func WaitForDeleteBucketAnalyticsConfiguration(ctx context.Context, conn *s3.S3,
 		Id:     aws.String(name),
 	}
 
-	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		output, err := conn.GetBucketAnalyticsConfigurationWithContext(ctx, input)
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if output != nil && output.AnalyticsConfiguration != nil {
-			return resource.RetryableError(fmt.Errorf("S3 bucket analytics configuration exists: %v", output))
+			return retry.RetryableError(fmt.Errorf("S3 bucket analytics configuration exists: %v", output))
 		}
 
 		return nil

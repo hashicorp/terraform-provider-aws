@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"context"
-	"log"
 	"strings"
 	"time"
 
@@ -15,14 +14,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_default_route_table", name="Route Table")
+// @Tags(identifierAttribute="id")
 func ResourceDefaultRouteTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultRouteTableCreate,
 		ReadWithoutTimeout:   resourceDefaultRouteTableRead,
 		UpdateWithoutTimeout: resourceRouteTableUpdate,
-		DeleteWithoutTimeout: resourceDefaultRouteTableDelete,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceDefaultRouteTableImport,
@@ -41,25 +43,20 @@ func ResourceDefaultRouteTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"default_route_table_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"propagating_vgws": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
-
 			"route": {
 				Type:       schema.TypeSet,
 				ConfigMode: schema.SchemaConfigModeAttr,
@@ -84,7 +81,6 @@ func ResourceDefaultRouteTable() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
 						},
-
 						//
 						// Targets.
 						// These target attributes are a subset of the aws_route_table resource's target attributes
@@ -130,10 +126,8 @@ func ResourceDefaultRouteTable() *schema.Resource {
 				},
 				Set: resourceRouteTableHash,
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -147,8 +141,6 @@ func ResourceDefaultRouteTable() *schema.Resource {
 func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	routeTableID := d.Get("default_route_table_id").(string)
 
@@ -169,8 +161,7 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 
 	// Delete all existing routes.
 	for _, v := range routeTable.Routes {
-		// you cannot delete the local route
-		if aws.StringValue(v.GatewayId) == "local" {
+		if gatewayID := aws.StringValue(v.GatewayId); gatewayID == gatewayIDLocal || gatewayID == gatewayIDVPCLattice {
 			continue
 		}
 
@@ -205,7 +196,6 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 			routeFinder = FindRouteByPrefixListIDDestination
 		}
 
-		log.Printf("[DEBUG] Deleting Route: %s", input)
 		_, err := conn.DeleteRouteWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteNotFound) {
@@ -216,10 +206,8 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendErrorf(diags, "deleting Route in EC2 Default Route Table (%s) with destination (%s): %s", d.Id(), destination, err)
 		}
 
-		_, err = WaitRouteDeleted(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate))
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Route in EC2 Default Route Table (%s) with destination (%s) to delete: %s", d.Id(), destination, err)
+		if _, err := WaitRouteDeleted(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Route in EC2 Default Route Table (%s) with destination (%s) delete: %s", d.Id(), destination, err)
 		}
 	}
 
@@ -245,10 +233,8 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if len(tags) > 0 {
-		if err := CreateTags(ctx, conn, d.Id(), tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "adding tags: %s", err)
-		}
+	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting EC2 Default Route Table (%s) tags: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceDefaultRouteTableRead(ctx, d, meta)...)
@@ -257,15 +243,9 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 func resourceDefaultRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	d.Set("default_route_table_id", d.Id())
 
-	// re-use regular AWS Route Table READ. This is an extra API call but saves us
-	// from trying to manually keep parity
+	// Re-use regular AWS Route Table READ.
+	// This is an extra API call but saves us from trying to manually keep parity.
 	return resourceRouteTableRead(ctx, d, meta)
-}
-
-func resourceDefaultRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	log.Printf("[WARN] Cannot destroy Default Route Table. Terraform will remove this resource from the state file, however resources may remain.")
-	return diags
 }
 
 func resourceDefaultRouteTableImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

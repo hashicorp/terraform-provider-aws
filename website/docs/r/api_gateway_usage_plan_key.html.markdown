@@ -24,7 +24,7 @@ resource "aws_api_gateway_usage_plan" "myusageplan" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.foo.stage_name
+    stage  = aws_api_gateway_stage.foo.stage_name
   }
 }
 

@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -20,7 +20,7 @@ const (
 )
 
 func waitConnectionConfirmed(ctx context.Context, conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{directconnect.ConnectionStatePending, directconnect.ConnectionStateOrdering, directconnect.ConnectionStateRequested},
 		Target:  []string{directconnect.ConnectionStateAvailable},
 		Refresh: statusConnectionState(ctx, conn, id),
@@ -37,7 +37,7 @@ func waitConnectionConfirmed(ctx context.Context, conn *directconnect.DirectConn
 }
 
 func waitConnectionDeleted(ctx context.Context, conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{directconnect.ConnectionStatePending, directconnect.ConnectionStateOrdering, directconnect.ConnectionStateAvailable, directconnect.ConnectionStateRequested, directconnect.ConnectionStateDeleting},
 		Target:  []string{},
 		Refresh: statusConnectionState(ctx, conn, id),
@@ -54,7 +54,7 @@ func waitConnectionDeleted(ctx context.Context, conn *directconnect.DirectConnec
 }
 
 func waitGatewayCreated(ctx context.Context, conn *directconnect.DirectConnect, id string, timeout time.Duration) (*directconnect.Gateway, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{directconnect.GatewayStatePending},
 		Target:  []string{directconnect.GatewayStateAvailable},
 		Refresh: statusGatewayState(ctx, conn, id),
@@ -73,7 +73,7 @@ func waitGatewayCreated(ctx context.Context, conn *directconnect.DirectConnect, 
 }
 
 func waitGatewayDeleted(ctx context.Context, conn *directconnect.DirectConnect, id string, timeout time.Duration) (*directconnect.Gateway, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{directconnect.GatewayStatePending, directconnect.GatewayStateAvailable, directconnect.GatewayStateDeleting},
 		Target:  []string{},
 		Refresh: statusGatewayState(ctx, conn, id),
@@ -92,7 +92,7 @@ func waitGatewayDeleted(ctx context.Context, conn *directconnect.DirectConnect, 
 }
 
 func waitGatewayAssociationCreated(ctx context.Context, conn *directconnect.DirectConnect, id string, timeout time.Duration) (*directconnect.GatewayAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{directconnect.GatewayAssociationStateAssociating},
 		Target:  []string{directconnect.GatewayAssociationStateAssociated},
 		Refresh: statusGatewayAssociationState(ctx, conn, id),
@@ -111,7 +111,7 @@ func waitGatewayAssociationCreated(ctx context.Context, conn *directconnect.Dire
 }
 
 func waitGatewayAssociationUpdated(ctx context.Context, conn *directconnect.DirectConnect, id string, timeout time.Duration) (*directconnect.GatewayAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{directconnect.GatewayAssociationStateUpdating},
 		Target:  []string{directconnect.GatewayAssociationStateAssociated},
 		Refresh: statusGatewayAssociationState(ctx, conn, id),
@@ -130,7 +130,7 @@ func waitGatewayAssociationUpdated(ctx context.Context, conn *directconnect.Dire
 }
 
 func waitGatewayAssociationDeleted(ctx context.Context, conn *directconnect.DirectConnect, id string, timeout time.Duration) (*directconnect.GatewayAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{directconnect.GatewayAssociationStateDisassociating},
 		Target:  []string{},
 		Refresh: statusGatewayAssociationState(ctx, conn, id),
@@ -149,7 +149,7 @@ func waitGatewayAssociationDeleted(ctx context.Context, conn *directconnect.Dire
 }
 
 func waitHostedConnectionDeleted(ctx context.Context, conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{directconnect.ConnectionStatePending, directconnect.ConnectionStateOrdering, directconnect.ConnectionStateAvailable, directconnect.ConnectionStateRequested, directconnect.ConnectionStateDeleting},
 		Target:  []string{},
 		Refresh: statusHostedConnectionState(ctx, conn, id),
@@ -166,7 +166,7 @@ func waitHostedConnectionDeleted(ctx context.Context, conn *directconnect.Direct
 }
 
 func waitLagDeleted(ctx context.Context, conn *directconnect.DirectConnect, id string) (*directconnect.Lag, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{directconnect.LagStateAvailable, directconnect.LagStateRequested, directconnect.LagStatePending, directconnect.LagStateDeleting},
 		Target:  []string{},
 		Refresh: statusLagState(ctx, conn, id),

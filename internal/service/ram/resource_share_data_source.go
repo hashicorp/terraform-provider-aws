@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ram_resource_share")
 func DataSourceResourceShare() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceShareRead,
@@ -118,7 +119,7 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 				d.Set("owning_account_id", r.OwningAccountId)
 				d.Set("status", r.Status)
 
-				if err := d.Set("tags", KeyValueTags(r.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+				if err := d.Set("tags", KeyValueTags(ctx, r.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 					return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 				}
 

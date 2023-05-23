@@ -122,7 +122,7 @@ func protocolDataDynamicValue6(_ context.Context, value *tfprotov6.DynamicValue)
 }
 
 func writeProtocolFile(ctx context.Context, dataDir string, rpc string, message string, field string, fileExtension string, fileContents []byte) {
-	fileName := fmt.Sprintf("%d_%s_%s_%s", time.Now().Unix(), rpc, message, field)
+	fileName := fmt.Sprintf("%d_%s_%s_%s", time.Now().UnixMilli(), rpc, message, field)
 
 	if fileExtension != "" {
 		fileName += "." + fileExtension

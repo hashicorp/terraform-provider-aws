@@ -66,6 +66,7 @@ The following arguments are required:
 * `architecture` – (Optional) The CPU architecture of an application. Valid values are `ARM64` or `X86_64`. Default value is `X86_64`.
 * `auto_start_configuration` – (Optional) The configuration for an application to automatically start on job submission.
 * `auto_stop_configuration` – (Optional) The configuration for an application to automatically stop after a certain amount of time being idle.
+* `image_configuration` – (Optional) The image configuration applied to all worker types.
 * `initial_capacity` – (Optional) The capacity to initialize when the application is created.
 * `maximum_capacity` – (Optional) The maximum capacity to allocate when the application is created. This is cumulative across all workers at any given point in time, not just when an application is created. No new resources will be created once any one of the defined limits is hit.
 * `name` – (Required) The name of the application.
@@ -98,6 +99,10 @@ The following arguments are required:
 
 * `security_group_ids` - (Optional) The array of security group Ids for customer VPC connectivity.
 * `subnet_ids` - (Optional) The array of subnet Ids for customer VPC connectivity.
+
+#### image_configuration Arguments
+
+* `image_uri` - (Required) The image URI.
 
 #### initial_capacity_config Arguments
 

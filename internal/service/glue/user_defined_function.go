@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_glue_user_defined_function")
 func ResourceUserDefinedFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserDefinedFunctionCreate,

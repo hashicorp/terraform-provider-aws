@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_storagegateway_cache")
 func ResourceCache() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCacheCreate,

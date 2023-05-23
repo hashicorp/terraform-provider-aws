@@ -17,35 +17,33 @@ resource "aws_backup_vault" "example" {
   name = "example"
 }
 
+data "aws_iam_policy_document" "example" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "backup:DescribeBackupVault",
+      "backup:DeleteBackupVault",
+      "backup:PutBackupVaultAccessPolicy",
+      "backup:DeleteBackupVaultAccessPolicy",
+      "backup:GetBackupVaultAccessPolicy",
+      "backup:StartBackupJob",
+      "backup:GetBackupVaultNotifications",
+      "backup:PutBackupVaultNotifications",
+    ]
+
+    resources = [aws_backup_vault.example.arn]
+  }
+}
+
 resource "aws_backup_vault_policy" "example" {
   backup_vault_name = aws_backup_vault.example.name
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "default",
-  "Statement": [
-    {
-      "Sid": "default",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": [
-		"backup:DescribeBackupVault",
-		"backup:DeleteBackupVault",
-		"backup:PutBackupVaultAccessPolicy",
-		"backup:DeleteBackupVaultAccessPolicy",
-		"backup:GetBackupVaultAccessPolicy",
-		"backup:StartBackupJob",
-		"backup:GetBackupVaultNotifications",
-		"backup:PutBackupVaultNotifications"
-      ],
-      "Resource": "${aws_backup_vault.example.arn}"
-    }
-  ]
-}
-POLICY
+  policy            = data.aws_iam_policy_document.example.json
 }
 ```
 

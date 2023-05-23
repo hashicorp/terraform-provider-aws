@@ -29,13 +29,14 @@ func TestExpandEndpoints(t *testing.T) { //nolint:paralleltest
 	oldEnv := stashEnv()
 	defer popEnv(oldEnv)
 
+	ctx := context.Background()
 	endpoints := make(map[string]interface{})
 	for _, serviceKey := range names.Aliases() {
 		endpoints[serviceKey] = ""
 	}
 	endpoints["sts"] = "https://sts.fake.test"
 
-	results, err := expandEndpoints([]interface{}{endpoints})
+	results, err := expandEndpoints(ctx, []interface{}{endpoints})
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
@@ -50,6 +51,7 @@ func TestExpandEndpoints(t *testing.T) { //nolint:paralleltest
 }
 
 func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
+	ctx := context.Background()
 	testcases := []struct {
 		endpoints        map[string]string
 		expectedService  string
@@ -91,7 +93,7 @@ func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
 			endpoints[k] = v
 		}
 
-		results, err := expandEndpoints([]interface{}{endpoints})
+		results, err := expandEndpoints(ctx, []interface{}{endpoints})
 		if err != nil {
 			t.Fatalf("Unexpected error: %s", err)
 		}
@@ -107,6 +109,7 @@ func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
 }
 
 func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
+	ctx := context.Background()
 	testcases := []struct {
 		endpoints        map[string]string
 		envvars          map[string]string
@@ -166,7 +169,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 			endpoints[k] = v
 		}
 
-		results, err := expandEndpoints([]interface{}{endpoints})
+		results, err := expandEndpoints(ctx, []interface{}{endpoints})
 		if err != nil {
 			t.Fatalf("Unexpected error: %s", err)
 		}

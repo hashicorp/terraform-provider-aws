@@ -19,6 +19,7 @@ import (
 // WAF requires UpdateIPSet operations be split into batches of 1000 Updates
 const ipSetUpdatesLimit = 1000
 
+// @SDKResource("aws_waf_ipset")
 func ResourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPSetCreate,

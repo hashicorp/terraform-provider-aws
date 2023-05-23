@@ -31,7 +31,7 @@ resource "aws_lightsail_disk" "test" {
 resource "aws_lightsail_instance" "test" {
   name              = "test-instance"
   availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux"
+  blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
 }
 

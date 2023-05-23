@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 func validName(v interface{}, k string) (ws []string, errors []error) {
@@ -81,7 +81,7 @@ func validTargetGroupName(v interface{}, k string) (ws []string, errors []error)
 
 func validTargetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	prefixMaxLength := 32 - resource.UniqueIDSuffixLength
+	prefixMaxLength := 32 - id.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than %d characters", k, prefixMaxLength))

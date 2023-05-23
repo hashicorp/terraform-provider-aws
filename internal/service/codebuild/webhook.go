@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_codebuild_webhook")
 func ResourceWebhook() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebhookCreate,
@@ -220,7 +221,7 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var err error
 	filterGroups := expandWebhookFilterGroups(d)
 
-	var buildType *string = nil
+	var buildType *string
 	if v, ok := d.GetOk("build_type"); ok {
 		buildType = aws.String(v.(string))
 	}

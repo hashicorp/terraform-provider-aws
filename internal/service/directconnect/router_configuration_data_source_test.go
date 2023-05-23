@@ -6,11 +6,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDirectConnectRouterConfigurationDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "VIRTUAL_INTERFACE_ID"
 	virtualInterfaceId := os.Getenv(key)
 	if virtualInterfaceId == "" {
@@ -22,8 +23,8 @@ func TestAccDirectConnectRouterConfigurationDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(directconnect.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, directconnect.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
