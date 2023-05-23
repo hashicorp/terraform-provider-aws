@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists codestarnotifications service tags.
@@ -80,15 +81,16 @@ func SetTagsOut(ctx context.Context, tags map[string]*string) {
 // UpdateTags updates codestarnotifications service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn codestarnotificationsiface.CodeStarNotificationsAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.CodeStarNotifications)
+	if len(removedTags) > 0 {
 		input := &codestarnotifications.UntagResourceInput{
 			Arn:     aws.String(identifier),
-			TagKeys: aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys: aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -98,10 +100,12 @@ func UpdateTags(ctx context.Context, conn codestarnotificationsiface.CodeStarNot
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.CodeStarNotifications)
+	if len(updatedTags) > 0 {
 		input := &codestarnotifications.TagResourceInput{
 			Arn:  aws.String(identifier),
-			Tags: Tags(updatedTags.IgnoreAWS()),
+			Tags: Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
@@ -38,6 +38,7 @@ func TestAccDirectConnectConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "partner_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vlan_id", ""),

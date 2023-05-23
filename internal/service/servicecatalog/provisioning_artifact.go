@@ -78,6 +78,10 @@ func ResourceProvisioningArtifact() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"provisioning_artifact_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"template_physical_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -209,6 +213,7 @@ func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("guidance", pad.Guidance)
 	d.Set("name", pad.Name)
 	d.Set("product_id", productID)
+	d.Set("provisioning_artifact_id", artifactID)
 	d.Set("type", pad.Type)
 
 	return diags

@@ -6,9 +6,6 @@ import (
 	{{- if .FmtPkg }}
 	"fmt"
 	{{- end }}
-	{{- if .StrConvPkg }}
-	"strconv"
-	{{- end }}
 
 	"github.com/aws/aws-sdk-go/aws"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -36,5 +33,8 @@ import (
 	{{- end }}
 	{{- if .InternalTypesPkg }}
     "github.com/hashicorp/terraform-provider-aws/internal/types"
+	{{- end }}
+	{{- if .NamesPkg }}
+    "github.com/hashicorp/terraform-provider-aws/names"
 	{{- end }}
 )

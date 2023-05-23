@@ -20,9 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_elasticache_parameter_group")
+// @SDKResource("aws_elasticache_parameter_group", name="Parameter Group")
+// @Tags(identifierAttribute="arn")
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,
@@ -73,8 +75,8 @@ func ResourceParameterGroup() *schema.Resource {
 				},
 				Set: ParameterHash,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -83,27 +85,21 @@ func ResourceParameterGroup() *schema.Resource {
 func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	createOpts := elasticache.CreateCacheParameterGroupInput{
+	input := elasticache.CreateCacheParameterGroupInput{
 		CacheParameterGroupName:   aws.String(d.Get("name").(string)),
 		CacheParameterGroupFamily: aws.String(d.Get("family").(string)),
 		Description:               aws.String(d.Get("description").(string)),
+		Tags:                      GetTagsIn(ctx),
 	}
 
-	if len(tags) > 0 {
-		createOpts.Tags = Tags(tags.IgnoreAWS())
-	}
+	resp, err := conn.CreateCacheParameterGroupWithContext(ctx, &input)
 
-	log.Printf("[DEBUG] Create ElastiCache Parameter Group: %#v", createOpts)
-	resp, err := conn.CreateCacheParameterGroupWithContext(ctx, &createOpts)
-
-	if createOpts.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ElastiCache Parameter Group with tags: %s. Trying create without tags.", err)
 
-		createOpts.Tags = nil
-		resp, err = conn.CreateCacheParameterGroupWithContext(ctx, &createOpts)
+		input.Tags = nil
+		resp, err = conn.CreateCacheParameterGroupWithContext(ctx, &input)
 	}
 
 	if err != nil {
@@ -120,8 +116,6 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	parameterGroup, err := FindParameterGroupByName(ctx, conn, d.Id())
 	if err != nil {
@@ -145,29 +139,6 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("parameter", FlattenParameters(describeParametersResp.Parameters))
-
-	tags, err := ListTags(ctx, conn, aws.StringValue(parameterGroup.ARN))
-
-	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache Parameter Group (%s): %s", d.Id(), err)
-	}
-
-	if err != nil {
-		log.Printf("[WARN] failed listing tags for ElastiCache Parameter Group (%s): %s", d.Id(), err)
-	}
-
-	if tags != nil {
-		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-		//lintignore:AWSR002
-		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-		}
-
-		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-		}
-	}
 
 	return diags
 }
@@ -288,21 +259,6 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "modifying ElastiCache Parameter Group: %s", err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n)
-
-		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-				// explicitly setting tags or not an iso-unsupported error
-				return sdkdiag.AppendErrorf(diags, "updating ElastiCache Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
-			}
-
-			log.Printf("[WARN] failed updating tags for ElastiCache Parameter Group (%s): %s", d.Get("arn").(string), err)
 		}
 	}
 

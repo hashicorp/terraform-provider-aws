@@ -48,4 +48,4 @@ If no attribute names are specified, then all attributes are returned. If any of
 
 In addition to all arguments above, the following attributes are exported:
 
-* `item` - A map of attribute names to [AttributeValue](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_AttributeValue.html) objects, as specified by ProjectionExpression.
+* `item` - JSON representation of a map of attribute names to [AttributeValue](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_AttributeValue.html) objects, as specified by ProjectionExpression.

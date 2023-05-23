@@ -19,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_eks_node_group")
+// @SDKResource("aws_eks_node_group", name="Node Group")
+// @Tags(identifierAttribute="arn")
 func ResourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNodeGroupCreate,
@@ -123,6 +125,7 @@ func ResourceNodeGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"node_group_name_prefix"},
+				ValidateFunc:  validation.StringLenBetween(0, 63),
 			},
 			"node_group_name_prefix": {
 				Type:          schema.TypeString,
@@ -130,6 +133,7 @@ func ResourceNodeGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"node_group_name"},
+				ValidateFunc:  validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
 			},
 			"node_role_arn": {
 				Type:         schema.TypeString,
@@ -222,8 +226,8 @@ func ResourceNodeGroup() *schema.Resource {
 				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"taint": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -287,19 +291,17 @@ func ResourceNodeGroup() *schema.Resource {
 
 func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
 	nodeGroupName := create.Name(d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
 	groupID := NodeGroupCreateResourceID(clusterName, nodeGroupName)
-
 	input := &eks.CreateNodegroupInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		ClusterName:        aws.String(clusterName),
 		NodegroupName:      aws.String(nodeGroupName),
 		NodeRole:           aws.String(d.Get("node_role_arn").(string)),
 		Subnets:            flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("ami_type"); ok {
@@ -350,10 +352,6 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Version = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	_, err := conn.CreateNodegroupWithContext(ctx, input)
 
 	if err != nil {
@@ -373,8 +371,6 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 
@@ -453,16 +449,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("version", nodeGroup.Version)
 
-	tags := KeyValueTags(ctx, nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, nodeGroup.Tags)
 
 	return nil
 }
@@ -564,13 +551,6 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		if err != nil {
 			return diag.Errorf("error waiting for EKS Node Group (%s) config update (%s): %s", d.Id(), updateID, err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
 

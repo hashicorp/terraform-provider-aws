@@ -20,7 +20,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{}
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceCertificate,
+			TypeName: "aws_dms_certificate",
+		},
+		{
+			Factory:  DataSourceEndpoint,
+			TypeName: "aws_dms_endpoint",
+		},
+		{
+			Factory:  DataSourceReplicationInstance,
+			TypeName: "aws_dms_replication_instance",
+		},
+		{
+			Factory:  DataSourceReplicationSubnetGroup,
+			TypeName: "aws_dms_replication_subnet_group",
+		},
+		{
+			Factory:  DataSourceReplicationTask,
+			TypeName: "aws_dms_replication_task",
+		},
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {

@@ -11,10 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
@@ -40,7 +40,8 @@ func TestAccS3BucketInventory_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketInventoryExistsConfig(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
-					resource.TestCheckNoResourceAttr(resourceName, "filter"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", "documents/"),
 					resource.TestCheckResourceAttr(resourceName, "name", inventoryName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "included_object_versions", "All"),
@@ -207,11 +208,6 @@ func testAccBucketInventoryBucketConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 `, name)
 }

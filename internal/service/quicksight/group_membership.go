@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-// @SDKResource("aws_quicksight_group_membership")
+// @SDKResource("aws_quicksight_group_membership", name="Group Membership")
 func ResourceGroupMembership() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupMembershipCreate,

@@ -86,7 +86,7 @@ func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta 
 	name := d.Get("name").(string)
 	input := &ssm.CreateActivationInput{
 		DefaultInstanceName: aws.String(name),
-		IamRole:             aws.String(d.Get("name").(string)),
+		IamRole:             aws.String(d.Get("iam_role").(string)),
 		Tags:                GetTagsIn(ctx),
 	}
 

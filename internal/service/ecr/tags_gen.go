@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists ecr service tags.
@@ -94,18 +95,28 @@ func SetTagsOut(ctx context.Context, tags []*ecr.Tag) {
 	}
 }
 
+// createTags creates ecr service tags for new resources.
+func createTags(ctx context.Context, conn ecriface.ECRAPI, identifier string, tags []*ecr.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return UpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // UpdateTags updates ecr service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn ecriface.ECRAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.ECR)
+	if len(removedTags) > 0 {
 		input := &ecr.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -115,10 +126,12 @@ func UpdateTags(ctx context.Context, conn ecriface.ECRAPI, identifier string, ol
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.ECR)
+	if len(updatedTags) > 0 {
 		input := &ecr.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

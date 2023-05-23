@@ -86,6 +86,53 @@ resource "aws_instance" "foo" {
 }
 ```
 
+### CPU options example
+
+```terraform
+resource "aws_vpc" "example" {
+  cidr_block = "172.16.0.0/16"
+
+  tags = {
+    Name = "tf-example"
+  }
+}
+
+resource "aws_subnet" "example" {
+  vpc_id            = aws_vpc.example.id
+  cidr_block        = "172.16.10.0/24"
+  availability_zone = "us-east-2a"
+
+  tags = {
+    Name = "tf-example"
+  }
+}
+
+data "aws_ami" "amzn-linux-2023-ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-2023.*-x86_64"]
+  }
+}
+
+resource "aws_instance" "example" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = "c6a.2xlarge"
+  subnet_id     = aws_subnet.example.id
+
+  cpu_options {
+    core_count       = 2
+    threads_per_core = 2
+  }
+
+  tags = {
+    Name = "tf-example"
+  }
+}
+```
+
 ### Host resource group or Licence Manager registered AMI example
 
 A host resource group is a collection of Dedicated Hosts that you can manage as a single entity. As you launch instances, License Manager allocates the hosts and launches instances on them based on the settings that you configured. You can add existing Dedicated Hosts to a host resource group and take advantage of automated host management through License Manager.
@@ -113,8 +160,9 @@ The following arguments are supported:
 
 -> **NOTE:** Changing `cpu_core_count` and/or `cpu_threads_per_core` will cause the resource to be destroyed and re-created.
 
-* `cpu_core_count` - (Optional) Sets the number of CPU cores for an instance. This option is only supported on creation of instance type that support CPU Options [CPU Cores and Threads Per CPU Core Per Instance Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html#cpu-options-supported-instances-values) - specifying this option for unsupported instance types will return an error from the EC2 API.
-* `cpu_threads_per_core` - (Optional - has no effect unless `cpu_core_count` is also set)  If set to 1, hyperthreading is disabled on the launched instance. Defaults to 2 if not set. See [Optimizing CPU Options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html) for more information.
+* `cpu_core_count` - (Optional, **Deprecated** use the `cpu_options` argument instead) Sets the number of CPU cores for an instance. This option is only supported on creation of instance type that support CPU Options [CPU Cores and Threads Per CPU Core Per Instance Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html#cpu-options-supported-instances-values) - specifying this option for unsupported instance types will return an error from the EC2 API.
+* `cpu_options` - (Optional) The CPU options for the instance. See [CPU Options](#cpu-options) below for more details.
+* `cpu_threads_per_core` - (Optional - has no effect unless `cpu_core_count` is also set, **Deprecated** use the `cpu_options` argument instead)  If set to 1, hyperthreading is disabled on the launched instance. Defaults to 2 if not set. See [Optimizing CPU Options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html) for more information.
 * `credit_specification` - (Optional) Configuration block for customizing the credit specification of the instance. See [Credit Specification](#credit-specification) below for more details. Terraform will only perform drift detection of its value when present in a configuration. Removing this configuration on existing instances will only stop managing it. It will not change the configuration back to the default for the instance type.
 * `disable_api_stop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html#Using_StopProtection).
 * `disable_api_termination` - (Optional) If true, enables [EC2 Instance Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination).
@@ -183,6 +231,20 @@ This `capacity_reservation_target` block supports the following:
 
 * `capacity_reservation_id` - (Optional) ID of the Capacity Reservation in which to run the instance.
 * `capacity_reservation_resource_group_arn` - (Optional) ARN of the Capacity Reservation resource group in which to run the instance.
+
+### CPU Options
+
+-> **NOTE:** Changing any of `amd_sev_snp`, `core_count`, `threads_per_core` will cause the resource to be destroyed and re-created.
+
+CPU options apply to the instance at launch time.
+
+The `cpu_options` block supports the following:
+
+* `amd_sev_snp` - (Optional) Indicates whether to enable the instance for AMD SEV-SNP. AMD SEV-SNP is supported with M6a, R6a, and C6a instance types only. Valid values are `enabled` and `disabled`.
+* `core_count` - (Optional) Sets the number of CPU cores for an instance. This option is only supported on creation of instance type that support CPU Options [CPU Cores and Threads Per CPU Core Per Instance Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html#cpu-options-supported-instances-values) - specifying this option for unsupported instance types will return an error from the EC2 API.
+* `threads_per_core` - (Optional - has no effect unless `core_count` is also set)  If set to 1, hyperthreading is disabled on the launched instance. Defaults to 2 if not set. See [Optimizing CPU Options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html) for more information.
+
+For more information, see the documentation on [Optimizing CPU options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html).
 
 ### Credit Specification
 

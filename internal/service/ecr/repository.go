@@ -2,12 +2,10 @@ package ecr
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -15,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -23,7 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ecr_repository")
+// @SDKResource("aws_ecr_repository", name="Repository")
+// @Tags(identifierAttribute="arn")
 func ResourceRepository() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryCreate,
@@ -106,27 +105,22 @@ func ResourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-const (
-	ResNameRepository = "Repository"
-)
-
 func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &ecr.CreateRepositoryInput{
 		EncryptionConfiguration: expandRepositoryEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
 		ImageTagMutability:      aws.String(d.Get("image_tag_mutability").(string)),
 		RepositoryName:          aws.String(name),
+		Tags:                    GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("image_scanning_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -136,15 +130,10 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	output, err := conn.CreateRepositoryWithContext(ctx, input)
 
-	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed creating ECR Repository (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
 
 		output, err = conn.CreateRepositoryWithContext(ctx, input)
@@ -156,18 +145,17 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(output.Repository.RepositoryName))
 
-	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if input.Tags == nil && len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
-		err := UpdateTags(ctx, conn, aws.StringValue(output.Repository.RepositoryArn), nil, tags)
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, aws.StringValue(output.Repository.RepositoryArn), tags)
 
-		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed adding tags after create for ECR Repository (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "adding tags after create for ECR Repository (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting ECR Repository (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -177,8 +165,6 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindRepositoryByName(ctx, conn, d.Id())
@@ -189,16 +175,14 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.SetId("")
 		return diags
 	}
+
 	if err != nil {
-		return create.DiagError(names.ECR, create.ErrActionReading, ResNameRepository, d.Id(), err)
-	}
-	if outputRaw == nil {
-		return create.DiagError(names.ECR, create.ErrActionReading, ResNameRepository, d.Id(), errors.New("empty output"))
+		return sdkdiag.AppendErrorf(diags, "reading ECR Repository (%s): %s", d.Id(), err)
 	}
 
 	repository := outputRaw.(*ecr.Repository)
-	arn := aws.StringValue(repository.RepositoryArn)
-	d.Set("arn", arn)
+
+	d.Set("arn", repository.RepositoryArn)
 	if err := d.Set("encryption_configuration", flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
@@ -209,29 +193,6 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("name", repository.RepositoryName)
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed listing tags for ECR Repository (%s): %s", d.Id(), err)
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for ECR Repository (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }
@@ -270,22 +231,6 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting ECR Repository (%s) image scanning configuration: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n)
-
-		// Some partitions may not support tagging, giving error
-		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed updating tags for ECR Repository (%s): %s", d.Id(), err)
-			return append(diags, resourceRepositoryRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating ECR Repository (%s) tags: %s", d.Id(), err)
 		}
 	}
 

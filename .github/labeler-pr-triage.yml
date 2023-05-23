@@ -182,6 +182,12 @@ service/chimesdkmeetings:
 service/chimesdkmessaging:
   - 'internal/service/chimesdkmessaging/**/*'
   - 'website/**/chimesdkmessaging_*'
+service/chimesdkvoice:
+  - 'internal/service/chimesdkvoice/**/*'
+  - 'website/**/chimesdkvoice_*'
+service/cleanrooms:
+  - 'internal/service/cleanrooms/**/*'
+  - 'website/**/cleanrooms_*'
 service/cloud9:
   - 'internal/service/cloud9/**/*'
   - 'website/**/cloud9_*'
@@ -326,6 +332,9 @@ service/dms:
 service/docdb:
   - 'internal/service/docdb/**/*'
   - 'website/**/docdb_*'
+service/docdbelastic:
+  - 'internal/service/docdbelastic/**/*'
+  - 'website/**/docdbelastic_*'
 service/drs:
   - 'internal/service/drs/**/*'
   - 'website/**/drs_*'
@@ -509,6 +518,9 @@ service/inspector:
 service/inspector2:
   - 'internal/service/inspector2/**/*'
   - 'website/**/inspector2_*'
+service/internetmonitor:
+  - 'internal/service/internetmonitor/**/*'
+  - 'website/**/internetmonitor_*'
 service/iot:
   - 'internal/service/iot/**/*'
   - 'website/**/iot_*'

@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_fms_policy")
+// @SDKResource("aws_fms_policy", name="Policy")
+// @Tags(identifierAttribute="arn")
 func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
@@ -153,8 +155,8 @@ func ResourcePolicy() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -162,12 +164,10 @@ func ResourcePolicy() *schema.Resource {
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fms.PutPolicyInput{
 		Policy:  resourcePolicyExpandPolicy(d),
-		TagList: Tags(tags.IgnoreAWS()),
+		TagList: GetTagsIn(ctx),
 	}
 
 	output, err := conn.PutPolicyWithContext(ctx, input)
@@ -184,8 +184,6 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindPolicyByID(ctx, conn, d.Id())
 
@@ -229,22 +227,6 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		sdkdiag.AppendErrorf(diags, "setting security_service_policy_data: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for FMS Policy (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -261,14 +243,6 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FMS Policy (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FMS Policy (%s) tags: %s", d.Id(), err)
 		}
 	}
 

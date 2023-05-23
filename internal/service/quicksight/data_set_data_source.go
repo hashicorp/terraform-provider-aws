@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_quicksight_data_set")
+// @SDKDataSource("aws_quicksight_data_set", name="Data Set")
 func DataSourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataSetRead,
@@ -219,8 +219,14 @@ func DataSourceDataSet() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchemaComputed(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
+			"tags_all": {
+				Type:       schema.TypeMap,
+				Optional:   true,
+				Computed:   true,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Deprecated: `this attribute has been deprecated`,
+			},
 		},
 	}
 }

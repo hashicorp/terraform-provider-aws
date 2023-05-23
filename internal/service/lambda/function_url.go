@@ -100,6 +100,12 @@ func ResourceFunctionURL() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"invoke_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      lambda.InvokeModeBuffered,
+				ValidateFunc: validation.StringInSlice(lambda.InvokeMode_Values(), false),
+			},
 			"qualifier": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -122,6 +128,7 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &lambda.CreateFunctionUrlConfigInput{
 		AuthType:     aws.String(d.Get("authorization_type").(string)),
 		FunctionName: aws.String(name),
+		InvokeMode:   aws.String(d.Get("invoke_mode").(string)),
 	}
 
 	if qualifier != "" {
@@ -203,6 +210,7 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("function_arn", output.FunctionArn)
 	d.Set("function_name", name)
 	d.Set("function_url", functionURL)
+	d.Set("invoke_mode", output.InvokeMode)
 	d.Set("qualifier", qualifier)
 
 	// Function URL endpoints have the following format:
@@ -245,6 +253,10 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 		} else {
 			input.Cors = &lambda.Cors{}
 		}
+	}
+
+	if d.HasChange("invoke_mode") {
+		input.InvokeMode = aws.String(d.Get("invoke_mode").(string))
 	}
 
 	log.Printf("[DEBUG] Updating Lambda Function URL: %s", input)

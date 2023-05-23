@@ -143,8 +143,11 @@ data "aws_vpc" "example" {
   }
 }
 
-data "aws_subnet_ids" "example" {
-  vpc_id = data.aws_vpc.example.id
+data "aws_subnets" "example" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.example.id]
+  }
 
   tags = {
     Tier = "private"
@@ -200,8 +203,8 @@ resource "aws_opensearch_domain" "example" {
 
   vpc_options {
     subnet_ids = [
-      data.aws_subnet_ids.example.ids[0],
-      data.aws_subnet_ids.example.ids[1],
+      data.aws_subnets.example.ids[0],
+      data.aws_subnets.example.ids[1],
     ]
 
     security_group_ids = [aws_security_group.example.id]
@@ -453,7 +456,7 @@ In addition to all arguments above, the following attributes are exported:
 * `domain_name` - Name of the OpenSearch domain.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
 * `dashboard_endpoint` - Domain-specific endpoint for Dashboard without https scheme.
-* `kibana_endpoint` - Domain-specific endpoint for kibana without https scheme. OpenSearch Dashboards do not use Kibana, so this attribute will be **DEPRECATED** in a future version.
+* `kibana_endpoint` - (**Deprecated**) Domain-specific endpoint for kibana without https scheme. Use the `dashboard_endpoint` attribute instead.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_options.0.availability_zones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnet_ids` were created inside.
 * `vpc_options.0.vpc_id` - If the domain was created inside a VPC, the ID of the VPC.

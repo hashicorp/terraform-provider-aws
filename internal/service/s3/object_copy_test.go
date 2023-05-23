@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
@@ -156,7 +156,28 @@ resource "aws_s3_bucket" "target" {
   bucket = %[3]q
 }
 
+resource "aws_s3_bucket_public_access_block" "target" {
+  bucket = aws_s3_bucket.target.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "target" {
+  bucket = aws_s3_bucket.target.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_object_copy" "test" {
+  depends_on = [
+    aws_s3_bucket_public_access_block.target,
+    aws_s3_bucket_ownership_controls.target,
+  ]
+
   bucket = aws_s3_bucket.target.bucket
   key    = %[4]q
   source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"

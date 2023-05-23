@@ -17,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_iot_thing_group")
+// @SDKResource("aws_iot_thing_group", name="Thing Group")
+// @Tags(identifierAttribute="arn")
 func ResourceThingGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThingGroupCreate,
@@ -107,8 +109,8 @@ func ResourceThingGroup() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"version": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -126,11 +128,10 @@ const (
 func resourceThingGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &iot.CreateThingGroupInput{
+		Tags:           GetTagsIn(ctx),
 		ThingGroupName: aws.String(name),
 	}
 
@@ -142,11 +143,6 @@ func resourceThingGroupCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ThingGroupProperties = expandThingGroupProperties(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating IoT Thing Group: %s", input)
 	output, err := conn.CreateThingGroupWithContext(ctx, input)
 
 	if err != nil {
@@ -161,8 +157,6 @@ func resourceThingGroupCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceThingGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindThingGroupByName(ctx, conn, d.Id())
 
@@ -201,22 +195,6 @@ func resourceThingGroupRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set("version", output.Version)
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for IoT Thing Group (%s): %s", d.Get("arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -249,13 +227,6 @@ func resourceThingGroupUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IoT Thing Group (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 

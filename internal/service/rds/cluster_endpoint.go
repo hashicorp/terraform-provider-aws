@@ -106,7 +106,6 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	_, err := conn.CreateDBClusterEndpointWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS Cluster Endpoint (%s): %s", endpointID, err)
 	}
@@ -174,7 +173,6 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		_, err := conn.ModifyDBClusterEndpointWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying RDS Cluster Endpoint (%s): %s", d.Id(), err)
 		}
@@ -191,7 +189,6 @@ func resourceClusterEndpointDelete(ctx context.Context, d *schema.ResourceData, 
 	_, err := conn.DeleteDBClusterEndpointWithContext(ctx, &rds.DeleteDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Id()),
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting RDS Cluster Endpoint (%s): %s", d.Id(), err)
 	}
@@ -209,7 +206,6 @@ func FindDBClusterEndpointByID(ctx context.Context, conn *rds.RDS, id string) (*
 	}
 
 	output, err := conn.DescribeDBClusterEndpointsWithContext(ctx, input)
-
 	if err != nil {
 		return nil, err
 	}

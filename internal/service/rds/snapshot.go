@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -140,7 +141,6 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	output, err := conn.CreateDBSnapshotWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS DB Snapshot (%s): %s", dbSnapshotID, err)
 	}
@@ -159,7 +159,6 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		_, err := conn.ModifyDBSnapshotAttributeWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
 		}
@@ -211,10 +210,12 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	output, err := conn.DescribeDBSnapshotAttributesWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshot (%s) attributes: %s", d.Id(), err)
 	}
 
 	d.Set("shared_accounts", flex.FlattenStringSet(output.DBSnapshotAttributesResult.DBSnapshotAttributes[0].AttributeValues))
+
+	SetTagsOut(ctx, snapshot.TagList)
 
 	return diags
 }
@@ -241,7 +242,7 @@ func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.ModifyDBSnapshotAttributeWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Snapshot (%s) attributes: %s", d.Id(), err)
 		}
 	}
 
@@ -266,4 +267,42 @@ func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return diags
+}
+
+func FindDBSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBSnapshot, error) {
+	input := &rds.DescribeDBSnapshotsInput{
+		DBSnapshotIdentifier: aws.String(id),
+	}
+
+	output, err := conn.DescribeDBSnapshotsWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.DBSnapshots) == 0 || output.DBSnapshots[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.DBSnapshots); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	dbSnapshot := output.DBSnapshots[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbSnapshot.DBSnapshotIdentifier) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return dbSnapshot, nil
 }

@@ -29,6 +29,7 @@ func ResourceDevicePool() *schema.Resource {
 		ReadWithoutTimeout:   resourceDevicePoolRead,
 		UpdateWithoutTimeout: resourceDevicePoolUpdate,
 		DeleteWithoutTimeout: resourceDevicePoolDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -109,20 +110,16 @@ func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.MaxDevices = aws.Int64(int64(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating DeviceFarm DevicePool: %s", name)
-	out, err := conn.CreateDevicePoolWithContext(ctx, input)
+	output, err := conn.CreateDevicePoolWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating DeviceFarm DevicePool: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DeviceFarm Device Pool (%s): %s", name, err)
 	}
 
-	arn := aws.StringValue(out.DevicePool.Arn)
-	log.Printf("[DEBUG] Successsfully Created DeviceFarm DevicePool: %s", arn)
-	d.SetId(arn)
+	d.SetId(aws.StringValue(output.DevicePool.Arn))
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm DevicePool (%s) tags: %s", arn, err)
-		}
+	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Device Pool (%s) tags: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceDevicePoolRead(ctx, d, meta)...)
@@ -135,13 +132,13 @@ func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	devicePool, err := FindDevicePoolByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] DeviceFarm DevicePool (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] DeviceFarm Device Pool (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DeviceFarm DevicePool (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DeviceFarm Device Pool (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(devicePool.Arn)
@@ -193,10 +190,10 @@ func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			}
 		}
 
-		log.Printf("[DEBUG] Updating DeviceFarm DevicePool: %s", d.Id())
 		_, err := conn.UpdateDevicePoolWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error Updating DeviceFarm DevicePool: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Device Pool (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -207,19 +204,17 @@ func resourceDevicePoolDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
-	input := &devicefarm.DeleteDevicePoolInput{
+	log.Printf("[DEBUG] Deleting DeviceFarm Device Pool: %s", d.Id())
+	_, err := conn.DeleteDevicePoolWithContext(ctx, &devicefarm.DeleteDevicePoolInput{
 		Arn: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting DeviceFarm DevicePool: %s", d.Id())
-	_, err := conn.DeleteDevicePoolWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error deleting DeviceFarm DevicePool: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting DeviceFarm Device Pool (%s): %s", d.Id(), err)
 	}
 
 	return diags

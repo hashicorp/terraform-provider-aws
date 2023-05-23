@@ -17,9 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_imagebuilder_container_recipe")
+// @SDKResource("aws_imagebuilder_container_recipe", name="Container Recipe")
+// @Tags(identifierAttribute="id")
 func ResourceContainerRecipe() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerRecipeCreate,
@@ -240,8 +242,8 @@ func ResourceContainerRecipe() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"Linux", "Windows"}, false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target_repository": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -281,11 +283,10 @@ func ResourceContainerRecipe() *schema.Resource {
 func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateContainerRecipeInput{
 		ClientToken: aws.String(id.UniqueId()),
+		Tags:        GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("component"); ok && len(v.([]interface{})) > 0 {
@@ -328,10 +329,6 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 		input.PlatformOverride = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	if v, ok := d.GetOk("target_repository"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.TargetRepository = expandTargetContainerRepository(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -362,8 +359,6 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetContainerRecipeInput{
 		ContainerRecipeArn: aws.String(d.Id()),
@@ -407,15 +402,7 @@ func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("parent_image", containerRecipe.ParentImage)
 	d.Set("platform", containerRecipe.Platform)
 
-	tags := KeyValueTags(ctx, containerRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, containerRecipe.Tags)
 
 	d.Set("target_repository", []interface{}{flattenTargetContainerRepository(containerRecipe.TargetRepository)})
 	d.Set("version", containerRecipe.Version)
@@ -426,15 +413,8 @@ func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceContainerRecipeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Image Builder Container Recipe (%s): %s", d.Id(), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceContainerRecipeRead(ctx, d, meta)...)
 }

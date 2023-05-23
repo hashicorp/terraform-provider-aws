@@ -18,9 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_imagebuilder_image_recipe")
+// @SDKResource("aws_imagebuilder_image_recipe", name="Image Recipe")
+// @Tags(identifierAttribute="id")
 func ResourceImageRecipe() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageRecipeCreate,
@@ -206,8 +208,8 @@ func ResourceImageRecipe() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user_data_base64": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -247,11 +249,10 @@ func ResourceImageRecipe() *schema.Resource {
 func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateImageRecipeInput{
 		ClientToken: aws.String(id.UniqueId()),
+		Tags:        GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("block_device_mapping"); ok && v.(*schema.Set).Len() > 0 {
@@ -278,10 +279,6 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.AdditionalInstanceConfiguration = &imagebuilder.AdditionalInstanceConfiguration{
 			SystemsManagerAgent: expandSystemsManagerAgent(v.([]interface{})[0].(map[string]interface{})),
 		}
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("user_data_base64"); ok {
@@ -316,8 +313,6 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetImageRecipeInput{
 		ImageRecipeArn: aws.String(d.Id()),
@@ -350,16 +345,8 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("owner", imageRecipe.Owner)
 	d.Set("parent_image", imageRecipe.ParentImage)
 	d.Set("platform", imageRecipe.Platform)
-	tags := KeyValueTags(ctx, imageRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, imageRecipe.Tags)
 
 	if imageRecipe.AdditionalInstanceConfiguration != nil {
 		d.Set("systems_manager_agent", []interface{}{flattenSystemsManagerAgent(imageRecipe.AdditionalInstanceConfiguration.SystemsManagerAgent)})
@@ -374,15 +361,8 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceImageRecipeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Image Builder Image Recipe (%s): %s", d.Id(), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceImageRecipeRead(ctx, d, meta)...)
 }

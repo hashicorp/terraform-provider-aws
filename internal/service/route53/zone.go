@@ -162,7 +162,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if err := UpdateTags(ctx, conn, d.Id(), route53.TagResourceTypeHostedzone, nil, KeyValueTags(ctx, GetTagsIn(ctx))); err != nil {
+	if err := createTags(ctx, conn, d.Id(), route53.TagResourceTypeHostedzone, GetTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Zone (%s) tags: %s", d.Id(), err)
 	}
 

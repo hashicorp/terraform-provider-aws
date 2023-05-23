@@ -368,15 +368,15 @@ func StatusProvisionedProduct(ctx context.Context, conn *servicecatalog.ServiceC
 		output, err := conn.DescribeProvisionedProductWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return nil, StatusNotFound, err
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, servicecatalog.StatusFailed, err
+			return nil, "", err
 		}
 
 		if output == nil || output.ProvisionedProductDetail == nil {
-			return nil, StatusNotFound, err
+			return nil, "", nil
 		}
 
 		return output, aws.StringValue(output.ProvisionedProductDetail.Status), err

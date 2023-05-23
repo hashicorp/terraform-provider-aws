@@ -56,7 +56,6 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).RDSConn()
 
 	v, err := FindDBSubnetGroupByName(ctx, conn, d.Get("name").(string))
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("RDS DB Subnet Group", err))
 	}

@@ -3,6 +3,7 @@ package rds
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -25,6 +26,11 @@ func ResourceClusterRoleAssociation() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -80,7 +86,7 @@ func resourceClusterRoleAssociationCreate(ctx context.Context, d *schema.Resourc
 
 	d.SetId(ClusterRoleAssociationCreateResourceID(dbClusterID, roleARN))
 
-	_, err = waitDBClusterRoleAssociationCreated(ctx, conn, dbClusterID, roleARN)
+	_, err = waitDBClusterRoleAssociationCreated(ctx, conn, dbClusterID, roleARN, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Cluster (%s) IAM Role (%s) Association to create: %s", dbClusterID, roleARN, err)
@@ -94,7 +100,6 @@ func resourceClusterRoleAssociationRead(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbClusterID, roleARN, err := ClusterRoleAssociationParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing RDS DB Cluster IAM Role Association ID: %s", err)
 	}
@@ -123,7 +128,6 @@ func resourceClusterRoleAssociationDelete(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbClusterID, roleARN, err := ClusterRoleAssociationParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing RDS DB Cluster IAM Role Association ID: %s", err)
 	}
@@ -145,7 +149,7 @@ func resourceClusterRoleAssociationDelete(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Cluster (%s) IAM Role (%s) Association: %s", dbClusterID, roleARN, err)
 	}
 
-	_, err = waitDBClusterRoleAssociationDeleted(ctx, conn, dbClusterID, roleARN)
+	_, err = waitDBClusterRoleAssociationDeleted(ctx, conn, dbClusterID, roleARN, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Cluster (%s) IAM Role (%s) Association to delete: %s", dbClusterID, roleARN, err)

@@ -11,12 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -127,13 +129,8 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 				MaxItems: 100,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						// TODO: remove attributes marked as Deprecated
-						// as they are not supported by the WAFv2 API
-						// in the context of WebACL Logging Configurations
-						"all_query_arguments": emptyDeprecatedSchema(),
-						"body":                emptyDeprecatedSchema(),
-						"method":              emptySchema(),
-						"query_string":        emptySchema(),
+						"method":       emptySchema(),
+						"query_string": emptySchema(),
 						"single_header": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -152,27 +149,6 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 									},
 								},
 							},
-						},
-						"single_query_argument": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"name": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 30),
-											// The value is returned in lower case by the API.
-											// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-											validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
-										),
-										Deprecated: "Not supported by WAFv2 API",
-									},
-								},
-							},
-							Deprecated: "Not supported by WAFv2 API",
 						},
 						"uri_path": emptySchema(),
 					},
@@ -195,11 +171,10 @@ func resourceWebACLLoggingConfigurationPut(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
-	resourceArn := d.Get("resource_arn").(string)
-
+	resourceARN := d.Get("resource_arn").(string)
 	config := &wafv2.LoggingConfiguration{
 		LogDestinationConfigs: flex.ExpandStringSet(d.Get("log_destination_configs").(*schema.Set)),
-		ResourceArn:           aws.String(resourceArn),
+		ResourceArn:           aws.String(resourceARN),
 	}
 
 	if v, ok := d.GetOk("logging_filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -219,14 +194,12 @@ func resourceWebACLLoggingConfigurationPut(ctx context.Context, d *schema.Resour
 	output, err := conn.PutLoggingConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "putting WAFv2 Logging Configuration for resource (%s): %s", resourceArn, err)
+		return sdkdiag.AppendErrorf(diags, "putting WAFv2 WebACL Logging Configuration (%s): %s", resourceARN, err)
 	}
 
-	if output == nil || output.LoggingConfiguration == nil {
-		return sdkdiag.AppendErrorf(diags, "putting WAFv2 Logging Configuration for resource (%s): empty response", resourceArn)
+	if d.IsNewResource() {
+		d.SetId(aws.StringValue(output.LoggingConfiguration.ResourceArn))
 	}
-
-	d.SetId(aws.StringValue(output.LoggingConfiguration.ResourceArn))
 
 	return append(diags, resourceWebACLLoggingConfigurationRead(ctx, d, meta)...)
 }
@@ -235,45 +208,27 @@ func resourceWebACLLoggingConfigurationRead(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
-	input := &wafv2.GetLoggingConfigurationInput{
-		ResourceArn: aws.String(d.Id()),
-	}
+	loggingConfig, err := FindLoggingConfigurationByARN(ctx, conn, d.Id())
 
-	output, err := conn.GetLoggingConfigurationWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
-		log.Printf("[WARN] WAFv2 Logging Configuration for WebACL with ARN %s not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] WAFv2 WebACL Logging Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading WAFv2 Logging Configuration for resource (%s): %s", d.Id(), err)
+		return diag.Errorf("reading WAFv2 WebACL Logging Configuration (%s): %s", d.Id(), err)
 	}
-
-	if output == nil || output.LoggingConfiguration == nil {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading WAFv2 Logging Configuration for resource (%s): empty response after creation", d.Id())
-		}
-		log.Printf("[WARN] WAFv2 Logging Configuration for WebACL with ARN %s not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	loggingConfig := output.LoggingConfiguration
 
 	if err := d.Set("log_destination_configs", flex.FlattenStringList(loggingConfig.LogDestinationConfigs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting log_destination_configs: %s", err)
 	}
-
 	if err := d.Set("logging_filter", flattenLoggingFilter(loggingConfig.LoggingFilter)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logging_filter: %s", err)
 	}
-
 	if err := d.Set("redacted_fields", flattenRedactedFields(loggingConfig.RedactedFields)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting redacted_fields: %s", err)
 	}
-
 	d.Set("resource_arn", loggingConfig.ResourceArn)
 
 	return diags
@@ -283,21 +238,45 @@ func resourceWebACLLoggingConfigurationDelete(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
-	input := &wafv2.DeleteLoggingConfigurationInput{
+	log.Printf("[INFO] Deleting WAFv2 WebACL Logging Configuration: %s", d.Id())
+	_, err := conn.DeleteLoggingConfigurationWithContext(ctx, &wafv2.DeleteLoggingConfigurationInput{
 		ResourceArn: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteLoggingConfigurationWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting WAFv2 Logging Configuration for resource (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAFv2 WebACL Logging Configuration (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func FindLoggingConfigurationByARN(ctx context.Context, conn *wafv2.WAFV2, arn string) (*wafv2.LoggingConfiguration, error) {
+	input := &wafv2.GetLoggingConfigurationInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	output, err := conn.GetLoggingConfigurationWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.LoggingConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.LoggingConfiguration, nil
 }
 
 func expandLoggingFilter(l []interface{}) *wafv2.LoggingFilter {

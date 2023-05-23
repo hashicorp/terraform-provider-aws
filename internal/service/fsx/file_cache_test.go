@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -25,8 +25,8 @@ func TestAccFSxFileCache_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"FSxFileCache": {
-			"basic":      TestAccFSxFileCache_basic,
-			"disappears": TestAccFSxFileCache_disappears,
+			"basic":      testAccFileCache_basic,
+			"disappears": testAccFileCache_disappears,
 			"kms_key_id": testAccFileCache_kmsKeyID,
 			"copy_tags_to_data_repository_associations": testAccFileCache_copyTagsToDataRepositoryAssociations,
 			"data_repository_association_multiple":      testAccFileCache_dataRepositoryAssociation_multiple,
@@ -40,7 +40,7 @@ func TestAccFSxFileCache_serial(t *testing.T) {
 	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
-func TestAccFSxFileCache_basic(t *testing.T) {
+func testAccFileCache_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -85,7 +85,7 @@ func TestAccFSxFileCache_basic(t *testing.T) {
 	})
 }
 
-func TestAccFSxFileCache_disappears(t *testing.T) {
+func testAccFileCache_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

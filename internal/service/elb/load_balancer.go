@@ -29,9 +29,11 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_elb")
+// @SDKResource("aws_elb", name="Classic Load Balancer")
+// @Tags(identifierAttribute="id")
 func ResourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCreate,
@@ -235,8 +237,8 @@ func ResourceLoadBalancer() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -248,8 +250,6 @@ func ResourceLoadBalancer() *schema.Resource {
 func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var elbName string
 	if v, ok := d.GetOk("name"); ok {
@@ -269,33 +269,30 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "creating ELB Classic Load Balancer (%s): %s", elbName, err)
 	}
 	// Provision the elb
-	elbOpts := &elb.CreateLoadBalancerInput{
+	input := &elb.CreateLoadBalancerInput{
 		LoadBalancerName: aws.String(elbName),
 		Listeners:        listeners,
-	}
-
-	if len(tags) > 0 {
-		elbOpts.Tags = Tags(tags.IgnoreAWS())
+		Tags:             GetTagsIn(ctx),
 	}
 
 	if _, ok := d.GetOk("internal"); ok {
-		elbOpts.Scheme = aws.String("internal")
+		input.Scheme = aws.String("internal")
 	}
 
 	if v, ok := d.GetOk("availability_zones"); ok {
-		elbOpts.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
+		input.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("security_groups"); ok {
-		elbOpts.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
+		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("subnets"); ok {
-		elbOpts.Subnets = flex.ExpandStringSet(v.(*schema.Set))
+		input.Subnets = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
-		return conn.CreateLoadBalancerWithContext(ctx, elbOpts)
+		return conn.CreateLoadBalancerWithContext(ctx, input)
 	}, elb.ErrCodeCertificateNotFoundException)
 
 	if err != nil {
@@ -312,8 +309,6 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	lb, err := FindLoadBalancerByName(ctx, conn, d.Id())
 
@@ -336,14 +331,14 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("arn", arn.String())
 
-	if err := flattenLoadBalancerResource(ctx, d, meta.(*conns.AWSClient).EC2Conn(), conn, lb, ignoreTagsConfig, defaultTagsConfig); err != nil {
+	if err := flattenLoadBalancerResource(ctx, d, meta.(*conns.AWSClient).EC2Conn(), conn, lb); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 	return diags
 }
 
 // flattenLoadBalancerResource takes a *elb.LoadBalancerDescription and populates all respective resource fields.
-func flattenLoadBalancerResource(ctx context.Context, d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *elb.ELB, lb *elb.LoadBalancerDescription, ignoreTagsConfig *tftags.IgnoreConfig, defaultTagsConfig *tftags.DefaultConfig) error {
+func flattenLoadBalancerResource(ctx context.Context, d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *elb.ELB, lb *elb.LoadBalancerDescription) error {
 	describeAttrsOpts := &elb.DescribeLoadBalancerAttributesInput{
 		LoadBalancerName: aws.String(d.Id()),
 	}
@@ -422,23 +417,6 @@ func flattenLoadBalancerResource(ctx context.Context, d *schema.ResourceData, ec
 		case "elb.http.desyncmitigationmode":
 			d.Set("desync_mitigation_mode", attr.Value)
 		}
-	}
-
-	tags, err := ListTags(ctx, elbconn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("listing tags for ELB (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	// There's only one health check, so save that to state as we
@@ -751,14 +729,6 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "Failure adding ELB subnets: %s", err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating ELB(%s) tags: %s", d.Id(), err)
 		}
 	}
 

@@ -329,11 +329,6 @@ func WaitClientVPNNetworkAssociationDeleted(ctx context.Context, conn *ec2.EC2, 
 	return nil, err
 }
 
-const (
-	ClientVPNRouteCreatedTimeout = 1 * time.Minute
-	ClientVPNRouteDeletedTimeout = 1 * time.Minute
-)
-
 func WaitClientVPNRouteCreated(ctx context.Context, conn *ec2.EC2, endpointID, targetSubnetID, destinationCIDR string, timeout time.Duration) (*ec2.ClientVpnRoute, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.ClientVpnRouteStatusCodeCreating},
@@ -738,12 +733,12 @@ func WaitRouteTableDeleted(ctx context.Context, conn *ec2.EC2, id string, timeou
 	return nil, err
 }
 
-func WaitRouteTableAssociationCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.RouteTableAssociationState, error) {
+func WaitRouteTableAssociationCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTableAssociationState, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:        []string{ec2.RouteTableAssociationStateCodeAssociating},
 		Target:         []string{ec2.RouteTableAssociationStateCodeAssociated},
 		Refresh:        StatusRouteTableAssociationState(ctx, conn, id),
-		Timeout:        RouteTableAssociationCreatedTimeout,
+		Timeout:        timeout,
 		NotFoundChecks: RouteTableAssociationCreatedNotFoundChecks,
 	}
 
@@ -760,12 +755,12 @@ func WaitRouteTableAssociationCreated(ctx context.Context, conn *ec2.EC2, id str
 	return nil, err
 }
 
-func WaitRouteTableAssociationDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.RouteTableAssociationState, error) {
+func WaitRouteTableAssociationDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTableAssociationState, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.RouteTableAssociationStateCodeDisassociating, ec2.RouteTableAssociationStateCodeAssociated},
 		Target:  []string{},
 		Refresh: StatusRouteTableAssociationState(ctx, conn, id),
-		Timeout: RouteTableAssociationDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -781,12 +776,12 @@ func WaitRouteTableAssociationDeleted(ctx context.Context, conn *ec2.EC2, id str
 	return nil, err
 }
 
-func WaitRouteTableAssociationUpdated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.RouteTableAssociationState, error) {
+func WaitRouteTableAssociationUpdated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTableAssociationState, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.RouteTableAssociationStateCodeAssociating},
 		Target:  []string{ec2.RouteTableAssociationStateCodeAssociated},
 		Refresh: StatusRouteTableAssociationState(ctx, conn, id),
-		Timeout: RouteTableAssociationUpdatedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -891,6 +886,24 @@ func waitSubnetAssignIPv6AddressOnCreationUpdated(ctx context.Context, conn *ec2
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
 		Refresh:    StatusSubnetAssignIPv6AddressOnCreation(ctx, conn, subnetID),
+		Timeout:    SubnetAttributePropagationTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.Subnet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSubnetEnableLniAtDeviceIndexUpdated(ctx context.Context, conn *ec2.EC2, subnetID string, expectedValue int64) (*ec2.Subnet, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:     []string{strconv.FormatInt(expectedValue, 10)},
+		Refresh:    StatusSubnetEnableLniAtDeviceIndex(ctx, conn, subnetID),
 		Timeout:    SubnetAttributePropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,

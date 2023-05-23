@@ -101,7 +101,6 @@ func resourceProxyDefaultTargetGroupRead(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).RDSConn()
 
 	tg, err := resourceProxyDefaultTargetGroupGet(ctx, conn, d.Id())
-
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 			log.Printf("[WARN] DB Proxy (%s) not found, removing from state", d.Id())
@@ -215,7 +214,6 @@ func resourceProxyDefaultTargetGroupGet(ctx context.Context, conn *rds.RDS, prox
 		}
 		return !lastPage
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +225,6 @@ func resourceProxyDefaultTargetGroupGet(ctx context.Context, conn *rds.RDS, prox
 func resourceProxyDefaultTargetGroupRefreshFunc(ctx context.Context, conn *rds.RDS, proxyName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		tg, err := resourceProxyDefaultTargetGroupGet(ctx, conn, proxyName)
-
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 				return 42, "", nil

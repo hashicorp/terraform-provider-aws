@@ -99,9 +99,8 @@ func ResourceClusterInstance() *schema.Resource {
 			},
 			"engine": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ForceNew:     true,
-				Default:      ClusterEngineAurora,
 				ValidateFunc: validClusterEngine(),
 			},
 			"engine_version": {
@@ -301,7 +300,6 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 			return conn.CreateDBInstanceWithContext(ctx, input)
 		},
 		errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (%s) Instance (%s): %s", clusterID, identifier, err)
 	}
@@ -365,7 +363,6 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	dbc, err := FindDBClusterByID(ctx, conn, dbClusterID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
 	}
@@ -415,6 +412,8 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("storage_encrypted", db.StorageEncrypted)
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
+
+	SetTagsOut(ctx, db.TagList)
 
 	return nil
 }
@@ -490,7 +489,6 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 				return conn.ModifyDBInstanceWithContext(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Instance (%s): %s", d.Id(), err)
 		}

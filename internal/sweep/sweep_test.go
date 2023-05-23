@@ -5,7 +5,7 @@ package sweep_test
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
@@ -80,6 +80,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/healthlake"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
@@ -106,6 +107,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/ram"

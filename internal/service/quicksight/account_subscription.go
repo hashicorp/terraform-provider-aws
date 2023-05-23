@@ -22,7 +22,7 @@ import (
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @SDKResource("aws_quicksight_account_subscription")
+// @SDKResource("aws_quicksight_account_subscription", name="Account Subscription")
 func ResourceAccountSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountSubscriptionCreate,

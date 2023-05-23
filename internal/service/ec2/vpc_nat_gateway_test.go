@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -32,6 +32,7 @@ func TestAccVPCNATGateway_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
 					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
 					resource.TestCheckResourceAttr(resourceName, "connectivity_type", "public"),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
@@ -89,6 +90,7 @@ func TestAccVPCNATGateway_ConnectivityType_private(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "allocation_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "association_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connectivity_type", "private"),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
@@ -123,6 +125,7 @@ func TestAccVPCNATGateway_privateIP(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "allocation_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "association_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connectivity_type", "private"),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
 					resource.TestCheckResourceAttr(resourceName, "private_ip", "10.0.0.8"),

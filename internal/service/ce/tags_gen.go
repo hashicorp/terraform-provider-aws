@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists ce service tags.
@@ -97,15 +98,16 @@ func SetTagsOut(ctx context.Context, tags []*costexplorer.ResourceTag) {
 // UpdateTags updates ce service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn costexploreriface.CostExplorerAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.CE)
+	if len(removedTags) > 0 {
 		input := &costexplorer.UntagResourceInput{
 			ResourceArn:     aws.String(identifier),
-			ResourceTagKeys: aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			ResourceTagKeys: aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -115,10 +117,12 @@ func UpdateTags(ctx context.Context, conn costexploreriface.CostExplorerAPI, ide
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.CE)
+	if len(updatedTags) > 0 {
 		input := &costexplorer.TagResourceInput{
 			ResourceArn:  aws.String(identifier),
-			ResourceTags: Tags(updatedTags.IgnoreAWS()),
+			ResourceTags: Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

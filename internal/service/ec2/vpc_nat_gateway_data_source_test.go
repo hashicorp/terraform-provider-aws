@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -37,6 +37,7 @@ func TestAccVPCNATGatewayDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceNameById, "private_ip"),
 					resource.TestCheckNoResourceAttr(dataSourceNameById, "attached_vpc_id"),
 					resource.TestCheckResourceAttrSet(dataSourceNameById, "tags.OtherTag"),
+					resource.TestCheckResourceAttrPair(dataSourceNameById, "association_id", resourceName, "association_id"),
 				),
 			},
 		},

@@ -45,6 +45,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLoadBalancer,
 			TypeName: "aws_elb",
+			Name:     "Classic Load Balancer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceAttachment,

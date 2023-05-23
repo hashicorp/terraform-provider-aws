@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_fsx_openzfs_snapshot")
+// @SDKResource("aws_fsx_openzfs_snapshot", name="OpenZFS Snapshot")
+// @Tags(identifierAttribute="arn")
 func ResourceOpenzfsSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOpenzfsSnapshotCreate,
@@ -52,8 +54,8 @@ func ResourceOpenzfsSnapshot() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 203),
 			},
-			"tags":     tftags.TagsSchemaComputed(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"volume_id": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -71,17 +73,12 @@ func ResourceOpenzfsSnapshot() *schema.Resource {
 func resourceOpenzfsSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateSnapshotInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		Name:               aws.String(d.Get("name").(string)),
+		Tags:               GetTagsIn(ctx),
 		VolumeId:           aws.String(d.Get("volume_id").(string)),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	result, err := conn.CreateSnapshotWithContext(ctx, input)
@@ -102,8 +99,6 @@ func resourceOpenzfsSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	snapshot, err := FindSnapshotByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -124,37 +119,12 @@ func resourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
 	}
 
-	//Snapshot tags do not get returned with describe call so need to make a separate list tags call
-	tags, tagserr := ListTags(ctx, conn, *snapshot.ResourceARN)
-
-	if tagserr != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Tags for FSx OpenZFS Snapshot (%s): %s", d.Id(), err)
-	} else {
-		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	}
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceOpenzfsSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FSx Snapshot (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateSnapshotInput{

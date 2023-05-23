@@ -17,7 +17,7 @@ jobs:
     env:
       UV_THREADPOOL_SIZE: 128
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
       - uses: YakDriver/md-check-links@9044b7162323b91150cef35355e1a3514564aa82
         with:
           use-quiet-mode: 'yes'
@@ -30,14 +30,14 @@ jobs:
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
       - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb
         with:
           args: 'docs'
   misspell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9
         with:
           go-version-file: go.mod

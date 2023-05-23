@@ -660,7 +660,7 @@ func expandComputeResource(ctx context.Context, tfMap map[string]interface{}) *b
 		apiObject.InstanceTypes = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["launch_template"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["launch_template"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.LaunchTemplate = expandLaunchTemplateSpecification(v[0].(map[string]interface{}))
 	}
 

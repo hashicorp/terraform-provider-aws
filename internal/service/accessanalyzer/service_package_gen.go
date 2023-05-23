@@ -26,7 +26,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAnalyzer,
+			Factory:  resourceAnalyzer,
 			TypeName: "aws_accessanalyzer_analyzer",
 			Name:     "Analyzer",
 			Tags: &types.ServicePackageResourceTags{
@@ -34,7 +34,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceArchiveRule,
+			Factory:  resourceArchiveRule,
 			TypeName: "aws_accessanalyzer_archive_rule",
 		},
 	}

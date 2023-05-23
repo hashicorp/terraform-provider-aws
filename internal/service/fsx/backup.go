@@ -17,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_fsx_backup")
+// @SDKResource("aws_fsx_backup", name="Backup")
+// @Tags(identifierAttribute="arn")
 func ResourceBackup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBackupCreate,
@@ -53,8 +55,8 @@ func ResourceBackup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchemaComputed(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -75,11 +77,10 @@ func ResourceBackup() *schema.Resource {
 func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateBackupInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("file_system_id"); ok {
@@ -96,10 +97,6 @@ func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if input.FileSystemId != nil && input.VolumeId != nil {
 		return sdkdiag.AppendErrorf(diags, "creating FSx Backup: %s", "can only specify either file_system_id or volume_id")
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	result, err := conn.CreateBackupWithContext(ctx, input)
@@ -119,15 +116,8 @@ func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceBackupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FSx Backup (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceBackupRead(ctx, d, meta)...)
 }
@@ -135,8 +125,6 @@ func resourceBackupUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceBackupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	backup, err := FindBackupByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -165,16 +153,7 @@ func resourceBackupRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("volume_id", backup.Volume.VolumeId)
 	}
 
-	tags := KeyValueTags(ctx, backup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, backup.Tags)
 
 	return diags
 }

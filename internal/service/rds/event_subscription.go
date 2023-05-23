@@ -124,7 +124,6 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 	log.Printf("[DEBUG] Creating RDS Event Subscription: %s", input)
 	output, err := conn.CreateEventSubscriptionWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS Event Subscription (%s): %s", name, err)
 	}
@@ -194,7 +193,6 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 
 		log.Printf("[DEBUG] Updating RDS Event Subscription: %s", input)
 		_, err := conn.ModifyEventSubscriptionWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS Event Subscription (%s): %s", d.Id(), err)
 		}
@@ -217,7 +215,6 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 				SourceIdentifier: aws.String(del),
 				SubscriptionName: aws.String(d.Id()),
 			})
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "removing RDS Event Subscription (%s) source ID (%s): %s", d.Id(), del, err)
 			}
@@ -229,7 +226,6 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 				SourceIdentifier: aws.String(add),
 				SubscriptionName: aws.String(d.Id()),
 			})
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "adding RDS Event Subscription (%s) source ID (%s): %s", d.Id(), add, err)
 			}

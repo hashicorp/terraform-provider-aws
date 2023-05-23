@@ -16,10 +16,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// https://docs.aws.amazon.com/iot/latest/apireference/API_CreateThingType.html
-// @SDKResource("aws_iot_thing_type")
+// @SDKResource("aws_iot_thing_type", name="Thing Type")
+// @Tags(identifierAttribute="arn")
 func ResourceThingType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThingTypeCreate,
@@ -73,8 +74,8 @@ func ResourceThingType() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -88,9 +89,9 @@ func ResourceThingType() *schema.Resource {
 func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-	params := &iot.CreateThingTypeInput{
+
+	input := &iot.CreateThingTypeInput{
+		Tags:          GetTagsIn(ctx),
 		ThingTypeName: aws.String(d.Get("name").(string)),
 	}
 
@@ -99,15 +100,11 @@ func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta i
 		config, ok := configs[0].(map[string]interface{})
 
 		if ok && config != nil {
-			params.ThingTypeProperties = expandThingTypeProperties(config)
+			input.ThingTypeProperties = expandThingTypeProperties(config)
 		}
 	}
-	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
-	}
 
-	log.Printf("[DEBUG] Creating IoT Thing Type: %s", params)
-	out, err := conn.CreateThingTypeWithContext(ctx, params)
+	out, err := conn.CreateThingTypeWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IoT Thing Type (%s): %s", d.Get("name").(string), err)
@@ -135,9 +132,6 @@ func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn()
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
 	params := &iot.DescribeThingTypeInput{
 		ThingTypeName: aws.String(d.Id()),
 	}
@@ -156,27 +150,11 @@ func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set("deprecated", out.ThingTypeMetadata.Deprecated)
 	}
 
-	d.Set("arn", out.ThingTypeArn)
-
-	tags, err := ListTags(ctx, conn, aws.StringValue(out.ThingTypeArn))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for IoT Thing Type (%s): %s", aws.StringValue(out.ThingTypeArn), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	if err := d.Set("properties", flattenThingTypeProperties(out.ThingTypeProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting properties: %s", err)
 	}
+
+	d.Set("arn", out.ThingTypeArn)
 
 	return diags
 }
@@ -196,14 +174,6 @@ func resourceThingTypeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IoT Thing Type (%s): deprecating Thing Type: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 

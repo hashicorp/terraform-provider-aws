@@ -165,7 +165,6 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	output, err := conn.CreateDBProxyWithContext(ctx, &input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS DB Proxy: %s", err)
 	}
@@ -234,7 +233,6 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		_, err := conn.ModifyDBProxyWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS DB Proxy (%s): %s", d.Id(), err)
 		}

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -153,7 +153,6 @@ POLICY
   }
 
   cluster_config {
-    instance_type            = "t3.small.search"
     instance_count           = 2
     dedicated_master_enabled = false
 
@@ -276,7 +275,6 @@ POLICY
   }
 
   cluster_config {
-    instance_type            = "t2.small.search"
     instance_count           = 2
     dedicated_master_enabled = false
 

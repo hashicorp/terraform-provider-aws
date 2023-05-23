@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists cloudhsmv2 service tags.
@@ -97,15 +98,16 @@ func SetTagsOut(ctx context.Context, tags []*cloudhsmv2.Tag) {
 // UpdateTags updates cloudhsmv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn cloudhsmv2iface.CloudHSMV2API, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.CloudHSMV2)
+	if len(removedTags) > 0 {
 		input := &cloudhsmv2.UntagResourceInput{
 			ResourceId: aws.String(identifier),
-			TagKeyList: aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeyList: aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -115,10 +117,12 @@ func UpdateTags(ctx context.Context, conn cloudhsmv2iface.CloudHSMV2API, identif
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.CloudHSMV2)
+	if len(updatedTags) > 0 {
 		input := &cloudhsmv2.TagResourceInput{
 			ResourceId: aws.String(identifier),
-			TagList:    Tags(updatedTags.IgnoreAWS()),
+			TagList:    Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

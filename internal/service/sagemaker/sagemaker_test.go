@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -50,8 +50,10 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"sharingSettings":                                        testAccDomain_sharingSettings,
 			"defaultUserSettingsUpdated":                             testAccDomain_defaultUserSettingsUpdated,
 			"canvas":                                                 testAccDomain_canvasAppSettings,
+			"modelRegisterSettings":                                  testAccDomain_modelRegisterSettings,
 			"domainSettings":                                         testAccDomain_domainSettings,
 			"rSessionAppSettings":                                    testAccDomain_rSessionAppSettings,
+			"rStudioServerProAppSettings":                            testAccDomain_rStudioServerProAppSettings,
 			"spaceSettingsKernelGatewayAppSettings":                  testAccDomain_spaceSettingsKernelGatewayAppSettings,
 			"code":                                                   testAccDomain_jupyterServerAppSettings_code,
 		},

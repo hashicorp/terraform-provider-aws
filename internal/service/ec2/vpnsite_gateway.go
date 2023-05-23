@@ -39,7 +39,7 @@ func ResourceVPNGateway() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Computed:     true,
-				ValidateFunc: validAmazonSideASN,
+				ValidateFunc: verify.ValidAmazonSideASN,
 			},
 			"arn": {
 				Type:     schema.TypeString,

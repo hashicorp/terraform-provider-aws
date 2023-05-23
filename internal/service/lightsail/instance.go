@@ -129,11 +129,6 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Default:  "dualstack",
 			},
-			"ipv6_address": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "use `ipv6_addresses` attribute instead",
-			},
 			"ipv6_addresses": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -260,11 +255,6 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
 	d.Set("cpu_count", out.Hardware.CpuCount)
 	d.Set("ram_size", out.Hardware.RamSizeInGb)
-
-	// Deprecated: AWS Go SDK v1.36.25 removed Ipv6Address field
-	if len(out.Ipv6Addresses) > 0 {
-		d.Set("ipv6_address", out.Ipv6Addresses[0])
-	}
 
 	d.Set("ipv6_addresses", aws.StringValueSlice(out.Ipv6Addresses))
 	d.Set("ip_address_type", out.IpAddressType)

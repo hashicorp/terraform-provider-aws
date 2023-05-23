@@ -103,7 +103,6 @@ func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	name := d.Get("name").(string)
 	dbProxy, err := FindDBProxyByName(ctx, conn, name)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy (%s): %s", name, err)
 	}

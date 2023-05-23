@@ -45,7 +45,7 @@ func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	apis, err := FindAPIs(ctx, conn, &apigatewayv2.GetApisInput{})
+	apis, err := findAPIs(ctx, conn, &apigatewayv2.GetApisInput{})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 APIs: %s", err)
@@ -76,4 +76,30 @@ func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	return diags
+}
+
+func findAPIs(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApisInput) ([]*apigatewayv2.Api, error) {
+	var apis []*apigatewayv2.Api
+
+	err := getAPIsPages(ctx, conn, input, func(page *apigatewayv2.GetApisOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, item := range page.Items {
+			if item == nil {
+				continue
+			}
+
+			apis = append(apis, item)
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return apis, nil
 }

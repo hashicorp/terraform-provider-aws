@@ -240,10 +240,8 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.StringValue(output.SnapshotId))
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		if err := CreateTags(ctx, conn, d.Id(), tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting EBS Snapshot Import (%s) tags: %s", d.Id(), err)
-		}
+	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting EBS Snapshot Import (%s) tags: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == ec2.TargetStorageTierArchive {

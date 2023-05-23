@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -23,9 +23,11 @@ import (
 // serializing tests so that we do not hit the lightsail rate limit for distributions
 func TestAccLightsailDistribution_serial(t *testing.T) {
 	t.Parallel()
+
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"distribution": {
 			"basic":                   testAccDistribution_basic,

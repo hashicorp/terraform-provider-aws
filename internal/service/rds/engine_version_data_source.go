@@ -190,7 +190,6 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		}
 		return !lastPage
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS engine versions: %s", err)
 	}

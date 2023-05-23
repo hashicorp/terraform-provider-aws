@@ -189,6 +189,13 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"key_storage_security_standard": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(acmpca.KeyStorageSecurityStandard_Values(), false),
+			},
 			"not_after": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -320,12 +327,6 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			// See https://github.com/hashicorp/terraform-provider-aws/issues/17832 for deprecation / removal status
-			"status": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "The reported value of the \"status\" attribute is often inaccurate. Use the resource's \"enabled\" attribute to explicitly set status.",
-			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
@@ -357,6 +358,10 @@ func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceD
 		IdempotencyToken:                  aws.String(id.UniqueId()),
 		RevocationConfiguration:           expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{})),
 		Tags:                              GetTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("key_storage_security_standard"); ok {
+		input.KeyStorageSecurityStandard = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("usage_mode"); ok {
@@ -402,13 +407,13 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "setting certificate_authority_configuration: %s", err)
 	}
 	d.Set("enabled", (aws.StringValue(certificateAuthority.Status) != acmpca.CertificateAuthorityStatusDisabled))
+	d.Set("key_storage_security_standard", certificateAuthority.KeyStorageSecurityStandard)
 	d.Set("not_after", aws.TimeValue(certificateAuthority.NotAfter).Format(time.RFC3339))
 	d.Set("not_before", aws.TimeValue(certificateAuthority.NotBefore).Format(time.RFC3339))
 	if err := d.Set("revocation_configuration", flattenRevocationConfiguration(certificateAuthority.RevocationConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting revocation_configuration: %s", err)
 	}
 	d.Set("serial", certificateAuthority.Serial)
-	d.Set("status", certificateAuthority.Status)
 	d.Set("type", certificateAuthority.Type)
 	d.Set("usage_mode", certificateAuthority.UsageMode)
 
