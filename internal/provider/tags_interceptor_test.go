@@ -70,7 +70,7 @@ func TestTagsInterceptor(t *testing.T) {
 		interceptor: tags,
 	})
 
-	conn := &conns.AWSClient{
+	conn := &conns.ProviderMeta{
 		ServicePackages: map[string]conns.ServicePackage{
 			"Test": &mockService{},
 		},
@@ -84,7 +84,7 @@ func TestTagsInterceptor(t *testing.T) {
 
 	bootstrapContext := func(ctx context.Context, meta any) context.Context {
 		ctx = conns.NewResourceContext(ctx, "Test", "aws_test")
-		if v, ok := meta.(*conns.AWSClient); ok {
+		if v, ok := meta.(*conns.ProviderMeta); ok {
 			ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
 		}
 
