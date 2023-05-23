@@ -140,6 +140,7 @@ func ResourceDetector() *schema.Resource {
 						},
 						"additional_configuration": {
 							Optional: true,
+							Computed: true,
 							Type:     schema.TypeList,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{

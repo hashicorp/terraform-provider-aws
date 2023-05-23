@@ -364,6 +364,87 @@ func testAccDetector_features_s3_data_events(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateVerify: false,
+			},
+			{
+				Config: testAccDetectorConfig_features_s3_data_events(false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDetectorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.#", "9"),
+					resource.TestCheckResourceAttr(resourceName, "features.0.name", "CLOUD_TRAIL"),
+					resource.TestCheckResourceAttr(resourceName, "features.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.1.name", "DNS_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.1.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.2.name", "FLOW_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.2.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.3.name", "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, "features.3.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.4.name", "EKS_AUDIT_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.4.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.5.name", "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resourceName, "features.5.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.6.name", "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, "features.6.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.name", "EKS_RUNTIME_MONITORING"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.8.name", "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.8.enable", "true"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDetector_features_eks_audit_logs(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_detector.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDetectorConfig_features_eks_audit_logs(true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDetectorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.#", "9"),
+					resource.TestCheckResourceAttr(resourceName, "features.0.name", "CLOUD_TRAIL"),
+					resource.TestCheckResourceAttr(resourceName, "features.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.1.name", "DNS_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.1.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.2.name", "FLOW_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.2.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.3.name", "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, "features.3.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.4.name", "EKS_AUDIT_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.4.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.5.name", "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resourceName, "features.5.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.6.name", "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, "features.6.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.name", "EKS_RUNTIME_MONITORING"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.8.name", "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.8.enable", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
@@ -382,6 +463,241 @@ func testAccDetector_features_s3_data_events(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "features.2.enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "features.3.name", "S3_DATA_EVENTS"),
 					resource.TestCheckResourceAttr(resourceName, "features.3.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.4.name", "EKS_AUDIT_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.4.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.5.name", "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resourceName, "features.5.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.6.name", "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, "features.6.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.name", "EKS_RUNTIME_MONITORING"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.8.name", "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.8.enable", "true"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDetector_features_ebs_malware_protection(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_detector.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDetectorConfig_features_ebs_malware_protection(true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDetectorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.#", "9"),
+					resource.TestCheckResourceAttr(resourceName, "features.0.name", "CLOUD_TRAIL"),
+					resource.TestCheckResourceAttr(resourceName, "features.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.1.name", "DNS_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.1.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.2.name", "FLOW_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.2.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.3.name", "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, "features.3.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.4.name", "EKS_AUDIT_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.4.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.5.name", "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resourceName, "features.5.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.6.name", "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, "features.6.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.name", "EKS_RUNTIME_MONITORING"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.8.name", "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.8.enable", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDetectorConfig_features_ebs_malware_protection(false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDetectorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.#", "9"),
+					resource.TestCheckResourceAttr(resourceName, "features.0.name", "CLOUD_TRAIL"),
+					resource.TestCheckResourceAttr(resourceName, "features.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.1.name", "DNS_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.1.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.2.name", "FLOW_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.2.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.3.name", "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, "features.3.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.4.name", "EKS_AUDIT_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.4.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.5.name", "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resourceName, "features.5.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.6.name", "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, "features.6.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.name", "EKS_RUNTIME_MONITORING"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.8.name", "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.8.enable", "true"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDetector_features_rds_login_events(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_detector.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDetectorConfig_features_rds_login_events(true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDetectorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "features.#", "9"),
+					resource.TestCheckResourceAttr(resourceName, "features.0.name", "CLOUD_TRAIL"),
+					resource.TestCheckResourceAttr(resourceName, "features.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.1.name", "DNS_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.1.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.2.name", "FLOW_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.2.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.3.name", "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, "features.3.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.4.name", "EKS_AUDIT_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.4.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.5.name", "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resourceName, "features.5.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.6.name", "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, "features.6.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.name", "EKS_RUNTIME_MONITORING"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.8.name", "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.8.enable", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDetectorConfig_features_rds_login_events(false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDetectorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "features.#", "9"),
+					resource.TestCheckResourceAttr(resourceName, "features.0.name", "CLOUD_TRAIL"),
+					resource.TestCheckResourceAttr(resourceName, "features.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.1.name", "DNS_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.1.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.2.name", "FLOW_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.2.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.3.name", "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, "features.3.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.4.name", "EKS_AUDIT_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.4.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.5.name", "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resourceName, "features.5.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.6.name", "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, "features.6.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.name", "EKS_RUNTIME_MONITORING"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "features.8.name", "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.8.enable", "true"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDetector_features_eks_runtime_monitoring(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_detector.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDetectorConfig_features_eks_runtime_monitoring(true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDetectorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "features.#", "9"),
+					resource.TestCheckResourceAttr(resourceName, "features.0.name", "CLOUD_TRAIL"),
+					resource.TestCheckResourceAttr(resourceName, "features.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.1.name", "DNS_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.1.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.2.name", "FLOW_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.2.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.3.name", "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, "features.3.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.4.name", "EKS_AUDIT_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.4.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.5.name", "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resourceName, "features.5.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.6.name", "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, "features.6.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.name", "EKS_RUNTIME_MONITORING"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
+					resource.TestCheckResourceAttr(resourceName, "features.7.additional_configuration.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.8.name", "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.8.enable", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDetectorConfig_features_rds_login_events(false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDetectorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "features.#", "9"),
+					resource.TestCheckResourceAttr(resourceName, "features.0.name", "CLOUD_TRAIL"),
+					resource.TestCheckResourceAttr(resourceName, "features.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.1.name", "DNS_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.1.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.2.name", "FLOW_LOGS"),
+					resource.TestCheckResourceAttr(resourceName, "features.2.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "features.3.name", "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, "features.3.enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "features.4.name", "EKS_AUDIT_LOGS"),
 					resource.TestCheckResourceAttr(resourceName, "features.4.enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "features.5.name", "EBS_MALWARE_PROTECTION"),
@@ -570,11 +886,59 @@ func testAccDetectorConfig_datasourcesAll(enableK8s, enableS3, enableMalware boo
 
 func testAccDetectorConfig_features_s3_data_events(enable bool) string {
 	return fmt.Sprintf(`
-resource "aws_guardduty_detector" "test" {
-  features {
-	name = "S3_DATA_EVENTS"
-	enable = %[1]t
-  }
+	resource "aws_guardduty_detector" "test" {
+		features {
+			name = "S3_DATA_EVENTS"
+			enable = %[1]t
+		}
+	}
+	`, enable)
 }
-`, enable)
+
+func testAccDetectorConfig_features_eks_audit_logs(enable bool) string {
+	return fmt.Sprintf(`
+	resource "aws_guardduty_detector" "test" {
+		features {
+			name = "EKS_AUDIT_LOGS"
+			enable = %[1]t
+		}
+	}
+	`, enable)
+}
+
+func testAccDetectorConfig_features_ebs_malware_protection(enable bool) string {
+	return fmt.Sprintf(`
+	resource "aws_guardduty_detector" "test" {
+		features {
+			name = "EBS_MALWARE_PROTECTION"
+			enable = %[1]t
+		}
+	}
+	`, enable)
+}
+
+func testAccDetectorConfig_features_rds_login_events(enable bool) string {
+	return fmt.Sprintf(`
+	resource "aws_guardduty_detector" "test" {
+		features {
+			name = "RDS_LOGIN_EVENTS"
+			enable = %[1]t
+		}
+	}
+	`, enable)
+}
+
+func testAccDetectorConfig_features_eks_runtime_monitoring(enable bool) string {
+	return fmt.Sprintf(`
+	resource "aws_guardduty_detector" "test" {
+		features {
+			name = "EKS_RUNTIME_MONITORING"
+			enable = %[1]t
+			additional_configuration {
+				enable = %[1]t
+				name   = "EKS_ADDON_MANAGEMENT"
+			}
+		}
+	}
+	`, enable)
 }
