@@ -182,3 +182,63 @@ func waitDashboardUpdated(ctx context.Context, conn *quicksight.QuickSight, id s
 
 	return nil, err
 }
+
+func waitAnalysisCreated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Analysis, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{quicksight.ResourceStatusCreationInProgress},
+		Target:                    []string{quicksight.ResourceStatusCreationSuccessful},
+		Refresh:                   statusAnalysis(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*quicksight.Analysis); ok {
+		if status, apiErrors := aws.StringValue(out.Status), out.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
+			var errors *multierror.Error
+
+			for _, apiError := range apiErrors {
+				if apiError == nil {
+					continue
+				}
+				errors = multierror.Append(errors, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
+			}
+			tfresource.SetLastError(err, errors)
+		}
+
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitAnalysisUpdated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Analysis, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{quicksight.ResourceStatusUpdateInProgress, quicksight.ResourceStatusCreationInProgress},
+		Target:                    []string{quicksight.ResourceStatusUpdateSuccessful, quicksight.ResourceStatusCreationSuccessful},
+		Refresh:                   statusAnalysis(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*quicksight.Analysis); ok {
+		if status, apiErrors := aws.StringValue(out.Status), out.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
+			var errors *multierror.Error
+
+			for _, apiError := range apiErrors {
+				if apiError == nil {
+					continue
+				}
+				errors = multierror.Append(errors, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
+			}
+			tfresource.SetLastError(err, errors)
+		}
+
+		return out, err
+	}
+
+	return nil, err
+}

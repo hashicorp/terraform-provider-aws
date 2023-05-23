@@ -62,3 +62,19 @@ func statusDashboard(ctx context.Context, conn *quicksight.QuickSight, id string
 		return out, *out.Version.Status, nil
 	}
 }
+
+// Fetch Analysis status
+func statusAnalysis(ctx context.Context, conn *quicksight.QuickSight, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := FindAnalysisByID(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, *out.Status, nil
+	}
+}
