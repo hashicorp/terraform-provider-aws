@@ -59,14 +59,15 @@ resource "aws_organizations_policy" "test" {
 }
 
 data "aws_organizations_policies" "test" {
-  depends_on=[aws_organizations_policy.test]
-  filter="%s"
+  depends_on = [aws_organizations_policy.test]
+  filter     = "%s"
 }
 
 data "aws_organizations_policy" "test" {
-  depends_on=[aws_organizations_policy.test]
-  policy_id=data.aws_organizations_policies.test.policies[0].id
+  depends_on = [aws_organizations_policy.test]
+  policy_id  = data.aws_organizations_policies.test.policies[0].id
 }
+
 
 `, rName, policyType, strconv.Quote(policyContent), policyType)
 }
