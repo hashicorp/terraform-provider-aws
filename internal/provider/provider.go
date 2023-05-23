@@ -47,10 +47,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Set:           schema.HashString,
 			},
 			"allowed_regions": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				Set:      schema.HashString,
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Set:         schema.HashString,
+				Description: "A list of aws regions that are allowed to be used as a `region` input at the resource level.",
 			},
 			"assume_role":                   assumeRoleSchema(),
 			"assume_role_with_web_identity": assumeRoleWithWebIdentitySchema(),
@@ -396,18 +397,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		return nil, err
 	}
 
-	// Set the provider Meta (instance data) here.
-	// It will be overwritten by the result of the call to ConfigureContextFunc,
-	// but can be used pre-configuration by other (non-primary) provider servers.
-	// var meta *conns.AWSClient
-	// if v, ok := provider.Meta().(*conns.AWSClient); ok {
-	// 	meta = v
-	// } else {
-	// 	meta = new(conns.AWSClient)
-	// }
-	// meta.ServicePackages = servicePackageMap
-	// provider.SetMeta(meta)
-
 	var providerMeta *conns.ProviderMeta
 	if v, ok := provider.Meta().(*conns.ProviderMeta); ok {
 		providerMeta = v
@@ -527,7 +516,6 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	providerMeta.IgnoreTagsConfig = config.IgnoreTagsConfig
 
 	var diags diag.Diagnostics
-
 	if config.Region == "" {
 		providerMeta.Region = endpoints.UsWest2RegionID
 	} else {
@@ -556,7 +544,6 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	}
 
 	for _, region := range providerMeta.AllowedRegions {
-
 		_, ok := providerMeta.AWSClients[region]
 		if !ok {
 			config.Region = region
