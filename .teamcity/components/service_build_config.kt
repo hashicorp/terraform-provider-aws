@@ -93,7 +93,7 @@ class Service(name: String, spec: ServiceSpec) {
                         }
                         buildStarted = false // With the number of tests, this would be too noisy
                         buildFailedToStart = true
-                        buildFailed = true
+                        buildFailed = false // With the current number of faling tests, this would be too noisy
                         buildFinishedSuccessfully = false // With the number of tests, this would be too noisy
                         firstSuccessAfterFailure = true
                         buildProbablyHanging = true
