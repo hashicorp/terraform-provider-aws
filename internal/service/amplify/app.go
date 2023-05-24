@@ -178,6 +178,13 @@ func ResourceApp() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 25000),
 			},
 
+			"custom_headers": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringLenBetween(1, 25000),
+			},
+
 			"custom_rule": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -350,6 +357,10 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.BuildSpec = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("custom_headers"); ok {
+		input.CustomHeaders = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("custom_rule"); ok && len(v.([]interface{})) > 0 {
 		input.CustomRules = expandCustomRules(v.([]interface{}))
 	}
@@ -433,6 +444,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("auto_branch_creation_patterns", aws.StringValueSlice(app.AutoBranchCreationPatterns))
 	d.Set("basic_auth_credentials", app.BasicAuthCredentials)
 	d.Set("build_spec", app.BuildSpec)
+	d.Set("custom_headers", app.CustomHeaders)
 	if err := d.Set("custom_rule", flattenCustomRules(app.CustomRules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting custom_rule: %s", err)
 	}
@@ -493,6 +505,10 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 		if d.HasChange("build_spec") {
 			input.BuildSpec = aws.String(d.Get("build_spec").(string))
+		}
+
+		if d.HasChange("custom_headers") {
+			input.CustomHeaders = aws.String(d.Get("custom_headers").(string))
 		}
 
 		if d.HasChange("custom_rule") {
