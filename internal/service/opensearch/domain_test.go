@@ -1304,14 +1304,14 @@ func TestAccOpenSearchDomain_Encryption_atRestEnable(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_1.1", false),
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_2.5", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckDomainEncrypted(false, &domain1),
 				),
 			},
 			{
-				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_1.1", true),
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_2.5", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckDomainEncrypted(true, &domain2),
@@ -1319,7 +1319,7 @@ func TestAccOpenSearchDomain_Encryption_atRestEnable(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_1.1", false),
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_2.5", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckDomainEncrypted(false, &domain1),
@@ -1413,14 +1413,14 @@ func TestAccOpenSearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_1.1", false),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_2.5", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckNodeToNodeEncrypted(false, &domain1),
 				),
 			},
 			{
-				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_1.1", true),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_2.5", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckNodeToNodeEncrypted(true, &domain2),
@@ -1428,7 +1428,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_1.1", false),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_2.5", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckNodeToNodeEncrypted(false, &domain1),
@@ -3324,8 +3324,6 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
-
-  engine_version = "OpenSearch_1.1"
 
   %[2]s
 
