@@ -325,7 +325,8 @@ Remove `capacity_providers` and `default_capacity_provider_strategy` from config
 
 ## resource/aws_eip
 
-With the retirement of EC2-Classic, the `standard` domain is no longer supported.
+* With the retirement of EC2-Classic, the `standard` domain is no longer supported.
+* The `vpc` argument has been deprecated. Use `domain` argument instead.
 
 ## resource/aws_eip_association
 
