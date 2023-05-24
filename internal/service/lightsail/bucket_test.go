@@ -246,7 +246,6 @@ func testAccCheckBucketExists(ctx context.Context, resourceName string) resource
 
 func testAccCheckBucketDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lightsail_bucket" {
 				continue
