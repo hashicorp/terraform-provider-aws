@@ -1,3 +1,7 @@
 ```release-note:bug
-resource/aws_s3_object: Remove default value for ACL in order to work with S3 buckets that have ACL disabled
+resource/aws_s3_object: Remove `acl` default in order to work with S3 buckets that have ACL disabled
+```
+
+```release-note:bug
+resource/aws_s3_object_copy: Remove `acl` default in order to work with S3 buckets that have ACL disabled
 ```
