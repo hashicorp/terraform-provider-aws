@@ -68,6 +68,8 @@ Upgrade topics:
 - [resource/aws_redshift_security_group](#resourceaws_redshift_security_group)
 - [resource/aws_route](#resourceaws_route)
 - [resource/aws_route_table](#resourceaws_route_table)
+- [resource/aws_s3_object](#resourceaws_s3_object)
+- [resource/aws_s3_object_copy](#resourceaws_s3_object_copy)
 - [resource/aws_secretsmanager_secret](#resourceaws_secretsmanager_secret)
 - [resource/aws_security_group](#resourceaws_security_group)
 - [resource/aws_security_group_rule](#resourceaws_security_group_rule)
@@ -527,6 +529,14 @@ resource "aws_route_table" "example" {
   depends_on = [aws_instance.example]
 }
 ```
+
+## resource/aws_s3_object
+
+The `acl` attribute no longer has a default value. Previously this was set to `private` when omitted. Objects requiring a private ACL should now explicitly set this attribute.
+
+## resource/aws_s3_object_copy
+
+The `acl` attribute no longer has a default value. Previously this was set to `private` when omitted. Object copies requiring a private ACL should now explicitly set this attribute.
 
 ## resource/aws_secretsmanager_secret
 

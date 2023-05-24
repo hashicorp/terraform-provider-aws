@@ -1847,7 +1847,8 @@ resource "aws_s3_object" "object" {
 func testAccObjectConfig_tags(rName, key, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -1875,7 +1876,8 @@ resource "aws_s3_object" "object" {
 func testAccObjectConfig_updatedTags(rName, key, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -1904,7 +1906,8 @@ resource "aws_s3_object" "object" {
 func testAccObjectConfig_noTags(rName, key, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_versioning" "test" {
