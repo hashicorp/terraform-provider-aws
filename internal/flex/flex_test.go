@@ -2,7 +2,6 @@ package flex
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -248,6 +247,7 @@ func TestExpandResourceRegion(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
+		name           string
 		region         interface{}
 		defaultRegion  string
 		allowedRegions []string
@@ -255,6 +255,7 @@ func TestExpandResourceRegion(t *testing.T) {
 		expectedError  error
 	}{
 		{
+			name:           "resourceRegionPositive",
 			region:         "us-east-1",
 			defaultRegion:  "us-west-2",
 			allowedRegions: []string{"us-west-2", "us-east-1"},
@@ -262,6 +263,7 @@ func TestExpandResourceRegion(t *testing.T) {
 			expectedError:  nil,
 		},
 		{
+			name:           "resourceRegionNilPositive",
 			region:         nil,
 			defaultRegion:  "us-west-2",
 			allowedRegions: []string{"us-west-2", "us-east-1"},
@@ -269,6 +271,7 @@ func TestExpandResourceRegion(t *testing.T) {
 			expectedError:  nil,
 		},
 		{
+			name:           "resourceRegionNilNegative",
 			region:         nil,
 			defaultRegion:  "us-west-2",
 			allowedRegions: []string{"us-east-1"},
@@ -276,6 +279,7 @@ func TestExpandResourceRegion(t *testing.T) {
 			expectedError:  fmt.Errorf("provided resource region is not an allowed region in the provider configuration. To deploy to this region, add it to the 'allowed_regions' provider setting, or remove the list of 'allowed_regions' from your provider configuration. Provided region us-west-2, provider allowed regions: [us-east-1]"),
 		},
 		{
+			name:           "resourceRegionNegative",
 			region:         "us-east-1",
 			defaultRegion:  "us-west-2",
 			allowedRegions: []string{"us-west-2", "ap-south-1"},
@@ -284,20 +288,22 @@ func TestExpandResourceRegion(t *testing.T) {
 		},
 	}
 
-	for i, tt := range cases {
-		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			out, err := ExpandResourceRegion(tt.region, tt.allowedRegions, tt.defaultRegion)
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			out, err := ExpandResourceRegion(tc.region, tc.allowedRegions, tc.defaultRegion)
 
-			if tt.expectedError != nil {
-				if err != nil && !strings.Contains(err.Error(), tt.expectedError.Error()) {
-					t.Fatalf("expected = %s, want = %s", tt.expectedError.Error(), err.Error())
-				} else if err != nil && tt.expectedError == nil {
+			if tc.expectedError != nil {
+				if err != nil && !strings.Contains(err.Error(), tc.expectedError.Error()) {
+					t.Fatalf("expected = %s, want = %s", tc.expectedError.Error(), err.Error())
+				} else if err != nil && tc.expectedError == nil {
 					t.Errorf("unexpected error returned: %s", err)
 				}
 			}
 
-			if !cmp.Equal(out, tt.expectedRegion) {
-				t.Errorf("expanded = %s, want = %s", out, tt.expectedRegion)
+			if !cmp.Equal(out, tc.expectedRegion) {
+				t.Errorf("expanded = %s, want = %s", out, tc.expectedRegion)
 			}
 		})
 	}
