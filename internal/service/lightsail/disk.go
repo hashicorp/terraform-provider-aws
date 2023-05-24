@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -72,7 +73,13 @@ func ResourceDisk() *schema.Resource {
 }
 
 func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.ProviderMeta).AWSClients[meta.(*conns.ProviderMeta).Region].LightsailConn()
+	region, err := flex.ExpandResourceRegion(d.Get("region"), meta.(*conns.ProviderMeta).AllowedRegions, meta.(*conns.ProviderMeta).Region)
+
+	if err != nil {
+		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceRegion, ResDisk, d.Get("name").(string), err)
+	}
+
+	conn := meta.(*conns.ProviderMeta).AWSClients[region].LightsailConn()
 
 	id := d.Get("name").(string)
 	in := lightsail.CreateDiskInput{
@@ -100,7 +107,13 @@ func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceDiskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.ProviderMeta).AWSClients[meta.(*conns.ProviderMeta).Region].LightsailConn()
+	region, err := flex.ExpandResourceRegion(d.Get("region"), meta.(*conns.ProviderMeta).AllowedRegions, meta.(*conns.ProviderMeta).Region)
+
+	if err != nil {
+		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceRegion, ResDisk, d.Get("name").(string), err)
+	}
+
+	conn := meta.(*conns.ProviderMeta).AWSClients[region].LightsailConn()
 
 	out, err := FindDiskById(ctx, conn, d.Id())
 
@@ -132,7 +145,13 @@ func resourceDiskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceDiskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.ProviderMeta).AWSClients[meta.(*conns.ProviderMeta).Region].LightsailConn()
+	region, err := flex.ExpandResourceRegion(d.Get("region"), meta.(*conns.ProviderMeta).AllowedRegions, meta.(*conns.ProviderMeta).Region)
+
+	if err != nil {
+		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceRegion, ResDisk, d.Get("name").(string), err)
+	}
+
+	conn := meta.(*conns.ProviderMeta).AWSClients[region].LightsailConn()
 
 	out, err := conn.DeleteDiskWithContext(ctx, &lightsail.DeleteDiskInput{
 		DiskName: aws.String(d.Id()),
