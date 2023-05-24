@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
@@ -65,11 +65,14 @@ func TestAccNetworkFirewallFirewallPolicy_encryptionConfiguration(t *testing.T) 
 		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallPolicyConfig_encryptionConfiguration(rName),
+				Config: testAccFirewallPolicyConfig_encryptionConfiguration(rName, "aws:pass"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_default_actions.*", "aws:pass"),
 				),
 			},
 			{
@@ -85,11 +88,25 @@ func TestAccNetworkFirewallFirewallPolicy_encryptionConfiguration(t *testing.T) 
 				),
 			},
 			{
-				Config: testAccFirewallPolicyConfig_encryptionConfiguration(rName),
+				Config: testAccFirewallPolicyConfig_encryptionConfiguration(rName, "aws:pass"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_default_actions.*", "aws:pass"),
+				),
+			},
+			{
+				Config: testAccFirewallPolicyConfig_encryptionConfiguration(rName, "aws:forward_to_sfe"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_default_actions.*", "aws:forward_to_sfe"),
 				),
 			},
 		},
@@ -1423,7 +1440,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 `, rName))
 }
 
-func testAccFirewallPolicyConfig_encryptionConfiguration(rName string) string {
+func testAccFirewallPolicyConfig_encryptionConfiguration(rName, statelessDefaultActions string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {}
 
@@ -1437,10 +1454,10 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
-    stateless_default_actions          = ["aws:pass"]
+    stateless_default_actions          = [%[2]q]
   }
 }
-`, rName)
+`, rName, statelessDefaultActions)
 }
 
 // The KMS key resource must stay in state while removing encryption configuration. If not

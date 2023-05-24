@@ -98,15 +98,16 @@ func SetTagsOut(ctx context.Context, tags []*neptune.Tag) {
 // UpdateTags updates neptune service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn neptuneiface.NeptuneAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Neptune)
+	if len(removedTags) > 0 {
 		input := &neptune.RemoveTagsFromResourceInput{
 			ResourceName: aws.String(identifier),
-			TagKeys:      aws.StringSlice(removedTags.IgnoreSystem(names.Neptune).Keys()),
+			TagKeys:      aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromResourceWithContext(ctx, input)
@@ -116,10 +117,12 @@ func UpdateTags(ctx context.Context, conn neptuneiface.NeptuneAPI, identifier st
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Neptune)
+	if len(updatedTags) > 0 {
 		input := &neptune.AddTagsToResourceInput{
 			ResourceName: aws.String(identifier),
-			Tags:         Tags(updatedTags.IgnoreSystem(names.Neptune)),
+			Tags:         Tags(updatedTags),
 		}
 
 		_, err := conn.AddTagsToResourceWithContext(ctx, input)

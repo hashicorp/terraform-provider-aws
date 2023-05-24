@@ -112,11 +112,12 @@ func FindCognitoUserPoolClientByName(ctx context.Context, conn *cognitoidentityp
 		return nil, err
 	}
 
-	if err := tfresource.ExpectSingleResult(clientDescs); err != nil {
+	client, err := tfresource.AssertSinglePtrResult(clientDescs)
+	if err != nil {
 		return nil, err
 	}
 
-	return FindCognitoUserPoolClientByID(ctx, conn, userPoolId, aws.StringValue(clientDescs[0].ClientId))
+	return FindCognitoUserPoolClientByID(ctx, conn, userPoolId, aws.StringValue(client.ClientId))
 }
 
 type cognitoUserPoolClientDescriptionNameFilter func(string) (bool, error)

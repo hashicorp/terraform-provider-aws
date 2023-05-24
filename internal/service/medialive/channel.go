@@ -1422,8 +1422,8 @@ func expandChannelDestinations(tfList []interface{}) []types.OutputDestination {
 		if v, ok := m["id"].(string); ok {
 			d.Id = aws.String(v)
 		}
-		if v, ok := m["media_package_settings"].([]interface{}); ok && len(v) > 0 {
-			d.MediaPackageSettings = expandChannelDestinationsMediaPackageSettings(v)
+		if v, ok := m["media_package_settings"].(*schema.Set); ok && v.Len() > 0 {
+			d.MediaPackageSettings = expandChannelDestinationsMediaPackageSettings(v.List())
 		}
 		if v, ok := m["multiplex_settings"].([]interface{}); ok && len(v) > 0 {
 			d.MultiplexSettings = expandChannelDestinationsMultiplexSettings(v)

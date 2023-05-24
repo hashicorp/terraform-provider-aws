@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_inspector2_enabler: Correctly supports `LAMBDA` resource scanning
+```
+
+```release-note:bug
+resource/aws_inspector2_enabler: No longer calls `Disable` API for status checking
+```
+
+```release-note:bug
+resource/aws_inspector2_enabler: Correctly supports multiple accounts
+```

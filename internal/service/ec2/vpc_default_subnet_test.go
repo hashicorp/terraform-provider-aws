@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -100,6 +100,7 @@ func testAccDefaultSubnet_Existing_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", "true"),
@@ -172,6 +173,7 @@ func testAccDefaultSubnet_Existing_ipv6(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", "true"),
@@ -218,6 +220,7 @@ func testAccDefaultSubnet_Existing_privateDNSNameOptionsOnLaunch(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", "true"),
@@ -264,6 +267,7 @@ func testAccDefaultSubnet_NotFound_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", "false"),
@@ -309,6 +313,7 @@ func testAccDefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", "false"),

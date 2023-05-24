@@ -4,7 +4,6 @@ package autoscaling
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
@@ -115,27 +114,6 @@ func ListOfMap(tags tftags.KeyValueTags) []any {
 	return result
 }
 
-// ListOfStringMap returns a list of autoscaling tags in flattened map of only string values.
-//
-// Compatible with setting Terraform state for legacy []map[string]string schema.
-// Deprecated: Will be removed in a future major version without replacement.
-func ListOfStringMap(tags tftags.KeyValueTags) []any {
-	var result []any
-
-	for _, key := range tags.Keys() {
-		m := map[string]string{
-			"key":   key,
-			"value": aws.StringValue(tags.KeyValue(key)),
-
-			"propagate_at_launch": strconv.FormatBool(aws.BoolValue(tags.KeyAdditionalBoolValue(key, "PropagateAtLaunch"))),
-		}
-
-		result = append(result, m)
-	}
-
-	return result
-}
-
 // Tags returns autoscaling service tags.
 func Tags(tags tftags.KeyValueTags) []*autoscaling.Tag {
 	var result []*autoscaling.Tag
@@ -228,12 +206,6 @@ func KeyValueTags(ctx context.Context, tags any, identifier, resourceType string
 				tagData.AdditionalBoolFields["PropagateAtLaunch"] = &v
 			}
 
-			// Deprecated: Legacy map handling
-			if v, ok := tfMap["propagate_at_launch"].(string); ok {
-				b, _ := strconv.ParseBool(v)
-				tagData.AdditionalBoolFields["PropagateAtLaunch"] = &b
-			}
-
 			tagData.AdditionalStringFields = make(map[string]*string)
 			tagData.AdditionalStringFields["ResourceId"] = &identifier
 			tagData.AdditionalStringFields["ResourceType"] = &resourceType
@@ -273,9 +245,11 @@ func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, ident
 	oldTags := KeyValueTags(ctx, oldTagsSet, identifier, resourceType)
 	newTags := KeyValueTags(ctx, newTagsSet, identifier, resourceType)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.AutoScaling)
+	if len(removedTags) > 0 {
 		input := &autoscaling.DeleteTagsInput{
-			Tags: Tags(removedTags.IgnoreSystem(names.AutoScaling)),
+			Tags: Tags(removedTags),
 		}
 
 		_, err := conn.DeleteTagsWithContext(ctx, input)
@@ -285,9 +259,11 @@ func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, ident
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.AutoScaling)
+	if len(updatedTags) > 0 {
 		input := &autoscaling.CreateOrUpdateTagsInput{
-			Tags: Tags(updatedTags.IgnoreSystem(names.AutoScaling)),
+			Tags: Tags(updatedTags),
 		}
 
 		_, err := conn.CreateOrUpdateTagsWithContext(ctx, input)

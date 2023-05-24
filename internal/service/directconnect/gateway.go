@@ -3,7 +3,6 @@ package directconnect
 import (
 	"context"
 	"log"
-	"regexp"
 	"strconv"
 	"time"
 
@@ -12,7 +11,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -39,9 +37,8 @@ func ResourceGateway() *schema.Resource {
 				ValidateFunc: verify.ValidAmazonSideASN,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z0-9-]{1,100}$`), "Name must contain no more than 100 characters. Valid characters are a-z, 0-9, and hyphens (–)."),
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"owner_account_id": {
 				Type:     schema.TypeString,

@@ -82,7 +82,10 @@ import (
 {{- end }}
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @SDKResource("{{ .ProviderResourceName }}")
+// @SDKResource("{{ .ProviderResourceName }}", name="{{ .HumanResourceName }}")
+// Tagging annotations are used for "transparent tagging".
+// Change the "identifierAttribute" value to the name of the attribute used in ListTags and UpdateTags calls (e.g. "arn").
+// @Tags(identifierAttribute="id")
 func Resource{{ .Resource }}() *schema.Resource {
 	return &schema.Resource{
 		{{- if .IncludeComments }}
@@ -189,8 +192,8 @@ func Resource{{ .Resource }}() *schema.Resource {
 					},
 				},
 			},
-			"tags":         tftags.TagsSchema(), {{- if .IncludeComments }} // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.{{- end }}
-			"tags_all":     tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(), {{- if .IncludeComments }} // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.{{- end }}
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -231,6 +234,13 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 		{{- end }}
 		{{ .Resource }}Name: aws.String(d.Get("name").(string)),
 		{{ .Resource }}Type: aws.String(d.Get("type").(string)),
+		{{ if .IncludeComments }}
+		// TIP: Not all resources support tags and tags don't always make sense. If
+		// your resource doesn't need tags, you can remove the tags lines here and
+		// below. Many resources do include tags so this a reminder to include them
+		// where possible.
+		{{- end }}
+		Tags: GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("max_size"); ok {
@@ -247,18 +257,7 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 		{{- end }}
 		in.ComplexArguments = expandComplexArguments(v.([]interface{}))
 	}
-	{{ if .IncludeComments }}
-	// TIP: Not all resources support tags and tags don't always make sense. If
-	// your resource doesn't need tags, you can remove the tags lines here and
-	// below. Many resources do include tags so this a reminder to include them
-	// where possible.
-	{{- end }}
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
-	}
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Call the AWS create function
 	{{- end }}
@@ -371,34 +370,7 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.Set("policy", p)
-	{{ if .IncludeComments }}
-	// TIP: -- 5. Set the tags
-	//
-	// TIP: Not all resources support tags and tags don't always make sense. If
-	// your resource doesn't need tags, you can remove the tags lines here and
-	// below. Many resources do include tags so this a reminder to include them
-	// where possible.
-	{{- end }}
-	{{- if .AWSGoSDKV2 }}
-	tags, err := ListTags(ctx, conn, d.Id())
-	{{- else }}
-	tags, err := ListTagsWithContext(ctx, conn, d.Id())
-	{{- end }}
-	if err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionReading, ResName{{ .Resource }}, d.Id(), err)
-	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)
-	}
 	{{ if .IncludeComments }}
 	// TIP: -- 6. Return nil
 	{{- end }}

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -160,6 +160,22 @@ func ResourceRole() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"role_last_used": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"region": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"last_used_date": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"unique_id": {
@@ -187,12 +203,11 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-	tags := GetTagsIn(ctx)
 	input := &iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(assumeRolePolicy),
 		Path:                     aws.String(d.Get("path").(string)),
 		RoleName:                 aws.String(name),
-		Tags:                     tags,
+		Tags:                     GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -209,9 +224,8 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	output, err := retryCreateRole(ctx, conn, input)
 
-	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed creating IAM Role (%s) with tags: %s. Trying create without tags.", name, err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
 
 		output, err = retryCreateRole(ctx, conn, input)
@@ -239,18 +253,17 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(roleName)
 
-	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if input.Tags == nil && len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
-		err := roleUpdateTags(ctx, conn, d.Id(), nil, KeyValueTags(ctx, tags))
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := roleCreateTags(ctx, conn, d.Id(), tags)
 
-		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed adding tags after create for IAM Role (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return append(diags, resourceRoleRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "adding tags after create for IAM Role (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting IAM Role (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -309,6 +322,10 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	inlinePolicies, err := readRoleInlinePolicies(ctx, aws.StringValue(role.RoleName), meta)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading inline policies for IAM role %s, error: %s", d.Id(), err)
+	}
+
+	if err := d.Set("role_last_used", flattenRoleLastUsed(role.RoleLastUsed)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting role_last_used: %s", err)
 	}
 
 	var configPoliciesList []*iam.PutRolePolicyInput
@@ -489,9 +506,8 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		err := roleUpdateTags(ctx, conn, d.Id(), o, n)
 
-		// Some partitions may not support tagging, giving error
-		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed updating tags for IAM Role %s: %s", d.Id(), err)
+		// Some partitions (e.g. ISO) may not support tagging.
+		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return append(diags, resourceRoleRead(ctx, d, meta)...)
 		}
 
@@ -634,6 +650,31 @@ func retryCreateRole(ctx context.Context, conn *iam.IAM, input *iam.CreateRoleIn
 	return output, err
 }
 
+func FindRoleByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Role, error) {
+	input := &iam.GetRoleInput{
+		RoleName: aws.String(name),
+	}
+
+	output, err := conn.GetRoleWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Role == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Role, nil
+}
+
 func readRolePolicyAttachments(ctx context.Context, conn *iam.IAM, roleName string) ([]*string, error) {
 	managedPolicies := make([]*string, 0)
 	input := &iam.ListAttachedRolePoliciesInput{
@@ -711,6 +752,21 @@ func deleteRoleInlinePolicies(ctx context.Context, conn *iam.IAM, roleName strin
 	}
 
 	return nil
+}
+
+func flattenRoleLastUsed(apiObject *iam.RoleLastUsed) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"region": aws.StringValue(apiObject.Region),
+	}
+
+	if apiObject.LastUsedDate != nil {
+		tfMap["last_used_date"] = apiObject.LastUsedDate.Format(time.RFC3339)
+	}
+	return []interface{}{tfMap}
 }
 
 func flattenRoleInlinePolicy(apiObject *iam.PutRolePolicyInput) map[string]interface{} {

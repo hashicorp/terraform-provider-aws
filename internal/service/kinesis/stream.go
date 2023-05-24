@@ -241,10 +241,8 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		if err := UpdateTags(ctx, conn, name, nil, tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "adding Kinesis Stream (%s) tags: %s", name, err)
-		}
+	if err := createTags(ctx, conn, name, GetTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Kinesis Stream (%s) tags: %s", name, err)
 	}
 
 	return append(diags, resourceStreamRead(ctx, d, meta)...)
