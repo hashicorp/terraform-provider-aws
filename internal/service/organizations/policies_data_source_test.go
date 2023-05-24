@@ -17,6 +17,7 @@ func TestAccOrganizationsPoliciesDataSource_basic(t *testing.T) {
 	datasourceServiceControlPolicy := "data.aws_organizations_policy.test"
 	dataSourceServiceControlPolicies := "data.aws_organizations_policies.test"
 
+	//Setting prefix and scp policy content
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	serviceControlPolicyContent := `{"Version": "2012-10-17", "Statement": { "Effect": "Deny", "Action": "*", "Resource": "*"}}`
 
