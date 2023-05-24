@@ -129,8 +129,8 @@ github.com/aws/aws-sdk-go-v2/service/xray v1.16.11 h1:mYQ9hVlxQgd37r8evKvCUo+ny3
 github.com/aws/aws-sdk-go-v2/service/xray v1.16.11/go.mod h1:EK5gjZWl5j6ttgiEaU++Y63VQ0TjiCWkl9wd0S+MjNM=
 github.com/aws/smithy-go v1.13.5 h1:hgz0X/DX0dGqTYpGALqXJoRKRj5oQ7150i5FdTePzO8=
 github.com/aws/smithy-go v1.13.5/go.mod h1:Tg+OJXh4MB2R/uN61Ko2f6hTZwB/ZYGOtib8J3gBHzA=
-github.com/beevik/etree v1.1.4 h1:34PFKrJczQ1qXVC4QCqvY0Iz7m3xu89OShTjYRl4Nbk=
-github.com/beevik/etree v1.1.4/go.mod h1:aiPf89g/1k3AShMVAzriilpcE4R/Vuor90y83zVZWFc=
+github.com/beevik/etree v1.2.0 h1:l7WETslUG/T+xOPs47dtd6jov2Ii/8/OjCldk5fYfQw=
+github.com/beevik/etree v1.2.0/go.mod h1:aiPf89g/1k3AShMVAzriilpcE4R/Vuor90y83zVZWFc=
 github.com/bgentry/speakeasy v0.1.0 h1:ByYyxL9InA1OWqxJqqp2A5pYHUrCiAL6K3J+LKSsQkY=
 github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
 github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc h1:biVzkmvwrH8WK8raXaxBx6fRVTlJILwEwQGL1I/ByEI=
