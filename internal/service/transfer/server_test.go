@@ -1284,7 +1284,7 @@ resource "aws_default_security_group" "test" {
 resource "aws_eip" "test" {
   count = 2
 
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q

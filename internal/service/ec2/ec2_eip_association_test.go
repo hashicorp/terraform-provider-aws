@@ -226,7 +226,7 @@ resource "aws_instance" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -269,7 +269,7 @@ resource "aws_instance" "test" {
 resource "aws_eip" "test" {
   count = 2
 
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -307,7 +307,7 @@ resource "aws_network_interface" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -364,7 +364,7 @@ resource "aws_ec2_tag" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q

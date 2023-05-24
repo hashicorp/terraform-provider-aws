@@ -762,7 +762,7 @@ resource "aws_eip" "test" {
 func testAccEIPConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     %[1]q = %[2]q

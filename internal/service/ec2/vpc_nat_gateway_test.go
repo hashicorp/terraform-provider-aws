@@ -277,7 +277,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
