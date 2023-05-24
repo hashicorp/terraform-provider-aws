@@ -2345,7 +2345,7 @@ func TestBucketRegionalDomainName(t *testing.T) {
 		{
 			Region:           endpoints.UsEast1RegionID,
 			ExpectedErrCount: 0,
-			ExpectedOutput:   bucket + ".s3.amazonaws.com",
+			ExpectedOutput:   bucket + fmt.Sprintf(".s3.%s.%s", endpoints.UsEast1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
 			Region:           endpoints.UsWest2RegionID,
