@@ -291,7 +291,7 @@ func ResourceIdPartCount(id string) int {
 // Takes an interface that contains region as a string value, a list of allowed regions, and a default Region
 // Returns a string of the region name to be used for the connection and an error if there is an issue returning the region
 func ExpandResourceRegion(r interface{}, allowedRegions []string, defaultRegion string) (region string, err error) {
-	if r != nil {
+	if r != nil && r.(string) != "" {
 		region = r.(string)
 	} else {
 		region = defaultRegion
