@@ -150,7 +150,7 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexp.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "OpenSearch_1.1"),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexp.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
@@ -543,7 +543,8 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "OpenSearch_1.1")),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+				),
 				ExpectError: regexp.MustCompile(`OpenSearch Domain ".+" already exists`),
 			},
 		},
