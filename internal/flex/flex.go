@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -285,4 +286,20 @@ func StringToBoolValue(v *string) bool {
 func ResourceIdPartCount(id string) int {
 	idParts := strings.Split(id, ResourceIdSeparator)
 	return len(idParts)
+}
+
+// Takes an interface that contains region as a string value, a list of allowed regions, and a default Region
+// Returns a string of the region name to be used for the connection and an error if there is an issue returning the region
+func ExpandResourceRegion(r interface{}, allowedRegions []string, defaultRegion string) (region string, err error) {
+	if r != nil {
+		region = r.(string)
+	} else {
+		region = defaultRegion
+	}
+
+	if !slices.Contains(allowedRegions, region) {
+		return "", fmt.Errorf("provided resource region is not an allowed region in the provider configuration. To deploy to this region, add it to the 'allowed_regions' provider setting, or remove the list of 'allowed_regions' from your provider configuration. Provided region %s, provider allowed regions: %v", region, allowedRegions)
+	}
+
+	return region, nil
 }
