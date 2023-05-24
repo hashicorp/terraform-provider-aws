@@ -27,3 +27,4 @@ In addition to all arguments above, the following attributes are exported:
 * `finding_publishing_frequency` - The frequency of notifications sent about subsequent finding occurrences.
 * `service_role_arn` - Service-linked role that grants GuardDuty access to the resources in the AWS account.
 * `status` - Current status of the detector.
+* `features` - Current configuration of the detector features.

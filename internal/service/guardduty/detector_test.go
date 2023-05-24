@@ -839,114 +839,114 @@ resource "aws_guardduty_detector" "test" {
 
 func testAccDetectorConfig_datasourcesKubernetesAuditLogs(enable bool) string {
 	return fmt.Sprintf(`
-	resource "aws_guardduty_detector" "test" {
-		datasources {
-			kubernetes {
-				audit_logs {
-					enable = %[1]t
-				}
-			}
-		}
-	}
-	`, enable)
+resource "aws_guardduty_detector" "test" {
+  datasources {
+    kubernetes {
+      audit_logs {
+        enable = %[1]t
+      }
+    }
+  }
+}
+`, enable)
 }
 
 func testAccDetectorConfig_datasourcesMalwareProtection(enable bool) string {
 	return fmt.Sprintf(`
-	resource "aws_guardduty_detector" "test" {
-		datasources {
-			malware_protection {
-				scan_ec2_instance_with_findings {
-					ebs_volumes {
-						enable = %[1]t
-					}
-				}
-			}
-		}
-	}
-	`, enable)
+resource "aws_guardduty_detector" "test" {
+  datasources {
+    malware_protection {
+      scan_ec2_instance_with_findings {
+        ebs_volumes {
+          enable = %[1]t
+        }
+      }
+    }
+  }
+}
+`, enable)
 }
 
 func testAccDetectorConfig_datasourcesAll(enableK8s, enableS3, enableMalware bool) string {
 	return fmt.Sprintf(`
-	resource "aws_guardduty_detector" "test" {
-		datasources {
-			kubernetes {
-				audit_logs {
-					enable = %[1]t
-				}
-			}
-			s3_logs {
-				enable = %[2]t
-			}
-			
-			malware_protection {
-				scan_ec2_instance_with_findings {
-					ebs_volumes {
-						enable = %[3]t
-					}
-				}
-			}
-		}
-	}
-	`, enableK8s, enableS3, enableMalware)
+resource "aws_guardduty_detector" "test" {
+  datasources {
+    kubernetes {
+      audit_logs {
+        enable = %[1]t
+      }
+    }
+    s3_logs {
+      enable = %[2]t
+    }
+
+    malware_protection {
+      scan_ec2_instance_with_findings {
+        ebs_volumes {
+          enable = %[3]t
+        }
+      }
+    }
+  }
+}
+`, enableK8s, enableS3, enableMalware)
 }
 
 func testAccDetectorConfig_features_s3_data_events(enable bool) string {
 	return fmt.Sprintf(`
-	resource "aws_guardduty_detector" "test" {
-		features {
-			name = "S3_DATA_EVENTS"
-			enable = %[1]t
-		}
-	}
-	`, enable)
+resource "aws_guardduty_detector" "test" {
+  features {
+    name   = "S3_DATA_EVENTS"
+    enable = %[1]t
+  }
+}
+`, enable)
 }
 
 func testAccDetectorConfig_features_eks_audit_logs(enable bool) string {
 	return fmt.Sprintf(`
-	resource "aws_guardduty_detector" "test" {
-		features {
-			name = "EKS_AUDIT_LOGS"
-			enable = %[1]t
-		}
-	}
-	`, enable)
+resource "aws_guardduty_detector" "test" {
+  features {
+    name   = "EKS_AUDIT_LOGS"
+    enable = %[1]t
+  }
+}
+`, enable)
 }
 
 func testAccDetectorConfig_features_ebs_malware_protection(enable bool) string {
 	return fmt.Sprintf(`
-	resource "aws_guardduty_detector" "test" {
-		features {
-			name = "EBS_MALWARE_PROTECTION"
-			enable = %[1]t
-		}
-	}
-	`, enable)
+resource "aws_guardduty_detector" "test" {
+  features {
+    name   = "EBS_MALWARE_PROTECTION"
+    enable = %[1]t
+  }
+}
+`, enable)
 }
 
 func testAccDetectorConfig_features_rds_login_events(enable bool) string {
 	return fmt.Sprintf(`
-	resource "aws_guardduty_detector" "test" {
-		features {
-			name = "RDS_LOGIN_EVENTS"
-			enable = %[1]t
-		}
-	}
-	`, enable)
+resource "aws_guardduty_detector" "test" {
+  features {
+    name   = "RDS_LOGIN_EVENTS"
+    enable = %[1]t
+  }
+}
+`, enable)
 }
 
 func testAccDetectorConfig_features_eks_runtime_monitoring(enable bool) string {
 	return fmt.Sprintf(`
-	resource "aws_guardduty_detector" "test" {
-		features {
-			name = "EKS_RUNTIME_MONITORING"
-			enable = %[1]t
-			additional_configuration {
-				enable = %[1]t
-				name   = "EKS_ADDON_MANAGEMENT"
-			}
-		}
-	}
-	`, enable)
+resource "aws_guardduty_detector" "test" {
+  features {
+    name   = "EKS_RUNTIME_MONITORING"
+    enable = %[1]t
+    additional_configuration {
+      name   = "EKS_ADDON_MANAGEMENT"
+      enable = %[1]t
+    }
+  }
+}
+`, enable)
 }

@@ -18,21 +18,27 @@ Provides a resource to manage a GuardDuty detector.
 resource "aws_guardduty_detector" "MyDetector" {
   enable = true
 
-  datasources {
-    s3_logs {
+  features {
+    name   = "S3_DATA_EVENTS"
+    enable = true
+  }
+
+  features {
+    name   = "EKS_AUDIT_LOGS"
+    enable = false
+  }
+
+  features {
+    name   = "EBS_MALWARE_PROTECTION"
+    enable = true
+  }
+
+  features {
+    name   = "EKS_RUNTIME_MONITORING"
+    enable = true
+    aditional_configuration {
+      name   = "EKS_ADDON_MANAGEMENT"
       enable = true
-    }
-    kubernetes {
-      audit_logs {
-        enable = false
-      }
-    }
-    malware_protection {
-      scan_ec2_instance_with_findings {
-        ebs_volumes {
-          enable = true
-        }
-      }
     }
   }
 }
@@ -44,7 +50,8 @@ The following arguments are supported:
 
 * `enable` - (Optional) Enable monitoring and feedback reporting. Setting to `false` is equivalent to "suspending" GuardDuty. Defaults to `true`.
 * `finding_publishing_frequency` - (Optional) Specifies the frequency of notifications sent for subsequent finding occurrences. If the detector is a GuardDuty member account, the value is determined by the GuardDuty primary account and cannot be modified, otherwise defaults to `SIX_HOURS`. For standalone and GuardDuty primary accounts, it must be configured in Terraform to enable drift detection. Valid values for standalone and primary accounts: `FIFTEEN_MINUTES`, `ONE_HOUR`, `SIX_HOURS`. See [AWS Documentation](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings_cloudwatch.html#guardduty_findings_cloudwatch_notification_frequency) for more information.
-* `datasources` - (Optional) Describes which data sources will be enabled for the detector. See [Data Sources](#data-sources) below for more details.
+* `datasources` - (Optional) Describes which data sources will be enabled for the detector. See [Data Sources](#data-sources) below for more details. [Deprecated](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html) in favor of `features`.
+* `features` - (Optional) Describes which features will be enabled for the detector. See [Features](#features) below for more details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Data Sources
@@ -57,6 +64,8 @@ The `datasources` block supports the following:
   See [Kubernetes](#kubernetes) and [Kubernetes Audit Logs](#kubernetes-audit-logs) below for more details.
 * `malware_protection` - (Optional) Configures [Malware Protection](https://docs.aws.amazon.com/guardduty/latest/ug/malware-protection.html).
   See [Malware Protection](#malware-protection), [Scan EC2 instance with findings](#scan-ec2-instance-with-findings) and [EBS volumes](#ebs-volumes) below for more details.
+
+The `datasources` block is deprecated since March 2023. Use the `features` block instead and [map each `datasources` block to the corresponding `features` block](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html#guardduty-feature-enablement-datasource-relation).
 
 ### S3 Logs
 
@@ -99,6 +108,21 @@ The `ebs_volumes` block supports the following:
 
 * `enable` - (Required) If true, enables [Malware Protection](https://docs.aws.amazon.com/guardduty/latest/ug/malware-protection.html) as data source for the detector.
   Defaults to `true`.
+
+### Features
+
+The `features` block supports the following:
+
+* `name` - (Required) Name of the feature to configure. See the [AWS GuardDuty documentation](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html#guardduty-feature-enablement-datasource-relation) for the allowed feature names.
+* `enable` - (Required) If true, enables the feature, false to disable the feature.
+* `additional_configuration` - (Optional) Additional feature configuration block See [below](#additional-configuration).
+
+### Additional Configuration
+
+The `additional_configuration` block supports the following:
+
+* `name` - (Required) Name of the additional feature configuration.
+* `enable` - (Required) If true, enables the additional feature configuration, false to disable the feature.
 
 ## Attributes Reference
 
