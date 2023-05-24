@@ -53,6 +53,7 @@ Upgrade topics:
 - [resource/aws_guardduty_organization_configuration](#resourceaws_guardduty_organization_configuration)
 - [resource/aws_kinesis_firehose_delivery_stream](#resourceaws_kinesis_firehose_delivery_stream)
 - [resource/aws_launch_configuration](#resourceaws_launch_configuration)
+- [resource/aws_launch_template](#resourceaws_launch_template)
 - [resource/aws_lightsail_instance](#resourceaws_lightsail_instance)
 - [resource/aws_macie_member_account_association](#resourceaws_macie_member_account_association)
 - [resource/aws_macie_s3_bucket_association](#resourceaws_macie_s3_bucket_association)
@@ -366,6 +367,10 @@ The `auto_enable` argument has been deprecated. Use the `auto_enable_organizatio
 ## resource/aws_launch_configuration
 
 Remove `vpc_classic_link_id` and `vpc_classic_link_security_groups` from configurations as they no longer exist. We removed them as part of the EC2-Classic retirement.
+
+## resource/aws_launch_template
+
+We removed defaults from `metatadata_options`. Launch template metadata options will now default to unset values, which is the AWS default behavior.
 
 ## resource/aws_lightsail_instance
 
