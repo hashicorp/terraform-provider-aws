@@ -1,11 +1,14 @@
 package flex
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -239,5 +242,64 @@ func TestFlattenTimeStringList(t *testing.T) {
 
 	if !cmp.Equal(got, want) {
 		t.Errorf("expanded = %v, want = %v", got, want)
+	}
+}
+
+func TestExpandResourceRegion(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		region         interface{}
+		defaultRegion  string
+		allowedRegions []string
+		expectedRegion string
+		expectedError  error
+	}{
+		{
+			region:         "us-east-1",
+			defaultRegion:  "us-west-2",
+			allowedRegions: []string{"us-west-2", "us-east-1"},
+			expectedRegion: "us-east-1",
+			expectedError:  nil,
+		},
+		{
+			region:         nil,
+			defaultRegion:  "us-west-2",
+			allowedRegions: []string{"us-west-2", "us-east-1"},
+			expectedRegion: "us-west-2",
+			expectedError:  nil,
+		},
+		{
+			region:         nil,
+			defaultRegion:  "us-west-2",
+			allowedRegions: []string{"us-east-1"},
+			expectedRegion: "",
+			expectedError:  fmt.Errorf("provided resource region is not an allowed region in the provider configuration. To deploy to this region, add it to the 'allowed_regions' provider setting, or remove the list of 'allowed_regions' from your provider configuration. Provided region us-west-2, provider allowed regions: [us-east-1]"),
+		},
+		{
+			region:         "us-east-1",
+			defaultRegion:  "us-west-2",
+			allowedRegions: []string{"us-west-2", "ap-south-1"},
+			expectedRegion: "",
+			expectedError:  fmt.Errorf("provided resource region is not an allowed region in the provider configuration. To deploy to this region, add it to the 'allowed_regions' provider setting, or remove the list of 'allowed_regions' from your provider configuration. Provided region us-east-1, provider allowed regions: [us-west-2 ap-south-1]"),
+		},
+	}
+
+	for i, tt := range cases {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			out, err := ExpandResourceRegion(tt.region, tt.allowedRegions, tt.defaultRegion)
+
+			if tt.expectedError != nil {
+				if err != nil && !strings.Contains(err.Error(), tt.expectedError.Error()) {
+					t.Fatalf("expected = %s, want = %s", tt.expectedError.Error(), err.Error())
+				} else if err != nil && tt.expectedError == nil {
+					t.Errorf("unexpected error returned: %s", err)
+				}
+			}
+
+			if !cmp.Equal(out, tt.expectedRegion) {
+				t.Errorf("expanded = %s, want = %s", out, tt.expectedRegion)
+			}
+		})
 	}
 }
