@@ -404,7 +404,8 @@ Remove `policy_document` from configurations as it no longer exists. Use the `aw
 
 ## resource/aws_opensearch_domain
 
-The `kibana_endpoint` attribute has been deprecated. All configurations using `kibana_endpoint` should be updated to use the `dashboard_endpoint` attribute instead.
+* The `kibana_endpoint` attribute has been deprecated. All configurations using `kibana_endpoint` should be updated to use the `dashboard_endpoint` attribute instead.
+* The `engine_version` attribute no longer has a default value. Omitting this attribute will now create a domain with the latest OpenSearch version, consistent with the behavior of the AWS API.
 
 ## resource/aws_rds_cluster
 
