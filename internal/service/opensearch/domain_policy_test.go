@@ -116,7 +116,7 @@ func buildDomainARN(name, partition, accId, region string) (string, error) {
 func testAccDomainPolicyConfig_basic(randInt int, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name    = "tf-test-%d"
+  domain_name = "tf-test-%d"
 
   cluster_config {
     instance_type = "t2.small.search" # supported in both aws and aws-us-gov

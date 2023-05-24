@@ -72,7 +72,7 @@ func testAccOutboundConnectionConfig(name string) string {
 	pw := fmt.Sprintf("Aa1-%s", sdkacctest.RandString(10))
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "domain_1" {
-  domain_name    = "%s-1"
+  domain_name = "%s-1"
 
   cluster_config {
     instance_type = "t3.small.search" # supported in both aws and aws-us-gov
@@ -108,7 +108,7 @@ resource "aws_opensearch_domain" "domain_1" {
 }
 
 resource "aws_opensearch_domain" "domain_2" {
-  domain_name    = "%s-2"
+  domain_name = "%s-2"
 
   cluster_config {
     instance_type = "t3.small.search" # supported in both aws and aws-us-gov
