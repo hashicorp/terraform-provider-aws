@@ -620,6 +620,7 @@ func flattenMalwareProtectionEBSVolumesConfigurationResult(apiObject *guardduty.
 
 	return tfMap
 }
+
 func flattenFeaturesConfigurationsResult(detectorFeatureConfigurations []*guardduty.DetectorFeatureConfigurationResult) []interface{} {
 	if len(detectorFeatureConfigurations) == 0 {
 		return []interface{}{}
