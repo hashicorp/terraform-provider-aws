@@ -11,6 +11,7 @@ description: |-
 Provides details about a specific Amazon Connect Hours of Operation.
 
 ## Example Usage
+
 By `name`
 
 ```hcl
@@ -46,7 +47,6 @@ In addition to all of the arguments above, the following attributes are exported
 * `arn` - ARN of the Hours of Operation.
 * `config` - Configuration information for the hours of operation: day, start time, and end time . Config blocks are documented below. Config blocks are documented below.
 * `description` - Description of the Hours of Operation.
-* `hours_of_operation_arn` - (**Deprecated**) ARN of the Hours of Operation.
 * `hours_of_operation_id` - The identifier for the hours of operation.
 * `instance_id` - Identifier of the hosting Amazon Connect Instance.
 * `name` - Name of the Hours of Operation.

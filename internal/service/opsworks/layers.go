@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -20,6 +20,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/exp/maps"
 )
 
@@ -399,8 +400,8 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 			ForceNew: true,
 			Required: true,
 		},
-		"tags":     tftags.TagsSchema(),
-		"tags_all": tftags.TagsSchemaComputed(),
+		names.AttrTags:    tftags.TagsSchema(),
+		names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		"use_ebs_optimized_instances": {
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -454,7 +455,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 		},
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: resourceSchema,
@@ -464,9 +465,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 }
 
 func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	attributes, err := lt.Attributes.resourceDataToAPIAttributes(d)
 
@@ -591,7 +590,7 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
 		layer, err := FindLayerByID(ctx, conn, d.Id())
 
 		if err != nil {
@@ -599,7 +598,7 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 		}
 
 		arn := aws.StringValue(layer.Arn)
-		if err := UpdateTagsWithContext(ctx, conn, arn, nil, tags); err != nil {
+		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
 			return diag.Errorf("adding OpsWorks Layer (%s) tags: %s", arn, err)
 		}
 	}
@@ -608,9 +607,7 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 }
 
 func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	layer, err := FindLayerByID(ctx, conn, d.Id())
 
@@ -705,28 +702,11 @@ func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("reading OpsWorks Layer (%s) load-based auto scaling configurations: %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return diag.Errorf("listing tags for OpsWorks Layer (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	if d.HasChangesExcept("elastic_load_balancer", "load_based_auto_scaling", "tags", "tags_all") {
 		input := &opsworks.UpdateLayerInput{
@@ -879,20 +859,11 @@ func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		arn := d.Get("arn").(string)
-		if err := UpdateTagsWithContext(ctx, conn, arn, o, n); err != nil {
-			return diag.Errorf("updating OpsWorks Layer (%s) tags: %s", arn, err)
-		}
-	}
-
 	return lt.Read(ctx, d, meta)
 }
 
 func (lt *opsworksLayerType) Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	log.Printf("[DEBUG] Deleting OpsWorks Layer: %s", d.Id())
 	_, err := conn.DeleteLayerWithContext(ctx, &opsworks.DeleteLayerInput{
@@ -929,7 +900,7 @@ func FindLayerByID(ctx context.Context, conn *opsworks.OpsWorks, id string) (*op
 	output, err := conn.DescribeLayersWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

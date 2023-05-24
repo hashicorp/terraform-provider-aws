@@ -57,12 +57,15 @@ In addition to all arguments above, the following attributes are exported:
         * `image` - Identifier of the AMI.
         * `name` - Name of the AMI.
         * `region` - Region of the AMI.
+    * `containers` - Set of objects with each container image created and stored in the output repository.
+        * `image_uris` - Set of URIs for created containers.
+        * `region` - Region of the container image.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - Version of the image.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `60m`)
 

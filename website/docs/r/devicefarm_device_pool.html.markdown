@@ -12,7 +12,6 @@ Provides a resource to manage AWS Device Farm Device Pools.
 
 ## Example Usage
 
-
 ```terraform
 resource "aws_devicefarm_device_pool" "example" {
   name        = "example"

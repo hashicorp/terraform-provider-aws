@@ -131,7 +131,6 @@ Other environment variables related to authorization are:
 * `AWS_CONFIG_FILE`
 * `AWS_SHARED_CREDENTIALS_FILE`
 
-
 ### Shared Configuration and Credentials Files
 
 The AWS Provider can source credentials and other settings from the [shared configuration and credentials files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
@@ -249,21 +248,19 @@ credential_process = custom-process --username jdoe
 Configuation for assuming an IAM role can be done using provider configuration or a named profile in shared configuration files.
 In the provider, all parameters for assuming an IAM role are set in the `assume_role` block.
 
-Environment variables are not supported for assuming IAM roles.
-
 See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html) for more information.
 
-|Setting|Provider|[Shared Config][config]|
-|-------|--------|-----------------------|
-|Role ARN|`role_arn`|`role_arn`|
-|Duration|`duration` or `duration_seconds`|`duration_seconds`|
-|External ID|`external_id`|`external_id`|
-|Policy|`policy`|N/A|
-|Policy ARNs|`policy_arns`|N/A|
-|Session Name|`session_name`|`role_session_name`|
-|Source Identity|`source_identity`|N/A|
-|Tags|`tags`|N/A|
-|Transitive Tag Keys|`transitive_tag_keys`|N/A|
+|Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
+|-------|--------|--------|-----------------------|
+|Role ARN|`role_arn`|`AWS_ROLE_ARN`|`role_arn`|
+|Duration|`duration` or `duration_seconds`|N/A|`duration_seconds`|
+|External ID|`external_id`|N/A|`external_id`|
+|Policy|`policy`|N/A|N/A|
+|Policy ARNs|`policy_arns`|N/A|N/A|
+|Session Name|`session_name`|`AWS_ROLE_SESSION_NAME`|`role_session_name`|
+|Source Identity|`source_identity`|N/A|N/A|
+|Tags|`tags`|N/A|N/A|
+|Transitive Tag Keys|`transitive_tag_keys`|N/A|N/A|
 
 [envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
 [config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
@@ -287,7 +284,7 @@ See the assume role documentation [section on web identities](https://docs.aws.a
 
 ## Custom User-Agent Information
 
-By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requestsE.g.,
+By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requests. E.g.,
 
 ```sh
 $ export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
@@ -316,7 +313,6 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `insecure` - (Optional) Whether to explicitly allow the provider to perform "insecure" SSL requests. If omitted, the default value is `false`.
 * `max_retries` - (Optional) Maximum number of times an API call is retried when AWS throttles requests or you experience transient failures.
   The delay between the subsequent API calls increases exponentially.
-  If omitted, the default value is `25`.
   Can also be set using the environment variable `AWS_MAX_ATTEMPTS`
   and the shared configuration parameter `max_attempts`.
 * `profile` - (Optional) AWS profile name as set in the shared configuration and credentials files.
@@ -325,14 +321,11 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   Can also be set with either the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables,
   or via a shared config file parameter `region` if `profile` is used.
   If credentials are retrieved from the EC2 Instance Metadata Service, the region can also be retrieved from the metadata.
-* `s3_force_path_style` - (Optional, **Deprecated**) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`. By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible. Specific to the Amazon S3 service.
 * `s3_use_path_style` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`. By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible. Specific to the Amazon S3 service.
 * `secret_key` - (Optional) AWS secret key. Can also be set with the `AWS_SECRET_ACCESS_KEY` environment variable, or via a shared configuration and credentials files if `profile` is used. See also `access_key`.
 * `shared_config_files` - (Optional) List of paths to AWS shared config files. If not set, the default is `[~/.aws/config]`. A single value can also be set with the `AWS_CONFIG_FILE` environment variable.
-* `shared_credentials_file` - (Optional, **Deprecated**) Path to the shared credentials file. If not set and a profile is used, the default value is `~/.aws/credentials`. Can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
 * `shared_credentials_files` - (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
 * `skip_credentials_validation` - (Optional) Whether to skip credentials validation via the STS API. This can be useful for testing and for AWS API implementations that do not have STS available.
-* `skip_get_ec2_platforms` - (Optional) Whether to skip getting the supported EC2 platforms. Can be used when you do not have `ec2:DescribeAccountAttributes` permissions.
 * `skip_metadata_api_check` - (Optional) Whether to skip the AWS Metadata API check.  Useful for AWS API implementations that do not have a metadata API endpoint.  Setting to `true` prevents Terraform from authenticating via the Metadata API. You may need to use other authentication methods like static credentials, configuration variables, or environment variables.
 * `skip_region_validation` - (Optional) Whether to skip validating the region. Useful for AWS-like implementations that use their own region names or to bypass the validation for regions that aren't publicly available yet.
 * `skip_requesting_account_id` - (Optional) Whether to skip requesting the account ID.  Useful for AWS API implementations that do not have the IAM, STS API, or metadata API.  When set to `true` and not determined previously, returns an empty account ID when manually constructing ARN attributes with the following:

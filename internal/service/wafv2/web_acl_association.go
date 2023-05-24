@@ -11,17 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const (
-	webACLAssociationCreateTimeout = 5 * time.Minute
-)
-
+// @SDKResource("aws_wafv2_web_acl_association")
 func ResourceWebACLAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebACLAssociationCreate,
@@ -29,7 +26,11 @@ func ResourceWebACLAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceWebACLAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -50,7 +51,7 @@ func ResourceWebACLAssociation() *schema.Resource {
 }
 
 func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
 	webACLARN := d.Get("web_acl_arn").(string)
 	resourceARN := d.Get("resource_arn").(string)
@@ -61,7 +62,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[INFO] Creating WAFv2 WebACL Association: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, webACLAssociationCreateTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return conn.AssociateWebACLWithContext(ctx, input)
 	}, wafv2.ErrCodeWAFUnavailableEntityException)
 
@@ -75,7 +76,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
 	_, resourceARN, err := WebACLAssociationParseResourceID(d.Id())
 
@@ -102,7 +103,7 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
 	_, resourceARN, err := WebACLAssociationParseResourceID(d.Id())
 
@@ -134,7 +135,7 @@ func FindWebACLByResourceARN(ctx context.Context, conn *wafv2.WAFV2, arn string)
 	output, err := conn.GetWebACLForResourceWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

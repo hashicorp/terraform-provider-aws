@@ -7,11 +7,19 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/"
     ignore:
+      # hcl/v2 should only be updated via terraform-plugin-sdk
+      - dependency-name: "github.com/hashicorp/hcl/v2"
+      # terraform-plugin-go should only be updated via terraform-plugin-framework
+      - dependency-name: "github.com/hashicorp/terraform-plugin-go"
+      # terraform-plugin-log should only be updated via terraform-plugin-framework
+      - dependency-name: "github.com/hashicorp/terraform-plugin-log"
+      # go-hclog should only be updated via terraform-plugin-log
+      - dependency-name: "github.com/hashicorp/go-hclog"
       - dependency-name: "golang.org/x/tools"
       - dependency-name: "google.golang.org/grpc"
     schedule:
       interval: "daily"
-    open-pull-requests-limit: 20
+    open-pull-requests-limit: 30
   - package-ecosystem: "gomod"
     directory: "/.ci/providerlint"
     ignore:

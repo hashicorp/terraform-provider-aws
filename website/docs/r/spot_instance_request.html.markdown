@@ -31,6 +31,8 @@ point in time. See the [AWS Spot Instance
 documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-spot-instances.html)
 for more information.
 
+~> **NOTE [AWS strongly discourages](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-best-practices.html#which-spot-request-method-to-use) the use of the legacy APIs called by this resource.
+We recommend using the [EC2 Fleet](ec2_fleet.html) or [Auto Scaling Group](autoscaling_group.html) resources instead.
 
 ## Example Usage
 
@@ -96,7 +98,7 @@ should only be used for informational purposes, not for resource dependencies:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
 * `delete` - (Default `20m`)

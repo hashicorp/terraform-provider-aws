@@ -40,6 +40,5 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-website/docs/r/globalaccelerator_accelerator.markdown
 See the [`aws_globalaccelerator_accelerator` resource](/docs/providers/aws/r/globalaccelerator_accelerator.html) for details on the
 returned attributes - they are identical.

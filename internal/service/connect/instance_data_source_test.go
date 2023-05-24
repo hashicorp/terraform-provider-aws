@@ -6,17 +6,18 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/connect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccInstanceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("datasource-test-terraform")
 	dataSourceName := "data.aws_connect_instance.test"
 	resourceName := "aws_connect_instance.test"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -41,6 +42,7 @@ func testAccInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "contact_lens_enabled", dataSourceName, "contact_lens_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "auto_resolve_best_voices_enabled", dataSourceName, "auto_resolve_best_voices_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "early_media_enabled", dataSourceName, "early_media_enabled"),
+					resource.TestCheckResourceAttrPair(resourceName, "multi_party_conference_enabled", dataSourceName, "multi_party_conference_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role", dataSourceName, "service_role"),
 				),
@@ -58,6 +60,7 @@ func testAccInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "contact_lens_enabled", dataSourceName, "contact_lens_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "auto_resolve_best_voices_enabled", dataSourceName, "auto_resolve_best_voices_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "early_media_enabled", dataSourceName, "early_media_enabled"),
+					resource.TestCheckResourceAttrPair(resourceName, "multi_party_conference_enabled", dataSourceName, "multi_party_conference_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role", dataSourceName, "service_role"),
 				),

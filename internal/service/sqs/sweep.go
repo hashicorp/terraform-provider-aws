@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -32,15 +32,17 @@ func init() {
 }
 
 func sweepQueues(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SQSConn
+	conn := client.(*conns.AWSClient).SQSConn()
+
 	input := &sqs.ListQueuesInput{}
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListQueuesPages(input, func(page *sqs.ListQueuesOutput, lastPage bool) bool {
+	err = conn.ListQueuesPagesWithContext(ctx, input, func(page *sqs.ListQueuesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -49,7 +51,7 @@ func sweepQueues(region string) error {
 			r := ResourceQueue()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(queueUrl))
-			err = sweep.DeleteResource(r, d, client)
+			err = sweep.DeleteResource(ctx, r, d, client)
 
 			if err != nil {
 				log.Printf("[ERROR] %s", err)

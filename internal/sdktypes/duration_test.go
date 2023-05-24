@@ -7,6 +7,8 @@ import (
 )
 
 func TestDuration(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		val           string
 		expectNull    bool
@@ -55,6 +57,8 @@ func TestDuration(t *testing.T) {
 }
 
 func TestValidationDuration(t *testing.T) {
+	t.Parallel()
+
 	runTestCases(t, map[string]testCase{
 		"valid": {
 			val: "1h2m3s",
@@ -69,6 +73,41 @@ func TestValidationDuration(t *testing.T) {
 		"wrong type": {
 			val:             1,
 			f:               ValidateDuration,
+			expectedSummary: regexp.MustCompile(`^Invalid value type$`),
+			expectedDetail:  regexp.MustCompile(`Expected type to be string`),
+		},
+	})
+}
+
+func TestValidationDurationBetween(t *testing.T) {
+	t.Parallel()
+
+	runTestCases(t, map[string]testCase{
+		"valid": {
+			val: "1h2m3s",
+			f:   ValidateDurationBetween(10*time.Second, 2*time.Hour),
+		},
+		"duration too big": {
+			val:             "10h",
+			f:               ValidateDurationBetween(10*time.Second, 2*time.Hour),
+			expectedSummary: regexp.MustCompile(`^Invalid value$`),
+			expectedDetail:  regexp.MustCompile(`Expected to be in the range \(10000000000 - 7200000000000\)`),
+		},
+		"duration too small": {
+			val:             "2s",
+			f:               ValidateDurationBetween(10*time.Second, 2*time.Hour),
+			expectedSummary: regexp.MustCompile(`^Invalid value$`),
+			expectedDetail:  regexp.MustCompile(`Expected to be in the range \(10000000000 - 7200000000000\)`),
+		},
+		"invalid duration format": {
+			val:             "A",
+			f:               ValidateDurationBetween(10*time.Second, 2*time.Hour),
+			expectedSummary: regexp.MustCompile(`^Invalid value$`),
+			expectedDetail:  regexp.MustCompile(`time: invalid duration "A"`),
+		},
+		"wrong type": {
+			val:             1,
+			f:               ValidateDurationBetween(10*time.Second, 2*time.Hour),
 			expectedSummary: regexp.MustCompile(`^Invalid value type$`),
 			expectedDetail:  regexp.MustCompile(`Expected type to be string`),
 		},

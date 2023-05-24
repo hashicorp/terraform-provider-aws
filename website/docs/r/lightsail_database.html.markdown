@@ -98,13 +98,12 @@ resource "aws_lightsail_database" "test" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name` - (Required) The name to use for your new Lightsail database resource. Names be unique within each AWS Region in your Lightsail account.
-* `availability_zone` - (Required) The Availability Zone in which to create your new database. Use the us-east-2a case-sensitive format.
+* `availability_zone` - The Availability Zone in which to create your new database. Use the us-east-2a case-sensitive format.
 * `master_database_name` - (Required) The name of the master database created when the Lightsail database resource is created.
 * `master_password` - (Sensitive) The password for the master user of your new database. The password can include any printable ASCII character except "/", """, or "@".
 * `master_username` - The master user name for your new database.
@@ -118,7 +117,6 @@ The following arguments are supported:
 * `skip_final_snapshot` - Determines whether a final database snapshot is created before your database is deleted. If true is specified, no database snapshot is created. If false is specified, a database snapshot is created before your database is deleted. You must specify the final relational database snapshot name parameter if the skip final snapshot parameter is false.
 * `final_snapshot_name` - (Required unless `skip_final_snapshot = true`) The name of the database snapshot created if skip final snapshot is false, which is the default value for that parameter.
 * `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value.
-
 
 ## Blueprint Ids
 
@@ -136,7 +134,6 @@ A Blueprint ID starts with a prefix of the engine type.
 ### Suffix
 
 A Blueprint ID has a sufix of the engine version.
-
 
 ## Bundles
 

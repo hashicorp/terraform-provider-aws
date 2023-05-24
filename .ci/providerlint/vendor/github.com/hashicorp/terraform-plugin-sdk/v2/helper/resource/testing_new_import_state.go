@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
+	"github.com/google/go-cmp/cmp"
 	"github.com/mitchellh/go-testing-interface"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
@@ -16,9 +16,6 @@ import (
 
 func testStepNewImportState(ctx context.Context, t testing.T, helper *plugintest.Helper, wd *plugintest.WorkingDir, step TestStep, cfg string, providers *providerFactories) error {
 	t.Helper()
-
-	spewConf := spew.NewDefaultConfig()
-	spewConf.SortKeys = true
 
 	if step.ResourceName == "" {
 		t.Fatal("ResourceName is required for an import state test")
@@ -137,12 +134,18 @@ func testStepNewImportState(ctx context.Context, t testing.T, helper *plugintest
 		logging.HelperResourceTrace(ctx, "Using TestStep ImportStateCheck")
 
 		var states []*terraform.InstanceState
-		for _, r := range importState.RootModule().Resources {
-			if r.Primary != nil {
-				is := r.Primary.DeepCopy()
-				is.Ephemeral.Type = r.Type // otherwise the check function cannot see the type
-				states = append(states, is)
+		for address, r := range importState.RootModule().Resources {
+			if strings.HasPrefix(address, "data.") {
+				continue
 			}
+
+			if r.Primary == nil {
+				continue
+			}
+
+			is := r.Primary.DeepCopy()
+			is.Ephemeral.Type = r.Type // otherwise the check function cannot see the type
+			states = append(states, is)
 		}
 
 		logging.HelperResourceDebug(ctx, "Calling TestStep ImportStateCheck")
@@ -158,20 +161,27 @@ func testStepNewImportState(ctx context.Context, t testing.T, helper *plugintest
 	if step.ImportStateVerify {
 		logging.HelperResourceTrace(ctx, "Using TestStep ImportStateVerify")
 
-		newResources := importState.RootModule().Resources
-		oldResources := state.RootModule().Resources
+		// Ensure that we do not match against data sources as they
+		// cannot be imported and are not what we want to verify.
+		// Mode is not present in ResourceState so we use the
+		// stringified ResourceStateKey for comparison.
+		newResources := make(map[string]*terraform.ResourceState)
+		for k, v := range importState.RootModule().Resources {
+			if !strings.HasPrefix(k, "data.") {
+				newResources[k] = v
+			}
+		}
+		oldResources := make(map[string]*terraform.ResourceState)
+		for k, v := range state.RootModule().Resources {
+			if !strings.HasPrefix(k, "data.") {
+				oldResources[k] = v
+			}
+		}
 
 		for _, r := range newResources {
 			// Find the existing resource
 			var oldR *terraform.ResourceState
-			for r2Key, r2 := range oldResources {
-				// Ensure that we do not match against data sources as they
-				// cannot be imported and are not what we want to verify.
-				// Mode is not present in ResourceState so we use the
-				// stringified ResourceStateKey for comparison.
-				if strings.HasPrefix(r2Key, "data.") {
-					continue
-				}
+			for _, r2 := range oldResources {
 
 				if r2.Primary != nil && r2.Primary.ID == r.Primary.ID && r2.Type == r.Type && r2.Provider == r.Provider {
 					oldR = r2
@@ -248,6 +258,8 @@ func testStepNewImportState(ctx context.Context, t testing.T, helper *plugintest
 
 			if !reflect.DeepEqual(actual, expected) {
 				// Determine only the different attributes
+				// go-cmp tries to show surrounding identical map key/value for
+				// context of differences, which may be confusing.
 				for k, v := range expected {
 					if av, ok := actual[k]; ok && v == av {
 						delete(expected, k)
@@ -255,10 +267,9 @@ func testStepNewImportState(ctx context.Context, t testing.T, helper *plugintest
 					}
 				}
 
-				t.Fatalf(
-					"ImportStateVerify attributes not equivalent. Difference is shown below. Top is actual, bottom is expected."+
-						"\n\n%s\n\n%s",
-					spewConf.Sdump(actual), spewConf.Sdump(expected))
+				if diff := cmp.Diff(expected, actual); diff != "" {
+					return fmt.Errorf("ImportStateVerify attributes not equivalent. Difference is shown below. The - symbol indicates attributes missing after import.\n\n%s", diff)
+				}
 			}
 		}
 	}

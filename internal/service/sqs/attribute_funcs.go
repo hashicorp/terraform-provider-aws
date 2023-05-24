@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type queueAttributeHandler struct {
@@ -21,10 +22,9 @@ type queueAttributeHandler struct {
 }
 
 func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn
+	conn := meta.(*conns.AWSClient).SQSConn()
 
 	attrValue, err := structure.NormalizeJsonString(d.Get(h.SchemaKey).(string))
-
 	if err != nil {
 		return diag.Errorf("%s (%s) is invalid JSON: %s", h.SchemaKey, d.Get(h.SchemaKey).(string), err)
 	}
@@ -55,9 +55,9 @@ func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceDa
 }
 
 func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn
+	conn := meta.(*conns.AWSClient).SQSConn()
 
-	outputRaw, err := tfresource.RetryWhenNotFoundContext(ctx, queueAttributeReadTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNotFound(ctx, queueAttributeReadTimeout, func() (interface{}, error) {
 		return FindQueueAttributeByURL(ctx, conn, d.Id(), h.AttributeName)
 	})
 
@@ -72,9 +72,15 @@ func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData
 	}
 
 	newValue, err := h.ToSet(d.Get(h.SchemaKey).(string), outputRaw.(string))
-
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if h.SchemaKey == "policy" {
+		newValue, err = verify.PolicyToSet(d.Get("policy").(string), newValue)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.Set(h.SchemaKey, newValue)
@@ -84,13 +90,13 @@ func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData
 }
 
 func (h *queueAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn
+	conn := meta.(*conns.AWSClient).SQSConn()
 
 	log.Printf("[DEBUG] Deleting SQS Queue (%s) attribute: %s", d.Id(), h.AttributeName)
 	attributes := map[string]string{
 		h.AttributeName: "",
 	}
-	_, err := conn.SetQueueAttributes(&sqs.SetQueueAttributesInput{
+	_, err := conn.SetQueueAttributesWithContext(ctx, &sqs.SetQueueAttributesInput{
 		Attributes: aws.StringMap(attributes),
 		QueueUrl:   aws.String(d.Id()),
 	})

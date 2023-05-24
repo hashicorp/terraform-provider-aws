@@ -2,7 +2,6 @@ package s3
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,12 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_bucket_object_lock_configuration")
 func ResourceBucketObjectLockConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketObjectLockConfigurationCreate,
-		ReadContext:   resourceBucketObjectLockConfigurationRead,
-		UpdateContext: resourceBucketObjectLockConfigurationUpdate,
-		DeleteContext: resourceBucketObjectLockConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketObjectLockConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketObjectLockConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketObjectLockConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketObjectLockConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -90,11 +91,10 @@ func ResourceBucketObjectLockConfiguration() *schema.Resource {
 }
 
 func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
-
 	input := &s3.PutObjectLockConfigurationInput{
 		Bucket: aws.String(bucket),
 		ObjectLockConfiguration: &s3.ObjectLockConfiguration{
@@ -113,17 +113,16 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 		input.RequestPayer = aws.String(v.(string))
 	}
 
-	// For existing buckets
 	if v, ok := d.GetOk("token"); ok {
 		input.Token = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutObjectLockConfigurationWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating S3 bucket (%s) Object Lock configuration: %w", bucket, err))
+		return diag.Errorf("creating S3 Bucket (%s) Object Lock configuration: %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
@@ -132,59 +131,41 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 }
 
 func resourceBucketObjectLockConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	input := &s3.GetObjectLockConfigurationInput{
-		Bucket: aws.String(bucket),
-	}
+	objLockConfig, err := FindObjectLockConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
-	if expectedBucketOwner != "" {
-		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-	}
-
-	output, err := conn.GetObjectLockConfigurationWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, ErrCodeObjectLockConfigurationNotFound) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Object Lock Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading S3 bucket Object Lock configuration (%s): %w", d.Id(), err))
+		return diag.Errorf("reading S3 Bucket Object Lock Configuration (%s): %s", d.Id(), err)
 	}
-
-	if output == nil || output.ObjectLockConfiguration == nil {
-		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading S3 bucket Object Lock configuration (%s): empty output", d.Id()))
-		}
-		log.Printf("[WARN] S3 Bucket Object Lock Configuration (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	objLockConfig := output.ObjectLockConfiguration
 
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	d.Set("object_lock_enabled", objLockConfig.ObjectLockEnabled)
-
 	if err := d.Set("rule", flattenBucketObjectLockConfigurationRule(objLockConfig.Rule)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting rule: %w", err))
+		return diag.Errorf("setting rule: %s", err)
 	}
 
 	return nil
 }
 
 func resourceBucketObjectLockConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -214,16 +195,17 @@ func resourceBucketObjectLockConfigurationUpdate(ctx context.Context, d *schema.
 	_, err = conn.PutObjectLockConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating S3 bucket Object Lock configuration (%s): %w", d.Id(), err))
+		return diag.Errorf("updating S3 Bucket Object Lock Configuration (%s): %s", d.Id(), err)
 	}
 
 	return resourceBucketObjectLockConfigurationRead(ctx, d, meta)
 }
 
 func resourceBucketObjectLockConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -243,15 +225,43 @@ func resourceBucketObjectLockConfigurationDelete(ctx context.Context, d *schema.
 
 	_, err = conn.PutObjectLockConfigurationWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, ErrCodeObjectLockConfigurationNotFound) {
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrCodeContains(err, errCodeObjectLockConfigurationNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting S3 bucket Object Lock configuration (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting S3 Bucket Object Lock Configuration (%s): %s", d.Id(), err)
 	}
 
 	return nil
+}
+
+func FindObjectLockConfiguration(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string) (*s3.ObjectLockConfiguration, error) {
+	input := &s3.GetObjectLockConfigurationInput{
+		Bucket: aws.String(bucket),
+	}
+	if expectedBucketOwner != "" {
+		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+	}
+
+	output, err := conn.GetObjectLockConfigurationWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrCodeContains(err, errCodeObjectLockConfigurationNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ObjectLockConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ObjectLockConfiguration, nil
 }
 
 func expandBucketObjectLockConfigurationRule(l []interface{}) *s3.ObjectLockRule {

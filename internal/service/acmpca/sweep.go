@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -23,18 +23,19 @@ func init() {
 }
 
 func sweepCertificateAuthorities(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ACMPCAConn
+	conn := client.(*conns.AWSClient).ACMPCAConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &acmpca.ListCertificateAuthoritiesInput{}
 
-	err = conn.ListCertificateAuthoritiesPages(input, func(page *acmpca.ListCertificateAuthoritiesOutput, lastPage bool) bool {
+	err = conn.ListCertificateAuthoritiesPagesWithContext(ctx, input, func(page *acmpca.ListCertificateAuthoritiesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -65,7 +66,7 @@ func sweepCertificateAuthorities(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing ACM PCA Certificate Authorities: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping ACM PCA Certificate Authorities for %s: %w", region, err))
 	}
 

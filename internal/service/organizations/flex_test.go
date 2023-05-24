@@ -9,6 +9,8 @@ import (
 )
 
 func TestFlattenOrganizationalUnits(t *testing.T) {
+	t.Parallel()
+
 	input := []*organizations.OrganizationalUnit{
 		{
 			Arn:  aws.String("arn:aws:organizations::123456789012:ou/o-abcde12345/ou-ab12-abcd1234"), //lintignore:AWSAT005

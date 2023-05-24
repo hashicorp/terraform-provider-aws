@@ -4,14 +4,13 @@
 package fis
 
 import (
-	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -24,11 +23,12 @@ func init() {
 }
 
 func sweepExperimentTemplates(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).FISConn
+	conn := client.(*conns.AWSClient).FISClient()
 	input := &fis.ListExperimentTemplatesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -36,7 +36,7 @@ func sweepExperimentTemplates(region string) error {
 	pg := fis.NewListExperimentTemplatesPaginator(conn, input)
 
 	for pg.HasMorePages() {
-		page, err := pg.NextPage(context.Background())
+		page, err := pg.NextPage(ctx)
 
 		if err != nil {
 			sweeperErr := fmt.Errorf("error listing FIS Experiment Templates: %w", err)
@@ -54,7 +54,7 @@ func sweepExperimentTemplates(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping FIS Experiment Templates (%s): %w", region, err)

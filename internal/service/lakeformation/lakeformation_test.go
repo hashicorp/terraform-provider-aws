@@ -2,9 +2,13 @@ package lakeformation_test
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccLakeFormation_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataLakeSettings": {
 			"basic":            testAccDataLakeSettings_basic,
@@ -13,14 +17,15 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"withoutCatalogId": testAccDataLakeSettings_withoutCatalogID,
 		},
 		"PermissionsBasic": {
-			"basic":              testAccPermissions_basic,
-			"database":           testAccPermissions_database,
-			"databaseIAMAllowed": testAccPermissions_databaseIAMAllowed,
-			"databaseMultiple":   testAccPermissions_databaseMultiple,
-			"dataLocation":       testAccPermissions_dataLocation,
-			"disappears":         testAccPermissions_disappears,
-			"lfTag":              testAccPermissions_lfTag,
-			"lfTagPolicy":        testAccPermissions_lfTagPolicy,
+			"basic":               testAccPermissions_basic,
+			"database":            testAccPermissions_database,
+			"databaseIAMAllowed":  testAccPermissions_databaseIAMAllowed,
+			"databaseMultiple":    testAccPermissions_databaseMultiple,
+			"dataLocation":        testAccPermissions_dataLocation,
+			"disappears":          testAccPermissions_disappears,
+			"lfTag":               testAccPermissions_lfTag,
+			"lfTagPolicy":         testAccPermissions_lfTagPolicy,
+			"lfTagPolicyMultiple": testAccPermissions_lfTagPolicyMultiple,
 		},
 		"PermissionsDataSource": {
 			"basic":            testAccPermissionsDataSource_basic,
@@ -50,9 +55,11 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"wildcardSelectPlus":      testAccPermissions_twcWildcardSelectPlus,
 		},
 		"LFTags": {
-			"basic":      testAccLFTag_basic,
-			"disappears": testAccLFTag_disappears,
-			"values":     testAccLFTag_values,
+			"basic":           testAccLFTag_basic,
+			"disappears":      testAccLFTag_disappears,
+			"tagKeyComplex":   testAccLFTag_TagKey_complex,
+			"values":          testAccLFTag_Values,
+			"valuesOverFifty": testAccLFTag_Values_overFifty,
 		},
 		"ResourceLFTags": {
 			"basic":            testAccResourceLFTags_basic,
@@ -63,15 +70,5 @@ func TestAccLakeFormation_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

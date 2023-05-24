@@ -11,14 +11,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_networkmanager_transit_gateway_peering", name="Transit Gateway Peering")
+// @Tags(identifierAttribute="arn")
 func ResourceTransitGatewayPeering() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayPeeringCreate,
@@ -67,8 +70,8 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_gateway_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -84,19 +87,14 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 }
 
 func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	transitGatewayARN := d.Get("transit_gateway_arn").(string)
 	input := &networkmanager.CreateTransitGatewayPeeringInput{
 		CoreNetworkId:     aws.String(coreNetworkID),
+		Tags:              GetTagsIn(ctx),
 		TransitGatewayArn: aws.String(transitGatewayARN),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Network Manager Transit Gateway Peering: %s", input)
@@ -116,9 +114,7 @@ func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	transitGatewayPeering, err := FindTransitGatewayPeeringByID(ctx, conn, d.Id())
 
@@ -149,36 +145,18 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("transit_gateway_arn", transitGatewayPeering.TransitGatewayArn)
 	d.Set("transit_gateway_peering_attachment_id", transitGatewayPeering.TransitGatewayPeeringAttachmentId)
 
-	tags := KeyValueTags(p.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("Setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, p.Tags)
 
 	return nil
 }
 
 func resourceTransitGatewayPeeringUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating Network Manager Transit Gateway Peering (%s) tags: %s", d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceTransitGatewayPeeringRead(ctx, d, meta)
 }
 
 func resourceTransitGatewayPeeringDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	log.Printf("[DEBUG] Deleting Network Manager Transit Gateway Peering: %s", d.Id())
 	_, err := conn.DeletePeeringWithContext(ctx, &networkmanager.DeletePeeringInput{
@@ -208,7 +186,7 @@ func FindTransitGatewayPeeringByID(ctx context.Context, conn *networkmanager.Net
 	output, err := conn.GetTransitGatewayPeeringWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -225,7 +203,7 @@ func FindTransitGatewayPeeringByID(ctx context.Context, conn *networkmanager.Net
 	return output.TransitGatewayPeering, nil
 }
 
-func StatusTransitGatewayPeeringState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
+func StatusTransitGatewayPeeringState(ctx context.Context, conn *networkmanager.NetworkManager, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTransitGatewayPeeringByID(ctx, conn, id)
 
@@ -242,7 +220,7 @@ func StatusTransitGatewayPeeringState(ctx context.Context, conn *networkmanager.
 }
 
 func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.TransitGatewayPeering, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.PeeringStateCreating},
 		Target:  []string{networkmanager.PeeringStateAvailable},
 		Timeout: timeout,
@@ -259,7 +237,7 @@ func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.
 }
 
 func waitTransitGatewayPeeringDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.TransitGatewayPeering, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.PeeringStateDeleting},
 		Target:  []string{},
 		Timeout: timeout,

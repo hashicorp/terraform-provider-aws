@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -22,15 +22,16 @@ func init() {
 }
 
 func sweepPipelines(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &codepipeline.ListPipelinesInput{}
-	conn := client.(*conns.AWSClient).CodePipelineConn
+	conn := client.(*conns.AWSClient).CodePipelineConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListPipelinesPages(input, func(page *codepipeline.ListPipelinesOutput, lastPage bool) bool {
+	err = conn.ListPipelinesPagesWithContext(ctx, input, func(page *codepipeline.ListPipelinesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -56,7 +57,7 @@ func sweepPipelines(region string) error {
 		return fmt.Errorf("error listing Codepipeline Pipelines (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Codepipeline Pipelines (%s): %w", region, err)

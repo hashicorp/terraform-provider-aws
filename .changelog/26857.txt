@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_ecr_image: Add `most_recent` argument to return the most recently pushed image
+```
+
+```release-note:enhancement
+data-source/aws_ecr_repository: Add `most_recent_image_tags` attribute containing the most recently pushed image tag(s) in an ECR repository
+```

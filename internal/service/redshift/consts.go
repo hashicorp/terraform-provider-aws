@@ -1,6 +1,8 @@
 package redshift
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	clusterAvailabilityStatusAvailable   = "Available"
@@ -16,6 +18,12 @@ const (
 	clusterStatusAvailable = "available"
 	clusterStatusModifying = "modifying"
 	clusterStatusRebooting = "rebooting"
+)
+
+const (
+	clusterSnapshotStatusAvailable = "available"
+	clusterSnapshotStatusCreating  = "creating"
+	clusterSnapshotStatusDeleted   = "deleted"
 )
 
 const (

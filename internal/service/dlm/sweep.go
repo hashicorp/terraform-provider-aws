@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -24,18 +24,19 @@ func init() {
 }
 
 func sweepLifecyclePolicies(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DLMConn
+	conn := client.(*conns.AWSClient).DLMConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &dlm.GetLifecyclePoliciesInput{}
-	policies, err := conn.GetLifecyclePolicies(input)
+	policies, err := conn.GetLifecyclePoliciesWithContext(ctx, input)
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error listing DLM Lifecycle Policy for %s: %w", region, err))
 	}
@@ -57,7 +58,7 @@ func sweepLifecyclePolicies(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DLM Lifecycle Policy for %s: %w", region, err))
 	}
 

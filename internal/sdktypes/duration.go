@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	awsdiag "github.com/hashicorp/terraform-provider-aws/internal/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 const (
@@ -34,17 +34,37 @@ func (d Duration) Value() (time.Duration, bool, error) {
 func ValidateDuration(i any, path cty.Path) diag.Diagnostics {
 	v, ok := i.(string)
 	if !ok {
-		return diag.Diagnostics{awsdiag.NewIncorrectValueTypeAttributeError(path, "string")}
+		return diag.Diagnostics{errs.NewIncorrectValueTypeAttributeError(path, "string")}
 	}
 
-	duration, err := time.ParseDuration(v)
+	duration, _, err := Duration(v).Value()
 	if err != nil {
-		return diag.Diagnostics{awsdiag.NewInvalidValueAttributeErrorf(path, "Cannot be parsed as duration: %s", err)}
+		return diag.Diagnostics{errs.NewInvalidValueAttributeErrorf(path, "Cannot be parsed as duration: %s", err)}
 	}
 
 	if duration < 0 {
-		return diag.Diagnostics{awsdiag.NewInvalidValueAttributeError(path, "Must be greater than zero")}
+		return diag.Diagnostics{errs.NewInvalidValueAttributeError(path, "Must be greater than zero")}
 	}
 
 	return nil
+}
+
+func ValidateDurationBetween(min, max time.Duration) schema.SchemaValidateDiagFunc {
+	return func(i any, path cty.Path) diag.Diagnostics {
+		v, ok := i.(string)
+		if !ok {
+			return diag.Diagnostics{errs.NewIncorrectValueTypeAttributeError(path, "string")}
+		}
+
+		duration, _, err := Duration(v).Value()
+		if err != nil {
+			return diag.Diagnostics{errs.NewInvalidValueAttributeErrorf(path, "Cannot be parsed as duration: %s", err)}
+		}
+
+		if duration < min || duration > max {
+			return diag.Diagnostics{errs.NewInvalidValueAttributeErrorf(path, "Expected to be in the range (%d - %d)", min, max)}
+		}
+
+		return nil
+	}
 }

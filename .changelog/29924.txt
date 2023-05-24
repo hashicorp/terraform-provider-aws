@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dynamodb_table: Add `deletion_protection_enabled` argument
+```
+
+```release-note:enhancement
+data-source/aws_dynamodb_table: Add `deletion_protection_enabled` attribute
+```

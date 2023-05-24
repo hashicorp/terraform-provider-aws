@@ -1,19 +1,23 @@
 package rds
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_db_instance")
 func DataSourceInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInstanceRead,
+		ReadWithoutTimeout: dataSourceInstanceRead,
 
 		Schema: map[string]*schema.Schema{
 			"address": {
@@ -70,11 +74,6 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"db_security_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"db_subnet_group": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -115,6 +114,26 @@ func DataSourceInstance() *schema.Resource {
 			"master_username": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"master_user_secret": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"monitoring_interval": {
 				Type:     schema.TypeInt,
@@ -165,6 +184,10 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"storage_throughput": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"storage_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -183,14 +206,14 @@ func DataSourceInstance() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	v, err := FindDBInstanceByID(conn, d.Get("db_instance_identifier").(string))
-
+	v, err := findDBInstanceByIDSDKv1(ctx, conn, d.Get("db_instance_identifier").(string))
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("RDS DB Instance", err)
+		return diag.FromErr(tfresource.SingularDataSourceFindError("RDS DB Instance", err))
 	}
 
 	d.SetId(aws.StringValue(v.DBInstanceIdentifier))
@@ -209,11 +232,6 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		parameterGroupNames = append(parameterGroupNames, aws.StringValue(v.DBParameterGroupName))
 	}
 	d.Set("db_parameter_groups", parameterGroupNames)
-	var securityGroupNames []string
-	for _, v := range v.DBSecurityGroups {
-		securityGroupNames = append(securityGroupNames, aws.StringValue(v.DBSecurityGroupName))
-	}
-	d.Set("db_security_groups", securityGroupNames)
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group", v.DBSubnetGroup.DBSubnetGroupName)
 	} else {
@@ -226,6 +244,11 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kms_key_id", v.KmsKeyId)
 	d.Set("license_model", v.LicenseModel)
 	d.Set("master_username", v.MasterUsername)
+	if v.MasterUserSecret != nil {
+		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(v.MasterUserSecret)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
+		}
+	}
 	d.Set("monitoring_interval", v.MonitoringInterval)
 	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
 	d.Set("multi_az", v.MultiAZ)
@@ -241,6 +264,7 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
 	d.Set("resource_id", v.DbiResourceId)
 	d.Set("storage_encrypted", v.StorageEncrypted)
+	d.Set("storage_throughput", v.StorageThroughput)
 	d.Set("storage_type", v.StorageType)
 	d.Set("timezone", v.Timezone)
 	var vpcSecurityGroupIDs []string
@@ -256,7 +280,6 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("endpoint", fmt.Sprintf("%s:%d", aws.StringValue(dbEndpoint.Address), aws.Int64Value(dbEndpoint.Port)))
 		d.Set("hosted_zone_id", dbEndpoint.HostedZoneId)
 		d.Set("port", dbEndpoint.Port)
-
 	} else {
 		d.Set("address", nil)
 		d.Set("endpoint", nil)
@@ -264,15 +287,11 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("port", nil)
 	}
 
-	tags, err := ListTags(conn, d.Get("db_instance_arn").(string))
-
-	if err != nil {
-		return fmt.Errorf("listing tags for RDS DB Instance (%s): %w", d.Get("db_instance_arn").(string), err)
-	}
+	tags := KeyValueTags(ctx, v.TagList)
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

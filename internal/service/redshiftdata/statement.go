@@ -1,26 +1,33 @@
 package redshiftdata
 
 import (
-	"fmt"
+	"context"
+	"errors"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshiftdata_statement")
 func ResourceStatement() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceStatementCreate,
-		Read:   resourceStatementRead,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceStatementCreate,
+		ReadWithoutTimeout:   resourceStatementRead,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -30,7 +37,7 @@ func ResourceStatement() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"cluster_identifier": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"database": {
@@ -84,18 +91,27 @@ func ResourceStatement() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"workgroup_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
 
-func resourceStatementCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftDataConn
+func resourceStatementCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftDataConn()
 
 	input := &redshiftdataapiservice.ExecuteStatementInput{
-		ClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
-		Database:          aws.String(d.Get("database").(string)),
-		Sql:               aws.String(d.Get("sql").(string)),
-		WithEvent:         aws.Bool(d.Get("with_event").(bool)),
+		Database:  aws.String(d.Get("database").(string)),
+		Sql:       aws.String(d.Get("sql").(string)),
+		WithEvent: aws.Bool(d.Get("with_event").(bool)),
+	}
+
+	if v, ok := d.GetOk("cluster_identifier"); ok {
+		input.ClusterIdentifier = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("db_user"); ok {
@@ -114,47 +130,129 @@ func resourceStatementCreate(d *schema.ResourceData, meta interface{}) error {
 		input.StatementName = aws.String(v.(string))
 	}
 
-	output, err := conn.ExecuteStatement(input)
+	if v, ok := d.GetOk("workgroup_name"); ok {
+		input.WorkgroupName = aws.String(v.(string))
+	}
+
+	output, err := conn.ExecuteStatementWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("executing Redshift Data Statement: %w", err)
+		return sdkdiag.AppendErrorf(diags, "executing Redshift Data Statement: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Id))
 
-	if _, err := waitStatementFinished(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for Redshift Data Statement (%s) to finish: %w", d.Id(), err)
+	if _, err := waitStatementFinished(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Data Statement (%s) to finish: %s", d.Id(), err)
 	}
 
-	return resourceStatementRead(d, meta)
+	return append(diags, resourceStatementRead(ctx, d, meta)...)
 }
 
-func resourceStatementRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftDataConn
+func resourceStatementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftDataConn()
 
-	sub, err := FindStatementByID(conn, d.Id())
+	sub, err := FindStatementByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Data Statement (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift Data Statement (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Data Statement (%s): %s", d.Id(), err)
 	}
 
 	d.Set("cluster_identifier", sub.ClusterIdentifier)
 	d.Set("secret_arn", sub.SecretArn)
 	d.Set("database", d.Get("database").(string))
 	d.Set("db_user", d.Get("db_user").(string))
-	d.Set("sql", sub.QueryString)
-
 	if err := d.Set("parameters", flattenParameters(sub.QueryParameters)); err != nil {
-		return fmt.Errorf("setting parameters: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
+	}
+	d.Set("sql", sub.QueryString)
+	d.Set("workgroup_name", sub.WorkgroupName)
+
+	return diags
+}
+
+// FindStatementByID will only find full statement info for statements created recently.
+// For statements that AWS thinks are expired, FindStatementByID will just return a bare bones DescribeStatementOutput w/ only the Id present.
+func FindStatementByID(ctx context.Context, conn *redshiftdataapiservice.RedshiftDataAPIService, id string) (*redshiftdataapiservice.DescribeStatementOutput, error) {
+	input := &redshiftdataapiservice.DescribeStatementInput{
+		Id: aws.String(id),
 	}
 
-	return nil
+	output, err := conn.DescribeStatementWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, redshiftdataapiservice.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if tfawserr.ErrCodeEquals(err, redshiftdataapiservice.ErrCodeValidationException) && strings.Contains(err.Error(), "expired") {
+		return &redshiftdataapiservice.DescribeStatementOutput{
+			Id:     aws.String(id),
+			Status: aws.String("EXPIRED"),
+		}, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusStatement(ctx context.Context, conn *redshiftdataapiservice.RedshiftDataAPIService, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindStatementByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitStatementFinished(ctx context.Context, conn *redshiftdataapiservice.RedshiftDataAPIService, id string, timeout time.Duration) (*redshiftdataapiservice.DescribeStatementOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			redshiftdataapiservice.StatusStringPicked,
+			redshiftdataapiservice.StatusStringStarted,
+			redshiftdataapiservice.StatusStringSubmitted,
+		},
+		Target:     []string{redshiftdataapiservice.StatusStringFinished},
+		Refresh:    statusStatement(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*redshiftdataapiservice.DescribeStatementOutput); ok {
+		if status := aws.StringValue(output.Status); status == redshiftdataapiservice.StatusStringFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.Error)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandParameter(tfMap map[string]interface{}) *redshiftdataapiservice.SqlParameter {

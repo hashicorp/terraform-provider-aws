@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"os"
 	"strings"
 	"testing"
@@ -8,17 +9,34 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestExpandEndpoints(t *testing.T) {
+func TestProvider(t *testing.T) {
+	t.Parallel()
+
+	p, err := New(context.Background())
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = p.InternalValidate()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestExpandEndpoints(t *testing.T) { //nolint:paralleltest
 	oldEnv := stashEnv()
 	defer popEnv(oldEnv)
 
+	ctx := context.Background()
 	endpoints := make(map[string]interface{})
 	for _, serviceKey := range names.Aliases() {
 		endpoints[serviceKey] = ""
 	}
 	endpoints["sts"] = "https://sts.fake.test"
 
-	results, err := expandEndpoints([]interface{}{endpoints})
+	results, err := expandEndpoints(ctx, []interface{}{endpoints})
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
@@ -32,7 +50,8 @@ func TestExpandEndpoints(t *testing.T) {
 	}
 }
 
-func TestEndpointMultipleKeys(t *testing.T) {
+func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
+	ctx := context.Background()
 	testcases := []struct {
 		endpoints        map[string]string
 		expectedService  string
@@ -74,7 +93,7 @@ func TestEndpointMultipleKeys(t *testing.T) {
 			endpoints[k] = v
 		}
 
-		results, err := expandEndpoints([]interface{}{endpoints})
+		results, err := expandEndpoints(ctx, []interface{}{endpoints})
 		if err != nil {
 			t.Fatalf("Unexpected error: %s", err)
 		}
@@ -89,7 +108,8 @@ func TestEndpointMultipleKeys(t *testing.T) {
 	}
 }
 
-func TestEndpointEnvVarPrecedence(t *testing.T) {
+func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
+	ctx := context.Background()
 	testcases := []struct {
 		endpoints        map[string]string
 		envvars          map[string]string
@@ -149,7 +169,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) {
 			endpoints[k] = v
 		}
 
-		results, err := expandEndpoints([]interface{}{endpoints})
+		results, err := expandEndpoints(ctx, []interface{}{endpoints})
 		if err != nil {
 			t.Fatalf("Unexpected error: %s", err)
 		}

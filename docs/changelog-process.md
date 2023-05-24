@@ -102,7 +102,6 @@ resource/aws_lambda_alias: Resource import no longer converts Lambda Function na
 ```
 ``````
 
-
 #### Region validation support
 
 ``````markdown

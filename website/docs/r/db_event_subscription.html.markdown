@@ -18,7 +18,7 @@ resource "aws_db_instance" "default" {
   engine               = "mysql"
   engine_version       = "5.6.17"
   instance_class       = "db.t2.micro"
-  name                 = "mydb"
+  db_name              = "mydb"
   username             = "foo"
   password             = "bar"
   db_subnet_group_name = "my_database_subnet_group"
@@ -34,7 +34,7 @@ resource "aws_db_event_subscription" "default" {
   sns_topic = aws_sns_topic.default.arn
 
   source_type = "db-instance"
-  source_ids  = [aws_db_instance.default.id]
+  source_ids  = [aws_db_instance.default.identifier]
 
   event_categories = [
     "availability",
@@ -75,7 +75,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `40m`)
 - `delete` - (Default `40m`)

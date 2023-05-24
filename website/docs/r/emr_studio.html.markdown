@@ -26,7 +26,6 @@ resource "aws_emr_studio" "example" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are required:

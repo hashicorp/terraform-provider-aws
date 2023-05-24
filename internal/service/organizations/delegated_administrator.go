@@ -10,20 +10,24 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_organizations_delegated_administrator")
 func ResourceDelegatedAdministrator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDelegatedAdministratorCreate,
 		ReadWithoutTimeout:   resourceDelegatedAdministratorRead,
 		DeleteWithoutTimeout: resourceDelegatedAdministratorDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"account_id": {
 				Type:         schema.TypeString,
@@ -70,7 +74,7 @@ func ResourceDelegatedAdministrator() *schema.Resource {
 }
 
 func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	accountID := d.Get("account_id").(string)
 	servicePrincipal := d.Get("service_principal").(string)
@@ -90,7 +94,7 @@ func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	accountID, servicePrincipal, err := DecodeOrganizationDelegatedAdministratorID(d.Id())
 	if err != nil {
@@ -114,9 +118,13 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	if delegatedAccount == nil {
-		log.Printf("[WARN] AWS Organization DelegatedAdministrators not found (%s), removing from state", d.Id())
-		d.SetId("")
-		return nil
+		if !d.IsNewResource() {
+			log.Printf("[WARN] AWS Organization DelegatedAdministrators not found (%s), removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		return diag.FromErr(&retry.NotFoundError{})
 	}
 
 	d.Set("arn", delegatedAccount.Arn)
@@ -133,7 +141,7 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	accountID, servicePrincipal, err := DecodeOrganizationDelegatedAdministratorID(d.Id())
 	if err != nil {

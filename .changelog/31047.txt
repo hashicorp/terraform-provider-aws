@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_db_instance: Consider `delete-precheck` a valid pending state for resource deletion
+```
+
+```release-note:bug
+resource/aws_rds_cluster_instance: Consider `delete-precheck` a valid pending state for resource deletion
+```

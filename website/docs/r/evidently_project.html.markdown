@@ -89,6 +89,14 @@ The `s3_destination` block supports the following arguments:
 * `bucket` - (Optional) The name of the bucket in which Evidently stores evaluation events.
 * `prefix` - (Optional) The bucket prefix in which Evidently stores evaluation events.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `2m`)
+* `delete` - (Default `2m`)
+* `update` - (Default `2m`)
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -99,7 +107,7 @@ In addition to all arguments above, the following attributes are exported:
 * `created_time` - The date and time that the project is created.
 * `experiment_count` - The number of experiments currently in the project. This includes all experiments that have been created and not deleted, whether they are ongoing or not.
 * `feature_count` - The number of features currently in the project.
-* `id` - The ID has the same value as the name of the project.
+* `id` - The ID has the same value as the arn of the project.
 * `last_updated_time` - The date and time that the project was most recently updated.
 * `launch_count` - The number of launches currently in the project. This includes all launches that have been created and not deleted, whether they are ongoing or not.
 * `status` - The current state of the project. Valid values are `AVAILABLE` and `UPDATING`.
@@ -107,8 +115,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch Evidently Project can be imported using the `name`, e.g.,
+CloudWatch Evidently Project can be imported using the `arn`, e.g.,
 
 ```
-$ terraform import aws_evidently_project.example example
+$ terraform import aws_evidently_project.example arn:aws:evidently:us-east-1:123456789012:segment/example
 ```

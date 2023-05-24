@@ -13,7 +13,7 @@ func main() {
 	debugFlag := flag.Bool("debug", false, "Start provider in debug mode.")
 	flag.Parse()
 
-	serverFactory, err := provider.ProtoV5ProviderServerFactory(context.Background())
+	serverFactory, _, err := provider.ProtoV5ProviderServerFactory(context.Background())
 
 	if err != nil {
 		log.Fatal(err)

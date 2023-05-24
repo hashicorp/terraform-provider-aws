@@ -63,6 +63,7 @@ the selected Nat Gateway.
 Each attachment supports the following:
 
 * `allocation_id` - ID of the EIP allocated to the selected Nat Gateway.
+* `association_id` - The association ID of the Elastic IP address that's associated with the NAT gateway. Only available when `connectivity_type` is `public`.
 * `connectivity_type` - Connectivity type of the NAT Gateway.
 * `network_interface_id` - The ID of the ENI allocated to the selected Nat Gateway.
 * `private_ip` - Private Ip address of the selected Nat Gateway.
@@ -70,6 +71,6 @@ Each attachment supports the following:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

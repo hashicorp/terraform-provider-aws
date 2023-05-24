@@ -95,7 +95,7 @@ consisting of a DNS name and a port number
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `45m`)
 - `update` - (Default `45m`)

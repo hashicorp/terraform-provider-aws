@@ -48,41 +48,41 @@ resource "aws_imagebuilder_image_recipe" "example" {
 
 The following arguments are required:
 
-* `component` - (Required) Ordered configuration block(s) with components for the image recipe. Detailed below.
-* `name` - (Required) Name of the image recipe.
-* `parent_image` - (Required) Platform of the image recipe.
-* `version` - (Required) Version of the image recipe.
+* `component` - Ordered configuration block(s) with components for the image recipe. Detailed below.
+* `name` - Name of the image recipe.
+* `parent_image` - The image recipe uses this image as a base from which to build your customized image. The value can be the base image ARN or an AMI ID.
+* `version` - The semantic version of the image recipe, which specifies the version in the following format, with numeric values in each position to indicate a specific version: major.minor.patch. For example: 1.0.0.
 
 The following attributes are optional:
 
-* `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the image recipe. Detailed below.
-* `description` - (Optional) Description of the image recipe.
-* `systems_manager_agent` - (Optional) Configuration block for the Systems Manager Agent installed by default by Image Builder. Detailed below.
-* `tags` - (Optional) Key-value map of resource tags for the image recipe. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `user_data_base64` (Optional) Base64 encoded user data. Use this to provide commands or a command script to run when you launch your build instance.
-* `working_directory` - (Optional) The working directory to be used during build and test workflows.
+* `block_device_mapping` - Configuration block(s) with block device mappings for the image recipe. Detailed below.
+* `description` - Description of the image recipe.
+* `systems_manager_agent` - Configuration block for the Systems Manager Agent installed by default by Image Builder. Detailed below.
+* `tags` - Key-value map of resource tags for the image recipe. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `user_data_base64` Base64 encoded user data. Use this to provide commands or a command script to run when you launch your build instance.
+* `working_directory` - The working directory to be used during build and test workflows.
 
 ### block_device_mapping
 
 The following arguments are optional:
 
-* `device_name` - (Optional) Name of the device. For example, `/dev/sda` or `/dev/xvdb`.
-* `ebs` - (Optional) Configuration block with Elastic Block Storage (EBS) block device mapping settings. Detailed below.
-* `no_device` - (Optional) Set to `true` to remove a mapping from the parent image.
-* `virtual_name` - (Optional) Virtual device name. For example, `ephemeral0`. Instance store volumes are numbered starting from 0.
+* `device_name` - Name of the device. For example, `/dev/sda` or `/dev/xvdb`.
+* `ebs` - Configuration block with Elastic Block Storage (EBS) block device mapping settings. Detailed below.
+* `no_device` - Set to `true` to remove a mapping from the parent image.
+* `virtual_name` - Virtual device name. For example, `ephemeral0`. Instance store volumes are numbered starting from 0.
 
 #### ebs
 
 The following arguments are optional:
 
-* `delete_on_termination` - (Optional) Whether to delete the volume on termination. Defaults to unset, which is the value inherited from the parent image.
-* `encrypted` - (Optional) Whether to encrypt the volume. Defaults to unset, which is the value inherited from the parent image.
-* `iops` - (Optional) Number of Input/Output (I/O) operations per second to provision for an `io1` or `io2` volume.
-* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key for encryption.
-* `snapshot_id` - (Optional) Identifier of the EC2 Volume Snapshot.
-* `throughput` - (Optional) For GP3 volumes only. The throughput in MiB/s that the volume supports.
-* `volume_size` - (Optional) Size of the volume, in GiB.
-* `volume_type` - (Optional) Type of the volume. For example, `gp2` or `io2`.
+* `delete_on_termination` - Whether to delete the volume on termination. Defaults to unset, which is the value inherited from the parent image.
+* `encrypted` - Whether to encrypt the volume. Defaults to unset, which is the value inherited from the parent image.
+* `iops` - Number of Input/Output (I/O) operations per second to provision for an `io1` or `io2` volume.
+* `kms_key_id` - Amazon Resource Name (ARN) of the Key Management Service (KMS) Key for encryption.
+* `snapshot_id` - Identifier of the EC2 Volume Snapshot.
+* `throughput` - For GP3 volumes only. The throughput in MiB/s that the volume supports.
+* `volume_size` - Size of the volume, in GiB.
+* `volume_type` - Type of the volume. For example, `gp2` or `io2`.
 
 ### component
 
@@ -95,14 +95,14 @@ The `component` block supports the following arguments:
 
 The following arguments are required:
 
-* `name` - (Required) The name of the component parameter.
-* `value` - (Required) The value for the named component parameter.
+* `name` - The name of the component parameter.
+* `value` - The value for the named component parameter.
 
 ### systems_manager_agent
 
 The following arguments are required:
 
-* `uninstall_after_build` - (Required) Whether to remove the Systems Manager Agent after the image has been built. Defaults to `false`.
+* `uninstall_after_build` - Whether to remove the Systems Manager Agent after the image has been built. Defaults to `false`.
 
 ## Attributes Reference
 
