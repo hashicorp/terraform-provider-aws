@@ -75,12 +75,12 @@ func ResourceBucket() *schema.Resource {
 }
 
 func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var region string
-	if v, ok := d.GetOk("region"); ok {
-		region = v.(string)
-	} else {
-		region = meta.(*conns.ProviderMeta).Region
+	region, err := flex.ExpandResourceRegion(d.Get("region"), meta.(*conns.ProviderMeta).AllowedRegions, meta.(*conns.ProviderMeta).Region)
+
+	if err != nil {
+		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceRegion, ResBucket, d.Get("name").(string), err)
 	}
+
 	conn := meta.(*conns.ProviderMeta).AWSClients[region].LightsailConn()
 
 	in := lightsail.CreateBucketInput{
@@ -154,12 +154,12 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var region string
-	if v, ok := d.GetOk("region"); ok {
-		region = v.(string)
-	} else {
-		region = meta.(*conns.ProviderMeta).Region
+	region, err := flex.ExpandResourceRegion(d.Get("region"), meta.(*conns.ProviderMeta).AllowedRegions, meta.(*conns.ProviderMeta).Region)
+
+	if err != nil {
+		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceRegion, ResBucket, d.Get("name").(string), err)
 	}
+
 	conn := meta.(*conns.ProviderMeta).AWSClients[region].LightsailConn()
 
 	if d.HasChange("bundle_id") {
@@ -184,12 +184,12 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var region string
-	if v, ok := d.GetOk("region"); ok {
-		region = v.(string)
-	} else {
-		region = meta.(*conns.ProviderMeta).Region
+	region, err := flex.ExpandResourceRegion(d.Get("region"), meta.(*conns.ProviderMeta).AllowedRegions, meta.(*conns.ProviderMeta).Region)
+
+	if err != nil {
+		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceRegion, ResBucket, d.Get("name").(string), err)
 	}
+
 	conn := meta.(*conns.ProviderMeta).AWSClients[region].LightsailConn()
 
 	out, err := conn.DeleteBucketWithContext(ctx, &lightsail.DeleteBucketInput{
