@@ -150,7 +150,7 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexp.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "OpenSearch_1.1"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "OpenSearch_2.5"),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexp.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
@@ -543,7 +543,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "OpenSearch_1.1")),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "OpenSearch_2.5")),
 				ExpectError: regexp.MustCompile(`OpenSearch Domain ".+" already exists`),
 			},
 		},
@@ -1303,14 +1303,14 @@ func TestAccOpenSearchDomain_Encryption_atRestEnable(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_1.1", false),
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_2.5", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckDomainEncrypted(false, &domain1),
 				),
 			},
 			{
-				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_1.1", true),
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_2.5", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckDomainEncrypted(true, &domain2),
@@ -1318,7 +1318,7 @@ func TestAccOpenSearchDomain_Encryption_atRestEnable(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_1.1", false),
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_2.5", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckDomainEncrypted(false, &domain1),
@@ -1412,14 +1412,14 @@ func TestAccOpenSearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_1.1", false),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_2.5", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckNodeToNodeEncrypted(false, &domain1),
 				),
 			},
 			{
-				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_1.1", true),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_2.5", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckNodeToNodeEncrypted(true, &domain2),
@@ -1427,7 +1427,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_1.1", false),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_2.5", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckNodeToNodeEncrypted(false, &domain1),
@@ -3323,8 +3323,6 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
-
-  engine_version = "OpenSearch_1.1"
 
   %[2]s
 
