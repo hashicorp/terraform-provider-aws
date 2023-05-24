@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -72,8 +73,12 @@ func ResourceEIP() *schema.Resource {
 				Optional: true,
 			},
 			"domain": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:          schema.TypeString,
+				ForceNew:      true,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validation.StringInSlice(ec2.DomainType_Values(), false),
+				ConflictsWith: []string{"vpc"},
 			},
 			"instance": {
 				Type:     schema.TypeString,
@@ -116,10 +121,12 @@ func ResourceEIP() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ForceNew:      true,
+				Computed:      true,
+				Deprecated:    "use domain attribute instead",
+				ConflictsWith: []string{"domain"},
 			},
 		},
 	}
@@ -139,6 +146,10 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if v, ok := d.GetOk("customer_owned_ipv4_pool"); ok {
 		input.CustomerOwnedIpv4Pool = aws.String(v.(string))
+	}
+
+	if v := d.Get("domain"); v != nil && v.(string) != "" {
+		input.Domain = aws.String(v.(string))
 	}
 
 	if v := d.Get("vpc"); v != nil && v.(bool) {
