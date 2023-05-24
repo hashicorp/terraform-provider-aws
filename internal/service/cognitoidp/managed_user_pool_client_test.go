@@ -1045,8 +1045,6 @@ resource "aws_cognito_identity_pool" "test" {
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
 
-  engine_version = "OpenSearch_1.1"
-
   cognito_options {
     enabled          = true
     user_pool_id     = aws_cognito_user_pool.test.id

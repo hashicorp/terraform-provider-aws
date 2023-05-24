@@ -73,7 +73,6 @@ func testAccOutboundConnectionConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "domain_1" {
   domain_name    = "%s-1"
-  engine_version = "OpenSearch_1.1"
 
   cluster_config {
     instance_type = "t3.small.search" # supported in both aws and aws-us-gov
@@ -110,7 +109,6 @@ resource "aws_opensearch_domain" "domain_1" {
 
 resource "aws_opensearch_domain" "domain_2" {
   domain_name    = "%s-2"
-  engine_version = "OpenSearch_1.1"
 
   cluster_config {
     instance_type = "t3.small.search" # supported in both aws and aws-us-gov
