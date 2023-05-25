@@ -15,11 +15,310 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func removeSSMParameter(name string, conn *ssm.SSM) error {
-	_, err := conn.DeleteParameter(&ssm.DeleteParameterInput{
-		Name: aws.String(name),
+func TestAccLambdaInvocation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	fName := "lambda_invocation"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInvocationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					testAccConfigInvocation_function(fName, rName, testData),
+					testAccConfigInvocation_invocation(inputJSON, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+		},
 	})
-	return err
+}
+
+func TestAccLambdaInvocation_qualifier(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInvocationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInvocationConfig_qualifier(rName, testData),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaInvocation_complex(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInvocationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInvocationConfig_complex(rName, testData),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaInvocation_triggers(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+	testData2 := "value4"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInvocationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInvocationConfig_triggers(rName, testData),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
+				),
+			},
+			{
+				Config: testAccInvocationConfig_triggers(rName, testData),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
+				),
+			},
+			{
+				Config: testAccInvocationConfig_triggers(rName, testData2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData2+`"}`),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaInvocation_lifecycle_scopeCRUDCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	fName := "lambda_invocation_crud"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSON := `{"key1":"value1","key2":"value2","tf":{"action":"create", "prev_input": null}}`
+
+	extraArgs := `lifecycle_scope = "CRUD"`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInvocationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					testAccConfigInvocation_function(fName, rName, ""),
+					testAccConfigInvocation_invocation(inputJSON, extraArgs),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	fName := "lambda_invocation_crud"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSON := `{"key1":"value1","key2":"value2","tf":{"action":"create", "prev_input": null}}`
+	inputJSON2 := `{"key1":"valueB","key2":"value2"}`
+	resultJSON2 := fmt.Sprintf(`{"key1":"valueB","key2":"value2","tf":{"action":"update", "prev_input": %s}}`, inputJSON)
+
+	extraArgs := `lifecycle_scope = "CRUD"`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInvocationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					testAccConfigInvocation_function(fName, rName, ""),
+					testAccConfigInvocation_invocation(inputJSON, extraArgs),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					testAccConfigInvocation_function(fName, rName, ""),
+					testAccConfigInvocation_invocation(inputJSON2, extraArgs),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON2),
+				),
+			},
+		},
+	})
+}
+
+// TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy will check destroy is handled appropriately.
+//
+// In order to allow checking the deletion we use a custom lifecycle which will store it's JSON even when a delete action
+// is passed. The Lambda function will create the SSM parameter and the check will verify the content.
+func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	fName := "lambda_invocation_crud"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ssmParameterName := fmt.Sprintf("/tf-test/CRUD/%s", rName)
+
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSON := `{"key1":"value1","key2":"value2","tf":{"action":"create", "prev_input": null}}`
+	destroyJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","tf":{"action":"delete","prev_input":%s}}`, inputJSON)
+
+	dependsOnSSMPermissions := `depends_on = [aws_iam_role_policy_attachment.test_ssm]`
+	crudLifecycle := `lifecycle_scope = "CRUD"`
+	extraArgs := dependsOnSSMPermissions + "\n" + crudLifecycle
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInvocationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					testAccConfigInvocation_function(fName, rName, ssmParameterName),
+					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
+					testAccConfigInvocation_invocation(inputJSON, extraArgs),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					testAccConfigInvocation_function(fName, rName, ssmParameterName),
+					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCRUDDestroyResult(resourceName, ssmParameterName, destroyJSON, t),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyToCRUD(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	fName := "lambda_invocation_crud"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ssmParameterName := fmt.Sprintf("/tf-test/CRUD/%s", rName)
+
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSONCRUD := fmt.Sprintf(`{"key1":"value1","key2":"value2","tf":{"action":"update", "prev_input": %s}}`, inputJSON)
+
+	extraArgs := `lifecycle_scope = "CRUD"`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInvocationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					testAccConfigInvocation_function(fName, rName, ""),
+					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
+					testAccConfigInvocation_invocation(inputJSON, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					testAccConfigInvocation_function(fName, rName, ""),
+					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
+					testAccConfigInvocation_invocation(inputJSON, extraArgs),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSONCRUD),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaInvocation_terraformKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	fName := "lambda_invocation_crud"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSON := `{"key1":"value1","key2":"value2","custom_key":{"action":"create", "prev_input": null}}`
+
+	terraformKey := `terraform_key = "custom_key"`
+	crudLifecycle := `lifecycle_scope = "CRUD"`
+	extraArgs := terraformKey + "\n" + crudLifecycle
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInvocationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					testAccConfigInvocation_function(fName, rName, ""),
+					testAccConfigInvocation_invocation(inputJSON, extraArgs),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckInvocationDestroy(s *terraform.State) error {
+	// Nothing to check on destroy
+	return nil
 }
 
 // testAccCheckCRUDDestroyResult verifies that when CRUD lifecycle is active that a destroyed resource
@@ -56,303 +355,11 @@ func testAccCheckCRUDDestroyResult(name, ssmParameterName, expectedResult string
 	}
 }
 
-func TestAccLambdaInvocation_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_lambda_invocation.test"
-	fName := "lambda_invocation"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	testData := "value3"
-	inputJSON := `{"key1":"value1","key2":"value2"}`
-	resultJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccDummyCheckInvocationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, testData),
-					testAccConfigInvocation_invocation(inputJSON, ""),
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult(resourceName, resultJSON),
-				),
-			},
-		},
+func removeSSMParameter(name string, conn *ssm.SSM) error {
+	_, err := conn.DeleteParameter(&ssm.DeleteParameterInput{
+		Name: aws.String(name),
 	})
-}
-
-// testAccDummyCheckInvocationDestroy is a fake check since most invocations their destroy
-// cannot be checked. See TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy for verification
-// that destroy is called.
-func testAccDummyCheckInvocationDestroy(s *terraform.State) error {
-	return nil
-}
-
-func TestAccLambdaInvocation_qualifier(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_lambda_invocation.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	testData := "value3"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccDummyCheckInvocationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInvocationConfig_qualifier(rName, testData),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult(resourceName, `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
-				),
-			},
-		},
-	})
-}
-
-func TestAccLambdaInvocation_complex(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_lambda_invocation.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	testData := "value3"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccDummyCheckInvocationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInvocationConfig_complex(rName, testData),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
-				),
-			},
-		},
-	})
-}
-
-func TestAccLambdaInvocation_triggers(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_lambda_invocation.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	testData := "value3"
-	testData2 := "value4"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccDummyCheckInvocationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInvocationConfig_triggers(rName, testData),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
-				),
-			},
-			{
-				Config: testAccInvocationConfig_triggers(rName, testData),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
-				),
-			},
-			{
-				Config: testAccInvocationConfig_triggers(rName, testData2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData2+`"}`),
-				),
-			},
-		},
-	})
-}
-
-func TestAccLambdaInvocation_lifecycle_scopeCRUDCreate(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_lambda_invocation.test"
-	fName := "lambda_invocation_crud"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	inputJSON := `{"key1":"value1","key2":"value2"}`
-	extraResourceArgs := `lifecycle_scope = "CRUD"`
-	resultJSON := `{"key1":"value1","key2":"value2","tf":{"action":"create", "prev_input": null}}`
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccDummyCheckInvocationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_invocation(inputJSON, extraResourceArgs),
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult(resourceName, resultJSON),
-				),
-			},
-		},
-	})
-}
-
-func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_lambda_invocation.test"
-	fName := "lambda_invocation_crud"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	inputJSON := `{"key1":"value1","key2":"value2"}`
-	extraResourceArgs := `lifecycle_scope = "CRUD"`
-	resultJSON := `{"key1":"value1","key2":"value2","tf":{"action":"create", "prev_input": null}}`
-	inputJSON2 := `{"key1":"valueB","key2":"value2"}`
-	resultJSON2 := fmt.Sprintf(`{"key1":"valueB","key2":"value2","tf":{"action":"update", "prev_input": %s}}`, inputJSON)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccDummyCheckInvocationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_invocation(inputJSON, extraResourceArgs),
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult(resourceName, resultJSON),
-				),
-			},
-			{
-				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_invocation(inputJSON2, extraResourceArgs),
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult(resourceName, resultJSON2),
-				),
-			},
-		},
-	})
-}
-
-// TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy will check destroy is handled appropriately.
-//
-// In order to allow checking the deletion we use a custom lifecycle which will store it's JSON even when a delete action
-// is passed. The Lambda function will create the SSM parameter and the check will verify the content.
-func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_lambda_invocation.test"
-	fName := "lambda_invocation_crud"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	inputJSON := `{"key1":"value1","key2":"value2"}`
-	dependsOnSSMPermissions := `depends_on = [aws_iam_role_policy_attachment.test_ssm]`
-	crudLifecycle := `lifecycle_scope = "CRUD"`
-	extraResourceArgs := dependsOnSSMPermissions + "\n" + crudLifecycle
-	resultJSON := `{"key1":"value1","key2":"value2","tf":{"action":"create", "prev_input": null}}`
-	destroyJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","tf":{"action":"delete","prev_input":%s}}`, inputJSON)
-	ssmParameterName := fmt.Sprintf("/tf-test/CRUD/%s", rName)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccDummyCheckInvocationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ssmParameterName),
-					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
-					testAccConfigInvocation_invocation(inputJSON, extraResourceArgs),
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult(resourceName, resultJSON),
-				),
-			},
-			{
-				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ssmParameterName),
-					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCRUDDestroyResult(resourceName, ssmParameterName, destroyJSON, t),
-				),
-			},
-		},
-	})
-}
-
-func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyToCRUD(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_lambda_invocation.test"
-	fName := "lambda_invocation_crud"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	inputJSON := `{"key1":"value1","key2":"value2"}`
-	crudLifecycle := `lifecycle_scope = "CRUD"`
-
-	resultJSON := `{"key1":"value1","key2":"value2"}`
-	resultJSONCRUD := fmt.Sprintf(`{"key1":"value1","key2":"value2","tf":{"action":"update", "prev_input": %s}}`, inputJSON)
-	ssmParameterName := fmt.Sprintf("/tf-test/CRUD/%s", rName)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccDummyCheckInvocationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
-					testAccConfigInvocation_invocation(inputJSON, ""),
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult(resourceName, resultJSON),
-				),
-			},
-			{
-				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
-					testAccConfigInvocation_invocation(inputJSON, crudLifecycle),
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult(resourceName, resultJSONCRUD),
-				),
-			},
-		},
-	})
-}
-
-func TestAccLambdaInvocation_terraform_key(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_lambda_invocation.test"
-	fName := "lambda_invocation_crud"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	inputJSON := `{"key1":"value1","key2":"value2"}`
-	terraformKey := `terraform_key = "custom_key"`
-	crudLifecycle := `lifecycle_scope = "CRUD"`
-	extraResourceArgs := terraformKey + "\n" + crudLifecycle
-	resultJSON := `{"key1":"value1","key2":"value2","custom_key":{"action":"create", "prev_input": null}}`
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccDummyCheckInvocationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_invocation(inputJSON, extraResourceArgs),
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult(resourceName, resultJSON),
-				),
-			},
-		},
-	})
+	return err
 }
 
 func testAccConfigInvocation_base(roleName string) string {
