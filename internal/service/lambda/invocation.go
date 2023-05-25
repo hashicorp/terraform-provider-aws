@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+const defaultInvocationTerraformKey = "tf"
+
 // @SDKResource("aws_lambda_invocation")
 func ResourceInvocation() *schema.Resource {
 	return &schema.Resource{
@@ -61,13 +63,105 @@ func ResourceInvocation() *schema.Resource {
 			"terraform_key": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "tf",
+				Default:  defaultInvocationTerraformKey,
 			},
 		},
 		CustomizeDiff: customdiff.Sequence(
 			CustomizeDiffValidateInput,
 		),
 	}
+}
+
+func resourceInvocationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return lambdaInvocation(ctx, lambdaInvocationActionCreate, d, meta)
+}
+
+func resourceInvocationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	return diags
+}
+
+func resourceInvocationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if !isCreateOnlyScope(d) {
+		log.Printf("[DEBUG] Lambda Invocation (%s) \"update\" by invocation", d.Id())
+		return lambdaInvocation(ctx, lambdaInvocationActionUpdate, d, meta)
+	} else {
+		log.Printf("[DEBUG] Lambda Invocation (%s) \"update\" by forceNew create", d.Id())
+		return resourceInvocationCreate(ctx, d, meta)
+	}
+}
+
+func resourceInvocationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if !isCreateOnlyScope(d) {
+		log.Printf("[DEBUG] Lambda Invocation (%s) \"deleted\" by invocation & removing from state", d.Id())
+		return lambdaInvocation(ctx, lambdaInvocationActionDelete, d, meta)
+	}
+	var diags diag.Diagnostics
+	log.Printf("[DEBUG] Lambda Invocation (%s) \"deleted\" by removing from state", d.Id())
+	return diags
+}
+
+// buildInput makes sure that the user provided input is enriched for handling lifecycle events
+//
+// In order to make this a non-breaking change this function only manipulates input if
+// the invocation is not only for creation of resources. In order for the lambda
+// to understand the action it has to take we pass on the action that terraform wants to do
+// on the invocation resource.
+//
+// Because Lambda functions by default are stateless we must pass the input from the previous
+// invocation to allow implementation of delete/update at Lambda side.
+func buildInput(d *schema.ResourceData, action string) ([]byte, error) {
+	if isCreateOnlyScope(d) {
+		jsonBytes := []byte(d.Get("input").(string))
+		return jsonBytes, nil
+	}
+	oldInputMap, newInputMap, err := getInputChange(d)
+	if err != nil {
+		log.Printf("[DEBUG] input serialization %s", err)
+		return nil, err
+	}
+
+	newInputMap[d.Get("terraform_key").(string)] = map[string]interface{}{
+		"action":     action,
+		"prev_input": oldInputMap,
+	}
+	return json.Marshal(&newInputMap)
+}
+
+func getObjectFromJSONString(s string) (map[string]interface{}, error) {
+	if len(s) == 0 {
+		return nil, nil
+	}
+	var mapObject map[string]interface{}
+	if err := json.Unmarshal([]byte(s), &mapObject); err != nil {
+		log.Printf("[ERROR] input JSON deserialization '%s'", s)
+		return nil, err
+	}
+	return mapObject, nil
+}
+
+// getInputChange gets old an new input as maps
+func getInputChange(d *schema.ResourceData) (map[string]interface{}, map[string]interface{}, error) {
+	old, new := d.GetChange("input")
+	oldMap, err := getObjectFromJSONString(old.(string))
+	if err != nil {
+		log.Printf("[ERROR] old input serialization '%s'", old.(string))
+		return nil, nil, err
+	}
+	newMap, err := getObjectFromJSONString(new.(string))
+	if err != nil {
+		log.Printf("[ERROR] new input serialization '%s'", new.(string))
+		return nil, nil, err
+	}
+	return oldMap, newMap, nil
+}
+
+// isCreateOnlyScope returns True if Lambda is only invoked when the resource is
+// created or replaced.
+//
+// The original invocation logic only triggers on create.
+func isCreateOnlyScope(d *schema.ResourceData) bool {
+	return d.Get("lifecycle_scope").(string) == lambdaLifecycleScopeCreateOnly
 }
 
 func lambdaInvocation(ctx context.Context, action string, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -100,97 +194,4 @@ func lambdaInvocation(ctx context.Context, action string, d *schema.ResourceData
 	d.Set("result", string(res.Payload))
 
 	return diags
-}
-
-func resourceInvocationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return lambdaInvocation(ctx, lambdaInvocationActionCreate, d, meta)
-}
-
-func getObjectFromJSONString(s string) (map[string]interface{}, error) {
-	if len(s) == 0 {
-		return nil, nil
-	}
-	var mapObject map[string]interface{}
-	if err := json.Unmarshal([]byte(s), &mapObject); err != nil {
-		log.Printf("[ERROR] input JSON deserialization '%s'", s)
-		return nil, err
-	}
-	return mapObject, nil
-}
-
-// getInputChange gets old an new input as maps
-func getInputChange(d *schema.ResourceData) (map[string]interface{}, map[string]interface{}, error) {
-	old, new := d.GetChange("input")
-	oldMap, err := getObjectFromJSONString(old.(string))
-	if err != nil {
-		log.Printf("[ERROR] old input serialization '%s'", old.(string))
-		return nil, nil, err
-	}
-	newMap, err := getObjectFromJSONString(new.(string))
-	if err != nil {
-		log.Printf("[ERROR] new input serialization '%s'", new.(string))
-		return nil, nil, err
-	}
-	return oldMap, newMap, nil
-}
-
-type tfInputFieldValue map[string]interface{}
-
-// onlyCreate returns True if Lambda is only invoked when the resource is created or replaced.
-//
-// Original invocation logic only triggers on create
-func onlyCreate(d *schema.ResourceData) bool {
-	return d.Get("lifecycle_scope").(string) == lambdaLifecycleScopeCreateOnly
-}
-
-// buildInput makes sure that the user provided input is enriched for handling lifecycle events
-//
-// In order to make this a non-breaking change this function only manipulates input if
-// the invocation is not only for creation of resources. In order for the lambda
-// to understand the action it has to take we pass on the action that terraform wants to do
-// on the invocation resource.
-//
-// Because Lambda functions by default are stateless we must pass the input from the previous
-// invocation to allow implementation of delete/update at Lambda side.
-func buildInput(d *schema.ResourceData, action string) ([]byte, error) {
-	if onlyCreate(d) {
-		jsonBytes := []byte(d.Get("input").(string))
-		return jsonBytes, nil
-	}
-	oldInputMap, newInputMap, err := getInputChange(d)
-	if err != nil {
-		log.Printf("[DEBUG] input serialization %s", err)
-		return nil, err
-	}
-
-	newInputMap[d.Get("terraform_key").(string)] = tfInputFieldValue{
-		"action":     action,
-		"prev_input": oldInputMap,
-	}
-	return json.Marshal(&newInputMap)
-}
-
-func resourceInvocationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	return diags
-}
-
-func resourceInvocationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if !onlyCreate(d) {
-		log.Printf("[DEBUG] Lambda Invocation (%s) \"deleted\" by invocation & removing from state", d.Id())
-		return lambdaInvocation(ctx, lambdaInvocationActionDelete, d, meta)
-	}
-	var diags diag.Diagnostics
-	log.Printf("[DEBUG] Lambda Invocation (%s) \"deleted\" by removing from state", d.Id())
-	return diags
-}
-
-func resourceInvocationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if !onlyCreate(d) {
-		log.Printf("[DEBUG] Lambda Invocation (%s) \"update\" by invocation", d.Id())
-		return lambdaInvocation(ctx, lambdaInvocationActionUpdate, d, meta)
-	} else {
-		log.Printf("[DEBUG] Lambda Invocation (%s) \"update\" by forceNew create", d.Id())
-		return resourceInvocationCreate(ctx, d, meta)
-	}
 }
