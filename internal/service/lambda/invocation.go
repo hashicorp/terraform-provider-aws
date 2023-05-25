@@ -67,7 +67,8 @@ func ResourceInvocation() *schema.Resource {
 			},
 		},
 		CustomizeDiff: customdiff.Sequence(
-			CustomizeDiffValidateInput,
+			customizeDiffValidateInput,
+			customizeDiffInputChangeWithCreateOnlyScope,
 		),
 	}
 }
@@ -82,13 +83,7 @@ func resourceInvocationRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceInvocationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if !isCreateOnlyScope(d) {
-		log.Printf("[DEBUG] Lambda Invocation (%s) \"update\" by invocation", d.Id())
-		return lambdaInvocation(ctx, lambdaInvocationActionUpdate, d, meta)
-	} else {
-		log.Printf("[DEBUG] Lambda Invocation (%s) \"update\" by forceNew create", d.Id())
-		return resourceInvocationCreate(ctx, d, meta)
-	}
+	return lambdaInvocation(ctx, lambdaInvocationActionUpdate, d, meta)
 }
 
 func resourceInvocationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

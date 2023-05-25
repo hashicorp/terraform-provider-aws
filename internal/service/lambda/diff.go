@@ -8,8 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// CustomizeDiffValidateInput validates that `input` is JSON dict when `lifecycle_scope is not "CREATE_ONLY"
-func CustomizeDiffValidateInput(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+// customizeDiffValidateInput validates that `input` is JSON object when
+// `lifecycle_scope` is not "CREATE_ONLY"
+func customizeDiffValidateInput(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if diff.Get("lifecycle_scope") == lambdaLifecycleScopeCreateOnly {
 		return nil
 	}
@@ -19,5 +20,14 @@ func CustomizeDiffValidateInput(_ context.Context, diff *schema.ResourceDiff, v 
 		return nil
 	}
 
-	return errors.New(`lifecycle_scope other than "CREATE" require input to be a JSON object`)
+	return errors.New(`lifecycle_scope other than "CREATE_ONLY" requires input to be a JSON object`)
+}
+
+// customizeDiffInputChangeWithCreateOnlyScope forces a new resource when `input` has
+// a change and `lifecycle_scope` is set to "CREATE_ONLY"
+func customizeDiffInputChangeWithCreateOnlyScope(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if diff.HasChange("input") && diff.Get("lifecycle_scope").(string) == lambdaLifecycleScopeCreateOnly {
+		return diff.ForceNew("input")
+	}
+	return nil
 }

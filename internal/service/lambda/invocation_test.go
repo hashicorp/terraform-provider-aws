@@ -193,6 +193,45 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
 	})
 }
 
+func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyUpdateInput(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	fName := "lambda_invocation_crud"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSON := `{"key1":"value1","key2":"value2"}`
+	inputJSON2 := `{"key1":"valueB","key2":"value2"}`
+	resultJSON2 := `{"key1":"valueB","key2":"value2"}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInvocationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					testAccConfigInvocation_function(fName, rName, ""),
+					testAccConfigInvocation_invocation(inputJSON, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					testAccConfigInvocation_function(fName, rName, ""),
+					testAccConfigInvocation_invocation(inputJSON2, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON2),
+				),
+			},
+		},
+	})
+}
+
 // TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy will check destroy is handled appropriately.
 //
 // In order to allow checking the deletion we use a custom lifecycle which will store it's JSON even when a delete action
