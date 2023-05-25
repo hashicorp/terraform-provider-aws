@@ -22,15 +22,13 @@ func removeSSMParameter(name string, conn *ssm.SSM) error {
 	return err
 }
 
-const testSSMParamName = "/tf-test/CRUD/delete-event"
-
 // testAccCheckCRUDDestroyResult verifies that when CRUD lifecycle is active that a destroyed resource
 // triggers the lambda.
 //
 // Because a destroy implies the resource will be removed from the state we need another way to check
 // how the lambda was invoked. The JSON used to invoke the lambda is stored in an SSM Parameter.
 // We will read it out, compare with the expected result and clean up the SSM parameter.
-func testAccCheckCRUDDestroyResult(name, expectedResult string, t *testing.T) resource.TestCheckFunc {
+func testAccCheckCRUDDestroyResult(name, ssmParameterName, expectedResult string, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if ok {
@@ -38,16 +36,16 @@ func testAccCheckCRUDDestroyResult(name, expectedResult string, t *testing.T) re
 		}
 		conn := acctest.ProviderMeta(t).SSMConn()
 		res, err := conn.GetParameter(&ssm.GetParameterInput{
-			Name:           aws.String(testSSMParamName),
+			Name:           aws.String(ssmParameterName),
 			WithDecryption: aws.Bool(true),
 		})
 
-		if cleanupErr := removeSSMParameter(testSSMParamName, conn); cleanupErr != nil {
-			return fmt.Errorf("Could not cleanup SSM Parameter %s", testSSMParamName)
+		if cleanupErr := removeSSMParameter(ssmParameterName, conn); cleanupErr != nil {
+			return fmt.Errorf("Could not cleanup SSM Parameter %s", ssmParameterName)
 		}
 
 		if err != nil {
-			return fmt.Errorf("Could not get SSM Parameter %s", testSSMParamName)
+			return fmt.Errorf("Could not get SSM Parameter %s", ssmParameterName)
 		}
 
 		if !verify.JSONStringsEqual(*res.Parameter.Value, expectedResult) {
@@ -254,6 +252,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
 	extraResourceArgs := dependsOnSSMPermissions + "\n" + crudLifecycle
 	resultJSON := `{"key1":"value1","key2":"value2","tf":{"action":"create", "prev_input": null}}`
 	destroyJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","tf":{"action":"delete","prev_input":%s}}`, inputJSON)
+	ssmParameterName := fmt.Sprintf("/tf-test/CRUD/%s", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -263,8 +262,8 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, testSSMParamName),
-					testAccConfigInvocation_crudAllowSSM(rName),
+					testAccConfigInvocation_function(fName, rName, ssmParameterName),
+					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
 					testAccConfigInvocation_invocation(inputJSON, extraResourceArgs),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -273,11 +272,11 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, testSSMParamName),
-					testAccConfigInvocation_crudAllowSSM(rName),
+					testAccConfigInvocation_function(fName, rName, ssmParameterName),
+					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCRUDDestroyResult(resourceName, destroyJSON, t),
+					testAccCheckCRUDDestroyResult(resourceName, ssmParameterName, destroyJSON, t),
 				),
 			},
 		},
@@ -294,6 +293,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyToCRUD(t *testing.T) {
 
 	resultJSON := `{"key1":"value1","key2":"value2"}`
 	resultJSONCRUD := fmt.Sprintf(`{"key1":"value1","key2":"value2","tf":{"action":"update", "prev_input": %s}}`, inputJSON)
+	ssmParameterName := fmt.Sprintf("/tf-test/CRUD/%s", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -304,7 +304,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyToCRUD(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_crudAllowSSM(rName),
+					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
 					testAccConfigInvocation_invocation(inputJSON, ""),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -314,7 +314,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyToCRUD(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_crudAllowSSM(rName),
+					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
 					testAccConfigInvocation_invocation(inputJSON, crudLifecycle),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -382,7 +382,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, roleName)
 }
 
-func testAccConfigInvocation_crudAllowSSM(rName string) string {
+func testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
 	name        = %[1]q
@@ -409,7 +409,7 @@ resource "aws_iam_role_policy_attachment" "test_ssm" {
   policy_arn = aws_iam_policy.test.arn
   role       = aws_iam_role.test.name
 }
-`, rName, testSSMParamName)
+`, rName, ssmParameterName)
 }
 
 func testAccConfigInvocation_function(fName, rName, testData string) string {

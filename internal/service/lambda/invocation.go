@@ -140,7 +140,7 @@ type tfInputFieldValue map[string]interface{}
 //
 // Original invocation logic only triggers on create
 func onlyCreate(d *schema.ResourceData) bool {
-	return d.Get("lifecycle_scope") == lambdaLifecycleScopeCreateOnly
+	return d.Get("lifecycle_scope").(string) == lambdaLifecycleScopeCreateOnly
 }
 
 // buildInput makes sure that the user provided input is enriched for handling lifecycle events
