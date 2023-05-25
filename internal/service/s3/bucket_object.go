@@ -189,6 +189,8 @@ func ResourceBucketObject() *schema.Resource {
 				Optional: true,
 			},
 		},
+
+		DeprecationMessage: `use the aws_s3_object resource instead`,
 	}
 }
 

@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -36,7 +36,7 @@ func TestAccEC2EIPsDataSource_basic(t *testing.T) {
 func testAccEIPsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test1" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = "%[1]s-1"
@@ -44,7 +44,7 @@ resource "aws_eip" "test1" {
 }
 
 resource "aws_eip" "test2" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = "%[1]s-2"

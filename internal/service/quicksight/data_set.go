@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -299,10 +300,68 @@ func ResourceDataSet() *schema.Resource {
 					},
 				},
 			},
+			"refresh_properties": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"refresh_configuration": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"incremental_refresh": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"lookback_window": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"column_name": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															"size": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+															"size_unit": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(quicksight.LookbackWindowSizeUnit_Values(), false),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+				mode := diff.Get("import_mode").(string)
+				if v, ok := diff.Get("refresh_properties").([]interface{}); ok && v != nil && len(v) > 0 && mode == "DIRECT_QUERY" {
+					return fmt.Errorf("refresh_properties cannot be set when import_mode is 'DIRECT_QUERY'")
+				}
+				return nil
+			},
+			verify.SetTagsDiff,
+		),
 	}
 }
 
@@ -829,6 +888,19 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error creating QuickSight Data Set: %s", err)
 	}
 
+	if v, ok := d.GetOk("refresh_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input := &quicksight.PutDataSetRefreshPropertiesInput{
+			AwsAccountId:             aws.String(awsAccountId),
+			DataSetId:                aws.String(dataSetID),
+			DataSetRefreshProperties: expandDataSetRefreshProperties(v.([]interface{})),
+		}
+
+		_, err := conn.PutDataSetRefreshPropertiesWithContext(ctx, input)
+		if err != nil {
+			return diag.Errorf("error putting QuickSight Data Set Refresh Properties: %s", err)
+		}
+	}
+
 	return resourceDataSetRead(ctx, d, meta)
 }
 
@@ -917,13 +989,29 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
 		return diag.Errorf("error setting permissions: %s", err)
 	}
+
+	propsResp, err := conn.DescribeDataSetRefreshPropertiesWithContext(ctx, &quicksight.DescribeDataSetRefreshPropertiesInput{
+		AwsAccountId: aws.String(awsAccountId),
+		DataSetId:    aws.String(dataSetId),
+	})
+
+	if err != nil && !tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+		return diag.Errorf("error describing refresh properties (%s): %s", d.Id(), err)
+	}
+
+	if err == nil {
+		if err := d.Set("refresh_properties", flattenRefreshProperties(propsResp.DataSetRefreshProperties)); err != nil {
+			return diag.Errorf("error setting refresh properties: %s", err)
+		}
+	}
+
 	return nil
 }
 
 func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn()
 
-	if d.HasChangesExcept("permissions", "tags", "tags_all") {
+	if d.HasChangesExcept("permissions", "tags", "tags_all", "refresh_properties") {
 		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
@@ -989,12 +1077,42 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
+	if d.HasChange("refresh_properties") {
+		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		oldraw, newraw := d.GetChange("refresh_properties")
+		old := oldraw.([]interface{})
+		new := newraw.([]interface{})
+		if len(old) == 1 && len(new) == 0 {
+			_, err := conn.DeleteDataSetRefreshPropertiesWithContext(ctx, &quicksight.DeleteDataSetRefreshPropertiesInput{
+				AwsAccountId: aws.String(awsAccountId),
+				DataSetId:    aws.String(dataSetId),
+			})
+			if err != nil {
+				return diag.Errorf("error deleting QuickSight Data Set Refresh Properties (%s): %s", d.Id(), err)
+			}
+		} else {
+			_, err = conn.PutDataSetRefreshPropertiesWithContext(ctx, &quicksight.PutDataSetRefreshPropertiesInput{
+				AwsAccountId:             aws.String(awsAccountId),
+				DataSetId:                aws.String(dataSetId),
+				DataSetRefreshProperties: expandDataSetRefreshProperties(d.Get("refresh_properties").([]interface{})),
+			})
+			if err != nil {
+				return diag.Errorf("error updating QuickSight Data Set Refresh Properties (%s): %s", d.Id(), err)
+			}
+		}
+	}
+
 	return resourceDataSetRead(ctx, d, meta)
 }
 
 func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn()
 
+	log.Printf("[INFO] Deleting QuickSight Data Set %s", d.Id())
 	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
@@ -1740,6 +1858,76 @@ func expandDataSetRowLevelPermissionTagConfigurations(tfList []interface{}) *qui
 	return rowLevelPermissionTagConfiguration
 }
 
+func expandDataSetRefreshProperties(tfList []interface{}) *quicksight.DataSetRefreshProperties {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	props := &quicksight.DataSetRefreshProperties{}
+	if v, ok := tfMap["refresh_configuration"].([]interface{}); ok {
+		props.RefreshConfiguration = expandDataSetRefreshConfiguration(v)
+	}
+	return props
+}
+
+func expandDataSetRefreshConfiguration(tfList []interface{}) *quicksight.RefreshConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	config := &quicksight.RefreshConfiguration{}
+	if v, ok := tfMap["incremental_refresh"].([]interface{}); ok {
+		config.IncrementalRefresh = expandIncrementalRefresh(v)
+	}
+	return config
+}
+
+func expandIncrementalRefresh(tfList []interface{}) *quicksight.IncrementalRefresh {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	refresh := &quicksight.IncrementalRefresh{}
+	if v, ok := tfMap["lookback_window"].([]interface{}); ok {
+		refresh.LookbackWindow = expandLookbackWindow(v)
+	}
+	return refresh
+}
+
+func expandLookbackWindow(tfList []interface{}) *quicksight.LookbackWindow {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	window := &quicksight.LookbackWindow{}
+	if v, ok := tfMap["column_name"].(string); ok {
+		window.ColumnName = aws.String(v)
+	}
+	if v, ok := tfMap["size"].(int); ok {
+		window.Size = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["size_unit"].(string); ok {
+		window.SizeUnit = aws.String(v)
+	}
+	return window
+}
+
 func expandDataSetTagRules(tfList []interface{}) []*quicksight.RowLevelPermissionTagRule {
 	if len(tfList) == 0 {
 		return nil
@@ -2423,6 +2611,64 @@ func flattenRowLevelPermissionTagConfiguration(apiObject *quicksight.RowLevelPer
 	return []interface{}{tfMap}
 }
 
+func flattenRefreshProperties(apiObject *quicksight.DataSetRefreshProperties) interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.RefreshConfiguration != nil {
+		tfMap["refresh_configuration"] = flattenRefreshConfiguration(apiObject.RefreshConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenRefreshConfiguration(apiObject *quicksight.RefreshConfiguration) interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.IncrementalRefresh != nil {
+		tfMap["incremental_refresh"] = flattenIncrementalRefresh(apiObject.IncrementalRefresh)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenIncrementalRefresh(apiObject *quicksight.IncrementalRefresh) interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.LookbackWindow != nil {
+		tfMap["lookback_window"] = flattenLookbackWindow(apiObject.LookbackWindow)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenLookbackWindow(apiObject *quicksight.LookbackWindow) interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ColumnName != nil {
+		tfMap["column_name"] = aws.StringValue(apiObject.ColumnName)
+	}
+	if apiObject.Size != nil {
+		tfMap["size"] = aws.Int64Value(apiObject.Size)
+	}
+	if apiObject.SizeUnit != nil {
+		tfMap["size_unit"] = aws.StringValue(apiObject.SizeUnit)
+	}
+
+	return []interface{}{tfMap}
+}
+
 func flattenTagRules(apiObject []*quicksight.RowLevelPermissionTagRule) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
@@ -2456,11 +2702,11 @@ func flattenTagRules(apiObject []*quicksight.RowLevelPermissionTagRule) []interf
 func ParseDataSetID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ",", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID,DATA_SOURCE_ID", id)
+		return "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID,DATA_SET_ID", id)
 	}
 	return parts[0], parts[1], nil
 }
 
-func createDataSetID(awsAccountID, dataSourceID string) string {
-	return fmt.Sprintf("%s,%s", awsAccountID, dataSourceID)
+func createDataSetID(awsAccountID, dataSetID string) string {
+	return fmt.Sprintf("%s,%s", awsAccountID, dataSetID)
 }
