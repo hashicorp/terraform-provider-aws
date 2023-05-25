@@ -96,7 +96,7 @@ func testAccCheckVPCAssociationAuthorizationDestroy(ctx context.Context) resourc
 			}
 
 			for _, vpc := range res.VPCs {
-				if vpc_id == *vpc.VPCId {
+				if vpc_id == aws.StringValue(vpc.VPCId) {
 					return fmt.Errorf("VPC association authorization for zone %v with %v still exists", zone_id, vpc_id)
 				}
 			}
@@ -133,7 +133,7 @@ func testAccCheckVPCAssociationAuthorizationExists(ctx context.Context, n string
 		}
 
 		for _, vpc := range res.VPCs {
-			if vpc_id == *vpc.VPCId {
+			if vpc_id == aws.StringValue(vpc.VPCId) {
 				return nil
 			}
 		}
@@ -143,9 +143,16 @@ func testAccCheckVPCAssociationAuthorizationExists(ctx context.Context, n string
 }
 
 func testAccVPCAssociationAuthorizationConfig_basic() string {
-	return acctest.ConfigAlternateAccountProvider() + `
-resource "aws_vpc" "test" {
-  cidr_block           = "10.6.0.0/16"
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(), `
+resource "aws_route53_vpc_association_authorization" "test" {
+  zone_id = aws_route53_zone.test.id
+  vpc_id  = aws_vpc.alternate.id
+}
+
+resource "aws_vpc" "alternate" {
+  provider             = "awsalternate"
+  cidr_block           = "10.7.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
 }
@@ -158,16 +165,10 @@ resource "aws_route53_zone" "test" {
   }
 }
 
-resource "aws_vpc" "alternate" {
-  provider             = "awsalternate"
-  cidr_block           = "10.7.0.0/16"
+resource "aws_vpc" "test" {
+  cidr_block           = "10.6.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
 }
-
-resource "aws_route53_vpc_association_authorization" "test" {
-  zone_id = aws_route53_zone.test.id
-  vpc_id  = aws_vpc.alternate.id
-}
-`
+`)
 }

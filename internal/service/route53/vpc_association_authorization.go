@@ -48,7 +48,7 @@ func ResourceVPCAssociationAuthorization() *schema.Resource {
 	}
 }
 
-func resourceVPCAssociationAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCAssociationAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn()
 
@@ -64,19 +64,18 @@ func resourceVPCAssociationAuthorizationCreate(ctx context.Context, d *schema.Re
 		req.VPC.VPCRegion = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Route53 VPC Association Authorization for hosted zone %s with VPC %s and region %s", *req.HostedZoneId, *req.VPC.VPCId, *req.VPC.VPCRegion)
-	_, err := conn.CreateVPCAssociationAuthorizationWithContext(ctx, req)
+	out, err := conn.CreateVPCAssociationAuthorizationWithContext(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 VPC Association Authorization: %s", err)
 	}
 
 	// Store association id
-	d.SetId(fmt.Sprintf("%s:%s", *req.HostedZoneId, *req.VPC.VPCId))
+	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(out.HostedZoneId), aws.StringValue(out.VPC.VPCId)))
 
 	return append(diags, resourceVPCAssociationAuthorizationRead(ctx, d, meta)...)
 }
 
-func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn()
 
@@ -126,7 +125,7 @@ func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceVPCAssociationAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCAssociationAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn()
 
