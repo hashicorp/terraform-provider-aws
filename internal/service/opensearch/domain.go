@@ -456,8 +456,9 @@ func ResourceDomain() *schema.Resource {
 				Default:  "OpenSearch_1.1",
 			},
 			"kibana_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "use 'dashboard_endpoint' attribute instead",
 			},
 			"log_publishing_options": {
 				Type:     schema.TypeSet,

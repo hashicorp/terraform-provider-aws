@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -182,6 +182,30 @@ func TestAccVPCSecurityGroupIngressRule_tags(t *testing.T) {
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCSecurityGroupIngressRule_tags_computed(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v ec2.SecurityGroupRule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpc_security_group_ingress_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupIngressRuleConfig_computed(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags.eip"),
 				),
 			},
 		},
@@ -461,6 +485,8 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTagsProviderAndResource_overlappi
 func TestAccVPCSecurityGroupIngressRule_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var v ec2.SecurityGroupRule
+	resourceName := "aws_vpc_security_group_ingress_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -473,8 +499,11 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTagsProviderAndResource_duplicate
 					acctest.ConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
 					testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "overlapkey", "overlapvalue"),
 				),
-				PlanOnly:    true,
-				ExpectError: regexp.MustCompile(`"tags" are identical to those in the "default_tags" configuration block`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+				),
 			},
 		},
 	})
@@ -1082,6 +1111,27 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
   }
 }
 `, tagKey1, tagValue1))
+}
+
+func testAccVPCSecurityGroupIngressRuleConfig_computed(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), `
+resource "aws_eip" "test" {
+  vpc = true
+}
+
+resource "aws_vpc_security_group_ingress_rule" "test" {
+  security_group_id = aws_security_group.test.id
+
+  cidr_ipv4   = "10.0.0.0/8"
+  from_port   = 80
+  ip_protocol = "tcp"
+  to_port     = 8080
+
+  tags = {
+    eip = aws_eip.test.public_ip
+  }
+}
+`)
 }
 
 func testAccVPCSecurityGroupIngressRuleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {

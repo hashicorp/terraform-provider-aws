@@ -3405,18 +3405,3 @@ rules:
             - pattern-regex: "(?i)ConfigService"
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
-  - id: configservice-in-test-name
-    languages:
-      - go
-    message: Include "ConfigService" in test name
-    paths:
-      include:
-        - internal/service/configservice/*_test.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccConfigService"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING

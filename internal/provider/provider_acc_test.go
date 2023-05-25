@@ -10,10 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
@@ -866,7 +866,6 @@ func testAccProviderConfig_endpoints(endpoints string) string {
 	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 
@@ -890,11 +889,6 @@ resource "aws_s3_bucket" "test" {
   bucket        = %[2]q
   force_destroy = true
 }
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
 `, endpoint, rName))
 }
 
@@ -903,7 +897,6 @@ func testAccProviderConfig_unusualEndpoints(unusual1, unusual2, unusual3 unusual
 	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 
@@ -921,7 +914,6 @@ func testAccProviderConfig_ignoreTagsKeys0() string {
 	return acctest.ConfigCompose(testAccProviderConfig_base, `
 provider "aws" {
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -937,7 +929,6 @@ provider "aws" {
   }
 
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -953,7 +944,6 @@ provider "aws" {
   }
 
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -965,7 +955,6 @@ func testAccProviderConfig_ignoreTagsKeyPrefixes0() string {
 	return acctest.ConfigCompose(testAccProviderConfig_base, `
 provider "aws" {
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -981,7 +970,6 @@ provider "aws" {
   }
 
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -997,7 +985,6 @@ provider "aws" {
   }
 
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -1011,7 +998,6 @@ provider "aws" {
   default_tags {}
 
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -1026,7 +1012,6 @@ provider "aws" {
   ignore_tags {}
 
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -1040,7 +1025,6 @@ provider "aws" {
   ignore_tags {}
 
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -1053,7 +1037,6 @@ func testAccProviderConfig_region(region string) string {
 provider "aws" {
   region                      = %[1]q
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -1067,7 +1050,6 @@ provider "aws" {
   region                      = %[1]q
   sts_region                  = %[2]q
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }

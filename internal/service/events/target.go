@@ -209,7 +209,6 @@ func ResourceTarget() *schema.Resource {
 						"propagate_tags": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      eventbridge.PropagateTagsTaskDefinition,
 							ValidateFunc: validation.StringInSlice(eventbridge.PropagateTags_Values(), false),
 						},
 						"tags": tftags.TagsSchema(),
@@ -768,41 +767,41 @@ func expandTargetRedshiftParameters(config []interface{}) *eventbridge.RedshiftD
 	return redshiftParameters
 }
 
-func expandTargetECSParameters(ctx context.Context, config []interface{}) *eventbridge.EcsParameters {
+func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *eventbridge.EcsParameters {
 	ecsParameters := &eventbridge.EcsParameters{}
-	for _, c := range config {
-		param := c.(map[string]interface{})
-		tags := tftags.New(ctx, param["tags"].(map[string]interface{}))
+	for _, c := range tfList {
+		tfMap := c.(map[string]interface{})
+		tags := tftags.New(ctx, tfMap["tags"].(map[string]interface{}))
 
-		if v, ok := param["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := tfMap["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
 			ecsParameters.CapacityProviderStrategy = expandTargetCapacityProviderStrategy(v.List())
 		}
 
-		if val, ok := param["group"].(string); ok && val != "" {
-			ecsParameters.Group = aws.String(val)
+		if v, ok := tfMap["group"].(string); ok && v != "" {
+			ecsParameters.Group = aws.String(v)
 		}
 
-		if val, ok := param["launch_type"].(string); ok && val != "" {
-			ecsParameters.LaunchType = aws.String(val)
+		if v, ok := tfMap["launch_type"].(string); ok && v != "" {
+			ecsParameters.LaunchType = aws.String(v)
 		}
 
-		if val, ok := param["network_configuration"]; ok {
-			ecsParameters.NetworkConfiguration = expandTargetECSParametersNetworkConfiguration(val.([]interface{}))
+		if v, ok := tfMap["network_configuration"]; ok {
+			ecsParameters.NetworkConfiguration = expandTargetECSParametersNetworkConfiguration(v.([]interface{}))
 		}
 
-		if val, ok := param["platform_version"].(string); ok && val != "" {
-			ecsParameters.PlatformVersion = aws.String(val)
+		if v, ok := tfMap["platform_version"].(string); ok && v != "" {
+			ecsParameters.PlatformVersion = aws.String(v)
 		}
 
-		if v, ok := param["placement_constraint"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := tfMap["placement_constraint"].(*schema.Set); ok && v.Len() > 0 {
 			ecsParameters.PlacementConstraints = expandTargetPlacementConstraints(v.List())
 		}
 
-		if v, ok := param["ordered_placement_strategy"]; ok {
+		if v, ok := tfMap["ordered_placement_strategy"]; ok {
 			ecsParameters.PlacementStrategy = expandTargetPlacementStrategies(v.([]interface{}))
 		}
 
-		if v, ok := param["propagate_tags"].(string); ok {
+		if v, ok := tfMap["propagate_tags"].(string); ok && v != "" {
 			ecsParameters.PropagateTags = aws.String(v)
 		}
 
@@ -810,10 +809,10 @@ func expandTargetECSParameters(ctx context.Context, config []interface{}) *event
 			ecsParameters.Tags = Tags(tags.IgnoreAWS())
 		}
 
-		ecsParameters.EnableExecuteCommand = aws.Bool(param["enable_execute_command"].(bool))
-		ecsParameters.EnableECSManagedTags = aws.Bool(param["enable_ecs_managed_tags"].(bool))
-		ecsParameters.TaskCount = aws.Int64(int64(param["task_count"].(int)))
-		ecsParameters.TaskDefinitionArn = aws.String(param["task_definition_arn"].(string))
+		ecsParameters.EnableExecuteCommand = aws.Bool(tfMap["enable_execute_command"].(bool))
+		ecsParameters.EnableECSManagedTags = aws.Bool(tfMap["enable_ecs_managed_tags"].(bool))
+		ecsParameters.TaskCount = aws.Int64(int64(tfMap["task_count"].(int)))
+		ecsParameters.TaskDefinitionArn = aws.String(tfMap["task_definition_arn"].(string))
 	}
 
 	return ecsParameters

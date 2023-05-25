@@ -309,19 +309,6 @@ func ResourceLaunchConfiguration() *schema.Resource {
 					return
 				},
 			},
-			"vpc_classic_link_id": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				ForceNew:   true,
-				Deprecated: `With the retirement of EC2-Classic the vpc_classic_link_id attribute has been deprecated and will be removed in a future version.`,
-			},
-			"vpc_classic_link_security_groups": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				ForceNew:   true,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				Deprecated: `With the retirement of EC2-Classic the vpc_classic_link_security_groups attribute has been deprecated and will be removed in a future version.`,
-			},
 		},
 	}
 }
@@ -330,14 +317,6 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn()
 	ec2conn := meta.(*conns.AWSClient).EC2Conn()
-
-	if _, ok := d.GetOk("vpc_classic_link_id"); ok {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new Auto Scaling Launch Configurations can be created referencing ClassicLink`)
-	}
-
-	if v, ok := d.GetOk("vpc_classic_link_security_groups"); ok && v.(*schema.Set).Len() > 0 {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new Auto Scaling Launch Configurations can be created referencing ClassicLink`)
-	}
 
 	lcName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := autoscaling.CreateLaunchConfigurationInput{
@@ -497,8 +476,6 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 			d.Set("user_data", userDataHashSum(v))
 		}
 	}
-	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
-	d.Set("vpc_classic_link_security_groups", aws.StringValueSlice(lc.ClassicLinkVPCSecurityGroups))
 
 	rootDeviceName, err := findImageRootDeviceName(ctx, ec2conn, d.Get("image_id").(string))
 

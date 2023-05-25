@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
@@ -91,7 +91,6 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "project_visibility", "PRIVATE"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role", roleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.auth.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.git_clone_depth", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", "false"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.location", "https://github.com/hashibot-test/aws-test.git"),

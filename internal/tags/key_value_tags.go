@@ -7,8 +7,13 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
+	"github.com/hashicorp/go-cty/cty"
+	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -419,6 +424,28 @@ func (tags KeyValueTags) ContainsAll(target KeyValueTags) bool {
 	return true
 }
 
+func (tags KeyValueTags) Difference(target KeyValueTags) KeyValueTags {
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		if val, ok := target[k]; !ok || (v.ValueString() != val.ValueString()) {
+			result[k] = v
+		}
+	}
+
+	return result
+}
+
+func (tags KeyValueTags) HasZeroValue() bool {
+	for _, v := range tags {
+		if v.ValueString() == "" {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Equal returns whether or two sets of key-value tags are equal.
 func (tags KeyValueTags) Equal(other KeyValueTags) bool {
 	if tags == nil && other == nil {
@@ -445,6 +472,10 @@ func (tags KeyValueTags) Equal(other KeyValueTags) bool {
 	}
 
 	return true
+}
+
+func (tags KeyValueTags) DeepEqual(target KeyValueTags) bool {
+	return reflect.DeepEqual(tags, target)
 }
 
 // Hash returns a stable hash value.
@@ -633,6 +664,14 @@ type TagData struct {
 	Value *string
 }
 
+func (td *TagData) ValueString() string {
+	if td.Value == nil {
+		return ""
+	}
+
+	return *td.Value
+}
+
 func (td *TagData) Equal(other *TagData) bool {
 	if td == nil && other == nil {
 		return true
@@ -701,6 +740,112 @@ func (td *TagData) String() string {
 	}
 
 	return fmt.Sprintf("TagData{%s}", strings.Join(fields, ", "))
+}
+
+// schemaResourceData is an interface that implements functions from schema.ResourceData
+type schemaResourceData interface {
+	GetRawConfig() cty.Value
+	GetRawPlan() cty.Value
+	GetRawState() cty.Value
+}
+
+func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, d schemaResourceData) KeyValueTags {
+	// remove default config.
+	t := tags.RemoveDefaultConfig(defaultConfig)
+
+	result := make(map[string]string)
+	for k, v := range t {
+		result[k] = v.ValueString()
+	}
+
+	configTags := make(map[string]string)
+	if config := d.GetRawPlan(); !config.IsNull() && config.IsKnown() {
+		c := config.GetAttr("tags")
+		if !c.IsNull() && c.IsKnown() {
+			for k, v := range c.AsValueMap() {
+				configTags[k] = v.AsString()
+			}
+		}
+	}
+
+	if config := d.GetRawConfig(); !config.IsNull() && config.IsKnown() {
+		c := config.GetAttr("tags")
+
+		// if the config is null just return the incoming tags
+		// no duplicates to calculate
+		if c.IsNull() {
+			return t
+		}
+
+		if !c.IsNull() && c.IsKnown() {
+			for k, v := range c.AsValueMap() {
+				if _, ok := configTags[k]; !ok {
+					configTags[k] = v.AsString()
+				}
+			}
+		}
+	}
+
+	if state := d.GetRawState(); !state.IsNull() && state.IsKnown() {
+		c := state.GetAttr("tags")
+		if !c.IsNull() {
+			for k, v := range c.AsValueMap() {
+				if _, ok := configTags[k]; !ok {
+					configTags[k] = v.AsString()
+				}
+			}
+		}
+	}
+
+	for k, v := range configTags {
+		if _, ok := result[k]; !ok {
+			if defaultConfig != nil {
+				if val, ok := defaultConfig.Tags[k]; ok && val.ValueString() == v {
+					result[k] = v
+				}
+			}
+		}
+	}
+
+	return New(ctx, result).IgnoreConfig(ignoreConfig)
+}
+
+func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, resp *resource.ReadResponse, diags fwdiag.Diagnostics) KeyValueTags {
+	// remove default config.
+	t := tags.RemoveDefaultConfig(defaultConfig)
+
+	var tagsAll types.Map
+	diags.Append(resp.State.GetAttribute(ctx, path.Root("tags"), &tagsAll)...)
+
+	if diags.HasError() {
+		return KeyValueTags{}
+	}
+
+	result := make(map[string]string)
+	for k, v := range t {
+		result[k] = v.ValueString()
+	}
+
+	for k, v := range tagsAll.Elements() {
+		if _, ok := result[k]; !ok {
+			if defaultConfig != nil {
+				s, err := strconv.Unquote(v.String()) // TODO rework to use Framework Map.Equals() value
+
+				if err != nil {
+					diags.AddError(
+						"unable to normalize string",
+						"unable to normalize string default value",
+					)
+				}
+
+				if val, ok := defaultConfig.Tags[k]; ok && val.ValueString() == s {
+					result[k] = s
+				}
+			}
+		}
+	}
+
+	return New(ctx, result).IgnoreConfig(ignoreConfig)
 }
 
 // ToSnakeCase converts a string to snake case.

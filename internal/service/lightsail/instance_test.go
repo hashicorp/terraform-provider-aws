@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -50,8 +50,8 @@ func TestAccLightsailInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
-					resource.TestMatchResourceAttr(resourceName, "ipv6_address", regexp.MustCompile(`([a-f0-9]{1,4}:){7}[a-f0-9]{1,4}`)),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "ipv6_addresses.0", regexp.MustCompile(`([a-f0-9]{1,4}:){7}[a-f0-9]{1,4}`)),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "ram_size", regexp.MustCompile(`\d+(.\d+)?`)),

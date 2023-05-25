@@ -44,6 +44,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceTemplateAlias,
 			Name:    "Template Alias",
 		},
+		{
+			Factory: newResourceVPCConnection,
+			Name:    "VPC Connection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 	}
 }
 
