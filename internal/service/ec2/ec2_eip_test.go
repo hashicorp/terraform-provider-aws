@@ -69,6 +69,40 @@ func TestAccEC2EIP_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEC2EIP_migrateVPCToDomain(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf ec2.Address
+	resourceName := "aws_eip.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		CheckDestroy: testAccCheckEIPDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.67.0",
+					},
+				},
+				Config: testAccEIPConfig_vpc,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEIPExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "domain", "vpc"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
+					testAccCheckEIPPublicDNS(resourceName),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccEIPConfig_basic,
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
 func TestAccEC2EIP_noVPC(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf ec2.Address
@@ -739,6 +773,12 @@ func testAccCheckEIPPublicDNS(resourceName string) resource.TestCheckFunc {
 const testAccEIPConfig_basic = `
 resource "aws_eip" "test" {
   domain = "vpc"
+}
+`
+
+const testAccEIPConfig_vpc = `
+resource "aws_eip" "test" {
+  vpc = true
 }
 `
 
