@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -64,6 +65,35 @@ func TestAccRoute53VPCAssociationAuthorization_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceVPCAssociationAuthorization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53VPCAssociationAuthorization_concurrent(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceNameAlternate := "aws_route53_vpc_association_authorization.alternate"
+	resourceNameThird := "aws_route53_vpc_association_authorization.third"
+
+	providers := make(map[string]*schema.Provider)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckThirdAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderName, acctest.ProviderNameAlternate, acctest.ProviderNameThird),
+		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCAssociationAuthorizationConfig_concurrent(t),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCAssociationAuthorizationExists(ctx, resourceNameAlternate),
+					testAccCheckVPCAssociationAuthorizationExists(ctx, resourceNameThird),
+				),
 			},
 		},
 	})
@@ -167,6 +197,61 @@ resource "aws_route53_zone" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block           = "10.6.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+}
+`)
+}
+
+func testAccVPCAssociationAuthorizationConfig_concurrent(t *testing.T) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleAccountProvider(t, 3), `
+resource "aws_route53_vpc_association_authorization" "alternate" {
+  zone_id = aws_route53_zone.test.id
+  vpc_id  = aws_vpc.alternate.id
+
+  # Try to encourage concurrency
+  depends_on = [
+    aws_vpc.alternate,
+    aws_vpc.third
+  ]
+}
+
+resource "aws_route53_vpc_association_authorization" "third" {
+  zone_id = aws_route53_zone.test.id
+  vpc_id  = aws_vpc.third.id
+
+  # Try to encourage concurrency
+  depends_on = [
+    aws_vpc.alternate,
+    aws_vpc.third
+  ]
+}
+
+resource "aws_route53_zone" "test" {
+  name = "example.com"
+
+  vpc {
+    vpc_id = aws_vpc.test.id
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block           = cidrsubnet("10.0.0.0/8", 8, 0)
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+}
+
+resource "aws_vpc" "alternate" {
+  provider             = "awsalternate"
+  cidr_block           = cidrsubnet("10.0.0.0/8", 8, 1)
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+}
+
+resource "aws_vpc" "third" {
+  provider             = "awsthird"
+  cidr_block           = cidrsubnet("10.0.0.0/8", 8, 2)
   enable_dns_hostnames = true
   enable_dns_support   = true
 }
