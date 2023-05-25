@@ -24,7 +24,6 @@ data "aws_partition" "current" {}
 
 resource "aws_eip" "example" {
   domain = "vpc"
-  
   tags = {
     Name = "example"
   }
