@@ -30,18 +30,16 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Computed: true,
 			},
 			"db_cluster_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				AtLeastOneOf: []string{"db_cluster_identifier", "db_cluster_snapshot_identifier"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"db_cluster_snapshot_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"db_cluster_snapshot_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				AtLeastOneOf: []string{"db_cluster_identifier", "db_cluster_snapshot_identifier"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"engine": {
 				Type:     schema.TypeString,
@@ -129,25 +127,51 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 		input.SnapshotType = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, input)
+	tags, tagsOk := d.GetOk("tags")
 
+	var dbClusterSnapshots []*rds.DBClusterSnapshot
+
+	err := conn.DescribeDBClusterSnapshotsPagesWithContext(ctx, input, func(page *rds.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, dbClusterSnapshot := range page.DBClusterSnapshots {
+			if dbClusterSnapshot == nil {
+				continue
+			}
+
+			if tagsOk {
+				if dbClusterSnapshot.TagList == nil {
+					continue
+				}
+
+				if tagsMatch(tags.(map[string]interface{}), KeyValueTags(ctx, dbClusterSnapshot.TagList).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()) {
+					dbClusterSnapshots = append(dbClusterSnapshots, dbClusterSnapshot)
+				}
+			} else {
+				dbClusterSnapshots = append(dbClusterSnapshots, dbClusterSnapshot)
+			}
+		}
+		return !lastPage
+	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster Snapshots: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshots: %s", err)
 	}
 
-	if len(output.DBClusterSnapshots) < 1 {
+	if len(dbClusterSnapshots) < 1 {
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	var snapshot *rds.DBClusterSnapshot
-	if len(output.DBClusterSnapshots) > 1 {
+	if len(dbClusterSnapshots) > 1 {
 		if d.Get("most_recent").(bool) {
-			snapshot = mostRecentClusterSnapshot(output.DBClusterSnapshots)
+			snapshot = mostRecentClusterSnapshot(dbClusterSnapshots)
 		} else {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 		}
 	} else {
-		snapshot = output.DBClusterSnapshots[0]
+		snapshot = dbClusterSnapshots[0]
 	}
 
 	d.SetId(aws.StringValue(snapshot.DBClusterSnapshotIdentifier))
@@ -170,9 +194,7 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags := KeyValueTags(ctx, snapshot.TagList)
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, snapshot.TagList).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
@@ -199,4 +221,17 @@ func mostRecentClusterSnapshot(snapshots []*rds.DBClusterSnapshot) *rds.DBCluste
 	sortedSnapshots := snapshots
 	sort.Sort(rdsClusterSnapshotSort(sortedSnapshots))
 	return sortedSnapshots[len(sortedSnapshots)-1]
+}
+
+func tagsMatch(tagsFilter map[string]interface{}, tagsDBSnapshot map[string]string) bool {
+	if len(tagsFilter) > len(tagsDBSnapshot) {
+		return false
+	}
+
+	for k, v := range tagsFilter {
+		if tagsDBSnapshot[k] != v.(string) {
+			return false
+		}
+	}
+	return true
 }

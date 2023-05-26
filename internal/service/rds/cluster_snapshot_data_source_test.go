@@ -106,6 +106,30 @@ func TestAccRDSClusterSnapshotDataSource_mostRecent(t *testing.T) {
 	})
 }
 
+func TestAccRDSClusterSnapshotDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_db_cluster_snapshot.test"
+	resourceName := "aws_db_cluster_snapshot.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterSnapshotDataSourceConfig_tags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_identifier", resourceName, "db_cluster_identifier"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_snapshot_arn", resourceName, "db_cluster_snapshot_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_snapshot_identifier", resourceName, "db_cluster_snapshot_identifier"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
+				),
+			},
+		},
+	})
+}
+
 func testAccClusterSnapshotDataSourceConfig_clusterSnapshotIdentifier(rName string) string {
 	return acctest.ConfigCompose(testAccClusterSnapshotConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_cluster_snapshot" "test" {
@@ -155,6 +179,27 @@ resource "aws_db_cluster_snapshot" "test" {
 data "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier = aws_db_cluster_snapshot.test.db_cluster_identifier
   most_recent           = true
+}
+`, rName))
+}
+
+func testAccClusterSnapshotDataSourceConfig_tags(rName string) string {
+	return acctest.ConfigCompose(testAccClusterSnapshotConfig_base(rName), fmt.Sprintf(`
+resource "aws_db_cluster_snapshot" "test" {
+  db_cluster_identifier          = aws_rds_cluster.test.id
+  db_cluster_snapshot_identifier = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_db_cluster_snapshot" "test" {
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_db_cluster_snapshot.test]
 }
 `, rName))
 }
