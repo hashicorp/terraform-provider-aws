@@ -27,6 +27,7 @@ func TestAccRDSSnapshotDataSource_basic(t *testing.T) {
 				Config: testAccSnapshotDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotIDDataSource("data.aws_db_snapshot.snapshot"),
+					testAccCheckSnapshotIDDataSource("data.aws_db_snapshot.snapshot_tags"),
 				),
 			},
 		},
@@ -84,9 +85,20 @@ data "aws_db_snapshot" "snapshot" {
   db_snapshot_identifier = aws_db_snapshot.test.id
 }
 
+data "aws_db_snapshot" "snapshot_tags" {
+  most_recent = "true"
+  tags        = { 
+    Foo = "Bar" 
+  }
+  depends_on = [aws_db_snapshot.test]
+}
+
 resource "aws_db_snapshot" "test" {
   db_instance_identifier = aws_db_instance.bar.identifier
   db_snapshot_identifier = "testsnapshot%[2]d"
+  tags = { 
+    Foo = "Bar" 
+  }
 }
 `, mySQLPreferredInstanceClasses, rInt)
 }

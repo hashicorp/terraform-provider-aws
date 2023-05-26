@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_db_snapshot")
@@ -28,18 +30,16 @@ func DataSourceSnapshot() *schema.Resource {
 				Computed: true,
 			},
 			"db_instance_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				AtLeastOneOf: []string{"db_instance_identifier", "db_snapshot_identifier"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"db_snapshot_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"db_snapshot_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				AtLeastOneOf: []string{"db_instance_identifier", "db_snapshot_identifier"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"encrypted": {
 				Type:     schema.TypeBool,
@@ -112,6 +112,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -123,6 +124,7 @@ func DataSourceSnapshot() *schema.Resource {
 func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &rds.DescribeDBSnapshotsInput{
 		IncludePublic: aws.Bool(d.Get("include_public").(bool)),
@@ -141,25 +143,51 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 		input.SnapshotType = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribeDBSnapshotsWithContext(ctx, input)
+	tags, tagsOk := d.GetOk("tags")
 
+	var dbSnapshots []*rds.DBSnapshot
+
+	err := conn.DescribeDBSnapshotsPagesWithContext(ctx, input, func(page *rds.DescribeDBSnapshotsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, dbSnapshot := range page.DBSnapshots {
+			if dbSnapshot == nil {
+				continue
+			}
+
+			if tagsOk {
+				if dbSnapshot.TagList == nil {
+					continue
+				}
+
+				if tagsMatch(tags.(map[string]interface{}), KeyValueTags(ctx, dbSnapshot.TagList).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()) {
+					dbSnapshots = append(dbSnapshots, dbSnapshot)
+				}
+			} else {
+				dbSnapshots = append(dbSnapshots, dbSnapshot)
+			}
+		}
+		return !lastPage
+	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshots: %s", err)
 	}
 
-	if len(output.DBSnapshots) < 1 {
+	if len(dbSnapshots) < 1 {
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	var snapshot *rds.DBSnapshot
-	if len(output.DBSnapshots) > 1 {
+	if len(dbSnapshots) > 1 {
 		if d.Get("most_recent").(bool) {
-			snapshot = mostRecentDBSnapshot(output.DBSnapshots)
+			snapshot = mostRecentDBSnapshot(dbSnapshots)
 		} else {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 		}
 	} else {
-		snapshot = output.DBSnapshots[0]
+		snapshot = dbSnapshots[0]
 	}
 
 	d.SetId(aws.StringValue(snapshot.DBSnapshotIdentifier))
@@ -184,6 +212,9 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("snapshot_type", snapshot.SnapshotType)
 	d.Set("status", snapshot.Status)
 	d.Set("storage_type", snapshot.StorageType)
+	if err := d.Set("tags", KeyValueTags(ctx, snapshot.TagList).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
+	}
 	d.Set("vpc_id", snapshot.VpcId)
 
 	return diags
@@ -209,4 +240,17 @@ func mostRecentDBSnapshot(snapshots []*rds.DBSnapshot) *rds.DBSnapshot {
 	sortedSnapshots := snapshots
 	sort.Sort(rdsSnapshotSort(sortedSnapshots))
 	return sortedSnapshots[len(sortedSnapshots)-1]
+}
+
+func tagsMatch(tagsFilter map[string]interface{}, tagsDBSnapshot map[string]string) bool {
+	if len(tagsFilter) > len(tagsDBSnapshot) {
+		return false
+	}
+
+	for k, v := range tagsFilter {
+		if tagsDBSnapshot[k] != v.(string) {
+			return false
+		}
+	}
+	return true
 }
