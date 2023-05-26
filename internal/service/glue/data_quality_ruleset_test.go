@@ -52,6 +52,31 @@ func TestAccGlueDataQualityRuleset_basic(t *testing.T) {
 	})
 }
 
+func TestAccGlueDataQualityRuleset_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ruleset := "Rules = [Completeness \"colA\" between 0.4 and 0.8]"
+	resourceName := "aws_glue_data_quality_ruleset.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataQualityRulesetConfig_basic(rName, ruleset),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceDataQualityRuleset(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckDataQualityRulesetExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
