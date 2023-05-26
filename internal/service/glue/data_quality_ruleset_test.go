@@ -127,6 +127,40 @@ func TestAccGlueDataQualityRuleset_updateDescription(t *testing.T) {
 	})
 }
 
+func TestAccGlueDataQualityRuleset_targetTable(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ruleset := "Rules = [Completeness \"colA\" between 0.4 and 0.8]"
+	resourceName := "aws_glue_data_quality_ruleset.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:  testAccDataQualityRulesetConfig_targetTable(rName, rName2, rName3, ruleset),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "target_table.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_database.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.table_name", "aws_glue_catalog_table.test", "name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccGlueDataQualityRuleset_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -277,6 +311,35 @@ resource "aws_glue_data_quality_ruleset" "test" {
   description = %[3]q
 }
 `, rName, ruleset, description)
+}
+
+func testAccDataQualityRulesetConfigTargetTableConfigBasic(rName, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[2]q
+  database_name = aws_glue_catalog_database.test.name
+}
+`, rName, rName2)
+}
+
+func testAccDataQualityRulesetConfig_targetTable(rName, rName2, rName3, ruleset string) string {
+	return acctest.ConfigCompose(
+		testAccDataQualityRulesetConfigTargetTableConfigBasic(rName2, rName3),
+		fmt.Sprintf(`
+resource "aws_glue_data_quality_ruleset" "test" {
+  name    = %[1]q
+  ruleset = %[2]q
+
+  target_table {
+    database_name = aws_glue_catalog_database.test.name
+    table_name    = aws_glue_catalog_table.test.name
+  }
+}
+`, rName, ruleset))
 }
 
 func testAccDataQualityRulesetConfig_tags1(rName, ruleset, tagKey1, tagValue1 string) string {
