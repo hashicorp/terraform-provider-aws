@@ -89,6 +89,44 @@ func TestAccGlueDataQualityRuleset_updateRuleset(t *testing.T) {
 	})
 }
 
+func TestAccGlueDataQualityRuleset_updateDescription(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ruleset := "Rules = [Completeness \"colA\" between 0.4 and 0.8]"
+	originalDescription := "original description"
+	updatedDescription := "updated description"
+	resourceName := "aws_glue_data_quality_ruleset.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataQualityRulesetConfig_description(rName, ruleset, originalDescription),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataQualityRulesetConfig_description(rName, ruleset, updatedDescription),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+				),
+			},
+		},
+	})
+}
+
 func TestAccGlueDataQualityRuleset_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -229,6 +267,16 @@ resource "aws_glue_data_quality_ruleset" "test" {
   ruleset = %[2]q
 }
 `, rName, ruleset)
+}
+
+func testAccDataQualityRulesetConfig_description(rName, ruleset, description string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_data_quality_ruleset" "test" {
+  name        = %[1]q
+  ruleset     = %[2]q
+  description = %[3]q
+}
+`, rName, ruleset, description)
 }
 
 func testAccDataQualityRulesetConfig_tags1(rName, ruleset, tagKey1, tagValue1 string) string {
