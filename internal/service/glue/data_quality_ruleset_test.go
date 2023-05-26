@@ -52,6 +52,43 @@ func TestAccGlueDataQualityRuleset_basic(t *testing.T) {
 	})
 }
 
+func TestAccGlueDataQualityRuleset_updateRuleset(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	originalRuleset := "Rules = [Completeness \"colA\" between 0.4 and 0.8]"
+	updatedRuleset := "Rules = [Completeness \"colA\" between 0.5 and 1.0]"
+	resourceName := "aws_glue_data_quality_ruleset.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataQualityRulesetConfig_basic(rName, originalRuleset),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "ruleset", originalRuleset),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataQualityRulesetConfig_basic(rName, updatedRuleset),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "ruleset", updatedRuleset),
+				),
+			},
+		},
+	})
+}
+
 func TestAccGlueDataQualityRuleset_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
