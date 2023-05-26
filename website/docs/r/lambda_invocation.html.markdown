@@ -70,8 +70,9 @@ resource "aws_lambda_invocation" "example" {
 ~> **NOTE:** `lifecycle_scope = "CRUD"` will inject a key `tf` in the input event to pass lifecycle information! This allows the lambda function to handle different lifecycle transitions uniquely.  If you need to use a key `tf` in your own input JSON, the default key name can be overridden with the `terraform_key` argument.
 
 The key `tf` gets added with subkeys:
-* `action` which gets a value corresponding to the action terraform performs on the resource [`create`, `delete`, `update`]
-* `prev_input` which gets a value of the previous invocation. This can be used to handle deletes and updates.
+
+* `action` - Action Terraform performs on the resource. Values are `create`, `update`, or `delete`.
+* `prev_input` - Input JSON payload from the previous invocation. This can be used to handle update and delete events.
 
 When the resource from the example above is created, the Lambda will get following JSON payload:
 
