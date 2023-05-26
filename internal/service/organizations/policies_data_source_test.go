@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/organizations"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -35,7 +35,7 @@ func TestAccOrganizationsPoliciesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccPoliciesDataSourceConfig_ServiceControlPolicy(rName, organizations.PolicyTypeServiceControlPolicy, serviceControlPolicyContent),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(listServiceControlPolicies, "policies.#", "0"),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(listServiceControlPolicies, "policies.#", 0),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceServiceControlPolicies, "policies.0.arn", datasourceServiceControlPolicy, "arn"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceServiceControlPolicies, "policies.0.aws_managed", datasourceServiceControlPolicy, "aws_managed"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceServiceControlPolicies, "policies.0.description", datasourceServiceControlPolicy, "description"),

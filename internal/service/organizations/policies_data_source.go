@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_organizations_policies", name="Policies")
+// @SDKDataSource("aws_organizations_policies")
 func DataSourcePolicies() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePoliciesRead,
