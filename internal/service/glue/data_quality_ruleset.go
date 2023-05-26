@@ -27,6 +27,7 @@ func ResourceDataQualityRuleset() *schema.Resource {
 		CreateWithoutTimeout: resourceDataQualityRulesetCreate,
 		ReadWithoutTimeout:   resourceDataQualityRulesetRead,
 		UpdateWithoutTimeout: resourceDataQualityRulesetUpdate,
+		DeleteWithoutTimeout: resourceDataQualityRulesetDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -195,6 +196,21 @@ func resourceDataQualityRulesetUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	return append(diags, resourceDataQualityRulesetRead(ctx, d, meta)...)
+}
+
+func resourceDataQualityRulesetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
+
+	log.Printf("[DEBUG] Glue Data Quality Ruleset: %s", d.Id())
+	_, err := conn.DeleteDataQualityRulesetWithContext(ctx, &glue.DeleteDataQualityRulesetInput{
+		Name: aws.String(d.Get("name").(string)),
+	})
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Data Quality Ruleset (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
 func expandTargetTable(tfMap map[string]interface{}) *glue.DataQualityTargetTable {
