@@ -33,8 +33,8 @@ func TestAccLambdaInvocation_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, testData),
-					testAccConfigInvocation_invocation(inputJSON, ""),
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocation(inputJSON, ""),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON),
@@ -142,8 +142,8 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDCreate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_invocation(inputJSON, extraArgs),
+					testAccInvocationConfig_function(fName, rName, ""),
+					testAccInvocationConfig_invocation(inputJSON, extraArgs),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON),
@@ -174,8 +174,8 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_invocation(inputJSON, extraArgs),
+					testAccInvocationConfig_function(fName, rName, ""),
+					testAccInvocationConfig_invocation(inputJSON, extraArgs),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON),
@@ -183,8 +183,8 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_invocation(inputJSON2, extraArgs),
+					testAccInvocationConfig_function(fName, rName, ""),
+					testAccInvocationConfig_invocation(inputJSON2, extraArgs),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON2),
@@ -213,8 +213,8 @@ func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyUpdateInput(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_invocation(inputJSON, ""),
+					testAccInvocationConfig_function(fName, rName, ""),
+					testAccInvocationConfig_invocation(inputJSON, ""),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON),
@@ -222,8 +222,8 @@ func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyUpdateInput(t *testing.T) 
 			},
 			{
 				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_invocation(inputJSON2, ""),
+					testAccInvocationConfig_function(fName, rName, ""),
+					testAccInvocationConfig_invocation(inputJSON2, ""),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON2),
@@ -260,9 +260,9 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ssmParameterName),
-					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
-					testAccConfigInvocation_invocation(inputJSON, extraArgs),
+					testAccInvocationConfig_function(fName, rName, ssmParameterName),
+					testAccInvocationConfig_crudAllowSSM(rName, ssmParameterName),
+					testAccInvocationConfig_invocation(inputJSON, extraArgs),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON),
@@ -270,8 +270,8 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ssmParameterName),
-					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
+					testAccInvocationConfig_function(fName, rName, ssmParameterName),
+					testAccInvocationConfig_crudAllowSSM(rName, ssmParameterName),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCRUDDestroyResult(ctx, resourceName, ssmParameterName, destroyJSON, t),
@@ -302,9 +302,9 @@ func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyToCRUD(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
-					testAccConfigInvocation_invocation(inputJSON, ""),
+					testAccInvocationConfig_function(fName, rName, ""),
+					testAccInvocationConfig_crudAllowSSM(rName, ssmParameterName),
+					testAccInvocationConfig_invocation(inputJSON, ""),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON),
@@ -312,9 +312,9 @@ func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyToCRUD(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
-					testAccConfigInvocation_invocation(inputJSON, extraArgs),
+					testAccInvocationConfig_function(fName, rName, ""),
+					testAccInvocationConfig_crudAllowSSM(rName, ssmParameterName),
+					testAccInvocationConfig_invocation(inputJSON, extraArgs),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSONCRUD),
@@ -345,8 +345,8 @@ func TestAccLambdaInvocation_terraformKey(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_invocation(inputJSON, extraArgs),
+					testAccInvocationConfig_function(fName, rName, ""),
+					testAccInvocationConfig_invocation(inputJSON, extraArgs),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON),
@@ -402,7 +402,7 @@ func removeSSMParameter(ctx context.Context, conn *ssm.SSM, name string) error {
 	return err
 }
 
-func testAccConfigInvocation_base(roleName string) string {
+func testAccInvocationConfig_base(roleName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -429,7 +429,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, roleName)
 }
 
-func testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName string) string {
+func testAccInvocationConfig_crudAllowSSM(rName, ssmParameterName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name = %[1]q
@@ -457,9 +457,9 @@ resource "aws_iam_role_policy_attachment" "test_ssm" {
 `, rName, ssmParameterName)
 }
 
-func testAccConfigInvocation_function(fName, rName, testData string) string {
+func testAccInvocationConfig_function(fName, rName, testData string) string {
 	return acctest.ConfigCompose(
-		testAccConfigInvocation_base(rName),
+		testAccInvocationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -479,7 +479,7 @@ resource "aws_lambda_function" "test" {
 `, fName, rName, testData))
 }
 
-func testAccConfigInvocation_invocation(inputJSON, extraArgs string) string {
+func testAccInvocationConfig_invocation(inputJSON, extraArgs string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_invocation" "test" {
   function_name = aws_lambda_function.test.function_name
@@ -492,7 +492,7 @@ resource "aws_lambda_invocation" "test" {
 
 func testAccInvocationConfig_qualifier(rName, testData string) string {
 	return acctest.ConfigCompose(
-		testAccConfigInvocation_function("lambda_invocation", rName, testData),
+		testAccInvocationConfig_function("lambda_invocation", rName, testData),
 		`
 resource "aws_lambda_invocation" "test" {
   function_name = aws_lambda_function.test.function_name
@@ -508,7 +508,7 @@ resource "aws_lambda_invocation" "test" {
 
 func testAccInvocationConfig_complex(rName, testData string) string {
 	return acctest.ConfigCompose(
-		testAccConfigInvocation_function("lambda_invocation", rName, testData),
+		testAccInvocationConfig_function("lambda_invocation", rName, testData),
 		`
 resource "aws_lambda_invocation" "test" {
   function_name = aws_lambda_function.test.function_name
@@ -530,7 +530,7 @@ resource "aws_lambda_invocation" "test" {
 
 func testAccInvocationConfig_triggers(rName, testData string) string {
 	return acctest.ConfigCompose(
-		testAccConfigInvocation_function("lambda_invocation", rName, testData),
+		testAccInvocationConfig_function("lambda_invocation", rName, testData),
 		`
 resource "aws_lambda_invocation" "test" {
   function_name = aws_lambda_function.test.function_name
