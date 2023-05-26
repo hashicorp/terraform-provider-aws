@@ -431,24 +431,22 @@ resource "aws_iam_role_policy_attachment" "test" {
 func testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-	name        = %[1]q
-	path        = "/"
-	description = "Used for terraform acceptance testing should be short-lived"
-	
-	# Terraform's "jsonencode" function converts a
-	# Terraform expression result to valid JSON syntax.
-	policy = jsonencode({
-		Version = "2012-10-17"
-		Statement = [
-		{
-			Action = [
-			"ssm:PutParameter",
-			]
-			Effect   = "Allow"
-			Resource = "arn:aws:ssm:*:*:parameter%[2]s"
-		},
-		]
-	})
+  name = %[1]q
+
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ssm:PutParameter",
+        ]
+        Effect   = "Allow"
+        Resource = "arn:aws:ssm:*:*:parameter%[2]s"
+      },
+    ]
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "test_ssm" {
@@ -463,19 +461,19 @@ func testAccConfigInvocation_function(fName, rName, testData string) string {
 		testAccConfigInvocation_base(rName),
 		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
-	depends_on = [aws_iam_role_policy_attachment.test]
-	
-	filename      = "test-fixtures/%[1]s.zip"
-	function_name = %[2]q
-	role          = aws_iam_role.test.arn
-	handler       = "%[1]s.handler"
-	runtime       = "nodejs14.x"
-	
-	environment {
-		variables = {
-			TEST_DATA = %[3]q
-		}
-	}
+  depends_on = [aws_iam_role_policy_attachment.test]
+
+  filename      = "test-fixtures/%[1]s.zip"
+  function_name = %[2]q
+  role          = aws_iam_role.test.arn
+  handler       = "%[1]s.handler"
+  runtime       = "nodejs14.x"
+
+  environment {
+    variables = {
+      TEST_DATA = %[3]q
+    }
+  }
 }
 `, fName, rName, testData))
 }
