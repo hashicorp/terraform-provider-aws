@@ -11,7 +11,7 @@ import (
 // customizeDiffValidateInput validates that `input` is JSON object when
 // `lifecycle_scope` is not "CREATE_ONLY"
 func customizeDiffValidateInput(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if diff.Get("lifecycle_scope") == lambdaLifecycleScopeCreateOnly {
+	if diff.Get("lifecycle_scope") == lifecycleScopeCreateOnly {
 		return nil
 	}
 	// input is validated to be valid JSON in the schema already.
@@ -26,7 +26,7 @@ func customizeDiffValidateInput(_ context.Context, diff *schema.ResourceDiff, v 
 // customizeDiffInputChangeWithCreateOnlyScope forces a new resource when `input` has
 // a change and `lifecycle_scope` is set to "CREATE_ONLY"
 func customizeDiffInputChangeWithCreateOnlyScope(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if diff.HasChange("input") && diff.Get("lifecycle_scope").(string) == lambdaLifecycleScopeCreateOnly {
+	if diff.HasChange("input") && diff.Get("lifecycle_scope").(string) == lifecycleScopeCreateOnly {
 		return diff.ForceNew("input")
 	}
 	return nil

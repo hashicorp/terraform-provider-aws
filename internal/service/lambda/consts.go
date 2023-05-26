@@ -19,19 +19,19 @@ const (
 )
 
 const (
-	lambdaInvocationActionCreate = "create"
-	lambdaInvocationActionDelete = "delete"
-	lambdaInvocationActionUpdate = "update"
+	invocationActionCreate = "create"
+	invocationActionDelete = "delete"
+	invocationActionUpdate = "update"
 )
 
 const (
-	lambdaLifecycleScopeCreateOnly = "CREATE_ONLY"
-	lambdaLifecycleScopeCrud       = "CRUD"
+	lifecycleScopeCreateOnly = "CREATE_ONLY"
+	lifecycleScopeCrud       = "CRUD"
 )
 
-func lambdaLifecycleScope_Values() []string {
+func lifecycleScope_Values() []string {
 	return []string{
-		lambdaLifecycleScopeCreateOnly,
-		lambdaLifecycleScopeCrud,
+		lifecycleScopeCreateOnly,
+		lifecycleScopeCrud,
 	}
 }

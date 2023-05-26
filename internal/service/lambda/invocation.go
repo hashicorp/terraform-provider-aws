@@ -57,8 +57,8 @@ func ResourceInvocation() *schema.Resource {
 			"lifecycle_scope": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      lambdaLifecycleScopeCreateOnly,
-				ValidateFunc: validation.StringInSlice(lambdaLifecycleScope_Values(), false),
+				Default:      lifecycleScopeCreateOnly,
+				ValidateFunc: validation.StringInSlice(lifecycleScope_Values(), false),
 			},
 			"terraform_key": {
 				Type:     schema.TypeString,
@@ -74,7 +74,7 @@ func ResourceInvocation() *schema.Resource {
 }
 
 func resourceInvocationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return lambdaInvocation(ctx, lambdaInvocationActionCreate, d, meta)
+	return invoke(ctx, invocationActionCreate, d, meta)
 }
 
 func resourceInvocationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -83,13 +83,13 @@ func resourceInvocationRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceInvocationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return lambdaInvocation(ctx, lambdaInvocationActionUpdate, d, meta)
+	return invoke(ctx, invocationActionUpdate, d, meta)
 }
 
 func resourceInvocationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	if !isCreateOnlyScope(d) {
 		log.Printf("[DEBUG] Lambda Invocation (%s) \"deleted\" by invocation & removing from state", d.Id())
-		return lambdaInvocation(ctx, lambdaInvocationActionDelete, d, meta)
+		return invoke(ctx, invocationActionDelete, d, meta)
 	}
 	var diags diag.Diagnostics
 	log.Printf("[DEBUG] Lambda Invocation (%s) \"deleted\" by removing from state", d.Id())
@@ -156,10 +156,10 @@ func getInputChange(d *schema.ResourceData) (map[string]interface{}, map[string]
 //
 // The original invocation logic only triggers on create.
 func isCreateOnlyScope(d *schema.ResourceData) bool {
-	return d.Get("lifecycle_scope").(string) == lambdaLifecycleScopeCreateOnly
+	return d.Get("lifecycle_scope").(string) == lifecycleScopeCreateOnly
 }
 
-func lambdaInvocation(ctx context.Context, action string, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func invoke(ctx context.Context, action string, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaConn()
 
