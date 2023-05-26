@@ -42,7 +42,7 @@ func waitClusterCreated(ctx context.Context, conn *redshift.Redshift, id string,
 
 func waitClusterDeleted(ctx context.Context, conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{clusterAvailabilityStatusModifying},
+		Pending: []string{clusterAvailabilityStatusMaintenance, clusterAvailabilityStatusModifying},
 		Target:  []string{},
 		Refresh: statusClusterAvailability(ctx, conn, id),
 		Timeout: timeout,
