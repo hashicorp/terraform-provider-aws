@@ -52,6 +52,56 @@ func TestAccGlueDataQualityRuleset_basic(t *testing.T) {
 	})
 }
 
+func TestAccGlueDataQualityRuleset_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ruleset := "Rules = [Completeness \"colA\" between 0.4 and 0.8]"
+	resourceName := "aws_glue_data_quality_ruleset.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:  testAccDataQualityRulesetConfig_tags1(rName, ruleset, "key1", "value1"),
+				Destroy: false,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:  testAccDataQualityRulesetConfig_tags2(rName, ruleset, "key1", "value1updated", "key2", "value2"),
+				Destroy: false,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config:  testAccDataQualityRulesetConfig_tags1(rName, ruleset, "key2", "value2"),
+				Destroy: false,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccGlueDataQualityRuleset_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -142,4 +192,31 @@ resource "aws_glue_data_quality_ruleset" "test" {
   ruleset = %[2]q
 }
 `, rName, ruleset)
+}
+
+func testAccDataQualityRulesetConfig_tags1(rName, ruleset, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_data_quality_ruleset" "test" {
+  name    = %[1]q
+  ruleset = %[2]q
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName, ruleset, tagKey1, tagValue1)
+}
+
+func testAccDataQualityRulesetConfig_tags2(rName, ruleset, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_data_quality_ruleset" "test" {
+  name    = %[1]q
+  ruleset = %[2]q
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rName, ruleset, tagKey1, tagValue1, tagKey2, tagValue2)
 }
