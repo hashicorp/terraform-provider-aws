@@ -10,7 +10,7 @@ description: |-
 
 Use this resource to invoke a lambda function. The lambda function is invoked with the [RequestResponse](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html#API_Invoke_RequestSyntax) invocation type.
 
-~> **NOTE:** By default this resource _only_ invokes the function when the arguments call for a create or replace. In other words, after an initial invocation on _apply_, if the arguments do not change, a subsequent _apply_ does not invoke the function again. To dynamically invoke the function, see the `triggers` example below. To always invoke a function on each _apply_, see the [`aws_lambda_invocation`](/docs/providers/aws/d/lambda_invocation.html) data source. To invoke the lambda function when the terraform resource is updated/deleted see the `CRUD` example below.
+~> **NOTE:** By default this resource _only_ invokes the function when the arguments call for a create or replace. In other words, after an initial invocation on _apply_, if the arguments do not change, a subsequent _apply_ does not invoke the function again. To dynamically invoke the function, see the `triggers` example below. To always invoke a function on each _apply_, see the [`aws_lambda_invocation`](/docs/providers/aws/d/lambda_invocation.html) data source. To invoke the lambda function when the terraform resource is updated and deleted, see the [CRUD Lifecycle Scope](#crud-lifecycle-scope) example below.
 
 ~> **NOTE:** If you get a `KMSAccessDeniedException: Lambda was unable to decrypt the environment variables because KMS access was denied` error when invoking an [`aws_lambda_function`](/docs/providers/aws/r/lambda_function.html) with environment variables, the IAM role associated with the function may have been deleted and recreated _after_ the function was created. You can fix the problem two ways: 1) updating the function's role to another role and then updating it back again to the recreated role, or 2) by using Terraform to `taint` the function and `apply` your configuration again to recreate the function. (When you create a function, Lambda grants permissions on the KMS key to the function's IAM role. If the IAM role is recreated, the grant is no longer valid. Changing the function's role or recreating the function causes Lambda to update the grant.)
 
@@ -52,7 +52,7 @@ resource "aws_lambda_invocation" "example" {
 }
 ```
 
-### CRUD lifecycle_scope: Process all the lifecycle events on the terraform resource
+### CRUD Lifecycle Scope
 
 ```terraform
 resource "aws_lambda_invocation" "example" {
@@ -67,14 +67,14 @@ resource "aws_lambda_invocation" "example" {
 }
 ```
 
-~> **NOTE:** `lifecycle_scope = "CRUD"` will inject a key `tf` in the input event to pass lifecycle information! This allows
-to implement logic in your lambda function to handle different lifecycle transitions uniquely.  If you need to use a key `tf` in your own input JSON then see the `terraform_key` argument.
+~> **NOTE:** `lifecycle_scope = "CRUD"` will inject a key `tf` in the input event to pass lifecycle information! This allows the lambda function to handle different lifecycle transitions uniquely.  If you need to use a key `tf` in your own input JSON, the default key name can be overridden with the `terraform_key` argument.
 
 The key `tf` gets added with subkeys:
- * `action` which gets a value corresponding to the action terraform performs on the resource [`create`, `delete`, `update`]
- * `prev_input` which gets a value of the previous invocation. This can be used to handle deletes and updates.
+* `action` which gets a value corresponding to the action terraform performs on the resource [`create`, `delete`, `update`]
+* `prev_input` which gets a value of the previous invocation. This can be used to handle deletes and updates.
 
-When the resource from the example above gets added the Lambda will get following JSON payload:
+When the resource from the example above is created, the Lambda will get following JSON payload:
+
 ```json
 {
   "key1": "value1",
@@ -84,9 +84,9 @@ When the resource from the example above gets added the Lambda will get followin
     "prev_input": null
   }
 }
-``` 
+```
 
-So if for the above example the input would change the value of `key1` to "valueB" then the lambda will be invoked once more with the following JSON body:
+If the input value of `key1` changes to "valueB", then the lambda will be invoked again with the following JSON payload:
 
 ```json
 {
@@ -102,7 +102,7 @@ So if for the above example the input would change the value of `key1` to "value
 }
 ```
 
-If finally the lambda_invocation resource will be removed then a final invocation happens with JSON body:
+When the invocation resource is removed, the final invocation will have the following JSON payload:
 
 ```json
 {
@@ -118,7 +118,6 @@ If finally the lambda_invocation resource will be removed then a final invocatio
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are required:
@@ -128,11 +127,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `lifecycle_scope` - (Optional) Lifecycle scope of the resource to manage. Supported values:
-  * `"CREATE_ONLY"` (Default): Trigger only on create or replace of the terraform resources.
-  * `"CRUD"`: Manage the full lifecycle and augment JSON payload of the lambda function with lifecycle information.
+* `lifecycle_scope` - (Optional) Lifecycle scope of the resource to manage. Valid values are `CREATE_ONLY` and `CRUD`. Defaults to `CREATE_ONLY`. `CREATE_ONLY` will invoke the function only on creation or replacement. `CRUD` will invoke the function on each lifecycle event, and augment the input JSON payload with additional lifecycle information.
 * `qualifier` - (Optional) Qualifier (i.e., version) of the lambda function. Defaults to `$LATEST`.
-* `terraform_key` - (Optional) The JSON key used to store lifecycle information in the JSON payload for the lambda function. Default "tf".
+* `terraform_key` - (Optional) The JSON key used to store lifecycle information in the input JSON payload. Defaults to `tf`. This additional key is only included when `lifecycle_scope` is set to `CRUD`.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a re-invocation. To force a re-invocation without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
 
 ## Attributes Reference
