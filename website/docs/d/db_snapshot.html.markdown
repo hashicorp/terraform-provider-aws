@@ -69,6 +69,9 @@ The default is `false`.
 * `include_public` - (Optional) Set this value to true to include manual DB snapshots that are public and can be
 copied or restored by any AWS account, otherwise set this value to false. The default is `false`.
 
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
+  a pair on the desired DB snapshot.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -89,4 +92,5 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - Status of this DB snapshot.
 * `storage_type` - Storage type associated with DB snapshot.
 * `vpc_id` - ID of the VPC associated with the DB snapshot.
+* `tags` - Mapping of tags for the resource.
 * `snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC).
