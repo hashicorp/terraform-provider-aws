@@ -79,7 +79,7 @@ func TestAccRedshiftCluster_aqua(t *testing.T) {
 				Config: testAccClusterConfig_aqua(rName, "enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "auto"),
 				),
 			},
 			{
@@ -97,14 +97,14 @@ func TestAccRedshiftCluster_aqua(t *testing.T) {
 				Config: testAccClusterConfig_aqua(rName, "disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "auto"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_aqua(rName, "enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "auto"),
 				),
 			},
 		},

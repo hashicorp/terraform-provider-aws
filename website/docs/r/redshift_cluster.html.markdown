@@ -61,7 +61,9 @@ The following arguments are supported:
   The version selected runs on all the nodes in the cluster.
 * `allow_version_upgrade` - (Optional) If true , major version upgrades can be applied during the maintenance window to the Amazon Redshift engine that is running on the cluster. Default is `true`.
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications are applied immediately, or during the next maintenance window. Default is `false`.
-* `aqua_configuration_status` - (Optional) The value represents how the cluster is configured to use AQUA (Advanced Query Accelerator) after the cluster is restored. Possible values are `enabled`, `disabled`, and `auto`. Requires Cluster reboot.
+* `aqua_configuration_status` - (Optional, **Deprecated**) The value represents how the cluster is configured to use AQUA (Advanced Query Accelerator) after the cluster is restored.
+  No longer supported by the AWS API.
+  Always returns `auto`.
 * `number_of_nodes` - (Optional) The number of compute nodes in the cluster. This parameter is required when the ClusterType parameter is specified as multi-node. Default is 1.
 * `publicly_accessible` - (Optional) If true, the cluster can be accessed from a public network. Default is `true`.
 * `encrypted` - (Optional) If true , the data in the cluster is encrypted at rest.
