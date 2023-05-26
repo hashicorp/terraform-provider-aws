@@ -1,4 +1,9 @@
 ## 5.0.1 (Unreleased)
+
+BUG FIXES:
+
+* provider/tags: Fix crash when tags are `null` ([#31587](https://github.com/hashicorp/terraform-provider-aws/issues/31587))
+
 ## 5.0.0 (May 25, 2023)
 
 BREAKING CHANGES:
