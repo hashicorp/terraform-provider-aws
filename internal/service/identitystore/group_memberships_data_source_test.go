@@ -72,10 +72,10 @@ resource "aws_identitystore_group_membership" "test" {
 }
 
 data "aws_identitystore_group_memberships" "test" {
-	depends_on = [aws_identitystore_group_membership.test]
+  depends_on = [aws_identitystore_group_membership.test]
 
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-	group_id = aws_identitystore_group.test.group_id
+  group_id          = aws_identitystore_group.test.group_id
 }
 `, userName, groupName)
 }
