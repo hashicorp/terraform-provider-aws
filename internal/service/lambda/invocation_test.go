@@ -443,7 +443,7 @@ resource "aws_iam_policy" "test" {
           "ssm:PutParameter",
         ]
         Effect   = "Allow"
-        Resource = "arn:aws:ssm:*:*:parameter%[2]s"
+        Resource = "arn:${data.aws_partition.current.partition}:ssm:*:*:parameter%[2]s"
       },
     ]
   })
