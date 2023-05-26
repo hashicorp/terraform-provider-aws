@@ -1,6 +1,7 @@
 package lambda_test
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -273,7 +274,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
 					testAccConfigInvocation_crudAllowSSM(rName, ssmParameterName),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCRUDDestroyResult(resourceName, ssmParameterName, destroyJSON, t),
+					testAccCheckCRUDDestroyResult(ctx, resourceName, ssmParameterName, destroyJSON, t),
 				),
 			},
 		},
@@ -366,19 +367,19 @@ func testAccCheckInvocationDestroy(s *terraform.State) error {
 // Because a destroy implies the resource will be removed from the state we need another way to check
 // how the lambda was invoked. The JSON used to invoke the lambda is stored in an SSM Parameter.
 // We will read it out, compare with the expected result and clean up the SSM parameter.
-func testAccCheckCRUDDestroyResult(name, ssmParameterName, expectedResult string, t *testing.T) resource.TestCheckFunc {
+func testAccCheckCRUDDestroyResult(ctx context.Context, name, ssmParameterName, expectedResult string, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if ok {
 			return fmt.Errorf("Still found resource in state: %s", name)
 		}
 		conn := acctest.ProviderMeta(t).SSMConn()
-		res, err := conn.GetParameter(&ssm.GetParameterInput{
+		res, err := conn.GetParameterWithContext(ctx, &ssm.GetParameterInput{
 			Name:           aws.String(ssmParameterName),
 			WithDecryption: aws.Bool(true),
 		})
 
-		if cleanupErr := removeSSMParameter(ssmParameterName, conn); cleanupErr != nil {
+		if cleanupErr := removeSSMParameter(ctx, conn, ssmParameterName); cleanupErr != nil {
 			return fmt.Errorf("Could not cleanup SSM Parameter %s", ssmParameterName)
 		}
 
@@ -394,8 +395,8 @@ func testAccCheckCRUDDestroyResult(name, ssmParameterName, expectedResult string
 	}
 }
 
-func removeSSMParameter(name string, conn *ssm.SSM) error {
-	_, err := conn.DeleteParameter(&ssm.DeleteParameterInput{
+func removeSSMParameter(ctx context.Context, conn *ssm.SSM, name string) error {
+	_, err := conn.DeleteParameterWithContext(ctx, &ssm.DeleteParameterInput{
 		Name: aws.String(name),
 	})
 	return err
