@@ -24,7 +24,8 @@ import (
 // @Tags(identifierAttribute="arn")
 func ResourceDataQualityRuleset() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: resourceDataQualityRulesetRead,
+		CreateWithoutTimeout: resourceDataQualityRulesetCreate,
+		ReadWithoutTimeout:   resourceDataQualityRulesetRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -98,6 +99,36 @@ func ResourceDataQualityRuleset() *schema.Resource {
 	}
 }
 
+func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
+
+	name := d.Get("name").(string)
+
+	input := &glue.CreateDataQualityRulesetInput{
+		Name:    aws.String(name),
+		Ruleset: aws.String(d.Get("ruleset").(string)),
+		Tags:    GetTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("target_table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.TargetTable = expandTargetTable(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	_, err := conn.CreateDataQualityRulesetWithContext(ctx, input)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Glue Data Quality Ruleset (%s): %s", name, err)
+	}
+
+	d.SetId(name)
+
+	return append(diags, resourceDataQualityRulesetRead(ctx, d, meta)...)
+}
+
 func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn()
@@ -136,6 +167,19 @@ func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return diags
+}
+
+func expandTargetTable(tfMap map[string]interface{}) *glue.DataQualityTargetTable {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &glue.DataQualityTargetTable{
+		DatabaseName: aws.String(tfMap["database_name"].(string)),
+		TableName:    aws.String(tfMap["table_name"].(string)),
+	}
+
+	return apiObject
 }
 
 func flattenTargetTable(apiObject *glue.DataQualityTargetTable) []interface{} {
