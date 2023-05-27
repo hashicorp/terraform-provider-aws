@@ -759,6 +759,25 @@ func ResourceGroup() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"traffic_sources": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"identifier": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 2048),
+						},
+
+						"type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 2048),
+						},
+					},
+				},
+			},
 			"vpc_zone_identifier": {
 				Type:          schema.TypeSet,
 				Optional:      true,
@@ -947,6 +966,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		createInput.TerminationPolicies = flex.ExpandStringList(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("traffic_sources"); ok && len(v.([]interface{})) > 0 {
+		createInput.TrafficSources = expandTrafficSourceList(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("vpc_zone_identifier"); ok && v.(*schema.Set).Len() > 0 {
 		createInput.VPCZoneIdentifier = expandVPCZoneIdentifiers(v.(*schema.Set).List())
 	}
@@ -1088,7 +1111,6 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("health_check_grace_period", g.HealthCheckGracePeriod)
 	d.Set("health_check_type", g.HealthCheckType)
-	d.Set("load_balancers", aws.StringValueSlice(g.LoadBalancerNames))
 	d.Set("launch_configuration", g.LaunchConfigurationName)
 	if g.LaunchTemplate != nil {
 		if err := d.Set("launch_template", []interface{}{flattenLaunchTemplateSpecification(g.LaunchTemplate)}); err != nil {
@@ -1114,10 +1136,18 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("protect_from_scale_in", g.NewInstancesProtectedFromScaleIn)
 	d.Set("service_linked_role_arn", g.ServiceLinkedRoleARN)
 	d.Set("suspended_processes", flattenSuspendedProcesses(g.SuspendedProcesses))
-	d.Set("target_group_arns", aws.StringValueSlice(g.TargetGroupARNs))
 	// If no termination polices are explicitly configured and the upstream state
 	// is only using the "Default" policy, clear the state to make it consistent
 	// with the default AWS Create API behavior.
+	if _, ok := d.GetOk("traffic_sources"); ok && len(g.TrafficSources) > 1 {
+		d.Set("traffic_sources", flattenTrafficSourceList(g.TrafficSources))
+		d.Set("target_group_arns", nil)
+		d.Set("load_balancers", nil)
+	} else if _, ok := d.GetOk("traffic_sources"); !ok {
+		d.Set("traffic_sources", nil)
+		d.Set("load_balancers", aws.StringValueSlice(g.LoadBalancerNames))
+		d.Set("target_group_arns", aws.StringValueSlice(g.TargetGroupARNs))
+	}
 	if _, ok := d.GetOk("termination_policies"); !ok && len(g.TerminationPolicies) == 1 && aws.StringValue(g.TerminationPolicies[0]) == DefaultTerminationPolicy {
 		d.Set("termination_policies", nil)
 	} else {
@@ -1283,6 +1313,59 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if err := UpdateTags(ctx, conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags for Auto Scaling Group (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("traffic_sources") {
+		o, n := d.GetChange("traffic_sources")
+		os := expandTrafficSourceList(o.([]interface{}))
+		ns := expandTrafficSourceList(n.([]interface{}))
+
+		remove := differenceTrafficSources(os, ns)
+		add := differenceTrafficSources(ns, os)
+
+		if len(remove) > 0 {
+			batchSize := 10
+			batches := makeBatchesTrafficSources(remove, batchSize)
+
+			for _, batch := range batches {
+				for _, ts := range batch {
+					_, err := conn.DetachTrafficSourcesWithContext(ctx, &autoscaling.DetachTrafficSourcesInput{
+						AutoScalingGroupName: aws.String(d.Id()),
+						TrafficSources:       []*autoscaling.TrafficSourceIdentifier{ts},
+					})
+
+					if err != nil {
+						return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) traffic sources: %s", d.Id(), err)
+					}
+
+					if _, err := WaitTrafficAttachmentDeleted(ctx, conn, d.Id(), aws.StringValue(ts.Type), aws.StringValue(ts.Identifier), d.Timeout(schema.TimeoutUpdate)); err != nil {
+						return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) traffice sources removed: %s", d.Id(), err)
+					}
+				}
+			}
+		}
+
+		if len(add) > 0 {
+			batchSize := 10
+			batches := makeBatchesTrafficSources(add, batchSize)
+
+			for _, batch := range batches {
+				for _, ts := range batch {
+					_, err := conn.AttachTrafficSourcesWithContext(ctx, &autoscaling.AttachTrafficSourcesInput{
+						AutoScalingGroupName: aws.String(d.Id()),
+						TrafficSources:       []*autoscaling.TrafficSourceIdentifier{ts},
+					})
+
+					if err != nil {
+						return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) traffice sources: %s", d.Id(), err)
+					}
+
+					if _, err := WaitTrafficAttachmentCreated(ctx, conn, d.Id(), aws.StringValue(ts.Type), aws.StringValue(ts.Identifier), d.Timeout(schema.TimeoutUpdate)); err != nil {
+						return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) traffice sources added: %s", d.Id(), err)
+					}
+				}
+			}
 		}
 	}
 
@@ -3087,6 +3170,25 @@ func expandVPCZoneIdentifiers(tfList []interface{}) *string {
 	return aws.String(strings.Join(vpcZoneIDs, ","))
 }
 
+func expandTrafficSourceList(tfList []interface{}) []*autoscaling.TrafficSourceIdentifier {
+	var trafficSourceIdentifiers []*autoscaling.TrafficSourceIdentifier
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		trafficSourceIdentifier := &autoscaling.TrafficSourceIdentifier{
+			Identifier: aws.String((tfMap["identifier"].(string))),
+			Type:       aws.String((tfMap["type"].(string))),
+		}
+
+		trafficSourceIdentifiers = append(trafficSourceIdentifiers, trafficSourceIdentifier)
+	}
+	return trafficSourceIdentifiers
+}
+
 func flattenEnabledMetrics(apiObjects []*autoscaling.EnabledMetric) []string {
 	var tfList []string
 
@@ -3507,6 +3609,25 @@ func flattentTotalLocalStorageGB(apiObject *autoscaling.TotalLocalStorageGBReque
 	return tfMap
 }
 
+func flattenTrafficSourceList(trafficSources []*autoscaling.TrafficSourceIdentifier) []interface{} {
+	if len(trafficSources) == 0 {
+		return []interface{}{}
+	}
+
+	var trafficSourcesList []interface{}
+
+	for _, trafficSource := range trafficSources {
+		m := map[string]interface{}{
+			"identifier": aws.StringValue(trafficSource.Identifier),
+			"type":       aws.StringValue(trafficSource.Type),
+		}
+		trafficSourcesList = append(trafficSourcesList, m)
+	}
+
+	fmt.Println(trafficSourcesList)
+	return trafficSourcesList
+}
+
 func flattenVCPUCount(apiObject *autoscaling.VCpuCountRequest) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -3659,4 +3780,38 @@ func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) dia
 	}
 
 	return diag.Errorf("'%s' is not a recognized parameter name for aws_autoscaling_group", v)
+}
+
+//Custom functions to handle how to add or remove traffice source resources
+
+func differenceTrafficSources(ts1, ts2 []*autoscaling.TrafficSourceIdentifier) []*autoscaling.TrafficSourceIdentifier {
+	diff := []*autoscaling.TrafficSourceIdentifier{}
+
+	for _, ts1Item := range ts1 {
+		if !containsTrafficSource(ts2, ts1Item) {
+			diff = append(diff, ts1Item)
+		}
+	}
+	fmt.Println(diff)
+	return diff
+}
+
+func containsTrafficSource(tsSlice []*autoscaling.TrafficSourceIdentifier, tsItem *autoscaling.TrafficSourceIdentifier) bool {
+	for _, ts := range tsSlice {
+		if *ts.Identifier == *tsItem.Identifier {
+			return true
+		}
+	}
+	return false
+}
+
+func makeBatchesTrafficSources(ts []*autoscaling.TrafficSourceIdentifier, batchSize int) [][]*autoscaling.TrafficSourceIdentifier {
+	var batches [][]*autoscaling.TrafficSourceIdentifier
+
+	for batchSize < len(ts) {
+		ts, batches = ts[batchSize:], append(batches, ts[0:batchSize:batchSize])
+	}
+	batches = append(batches, ts)
+	fmt.Println(batches)
+	return batches
 }

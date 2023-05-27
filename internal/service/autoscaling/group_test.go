@@ -544,6 +544,76 @@ func TestAccAutoScalingGroup_WithLoadBalancer_toTargetGroup(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingGroup_withTrafficSourcesElb(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_traficSourceElb(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "force_delete", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period", "300"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_type", "ELB"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "traffic_sources.0.identifier", "aws_elb.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_sources.0.type", "elb"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_zone_identifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_elb_capacity", "2"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_withTrafficSources_toTargetGroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_traficSourceElb(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "1"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_traficSourceElbv2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "1"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+			{
+				Config: testAccGroupConfig_traficSourceElb(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAutoScalingGroup_withPlacementGroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group autoscaling.Group
@@ -3954,6 +4024,59 @@ resource "aws_autoscaling_group" "test" {
   wait_for_elb_capacity     = 2
   force_delete              = true
   target_group_arns         = [aws_lb_target_group.test.arn]
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+}
+`, rName))
+}
+
+func testAccGroupConfig_traficSourceElb(rName string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_elbBase(rName), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  vpc_zone_identifier  = aws_subnet.test[*].id
+  max_size                  = 1
+  min_size                  = 0
+  desired_capacity          = 0
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+
+  health_check_grace_period = 300
+  force_delete              = true
+  traffic_sources {
+    identifier = aws_elb.test.name
+    type       = "elb"
+  }
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+}
+`, rName))
+}
+
+func testAccGroupConfig_traficSourceElbv2(rName string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_elbBase(rName), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  vpc_zone_identifier  = aws_subnet.test[*].id
+  max_size             = 2
+  min_size             = 2
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  wait_for_elb_capacity     = 2
+  force_delete              = true
+  traffic_sources {
+    identifier = aws_lb_target_group.test.arn
+    type       = "elbv2"
+  }
 
   tag {
     key                 = "Name"
