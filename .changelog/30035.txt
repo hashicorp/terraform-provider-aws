@@ -1,0 +1,7 @@
+```release-note:note
+resource/aws_vpc_security_group_ingress_rule: End user documentation change to clearly mention `from_port` and `to_port` should not be defined when `ip_protocol` is set to `-1`, to avoid terraform detecting changes endlessly. Resolves confusion that is seen in GitHub issues [#1177](https://github.com/hashicorp/terraform/issues/1177), [#1729](https://github.com/hashicorp/terraform/issues/1729), [#30035](https://github.com/hashicorp/terraform-provider-aws/issues/30035).
+```
+
+```release-note:note
+resource/aws_vpc_security_group_egress_rule: End user documentation change to clearly mention `from_port` and `to_port` should not be defined when `ip_protocol` is set to `-1`, to avoid terraform detecting changes endlessly. Resolves confusion that is seen in GitHub issues [#1177](https://github.com/hashicorp/terraform/issues/1177), [#1729](https://github.com/hashicorp/terraform/issues/1729), [#30035](https://github.com/hashicorp/terraform-provider-aws/issues/30035).
+```
