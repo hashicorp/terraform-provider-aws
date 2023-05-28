@@ -1136,18 +1136,23 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("protect_from_scale_in", g.NewInstancesProtectedFromScaleIn)
 	d.Set("service_linked_role_arn", g.ServiceLinkedRoleARN)
 	d.Set("suspended_processes", flattenSuspendedProcesses(g.SuspendedProcesses))
+
+	if _, ok := d.GetOk("traffic_sources"); ok {
+		trafficSources := flattenTrafficSourceList(g.TrafficSources)
+		d.Set("traffic_sources", trafficSources)
+	}
+
+	if _, ok := d.GetOk("load_balancers"); ok {
+		d.Set("load_balancers", aws.StringValueSlice(g.LoadBalancerNames))
+	}
+
+	if _, ok := d.GetOk("target_group_arns"); ok {
+		d.Set("target_group_arns", aws.StringValueSlice(g.TargetGroupARNs))
+	}
+
 	// If no termination polices are explicitly configured and the upstream state
 	// is only using the "Default" policy, clear the state to make it consistent
 	// with the default AWS Create API behavior.
-	if _, ok := d.GetOk("traffic_sources"); ok && len(g.TrafficSources) > 1 {
-		d.Set("traffic_sources", flattenTrafficSourceList(g.TrafficSources))
-		d.Set("target_group_arns", nil)
-		d.Set("load_balancers", nil)
-	} else if _, ok := d.GetOk("traffic_sources"); !ok {
-		d.Set("traffic_sources", nil)
-		d.Set("load_balancers", aws.StringValueSlice(g.LoadBalancerNames))
-		d.Set("target_group_arns", aws.StringValueSlice(g.TargetGroupARNs))
-	}
 	if _, ok := d.GetOk("termination_policies"); !ok && len(g.TerminationPolicies) == 1 && aws.StringValue(g.TerminationPolicies[0]) == DefaultTerminationPolicy {
 		d.Set("termination_policies", nil)
 	} else {
@@ -3624,7 +3629,6 @@ func flattenTrafficSourceList(trafficSources []*autoscaling.TrafficSourceIdentif
 		trafficSourcesList = append(trafficSourcesList, m)
 	}
 
-	fmt.Println(trafficSourcesList)
 	return trafficSourcesList
 }
 
