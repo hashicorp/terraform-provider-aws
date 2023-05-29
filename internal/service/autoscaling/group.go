@@ -252,6 +252,7 @@ func ResourceGroup() *schema.Resource {
 			"load_balancers": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"max_instance_lifetime": {
@@ -752,6 +753,7 @@ func ResourceGroup() *schema.Resource {
 			"target_group_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"termination_policies": {
@@ -760,8 +762,9 @@ func ResourceGroup() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"traffic_sources": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"identifier": {
@@ -966,8 +969,8 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		createInput.TerminationPolicies = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("traffic_sources"); ok && len(v.([]interface{})) > 0 {
-		createInput.TrafficSources = expandTrafficSourceList(v.([]interface{}))
+	if v, ok := d.GetOk("traffic_sources"); ok && v.(*schema.Set).Len() > 0 {
+		createInput.TrafficSources = expandTrafficSourceList(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("vpc_zone_identifier"); ok && v.(*schema.Set).Len() > 0 {
@@ -1137,18 +1140,25 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("service_linked_role_arn", g.ServiceLinkedRoleARN)
 	d.Set("suspended_processes", flattenSuspendedProcesses(g.SuspendedProcesses))
 
-	if _, ok := d.GetOk("traffic_sources"); ok {
-		trafficSources := flattenTrafficSourceList(g.TrafficSources)
-		d.Set("traffic_sources", trafficSources)
-	}
+	// if _, ok := d.GetOk("traffic_sources"); ok {
+	// 	trafficSources := flattenTrafficSourceList(g.TrafficSources)
+	// 	d.Set("traffic_sources", trafficSources)
+	// }
+	trafficSources := flattenTrafficSourceList(g.TrafficSources)
 
-	if _, ok := d.GetOk("load_balancers"); ok {
-		d.Set("load_balancers", aws.StringValueSlice(g.LoadBalancerNames))
-	}
+	d.Set("traffic_sources", trafficSources)
+	d.Set("load_balancers", aws.StringValueSlice(g.LoadBalancerNames))
+	d.Set("target_group_arns", aws.StringValueSlice(g.TargetGroupARNs))
 
-	if _, ok := d.GetOk("target_group_arns"); ok {
-		d.Set("target_group_arns", aws.StringValueSlice(g.TargetGroupARNs))
-	}
+	// if _, ok := d.GetOk("load_balancers"); ok {
+	// 	d.Set("load_balancers", aws.StringValueSlice(g.LoadBalancerNames))
+	// 	d.Set("traffic_sources", nil)
+	// }
+
+	// if _, ok := d.GetOk("target_group_arns"); ok {
+	// 	d.Set("target_group_arns", aws.StringValueSlice(g.TargetGroupARNs))
+	// 	d.Set("traffic_sources", nil)
+	// }
 
 	// If no termination polices are explicitly configured and the upstream state
 	// is only using the "Default" policy, clear the state to make it consistent
@@ -1192,6 +1202,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		"suspended_processes",
 		"tag",
 		"target_group_arns",
+		"traffic_sources",
 		"warm_pool",
 	) {
 		input := &autoscaling.UpdateAutoScalingGroupInput{
@@ -1323,15 +1334,26 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("traffic_sources") {
 		o, n := d.GetChange("traffic_sources")
-		os := expandTrafficSourceList(o.([]interface{}))
-		ns := expandTrafficSourceList(n.([]interface{}))
+		if o == nil {
+			o = new(schema.Set)
+		}
+		if n == nil {
+			n = new(schema.Set)
+		}
 
-		remove := differenceTrafficSources(os, ns)
-		add := differenceTrafficSources(ns, os)
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
 
-		if len(remove) > 0 {
+		if remove := expandTrafficSourceList(os.Difference(ns).List()); len(remove) > 0 {
+			// API only supports removing 10 at a time.
 			batchSize := 10
-			batches := makeBatchesTrafficSources(remove, batchSize)
+
+			var batches [][]*autoscaling.TrafficSourceIdentifier
+
+			for batchSize < len(remove) {
+				remove, batches = remove[batchSize:], append(batches, remove[0:batchSize:batchSize])
+			}
+			batches = append(batches, remove)
 
 			for _, batch := range batches {
 				for _, ts := range batch {
@@ -1339,21 +1361,25 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 						AutoScalingGroupName: aws.String(d.Id()),
 						TrafficSources:       []*autoscaling.TrafficSourceIdentifier{ts},
 					})
-
 					if err != nil {
 						return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) traffic sources: %s", d.Id(), err)
 					}
-
-					if _, err := WaitTrafficAttachmentDeleted(ctx, conn, d.Id(), aws.StringValue(ts.Type), aws.StringValue(ts.Identifier), d.Timeout(schema.TimeoutUpdate)); err != nil {
-						return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) traffice sources removed: %s", d.Id(), err)
+					if _, err := waitTrafficSourcesDeleted(ctx, conn, d.Id(), aws.StringValue(ts.Type), d.Timeout(schema.TimeoutUpdate)); err != nil {
+						return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) traffice sources added: %s", d.Id(), err)
 					}
 				}
 			}
 		}
-
-		if len(add) > 0 {
+		if add := expandTrafficSourceList(ns.Difference(os).List()); len(add) > 0 {
+			// API only supports adding 10 at a time.
 			batchSize := 10
-			batches := makeBatchesTrafficSources(add, batchSize)
+
+			var batches [][]*autoscaling.TrafficSourceIdentifier
+
+			for batchSize < len(add) {
+				add, batches = add[batchSize:], append(batches, add[0:batchSize:batchSize])
+			}
+			batches = append(batches, add)
 
 			for _, batch := range batches {
 				for _, ts := range batch {
@@ -1366,7 +1392,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 						return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) traffice sources: %s", d.Id(), err)
 					}
 
-					if _, err := WaitTrafficAttachmentCreated(ctx, conn, d.Id(), aws.StringValue(ts.Type), aws.StringValue(ts.Identifier), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					if _, err := waitTrafficSourcesCreated(ctx, conn, d.Id(), aws.StringValue(ts.Type), d.Timeout(schema.TimeoutUpdate)); err != nil {
 						return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) traffice sources added: %s", d.Id(), err)
 					}
 				}
@@ -2480,6 +2506,102 @@ func waitLoadBalancerTargetGroupsRemoved(ctx context.Context, conn *autoscaling.
 	}
 
 	return nil, err
+}
+
+func waitTrafficSourcesCreated(ctx context.Context, conn *autoscaling.AutoScaling, name string, sourceType string, timeout time.Duration) ([]*autoscaling.TrafficSourceState, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:  []string{"0"},
+		Refresh: statusTrafficSourcesCount(ctx, conn, name, sourceType),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.([]*autoscaling.TrafficSourceState); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTrafficSourcesDeleted(ctx context.Context, conn *autoscaling.AutoScaling, name string, sourceType string, timeout time.Duration) ([]*autoscaling.TrafficSourceState, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:  []string{"0"},
+		Refresh: statusTrafficSourcesCount(ctx, conn, name, sourceType),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.([]*autoscaling.TrafficSourceState); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusTrafficSourcesCount(ctx context.Context, conn *autoscaling.AutoScaling, name string, sourceType string, states ...string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findTrafficSourcesGroupStates(ctx, conn, name, sourceType)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		var count int
+
+		for _, v := range output {
+			for _, state := range states {
+				if aws.StringValue(v.State) == state {
+					count++
+					break
+				}
+			}
+		}
+
+		return output, strconv.Itoa(count), nil
+	}
+}
+
+func findTrafficSourcesGroupStates(ctx context.Context, conn *autoscaling.AutoScaling, name string, sourceType string) ([]*autoscaling.TrafficSourceState, error) {
+	input := &autoscaling.DescribeTrafficSourcesInput{
+		AutoScalingGroupName: aws.String(name),
+		TrafficSourceType:    aws.String(sourceType),
+	}
+	var output []*autoscaling.TrafficSourceState
+
+	err := describeTrafficSourcesPages(ctx, conn, input, func(page *autoscaling.DescribeTrafficSourcesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TrafficSources {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 const (
@@ -3784,38 +3906,4 @@ func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) dia
 	}
 
 	return diag.Errorf("'%s' is not a recognized parameter name for aws_autoscaling_group", v)
-}
-
-//Custom functions to handle how to add or remove traffice source resources
-
-func differenceTrafficSources(ts1, ts2 []*autoscaling.TrafficSourceIdentifier) []*autoscaling.TrafficSourceIdentifier {
-	diff := []*autoscaling.TrafficSourceIdentifier{}
-
-	for _, ts1Item := range ts1 {
-		if !containsTrafficSource(ts2, ts1Item) {
-			diff = append(diff, ts1Item)
-		}
-	}
-	fmt.Println(diff)
-	return diff
-}
-
-func containsTrafficSource(tsSlice []*autoscaling.TrafficSourceIdentifier, tsItem *autoscaling.TrafficSourceIdentifier) bool {
-	for _, ts := range tsSlice {
-		if *ts.Identifier == *tsItem.Identifier {
-			return true
-		}
-	}
-	return false
-}
-
-func makeBatchesTrafficSources(ts []*autoscaling.TrafficSourceIdentifier, batchSize int) [][]*autoscaling.TrafficSourceIdentifier {
-	var batches [][]*autoscaling.TrafficSourceIdentifier
-
-	for batchSize < len(ts) {
-		ts, batches = ts[batchSize:], append(batches, ts[0:batchSize:batchSize])
-	}
-	batches = append(batches, ts)
-	fmt.Println(batches)
-	return batches
 }

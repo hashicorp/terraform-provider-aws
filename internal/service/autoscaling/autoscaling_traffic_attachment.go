@@ -89,7 +89,7 @@ func resourceTrafficAttachmentCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(id)
 
-	if _, err := WaitTrafficAttachmentCreated(ctx, conn, asgName, trafficSourcesType, trafficSourcesIdentifier, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitTrafficAttachmentCreated(ctx, conn, asgName, trafficSourcesType, trafficSourcesIdentifier, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for Traffic Source (%s) to be attached to Auto Scaling Group: %s", id, err)
 	}
 
@@ -139,14 +139,14 @@ func resourceTrafficAttachmentDelete(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("deleting Source Attachment (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitTrafficAttachmentDeleted(ctx, conn, asgName, *sourceIdentifier.Type, *sourceIdentifier.Identifier, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitTrafficAttachmentDeleted(ctx, conn, asgName, *sourceIdentifier.Type, *sourceIdentifier.Identifier, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for Traffic Source (%s) to be detached from Auto Scaling Group: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func WaitTrafficAttachmentCreated(ctx context.Context, conn *autoscaling.AutoScaling, asgName string, sourceType string, sourceIdentifier string, timeout time.Duration) (*autoscaling.TrafficSourceState, error) {
+func waitTrafficAttachmentCreated(ctx context.Context, conn *autoscaling.AutoScaling, asgName string, sourceType string, sourceIdentifier string, timeout time.Duration) (*autoscaling.TrafficSourceState, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{"Adding"},
 		Target:                    []string{"InService", "Added"},
@@ -166,7 +166,7 @@ func WaitTrafficAttachmentCreated(ctx context.Context, conn *autoscaling.AutoSca
 	return nil, err
 }
 
-func WaitTrafficAttachmentDeleted(ctx context.Context, conn *autoscaling.AutoScaling, asgName string, sourceType string, sourceIdentifier string, timeout time.Duration) (*autoscaling.TrafficSourceState, error) {
+func waitTrafficAttachmentDeleted(ctx context.Context, conn *autoscaling.AutoScaling, asgName string, sourceType string, sourceIdentifier string, timeout time.Duration) (*autoscaling.TrafficSourceState, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{"Removing", "Removed"},
 		Target:                    []string{},
