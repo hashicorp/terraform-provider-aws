@@ -7324,7 +7324,7 @@ resource "aws_instance" "test" {
 
 resource "aws_eip" "test" {
   instance   = aws_instance.test.id
-  vpc        = true
+  domain     = "vpc"
   depends_on = [aws_internet_gateway.test]
 
   tags = {
@@ -7354,7 +7354,7 @@ resource "aws_instance" "test" {
 
 resource "aws_eip" "test" {
   instance   = aws_instance.test.id
-  vpc        = true
+  domain     = "vpc"
   depends_on = [aws_internet_gateway.test]
 
   tags = {
@@ -7384,7 +7384,7 @@ resource "aws_instance" "test" {
 
 resource "aws_eip" "test" {
   instance   = aws_instance.test.id
-  vpc        = true
+  domain     = "vpc"
   depends_on = [aws_internet_gateway.test]
 
   tags = {

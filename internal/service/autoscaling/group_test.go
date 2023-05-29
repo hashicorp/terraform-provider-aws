@@ -793,14 +793,14 @@ func TestAccAutoScalingGroup_withScalingActivityErrorIncorrectInstanceArchitectu
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t4g.micro"),
+				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t4g.micro", 1),
 				ExpectError: regexp.MustCompile(`The architecture 'arm64' of the specified instance type does not match the architecture 'x86_64' of the specified AMI`),
 			},
 		},
 	})
 }
 
-func TestAccAutoScalingGroup_withNoScalingActivityErrorCorrectInstanceArchitecture(t *testing.T) {
+func TestAccAutoScalingGroup_withScalingActivityErrorIncorrectInstanceArchitecture_Recovers(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group autoscaling.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -813,8 +813,18 @@ func TestAccAutoScalingGroup_withNoScalingActivityErrorCorrectInstanceArchitectu
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_withPotentialScalingActivityError(rName, "t2.micro"),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccGroupConfig_withPotentialScalingActivityError(rName, "t2.micro", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+				),
+			},
+			{
+				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t4g.micro", 2),
+				ExpectError: regexp.MustCompile(`The architecture 'arm64' of the specified instance type does not match the architecture 'x86_64' of the specified AMI`),
+			},
+			{
+				Config: testAccGroupConfig_withPotentialScalingActivityError(rName, "t2.micro", 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 				),
 			},
@@ -3799,9 +3809,13 @@ func testAccGroupConfig_launchConfigurationBase(rName, instanceType string) stri
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name          = %[1]q
+  name_prefix   = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = %[2]q
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 `, rName, instanceType))
 }
@@ -4574,20 +4588,24 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupConfig_withPotentialScalingActivityError(rName, instanceType string) string {
+func testAccGroupConfig_withPotentialScalingActivityError(rName, instanceType string, instanceCount int) string {
 	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, instanceType), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones        = [data.aws_availability_zones.available.names[0]]
   name                      = %[1]q
-  max_size                  = 1
+  max_size                  = %[2]d
   min_size                  = 1
   health_check_grace_period = 300
   health_check_type         = "ELB"
-  desired_capacity          = 1
+  desired_capacity          = %[2]d
   force_delete              = true
   termination_policies      = ["OldestInstance", "ClosestToNextInstanceHour"]
   wait_for_capacity_timeout = "2m"
   launch_configuration      = aws_launch_configuration.test.name
+
+  instance_refresh {
+    strategy = "Rolling"
+  }
 
   tag {
     key                 = "Name"
@@ -4595,7 +4613,7 @@ resource "aws_autoscaling_group" "test" {
     propagate_at_launch = true
   }
 }
-`, rName))
+`, rName, instanceCount))
 }
 
 func testAccGroupConfig_serviceLinkedRoleARN(rName string) string {

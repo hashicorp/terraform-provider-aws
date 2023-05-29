@@ -71,9 +71,9 @@ func TestAccElastiCacheReplicationGroupDataSource_clusterMode(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az_enabled", resourceName, "multi_az_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "configuration_endpoint_address", resourceName, "configuration_endpoint_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "node_type", resourceName, "node_type"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "num_node_groups", resourceName, "cluster_mode.0.num_node_groups"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "num_node_groups", resourceName, "num_node_groups"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "port", resourceName, "port"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "replicas_per_node_group", resourceName, "cluster_mode.0.replicas_per_node_group"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "replicas_per_node_group", resourceName, "replicas_per_node_group"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "replication_group_id", resourceName, "replication_group_id"),
 				),
@@ -182,10 +182,8 @@ resource "aws_elasticache_replication_group" "test" {
   port                       = 6379
   automatic_failover_enabled = true
 
-  cluster_mode {
-    replicas_per_node_group = 1
-    num_node_groups         = 2
-  }
+  replicas_per_node_group = 1
+  num_node_groups         = 2
 }
 
 data "aws_elasticache_replication_group" "test" {

@@ -378,7 +378,7 @@ resource "aws_eip" "private" {
   count      = 2
   depends_on = [aws_internet_gateway.test]
 
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q

@@ -690,7 +690,7 @@ resource "aws_globalaccelerator_listener" "test" {
 resource "aws_eip" "test" {
   provider = "awsalternate"
 
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -800,7 +800,7 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -846,7 +846,7 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q

@@ -157,6 +157,28 @@ func TestAccVPC_tags_computed(t *testing.T) {
 	})
 }
 
+func TestAccVPC_tags_null(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCConfig_tags_null,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPC_DefaultTags_zeroValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc ec2.Vpc
@@ -1127,7 +1149,7 @@ resource "aws_vpc" "test" {
 
 const testAccVPCConfig_tags_computed = `
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 }
 
 resource "aws_vpc" "test" {
@@ -1135,6 +1157,16 @@ resource "aws_vpc" "test" {
 
   tags = {
     eip = aws_eip.test.public_ip
+  }
+}
+`
+
+const testAccVPCConfig_tags_null = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = null
   }
 }
 `

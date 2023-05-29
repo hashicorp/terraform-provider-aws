@@ -4767,7 +4767,7 @@ resource "aws_internet_gateway" "gw" {
 
 # elastic ip for NAT gateway
 resource "aws_eip" "nat" {
-  vpc = true
+  domain = "vpc"
   tags = {
     Name = %[1]q
   }

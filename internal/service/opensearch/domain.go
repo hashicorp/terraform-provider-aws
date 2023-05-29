@@ -453,7 +453,7 @@ func ResourceDomain() *schema.Resource {
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "OpenSearch_1.1",
+				Computed: true,
 			},
 			"kibana_endpoint": {
 				Type:       schema.TypeString,
@@ -568,9 +568,12 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	inputCreateDomain := opensearchservice.CreateDomainInput{
-		DomainName:    aws.String(d.Get("domain_name").(string)),
-		EngineVersion: aws.String(d.Get("engine_version").(string)),
-		TagList:       GetTagsIn(ctx),
+		DomainName: aws.String(d.Get("domain_name").(string)),
+		TagList:    GetTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("engine_version"); ok {
+		inputCreateDomain.EngineVersion = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("access_policies"); ok {

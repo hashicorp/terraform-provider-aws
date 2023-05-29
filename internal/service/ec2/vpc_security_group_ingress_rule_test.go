@@ -1116,7 +1116,7 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
 func testAccVPCSecurityGroupIngressRuleConfig_computed(rName string) string {
 	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), `
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "test" {

@@ -36,7 +36,7 @@ func TestAccEC2EIPsDataSource_basic(t *testing.T) {
 func testAccEIPsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test1" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = "%[1]s-1"
@@ -44,7 +44,7 @@ resource "aws_eip" "test1" {
 }
 
 resource "aws_eip" "test2" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = "%[1]s-2"
