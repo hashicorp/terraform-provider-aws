@@ -184,7 +184,7 @@ object PullRequest : BuildType({
                 buildFailed = true
                 buildFinishedSuccessfully = true
                 firstBuildErrorOccurs = true
-                buildProbablyHanging = true
+                buildProbablyHanging = false
             }
         }
     }
@@ -344,7 +344,7 @@ object SetUp : BuildType({
                 buildFailed = true
                 buildFinishedSuccessfully = false // With the number of tests, this would be too noisy
                 firstSuccessAfterFailure = true
-                buildProbablyHanging = true
+                buildProbablyHanging = false
                 // Ideally we'd have this enabled, but we have too many failures and this would get very noisy
                 // firstBuildErrorOccurs = true
             }

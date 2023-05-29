@@ -96,7 +96,7 @@ class Service(name: String, spec: ServiceSpec) {
                         buildFailed = false // With the current number of faling tests, this would be too noisy
                         buildFinishedSuccessfully = false // With the number of tests, this would be too noisy
                         firstSuccessAfterFailure = true
-                        buildProbablyHanging = true
+                        buildProbablyHanging = false
                         // Ideally we'd have this enabled, but we have too many failures and this would get very noisy
                         // firstBuildErrorOccurs = true
                     }
