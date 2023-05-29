@@ -1,4 +1,10 @@
 ## 5.1.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_autoscaling_group: Now ignores previous failed scaling activities ([#31551](https://github.com/hashicorp/terraform-provider-aws/issues/31551))
+* resource/aws_route53_vpc_association_authorization: Fix `ConcurrentModification` error ([#31588](https://github.com/hashicorp/terraform-provider-aws/issues/31588))
+
 ## 5.0.1 (May 26, 2023)
 
 BUG FIXES:
