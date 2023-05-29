@@ -61,8 +61,8 @@ github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.1 h1:aBrA5bDK3ou4Jqo
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.1/go.mod h1:tjEH79gyftglvYJMPGSachjqhthFaVYjco94mJ5ANcY=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.10 h1:b9yLKuY9L43WOJOHAj6OApgNTgze8D4akNbFhCnXUQQ=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.10/go.mod h1:PjV/8ElvXTf1jbcjaGvUphvb8Sz4/lTP87GFhQrZGbk=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.97.0 h1:glGFVlA0MVrOpDF+KsVZZA/QCwykYPanYMW0DoIJN34=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.97.0/go.mod h1:L3ZT0N/vBsw77mOAawXmRnREpEjcHd2v5Hzf7AkIH8M=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.98.0 h1:WblDV33AG9dhv0zFEPEmGtD5UECSNpKMxtdENULfR8M=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.98.0/go.mod h1:L3ZT0N/vBsw77mOAawXmRnREpEjcHd2v5Hzf7AkIH8M=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.10 h1:uDfGkU0W6mO34XFbXgc9sFjOXTNA6IRoeeoPkCnZnx4=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.10/go.mod h1:UFu/qHPW17t5CcwChAc76mSq3v/bRyzhqjwiTcqlwLI=
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.11 h1:/2EzMFJcYe87txoIlpM+qW9I3lH5Qro+DumdRuXCrb4=
