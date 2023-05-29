@@ -91,8 +91,8 @@ github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.4 h1:ghpmRvcyW4vk
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.4/go.mod h1:LMAikx29Mp71h/luaesJvO3//aeMPWu6MRE4eFfbWOU=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.2.6 h1:dSXPRQShC1+i/d7k0w8hHZWX/44Z/hfWgIYq5MSLajA=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.2.6/go.mod h1:tkKKTXm4WD7VCL5yUDvtvGZ8xaqbjk2WMJZLLetbJ0o=
-github.com/aws/aws-sdk-go-v2/service/rbin v1.8.11 h1:I1eHgy/bq1ZaNKVD0yuD8gM3SjxUPh4NbsyT8wAGzqw=
-github.com/aws/aws-sdk-go-v2/service/rbin v1.8.11/go.mod h1:kdlIXWL9Akk4tj/u9GMnO17ImBEvrhQmb0OnJ7LokQY=
+github.com/aws/aws-sdk-go-v2/service/rbin v1.8.12 h1:fNxEf+LXsuisrVIFAK9ZqNYaQM0ZByv73rDzxsHe52s=
+github.com/aws/aws-sdk-go-v2/service/rbin v1.8.12/go.mod h1:kdlIXWL9Akk4tj/u9GMnO17ImBEvrhQmb0OnJ7LokQY=
 github.com/aws/aws-sdk-go-v2/service/rds v1.44.0 h1:50lSF6RpPN5stt+nUbidwGzm9E1sKxBZJedU6nxu8RA=
 github.com/aws/aws-sdk-go-v2/service/rds v1.44.0/go.mod h1:rS6T0DrjdZ5LDr8ZC/J9iZdD1oSbie5reWWzqv5zLOw=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.13 h1:9uj47asgRDlwNqZIlzDt5HjnD2wakHy4yUXSz3e9V0M=
