@@ -118,8 +118,9 @@ func ResourceOntapVolume() *schema.Resource {
 			},
 			"volume_type": {
 				Type:         schema.TypeString,
-				Default:      fsx.VolumeTypeOntap,
 				Optional:     true,
+				ForceNew:     true,
+				Default:      fsx.VolumeTypeOntap,
 				ValidateFunc: validation.StringInSlice(fsx.VolumeType_Values(), false),
 			},
 		},

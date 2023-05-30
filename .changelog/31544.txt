@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_fsx_ontap_volume: Update `ontap_volume_type` attribute to be configurable
 ```
+
+```release-note:bug
+resource/aws_fsx_ontap_volume: Change `volume_type` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
+```
