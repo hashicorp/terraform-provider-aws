@@ -288,32 +288,33 @@ data "aws_autoscaling_group" "test" {
 }
 
 resource "aws_launch_configuration" "test" {
-	name          = %[1]q
-	image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-	instance_type = "t2.micro"
-  
-	enable_monitoring = false
-  }
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
 
-  resource "aws_lb_target_group" "test" {
-	name     = %[1]q
-	port     = 80
-	protocol = "HTTP"
-	vpc_id   = aws_vpc.test.id
-  }
+  enable_monitoring = false
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+}
 
 resource "aws_autoscaling_group" "test" {
-  name               = %[1]q
+  name                 = %[1]q
   vpc_zone_identifier  = aws_subnet.test[*].id
   max_size             = 0
   min_size             = 0
   launch_configuration = aws_launch_configuration.test.name
 
   traffic_sources {
-    identifier =aws_lb_target_group.test.arn
+    identifier = aws_lb_target_group.test.arn
     type       = "elbv2"
   }
 }
+
 
 `, rName))
 }

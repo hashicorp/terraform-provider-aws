@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -610,7 +611,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("target_group_arns", aws.StringValueSlice(group.TargetGroupARNs))
 	d.Set("termination_policies", aws.StringValueSlice(group.TerminationPolicies))
-	d.Set("traffic_sources", flattenTrafficSourceList(group.TrafficSources))
+	d.Set("traffic_sources", flattenDataTrafficSourceList(group.TrafficSources))
 	d.Set("vpc_zone_identifier", group.VPCZoneIdentifier)
 	if group.WarmPoolConfiguration != nil {
 		if err := d.Set("warm_pool", []interface{}{flattenWarmPoolConfiguration(group.WarmPoolConfiguration)}); err != nil {
@@ -622,4 +623,22 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("warm_pool_size", group.WarmPoolSize)
 
 	return diags
+}
+
+func flattenDataTrafficSourceList(trafficSources []*autoscaling.TrafficSourceIdentifier) []interface{} {
+	if len(trafficSources) == 0 {
+		return []interface{}{}
+	}
+
+	var trafficSourcesList []interface{}
+
+	for _, trafficSource := range trafficSources {
+		m := map[string]interface{}{
+			"identifier": aws.StringValue(trafficSource.Identifier),
+			"type":       aws.StringValue(trafficSource.Type),
+		}
+		trafficSourcesList = append(trafficSourcesList, m)
+	}
+
+	return trafficSourcesList
 }
