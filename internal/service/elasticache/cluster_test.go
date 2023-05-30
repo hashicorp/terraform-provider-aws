@@ -1721,11 +1721,9 @@ resource "aws_elasticache_cluster" "test" {
   node_type              = "cache.t3.small"
   num_cache_nodes        = 1
   engine                 = "redis"
-  engine_version         = "2.8.19"
   port                   = 6379
   subnet_group_name      = aws_elasticache_subnet_group.test.name
   security_group_ids     = [aws_security_group.test.id]
-  parameter_group_name   = "default.redis2.8"
   notification_topic_arn = aws_sns_topic.test.arn
   availability_zone      = data.aws_availability_zones.available.names[0]
 }
@@ -1799,12 +1797,10 @@ resource "aws_security_group_rule" "test" {
 }
 
 resource "aws_elasticache_cluster" "test" {
-  cluster_id           = %[1]q
-  engine               = "redis"
-  engine_version       = "5.0.4"
-  node_type            = "cache.t2.micro"
-  num_cache_nodes      = 1
-  parameter_group_name = "default.redis5.0"
+  cluster_id      = %[1]q
+  engine          = "redis"
+  node_type       = "cache.t2.micro"
+  num_cache_nodes = 1
 }
 `, rName)
 }
