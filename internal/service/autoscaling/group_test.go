@@ -544,7 +544,7 @@ func TestAccAutoScalingGroup_WithLoadBalancer_toTargetGroup(t *testing.T) {
 	})
 }
 
-func TestAccAutoScalingGroup_withTrafficSourcesELB(t *testing.T) {
+func TestAccAutoScalingGroup_withTrafficSourceELB(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group autoscaling.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -563,10 +563,10 @@ func TestAccAutoScalingGroup_withTrafficSourcesELB(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "force_delete", "true"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period", "300"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_type", "ELB"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_sources.0.%", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "traffic_sources.0.identifier", "aws_elb.test", "name"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_sources.0.type", "elb"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_source.0.%", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "traffic_source.0.identifier", "aws_elb.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_source.0.type", "elb"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_zone_identifier.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_elb_capacity", "2"),
 				),
@@ -611,7 +611,7 @@ func TestAccAutoScalingGroup_withTrafficSourcesELBs(t *testing.T) {
 	})
 }
 
-func TestAccAutoScalingGroup_withTrafficSources_ELB_toTargetGroup(t *testing.T) {
+func TestAccAutoScalingGroup_withTrafficSourceELB_toTargetGroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group autoscaling.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -627,14 +627,14 @@ func TestAccAutoScalingGroup_withTrafficSources_ELB_toTargetGroup(t *testing.T) 
 				Config: testAccGroupConfig_trafficSourceELB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_source.#", "1"),
 				),
 			},
 			{
 				Config: testAccGroupConfig_trafficSourceELBtoELBv2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_source.#", "1"),
 				),
 			},
 			testAccGroupImportStep(resourceName),
@@ -642,14 +642,14 @@ func TestAccAutoScalingGroup_withTrafficSources_ELB_toTargetGroup(t *testing.T) 
 				Config: testAccGroupConfig_trafficSourceELB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_source.#", "1"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAutoScalingGroup_withTrafficeSourcesELBV2(t *testing.T) {
+func TestAccAutoScalingGroup_withTrafficeSourceELBV2(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
@@ -665,14 +665,14 @@ func TestAccAutoScalingGroup_withTrafficeSourcesELBV2(t *testing.T) {
 				Config: testAccGroupConfig_trafficSourceELBv2(rName, 11),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "11"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_source.#", "11"),
 				),
 			},
 			{
 				Config: testAccGroupConfig_trafficSourceELBv2(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_source.#", "0"),
 				),
 			},
 			testAccGroupImportStep(resourceName),
@@ -680,14 +680,14 @@ func TestAccAutoScalingGroup_withTrafficeSourcesELBV2(t *testing.T) {
 				Config: testAccGroupConfig_trafficSourceELBv2(rName, 11),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "11"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_source.#", "11"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAutoScalingGroup_withTrafficSourcesVPCLatticeTargetGroup(t *testing.T) {
+func TestAccAutoScalingGroup_withTrafficSourceVPCLatticeTargetGroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group autoscaling.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -706,7 +706,7 @@ func TestAccAutoScalingGroup_withTrafficSourcesVPCLatticeTargetGroup(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "force_delete", "true"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period", "300"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_type", "ELB"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_zone_identifier.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_elb_capacity", "2"),
 				),
@@ -716,7 +716,7 @@ func TestAccAutoScalingGroup_withTrafficSourcesVPCLatticeTargetGroup(t *testing.
 	})
 }
 
-func TestAccAutoScalingGroup_withTrafficSourcesVPCLatticeTargetGroups(t *testing.T) {
+func TestAccAutoScalingGroup_withTrafficSourceVPCLatticeTargetGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group autoscaling.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -732,7 +732,7 @@ func TestAccAutoScalingGroup_withTrafficSourcesVPCLatticeTargetGroups(t *testing
 				Config: testAccGroupConfig_trafficSourceVPCLatticeTargetGroups(rName, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_source.#", "5"),
 				),
 			},
 			testAccGroupImportStep(resourceName),
@@ -4174,16 +4174,14 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupConfig_VPCLatticebase(rName string, targetGroupCount int) string {
+func testAccGroupConfig_vpcLatticeBase(rName string, targetGroupCount int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
-
-
 resource "aws_vpclattice_target_group" "test" {
   count = %[2]d
-  name  = format("%%s-%%d", substr(%[1]q, 0, 28), count.index)
+  name  = %[1]q
   type  = "INSTANCE"
 
   config {
@@ -4198,7 +4196,6 @@ resource "aws_launch_configuration" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
 }
-
 `, rName, targetGroupCount))
 }
 
@@ -4215,7 +4212,8 @@ resource "aws_autoscaling_group" "test" {
   health_check_type         = "ELB"
   force_delete              = true
   wait_for_elb_capacity     = 2
-  traffic_sources {
+
+  traffic_source {
     identifier = aws_elb.test.name
     type       = "elb"
   }
@@ -4270,13 +4268,15 @@ resource "aws_autoscaling_group" "test" {
   force_delete = true
   max_size     = 0
   min_size     = 0
-  dynamic "traffic_sources" {
+
+  dynamic "traffic_source" {
     for_each = aws_elb.test[*]
     content {
-      identifier = traffic_sources.value.name
+      identifier = traffic_source.value.name
       type       = "elb"
     }
   }
+
   vpc_zone_identifier = aws_subnet.test[*].id
 
   launch_template {
@@ -4299,7 +4299,8 @@ resource "aws_autoscaling_group" "test" {
   health_check_type         = "ELB"
   wait_for_elb_capacity     = 2
   force_delete              = true
-  traffic_sources {
+
+  traffic_source {
     identifier = aws_lb_target_group.test.arn
     type       = "elbv2"
   }
@@ -4329,7 +4330,7 @@ resource "aws_launch_configuration" "test" {
 resource "aws_lb_target_group" "test" {
   count = %[2]d
 
-  name     = format("%%s-%%s", substr(%[1]q, 0, 28), count.index)
+  name     = "%[1]s-${count.index}"
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
@@ -4342,10 +4343,10 @@ resource "aws_autoscaling_group" "test" {
   name                 = %[1]q
   launch_configuration = aws_launch_configuration.test.name
 
-  dynamic "traffic_sources" {
+  dynamic "traffic_source" {
     for_each = aws_lb_target_group.test[*]
     content {
-      identifier = traffic_sources.value.arn
+      identifier = traffic_source.value.arn
       type       = "elbv2"
     }
   }
@@ -4354,7 +4355,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccGroupConfig_trafficSourceVPCLatticeTargetGroup(rName string) string {
-	return acctest.ConfigCompose(testAccGroupConfig_VPCLatticebase(rName, 1), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGroupConfig_vpcLatticeBase(rName, 1), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   vpc_zone_identifier  = aws_subnet.test[*].id
   max_size             = 2
@@ -4366,7 +4367,8 @@ resource "aws_autoscaling_group" "test" {
   health_check_type         = "ELB"
   wait_for_elb_capacity     = 2
   force_delete              = true
-  traffic_sources {
+
+  traffic_source {
     identifier = aws_vpclattice_target_group.test[0].arn
     type       = "vpc-lattice"
   }
@@ -4384,11 +4386,10 @@ func testAccGroupConfig_trafficSourceVPCLatticeTargetGroups(rName string, target
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
-
-
 resource "aws_vpclattice_target_group" "test" {
   count = %[2]d
-  name  = format("%%s-%%d", substr(%[1]q, 0, 28), count.index)
+
+  name  = "%[1]s-${count.index}"
   type  = "INSTANCE"
 
   config {
@@ -4415,10 +4416,11 @@ resource "aws_autoscaling_group" "test" {
   health_check_type         = "ELB"
   wait_for_elb_capacity     = 2
   force_delete              = true
-  dynamic "traffic_sources" {
+
+  dynamic "traffic_source" {
     for_each = aws_vpclattice_target_group.test[*]
     content {
-      identifier = traffic_sources.value.arn
+      identifier = traffic_source.value.arn
       type       = "vpc-lattice"
     }
   }

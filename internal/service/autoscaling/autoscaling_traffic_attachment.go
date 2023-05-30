@@ -249,17 +249,3 @@ func FindTrafficAttachment(ctx context.Context, conn *autoscaling.AutoScaling, a
 
 	return result, nil
 }
-
-func expandTrafficSourceIdentifier(tfMap map[string]interface{}) *autoscaling.TrafficSourceIdentifier {
-	apiObject := &autoscaling.TrafficSourceIdentifier{}
-
-	if v, ok := tfMap["identifier"].(string); ok && v != "" {
-		apiObject.Identifier = aws.String(v)
-	}
-
-	if v, ok := tfMap["type"].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
-	}
-
-	return apiObject
-}
