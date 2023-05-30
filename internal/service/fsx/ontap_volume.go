@@ -72,7 +72,7 @@ func ResourceOntapVolume() *schema.Resource {
 			"security_style": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      fsx.StorageVirtualMachineRootVolumeSecurityStyleUnix,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice(fsx.StorageVirtualMachineRootVolumeSecurityStyle_Values(), false),
 			},
 			"size_in_megabytes": {

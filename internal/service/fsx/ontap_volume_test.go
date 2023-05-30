@@ -170,7 +170,7 @@ func TestAccFSxOntapVolume_ontapVolumeType(t *testing.T) {
 		CheckDestroy:             testAccCheckOntapVolumeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccONTAPVolumeConfig_ontapVolumeType(rName, "DP"),
+				Config: testAccONTAPVolumeConfig_ontapVolumeTypeDP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapVolumeExists(ctx, resourceName, &volume),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -526,17 +526,15 @@ resource "aws_fsx_ontap_volume" "test" {
 `, rName, junctionPath))
 }
 
-func testAccONTAPVolumeConfig_ontapVolumeType(rName, ontapVolumeType string) string {
+func testAccONTAPVolumeConfig_ontapVolumeTypeDP(rName string) string {
 	return acctest.ConfigCompose(testAccOntapVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
-  junction_path              = "/%[1]s"
-  ontap_volume_type          = %[2]q
+  ontap_volume_type          = "DP"
   size_in_megabytes          = 1024
-  storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
-`, rName, ontapVolumeType))
+`, rName))
 }
 
 func testAccONTAPVolumeConfig_securityStyle(rName string, securityStyle string) string {
