@@ -157,6 +157,35 @@ func TestAccFSxOntapVolume_junctionPath(t *testing.T) {
 	})
 }
 
+func TestAccFSxOntapVolume_ontapVolumeType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var volume fsx.Volume
+	resourceName := "aws_fsx_ontap_volume.test"
+	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapVolumeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccONTAPVolumeConfig_ontapVolumeType(rName, "DP"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOntapVolumeExists(ctx, resourceName, &volume),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "ontap_volume_type", "DP"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccFSxOntapVolume_securityStyle(t *testing.T) {
 	ctx := acctest.Context(t)
 	var volume1, volume2, volume3 fsx.Volume
@@ -388,25 +417,22 @@ func TestAccFSxOntapVolume_tieringPolicy(t *testing.T) {
 	})
 }
 
-func testAccCheckOntapVolumeExists(ctx context.Context, resourceName string, volume *fsx.Volume) resource.TestCheckFunc {
+func testAccCheckOntapVolumeExists(ctx context.Context, n string, v *fsx.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
-		volume1, err := tffsx.FindVolumeByID(ctx, conn, rs.Primary.ID)
+		output, err := tffsx.FindVolumeByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if volume == nil {
-			return fmt.Errorf("FSx ONTAP Volume (%s) not found", rs.Primary.ID)
-		}
-
-		*volume = *volume1
+		*v = *output
 
 		return nil
 	}
@@ -422,6 +448,7 @@ func testAccCheckOntapVolumeDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			volume, err := tffsx.FindVolumeByID(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -454,42 +481,14 @@ func testAccCheckOntapVolumeRecreated(i, j *fsx.Volume) resource.TestCheckFunc {
 	}
 }
 
-func testAccOntapVolumeBaseConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccOntapVolumeConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
-  subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
+  subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "MULTI_AZ_1"
   throughput_capacity = 512
-  preferred_subnet_id = aws_subnet.test1.id
+  preferred_subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -504,7 +503,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 }
 
 func testAccONTAPVolumeConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccOntapVolumeBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOntapVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
@@ -516,7 +515,7 @@ resource "aws_fsx_ontap_volume" "test" {
 }
 
 func testAccONTAPVolumeConfig_junctionPath(rName string, junctionPath string) string {
-	return acctest.ConfigCompose(testAccOntapVolumeBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOntapVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = %[2]q
@@ -527,8 +526,21 @@ resource "aws_fsx_ontap_volume" "test" {
 `, rName, junctionPath))
 }
 
+func testAccONTAPVolumeConfig_ontapVolumeType(rName, ontapVolumeType string) string {
+	return acctest.ConfigCompose(testAccOntapVolumeConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_volume" "test" {
+  name                       = %[1]q
+  junction_path              = "/%[1]s"
+  ontap_volume_type          = %[2]q
+  size_in_megabytes          = 1024
+  storage_efficiency_enabled = true
+  storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
+}
+`, rName, ontapVolumeType))
+}
+
 func testAccONTAPVolumeConfig_securityStyle(rName string, securityStyle string) string {
-	return acctest.ConfigCompose(testAccOntapVolumeBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOntapVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
@@ -541,7 +553,7 @@ resource "aws_fsx_ontap_volume" "test" {
 }
 
 func testAccONTAPVolumeConfig_size(rName string, size int) string {
-	return acctest.ConfigCompose(testAccOntapVolumeBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOntapVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
@@ -553,7 +565,7 @@ resource "aws_fsx_ontap_volume" "test" {
 }
 
 func testAccONTAPVolumeConfig_storageEfficiency(rName string, storageEfficiencyEnabled bool) string {
-	return acctest.ConfigCompose(testAccOntapVolumeBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOntapVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
@@ -565,13 +577,14 @@ resource "aws_fsx_ontap_volume" "test" {
 }
 
 func testAccONTAPVolumeConfig_tieringPolicy(rName string, policy string, coolingPeriod int) string {
-	return acctest.ConfigCompose(testAccOntapVolumeBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOntapVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
+
   tiering_policy {
     name           = %[2]q
     cooling_period = %[3]d
@@ -581,13 +594,14 @@ resource "aws_fsx_ontap_volume" "test" {
 }
 
 func testAccONTAPVolumeConfig_tieringPolicyNoCooling(rName string, policy string) string {
-	return acctest.ConfigCompose(testAccOntapVolumeBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOntapVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
+
   tiering_policy {
     name = %[2]q
   }
@@ -596,7 +610,7 @@ resource "aws_fsx_ontap_volume" "test" {
 }
 
 func testAccONTAPVolumeConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccOntapVolumeBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOntapVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
@@ -612,7 +626,7 @@ resource "aws_fsx_ontap_volume" "test" {
 }
 
 func testAccONTAPVolumeConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccOntapVolumeBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOntapVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
