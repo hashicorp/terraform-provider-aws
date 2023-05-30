@@ -995,7 +995,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		DataSetId:    aws.String(dataSetId),
 	})
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+	if err != nil && !(tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, quicksight.ErrCodeInvalidParameterValueException, "not a SPICE dataset")) {
 		return diag.Errorf("error describing refresh properties (%s): %s", d.Id(), err)
 	}
 
