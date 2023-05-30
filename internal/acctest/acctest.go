@@ -1205,12 +1205,23 @@ provider "aws" {
 // This can only be used for single provider configuration testing as it
 // overwrites the "aws" provider configuration.
 func ConfigRegionalProvider(region string) string {
+	return ConfigNamedRegionalProvider(ProviderName, region)
+}
+
+func ConfigAlternateAccountAlternateRegionProvider() string {
+	return ConfigNamedAlternateAccountAlternateRegionProvider(ProviderNameAlternate)
+}
+
+func ConfigNamedAlternateAccountAlternateRegionProvider(providerName string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
-provider "aws" {
-  region = %[1]q
+provider %[1]q {
+  access_key = %[2]q
+  profile    = %[3]q
+  region     = %[4]q
+  secret_key = %[5]q
 }
-`, region)
+`, providerName, os.Getenv(envvar.AlternateAccessKeyId), os.Getenv(envvar.AlternateProfile), AlternateRegion(), os.Getenv(envvar.AlternateSecretAccessKey))
 }
 
 func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {
