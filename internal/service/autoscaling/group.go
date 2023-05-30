@@ -1141,26 +1141,10 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("protect_from_scale_in", g.NewInstancesProtectedFromScaleIn)
 	d.Set("service_linked_role_arn", g.ServiceLinkedRoleARN)
 	d.Set("suspended_processes", flattenSuspendedProcesses(g.SuspendedProcesses))
-
-	// if _, ok := d.GetOk("traffic_sources"); ok {
-	// 	trafficSources := flattenTrafficSourceList(g.TrafficSources)
-	// 	d.Set("traffic_sources", trafficSources)
-	// }
 	trafficSources := flattenTrafficSourceList(g.TrafficSources)
-
 	d.Set("traffic_sources", trafficSources)
 	d.Set("load_balancers", aws.StringValueSlice(g.LoadBalancerNames))
 	d.Set("target_group_arns", aws.StringValueSlice(g.TargetGroupARNs))
-
-	// if _, ok := d.GetOk("load_balancers"); ok {
-	// 	d.Set("load_balancers", aws.StringValueSlice(g.LoadBalancerNames))
-	// 	d.Set("traffic_sources", nil)
-	// }
-
-	// if _, ok := d.GetOk("target_group_arns"); ok {
-	// 	d.Set("target_group_arns", aws.StringValueSlice(g.TargetGroupARNs))
-	// 	d.Set("traffic_sources", nil)
-	// }
 
 	// If no termination polices are explicitly configured and the upstream state
 	// is only using the "Default" policy, clear the state to make it consistent
