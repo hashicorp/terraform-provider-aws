@@ -60,6 +60,10 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(redshift.AquaConfigurationStatus_Values(), false),
+				Deprecated:   "This parameter is no longer supported by the AWS API. It will be removed in the next major version of the provider.",
+				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+					return true
+				},
 			},
 			"arn": {
 				Type:     schema.TypeString,
