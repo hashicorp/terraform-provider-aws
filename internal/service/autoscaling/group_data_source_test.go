@@ -82,6 +82,29 @@ func TestAccAutoScalingGroupDataSource_launchTemplate(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingGroupDataSource_trafficSources(t *testing.T) {
+	ctx := acctest.Context(t)
+	datasourceName := "data.aws_autoscaling_group.test"
+	resourceName := "aws_autoscaling_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupDataSourceConfig_trafficSources(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "traffic_sources.#", resourceName, "traffic_sources.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "traffic_sources.0.identifier", resourceName, "traffic_sources.0.identifier"),
+					resource.TestCheckResourceAttrPair(datasourceName, "traffic_sources.0.type", resourceName, "traffic_sources.0.type"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAutoScalingGroupDataSource_mixedInstancesPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_autoscaling_group.test"
@@ -252,6 +275,46 @@ resource "aws_launch_template" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
+`, rName))
+}
+
+func testAccGroupDataSourceConfig_trafficSources(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+data "aws_autoscaling_group" "test" {
+  name = aws_autoscaling_group.test.name
+}
+
+resource "aws_launch_configuration" "test" {
+	name          = %[1]q
+	image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+	instance_type = "t2.micro"
+  
+	enable_monitoring = false
+  }
+
+  resource "aws_lb_target_group" "test" {
+	name     = %[1]q
+	port     = 80
+	protocol = "HTTP"
+	vpc_id   = aws_vpc.test.id
+  }
+
+resource "aws_autoscaling_group" "test" {
+  name               = %[1]q
+  vpc_zone_identifier  = aws_subnet.test[*].id
+  max_size             = 0
+  min_size             = 0
+  launch_configuration = aws_launch_configuration.test.name
+
+  traffic_sources {
+    identifier =aws_lb_target_group.test.arn
+    type       = "elbv2"
+  }
+}
+
 `, rName))
 }
 
