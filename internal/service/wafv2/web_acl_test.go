@@ -3,17 +3,20 @@ package wafv2_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -45,6 +48,7 @@ func TestAccWAFV2WebACL_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "association_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "captcha_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
@@ -2385,6 +2389,54 @@ func TestAccWAFV2WebACL_tokenDomains(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACL_associationConfig(t *testing.T) {
+	// All wafv2 requests with scope CLOUDFRONT should be sent to the us-east-1 api.
+	originalDefaultRegionEnvVarValue := os.Getenv(envvar.DefaultRegion)
+	defer func() { os.Setenv(envvar.DefaultRegion, originalDefaultRegionEnvVarValue) }()
+	os.Setenv(envvar.DefaultRegion, endpoints.UsEast1RegionID) //nolint:tenv // Can't use t.Setenv() because we are running the tests in parallel.
+
+	ctx := acctest.Context(t)
+	var v wafv2.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeCloudFront(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_associationConfig(webACLName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`global/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "association_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.cloudfront.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.cloudfront.0.default_size_inspection_limit", "KB_64"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "description", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeCloudfront),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -4649,4 +4701,50 @@ resource "aws_wafv2_web_acl" "test" {
   }
 }
 `, name, domain1, domain2)
+}
+
+func testAccWebACLConfig_associationConfig(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  association_config {
+    request_body {
+      cloudfront {
+        default_size_inspection_limit = "KB_64"
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccPreCheckScopeCloudFront(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
+
+	input := &wafv2.ListWebACLsInput{
+		Scope: aws.String(wafv2.ScopeCloudfront),
+	}
+
+	_, err := conn.ListWebACLsWithContext(ctx, input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
