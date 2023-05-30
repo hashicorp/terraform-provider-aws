@@ -649,7 +649,7 @@ func TestAccAutoScalingGroup_withTrafficSources_ELB_toTargetGroup(t *testing.T) 
 	})
 }
 
-func TestAccAutoScalingGroup_withTrafficeSourcesELBV2(t *testing.T) {
+func TestAccAutoScalingGroup_withTrafficSourcesELBV2(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
@@ -662,25 +662,25 @@ func TestAccAutoScalingGroup_withTrafficeSourcesELBV2(t *testing.T) {
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_trafficSourceELBv2(rName, 11),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "11"),
-				),
-			},
-			{
 				Config: testAccGroupConfig_trafficSourceELBv2(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "0"),
 				),
 			},
-			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_trafficSourceELBv2(rName, 11),
+				Config: testAccGroupConfig_trafficSourceELBv2(rName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "11"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "10"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+			{
+				Config: testAccGroupConfig_trafficSourceELBv2(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "traffic_sources.#", "1"),
 				),
 			},
 		},
