@@ -87,6 +87,7 @@ func ResourceOntapVolume() *schema.Resource {
 			"storage_virtual_machine_id": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(21, 21),
 			},
 			"tiering_policy": {
