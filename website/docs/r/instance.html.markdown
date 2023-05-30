@@ -41,6 +41,36 @@ resource "aws_instance" "web" {
 }
 ```
 
+### Spot instance example
+
+```terraform
+data "aws_ami" "this" {
+  most_recent = true
+  owners      = ["amazon"]
+  filter {
+    name   = "architecture"
+    values = ["arm64"]
+  }
+  filter {
+    name   = "name"
+    values = ["al2023-ami-2023*"]
+  }
+}
+
+resource "aws_instance" "this" {
+  ami = data.aws_ami.this.id
+  instance_market_options {
+    spot_options {
+      max_price = 0.0031
+    }
+  }
+  instance_type = "t4g.nano"
+  tags = {
+    Name = "test-spot"
+  }
+}
+```
+
 ### Network and credit specification example
 
 ```terraform
@@ -176,6 +206,7 @@ The following arguments are supported:
 * `host_resource_group_arn` - (Optional) ARN of the host resource group in which to launch the instances. If you specify an ARN, omit the `tenancy` parameter or set it to `host`.
 * `iam_instance_profile` - (Optional) IAM Instance Profile to launch the instance with. Specified as the name of the Instance Profile. Ensure your credentials have the correct permission to assign the instance profile according to the [EC2 documentation](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html#roles-usingrole-ec2instance-permissions), notably `iam:PassRole`.
 * `instance_initiated_shutdown_behavior` - (Optional) Shutdown behavior for the instance. Amazon defaults this to `stop` for EBS-backed instances and `terminate` for instance-store instances. Cannot be set on instance-store instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingInstanceInitiatedShutdownBehavior) for more information.
+* `instance_market_options` - (Optional) Describes the market (purchasing) option for the instances. See [Market Options](#market-options) below for details on attributes.
 * `instance_type` - (Optional) Instance type to use for the instance. Required unless `launch_template` is specified and the Launch Template specifies an instance type. If an instance type is specified in the Launch Template, setting `instance_type` will override the instance type specified in the Launch Template. Updates to this field will trigger a stop/start of the EC2 instance.
 * `ipv6_address_count`- (Optional) Number of IPv6 addresses to associate with the primary network interface. Amazon EC2 chooses the IPv6 addresses from the range of your subnet.
 * `ipv6_addresses` - (Optional) Specify one or more IPv6 addresses from the range of the subnet to associate with the primary network interface
@@ -310,6 +341,13 @@ The `maintenance_options` block supports the following:
 
 * `auto_recovery` - (Optional) Automatic recovery behavior of the Instance. Can be `"default"` or `"disabled"`. See [Recover your instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-recover.html) for more details.
 
+### Market Options
+
+The `instance_market_options` block supports the following:
+
+* `market_type` - (Optional) Type of market for the instance. Valid value is `spot`. Defaults to `spot`.
+* `spot_options` - (Optional) Block to configure the options for Spot Instances. See [Spot Options](#spot-options) below for details on attributes.
+
 ### Metadata Options
 
 Metadata options can be applied/modified to the EC2 Instance at any time.
@@ -343,6 +381,15 @@ The `private_dns_name_options` block supports the following:
 * `enable_resource_name_dns_aaaa_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
 * `enable_resource_name_dns_a_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
 * `hostname_type` - Type of hostname for Amazon EC2 instances. For IPv4 only subnets, an instance DNS name must be based on the instance IPv4 address. For IPv6 native subnets, an instance DNS name must be based on the instance ID. For dual-stack subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name` and `resource-name`.
+
+### Spot Options
+
+The `spot_options` block supports the following:
+
+* `instance_interruption_behavior` - (Optional) The behavior when a Spot Instance is interrupted. Valid values include `hibernate`, `stop`, `terminate` . The default is `terminate`.
+* `max_price` - (Optional) The maximum hourly price that you're willing to pay for a Spot Instance.
+* `spot_instance_type` - (Optional) The Spot Instance request type. Valid values include `one-time`, `persistent`. Persistent Spot Instance requests are only supported when the instance interruption behavior is either hibernate or stop. The default is `one-time`.
+* `valid_until` - (Optional) The end date of the request, in UTC format (YYYY-MM-DDTHH:MM:SSZ). Supported only for persistent requests.
 
 ### Launch Template Specification
 
@@ -380,6 +427,11 @@ For `root_block_device`, in addition to the arguments above, the following attri
 
 * `volume_id` - ID of the volume. For example, the ID can be accessed like this, `aws_instance.web.root_block_device.0.volume_id`.
 * `device_name` - Device name, e.g., `/dev/sdh` or `xvdh`.
+
+For `instance_market_options`, in addition to the arguments above, the following attributes are exported:
+
+* `instance_lifecycle` - Indicates whether this is a Spot Instance or a Scheduled Instance.
+* `spot_instance_request_id` - If the request is a Spot Instance request, the ID of the request.
 
 ## Timeouts
 
