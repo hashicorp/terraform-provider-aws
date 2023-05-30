@@ -53,7 +53,7 @@ func ResourceOntapVolume() *schema.Resource {
 			},
 			"junction_path": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"name": {
@@ -137,13 +137,16 @@ func resourceOntapVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &fsx.CreateVolumeInput{
 		Name: aws.String(name),
 		OntapConfiguration: &fsx.CreateOntapVolumeConfiguration{
-			JunctionPath:             aws.String(d.Get("junction_path").(string)),
 			SizeInMegabytes:          aws.Int64(int64(d.Get("size_in_megabytes").(int))),
 			StorageEfficiencyEnabled: aws.Bool(d.Get("storage_efficiency_enabled").(bool)),
 			StorageVirtualMachineId:  aws.String(d.Get("storage_virtual_machine_id").(string)),
 		},
 		Tags:       GetTagsIn(ctx),
 		VolumeType: aws.String(d.Get("volume_type").(string)),
+	}
+
+	if v, ok := d.GetOk("junction_path"); ok {
+		input.OntapConfiguration.JunctionPath = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("ontap_volume_type"); ok {
