@@ -1,6 +1,7 @@
 ```release-note:new-resource
 aws_autoscaling_traffic_attachment
 ```
+
 ```release-note:enhancement
-resource/aws_autoscaling_group: Add ability to specify Traffic Source `traffic_source`
+resource/aws_autoscaling_group: Add `traffic_source` configuration block
 ```

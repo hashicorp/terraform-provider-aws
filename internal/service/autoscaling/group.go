@@ -761,7 +761,7 @@ func ResourceGroup() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"traffic_sources": {
+			"traffic_source": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -772,7 +772,6 @@ func ResourceGroup() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
-
 						"type": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -971,8 +970,8 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		createInput.TerminationPolicies = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("traffic_sources"); ok && v.(*schema.Set).Len() > 0 {
-		createInput.TrafficSources = expandTrafficSourceList(v.(*schema.Set).List())
+	if v, ok := d.GetOk("traffic_source"); ok && v.(*schema.Set).Len() > 0 {
+		createInput.TrafficSources = expandTrafficSourceIdentifiers(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("vpc_zone_identifier"); ok && v.(*schema.Set).Len() > 0 {
@@ -1124,6 +1123,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	} else {
 		d.Set("launch_template", nil)
 	}
+	d.Set("load_balancers", aws.StringValueSlice(g.LoadBalancerNames))
 	d.Set("max_instance_lifetime", g.MaxInstanceLifetime)
 	d.Set("max_size", g.MaxSize)
 	d.Set("min_size", g.MinSize)
@@ -1141,11 +1141,10 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("protect_from_scale_in", g.NewInstancesProtectedFromScaleIn)
 	d.Set("service_linked_role_arn", g.ServiceLinkedRoleARN)
 	d.Set("suspended_processes", flattenSuspendedProcesses(g.SuspendedProcesses))
-	trafficSources := flattenTrafficSourceList(g.TrafficSources)
-	d.Set("traffic_sources", trafficSources)
-	d.Set("load_balancers", aws.StringValueSlice(g.LoadBalancerNames))
+	if err := d.Set("traffic_source", flattenTrafficSourceIdentifiers(g.TrafficSources)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting traffic_source: %s", err)
+	}
 	d.Set("target_group_arns", aws.StringValueSlice(g.TargetGroupARNs))
-
 	// If no termination polices are explicitly configured and the upstream state
 	// is only using the "Default" policy, clear the state to make it consistent
 	// with the default AWS Create API behavior.
@@ -1190,7 +1189,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		"suspended_processes",
 		"tag",
 		"target_group_arns",
-		"traffic_sources",
+		"traffic_source",
 		"warm_pool",
 	) {
 		input := &autoscaling.UpdateAutoScalingGroupInput{
@@ -1320,8 +1319,8 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange("traffic_sources") {
-		o, n := d.GetChange("traffic_sources")
+	if d.HasChange("traffic_source") {
+		o, n := d.GetChange("traffic_source")
 		if o == nil {
 			o = new(schema.Set)
 		}
@@ -1332,7 +1331,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		if remove := expandTrafficSourceList(os.Difference(ns).List()); len(remove) > 0 {
+		if remove := expandTrafficSourceIdentifiers(os.Difference(ns).List()); len(remove) > 0 {
 			// API only supports removing 10 at a time.
 			batchSize := 10
 
@@ -1358,7 +1357,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				}
 			}
 		}
-		if add := expandTrafficSourceList(ns.Difference(os).List()); len(add) > 0 {
+		if add := expandTrafficSourceIdentifiers(ns.Difference(os).List()); len(add) > 0 {
 			// API only supports adding 10 at a time.
 			batchSize := 10
 
@@ -3287,23 +3286,48 @@ func expandVPCZoneIdentifiers(tfList []interface{}) *string {
 	return aws.String(strings.Join(vpcZoneIDs, ","))
 }
 
-func expandTrafficSourceList(tfList []interface{}) []*autoscaling.TrafficSourceIdentifier {
-	var trafficSourceIdentifiers []*autoscaling.TrafficSourceIdentifier
+func expandTrafficSourceIdentifier(tfMap map[string]interface{}) *autoscaling.TrafficSourceIdentifier {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &autoscaling.TrafficSourceIdentifier{}
+
+	if v, ok := tfMap["identifier"].(string); ok && v != "" {
+		apiObject.Identifier = aws.String(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandTrafficSourceIdentifiers(tfList []interface{}) []*autoscaling.TrafficSourceIdentifier {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*autoscaling.TrafficSourceIdentifier
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
+
 		if !ok {
 			continue
 		}
 
-		trafficSourceIdentifier := &autoscaling.TrafficSourceIdentifier{
-			Identifier: aws.String((tfMap["identifier"].(string))),
-			Type:       aws.String((tfMap["type"].(string))),
+		apiObject := expandTrafficSourceIdentifier(tfMap)
+
+		if apiObject == nil {
+			continue
 		}
 
-		trafficSourceIdentifiers = append(trafficSourceIdentifiers, trafficSourceIdentifier)
+		apiObjects = append(apiObjects, apiObject)
 	}
-	return trafficSourceIdentifiers
+
+	return apiObjects
 }
 
 func flattenEnabledMetrics(apiObjects []*autoscaling.EnabledMetric) []string {
@@ -3726,22 +3750,40 @@ func flattentTotalLocalStorageGB(apiObject *autoscaling.TotalLocalStorageGBReque
 	return tfMap
 }
 
-func flattenTrafficSourceList(trafficSources []*autoscaling.TrafficSourceIdentifier) []interface{} {
-	if len(trafficSources) == 0 {
-		return []interface{}{}
+func flattenTrafficSourceIdentifier(apiObject *autoscaling.TrafficSourceIdentifier) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	var trafficSourcesList []interface{}
+	tfMap := map[string]interface{}{}
 
-	for _, trafficSource := range trafficSources {
-		m := map[string]interface{}{
-			"identifier": aws.StringValue(trafficSource.Identifier),
-			"type":       aws.StringValue(trafficSource.Type),
+	if v := apiObject.Identifier; v != nil {
+		tfMap["identifier"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenTrafficSourceIdentifiers(apiObjects []*autoscaling.TrafficSourceIdentifier) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
 		}
-		trafficSourcesList = append(trafficSourcesList, m)
+
+		tfList = append(tfList, flattenTrafficSourceIdentifier(apiObject))
 	}
 
-	return trafficSourcesList
+	return tfList
 }
 
 func flattenVCPUCount(apiObject *autoscaling.VCpuCountRequest) map[string]interface{} {

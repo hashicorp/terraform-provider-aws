@@ -386,10 +386,10 @@ resource "aws_autoscaling_group" "test" {
   min_size            = 1
 
   force_delete = true
-  dynamic "traffic_sources" {
+  dynamic "traffic_source" {
     for_each = aws_vpclattice_target_group.test[*]
     content {
-      identifier = traffic_sources.value.arn
+      identifier = traffic_source.value.arn
       type       = "vpc-lattice"
     }
   }
@@ -435,6 +435,7 @@ The following arguments are supported:
   behavior and potentially leaves resources dangling.
 - `load_balancers` (Optional) List of elastic load balancer names to add to the autoscaling
   group names. Only valid for classic load balancers. For ALBs, use `target_group_arns` instead.
+- `traffic_source` (Optional) Attaches one or more traffic sources to the specified Auto Scaling group.
 - `vpc_zone_identifier` (Optional) List of subnet IDs to launch resources in. Subnets automatically determine which availability zones the group will reside. Conflicts with `availability_zones`.
 - `target_group_arns` (Optional) Set of `aws_alb_target_group` ARNs, for use with Application or Network Load Balancing.
 - `termination_policies` (Optional) List of policies to decide how the instances in the Auto Scaling Group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `OldestLaunchTemplate`, `AllocationStrategy`, `Default`. Additionally, the ARN of a Lambda function can be specified for custom termination policies.
@@ -682,9 +683,8 @@ This configuration block supports the following:
 - `min_size` - (Optional) Minimum number of instances to maintain in the warm pool. This helps you to ensure that there is always a certain number of warmed instances available to handle traffic spikes. Defaults to 0 if not specified.
 - `pool_state` - (Optional) Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default), Running or Hibernated.
 
-### traffic_sources
+### traffic_source
 
-- `traffic_sources` - Attaches one or more traffic sources to the specified Auto Scaling group.
 - `identifier` - Identifies the traffic source.For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the Amazon Resource Name (ARN) for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
 - `type` - Provides additional context for the value of Identifier.
   The following lists the valid values:
