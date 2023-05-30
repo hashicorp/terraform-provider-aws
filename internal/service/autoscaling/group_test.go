@@ -4330,7 +4330,8 @@ resource "aws_launch_configuration" "test" {
 resource "aws_lb_target_group" "test" {
   count = %[2]d
 
-  name     = "%[1]s-${count.index}"
+  # "name" cannot be longer than 32 characters.
+  name     = format("%%s-%%d", substr(%[1]q, 0, 28), count.index)
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id

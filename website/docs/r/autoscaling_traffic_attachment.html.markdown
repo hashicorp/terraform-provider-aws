@@ -18,7 +18,7 @@ Attaches traffic sources to the specified Auto Scaling group.
 resource "aws_autoscaling_traffic_attachment" "test" {
   autoscaling_group_name = aws_autoscaling_group.test.id
 
-  traffic_sources {
+  traffic_source {
     identifier = aws_lb_target_group.test[0].arn
     type       = "elbv2"
   }
@@ -31,7 +31,7 @@ The following arguments are required:
 
 - `autoscaling_group_name` - (Required) The name of the Auto Scaling group.
 
-- `traffic_sources` - (Required) The unique identifiers of one or more traffic sources. You can specify up to 10 traffic sources.
+- `traffic_source` - (Required) The unique identifiers of a traffic sources.
 
 `traffic_source` supports the following:
 

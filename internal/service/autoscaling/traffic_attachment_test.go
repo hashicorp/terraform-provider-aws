@@ -122,7 +122,7 @@ func TestAccAutoScalingTrafficAttachment_multipleVPCLatticeTargetGroups(t *testi
 		Steps: []resource.TestStep{
 			// Create all the ELBs first.
 			{
-				Config: testAccTrafficAttachmentConfig_vpcLatticebase(rName, 5),
+				Config: testAccTrafficAttachmentConfig_vpcLatticeBase(rName, 5),
 			},
 			{
 				Config: testAccTrafficAttachmentConfig_multipleVPCLatticeTargetGroups(rName, 5),
@@ -132,7 +132,7 @@ func TestAccAutoScalingTrafficAttachment_multipleVPCLatticeTargetGroups(t *testi
 				),
 			},
 			{
-				Config: testAccTrafficAttachmentConfig_vpcLatticebase(rName, 5),
+				Config: testAccTrafficAttachmentConfig_vpcLatticeBase(rName, 5),
 			},
 		},
 	})
@@ -175,11 +175,9 @@ func testAccCheckTrafficAttachmentExists(ctx context.Context, n string) resource
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		var err error
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
-		_, err = tfautoscaling.FindTrafficAttachment(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["traffic_sources.0.type"], rs.Primary.Attributes["traffic_sources.0.identifier"])
+		_, err := tfautoscaling.FindTrafficAttachment(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["traffic_source.0.type"], rs.Primary.Attributes["traffic_source.0.identifier"])
 
 		return err
 	}
@@ -194,9 +192,7 @@ func testAccCheckTrafficAttachmentDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			var err error
-
-			_, err = tfautoscaling.FindTrafficAttachment(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["traffic_sources.0.type"], rs.Primary.Attributes["traffic_sources.0.identifier"])
+			_, err := tfautoscaling.FindTrafficAttachment(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["traffic_source.0.type"], rs.Primary.Attributes["traffic_source.0.identifier"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -206,7 +202,7 @@ func testAccCheckTrafficAttachmentDestroy(ctx context.Context) resource.TestChec
 				return err
 			}
 
-			return fmt.Errorf("Auto Scaling Group Attachment %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Auto Scaling Group Traffic Attachment %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -289,24 +285,19 @@ resource "aws_autoscaling_group" "test" {
     value               = %[1]q
     propagate_at_launch = true
   }
-
-  lifecycle {
-    ignore_changes = [target_group_arns]
-  }
 }
 `, rName, targetGroupCount))
 }
 
-func testAccTrafficAttachmentConfig_vpcLatticebase(rName string, targetGroupCount int) string {
+func testAccTrafficAttachmentConfig_vpcLatticeBase(rName string, targetGroupCount int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
-
-
 resource "aws_vpclattice_target_group" "test" {
   count = %[2]d
-  name  = format("%%s-%%d", substr(%[1]q, 0, 28), count.index)
+
+  name  = "%[1]s-${count.index}"
   type  = "INSTANCE"
 
   config {
@@ -337,10 +328,6 @@ resource "aws_autoscaling_group" "test" {
     value               = %[1]q
     propagate_at_launch = true
   }
-
-  lifecycle {
-    ignore_changes = [target_group_arns]
-  }
 }
 `, rName, targetGroupCount))
 }
@@ -349,7 +336,8 @@ func testAccTrafficAttachmentConfig_elb(rName string) string {
 	return acctest.ConfigCompose(testAccTrafficAttachmentConfig_elbBase(rName, 1), `
 resource "aws_autoscaling_traffic_attachment" "test" {
   autoscaling_group_name = aws_autoscaling_group.test.id
-  traffic_sources {
+
+  traffic_source {
     identifier = aws_elb.test[0].id
     type       = "elb"
   }
@@ -363,7 +351,8 @@ resource "aws_autoscaling_traffic_attachment" "test" {
   count = %[1]d
 
   autoscaling_group_name = aws_autoscaling_group.test.id
-  traffic_sources {
+
+  traffic_source {
     identifier = aws_elb.test[count.index].id
     type       = "elb"
   }
@@ -375,7 +364,8 @@ func testAccTrafficAttachmentConfig_targetGroup(rName string) string {
 	return acctest.ConfigCompose(testAccTrafficAttachmentConfig_targetGroupBase(rName, 1), `
 resource "aws_autoscaling_traffic_attachment" "test" {
   autoscaling_group_name = aws_autoscaling_group.test.id
-  traffic_sources {
+
+  traffic_source {
     identifier = aws_lb_target_group.test[0].arn
     type       = "elbv2"
   }
@@ -387,8 +377,10 @@ func testAccTrafficAttachmentConfig_multipleTargetGroups(rName string, n int) st
 	return acctest.ConfigCompose(testAccTrafficAttachmentConfig_targetGroupBase(rName, n), fmt.Sprintf(`
 resource "aws_autoscaling_traffic_attachment" "test" {
   count                  = %[1]d
+
   autoscaling_group_name = aws_autoscaling_group.test.id
-  traffic_sources {
+
+  traffic_source {
     identifier = aws_lb_target_group.test[0].arn
     type       = "elbv2"
   }
@@ -397,10 +389,11 @@ resource "aws_autoscaling_traffic_attachment" "test" {
 }
 
 func testAccTrafficAttachmentConfig_vpcLatticeTargetGrpoup(rName string) string {
-	return acctest.ConfigCompose(testAccTrafficAttachmentConfig_vpcLatticebase(rName, 1), `
+	return acctest.ConfigCompose(testAccTrafficAttachmentConfig_vpcLatticeBase(rName, 1), `
 resource "aws_autoscaling_traffic_attachment" "test" {
   autoscaling_group_name = aws_autoscaling_group.test.id
-  traffic_sources {
+
+  traffic_source {
     identifier = aws_vpclattice_target_group.test[0].arn
     type       = "vpc-lattice"
   }
@@ -409,11 +402,13 @@ resource "aws_autoscaling_traffic_attachment" "test" {
 }
 
 func testAccTrafficAttachmentConfig_multipleVPCLatticeTargetGroups(rName string, n int) string {
-	return acctest.ConfigCompose(testAccTrafficAttachmentConfig_vpcLatticebase(rName, n), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTrafficAttachmentConfig_vpcLatticeBase(rName, n), fmt.Sprintf(`
 resource "aws_autoscaling_traffic_attachment" "test" {
   count                  = %[1]d
+
   autoscaling_group_name = aws_autoscaling_group.test.id
-  traffic_sources {
+
+  traffic_source {
     identifier = aws_vpclattice_target_group.test[count.index].arn
     type       = "vpc-lattice"
   }

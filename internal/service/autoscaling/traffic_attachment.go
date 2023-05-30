@@ -38,11 +38,11 @@ func ResourceTrafficAttachment() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"traffic_sources": {
+			"traffic_source": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MaxItems: 1,
 				ForceNew: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"identifier": {
@@ -51,7 +51,6 @@ func ResourceTrafficAttachment() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
-
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -71,7 +70,7 @@ const (
 
 func resourceTrafficAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AutoScalingConn()
-	trafficSources := expandTrafficSourceIdentifier(d.Get("traffic_sources").([]interface{})[0].(map[string]interface{}))
+	trafficSources := expandTrafficSourceIdentifier(d.Get("traffic_source").([]interface{})[0].(map[string]interface{}))
 	trafficSourcesIdentifier := aws.StringValue(trafficSources.Identifier)
 	trafficSourcesType := aws.StringValue(trafficSources.Type)
 	asgName := d.Get("autoscaling_group_name").(string)
@@ -101,7 +100,7 @@ func resourceTrafficAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	asgName := d.Get("autoscaling_group_name").(string)
-	trafficSources := expandTrafficSourceIdentifier(d.Get("traffic_sources").([]interface{})[0].(map[string]interface{}))
+	trafficSources := expandTrafficSourceIdentifier(d.Get("traffic_source").([]interface{})[0].(map[string]interface{}))
 	sourceIdentifier := aws.StringValue(trafficSources.Identifier)
 	sourceType := aws.StringValue(trafficSources.Type)
 	_, err := FindTrafficAttachment(ctx, conn, asgName, sourceType, sourceIdentifier)
@@ -122,7 +121,7 @@ func resourceTrafficAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 func resourceTrafficAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AutoScalingConn()
 	asgName := d.Get("autoscaling_group_name").(string)
-	sourceIdentifier := expandTrafficSourceIdentifier(d.Get("traffic_sources").([]interface{})[0].(map[string]interface{}))
+	sourceIdentifier := expandTrafficSourceIdentifier(d.Get("traffic_source").([]interface{})[0].(map[string]interface{}))
 
 	log.Printf("[INFO] Deleting AutoScaling AutoscalingTrafficAttachment %s", d.Id())
 
