@@ -29,6 +29,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -1105,7 +1106,6 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("default_instance_warmup", g.DefaultInstanceWarmup)
 	d.Set("desired_capacity", g.DesiredCapacity)
 	d.Set("desired_capacity_type", g.DesiredCapacityType)
-
 	if len(g.EnabledMetrics) > 0 {
 		d.Set("enabled_metrics", flattenEnabledMetrics(g.EnabledMetrics))
 		d.Set("metrics_granularity", g.EnabledMetrics[0].Granularity)
@@ -1300,7 +1300,6 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.VPCZoneIdentifier = expandVPCZoneIdentifiers(d.Get("vpc_zone_identifier").(*schema.Set).List())
 		}
 
-		log.Printf("[DEBUG] Updating Auto Scaling Group: %s", input)
 		_, err := conn.UpdateAutoScalingGroupWithContext(ctx, input)
 
 		if err != nil {
@@ -1331,58 +1330,35 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		if remove := expandTrafficSourceIdentifiers(os.Difference(ns).List()); len(remove) > 0 {
-			// API only supports removing 10 at a time.
-			batchSize := 10
+		// API only supports adding or removing 10 at a time.
+		batchSize := 10
+		for _, chunk := range slices.Chunks(expandTrafficSourceIdentifiers(os.Difference(ns).List()), batchSize) {
+			_, err := conn.DetachTrafficSourcesWithContext(ctx, &autoscaling.DetachTrafficSourcesInput{
+				AutoScalingGroupName: aws.String(d.Id()),
+				TrafficSources:       chunk,
+			})
 
-			var batches [][]*autoscaling.TrafficSourceIdentifier
-
-			for batchSize < len(remove) {
-				remove, batches = remove[batchSize:], append(batches, remove[0:batchSize:batchSize])
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) traffic sources: %s", d.Id(), err)
 			}
-			batches = append(batches, remove)
 
-			for _, batch := range batches {
-				for _, ts := range batch {
-					_, err := conn.DetachTrafficSourcesWithContext(ctx, &autoscaling.DetachTrafficSourcesInput{
-						AutoScalingGroupName: aws.String(d.Id()),
-						TrafficSources:       []*autoscaling.TrafficSourceIdentifier{ts},
-					})
-					if err != nil {
-						return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) traffic sources: %s", d.Id(), err)
-					}
-					if _, err := waitTrafficSourcesDeleted(ctx, conn, d.Id(), aws.StringValue(ts.Type), d.Timeout(schema.TimeoutUpdate)); err != nil {
-						return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) traffice sources added: %s", d.Id(), err)
-					}
-				}
+			if _, err := waitTrafficSourcesDeleted(ctx, conn, d.Id(), "", d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) traffic sources removed: %s", d.Id(), err)
 			}
 		}
-		if add := expandTrafficSourceIdentifiers(ns.Difference(os).List()); len(add) > 0 {
-			// API only supports adding 10 at a time.
-			batchSize := 10
 
-			var batches [][]*autoscaling.TrafficSourceIdentifier
+		for _, chunk := range slices.Chunks(expandTrafficSourceIdentifiers(ns.Difference(os).List()), batchSize) {
+			_, err := conn.AttachTrafficSourcesWithContext(ctx, &autoscaling.AttachTrafficSourcesInput{
+				AutoScalingGroupName: aws.String(d.Id()),
+				TrafficSources:       chunk,
+			})
 
-			for batchSize < len(add) {
-				add, batches = add[batchSize:], append(batches, add[0:batchSize:batchSize])
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) traffic sources: %s", d.Id(), err)
 			}
-			batches = append(batches, add)
 
-			for _, batch := range batches {
-				for _, ts := range batch {
-					_, err := conn.AttachTrafficSourcesWithContext(ctx, &autoscaling.AttachTrafficSourcesInput{
-						AutoScalingGroupName: aws.String(d.Id()),
-						TrafficSources:       []*autoscaling.TrafficSourceIdentifier{ts},
-					})
-
-					if err != nil {
-						return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) traffice sources: %s", d.Id(), err)
-					}
-
-					if _, err := waitTrafficSourcesCreated(ctx, conn, d.Id(), aws.StringValue(ts.Type), d.Timeout(schema.TimeoutUpdate)); err != nil {
-						return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) traffice sources added: %s", d.Id(), err)
-					}
-				}
+			if _, err := waitTrafficSourcesCreated(ctx, conn, d.Id(), "", d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) traffic sources added: %s", d.Id(), err)
 			}
 		}
 	}
@@ -1398,57 +1374,35 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		if remove := flex.ExpandStringSet(os.Difference(ns)); len(remove) > 0 {
-			// API only supports removing 10 at a time.
-			batchSize := 10
+		// API only supports adding or removing 10 at a time.
+		batchSize := 10
+		for _, chunk := range slices.Chunks(flex.ExpandStringSet(os.Difference(ns)), batchSize) {
+			_, err := conn.DetachLoadBalancersWithContext(ctx, &autoscaling.DetachLoadBalancersInput{
+				AutoScalingGroupName: aws.String(d.Id()),
+				LoadBalancerNames:    chunk,
+			})
 
-			var batches [][]*string
-
-			for batchSize < len(remove) {
-				remove, batches = remove[batchSize:], append(batches, remove[0:batchSize:batchSize])
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) load balancers: %s", d.Id(), err)
 			}
-			batches = append(batches, remove)
 
-			for _, batch := range batches {
-				_, err := conn.DetachLoadBalancersWithContext(ctx, &autoscaling.DetachLoadBalancersInput{
-					AutoScalingGroupName: aws.String(d.Id()),
-					LoadBalancerNames:    batch,
-				})
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) load balancers: %s", d.Id(), err)
-				}
-
-				if _, err := waitLoadBalancersRemoved(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) load balancers removed: %s", d.Id(), err)
-				}
+			if _, err := waitLoadBalancersRemoved(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) load balancers removed: %s", d.Id(), err)
 			}
 		}
 
-		if add := flex.ExpandStringSet(ns.Difference(os)); len(add) > 0 {
-			// API only supports adding 10 at a time.
-			batchSize := 10
+		for _, chunk := range slices.Chunks(flex.ExpandStringSet(ns.Difference(os)), batchSize) {
+			_, err := conn.AttachLoadBalancersWithContext(ctx, &autoscaling.AttachLoadBalancersInput{
+				AutoScalingGroupName: aws.String(d.Id()),
+				LoadBalancerNames:    chunk,
+			})
 
-			var batches [][]*string
-
-			for batchSize < len(add) {
-				add, batches = add[batchSize:], append(batches, add[0:batchSize:batchSize])
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) load balancers: %s", d.Id(), err)
 			}
-			batches = append(batches, add)
 
-			for _, batch := range batches {
-				_, err := conn.AttachLoadBalancersWithContext(ctx, &autoscaling.AttachLoadBalancersInput{
-					AutoScalingGroupName: aws.String(d.Id()),
-					LoadBalancerNames:    batch,
-				})
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) load balancers: %s", d.Id(), err)
-				}
-
-				if _, err := waitLoadBalancersAdded(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) load balancers added: %s", d.Id(), err)
-				}
+			if _, err := waitLoadBalancersAdded(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) load balancers added: %s", d.Id(), err)
 			}
 		}
 	}
@@ -1464,57 +1418,35 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		if remove := flex.ExpandStringSet(os.Difference(ns)); len(remove) > 0 {
-			// AWS API only supports adding/removing 10 at a time.
-			batchSize := 10
+		// API only supports adding or removing 10 at a time.
+		batchSize := 10
+		for _, chunk := range slices.Chunks(flex.ExpandStringSet(os.Difference(ns)), batchSize) {
+			_, err := conn.DetachLoadBalancerTargetGroupsWithContext(ctx, &autoscaling.DetachLoadBalancerTargetGroupsInput{
+				AutoScalingGroupName: aws.String(d.Id()),
+				TargetGroupARNs:      chunk,
+			})
 
-			var batches [][]*string
-
-			for batchSize < len(remove) {
-				remove, batches = remove[batchSize:], append(batches, remove[0:batchSize:batchSize])
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) target groups: %s", d.Id(), err)
 			}
-			batches = append(batches, remove)
 
-			for _, batch := range batches {
-				_, err := conn.DetachLoadBalancerTargetGroupsWithContext(ctx, &autoscaling.DetachLoadBalancerTargetGroupsInput{
-					AutoScalingGroupName: aws.String(d.Id()),
-					TargetGroupARNs:      batch,
-				})
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) target groups: %s", d.Id(), err)
-				}
-
-				if _, err := waitLoadBalancerTargetGroupsRemoved(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) target groups removed: %s", d.Id(), err)
-				}
+			if _, err := waitLoadBalancerTargetGroupsRemoved(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) target groups removed: %s", d.Id(), err)
 			}
 		}
 
-		if add := flex.ExpandStringSet(ns.Difference(os)); len(add) > 0 {
-			// AWS API only supports adding/removing 10 at a time.
-			batchSize := 10
+		for _, chunk := range slices.Chunks(flex.ExpandStringSet(ns.Difference(os)), batchSize) {
+			_, err := conn.AttachLoadBalancerTargetGroupsWithContext(ctx, &autoscaling.AttachLoadBalancerTargetGroupsInput{
+				AutoScalingGroupName: aws.String(d.Id()),
+				TargetGroupARNs:      chunk,
+			})
 
-			var batches [][]*string
-
-			for batchSize < len(add) {
-				add, batches = add[batchSize:], append(batches, add[0:batchSize:batchSize])
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) target groups: %s", d.Id(), err)
 			}
-			batches = append(batches, add)
 
-			for _, batch := range batches {
-				_, err := conn.AttachLoadBalancerTargetGroupsWithContext(ctx, &autoscaling.AttachLoadBalancerTargetGroupsInput{
-					AutoScalingGroupName: aws.String(d.Id()),
-					TargetGroupARNs:      batch,
-				})
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) target groups: %s", d.Id(), err)
-				}
-
-				if _, err := waitLoadBalancerTargetGroupsAdded(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) target groups added: %s", d.Id(), err)
-				}
+			if _, err := waitLoadBalancerTargetGroupsAdded(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) target groups added: %s", d.Id(), err)
 			}
 		}
 	}
@@ -2559,7 +2491,9 @@ func statusTrafficSourcesCount(ctx context.Context, conn *autoscaling.AutoScalin
 func findTrafficSourceStatesByTwoPartKey(ctx context.Context, conn *autoscaling.AutoScaling, asgName, trafficSourceType string) ([]*autoscaling.TrafficSourceState, error) {
 	input := &autoscaling.DescribeTrafficSourcesInput{
 		AutoScalingGroupName: aws.String(asgName),
-		TrafficSourceType:    aws.String(trafficSourceType),
+	}
+	if trafficSourceType != "" {
+		input.TrafficSourceType = aws.String(trafficSourceType)
 	}
 
 	return findTrafficSourceStates(ctx, conn, input)
