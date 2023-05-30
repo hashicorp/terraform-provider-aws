@@ -247,7 +247,7 @@ func testAccServer_securityPolicy(t *testing.T) {
 			{
 				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-2023-05"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServerExists(resourceName, &conf),
+					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2023-05"),
 				),
 			},
