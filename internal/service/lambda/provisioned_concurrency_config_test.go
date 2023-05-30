@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -31,18 +32,20 @@ func TestAccLambdaProvisionedConcurrencyConfig_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckProvisionedConcurrencyConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisionedConcurrencyConfigConfig_qualifierFunctionVersion(rName),
+				Config: testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyExistsConfig(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaFunctionResourceName, "version"),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -122,9 +125,10 @@ func TestAccLambdaProvisionedConcurrencyConfig_provisionedConcurrentExecutions(t
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 			{
 				Config: testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 2),
@@ -159,9 +163,40 @@ func TestAccLambdaProvisionedConcurrencyConfig_Qualifier_aliasName(t *testing.T)
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
+			},
+		},
+	})
+}
+
+func TestAccLambdaProvisionedConcurrencyConfig_skipDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	if os.Getenv("SKIP_DESTROY_ENABLED") == "" {
+		t.Skip("Environment variable SKIP_DESTROY_ENABLED is not set")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	lambdaFunctionResourceName := "aws_lambda_function.test"
+	resourceName := "aws_lambda_provisioned_concurrency_config.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisionedConcurrencyConfigNoDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProvisionedConcurrencyConfigConfig_skipDestroy(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedConcurrencyExistsConfig(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaFunctionResourceName, "version"),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+				),
 			},
 		},
 	})
@@ -203,6 +238,34 @@ func testAccCheckProvisionedConcurrencyConfigDestroy(ctx context.Context) resour
 			if output != nil {
 				return fmt.Errorf("Lambda Provisioned Concurrency Config (%s) still exists", rs.Primary.ID)
 			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckProvisionedConcurrencyConfigNoDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient()
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lambda_provisioned_concurrency_config" {
+				continue
+			}
+
+			functionName, qualifier, err := tflambda.ProvisionedConcurrencyConfigParseID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			input := &lambda.GetProvisionedConcurrencyConfigInput{
+				FunctionName: aws.String(functionName),
+				Qualifier:    aws.String(qualifier),
+			}
+
+			_, err = conn.GetProvisionedConcurrencyConfig(ctx, input)
+			return err
 		}
 
 		return nil
@@ -320,17 +383,22 @@ resource "aws_lambda_function" "test" {
 }
 
 func testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName string, provisionedConcurrentExecutions int) string {
-	return testAccProvisionedConcurrencyConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccProvisionedConcurrencyConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_lambda_provisioned_concurrency_config" "test" {
   function_name                     = aws_lambda_function.test.function_name
   provisioned_concurrent_executions = %[1]d
   qualifier                         = aws_lambda_function.test.version
 }
-`, provisionedConcurrentExecutions)
+`, provisionedConcurrentExecutions),
+	)
 }
 
 func testAccProvisionedConcurrencyConfigConfig_qualifierAliasName(rName string) string {
-	return testAccProvisionedConcurrencyConfig_base(rName) + `
+	return acctest.ConfigCompose(
+		testAccProvisionedConcurrencyConfig_base(rName),
+		`
 resource "aws_lambda_alias" "test" {
   function_name    = aws_lambda_function.test.function_name
   function_version = aws_lambda_function.test.version
@@ -342,15 +410,58 @@ resource "aws_lambda_provisioned_concurrency_config" "test" {
   provisioned_concurrent_executions = 1
   qualifier                         = aws_lambda_alias.test.name
 }
-`
+`,
+	)
 }
 
-func testAccProvisionedConcurrencyConfigConfig_qualifierFunctionVersion(rName string) string {
-	return testAccProvisionedConcurrencyConfig_base(rName) + `
+func testAccProvisionedConcurrencyConfigConfig_skipDestroy(rName string, skipDestroy bool) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  role       = aws_iam_role.test.id
+}
+
+resource "aws_lambda_function" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test]
+
+  filename      = "test-fixtures/lambdapinpoint.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  handler       = "lambdapinpoint.handler"
+  publish       = true
+  runtime       = "nodejs16.x"
+
+  skip_destroy = %[2]t
+}
+
 resource "aws_lambda_provisioned_concurrency_config" "test" {
   function_name                     = aws_lambda_function.test.function_name
   provisioned_concurrent_executions = 1
   qualifier                         = aws_lambda_function.test.version
+
+  skip_destroy = %[2]t
 }
-`
+`, rName, skipDestroy)
 }
