@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -493,6 +494,26 @@ func DataSourceGroup() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"traffic_sources": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"identifier": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 2048),
+						},
+
+						"type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 2048),
+						},
+					},
+				},
+			},
 			"vpc_zone_identifier": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -589,6 +610,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("target_group_arns", aws.StringValueSlice(group.TargetGroupARNs))
 	d.Set("termination_policies", aws.StringValueSlice(group.TerminationPolicies))
+	d.Set("traffic_sources", flattenTrafficSourceList(g.TrafficSources))
 	d.Set("vpc_zone_identifier", group.VPCZoneIdentifier)
 	if group.WarmPoolConfiguration != nil {
 		if err := d.Set("warm_pool", []interface{}{flattenWarmPoolConfiguration(group.WarmPoolConfiguration)}); err != nil {
