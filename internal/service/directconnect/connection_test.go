@@ -41,7 +41,7 @@ func TestAccDirectConnectConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "partner_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vlan_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vlan_id", "0"),
 				),
 			},
 			// Test import.

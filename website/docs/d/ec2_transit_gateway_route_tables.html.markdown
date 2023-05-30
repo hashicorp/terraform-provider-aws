@@ -18,7 +18,7 @@ The following shows outputting all Transit Gateway Route Table Ids.
 data "aws_ec2_transit_gateway_route_tables" "example" {}
 
 output "example" {
-  value = data.aws_ec2_transit_gateway_route_table.example.ids
+  value = data.aws_ec2_transit_gateway_route_tables.example.ids
 }
 ```
 
