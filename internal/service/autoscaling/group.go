@@ -1,7 +1,6 @@
 package autoscaling
 
 import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
-	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -739,16 +738,6 @@ func ResourceGroup() *schema.Resource {
 							Required: true,
 						},
 					},
-				},
-				// This should be removable, but wait until other tags work is being done.
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["key"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
-					buf.WriteString(fmt.Sprintf("%t-", m["propagate_at_launch"].(bool)))
-
-					return create.StringHashcode(buf.String())
 				},
 			},
 			"target_group_arns": {
