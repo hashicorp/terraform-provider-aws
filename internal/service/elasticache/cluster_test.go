@@ -2060,11 +2060,13 @@ resource "aws_iam_role" "r" {
 
 resource "aws_kinesis_firehose_delivery_stream" "ds" {
   name        = %[1]q
-  destination = "s3"
-  s3_configuration {
-    role_arn   = aws_iam_role.r.arn
+  destination = "extended_s3"
+
+  extended_s3_configuration {
     bucket_arn = aws_s3_bucket.b.arn
+    role_arn   = aws_iam_role.r.arn
   }
+
   lifecycle {
     ignore_changes = [
       tags["LogDeliveryEnabled"],
