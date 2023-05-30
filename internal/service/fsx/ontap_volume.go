@@ -64,14 +64,15 @@ func ResourceOntapVolume() *schema.Resource {
 			},
 			"ontap_volume_type": {
 				Type:         schema.TypeString,
-				Default:      fsx.InputOntapVolumeTypeRw,
 				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(fsx.InputOntapVolumeType_Values(), false),
 			},
 			"security_style": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "UNIX",
+				Default:      fsx.StorageVirtualMachineRootVolumeSecurityStyleUnix,
 				ValidateFunc: validation.StringInSlice(fsx.StorageVirtualMachineRootVolumeSecurityStyle_Values(), false),
 			},
 			"size_in_megabytes": {
@@ -130,16 +131,17 @@ func resourceOntapVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
 
+	name := d.Get("name").(string)
 	input := &fsx.CreateVolumeInput{
-		Name:       aws.String(d.Get("name").(string)),
-		VolumeType: aws.String(d.Get("volume_type").(string)),
+		Name: aws.String(name),
 		OntapConfiguration: &fsx.CreateOntapVolumeConfiguration{
 			JunctionPath:             aws.String(d.Get("junction_path").(string)),
 			SizeInMegabytes:          aws.Int64(int64(d.Get("size_in_megabytes").(int))),
 			StorageEfficiencyEnabled: aws.Bool(d.Get("storage_efficiency_enabled").(bool)),
 			StorageVirtualMachineId:  aws.String(d.Get("storage_virtual_machine_id").(string)),
 		},
-		Tags: GetTagsIn(ctx),
+		Tags:       GetTagsIn(ctx),
+		VolumeType: aws.String(d.Get("volume_type").(string)),
 	}
 
 	if v, ok := d.GetOk("ontap_volume_type"); ok {
@@ -157,13 +159,13 @@ func resourceOntapVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 	result, err := conn.CreateVolumeWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating FSx Volume: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating FSx ONTAP Volume (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(result.Volume.VolumeId))
 
 	if _, err := waitVolumeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for FSx Volume(%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP Volume (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceOntapVolumeRead(ctx, d, meta)...)
@@ -187,7 +189,7 @@ func resourceOntapVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	ontapConfig := volume.OntapConfiguration
 	if ontapConfig == nil {
-		return sdkdiag.AppendErrorf(diags, "describing FSx ONTAP Volume (%s): empty ONTAP configuration", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading FSx ONTAP Volume (%s): empty ONTAP configuration", d.Id())
 	}
 
 	d.Set("arn", volume.ResourceARN)
@@ -199,12 +201,11 @@ func resourceOntapVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("size_in_megabytes", ontapConfig.SizeInMegabytes)
 	d.Set("storage_efficiency_enabled", ontapConfig.StorageEfficiencyEnabled)
 	d.Set("storage_virtual_machine_id", ontapConfig.StorageVirtualMachineId)
-	d.Set("uuid", ontapConfig.UUID)
-	d.Set("volume_type", volume.VolumeType)
-
 	if err := d.Set("tiering_policy", flattenOntapVolumeTieringPolicy(ontapConfig.TieringPolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tiering_policy: %s", err)
 	}
+	d.Set("uuid", ontapConfig.UUID)
+	d.Set("volume_type", volume.VolumeType)
 
 	return diags
 }
@@ -216,8 +217,8 @@ func resourceOntapVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateVolumeInput{
 			ClientRequestToken: aws.String(id.UniqueId()),
-			VolumeId:           aws.String(d.Id()),
 			OntapConfiguration: &fsx.UpdateOntapVolumeConfiguration{},
+			VolumeId:           aws.String(d.Id()),
 		}
 
 		if d.HasChange("junction_path") {
