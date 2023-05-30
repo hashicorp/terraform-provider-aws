@@ -38,8 +38,9 @@ func TestAccFSxOntapVolume_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "junction_path", fmt.Sprintf("/%[1]s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "ontap_volume_type", "RW"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "security_style", "UNIX"),
+					resource.TestCheckResourceAttr(resourceName, "security_style", ""),
 					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "false"),
 					resource.TestCheckResourceAttr(resourceName, "storage_efficiency_enabled", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "storage_virtual_machine_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -48,9 +49,10 @@ func TestAccFSxOntapVolume_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_backup"},
 			},
 		},
 	})
@@ -101,9 +103,10 @@ func TestAccFSxOntapVolume_name(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_backup"},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_basic(rName2),
@@ -140,9 +143,10 @@ func TestAccFSxOntapVolume_junctionPath(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_backup"},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_junctionPath(rName, jPath2),
@@ -178,9 +182,10 @@ func TestAccFSxOntapVolume_ontapVolumeType(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_backup"},
 			},
 		},
 	})
@@ -207,9 +212,10 @@ func TestAccFSxOntapVolume_securityStyle(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_backup"},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_securityStyle(rName, "NTFS"),
@@ -256,9 +262,10 @@ func TestAccFSxOntapVolume_size(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_backup"},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_size(rName, size2),
@@ -294,9 +301,10 @@ func TestAccFSxOntapVolume_storageEfficiency(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_backup"},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_storageEfficiency(rName, false),
@@ -332,9 +340,10 @@ func TestAccFSxOntapVolume_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_backup"},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -380,9 +389,10 @@ func TestAccFSxOntapVolume_tieringPolicy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_backup"},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_tieringPolicy(rName, "SNAPSHOT_ONLY", 10),
@@ -532,6 +542,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   ontap_volume_type          = "DP"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
 `, rName))

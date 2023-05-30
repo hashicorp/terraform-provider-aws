@@ -28,8 +28,13 @@ func ResourceOntapVolume() *schema.Resource {
 		ReadWithoutTimeout:   resourceOntapVolumeRead,
 		UpdateWithoutTimeout: resourceOntapVolumeUpdate,
 		DeleteWithoutTimeout: resourceOntapVolumeDelete,
+
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("skip_final_backup", false)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -79,6 +84,11 @@ func ResourceOntapVolume() *schema.Resource {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ValidateFunc: validation.IntBetween(0, 2147483647),
+			},
+			"skip_final_backup": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"storage_efficiency_enabled": {
 				Type:     schema.TypeBool,
@@ -269,6 +279,9 @@ func resourceOntapVolumeDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Deleting FSx ONTAP Volume: %s", d.Id())
 	_, err := conn.DeleteVolumeWithContext(ctx, &fsx.DeleteVolumeInput{
+		OntapConfiguration: &fsx.DeleteVolumeOntapConfiguration{
+			SkipFinalBackup: aws.Bool(d.Get("skip_final_backup").(bool)),
+		},
 		VolumeId: aws.String(d.Id()),
 	})
 

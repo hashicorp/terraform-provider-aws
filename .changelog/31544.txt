@@ -18,6 +18,10 @@ resource/aws_fsx_ontap_volume: `storage_efficiency_enabled` is Optional
 resource/aws_fsx_ontap_volume: Change `volume_type` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
 ```
 
+```release-note:enhancement
+resource/aws_fsx_ontap_volume: Add `skip_final_backup` argument
+```
+
 ```release-note:bug
 resource/aws_fsx_ontap_volume: Change `storage_virtual_machine_id` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
 ```
