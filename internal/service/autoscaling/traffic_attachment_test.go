@@ -175,9 +175,15 @@ func testAccCheckTrafficAttachmentExists(ctx context.Context, n string) resource
 			return fmt.Errorf("Not found: %s", n)
 		}
 
+		asgName, trafficSourceType, trafficSourceID, err := tfautoscaling.TrafficAttachmentParseResourceID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
-		_, err := tfautoscaling.FindTrafficAttachment(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["traffic_source.0.type"], rs.Primary.Attributes["traffic_source.0.identifier"])
+		_, err = tfautoscaling.FindTrafficAttachmentByThreePartKey(ctx, conn, asgName, trafficSourceType, trafficSourceID)
 
 		return err
 	}
@@ -192,7 +198,13 @@ func testAccCheckTrafficAttachmentDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			_, err := tfautoscaling.FindTrafficAttachment(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["traffic_source.0.type"], rs.Primary.Attributes["traffic_source.0.identifier"])
+			asgName, trafficSourceType, trafficSourceID, err := tfautoscaling.TrafficAttachmentParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfautoscaling.FindTrafficAttachmentByThreePartKey(ctx, conn, asgName, trafficSourceType, trafficSourceID)
 
 			if tfresource.NotFound(err) {
 				continue

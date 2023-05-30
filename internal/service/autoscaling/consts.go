@@ -74,3 +74,11 @@ func PolicyType_Values() []string {
 		PolicyTypeTargetTrackingScaling,
 	}
 }
+
+const (
+	TrafficSourceStateAdding    = "Adding"
+	TrafficSourceStateAdded     = "Added"
+	TrafficSourceStateInService = "InService"
+	TrafficSourceStateRemoving  = "Removing"
+	TrafficSourceStateRemoved   = "Removed"
+)

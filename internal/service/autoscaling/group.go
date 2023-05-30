@@ -2593,6 +2593,39 @@ func findTrafficSourcesGroupStates(ctx context.Context, conn *autoscaling.AutoSc
 	return output, nil
 }
 
+func findTrafficSourceStates(ctx context.Context, conn *autoscaling.AutoScaling, input *autoscaling.DescribeTrafficSourcesInput) ([]*autoscaling.TrafficSourceState, error) {
+	var output []*autoscaling.TrafficSourceState
+
+	err := conn.DescribeTrafficSourcesPagesWithContext(ctx, input, func(page *autoscaling.DescribeTrafficSourcesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TrafficSources {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 const (
 	// Maximum amount of time to wait for an InstanceRefresh to be started
 	// Must be at least as long as instanceRefreshCancelledTimeout, since we try to cancel any
