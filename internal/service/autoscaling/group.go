@@ -2497,10 +2497,10 @@ func waitLoadBalancerTargetGroupsRemoved(ctx context.Context, conn *autoscaling.
 	return nil, err
 }
 
-func waitTrafficSourcesCreated(ctx context.Context, conn *autoscaling.AutoScaling, name string, sourceType string, timeout time.Duration) ([]*autoscaling.TrafficSourceState, error) {
+func waitTrafficSourcesCreated(ctx context.Context, conn *autoscaling.AutoScaling, asgName, trafficSourceType string, timeout time.Duration) ([]*autoscaling.TrafficSourceState, error) {
 	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
-		Refresh: statusTrafficSourcesCount(ctx, conn, name, sourceType),
+		Refresh: statusTrafficSourcesCount(ctx, conn, asgName, trafficSourceType),
 		Timeout: timeout,
 	}
 
@@ -2513,10 +2513,10 @@ func waitTrafficSourcesCreated(ctx context.Context, conn *autoscaling.AutoScalin
 	return nil, err
 }
 
-func waitTrafficSourcesDeleted(ctx context.Context, conn *autoscaling.AutoScaling, name string, sourceType string, timeout time.Duration) ([]*autoscaling.TrafficSourceState, error) {
+func waitTrafficSourcesDeleted(ctx context.Context, conn *autoscaling.AutoScaling, asgName, trafficSourceType string, timeout time.Duration) ([]*autoscaling.TrafficSourceState, error) {
 	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
-		Refresh: statusTrafficSourcesCount(ctx, conn, name, sourceType),
+		Refresh: statusTrafficSourcesCount(ctx, conn, asgName, trafficSourceType),
 		Timeout: timeout,
 	}
 
@@ -2529,9 +2529,9 @@ func waitTrafficSourcesDeleted(ctx context.Context, conn *autoscaling.AutoScalin
 	return nil, err
 }
 
-func statusTrafficSourcesCount(ctx context.Context, conn *autoscaling.AutoScaling, name string, sourceType string, states ...string) retry.StateRefreshFunc {
+func statusTrafficSourcesCount(ctx context.Context, conn *autoscaling.AutoScaling, asgName, trafficSourceType string, states ...string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findTrafficSourcesGroupStates(ctx, conn, name, sourceType)
+		output, err := findTrafficSourceStatesByTwoPartKey(ctx, conn, asgName, trafficSourceType)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -2556,41 +2556,13 @@ func statusTrafficSourcesCount(ctx context.Context, conn *autoscaling.AutoScalin
 	}
 }
 
-func findTrafficSourcesGroupStates(ctx context.Context, conn *autoscaling.AutoScaling, name string, sourceType string) ([]*autoscaling.TrafficSourceState, error) {
+func findTrafficSourceStatesByTwoPartKey(ctx context.Context, conn *autoscaling.AutoScaling, asgName, trafficSourceType string) ([]*autoscaling.TrafficSourceState, error) {
 	input := &autoscaling.DescribeTrafficSourcesInput{
-		AutoScalingGroupName: aws.String(name),
-		TrafficSourceType:    aws.String(sourceType),
-	}
-	var output []*autoscaling.TrafficSourceState
-
-	err := describeTrafficSourcesPages(ctx, conn, input, func(page *autoscaling.DescribeTrafficSourcesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.TrafficSources {
-			if v == nil {
-				continue
-			}
-
-			output = append(output, v)
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+		AutoScalingGroupName: aws.String(asgName),
+		TrafficSourceType:    aws.String(trafficSourceType),
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
+	return findTrafficSourceStates(ctx, conn, input)
 }
 
 func findTrafficSourceStates(ctx context.Context, conn *autoscaling.AutoScaling, input *autoscaling.DescribeTrafficSourcesInput) ([]*autoscaling.TrafficSourceState, error) {
