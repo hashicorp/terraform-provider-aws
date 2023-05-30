@@ -82,7 +82,7 @@ func ResourceOntapVolume() *schema.Resource {
 			},
 			"storage_efficiency_enabled": {
 				Type:     schema.TypeBool,
-				Required: true,
+				Optional: true,
 			},
 			"storage_virtual_machine_id": {
 				Type:         schema.TypeString,
@@ -137,9 +137,8 @@ func resourceOntapVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &fsx.CreateVolumeInput{
 		Name: aws.String(name),
 		OntapConfiguration: &fsx.CreateOntapVolumeConfiguration{
-			SizeInMegabytes:          aws.Int64(int64(d.Get("size_in_megabytes").(int))),
-			StorageEfficiencyEnabled: aws.Bool(d.Get("storage_efficiency_enabled").(bool)),
-			StorageVirtualMachineId:  aws.String(d.Get("storage_virtual_machine_id").(string)),
+			SizeInMegabytes:         aws.Int64(int64(d.Get("size_in_megabytes").(int))),
+			StorageVirtualMachineId: aws.String(d.Get("storage_virtual_machine_id").(string)),
 		},
 		Tags:       GetTagsIn(ctx),
 		VolumeType: aws.String(d.Get("volume_type").(string)),
@@ -155,6 +154,10 @@ func resourceOntapVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("security_style"); ok {
 		input.OntapConfiguration.SecurityStyle = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOkExists("storage_efficiency_enabled"); ok {
+		input.OntapConfiguration.StorageEfficiencyEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("tiering_policy"); ok {
