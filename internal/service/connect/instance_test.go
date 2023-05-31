@@ -18,7 +18,7 @@ import (
 
 func testAccInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v connect.DescribeInstanceOutput
+	var v connect.Instance
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
@@ -75,7 +75,7 @@ func testAccInstance_basic(t *testing.T) {
 
 func testAccInstance_directory(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v connect.DescribeInstanceOutput
+	var v connect.Instance
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
@@ -107,7 +107,7 @@ func testAccInstance_directory(t *testing.T) {
 
 func testAccInstance_saml(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v connect.DescribeInstanceOutput
+	var v connect.Instance
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
