@@ -55,6 +55,19 @@ resource "aws_kendra_index" "example" {
 }
 ```
 
+### With user group resolution configuration
+
+```terraform
+resource "aws_kendra_index" "example" {
+  name     = "example"
+  role_arn = aws_iam_role.this.arn
+
+  user_group_resolution_configuration {
+    user_group_resolution_mode = "AWS_SSO"
+  }
+}
+```
+
 ### With Document Metadata Configuration Updates
 
 #### Specifying the predefined elements

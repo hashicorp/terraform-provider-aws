@@ -1065,7 +1065,7 @@ func flattenUserGroupResolutionConfiguration(userGroupResolutionConfiguration *t
 	}
 
 	values := map[string]interface{}{
-		"user_group_resolution_configuration": userGroupResolutionConfiguration.UserGroupResolutionMode,
+		"user_group_resolution_mode": userGroupResolutionConfiguration.UserGroupResolutionMode,
 	}
 
 	return []interface{}{values}
