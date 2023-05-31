@@ -62,7 +62,7 @@ func TestAccKendraIndex_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.storage_capacity_units", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "13"),
+					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "14"),
 					resource.TestCheckResourceAttr(resourceName, "edition", string(types.IndexEditionEnterpriseEdition)),
 					resource.TestCheckResourceAttr(resourceName, "index_statistics.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "index_statistics.0.faq_statistics.#", "1"),
@@ -462,7 +462,7 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 				Config: testAccIndexConfig_documentMetadataConfigurationUpdatesBase(rName, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "13"),
+					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "14"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						"name":                   "_authors",
 						"type":                   string(types.DocumentAttributeValueTypeStringListValue),
@@ -598,6 +598,18 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
+						"name":                                "_tenant_id",
+						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
+						"search.0.displayable":                "false",
+						"search.0.facetable":                  "false",
+						"search.0.searchable":                 "false",
+						"search.0.sortable":                   "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						"name":                                "_version",
 						"type":                                string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
@@ -632,7 +644,7 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 				Config: testAccIndexConfig_documentMetadataConfigurationUpdatesAddNewMetadata(rName, rName2, rName3, authorsFacetable, longValDisplayable, stringListValSearchable, dateValSortable, stringValImportance),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "17"),
+					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "18"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						"name":                   "_authors",
 						"type":                   string(types.DocumentAttributeValueTypeStringListValue),
@@ -768,6 +780,18 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
+						"name":                                "_tenant_id",
+						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
+						"search.0.displayable":                "false",
+						"search.0.facetable":                  "false",
+						"search.0.searchable":                 "false",
+						"search.0.sortable":                   "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						"name":                                "_version",
 						"type":                                string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
@@ -876,7 +900,7 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 				Config: testAccIndexConfig_documentMetadataConfigurationUpdatesAddNewMetadata(rName, rName2, rName3, originalAuthorsFacetable, originalLongValDisplayable, originalStringListValSearchable, originalDateValSortable, originalStringValImportance),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "17"),
+					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "18"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						"name":                   "_authors",
 						"type":                   string(types.DocumentAttributeValueTypeStringListValue),
@@ -1012,6 +1036,18 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
+						"name":                                "_tenant_id",
+						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
+						"search.0.displayable":                "false",
+						"search.0.facetable":                  "false",
+						"search.0.searchable":                 "false",
+						"search.0.sortable":                   "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						"name":                                "_version",
 						"type":                                string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
@@ -1095,7 +1131,7 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 				Config: testAccIndexConfig_documentMetadataConfigurationUpdatesAddNewMetadata(rName, rName2, rName3, updatedAuthorsFacetable, updatedLongValDisplayable, updatedStringListValSearchable, updatedDateValSortable, updatedStringValImportance),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "17"),
+					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "18"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						"name":                   "_authors",
 						"type":                   string(types.DocumentAttributeValueTypeStringListValue),
@@ -1229,6 +1265,18 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.facetable":                  "false",
 						"search.0.searchable":                 "false",
 						"search.0.sortable":                   "false",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
+						"name":                                "_tenant_id",
+						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						"relevance.#":                         "1",
+						"relevance.0.importance":              "1",
+						"relevance.0.values_importance_map.%": "0",
+						"search.#":                            "1",
+						"search.0.displayable":                "false",
+						"search.0.facetable":                  "false",
+						"search.0.searchable":                 "false",
+						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						"name":                                "_version",
@@ -1823,6 +1871,21 @@ resource "aws_kendra_index" "test" {
   }
 
   document_metadata_configuration_updates {
+    name = "_tenant_id"
+    type = "STRING_VALUE"
+    search {
+      displayable = false
+      facetable   = false
+      searchable  = false
+      sortable    = true
+    }
+    relevance {
+      importance            = 1
+      values_importance_map = {}
+    }
+  }
+
+  document_metadata_configuration_updates {
     name = "_version"
     type = "STRING_VALUE"
     search {
@@ -2023,6 +2086,21 @@ resource "aws_kendra_index" "test" {
       facetable   = false
       searchable  = false
       sortable    = false
+    }
+    relevance {
+      importance            = 1
+      values_importance_map = {}
+    }
+  }
+
+  document_metadata_configuration_updates {
+    name = "_tenant_id"
+    type = "STRING_VALUE"
+    search {
+      displayable = false
+      facetable   = false
+      searchable  = false
+      sortable    = true
     }
     relevance {
       importance            = 1
