@@ -253,10 +253,6 @@ resource "aws_autoscaling_group" "test" {
     value               = %[1]q
     propagate_at_launch = true
   }
-
-  lifecycle {
-    ignore_changes = [load_balancers]
-  }
 }
 `, rName, elbCount))
 }
