@@ -51,7 +51,6 @@ New Resource(s):
 - `aws_cleanrooms_configured_table_association`
 - `aws_cleanrooms_membership`
 
-
 ## Enhancements to Existing Services
 
 This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
