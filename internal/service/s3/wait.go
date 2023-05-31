@@ -15,6 +15,7 @@ const (
 	lifecycleConfigurationRulesPropagationTimeout = 3 * time.Minute
 	lifecycleConfigurationRulesSteadyTimeout      = 2 * time.Minute
 	propagationTimeout                            = 1 * time.Minute
+
 	// LifecycleConfigurationRulesStatusReady occurs when all configured rules reach their desired state (Enabled or Disabled)
 	LifecycleConfigurationRulesStatusReady = "READY"
 	// LifecycleConfigurationRulesStatusNotReady occurs when all configured rules have not reached their desired state (Enabled or Disabled)
