@@ -1,5 +1,5 @@
 ```release-note:new-resource
-aws_autoscaling_traffic_attachment
+aws_autoscaling_traffic_source_attachment
 ```
 
 ```release-note:enhancement
