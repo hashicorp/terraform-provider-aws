@@ -94,8 +94,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protect_from_scale_in", "false"),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "service_linked_role_arn", "iam", "role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"),
 					resource.TestCheckResourceAttr(resourceName, "tag.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tag.#", "0"),
-					resource.TestCheckNoResourceAttr(resourceName, "tags.#"),
+					resource.TestCheckNoResourceAttr(resourceName, "tags.#"), // "tags" removed at v5.0.0.
 					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "termination_policies.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_source.#", "0"),
@@ -4142,6 +4141,7 @@ resource "aws_autoscaling_group" "test" {
   wait_for_elb_capacity     = 2
   force_delete              = true
   load_balancers            = [aws_elb.test.name]
+  target_group_arns         = []
 
   tag {
     key                 = "Name"
@@ -4165,6 +4165,7 @@ resource "aws_autoscaling_group" "test" {
   health_check_type         = "ELB"
   wait_for_elb_capacity     = 2
   force_delete              = true
+  load_balancers            = []
   target_group_arns         = [aws_lb_target_group.test.arn]
 
   tag {
