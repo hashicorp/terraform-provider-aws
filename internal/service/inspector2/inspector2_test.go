@@ -11,9 +11,17 @@ func TestAccInspector2_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Enabler": {
-			"basic":      testAccEnabler_basic,
-			"accountID":  testAccEnabler_accountID,
-			"disappears": testAccEnabler_disappears,
+			"basic":                              testAccEnabler_basic,
+			"accountID":                          testAccEnabler_accountID,
+			"disappears":                         testAccEnabler_disappears,
+			"lambda":                             testAccEnabler_lambda,
+			"updateResourceTypes":                testAccEnabler_updateResourceTypes,
+			"updateResourceTypes_disjoint":       testAccEnabler_updateResourceTypes_disjoint,
+			"memberAccount_basic":                testAccEnabler_memberAccount_basic,
+			"memberAccount_multiple":             testAccEnabler_memberAccount_multiple,
+			"memberAccount_updateMemberAccounts": testAccEnabler_memberAccount_updateMemberAccounts,
+			"memberAccount_updateMemberAccountsAndScanTypes": testAccEnabler_memberAccount_updateMemberAccountsAndScanTypes,
+			"memberAccount_disappearsMemberAssociation":      testAccEnabler_memberAccount_disappearsMemberAssociation,
 		},
 		"DelegatedAdminAccount": {
 			"basic":      testAccDelegatedAdminAccount_basic,

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_grafana_workspace: Increase default Create and Update timeouts to 30 minutes
+```

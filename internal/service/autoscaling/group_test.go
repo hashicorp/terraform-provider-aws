@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
@@ -90,6 +90,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "placement_group", ""),
+					resource.TestCheckResourceAttr(resourceName, "predicted_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "protect_from_scale_in", "false"),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "service_linked_role_arn", "iam", "role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"),
 					resource.TestCheckResourceAttr(resourceName, "suspended_processes.#", "0"),
@@ -101,6 +102,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "wait_for_capacity_timeout", "10m"),
 					resource.TestCheckNoResourceAttr(resourceName, "wait_for_elb_capacity"),
 					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_size", "0"),
 				),
 			},
 			testAccGroupImportStep(resourceName),
@@ -270,36 +272,6 @@ func TestAccAutoScalingGroup_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAutoScalingGroup_deprecatedTags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var group autoscaling.Group
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_autoscaling_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupConfig_deprecatedTags1(rName, "key1", "value1", true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "tag.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tags.*", map[string]string{
-						"key":                 "key1",
-						"value":               "value1",
-						"propagate_at_launch": "true",
-					}),
-				),
-			},
-			testAccGroupImportStep(resourceName),
 		},
 	})
 }
@@ -625,14 +597,14 @@ func TestAccAutoScalingGroup_withScalingActivityErrorIncorrectInstanceArchitectu
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t4g.micro"),
+				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t4g.micro", 1),
 				ExpectError: regexp.MustCompile(`The architecture 'arm64' of the specified instance type does not match the architecture 'x86_64' of the specified AMI`),
 			},
 		},
 	})
 }
 
-func TestAccAutoScalingGroup_withNoScalingActivityErrorCorrectInstanceArchitecture(t *testing.T) {
+func TestAccAutoScalingGroup_withScalingActivityErrorIncorrectInstanceArchitecture_Recovers(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group autoscaling.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -645,8 +617,18 @@ func TestAccAutoScalingGroup_withNoScalingActivityErrorCorrectInstanceArchitectu
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_withPotentialScalingActivityError(rName, "t2.micro"),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccGroupConfig_withPotentialScalingActivityError(rName, "t2.micro", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+				),
+			},
+			{
+				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t4g.micro", 2),
+				ExpectError: regexp.MustCompile(`The architecture 'arm64' of the specified instance type does not match the architecture 'x86_64' of the specified AMI`),
+			},
+			{
+				Config: testAccGroupConfig_withPotentialScalingActivityError(rName, "t2.micro", 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 				),
 			},
@@ -1165,7 +1147,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_triggers(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "instance_refresh.0.triggers.*", "tags"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "instance_refresh.0.triggers.*", "tag"),
 					testAccCheckInstanceRefreshCount(ctx, &group, 1),
 					testAccCheckInstanceRefreshStatus(ctx, &group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
 				),
@@ -1256,6 +1238,7 @@ func TestAccAutoScalingGroup_ALBTargetGroups_elbCapacity(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	subnetCount := 2
 	var tg elbv2.TargetGroup
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1265,7 +1248,7 @@ func TestAccAutoScalingGroup_ALBTargetGroups_elbCapacity(t *testing.T) {
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_targetELBCapacity(rName),
+				Config: testAccGroupConfig_targetELBCapacity(rName, subnetCount),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					testAccCheckLBTargetGroupExists(ctx, "aws_lb_target_group.test", &tg),
@@ -3630,9 +3613,13 @@ func testAccGroupConfig_launchConfigurationBase(rName, instanceType string) stri
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name          = %[1]q
+  name_prefix   = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = %[2]q
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 `, rName, instanceType))
 }
@@ -3736,24 +3723,6 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagPropagateAtLaunch1, tagKey2, tagValue2, tagPropagateAtLaunch2))
-}
-
-func testAccGroupConfig_deprecatedTags1(rName, tagKey1, tagValue1 string, tagPropagateAtLaunch1 bool) string {
-	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t2.micro"), fmt.Sprintf(`
-resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.available.names[0]]
-  max_size             = 0
-  min_size             = 0
-  name                 = %[1]q
-  launch_configuration = aws_launch_configuration.test.name
-
-  tags = [{
-    "key"                 = %[2]q
-    "value"               = %[3]q
-    "propagate_at_launch" = %[4]t
-  }]
-}
-`, rName, tagKey1, tagValue1, tagPropagateAtLaunch1))
 }
 
 func testAccGroupConfig_simple(rName string) string {
@@ -4165,20 +4134,24 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupConfig_withPotentialScalingActivityError(rName, instanceType string) string {
+func testAccGroupConfig_withPotentialScalingActivityError(rName, instanceType string, instanceCount int) string {
 	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, instanceType), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones        = [data.aws_availability_zones.available.names[0]]
   name                      = %[1]q
-  max_size                  = 1
+  max_size                  = %[2]d
   min_size                  = 1
   health_check_grace_period = 300
   health_check_type         = "ELB"
-  desired_capacity          = 1
+  desired_capacity          = %[2]d
   force_delete              = true
   termination_policies      = ["OldestInstance", "ClosestToNextInstanceHour"]
   wait_for_capacity_timeout = "2m"
   launch_configuration      = aws_launch_configuration.test.name
+
+  instance_refresh {
+    strategy = "Rolling"
+  }
 
   tag {
     key                 = "Name"
@@ -4186,7 +4159,7 @@ resource "aws_autoscaling_group" "test" {
     propagate_at_launch = true
   }
 }
-`, rName))
+`, rName, instanceCount))
 }
 
 func testAccGroupConfig_serviceLinkedRoleARN(rName string) string {
@@ -4519,7 +4492,7 @@ resource "aws_autoscaling_group" "test" {
 
   instance_refresh {
     strategy = "Rolling"
-    triggers = ["tags"]
+    triggers = ["tag"]
   }
 
   tag {
@@ -4622,10 +4595,10 @@ resource "aws_autoscaling_group" "test" {
 `, rName, targetGroupCount))
 }
 
-func testAccGroupConfig_targetELBCapacity(rName string) string {
+func testAccGroupConfig_targetELBCapacity(rName string, subnetCount int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		acctest.ConfigVPCWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, subnetCount),
 		fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -4686,7 +4659,7 @@ resource "aws_route_table" "test" {
 }
 
 resource "aws_route_table_association" "test" {
-  count = length(aws_subnet.test[*])
+  count = %[2]d
 
   subnet_id      = aws_subnet.test[count.index].id
   route_table_id = aws_route_table.test.id
@@ -4737,7 +4710,7 @@ resource "aws_autoscaling_group" "test" {
     propagate_at_launch = true
   }
 }
-`, rName))
+`, rName, subnetCount))
 }
 
 func testAccGroupConfig_warmPoolEmpty(rName string) string {

@@ -88,6 +88,15 @@ func ResourceEndpointConfiguration() *schema.Resource {
 													ForceNew:     true,
 													ValidateFunc: verify.ValidARN,
 												},
+												"include_inference_response_in": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													ForceNew: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringInSlice(sagemaker.AsyncNotificationTopicTypes_Values(), false),
+													},
+												},
 												"success_topic": {
 													Type:         schema.TypeString,
 													Optional:     true,
@@ -96,6 +105,15 @@ func ResourceEndpointConfiguration() *schema.Resource {
 												},
 											},
 										},
+									},
+									"s3_failure_path": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+										ValidateFunc: validation.All(
+											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringLenBetween(1, 512),
+										),
 									},
 									"s3_output_path": {
 										Type:     schema.TypeString,
@@ -323,6 +341,12 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.IntInSlice([]int{1024, 2048, 3072, 4096, 5120, 6144}),
 									},
+									"provisioned_concurrency": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntBetween(1, 200),
+									},
 								},
 							},
 						},
@@ -439,6 +463,12 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Required:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.IntInSlice([]int{1024, 2048, 3072, 4096, 5120, 6144}),
+									},
+									"provisioned_concurrency": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntBetween(1, 200),
 									},
 								},
 							},
@@ -848,6 +878,10 @@ func expandEndpointConfigOutputConfig(configured []interface{}) *sagemaker.Async
 		c.KmsKeyId = aws.String(v)
 	}
 
+	if v, ok := m["s3_failure_path"].(string); ok && v != "" {
+		c.S3FailurePath = aws.String(v)
+	}
+
 	if v, ok := m["notification_config"].([]interface{}); ok && len(v) > 0 {
 		c.NotificationConfig = expandEndpointConfigNotificationConfig(v)
 	}
@@ -872,6 +906,10 @@ func expandEndpointConfigNotificationConfig(configured []interface{}) *sagemaker
 		c.SuccessTopic = aws.String(v)
 	}
 
+	if v, ok := m["include_inference_response_in"].(*schema.Set); ok && v.Len() > 0 {
+		c.IncludeInferenceResponseIn = flex.ExpandStringSet(v)
+	}
+
 	return c
 }
 
@@ -890,6 +928,10 @@ func expandServerlessConfig(configured []interface{}) *sagemaker.ProductionVaria
 
 	if v, ok := m["memory_size_in_mb"].(int); ok {
 		c.MemorySizeInMB = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["provisioned_concurrency"].(int); ok && v > 0 {
+		c.ProvisionedConcurrency = aws.Int64(int64(v))
 	}
 
 	return c
@@ -964,6 +1006,10 @@ func flattenEndpointConfigOutputConfig(config *sagemaker.AsyncInferenceOutputCon
 		cfg["notification_config"] = flattenEndpointConfigNotificationConfig(config.NotificationConfig)
 	}
 
+	if config.S3FailurePath != nil {
+		cfg["s3_failure_path"] = aws.StringValue(config.S3FailurePath)
+	}
+
 	return []map[string]interface{}{cfg}
 }
 
@@ -982,6 +1028,10 @@ func flattenEndpointConfigNotificationConfig(config *sagemaker.AsyncInferenceNot
 		cfg["success_topic"] = aws.StringValue(config.SuccessTopic)
 	}
 
+	if config.IncludeInferenceResponseIn != nil {
+		cfg["include_inference_response_in"] = flex.FlattenStringSet(config.IncludeInferenceResponseIn)
+	}
+
 	return []map[string]interface{}{cfg}
 }
 
@@ -998,6 +1048,10 @@ func flattenServerlessConfig(config *sagemaker.ProductionVariantServerlessConfig
 
 	if config.MemorySizeInMB != nil {
 		cfg["memory_size_in_mb"] = aws.Int64Value(config.MemorySizeInMB)
+	}
+
+	if config.ProvisionedConcurrency != nil {
+		cfg["provisioned_concurrency"] = aws.Int64Value(config.ProvisionedConcurrency)
 	}
 
 	return []map[string]interface{}{cfg}

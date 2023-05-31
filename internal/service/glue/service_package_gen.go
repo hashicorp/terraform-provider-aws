@@ -45,6 +45,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCatalogDatabase,
 			TypeName: "aws_glue_catalog_database",
+			Name:     "Database",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceCatalogTable,
@@ -73,6 +77,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDataCatalogEncryptionSettings,
 			TypeName: "aws_glue_data_catalog_encryption_settings",
+		},
+		{
+			Factory:  ResourceDataQualityRuleset,
+			TypeName: "aws_glue_data_quality_ruleset",
+			Name:     "Data Quality Ruleset",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceDevEndpoint,

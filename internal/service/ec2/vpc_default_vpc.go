@@ -75,18 +75,6 @@ func ResourceDefaultVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enable_classiclink": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: `With the retirement of EC2-Classic the enable_classiclink attribute has been deprecated and will be removed in a future version.`,
-			},
-			"enable_classiclink_dns_support": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: `With the retirement of EC2-Classic the enable_classiclink_dns_support attribute has been deprecated and will be removed in a future version.`,
-			},
 			"enable_dns_hostnames": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -161,7 +149,7 @@ func ResourceDefaultVPC() *schema.Resource {
 	}
 }
 
-func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
@@ -182,26 +170,6 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("existing_default_vpc", true)
 
 		vpcInfo.vpc = vpc
-
-		if v, err := FindVPCClassicLinkEnabled(ctx, conn, d.Id()); err != nil {
-			if tfresource.NotFound(err) {
-				vpcInfo.enableClassicLink = false
-			} else {
-				return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) ClassicLinkEnabled: %s", d.Id(), err)
-			}
-		} else {
-			vpcInfo.enableClassicLink = v
-		}
-
-		if v, err := FindVPCClassicLinkDNSSupported(ctx, conn, d.Id()); err != nil {
-			if tfresource.NotFound(err) {
-				vpcInfo.enableClassicLinkDNSSupport = false
-			} else {
-				return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) ClassicLinkDnsSupported: %s", d.Id(), err)
-			}
-		} else {
-			vpcInfo.enableClassicLinkDNSSupport = v
-		}
 
 		if v, err := FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableDnsHostnames); err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), ec2.VpcAttributeNameEnableDnsHostnames, err)
@@ -241,8 +209,6 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		vpcInfo.vpc = vpc
-		vpcInfo.enableClassicLink = false
-		vpcInfo.enableClassicLinkDNSSupport = false
 		vpcInfo.enableDnsHostnames = true
 		vpcInfo.enableDnsSupport = true
 		vpcInfo.enableNetworkAddressUsageMetrics = false

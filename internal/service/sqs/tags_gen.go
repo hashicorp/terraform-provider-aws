@@ -78,6 +78,15 @@ func SetTagsOut(ctx context.Context, tags map[string]*string) {
 	}
 }
 
+// createTags creates sqs service tags for new resources.
+func createTags(ctx context.Context, conn sqsiface.SQSAPI, identifier string, tags map[string]*string) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return UpdateTags(ctx, conn, identifier, nil, tags)
+}
+
 // UpdateTags updates sqs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

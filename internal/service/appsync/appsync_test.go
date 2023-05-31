@@ -63,6 +63,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"AdditionalAuthentication_awsLambda":                  testAccGraphQLAPI_AdditionalAuthentication_lambda,
 			"AdditionalAuthentication_multiple":                   testAccGraphQLAPI_AdditionalAuthentication_multiple,
 			"xrayEnabled":                                         testAccGraphQLAPI_xrayEnabled,
+			"visibility":                                          testAccGraphQLAPI_visibility,
 		},
 		"Function": {
 			"basic":                   testAccFunction_basic,

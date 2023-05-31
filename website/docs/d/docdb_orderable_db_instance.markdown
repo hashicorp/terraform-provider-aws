@@ -1,5 +1,5 @@
 ---
-subcategory: "DocDB (DocumentDB)"
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb_orderable_db_instance"
 description: |-

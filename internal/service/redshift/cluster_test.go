@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
@@ -79,7 +79,7 @@ func TestAccRedshiftCluster_aqua(t *testing.T) {
 				Config: testAccClusterConfig_aqua(rName, "enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "auto"),
 				),
 			},
 			{
@@ -97,14 +97,14 @@ func TestAccRedshiftCluster_aqua(t *testing.T) {
 				Config: testAccClusterConfig_aqua(rName, "disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "auto"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_aqua(rName, "enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "auto"),
 				),
 			},
 		},
@@ -1198,8 +1198,6 @@ func testAccClusterConfig_loggingEnabled(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-data "aws_redshift_service_account" "main" {}
-
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -1215,7 +1213,7 @@ resource "aws_s3_bucket_policy" "test" {
       "Sid": "Stmt1376526643067",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "${data.aws_redshift_service_account.main.arn}"
+        "Service": "redshift.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "s3:PutObject",
       "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
@@ -1224,7 +1222,7 @@ resource "aws_s3_bucket_policy" "test" {
       "Sid": "Stmt137652664067",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "${data.aws_redshift_service_account.main.arn}"
+        "Service": "redshift.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "s3:GetBucketAcl",
       "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s"

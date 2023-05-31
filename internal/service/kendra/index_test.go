@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkendra "github.com/hashicorp/terraform-provider-aws/internal/service/kendra"
@@ -390,6 +390,48 @@ func TestAccKendraIndex_updateRoleARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.access_sm", "arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKendraIndex_updateUserGroupResolutionConfigurationMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var index kendra.DescribeIndexOutput
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	originalUserGroupResolutionMode := types.UserGroupResolutionModeAwsSso
+	updatedUserGroupResolutionMode := types.UserGroupResolutionModeNone
+	resourceName := "aws_kendra_index.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIndexConfig_userGroupResolutionMode(rName, rName2, rName3, string(originalUserGroupResolutionMode)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIndexExists(ctx, resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "user_group_resolution_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_group_resolution_configuration.0.user_group_resolution_mode", string(originalUserGroupResolutionMode)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIndexConfig_userGroupResolutionMode(rName, rName2, rName3, string(updatedUserGroupResolutionMode)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIndexExists(ctx, resourceName, &index),
+					resource.TestCheckResourceAttr(resourceName, "user_group_resolution_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_group_resolution_configuration.0.user_group_resolution_mode", string(updatedUserGroupResolutionMode)),
 				),
 			},
 		},
@@ -1553,6 +1595,21 @@ resource "aws_kendra_index" "test" {
   }
 }
 `, rName3, groupAttributeField, userNameAttributeField))
+}
+
+func testAccIndexConfig_userGroupResolutionMode(rName, rName2, rName3, UserGroupResolutionMode string) string {
+	return acctest.ConfigCompose(
+		testAccIndexConfigBase(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_kendra_index" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.access_cw.arn
+
+  user_group_resolution_configuration {
+    user_group_resolution_mode = %[2]q
+  }
+}
+`, rName3, UserGroupResolutionMode))
 }
 
 func testAccIndexConfig_tags(rName, rName2, rName3, description string) string {
