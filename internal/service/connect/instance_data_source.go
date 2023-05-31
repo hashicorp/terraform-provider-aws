@@ -93,11 +93,13 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("instance_id"); ok {
 		instanceID := v.(string)
-		matchedInstance, err = FindInstanceByID(ctx, conn, instanceID)
+		instance, err := FindInstanceByID(ctx, conn, instanceID)
 
 		if err != nil {
 			return diag.Errorf("reading Connect Instance (%s): %s", instanceID, err)
 		}
+
+		matchedInstance = instance
 	} else if v, ok := d.GetOk("instance_alias"); ok {
 		instanceAlias := v.(string)
 
