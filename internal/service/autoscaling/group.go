@@ -250,10 +250,11 @@ func ResourceGroup() *schema.Resource {
 				ExactlyOneOf: []string{"launch_configuration", "launch_template", "mixed_instances_policy"},
 			},
 			"load_balancers": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"traffic_source"},
 			},
 			"max_instance_lifetime": {
 				Type:     schema.TypeInt,
@@ -741,10 +742,11 @@ func ResourceGroup() *schema.Resource {
 				},
 			},
 			"target_group_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"traffic_source"},
 			},
 			"termination_policies": {
 				Type:     schema.TypeList,
@@ -759,7 +761,7 @@ func ResourceGroup() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"identifier": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
 						"type": {
@@ -769,6 +771,7 @@ func ResourceGroup() *schema.Resource {
 						},
 					},
 				},
+				ConflictsWith: []string{"load_balancers", "target_group_arns"},
 			},
 			"vpc_zone_identifier": {
 				Type:          schema.TypeSet,
@@ -2062,6 +2065,50 @@ func findScalingActivitiesByName(ctx context.Context, conn *autoscaling.AutoScal
 	return findScalingActivities(ctx, conn, input, startTime)
 }
 
+func findTrafficSourceStates(ctx context.Context, conn *autoscaling.AutoScaling, input *autoscaling.DescribeTrafficSourcesInput) ([]*autoscaling.TrafficSourceState, error) {
+	var output []*autoscaling.TrafficSourceState
+
+	err := conn.DescribeTrafficSourcesPagesWithContext(ctx, input, func(page *autoscaling.DescribeTrafficSourcesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TrafficSources {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findTrafficSourceStatesByTwoPartKey(ctx context.Context, conn *autoscaling.AutoScaling, asgName, trafficSourceType string) ([]*autoscaling.TrafficSourceState, error) {
+	input := &autoscaling.DescribeTrafficSourcesInput{
+		AutoScalingGroupName: aws.String(asgName),
+	}
+	if trafficSourceType != "" {
+		input.TrafficSourceType = aws.String(trafficSourceType)
+	}
+
+	return findTrafficSourceStates(ctx, conn, input)
+}
+
 func findWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name string) (*autoscaling.DescribeWarmPoolOutput, error) {
 	input := &autoscaling.DescribeWarmPoolInput{
 		AutoScalingGroupName: aws.String(name),
@@ -2290,6 +2337,33 @@ func statusLoadBalancerTargetGroupInStateCount(ctx context.Context, conn *autosc
 	}
 }
 
+func statusTrafficSourcesInStateCount(ctx context.Context, conn *autoscaling.AutoScaling, asgName, trafficSourceType string, states ...string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findTrafficSourceStatesByTwoPartKey(ctx, conn, asgName, trafficSourceType)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		var count int
+
+		for _, v := range output {
+			for _, state := range states {
+				if aws.StringValue(v.State) == state {
+					count++
+					break
+				}
+			}
+		}
+
+		return output, strconv.Itoa(count), nil
+	}
+}
+
 func statusWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findWarmPool(ctx, conn, name)
@@ -2421,7 +2495,7 @@ func waitLoadBalancerTargetGroupsRemoved(ctx context.Context, conn *autoscaling.
 func waitTrafficSourcesCreated(ctx context.Context, conn *autoscaling.AutoScaling, asgName, trafficSourceType string, timeout time.Duration) ([]*autoscaling.TrafficSourceState, error) {
 	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
-		Refresh: statusTrafficSourcesCount(ctx, conn, asgName, trafficSourceType),
+		Refresh: statusTrafficSourcesInStateCount(ctx, conn, asgName, trafficSourceType, TrafficSourceStateAdding),
 		Timeout: timeout,
 	}
 
@@ -2437,7 +2511,7 @@ func waitTrafficSourcesCreated(ctx context.Context, conn *autoscaling.AutoScalin
 func waitTrafficSourcesDeleted(ctx context.Context, conn *autoscaling.AutoScaling, asgName, trafficSourceType string, timeout time.Duration) ([]*autoscaling.TrafficSourceState, error) {
 	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
-		Refresh: statusTrafficSourcesCount(ctx, conn, asgName, trafficSourceType),
+		Refresh: statusTrafficSourcesInStateCount(ctx, conn, asgName, trafficSourceType, TrafficSourceStateRemoving),
 		Timeout: timeout,
 	}
 
@@ -2448,77 +2522,6 @@ func waitTrafficSourcesDeleted(ctx context.Context, conn *autoscaling.AutoScalin
 	}
 
 	return nil, err
-}
-
-func statusTrafficSourcesCount(ctx context.Context, conn *autoscaling.AutoScaling, asgName, trafficSourceType string, states ...string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findTrafficSourceStatesByTwoPartKey(ctx, conn, asgName, trafficSourceType)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		var count int
-
-		for _, v := range output {
-			for _, state := range states {
-				if aws.StringValue(v.State) == state {
-					count++
-					break
-				}
-			}
-		}
-
-		return output, strconv.Itoa(count), nil
-	}
-}
-
-func findTrafficSourceStatesByTwoPartKey(ctx context.Context, conn *autoscaling.AutoScaling, asgName, trafficSourceType string) ([]*autoscaling.TrafficSourceState, error) {
-	input := &autoscaling.DescribeTrafficSourcesInput{
-		AutoScalingGroupName: aws.String(asgName),
-	}
-	if trafficSourceType != "" {
-		input.TrafficSourceType = aws.String(trafficSourceType)
-	}
-
-	return findTrafficSourceStates(ctx, conn, input)
-}
-
-func findTrafficSourceStates(ctx context.Context, conn *autoscaling.AutoScaling, input *autoscaling.DescribeTrafficSourcesInput) ([]*autoscaling.TrafficSourceState, error) {
-	var output []*autoscaling.TrafficSourceState
-
-	err := conn.DescribeTrafficSourcesPagesWithContext(ctx, input, func(page *autoscaling.DescribeTrafficSourcesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.TrafficSources {
-			if v == nil {
-				continue
-			}
-
-			output = append(output, v)
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
 }
 
 const (
