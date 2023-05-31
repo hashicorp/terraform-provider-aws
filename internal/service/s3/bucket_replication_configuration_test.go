@@ -1253,16 +1253,10 @@ func testAccCheckBucketReplicationConfigurationExists(ctx context.Context, n str
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-		output, err := conn.GetBucketReplicationWithContext(ctx, &s3.GetBucketReplicationInput{
-			Bucket: aws.String(rs.Primary.ID),
-		})
+		_, err := tfs3.FindBucketReplicationConfigurationByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
-		}
-
-		if output == nil || output.ReplicationConfiguration == nil {
-			return fmt.Errorf("S3 Bucket Replication Configuration for bucket (%s) not found", rs.Primary.ID)
 		}
 
 		return nil

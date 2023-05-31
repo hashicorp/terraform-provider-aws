@@ -346,7 +346,7 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 
 	d.SetId(bucket)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, replicationConfigPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindBucketReplicationConfigurationByID(ctx, conn, d.Id())
 	})
 
