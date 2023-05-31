@@ -348,11 +348,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_iam_role" "bucket" {
   name = "%[1]s2"
 
@@ -422,9 +417,9 @@ func testAccConfigurationSetEventDestinationConfig_kinesisFirehoseDestination1(r
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test1" {
   name        = "%[1]s-1"
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.bucket.arn
     bucket_arn = aws_s3_bucket.test.arn
   }
@@ -458,9 +453,9 @@ func testAccConfigurationSetEventDestinationConfig_kinesisFirehoseDestination2(r
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test2" {
   name        = "%[1]s-2"
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.bucket.arn
     bucket_arn = aws_s3_bucket.test.arn
   }
