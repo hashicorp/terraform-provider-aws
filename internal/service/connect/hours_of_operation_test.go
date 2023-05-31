@@ -48,7 +48,6 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 						"start_time.0.minutes": "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
-					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_arn"), // Deprecated
 					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
@@ -78,7 +77,6 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 						"start_time.0.minutes": "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
-					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_arn"), // Deprecated
 					resource.TestCheckResourceAttrSet(resourceName, "hours_of_operation_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),

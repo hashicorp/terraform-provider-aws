@@ -65,14 +65,9 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 										ValidateFunc: validRoleMappingsRulesClaim,
 									},
 									"match_type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											cognitoidentity.MappingRuleMatchTypeEquals,
-											cognitoidentity.MappingRuleMatchTypeContains,
-											cognitoidentity.MappingRuleMatchTypeStartsWith,
-											cognitoidentity.MappingRuleMatchTypeNotEqual,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cognitoidentity.MappingRuleMatchType_Values(), false),
 									},
 									"role_arn": {
 										Type:         schema.TypeString,

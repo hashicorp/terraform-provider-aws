@@ -379,7 +379,7 @@ resource "aws_wafv2_ip_set" "ip_set" {
 func testAccIPSetConfig_addresses(name string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 }
 
 resource "aws_wafv2_ip_set" "ip_set" {

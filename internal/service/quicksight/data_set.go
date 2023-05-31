@@ -995,7 +995,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		DataSetId:    aws.String(dataSetId),
 	})
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+	if err != nil && !(tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, quicksight.ErrCodeInvalidParameterValueException, "not a SPICE dataset")) {
 		return diag.Errorf("error describing refresh properties (%s): %s", d.Id(), err)
 	}
 
@@ -1313,8 +1313,8 @@ func expandDataSetLogicalTableSource(tfMap map[string]interface{}) *quicksight.L
 	if v, ok := tfMap["physical_table_id"].(string); ok && v != "" {
 		logicalTableSource.PhysicalTableId = aws.String(v)
 	}
-	if v, ok := tfMap["join_instruction"].(map[string]interface{}); ok && len(v) > 0 {
-		logicalTableSource.JoinInstruction = expandDataSetJoinInstruction(v)
+	if v, ok := tfMap["join_instruction"].([]interface{}); ok && len(v) > 0 {
+		logicalTableSource.JoinInstruction = expandDataSetJoinInstruction(v[0].(map[string]interface{}))
 	}
 
 	return logicalTableSource

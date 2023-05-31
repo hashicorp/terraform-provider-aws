@@ -55,9 +55,24 @@ resource "aws_kendra_index" "example" {
 }
 ```
 
+### With user group resolution configuration
+
+```terraform
+resource "aws_kendra_index" "example" {
+  name     = "example"
+  role_arn = aws_iam_role.this.arn
+
+  user_group_resolution_configuration {
+    user_group_resolution_mode = "AWS_SSO"
+  }
+}
+```
+
 ### With Document Metadata Configuration Updates
 
 #### Specifying the predefined elements
+
+Refer to [Amazon Kendra documentation on built-in document fields](https://docs.aws.amazon.com/kendra/latest/dg/hiw-index.html#index-reserved-fields) for more information.
 
 ```terraform
 resource "aws_kendra_index" "example" {
@@ -225,6 +240,21 @@ resource "aws_kendra_index" "example" {
       facetable   = false
       searchable  = false
       sortable    = false
+    }
+    relevance {
+      importance            = 1
+      values_importance_map = {}
+    }
+  }
+
+  document_metadata_configuration_updates {
+    name = "_tenant_id"
+    type = "STRING_VALUE"
+    search {
+      displayable = false
+      facetable   = false
+      searchable  = false
+      sortable    = true
     }
     relevance {
       importance            = 1
@@ -434,6 +464,21 @@ resource "aws_kendra_index" "example" {
       facetable   = false
       searchable  = false
       sortable    = false
+    }
+    relevance {
+      importance            = 1
+      values_importance_map = {}
+    }
+  }
+
+  document_metadata_configuration_updates {
+    name = "_tenant_id"
+    type = "STRING_VALUE"
+    search {
+      displayable = false
+      facetable   = false
+      searchable  = false
+      sortable    = true
     }
     relevance {
       importance            = 1

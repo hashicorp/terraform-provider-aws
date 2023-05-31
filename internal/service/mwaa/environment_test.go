@@ -456,7 +456,7 @@ resource "aws_subnet" "private" {
 resource "aws_eip" "private" {
   count = 2
 
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
