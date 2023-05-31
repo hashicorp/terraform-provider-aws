@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccPoliciesForTargetDataSource_basic(t *testing.T) {
+func TestAccOrganizationsPoliciesForTargetDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_organizations_policies_for_target.test"
 	policyResourceName := "data.aws_organizations_policy.test"
@@ -25,7 +25,7 @@ func TestAccPoliciesForTargetDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPoliciesForTargetDataSourceConfig_AttachQuery(rName),
+				Config: testAccOrganizationsPoliciesForTargetDataSourceConfig_AttachQuery(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue("data.aws_organizations_policies_for_target.test", "policies.#", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "policies.0.arn", policyResourceName, "arn"),
@@ -39,7 +39,7 @@ func TestAccPoliciesForTargetDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccPoliciesForTargetDataSourceConfig_AttachQuery(rName string) string {
+func testAccOrganizationsPoliciesForTargetDataSourceConfig_AttachQuery(rName string) string {
 	return fmt.Sprintf(`
 data "aws_organizations_organization" "test" {
 }
