@@ -12,14 +12,7 @@ Provides an Auto Scaling Group resource.
 
 -> **Note:** You must specify either `launch_configuration`, `launch_template`, or `mixed_instances_policy`.
 
-~> **NOTE on Auto Scaling Groups and ASG Attachments:** Terraform currently provides
-both a standalone [`aws_autoscaling_attachment`](autoscaling_attachment.html) resource
-(describing an ASG attached to an ELB or ALB), and an [`aws_autoscaling_group`](autoscaling_group.html)
-with `load_balancers` and `target_group_arns` defined in-line. These two methods are not
-mutually-exclusive. If `aws_autoscaling_attachment` resources are used, either alone or with inline
-`load_balancers` or `target_group_arns`, the `aws_autoscaling_group` resource must be configured
-to ignore changes to the `load_balancers` and `target_group_arns` arguments within a
-[`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html).
+~> **NOTE on Auto Scaling Groups, Attachments and Traffic Source Attachments:** Terraform provides standalone [Attachment](autoscaling_attachment.html) (for attaching Classic Load Balancers and Application Load Balancer, Gateway Load Balancer, or Network Load Balancer target groups) and [Traffic Source Attachment](autoscaling_traffic_source_attachment.html) (for attaching Load Balancers and VPC Lattice target groups) resources and an Auto Scaling Group resource with `load_balancers`, `target_group_arns` and `traffic_source` attributes. Do not use the same traffic source in more than one of these resources. Doing so will cause a conflict of attachments. A [`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) can be used to suppress differences if necessary.
 
 > **Hands-on:** Try the [Manage AWS Auto Scaling Groups](https://learn.hashicorp.com/tutorials/terraform/aws-asg?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) tutorial on HashiCorp Learn.
 

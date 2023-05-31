@@ -8,18 +8,20 @@ description: |-
 
 # Resource: aws_autoscaling_traffic_source_attachment
 
-Attaches traffic sources to the specified Auto Scaling group.
+Attaches a traffic source to an Auto Scaling group.
+
+~> **NOTE on Auto Scaling Groups, Attachments and Traffic Source Attachments:** Terraform provides standalone [Attachment](autoscaling_attachment.html) (for attaching Classic Load Balancers and Application Load Balancer, Gateway Load Balancer, or Network Load Balancer target groups) and Traffic Source Attachment (for attaching Load Balancers and VPC Lattice target groups) resources and an [Auto Scaling Group](autoscaling_group.html) resource with `load_balancers`, `target_group_arns` and `traffic_source` attributes. Do not use the same traffic source in more than one of these resources. Doing so will cause a conflict of attachments. A [`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) can be used to suppress differences if necessary.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_autoscaling_traffic_source_attachment" "test" {
-  autoscaling_group_name = aws_autoscaling_group.test.id
+resource "aws_autoscaling_traffic_source_attachment" "example" {
+  autoscaling_group_name = aws_autoscaling_group.example.id
 
   traffic_source {
-    identifier = aws_lb_target_group.test[0].arn
+    identifier = aws_lb_target_group.example.arn
     type       = "elbv2"
   }
 }
