@@ -304,8 +304,8 @@ func testAccTrafficSourceAttachmentConfig_vpcLatticeBase(rName string, targetGro
 resource "aws_vpclattice_target_group" "test" {
   count = %[2]d
 
-  name  = "%[1]s-${count.index}"
-  type  = "INSTANCE"
+  name = "%[1]s-${count.index}"
+  type = "INSTANCE"
 
   config {
     port           = 80
@@ -383,7 +383,7 @@ resource "aws_autoscaling_traffic_source_attachment" "test" {
 func testAccTrafficSourceAttachmentConfig_multipleTargetGroups(rName string, n int) string {
 	return acctest.ConfigCompose(testAccTrafficSourceAttachmentConfig_targetGroupBase(rName, n), fmt.Sprintf(`
 resource "aws_autoscaling_traffic_source_attachment" "test" {
-  count                  = %[1]d
+  count = %[1]d
 
   autoscaling_group_name = aws_autoscaling_group.test.id
 
@@ -411,7 +411,7 @@ resource "aws_autoscaling_traffic_source_attachment" "test" {
 func testAccTrafficSourceAttachmentConfig_multipleVPCLatticeTargetGroups(rName string, n int) string {
 	return acctest.ConfigCompose(testAccTrafficSourceAttachmentConfig_vpcLatticeBase(rName, n), fmt.Sprintf(`
 resource "aws_autoscaling_traffic_source_attachment" "test" {
-  count                  = %[1]d
+  count = %[1]d
 
   autoscaling_group_name = aws_autoscaling_group.test.id
 

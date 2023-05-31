@@ -4393,8 +4393,8 @@ func testAccGroupConfig_trafficSourceVPCLatticeTargetGroups(rName string, target
 resource "aws_vpclattice_target_group" "test" {
   count = %[2]d
 
-  name  = "%[1]s-${count.index}"
-  type  = "INSTANCE"
+  name = "%[1]s-${count.index}"
+  type = "INSTANCE"
 
   config {
     port           = 80
