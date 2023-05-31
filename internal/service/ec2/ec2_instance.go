@@ -386,9 +386,10 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"instance_market_options": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"market_type": {
@@ -398,23 +399,32 @@ func ResourceInstance() *schema.Resource {
 							ValidateFunc: validation.StringInSlice(ec2.MarketType_Values(), false),
 						},
 						"spot_options": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"instance_interruption_behavior": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										Default:      "terminate",
 										ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
 									},
 									"max_price": {
 										Type:     schema.TypeString,
 										Optional: true,
+										DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+											if (oldValue != "" && newValue == "") || (strings.TrimRight(oldValue, "0") == strings.TrimRight(newValue, "0")) {
+												return true
+											}
+											return false
+										},
 									},
 									"spot_instance_type": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										Default:      "one-time",
 										ValidateFunc: validation.StringInSlice(ec2.SpotInstanceType_Values(), false),
 									},
 									"valid_until": {
@@ -1374,6 +1384,40 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	} else {
 		d.Set("capacity_reservation_specification", nil)
+	}
+
+	if instance.SpotInstanceRequestId != nil && instance.InstanceLifecycle != nil {
+		d.Set("spot_instance_request_id", instance.SpotInstanceRequestId)
+		d.Set("instance_lifecycle", instance.InstanceLifecycle)
+		attr, err := conn.DescribeSpotInstanceRequestsWithContext(ctx, &ec2.DescribeSpotInstanceRequestsInput{
+			SpotInstanceRequestIds: []*string{instance.SpotInstanceRequestId},
+		})
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
+		}
+		if attr.SpotInstanceRequests != nil {
+			for _, req := range attr.SpotInstanceRequests {
+				if aws.StringValue(req.SpotInstanceRequestId) == aws.StringValue(instance.SpotInstanceRequestId) {
+					instanceMarketOptions := map[string]any{}
+					instanceMarketOptions["market_type"] = "spot"
+					spotOptions := map[string]any{}
+					if v := aws.StringValue(req.InstanceInterruptionBehavior); v != "" {
+						spotOptions["instance_interruption_behavior"] = v
+					}
+					if v := aws.StringValue(req.SpotPrice); v != "" {
+						spotOptions["max_price"] = v
+					}
+					if v := aws.StringValue(req.Type); v != "" {
+						spotOptions["spot_instance_type"] = v
+					}
+					if v := req.ValidUntil; v != nil {
+						spotOptions["valid_until"] = v.String()
+					}
+					instanceMarketOptions["spot_options"] = []interface{}{spotOptions}
+					d.Set("instance_market_options", []interface{}{instanceMarketOptions})
+				}
+			}
+		}
 	}
 
 	return diags
@@ -2893,8 +2937,8 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		opts.PrivateDNSNameOptions = expandPrivateDNSNameOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("instance_market_options"); ok {
-		opts.InstanceMarketOptions = expandInstanceMarketOptionsRequest(v.(*schema.Set))
+	if v, ok := d.GetOk("instance_market_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		opts.InstanceMarketOptions = expandInstanceMarketOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	return opts, nil
@@ -3598,37 +3642,35 @@ func ParseInstanceType(s string) (*InstanceType, error) {
 	}, nil
 }
 
-func expandInstanceMarketOptionsRequest(tfMap *schema.Set) *ec2.InstanceMarketOptionsRequest {
+func expandInstanceMarketOptionsRequest(tfMap map[string]interface{}) *ec2.InstanceMarketOptionsRequest {
 	apiObject := &ec2.InstanceMarketOptionsRequest{}
 
-	for _, v := range tfMap.List() {
-		if v, ok := v.(map[string]interface{})["market_type"].(string); ok {
-			apiObject.MarketType = aws.String(v)
-		}
-		apiObject.SpotOptions = expandSpotMarketOptions(v.(map[string]interface{})["spot_options"].(*schema.Set))
+	if v, ok := tfMap["market_type"]; ok && v.(string) != "" {
+		apiObject.MarketType = aws.String(tfMap["market_type"].(string))
+	}
+	if v, ok := tfMap["spot_options"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.SpotOptions = expandSpotMarketOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandSpotMarketOptions(tfMap *schema.Set) *ec2.SpotMarketOptions {
+func expandSpotMarketOptions(tfMap map[string]interface{}) *ec2.SpotMarketOptions {
 	apiObject := &ec2.SpotMarketOptions{}
 
-	for _, v := range tfMap.List() {
-		if v, ok := v.(map[string]interface{})["instance_interruption_behavior"].(string); ok && v != "" {
-			apiObject.InstanceInterruptionBehavior = aws.String(v)
-		}
-		if v, ok := v.(map[string]interface{})["max_price"].(string); ok && v != "" {
-			apiObject.MaxPrice = aws.String(v)
-		}
-		if v, ok := v.(map[string]interface{})["spot_instance_type"].(string); ok && v != "" {
-			apiObject.SpotInstanceType = aws.String(v)
-		}
-		if v, ok := v.(map[string]interface{})["valid_until"].(string); ok {
-			validUntil, err := time.Parse(time.RFC3339, v)
-			if err == nil {
-				apiObject.ValidUntil = &validUntil
-			}
+	if v, ok := tfMap["instance_interruption_behavior"].(string); ok && v != "" {
+		apiObject.InstanceInterruptionBehavior = aws.String(v)
+	}
+	if v, ok := tfMap["max_price"].(string); ok && v != "" {
+		apiObject.MaxPrice = aws.String(v)
+	}
+	if v, ok := tfMap["spot_instance_type"].(string); ok && v != "" {
+		apiObject.SpotInstanceType = aws.String(v)
+	}
+	if v, ok := tfMap["valid_until"].(string); ok && v != "" {
+		validUntil, err := time.Parse(time.RFC3339, v)
+		if err == nil {
+			apiObject.ValidUntil = &validUntil
 		}
 	}
 
