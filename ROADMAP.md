@@ -10,10 +10,10 @@ This roadmap does not describe all the work that will be included within this ti
 
 In the period spanning January to April 2023 the AWS Provider added support for the following (among many others):
 
--AWS VPC Lattice
--AWS Quicksight
--AWS Directory Service “Trust”
--AWS Observability Access Manager
+- AWS VPC Lattice
+- AWS Quicksight
+- AWS Directory Service “Trust”
+- AWS Observability Access Manager
 
 From May - July 2023, we will be prioritizing the following areas of work:
 
@@ -29,11 +29,11 @@ Support for Amazon OpenSearch Serverless may include:
 
 New Resource(s):
 
--`aws_opensearchserverless_collection`
--`aws_opensearchserverless_access_policy`
--`aws_opensearchserverless_security_config`
--`aws_opensearchserverless_security_policy`
--`aws_opensearchserverless_vpc_endpoint`
+- `aws_opensearchserverless_collection`
+- `aws_opensearchserverless_access_policy`
+- `aws_opensearchserverless_security_config`
+- `aws_opensearchserverless_security_policy`
+- `aws_opensearchserverless_vpc_endpoint`
 
 ### AWS Clean Rooms
 
@@ -45,11 +45,11 @@ Support for AWS Clean Rooms may include:
 
 New Resource(s):
 
--`aws_cleanrooms_collaboration`
--`aws_cleanrooms_configured_table`
--`aws_cleanrooms_configured_table_analysis_rule`
--`aws_cleanrooms_configured_table_association`
--`aws_cleanrooms_membership`
+- `aws_cleanrooms_collaboration`
+- `aws_cleanrooms_configured_table`
+- `aws_cleanrooms_configured_table_analysis_rule`
+- `aws_cleanrooms_configured_table_association`
+- `aws_cleanrooms_membership`
 
 
 ## Enhancements to Existing Services
@@ -72,9 +72,9 @@ Thanks to new features available in the [Terraform plugin SDK](https://developer
 
 The updates in version 5.0 solve for:
 
--Inconsistent final plans that cause failures when tags are computed.
--Identical tags in both default tags and resource tags.
--Perpetual diffs within tag configurations.
+- Inconsistent final plans that cause failures when tags are computed.
+- Identical tags in both default tags and resource tags.
+- Perpetual diffs within tag configurations.
 
 ### Remove EC2 Classic Functionality:
 In 2021 AWS [announced](https://aws.amazon.com/blogs/aws/ec2-classic-is-retiring-heres-how-to-prepare/) the retirement of EC2 Classic Networking functionality. This was scheduled to occur on August 15th, 2022. Support for the functionality was extended until late September when any AWS customers who had qualified for extension finished their migration. At that time those features were marked as deprecated and it is now time to remove them as the functionality is no longer available through AWS. While this is a standard deprecation, this is a major feature removal.
