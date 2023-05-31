@@ -1255,11 +1255,7 @@ func testAccCheckBucketReplicationConfigurationExists(ctx context.Context, n str
 
 		_, err := tfs3.FindBucketReplicationConfigurationByID(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
