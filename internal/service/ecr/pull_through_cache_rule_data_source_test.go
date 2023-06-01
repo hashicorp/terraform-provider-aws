@@ -11,7 +11,7 @@ import (
 
 func TestAccECRPullThroughCacheRuleDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	ecr_repository_prefix := "ecr-public"
+	prefix := "ecr-public"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -19,17 +19,17 @@ func TestAccECRPullThroughCacheRuleDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPullThroughCacheRuleDataSourceConfig_basic(ecr_repository_prefix),
+				Config: testAccPullThroughCacheRuleDataSourceConfig_basic(prefix),
 				Check:  resource.ComposeTestCheckFunc(),
 			},
 		},
 	})
 }
 
-func testAccPullThroughCacheRuleDataSourceConfig_basic(ecr_repository_prefix string) string {
+func testAccPullThroughCacheRuleDataSourceConfig_basic(prefix string) string {
 	return fmt.Sprintf(`
-data "aws_ecr_pull_through_cache_rule" "by_tag" {
+data "aws_ecr_pull_through_cache_rule" "default" {
   ecr_repository_prefix = %q
 }
-`, ecr_repository_prefix)
+`, prefix)
 }
