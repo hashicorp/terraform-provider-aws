@@ -152,7 +152,7 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexp.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexp.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
-					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
 				),
@@ -3396,6 +3396,11 @@ func testAccDomainConfig_offPeakWindowOptions(rName string, h, m int) string {
 resource "aws_opensearch_domain" "test" {
   domain_name    = %[1]q
   engine_version = "Elasticsearch_6.7"
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
 
   off_peak_window_options {
     off_peak_window {
