@@ -911,6 +911,14 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting domain_endpoint_options: %s", err)
 	}
 
+	if ds.OffPeakWindowOptions != nil {
+		if err := d.Set("off_peak_window_options", []interface{}{flattenOffPeakWindowOptions(ds.OffPeakWindowOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting off_peak_window_options: %s", err)
+		}
+	} else {
+		d.Set("off_peak_window_options", nil)
+	}
+
 	d.Set("arn", ds.ARN)
 
 	return diags
