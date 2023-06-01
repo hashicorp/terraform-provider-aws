@@ -131,3 +131,18 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	return diags
 }
+
+func flattenRoleLastUsed(apiObject *iam.RoleLastUsed) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"region": aws.StringValue(apiObject.Region),
+	}
+
+	if apiObject.LastUsedDate != nil {
+		tfMap["last_used_date"] = apiObject.LastUsedDate.Format(time.RFC3339)
+	}
+	return []interface{}{tfMap}
+}
