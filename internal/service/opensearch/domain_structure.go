@@ -67,16 +67,54 @@ func expandAutoTuneOptions(tfMap map[string]interface{}) *opensearchservice.Auto
 	return options
 }
 
-func expandOffPeakWindowOptions(enabled bool, hours int64, minutes int64) *opensearchservice.OffPeakWindowOptions {
-	options := &opensearchservice.OffPeakWindowOptions{}
-	options.Enabled = &enabled
-	options.OffPeakWindow = &opensearchservice.OffPeakWindow{
-		WindowStartTime: &opensearchservice.WindowStartTime{
-			Hours:   aws.Int64(hours),
-			Minutes: aws.Int64(minutes),
-		},
+func expandOffPeakWindowOptions(tfMap map[string]interface{}) *opensearchservice.OffPeakWindowOptions {
+	if tfMap == nil {
+		return nil
 	}
-	return options
+
+	apiObject := &opensearchservice.OffPeakWindowOptions{}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["off_peak_window"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.OffPeakWindow = expandOffPeakWindow(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandOffPeakWindow(tfMap map[string]interface{}) *opensearchservice.OffPeakWindow {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &opensearchservice.OffPeakWindow{}
+
+	if v, ok := tfMap["window_start_time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.WindowStartTime = expandWindowStartTime(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandWindowStartTime(tfMap map[string]interface{}) *opensearchservice.WindowStartTime {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &opensearchservice.WindowStartTime{}
+
+	if v, ok := tfMap["hours"].(int); ok && v != 0 {
+		apiObject.Hours = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["minutes"].(int); ok && v != 0 {
+		apiObject.Minutes = aws.Int64(int64(v))
+	}
+
+	return apiObject
 }
 
 func expandAutoTuneOptionsInput(tfMap map[string]interface{}) *opensearchservice.AutoTuneOptionsInput_ {
