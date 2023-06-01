@@ -1,7 +1,6 @@
 package ecr_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ecr"
@@ -11,25 +10,28 @@ import (
 
 func TestAccECRPullThroughCacheRuleDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	prefix := "ecr-public"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPullThroughCacheRuleDataSourceConfig_basic(prefix),
+				Config: testAccPullThroughCacheRuleDataSourceConfig_basic(),
 				Check:  resource.ComposeTestCheckFunc(),
 			},
 		},
 	})
 }
 
-func testAccPullThroughCacheRuleDataSourceConfig_basic(prefix string) string {
-	return fmt.Sprintf(`
-data "aws_ecr_pull_through_cache_rule" "default" {
-  ecr_repository_prefix = %q
+func testAccPullThroughCacheRuleDataSourceConfig_basic() string {
+	return `
+resource "aws_ecr_pull_through_cache_rule" "ecr_public" {
+  ecr_repository_prefix = "ecr-public"
+  upstream_registry_url = "public.ecr.aws"
 }
-`, prefix)
+
+data "aws_ecr_pull_through_cache_rule" "default" {
+  ecr_repository_prefix = aws_ecr_pull_through_cache_rule.ecr_public.ecr_repository_prefix
+}
+`
 }
