@@ -1235,7 +1235,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("db_cluster_instance_class") {
-			input.EngineVersion = aws.String(d.Get("db_cluster_instance_class").(string))
+			input.DBClusterInstanceClass = aws.String(d.Get("db_cluster_instance_class").(string))
 		}
 
 		if d.HasChange("db_cluster_parameter_group_name") {
