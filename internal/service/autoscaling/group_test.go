@@ -1222,22 +1222,6 @@ func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupConfig_instanceRefreshAutoRollback(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.auto_rollback", "true"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_delay", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "0"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.skip_matching", "false"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
-					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "0"),
-				),
-			},
-			{
 				Config: testAccGroupConfig_instanceRefreshFull(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
@@ -1347,6 +1331,54 @@ func TestAccAutoScalingGroup_InstanceRefresh_triggers(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "instance_refresh.0.triggers.*", "tag"),
 					testAccCheckInstanceRefreshCount(ctx, &group, 1),
 					testAccCheckInstanceRefreshStatus(ctx, &group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_InstanceRefresh_autoRollback(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_instanceRefreshAutoRollback(rName, "t2.micro"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.auto_rollback", "true"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_delay", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.skip_matching", "false"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "0"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_instanceRefreshAutoRollback(rName, "t3.micro"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.auto_rollback", "true"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_delay", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.checkpoint_percentages.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.instance_warmup", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.min_healthy_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.skip_matching", "false"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "0"),
 				),
 			},
 		},
@@ -4827,15 +4859,19 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupConfig_instanceRefreshAutoRollback(rName string) string {
-	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t3.nano"), fmt.Sprintf(`
+func testAccGroupConfig_instanceRefreshAutoRollback(rName, instanceType string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchTemplateBase(rName, instanceType), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   name                 = %[1]q
   max_size             = 2
   min_size             = 1
   desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.test.name
+
+  launch_template {
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.default_version
+  }
 
   instance_refresh {
     strategy = "Rolling"
