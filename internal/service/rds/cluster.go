@@ -1674,6 +1674,7 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, timeout
 			ClusterStatusModifying,
 			ClusterStatusRenaming,
 			ClusterStatusResettingMasterCredentials,
+			ClusterStatusScalingCompute,
 			ClusterStatusUpgrading,
 		},
 		Target:     []string{ClusterStatusAvailable},
