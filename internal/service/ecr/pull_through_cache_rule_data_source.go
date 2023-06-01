@@ -2,7 +2,6 @@ package ecr
 
 import (
 	"context"
-	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKDataSource("aws_ecr_pull_through_cache_rule")
@@ -48,14 +46,8 @@ func dataSourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceD
 
 	rule, err := FindPullThroughCacheRuleByRepositoryPrefix(ctx, conn, repositoryPrefix)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] ECR Pull Through Cache Rule (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
 	if err != nil {
-		return diag.Errorf("error reading ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
+		return diag.Errorf("error reading ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
 	}
 
 	d.SetId(aws.StringValue(rule.EcrRepositoryPrefix))
