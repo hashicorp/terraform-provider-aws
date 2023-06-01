@@ -11,7 +11,6 @@ import (
 func TestAccECRPullThroughCacheRuleDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSource := "data.aws_ecr_pull_through_cache_rule.test"
-	accountId := acctest.AccountID()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -22,7 +21,7 @@ func TestAccECRPullThroughCacheRuleDataSource_basic(t *testing.T) {
 				Config: testAccPullThroughCacheRuleDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSource, "upstream_registry_url", "public.ecr.aws"),
-					resource.TestCheckResourceAttr(dataSource, "registry_id", accountId),
+					acctest.CheckResourceAttrAccountID(dataSource, "registry_id"),
 				),
 			},
 		},
