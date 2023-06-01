@@ -186,15 +186,6 @@ func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	// tags_all does not detect changes when tag value is "" while this change is detected by tags
-	if d.HasChanges("tags_all", "tags") {
-		log.Printf("[DEBUG] Updating SSMIncidents ReplicationSet tags")
-
-		if err := updateResourceTags(ctx, client, d); err != nil {
-			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
-		}
-	}
-
 	return resourceReplicationSetRead(ctx, d, meta)
 }
 

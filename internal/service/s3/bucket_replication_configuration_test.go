@@ -9,10 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
@@ -1253,19 +1253,9 @@ func testAccCheckBucketReplicationConfigurationExists(ctx context.Context, n str
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-		output, err := conn.GetBucketReplicationWithContext(ctx, &s3.GetBucketReplicationInput{
-			Bucket: aws.String(rs.Primary.ID),
-		})
+		_, err := tfs3.FindBucketReplicationConfigurationByID(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		if output == nil || output.ReplicationConfiguration == nil {
-			return fmt.Errorf("S3 Bucket Replication Configuration for bucket (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 

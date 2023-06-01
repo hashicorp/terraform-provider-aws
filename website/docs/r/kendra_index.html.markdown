@@ -55,9 +55,24 @@ resource "aws_kendra_index" "example" {
 }
 ```
 
+### With user group resolution configuration
+
+```terraform
+resource "aws_kendra_index" "example" {
+  name     = "example"
+  role_arn = aws_iam_role.this.arn
+
+  user_group_resolution_configuration {
+    user_group_resolution_mode = "AWS_SSO"
+  }
+}
+```
+
 ### With Document Metadata Configuration Updates
 
 #### Specifying the predefined elements
+
+Refer to [Amazon Kendra documentation on built-in document fields](https://docs.aws.amazon.com/kendra/latest/dg/hiw-index.html#index-reserved-fields) for more information.
 
 ```terraform
 resource "aws_kendra_index" "example" {
@@ -225,6 +240,21 @@ resource "aws_kendra_index" "example" {
       facetable   = false
       searchable  = false
       sortable    = false
+    }
+    relevance {
+      importance            = 1
+      values_importance_map = {}
+    }
+  }
+
+  document_metadata_configuration_updates {
+    name = "_tenant_id"
+    type = "STRING_VALUE"
+    search {
+      displayable = false
+      facetable   = false
+      searchable  = false
+      sortable    = true
     }
     relevance {
       importance            = 1
@@ -442,6 +472,21 @@ resource "aws_kendra_index" "example" {
   }
 
   document_metadata_configuration_updates {
+    name = "_tenant_id"
+    type = "STRING_VALUE"
+    search {
+      displayable = false
+      facetable   = false
+      searchable  = false
+      sortable    = true
+    }
+    relevance {
+      importance            = 1
+      values_importance_map = {}
+    }
+  }
+
+  document_metadata_configuration_updates {
     name = "_version"
     type = "STRING_VALUE"
     search {
@@ -561,7 +606,7 @@ The following arguments are supported:
 * `name` - (Required) Specifies the name of the Index.
 * `role_arn` - (Required) An AWS Identity and Access Management (IAM) role that gives Amazon Kendra permissions to access your Amazon CloudWatch logs and metrics. This is also the role you use when you call the `BatchPutDocument` API to index documents from an Amazon S3 bucket.
 * `server_side_encryption_configuration` - (Optional) A block that specifies the identifier of the AWS KMS customer managed key (CMK) that's used to encrypt data indexed by Amazon Kendra. Amazon Kendra doesn't support asymmetric CMKs. [Detailed below](#server_side_encryption_configuration).
-* `user_context_policy` - (Optional) The user context policy. Valid values are `ATTRIBUTE_FILTER` or `USER_TOKEN`. For more information, refer to [UserContextPolicy](https://docs.aws.amazon.com/kendra/latest/dg/API_CreateIndex.html#Kendra-CreateIndex-request-UserContextPolicy). Defaults to `ATTRIBUTE_FILTER`.
+* `user_context_policy` - (Optional) The user context policy. Valid values are `ATTRIBUTE_FILTER` or `USER_TOKEN`. For more information, refer to [UserContextPolicy](https://docs.aws.amazon.com/kendra/latest/APIReference/API_CreateIndex.html#kendra-CreateIndex-request-UserContextPolicy). Defaults to `ATTRIBUTE_FILTER`.
 * `user_group_resolution_configuration` - (Optional) A block that enables fetching access levels of groups and users from an AWS Single Sign-On identity source. To configure this, see [UserGroupResolutionConfiguration](https://docs.aws.amazon.com/kendra/latest/dg/API_UserGroupResolutionConfiguration.html). [Detailed below](#user_group_resolution_configuration).
 * `user_token_configurations` - (Optional) A block that specifies the user token configuration. [Detailed below](#user_token_configurations).
 * `tags` - (Optional) Tags to apply to the Index. If configured with a provider

@@ -124,6 +124,10 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"amd_sev_snp": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"core_count": {
 							Type:     schema.TypeInt,
 							Computed: true,

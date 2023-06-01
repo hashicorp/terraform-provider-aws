@@ -802,12 +802,13 @@ func validExperimentTemplateStopConditionSource() schema.SchemaValidateFunc {
 
 func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
 	allowedStopConditionSources := []string{
+		"Cluster",
 		"Clusters",
 		"DBInstances",
 		"Instances",
-		"SpotInstances",
 		"Nodegroups",
 		"Roles",
+		"SpotInstances",
 		"Subnets",
 	}
 

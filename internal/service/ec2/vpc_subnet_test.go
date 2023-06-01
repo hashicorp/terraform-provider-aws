@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -370,28 +370,6 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_overlappingTag(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue2"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccVPCSubnet_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
-		Steps: []resource.TestStep{
-			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
-					testAccVPCSubnetConfig_tags1(rName, "overlapkey", "overlapvalue"),
-				),
-				PlanOnly:    true,
-				ExpectError: regexp.MustCompile(`"tags" are identical to those in the "default_tags" configuration block`),
 			},
 		},
 	})

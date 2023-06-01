@@ -51,7 +51,7 @@ data "aws_iam_policy_document" "foo" {
 resource "aws_iam_role_policy" "foo" {
   name   = "tf-test-transfer-user-iam-policy"
   role   = aws_iam_role.foo.id
-  policy = data.aws_iam_role_policy.foo.json
+  policy = data.aws_iam_policy_document.foo.json
 }
 
 resource "aws_transfer_user" "foo" {

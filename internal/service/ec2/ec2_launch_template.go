@@ -157,6 +157,11 @@ func ResourceLaunchTemplate() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"amd_sev_snp": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(ec2.AmdSevSnpSpecification_Values(), false),
+						},
 						"core_count": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -667,7 +672,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 						"http_protocol_ipv6": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      ec2.LaunchTemplateInstanceMetadataProtocolIpv6Disabled,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateInstanceMetadataProtocolIpv6_Values(), false),
 						},
 						"http_put_response_hop_limit": {
@@ -685,7 +690,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 						"instance_metadata_tags": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      ec2.LaunchTemplateInstanceMetadataTagsStateDisabled,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateInstanceMetadataTagsState_Values(), false),
 						},
 					},
@@ -1424,6 +1429,10 @@ func expandLaunchTemplateCPUOptionsRequest(tfMap map[string]interface{}) *ec2.La
 	}
 
 	apiObject := &ec2.LaunchTemplateCpuOptionsRequest{}
+
+	if v, ok := tfMap["amd_sev_snp"].(string); ok && v != "" {
+		apiObject.AmdSevSnp = aws.String(v)
+	}
 
 	if v, ok := tfMap["core_count"].(int); ok && v != 0 {
 		apiObject.CoreCount = aws.Int64(int64(v))
@@ -2441,6 +2450,10 @@ func flattenLaunchTemplateCPUOptions(apiObject *ec2.LaunchTemplateCpuOptions) ma
 	}
 
 	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AmdSevSnp; v != nil {
+		tfMap["amd_sev_snp"] = aws.StringValue(v)
+	}
 
 	if v := apiObject.CoreCount; v != nil {
 		tfMap["core_count"] = aws.Int64Value(v)

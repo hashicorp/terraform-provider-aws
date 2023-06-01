@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
@@ -178,7 +178,7 @@ func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 			if err == nil {
 				if len(resp.DBSubnetGroups) != 0 &&
 					aws.StringValue(resp.DBSubnetGroups[0].DBSubnetGroupName) == rs.Primary.ID {
-					return fmt.Errorf("DocDB Subnet Group %s still exists", rs.Primary.ID)
+					return fmt.Errorf("DocumentDB Subnet Group %s still exists", rs.Primary.ID)
 				}
 			}
 

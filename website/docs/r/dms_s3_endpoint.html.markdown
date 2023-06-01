@@ -106,7 +106,7 @@ The following arguments are optional:
 * `add_column_name` - (Optional) Whether to add column name information to the .csv output file. Default is `false`.
 * `add_trailing_padding_character` - (Optional) Whether to add padding. Default is `false`. (Ignored for source endpoints.)
 * `bucket_folder` - (Optional) S3 object prefix.
-* `canned_acl_for_objects` - (Optional) Predefined (canned) access control list for objects created in an S3 bucket. Valid values include `NONE`, `PRIVATE`, `PUBLIC_READ`, `PUBLIC_READ_WRITE`, `AUTHENTICATED_READ`, `AWS_EXEC_READ`, `BUCKET_OWNER_READ`, and `BUCKET_OWNER_FULL_CONTROL`. (AWS default is `NONE`.)
+* `canned_acl_for_objects` - (Optional) Predefined (canned) access control list for objects created in an S3 bucket. Valid values include `none`, `private`, `public-read`, `public-read-write`, `authenticated-read`, `aws-exec-read`, `bucket-owner-read`, and `bucket-owner-full-control`. Default is `none`.
 * `cdc_inserts_and_updates` - (Optional) Whether to write insert and update operations to .csv or .parquet output files. Default is `false`.
 * `cdc_inserts_only` - (Optional) Whether to write insert operations to .csv or .parquet output files. Default is `false`.
 * `cdc_max_batch_interval` - (Optional) Maximum length of the interval, defined in seconds, after which to output a file to Amazon S3. (AWS default is `60`.)

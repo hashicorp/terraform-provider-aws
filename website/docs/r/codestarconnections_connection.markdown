@@ -10,7 +10,7 @@ description: |-
 
 Provides a CodeStar Connection.
 
-~> **NOTE:** The `aws_codestarconnections_connection` resource is created in the state `PENDING`. Authentication with the connection provider must be completed in the AWS Console.
+~> **NOTE:** The `aws_codestarconnections_connection` resource is created in the state `PENDING`. Authentication with the connection provider must be completed in the AWS Console. See the [AWS documentation](https://docs.aws.amazon.com/dtconsole/latest/userguide/connections-update.html) for details.
 
 ## Example Usage
 

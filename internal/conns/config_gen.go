@@ -3,12 +3,16 @@ package conns
 
 import (
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
+	"github.com/aws/aws-sdk-go-v2/service/account"
+	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
@@ -35,11 +39,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	"github.com/aws/aws-sdk-go-v2/service/xray"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/accessanalyzer"
-	"github.com/aws/aws-sdk-go/service/account"
-	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/alexaforbusiness"
 	"github.com/aws/aws-sdk-go/service/amplify"
@@ -318,20 +320,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/workmailmessageflow"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/workspacesweb"
-	"github.com/aws/aws-sdk-go/service/xray"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // sdkv1Conns initializes AWS SDK for Go v1 clients.
 func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
-	client.acmConn = acm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ACM])}))
 	client.acmpcaConn = acmpca.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ACMPCA])}))
 	client.ampConn = prometheusservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.AMP])}))
 	client.apigatewayConn = apigateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.APIGateway])}))
 	client.apigatewaymanagementapiConn = apigatewaymanagementapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.APIGatewayManagementAPI])}))
 	client.apigatewayv2Conn = apigatewayv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.APIGatewayV2])}))
-	client.accessanalyzerConn = accessanalyzer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.AccessAnalyzer])}))
-	client.accountConn = account.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Account])}))
 	client.alexaforbusinessConn = alexaforbusiness.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.AlexaForBusiness])}))
 	client.amplifyConn = amplify.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Amplify])}))
 	client.amplifybackendConn = amplifybackend.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.AmplifyBackend])}))
@@ -605,11 +603,25 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.workmailmessageflowConn = workmailmessageflow.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.WorkMailMessageFlow])}))
 	client.workspacesConn = workspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.WorkSpaces])}))
 	client.workspaceswebConn = workspacesweb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.WorkSpacesWeb])}))
-	client.xrayConn = xray.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.XRay])}))
 }
 
 // sdkv2Conns initializes AWS SDK for Go v2 clients.
 func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
+	client.acmClient = acm.NewFromConfig(cfg, func(o *acm.Options) {
+		if endpoint := c.Endpoints[names.ACM]; endpoint != "" {
+			o.EndpointResolver = acm.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.accessanalyzerClient = accessanalyzer.NewFromConfig(cfg, func(o *accessanalyzer.Options) {
+		if endpoint := c.Endpoints[names.AccessAnalyzer]; endpoint != "" {
+			o.EndpointResolver = accessanalyzer.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.accountClient = account.NewFromConfig(cfg, func(o *account.Options) {
+		if endpoint := c.Endpoints[names.Account]; endpoint != "" {
+			o.EndpointResolver = account.EndpointResolverFromURL(endpoint)
+		}
+	})
 	client.auditmanagerClient = auditmanager.NewFromConfig(cfg, func(o *auditmanager.Options) {
 		if endpoint := c.Endpoints[names.AuditManager]; endpoint != "" {
 			o.EndpointResolver = auditmanager.EndpointResolverFromURL(endpoint)
@@ -740,10 +752,22 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 			o.EndpointResolver = vpclattice.EndpointResolverFromURL(endpoint)
 		}
 	})
+	client.xrayClient = xray.NewFromConfig(cfg, func(o *xray.Options) {
+		if endpoint := c.Endpoints[names.XRay]; endpoint != "" {
+			o.EndpointResolver = xray.EndpointResolverFromURL(endpoint)
+		}
+	})
 }
 
 // sdkv2LazyConns initializes AWS SDK for Go v2 lazy-load clients.
 func (c *Config) sdkv2LazyConns(client *AWSClient, cfg aws_sdkv2.Config) {
+	client.dsClient.init(&cfg, func() *directoryservice_sdkv2.Client {
+		return directoryservice_sdkv2.NewFromConfig(cfg, func(o *directoryservice_sdkv2.Options) {
+			if endpoint := c.Endpoints[names.DS]; endpoint != "" {
+				o.EndpointResolver = directoryservice_sdkv2.EndpointResolverFromURL(endpoint)
+			}
+		})
+	})
 	client.ec2Client.init(&cfg, func() *ec2_sdkv2.Client {
 		return ec2_sdkv2.NewFromConfig(cfg, func(o *ec2_sdkv2.Options) {
 			if endpoint := c.Endpoints[names.EC2]; endpoint != "" {
