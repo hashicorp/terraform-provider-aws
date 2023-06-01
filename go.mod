@@ -20,7 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.10
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.98.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.10
-	github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.11
+	github.com/aws/aws-sdk-go-v2/service/healthlake v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.11
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.5
