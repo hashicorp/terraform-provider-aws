@@ -502,7 +502,7 @@ func ResourceDomain() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  true,
+							Computed: true,
 						},
 						"off_peak_window": {
 							Type:     schema.TypeList,
@@ -722,6 +722,11 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("off_peak_window_options"); ok && len(v.([]interface{})) > 0 {
 		input.OffPeakWindowOptions = expandOffPeakWindowOptions(v.([]interface{})[0].(map[string]interface{}))
+
+		// This option is only available when modifying a domain created prior to February 16, 2023, not when creating a new domain.
+		if input.OffPeakWindowOptions != nil {
+			input.OffPeakWindowOptions.Enabled = nil
+		}
 	}
 
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
@@ -837,6 +842,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(aws.StringValue(ds.ARN))
+	d.Set("arn", ds.ARN)
 	d.Set("domain_id", ds.DomainId)
 	d.Set("domain_name", ds.DomainName)
 	d.Set("engine_version", ds.EngineVersion)
@@ -922,8 +928,6 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	} else {
 		d.Set("off_peak_window_options", nil)
 	}
-
-	d.Set("arn", ds.ARN)
 
 	return diags
 }
