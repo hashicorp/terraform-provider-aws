@@ -4862,11 +4862,11 @@ resource "aws_autoscaling_group" "test" {
 func testAccGroupConfig_instanceRefreshAutoRollback(rName, instanceType string) string {
 	return acctest.ConfigCompose(testAccGroupConfig_launchTemplateBase(rName, instanceType), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
-  availability_zones   = [data.aws_availability_zones.available.names[0]]
-  name                 = %[1]q
-  max_size             = 2
-  min_size             = 1
-  desired_capacity     = 1
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  name               = %[1]q
+  max_size           = 2
+  min_size           = 1
+  desired_capacity   = 1
 
   launch_template {
     id      = aws_launch_template.test.id
