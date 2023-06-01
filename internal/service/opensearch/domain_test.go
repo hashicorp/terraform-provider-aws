@@ -3399,7 +3399,7 @@ resource "aws_opensearch_domain" "test" {
 
   off_peak_window_options {
     off_peak_window {
-      duration {
+      window_start_time {
         hours   = %[2]d
         minutes = %[3]d
       }
