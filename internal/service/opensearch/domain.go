@@ -164,46 +164,6 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"off_peak_window_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"off_peak_window": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"window_start_time": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"hours": {
-													Type:     schema.TypeInt,
-													Required: true,
-												},
-												"minutes": {
-													Type:     schema.TypeInt,
-													Required: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			"auto_tune_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -529,6 +489,46 @@ func ResourceDomain() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
+						},
+					},
+				},
+			},
+			"off_peak_window_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"off_peak_window": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"window_start_time": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"hours": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"minutes": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 					},
 				},
