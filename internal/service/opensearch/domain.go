@@ -520,11 +520,13 @@ func ResourceDomain() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"hours": {
 													Type:     schema.TypeInt,
-													Required: true,
+													Optional: true,
+													Computed: true,
 												},
 												"minutes": {
 													Type:     schema.TypeInt,
-													Required: true,
+													Optional: true,
+													Computed: true,
 												},
 											},
 										},
