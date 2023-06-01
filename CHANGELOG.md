@@ -1,4 +1,5 @@
-## 5.1.0 (Unreleased)
+## 5.2.0 (Unreleased)
+## 5.1.0 (June  1, 2023)
 
 BREAKING CHANGES:
 
