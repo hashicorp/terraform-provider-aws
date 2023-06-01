@@ -1461,7 +1461,19 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if shouldRefreshInstances {
-			if err := startInstanceRefresh(ctx, conn, expandStartInstanceRefreshInput(d.Id(), tfMap)); err != nil {
+			var launchTemplate *autoscaling.LaunchTemplateSpecification
+
+			if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				launchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
+			}
+
+			var mixedInstancesPolicy *autoscaling.MixedInstancesPolicy
+
+			if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				mixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}))
+			}
+
+			if err := startInstanceRefresh(ctx, conn, expandStartInstanceRefreshInput(d.Id(), tfMap, launchTemplate, mixedInstancesPolicy)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
@@ -3149,7 +3161,7 @@ func expandInstanceReusePolicy(tfMap map[string]interface{}) *autoscaling.Instan
 	return apiObject
 }
 
-func expandStartInstanceRefreshInput(name string, tfMap map[string]interface{}) *autoscaling.StartInstanceRefreshInput {
+func expandStartInstanceRefreshInput(name string, tfMap map[string]interface{}, launchTemplate *autoscaling.LaunchTemplateSpecification, mixedInstancesPolicy *autoscaling.MixedInstancesPolicy) *autoscaling.StartInstanceRefreshInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -3160,6 +3172,14 @@ func expandStartInstanceRefreshInput(name string, tfMap map[string]interface{}) 
 
 	if v, ok := tfMap["preferences"].([]interface{}); ok && len(v) > 0 {
 		apiObject.Preferences = expandRefreshPreferences(v[0].(map[string]interface{}))
+
+		// "The AutoRollback parameter cannot be set to true when the DesiredConfiguration parameter is empty".
+		if aws.BoolValue(apiObject.Preferences.AutoRollback) {
+			apiObject.DesiredConfiguration = &autoscaling.DesiredConfiguration{
+				LaunchTemplate:       launchTemplate,
+				MixedInstancesPolicy: mixedInstancesPolicy,
+			}
+		}
 	}
 
 	if v, ok := tfMap["strategy"].(string); ok && v != "" {
