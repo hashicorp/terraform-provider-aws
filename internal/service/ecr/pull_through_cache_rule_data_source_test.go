@@ -10,7 +10,7 @@ import (
 
 func TestAccECRPullThroughCacheRuleDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_ecr_pull_through_cache_rule.ecr_public"
+	dataSource := "data.aws_ecr_pull_through_cache_rule.test"
 	accountId := acctest.AccountID()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -21,8 +21,8 @@ func TestAccECRPullThroughCacheRuleDataSource_basic(t *testing.T) {
 			{
 				Config: testAccPullThroughCacheRuleDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", "public.ecr.aws"),
-					resource.TestCheckResourceAttr(resourceName, "registry_id", accountId),
+					resource.TestCheckResourceAttr(dataSource, "upstream_registry_url", "public.ecr.aws"),
+					resource.TestCheckResourceAttr(dataSource, "registry_id", accountId),
 				),
 			},
 		},
@@ -31,13 +31,13 @@ func TestAccECRPullThroughCacheRuleDataSource_basic(t *testing.T) {
 
 func testAccPullThroughCacheRuleDataSourceConfig_basic() string {
 	return `
-resource "aws_ecr_pull_through_cache_rule" "ecr_public" {
+resource "aws_ecr_pull_through_cache_rule" "test" {
   ecr_repository_prefix = "ecr-public"
   upstream_registry_url = "public.ecr.aws"
 }
 
-data "aws_ecr_pull_through_cache_rule" "default" {
-  ecr_repository_prefix = aws_ecr_pull_through_cache_rule.ecr_public.ecr_repository_prefix
+data "aws_ecr_pull_through_cache_rule" "test" {
+  ecr_repository_prefix = aws_ecr_pull_through_cache_rule.test.ecr_repository_prefix
 }
 `
 }
