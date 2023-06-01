@@ -282,13 +282,6 @@ func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	// tags can have a change without tags_all having a change when value of tag is ""
-	if d.HasChanges("tags_all", "tags") {
-		if err := updateResourceTags(ctx, client, d); err != nil {
-			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameResponsePlan, d.Id(), err)
-		}
-	}
-
 	return resourceResponsePlanRead(ctx, d, meta)
 }
 

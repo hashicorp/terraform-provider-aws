@@ -179,7 +179,6 @@ The following arguments are optional:
 * `encryption_mode` - (Optional) Server-side encryption mode that you want to encrypt your .csv or .parquet object files copied to S3. Valid values are `SSE_S3` and `SSE_KMS`. Default is `SSE_S3`.
 * `external_table_definition` - (Optional) JSON document that describes how AWS DMS should interpret the data.
 * `ignore_header_rows` - (Optional) When this value is set to `1`, DMS ignores the first row header in a .csv file. Default is `0`.
-* `ignore_headers_row` - (Optional) Deprecated. This setting has no effect. Will be removed in a future version.
 * `include_op_for_full_load` - (Optional) Whether to enable a full load to write INSERT operations to the .csv output files only to indicate how the rows were added to the source database. Default is `false`.
 * `max_file_size` - (Optional) Maximum size (in KB) of any .csv file to be created while migrating to an S3 target during full load. Valid values are from `1` to `1048576`. Default is `1048576` (1 GB).
 * `parquet_timestamp_in_millisecond` - (Optional) - Specifies the precision of any TIMESTAMP column values written to an S3 object file in .parquet format. Default is `false`.

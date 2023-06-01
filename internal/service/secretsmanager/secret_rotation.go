@@ -8,9 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,16 +23,12 @@ func ResourceSecretRotation() *schema.Resource {
 		ReadWithoutTimeout:   resourceSecretRotationRead,
 		UpdateWithoutTimeout: resourceSecretRotationUpdate,
 		DeleteWithoutTimeout: resourceSecretRotationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"secret_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"rotation_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -76,6 +70,11 @@ func ResourceSecretRotation() *schema.Resource {
 					},
 				},
 			},
+			"secret_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -92,31 +91,16 @@ func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, m
 			SecretId:          aws.String(secretID),
 		}
 
-		log.Printf("[DEBUG] Enabling Secrets Manager Secret rotation: %s", input)
-		var output *secretsmanager.RotateSecretOutput
-		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-			var err error
-			output, err = conn.RotateSecretWithContext(ctx, input)
-			if err != nil {
-				// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-				if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
-					return retry.RetryableError(err)
-				}
-				return retry.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			output, err = conn.RotateSecretWithContext(ctx, input)
-		}
+		// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
+		outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
+			return conn.RotateSecretWithContext(ctx, input)
+		}, "AccessDeniedException")
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "enabling Secrets Manager Secret %q rotation: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "creating Secrets Manager Secret Rotation (%s): %s", secretID, err)
 		}
 
-		d.SetId(aws.StringValue(output.ARN))
+		d.SetId(aws.StringValue(outputRaw.(*secretsmanager.RotateSecretOutput).ARN))
 	}
 
 	return append(diags, resourceSecretRotationRead(ctx, d, meta)...)
@@ -126,33 +110,11 @@ func resourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
-	input := &secretsmanager.DescribeSecretInput{
-		SecretId: aws.String(d.Id()),
-	}
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+		return FindSecretByID(ctx, conn, d.Id())
+	}, d.IsNewResource())
 
-	var output *secretsmanager.DescribeSecretOutput
-
-	err := retry.RetryContext(ctx, PropagationTimeout, func() *retry.RetryError {
-		var err error
-
-		output, err = conn.DescribeSecretWithContext(ctx, input)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.DescribeSecretWithContext(ctx, input)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Secrets Manager Secret Rotation (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -162,13 +124,10 @@ func resourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Rotation (%s): %s", d.Id(), err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Rotation (%s): empty response", d.Id())
-	}
+	output := outputRaw.(*secretsmanager.DescribeSecretOutput)
 
 	d.Set("secret_id", d.Id())
 	d.Set("rotation_enabled", output.RotationEnabled)
-
 	if aws.BoolValue(output.RotationEnabled) {
 		d.Set("rotation_lambda_arn", output.RotationLambdaARN)
 		if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {
@@ -195,35 +154,23 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 				SecretId:          aws.String(secretID),
 			}
 
-			log.Printf("[DEBUG] Enabling Secrets Manager Secret Rotation: %s", input)
-			err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-				_, err := conn.RotateSecretWithContext(ctx, input)
-				if err != nil {
-					// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-					if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
-						return retry.RetryableError(err)
-					}
-					return retry.NonRetryableError(err)
-				}
-				return nil
-			})
-
-			if tfresource.TimedOut(err) {
-				_, err = conn.RotateSecretWithContext(ctx, input)
-			}
+			// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
+				return conn.RotateSecretWithContext(ctx, input)
+			}, "AccessDeniedException")
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret Rotation %q : %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret Rotation (%s): %s", d.Id(), err)
 			}
 		} else {
 			input := &secretsmanager.CancelRotateSecretInput{
 				SecretId: aws.String(d.Id()),
 			}
 
-			log.Printf("[DEBUG] Cancelling Secrets Manager Secret Rotation: %s", input)
 			_, err := conn.CancelRotateSecretWithContext(ctx, input)
+
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "cancelling Secret Manager Secret Rotation %q : %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "cancelling Secrets Manager Secret Rotation (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -234,16 +181,14 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 func resourceSecretRotationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerConn()
-	secretID := d.Get("secret_id").(string)
 
-	input := &secretsmanager.CancelRotateSecretInput{
-		SecretId: aws.String(secretID),
-	}
+	log.Printf("[DEBUG] Deleting Secrets Manager Rotation: %s", d.Id())
+	_, err := conn.CancelRotateSecretWithContext(ctx, &secretsmanager.CancelRotateSecretInput{
+		SecretId: aws.String(d.Get("secret_id").(string)),
+	})
 
-	log.Printf("[DEBUG] Deleting Secrets Manager Rotation: %s", input)
-	_, err := conn.CancelRotateSecretWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "cancelling Secret Manager Secret %q rotation: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Secret Manager Secret Rotation (%s): %s", d.Id(), err)
 	}
 
 	return diags

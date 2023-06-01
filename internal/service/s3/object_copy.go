@@ -37,7 +37,6 @@ func ResourceObjectCopy() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"acl": {
 				Type:          schema.TypeString,
-				Default:       s3.ObjectCannedACLPrivate,
 				Optional:      true,
 				ValidateFunc:  validation.StringInSlice(s3.ObjectCannedACL_Values(), false),
 				ConflictsWith: []string{"grant"},

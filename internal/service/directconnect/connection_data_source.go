@@ -54,7 +54,7 @@ func DataSourceConnection() *schema.Resource {
 			},
 			"tags": tftags.TagsSchemaComputed(),
 			"vlan_id": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 		},

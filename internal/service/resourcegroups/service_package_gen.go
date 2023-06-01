@@ -33,6 +33,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 				IdentifierAttribute: "arn",
 			},
 		},
+		{
+			Factory:  ResourceResource,
+			TypeName: "aws_resourcegroups_resource",
+			Name:     "Resource",
+		},
 	}
 }
 

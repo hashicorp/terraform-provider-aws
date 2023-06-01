@@ -35,7 +35,6 @@ var routeValidTargets = []string{
 	"core_network_arn",
 	"egress_only_gateway_id",
 	"gateway_id",
-	"instance_id",
 	"local_gateway_id",
 	"nat_gateway_id",
 	"network_interface_id",
@@ -119,13 +118,6 @@ func ResourceRoute() *schema.Resource {
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-			"instance_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				Deprecated:   "Use network_interface_id instead",
-				ExactlyOneOf: routeValidTargets,
-			},
 			"local_gateway_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -164,6 +156,10 @@ func ResourceRoute() *schema.Resource {
 			//
 			// Computed attributes.
 			//
+			"instance_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"instance_owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -226,8 +222,6 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.EgressOnlyInternetGatewayId = target
 	case "gateway_id":
 		input.GatewayId = target
-	case "instance_id":
-		input.InstanceId = target
 	case "local_gateway_id":
 		input.LocalGatewayId = target
 	case "nat_gateway_id":
@@ -385,8 +379,6 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		} else {
 			input.GatewayId = target
 		}
-	case "instance_id":
-		input.InstanceId = target
 	case "local_gateway_id":
 		input.LocalGatewayId = target
 	case "nat_gateway_id":
