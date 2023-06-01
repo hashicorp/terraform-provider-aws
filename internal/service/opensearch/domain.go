@@ -496,6 +496,7 @@ func ResourceDomain() *schema.Resource {
 			"off_peak_window_options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -724,8 +725,9 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.OffPeakWindowOptions = expandOffPeakWindowOptions(v.([]interface{})[0].(map[string]interface{}))
 
 		// This option is only available when modifying a domain created prior to February 16, 2023, not when creating a new domain.
+		// An off-peak window is required for a domain and cannot be disabled.
 		if input.OffPeakWindowOptions != nil {
-			input.OffPeakWindowOptions.Enabled = nil
+			input.OffPeakWindowOptions.Enabled = aws.Bool(true)
 		}
 	}
 
