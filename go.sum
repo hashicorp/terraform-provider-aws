@@ -65,8 +65,8 @@ github.com/aws/aws-sdk-go-v2/service/ec2 v1.98.0 h1:WblDV33AG9dhv0zFEPEmGtD5UECS
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.98.0/go.mod h1:L3ZT0N/vBsw77mOAawXmRnREpEjcHd2v5Hzf7AkIH8M=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.10 h1:uDfGkU0W6mO34XFbXgc9sFjOXTNA6IRoeeoPkCnZnx4=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.10/go.mod h1:UFu/qHPW17t5CcwChAc76mSq3v/bRyzhqjwiTcqlwLI=
-github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.11 h1:/2EzMFJcYe87txoIlpM+qW9I3lH5Qro+DumdRuXCrb4=
-github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.11/go.mod h1:n1IxBDIRdNPVLrEDqwDSZSF60FkFIO43gWVMZo4Y/Rk=
+github.com/aws/aws-sdk-go-v2/service/healthlake v1.16.0 h1:8CXnXojAdCTtFhrJn2Ez6DDFFykbd9lWOu0Frs1zoqk=
+github.com/aws/aws-sdk-go-v2/service/healthlake v1.16.0/go.mod h1:n1IxBDIRdNPVLrEDqwDSZSF60FkFIO43gWVMZo4Y/Rk=
 github.com/aws/aws-sdk-go-v2/service/iam v1.19.12 h1:JH1H7POlsZt41X9JYIBLZoXW0Qv+WOuC48xsafsls2Q=
 github.com/aws/aws-sdk-go-v2/service/iam v1.19.12/go.mod h1:kAnokExGCYs7zfvZEZdFHvQ/x4ZKIci0Raps6mZI1Ag=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.11 h1:lXvr+mWzICOdOWQAKGPpAgSuA3lw3XEnzuCUMBVFjgs=
