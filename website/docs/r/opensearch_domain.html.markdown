@@ -456,9 +456,9 @@ AWS documentation: [Off Peak Hours Support for Amazon OpenSearch Service Domains
 
 * `enabled` - (Optional) Enabled disabled toggle for off-peak update window.
 * `off_peak_window` - (Optional)
-  * `window_start_time` - (Optional) 10h window for updates
-    * `hours` - (Required) Starting hour of the 10-hour window for updates
-    * `minutes` - (Required) Starting minute of the 10-hour window for updates
+    * `window_start_time` - (Optional) 10h window for updates
+        * `hours` - (Required) Starting hour of the 10-hour window for updates
+        * `minutes` - (Required) Starting minute of the 10-hour window for updates
 
 ## Attributes Reference
 
