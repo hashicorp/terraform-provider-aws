@@ -302,6 +302,43 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"off_peak_window_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"off_peak_window": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"window_start_time": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"hours": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												"minutes": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"processing": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -460,9 +497,16 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting cognito_options: %s", err)
 	}
 
+	if ds.OffPeakWindowOptions != nil {
+		if err := d.Set("off_peak_window_options", []interface{}{flattenOffPeakWindowOptions(ds.OffPeakWindowOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting off_peak_window_options: %s", err)
+		}
+	} else {
+		d.Set("off_peak_window_options", nil)
+	}
+
 	d.Set("created", ds.Created)
 	d.Set("deleted", ds.Deleted)
-
 	d.Set("processing", ds.Processing)
 
 	tags, err := ListTags(ctx, conn, d.Id())
