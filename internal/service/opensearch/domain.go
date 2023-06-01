@@ -502,7 +502,7 @@ func ResourceDomain() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
+							Default:  true,
 						},
 						"off_peak_window": {
 							Type:     schema.TypeList,

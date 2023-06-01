@@ -454,7 +454,7 @@ AWS documentation: [VPC Support for Amazon OpenSearch Service Domains](https://d
 
 AWS documentation: [Off Peak Hours Support for Amazon OpenSearch Service Domains](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/off-peak.html)
 
-* `enabled` - Enabled disabled toggle for off-peak update window
+* `enabled` - Enabled disabled toggle for off-peak update window. Default `true`
 * `off_peak_window` - (Optional) 
   * `window_start_time` - (Optional) 10h window for updates
     * `hours` - (Required) Starting hour of the 10-hour window for updates
