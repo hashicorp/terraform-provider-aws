@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	multierror "github.com/hashicorp/go-multierror"
@@ -142,6 +143,12 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Optional: true,
 				Description: "The region where AWS operations will take place. Examples\n" +
 					"are us-east-1, us-west-2, etc.", // lintignore:AWSAT003,
+			},
+			"retry_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Specifies how retries are attempted. Valid values are `standard` and `adaptive`. " +
+					"Can also be configured using the `RETRY_MODE` environment variable.",
 			},
 			"s3_use_path_style": {
 				Type:     schema.TypeBool,
@@ -432,6 +439,14 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		Token:                          d.Get("token").(string),
 		UseDualStackEndpoint:           d.Get("use_dualstack_endpoint").(bool),
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
+	}
+
+	if v, ok := d.Get("retry_mode").(string); ok && v != "" {
+		mode, err := aws.ParseRetryMode(v)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+		config.RetryMode = mode
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok && v.(*schema.Set).Len() > 0 {

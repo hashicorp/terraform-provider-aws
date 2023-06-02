@@ -84,6 +84,10 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 				Optional:    true,
 				Description: "The region where AWS operations will take place. Examples\nare us-east-1, us-west-2, etc.", // lintignore:AWSAT003
 			},
+			"retry_mode": schema.StringAttribute{
+				Optional:    true,
+				Description: "Specifies how retries are attempted. Valid values are `standard` and `adaptive`. Can also be configured using the `RETRY_MODE` environment variable.",
+			},
 			"s3_use_path_style": schema.BoolAttribute{
 				Optional:    true,
 				Description: "Set this to true to enable the request to use path-style addressing,\ni.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\nuse virtual hosted bucket addressing when possible\n(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
