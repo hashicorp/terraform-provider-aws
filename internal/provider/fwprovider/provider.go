@@ -86,7 +86,7 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 			},
 			"retry_mode": schema.StringAttribute{
 				Optional:    true,
-				Description: "Specifies how retries are attempted. Valid values are `standard` and `adaptive`. Can also be configured using the `RETRY_MODE` environment variable.",
+				Description: "Specifies how retries are attempted. Valid values are `standard` and `adaptive`. Can also be configured using the `AWS_RETRY_MODE` environment variable.",
 			},
 			"s3_use_path_style": schema.BoolAttribute{
 				Optional:    true,

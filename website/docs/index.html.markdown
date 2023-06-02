@@ -325,7 +325,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   If credentials are retrieved from the EC2 Instance Metadata Service, the region can also be retrieved from the metadata.
 * `retry_mode` - (Optional) Specifies how retries are attempted.
   Valid values are `standard` and `adaptive`.
-  Can also be configured using the `RETRY_MODE` environment variable or the shared config file parameter `retry_mode`.
+  Can also be configured using the `AWS_RETRY_MODE` environment variable or the shared config file parameter `retry_mode`.
 * `s3_use_path_style` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`. By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible. Specific to the Amazon S3 service.
 * `secret_key` - (Optional) AWS secret key. Can also be set with the `AWS_SECRET_ACCESS_KEY` environment variable, or via a shared configuration and credentials files if `profile` is used. See also `access_key`.
 * `shared_config_files` - (Optional) List of paths to AWS shared config files. If not set, the default is `[~/.aws/config]`. A single value can also be set with the `AWS_CONFIG_FILE` environment variable.

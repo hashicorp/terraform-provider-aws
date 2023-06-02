@@ -148,7 +148,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Type:     schema.TypeString,
 				Optional: true,
 				Description: "Specifies how retries are attempted. Valid values are `standard` and `adaptive`. " +
-					"Can also be configured using the `RETRY_MODE` environment variable.",
+					"Can also be configured using the `AWS_RETRY_MODE` environment variable.",
 			},
 			"s3_use_path_style": {
 				Type:     schema.TypeBool,
