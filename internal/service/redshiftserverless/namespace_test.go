@@ -262,11 +262,13 @@ resource "aws_iam_role" "test" {
 EOF
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role_policy_attachment" "test" {
   count = %[2]d
 
   role       = aws_iam_role.test[count.index].name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonRedshiftAllCommandsFullAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonRedshiftAllCommandsFullAccess"
 }
 
 `, rName, n)
