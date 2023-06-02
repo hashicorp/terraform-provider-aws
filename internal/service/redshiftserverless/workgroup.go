@@ -56,9 +56,15 @@ func ResourceWorkgroup() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"parameter_key": {
-							Type:         schema.TypeString,
-							ValidateFunc: validation.StringInSlice([]string{"datestyle", "enable_user_activity_logging", "query_group", "search_path", "max_query_execution_time"}, false),
-							Required:     true,
+							Type: schema.TypeString,
+							ValidateFunc: validation.StringInSlice([]string{
+								"datestyle",
+								"enable_user_activity_logging",
+								"query_group",
+								"search_path",
+								"max_query_execution_time",
+							}, false),
+							Required: true,
 						},
 						"parameter_value": {
 							Type:     schema.TypeString,
@@ -173,10 +179,11 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
+	name := d.Get("workgroup_name").(string)
 	input := redshiftserverless.CreateWorkgroupInput{
 		NamespaceName: aws.String(d.Get("namespace_name").(string)),
 		Tags:          GetTagsIn(ctx),
-		WorkgroupName: aws.String(d.Get("workgroup_name").(string)),
+		WorkgroupName: aws.String(name),
 	}
 
 	if v, ok := d.GetOk("base_capacity"); ok {
@@ -203,16 +210,16 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	out, err := conn.CreateWorkgroupWithContext(ctx, &input)
+	output, err := conn.CreateWorkgroupWithContext(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Redshift Serverless Workgroup : %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Serverless Workgroup (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.Workgroup.WorkgroupName))
+	d.SetId(aws.StringValue(output.Workgroup.WorkgroupName))
 
 	if _, err := waitWorkgroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Workgroup (%s) to be created: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Workgroup (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceWorkgroupRead(ctx, d, meta)...)
@@ -223,6 +230,7 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	out, err := FindWorkgroupByName(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Workgroup (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -236,6 +244,12 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	arn := aws.StringValue(out.WorkgroupArn)
 	d.Set("arn", arn)
 	d.Set("base_capacity", out.BaseCapacity)
+	if err := d.Set("config_parameter", flattenConfigParameters(out.ConfigParameters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting config_parameter: %s", err)
+	}
+	if err := d.Set("endpoint", []interface{}{flattenEndpoint(out.Endpoint)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
+	}
 	d.Set("enhanced_vpc_routing", out.EnhancedVpcRouting)
 	d.Set("namespace_name", out.NamespaceName)
 	d.Set("publicly_accessible", out.PubliclyAccessible)
@@ -243,13 +257,6 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("subnet_ids", flex.FlattenStringSet(out.SubnetIds))
 	d.Set("workgroup_id", out.WorkgroupId)
 	d.Set("workgroup_name", out.WorkgroupName)
-	if err := d.Set("config_parameter", flattenConfigParameters(out.ConfigParameters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting config_parameter: %s", err)
-	}
-
-	if err := d.Set("endpoint", []interface{}{flattenEndpoint(out.Endpoint)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
-	}
 
 	return diags
 }
@@ -288,12 +295,13 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		_, err := conn.UpdateWorkgroupWithContext(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Redshift Serverless Workgroup (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitWorkgroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Workgroup (%s) to be updated: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Workgroup (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -304,6 +312,7 @@ func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
+	log.Printf("[DEBUG] Deleting Redshift Serverless Workgroup: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 10*time.Minute,
 		func() (interface{}, error) {
 			return conn.DeleteWorkgroupWithContext(ctx, &redshiftserverless.DeleteWorkgroupInput{
@@ -313,15 +322,16 @@ func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 		// "ConflictException: There is an operation running on the workgroup. Try deleting the workgroup again later."
 		redshiftserverless.ErrCodeConflictException, "operation running")
 
+	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
+		return diags
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Serverless Workgroup (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitWorkgroupDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Redshift Serverless Workgroup (%s): waiting for completion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Workgroup (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
