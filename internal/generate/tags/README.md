@@ -24,6 +24,7 @@ Some flags control generation a certain section of code, such as whether the gen
 | --- | --- | --- | --- |
 | `GetTag` |  | Whether to generate GetTag | `-GetTag` |
 | `ListTags` |  | Whether to generate ListTags | `-ListTags` |
+| `ServicePackage` |  | AWS Go SDK package to use. Defaults to the provider service package name. | `-ServicePackage=chimesdkvoice` |
 | `ServiceTagsMap` |  | Whether to generate map service tags (use this or `ServiceTagsSlice`, not both) | `-ServiceTagsMap` |
 | `ServiceTagsSlice` |  | Whether to generate slice service tags (use this or `ServiceTagsMap`, not both) | `-ServiceTagsSlice` |
 | `UpdateTags` |  | Whether to generate UpdateTags | `-UpdateTags` |

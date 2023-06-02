@@ -62,10 +62,11 @@ var (
 	parentNotFoundErrCode = flag.String("ParentNotFoundErrCode", "", "Parent 'NotFound' Error Code")
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
 
-	sdkVersion   = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
-	kvtValues    = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
-	skipNamesImp = flag.Bool("SkipNamesImp", false, "Whether to skip importing names")
-	skipTypesImp = flag.Bool("SkipTypesImp", false, "Whether to skip importing types")
+	sdkVersion     = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
+	kvtValues      = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
+	skipNamesImp   = flag.Bool("SkipNamesImp", false, "Whether to skip importing names")
+	skipTypesImp   = flag.Bool("SkipTypesImp", false, "Whether to skip importing types")
+	servicePackage = flag.String("ServicePackage", "", "AWS Go SDK package to use. Defaults to provider service package name.")
 )
 
 func usage() {
@@ -123,6 +124,7 @@ type TemplateData struct {
 	AWSService             string
 	AWSServiceIfacePackage string
 	ClientType             string
+	InternalServicePackage string
 	ProviderNameUpper      string
 	ServicePackage         string
 
@@ -187,9 +189,12 @@ func main() {
 		g.Fatalf("AWS SDK Go Version %d not supported", *sdkVersion)
 	}
 
-	servicePackage := os.Getenv("GOPACKAGE")
-	awsPkg, err := names.AWSGoPackage(servicePackage, *sdkVersion)
+	internalServicePackage := os.Getenv("GOPACKAGE")
+	if *servicePackage == "" {
+		servicePackage = &internalServicePackage
+	}
 
+	awsPkg, err := names.AWSGoPackage(*servicePackage, *sdkVersion)
 	if err != nil {
 		g.Fatalf("encountered: %s", err)
 	}
@@ -199,13 +204,13 @@ func main() {
 		awsIntfPkg = fmt.Sprintf("%[1]s/%[1]siface", awsPkg)
 	}
 
-	clientTypeName, err := names.AWSGoClientTypeName(servicePackage, *sdkVersion)
+	clientTypeName, err := names.AWSGoClientTypeName(*servicePackage, *sdkVersion)
 
 	if err != nil {
 		g.Fatalf("encountered: %s", err)
 	}
 
-	providerNameUpper, err := names.ProviderNameUpper(servicePackage)
+	providerNameUpper, err := names.ProviderNameUpper(*servicePackage)
 
 	if err != nil {
 		g.Fatalf("encountered: %s", err)
@@ -239,8 +244,9 @@ func main() {
 		AWSService:             awsPkg,
 		AWSServiceIfacePackage: awsIntfPkg,
 		ClientType:             clientType,
+		InternalServicePackage: internalServicePackage,
 		ProviderNameUpper:      providerNameUpper,
-		ServicePackage:         servicePackage,
+		ServicePackage:         *servicePackage,
 
 		ConnsPkg:         *listTags || *updateTags,
 		FmtPkg:           *updateTags,
