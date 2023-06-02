@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_redshiftserverless_workgroup: Additional supported values for `config_parameter.parameter_key`
+```
