@@ -81,6 +81,7 @@ The following attribute is additionally exported:
 * `enable_dns_hostnames` - Whether or not the VPC has DNS hostname support
 * `instance_tenancy` - Allowed tenancy of instances launched into the
   selected VPC. May be any of `"default"`, `"dedicated"`, or `"host"`.
+* `id` - VPC Id
 * `ipv6_association_id` - Association ID for the IPv6 CIDR block.
 * `ipv6_cidr_block` - IPv6 CIDR block.
 * `main_route_table_id` - ID of the main route table associated with this VPC.
