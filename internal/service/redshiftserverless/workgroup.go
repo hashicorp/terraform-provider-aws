@@ -2,6 +2,7 @@ package redshiftserverless
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -277,43 +278,71 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	// You can't update multiple parameters in one request.
+
+	if d.HasChange("base_capacity") {
 		input := &redshiftserverless.UpdateWorkgroupInput{
+			BaseCapacity:  aws.Int64(int64(d.Get("base_capacity").(int))),
 			WorkgroupName: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("base_capacity"); ok {
-			input.BaseCapacity = aws.Int64(int64(v.(int)))
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("config_parameter") {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			ConfigParameters: expandConfigParameters(d.Get("config_parameter").(*schema.Set).List()),
+			WorkgroupName:    aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("config_parameter"); ok && v.(*schema.Set).Len() > 0 {
-			input.ConfigParameters = expandConfigParameters(v.(*schema.Set).List())
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("enhanced_vpc_routing") {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			EnhancedVpcRouting: aws.Bool(d.Get("enhanced_vpc_routing").(bool)),
+			WorkgroupName:      aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("enhanced_vpc_routing"); ok {
-			input.EnhancedVpcRouting = aws.Bool(v.(bool))
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("publicly_accessible") {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			PubliclyAccessible: aws.Bool(d.Get("publicly_accessible").(bool)),
+			WorkgroupName:      aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("publicly_accessible"); ok {
-			input.PubliclyAccessible = aws.Bool(v.(bool))
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("security_group_ids") {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
+			WorkgroupName:    aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
-			input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("subnet_ids") {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			SubnetIds:     flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+			WorkgroupName: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
-			input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
-		}
-
-		_, err := conn.UpdateWorkgroupWithContext(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Redshift Serverless Workgroup (%s): %s", d.Id(), err)
-		}
-
-		if _, err := waitWorkgroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Workgroup (%s) update: %s", d.Id(), err)
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -347,6 +376,21 @@ func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	return diags
+}
+
+func updateWorkgroup(ctx context.Context, conn *redshiftserverless.RedshiftServerless, input *redshiftserverless.UpdateWorkgroupInput, timeout time.Duration) error {
+	name := aws.StringValue(input.WorkgroupName)
+	_, err := conn.UpdateWorkgroupWithContext(ctx, input)
+
+	if err != nil {
+		return fmt.Errorf("updating Redshift Serverless Workgroup (%s): %w", name, err)
+	}
+
+	if _, err := waitWorkgroupAvailable(ctx, conn, name, timeout); err != nil {
+		return fmt.Errorf("waiting for Redshift Serverless Workgroup (%s) update: %w", name, err)
+	}
+
+	return nil
 }
 
 func expandConfigParameter(tfMap map[string]interface{}) *redshiftserverless.ConfigParameter {
