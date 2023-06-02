@@ -4,11 +4,11 @@ on:
   workflow_call:
     inputs:
       add:
-        description: '(Optional) The comma-separated label(s) to add to the issue or pull request'
+        description: '(Optional) The comma-separated label(s) to add to the Issue or Pull Request.'
         required: false
         type: string
       remove:
-        description: '(Optional) The comma-separated label(s) to remove from the issue or pull request'
+        description: '(Optional) The comma-separated label(s) to remove from the Issue or Pull Request.'
         required: false
         type: string
 
