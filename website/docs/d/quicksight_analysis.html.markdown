@@ -34,4 +34,3 @@ The following arguments are optional:
 
 See the [Analysis Resource](/docs/providers/aws/r/quicksight_analysis.html) for details on the
 returned attributes - they are identical.
-
