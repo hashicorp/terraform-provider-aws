@@ -47,6 +47,42 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccRedshiftServerlessWorkgroup_baseCapacityAndPubliclyAccessible(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkgroupConfig_baseCapacityAndPubliclyAccessible(rName, 64, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "64"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccWorkgroupConfig_baseCapacityAndPubliclyAccessible(rName, 128, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
@@ -59,7 +95,7 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkgroupConfig_configParameters(rName),
+				Config: testAccWorkgroupConfig_configParameters(rName, "14400"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "7"),
@@ -97,6 +133,41 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccWorkgroupConfig_configParameters(rName, "28800"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "7"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "datestyle",
+						"parameter_value": "ISO, MDY",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "enable_user_activity_logging",
+						"parameter_value": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "query_group",
+						"parameter_value": "default",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "search_path",
+						"parameter_value": "$user, public",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_query_execution_time",
+						"parameter_value": "28800",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "auto_mv",
+						"parameter_value": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "enable_case_sensitive_identifier",
+						"parameter_value": "false",
+					}),
+				),
 			},
 		},
 	})
@@ -226,7 +297,22 @@ resource "aws_redshiftserverless_workgroup" "test" {
 `, rName)
 }
 
-func testAccWorkgroupConfig_configParameters(rName string) string {
+func testAccWorkgroupConfig_baseCapacityAndPubliclyAccessible(rName string, baseCapacity int, publiclyAccessible bool) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name      = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name      = %[1]q
+  base_capacity       = %[2]d
+  publicly_accessible = %[3]t
+}
+`, rName, baseCapacity, publiclyAccessible)
+}
+
+func testAccWorkgroupConfig_configParameters(rName, maxQueryExecutionTime string) string {
 	return fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
@@ -254,7 +340,7 @@ resource "aws_redshiftserverless_workgroup" "test" {
   }
   config_parameter {
     parameter_key   = "max_query_execution_time"
-    parameter_value = "14400"
+    parameter_value = %[2]q
   }
   config_parameter {
     parameter_key   = "auto_mv"
@@ -265,7 +351,7 @@ resource "aws_redshiftserverless_workgroup" "test" {
     parameter_value = "false"
   }
 }
-`, rName)
+`, rName, maxQueryExecutionTime)
 }
 
 func testAccWorkgroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
