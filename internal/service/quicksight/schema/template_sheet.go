@@ -1734,7 +1734,7 @@ func flattenFreeFormLayoutCanvasSizeOptions(apiObject *quicksight.FreeFormLayout
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ScreenCanvasSizeOptions != nil {
-		tfMap["canvas_size_options"] = flattenFreeFormLayoutScreenCanvasSizeOptions(apiObject.ScreenCanvasSizeOptions)
+		tfMap["screen_canvas_size_options"] = flattenFreeFormLayoutScreenCanvasSizeOptions(apiObject.ScreenCanvasSizeOptions)
 	}
 
 	return []interface{}{tfMap}

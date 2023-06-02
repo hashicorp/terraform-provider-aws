@@ -116,6 +116,7 @@ func ResourceDashboard() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"theme_arn": {
 				Type:     schema.TypeString,
+				Computed: true,
 				Optional: true,
 			},
 			"version_description": {
@@ -155,6 +156,10 @@ func resourceDashboardCreate(ctx context.Context, d *schema.ResourceData, meta i
 		DashboardId:  aws.String(dashboardId),
 		Name:         aws.String(d.Get("name").(string)),
 		Tags:         getTagsIn(ctx),
+	}
+
+	if v, ok := d.Get("theme_arn").(string); ok && v != "" {
+		input.ThemeArn = aws.String(v)
 	}
 
 	if v, ok := d.GetOk("version_description"); ok {
@@ -221,6 +226,7 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("status", out.Version.Status)
 	d.Set("source_entity_arn", out.Version.SourceEntityArn)
 	d.Set("dashboard_id", out.DashboardId)
+	d.Set("theme_arn", out.Version.ThemeArn)
 	d.Set("version_description", out.Version.Description)
 	d.Set("version_number", out.Version.VersionNumber)
 
@@ -272,6 +278,10 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			DashboardId:        aws.String(dashboardId),
 			Name:               aws.String(d.Get("name").(string)),
 			VersionDescription: aws.String(d.Get("version_description").(string)),
+		}
+
+		if v, ok := d.Get("theme_arn").(string); ok && v != "" {
+			in.ThemeArn = aws.String(v)
 		}
 
 		_, createdFromEntity := d.GetOk("source_entity")

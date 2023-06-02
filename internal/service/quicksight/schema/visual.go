@@ -1473,7 +1473,7 @@ func flattenDataLabelOptions(apiObject *quicksight.DataLabelOptions) []interface
 		tfMap["label_font_configuration"] = flattenFontConfiguration(apiObject.LabelFontConfiguration)
 	}
 	if apiObject.MeasureLabelVisibility != nil {
-		tfMap["measure_visibility"] = aws.StringValue(apiObject.MeasureLabelVisibility)
+		tfMap["measure_label_visibility"] = aws.StringValue(apiObject.MeasureLabelVisibility)
 	}
 	if apiObject.Overlap != nil {
 		tfMap["overlap"] = aws.StringValue(apiObject.Overlap)
