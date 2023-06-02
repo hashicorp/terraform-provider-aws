@@ -125,8 +125,8 @@ func validUserPoolSchemaName(v interface{}, k string) (ws []string, es []error) 
 		es = append(es, fmt.Errorf("%q cannot be less than 1 character", k))
 	}
 
-	if len(value) > 20 {
-		es = append(es, fmt.Errorf("%q cannot be longer than 20 character", k))
+	if len(value) > 32 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 32 character", k))
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
