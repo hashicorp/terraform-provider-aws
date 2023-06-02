@@ -63,22 +63,34 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "7"),
-					/*
-						resource.TestCheckResourceAttr(resourceName, "config_parameter.0.parameter_key", "datestyle"),
-						resource.TestCheckResourceAttr(resourceName, "config_parameter.0.parameter_value", "ISO, MDY"),
-						resource.TestCheckResourceAttr(resourceName, "config_parameter.1.parameter_key", "enable_user_activity_logging"),
-						resource.TestCheckResourceAttr(resourceName, "config_parameter.1.parameter_value", "true"),
-						resource.TestCheckResourceAttr(resourceName, "config_parameter.2.parameter_key", "query_group"),
-						resource.TestCheckResourceAttr(resourceName, "config_parameter.2.parameter_value", "default"),
-						resource.TestCheckResourceAttr(resourceName, "config_parameter.3.parameter_key", "search_path"),
-						resource.TestCheckResourceAttr(resourceName, "config_parameter.3.parameter_value", "$user, public"),
-						resource.TestCheckResourceAttr(resourceName, "config_parameter.4.parameter_key", "max_query_execution_time"),
-						resource.TestCheckResourceAttr(resourceName, "config_parameter.4.parameter_value", "14400"),
-						resource.TestCheckResourceAttr(resourceName, "config_parameter.5.parameter_key", "auto_mv"),
-						resource.TestCheckResourceAttr(resourceName, "config_parameter.5.parameter_value", "true"),
-						resource.TestCheckResourceAttr(resourceName, "config_parameter.6.parameter_key", "enable_case_sensitive_identifier"),
-						resource.TestCheckResourceAttr(resourceName, "config_parameter.6.parameter_value", "false"),
-					*/
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "datestyle",
+						"parameter_value": "ISO, MDY",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "enable_user_activity_logging",
+						"parameter_value": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "query_group",
+						"parameter_value": "default",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "search_path",
+						"parameter_value": "$user, public",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "max_query_execution_time",
+						"parameter_value": "14400",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "auto_mv",
+						"parameter_value": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "enable_case_sensitive_identifier",
+						"parameter_value": "false",
+					}),
 				),
 			},
 			{

@@ -50,7 +50,7 @@ func ResourceWorkgroup() *schema.Resource {
 				Computed: true,
 			},
 			"config_parameter": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -202,8 +202,8 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.BaseCapacity = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("config_parameter"); ok && len(v.([]interface{})) > 0 {
-		input.ConfigParameters = expandConfigParameters(v.([]interface{}))
+	if v, ok := d.GetOk("config_parameter"); ok && v.(*schema.Set).Len() > 0 {
+		input.ConfigParameters = expandConfigParameters(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("enhanced_vpc_routing"); ok {
@@ -286,8 +286,8 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.BaseCapacity = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("config_parameter"); ok && len(v.([]interface{})) > 0 {
-			input.ConfigParameters = expandConfigParameters(v.([]interface{}))
+		if v, ok := d.GetOk("config_parameter"); ok && v.(*schema.Set).Len() > 0 {
+			input.ConfigParameters = expandConfigParameters(v.(*schema.Set).List())
 		}
 
 		if v, ok := d.GetOk("enhanced_vpc_routing"); ok {
