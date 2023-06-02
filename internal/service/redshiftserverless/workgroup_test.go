@@ -47,6 +47,49 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkgroupConfig_configParameters(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "7"),
+					/*
+						resource.TestCheckResourceAttr(resourceName, "config_parameter.0.parameter_key", "datestyle"),
+						resource.TestCheckResourceAttr(resourceName, "config_parameter.0.parameter_value", "ISO, MDY"),
+						resource.TestCheckResourceAttr(resourceName, "config_parameter.1.parameter_key", "enable_user_activity_logging"),
+						resource.TestCheckResourceAttr(resourceName, "config_parameter.1.parameter_value", "true"),
+						resource.TestCheckResourceAttr(resourceName, "config_parameter.2.parameter_key", "query_group"),
+						resource.TestCheckResourceAttr(resourceName, "config_parameter.2.parameter_value", "default"),
+						resource.TestCheckResourceAttr(resourceName, "config_parameter.3.parameter_key", "search_path"),
+						resource.TestCheckResourceAttr(resourceName, "config_parameter.3.parameter_value", "$user, public"),
+						resource.TestCheckResourceAttr(resourceName, "config_parameter.4.parameter_key", "max_query_execution_time"),
+						resource.TestCheckResourceAttr(resourceName, "config_parameter.4.parameter_value", "14400"),
+						resource.TestCheckResourceAttr(resourceName, "config_parameter.5.parameter_key", "auto_mv"),
+						resource.TestCheckResourceAttr(resourceName, "config_parameter.5.parameter_value", "true"),
+						resource.TestCheckResourceAttr(resourceName, "config_parameter.6.parameter_key", "enable_case_sensitive_identifier"),
+						resource.TestCheckResourceAttr(resourceName, "config_parameter.6.parameter_value", "false"),
+					*/
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccRedshiftServerlessWorkgroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
@@ -167,6 +210,48 @@ resource "aws_redshiftserverless_namespace" "test" {
 resource "aws_redshiftserverless_workgroup" "test" {
   namespace_name = aws_redshiftserverless_namespace.test.namespace_name
   workgroup_name = %[1]q
+}
+`, rName)
+}
+
+func testAccWorkgroupConfig_configParameters(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+
+  config_parameter {
+    parameter_key   = "datestyle"
+    parameter_value = "ISO, MDY"
+  }
+  config_parameter {
+    parameter_key   = "enable_user_activity_logging"
+    parameter_value = "true"
+  }
+  config_parameter {
+    parameter_key   = "query_group"
+    parameter_value = "default"
+  }
+  config_parameter {
+    parameter_key   = "search_path"
+    parameter_value = "$user, public"
+  }
+  config_parameter {
+    parameter_key   = "max_query_execution_time"
+    parameter_value = "14400"
+  }
+  config_parameter {
+    parameter_key   = "auto_mv"
+    parameter_value = "true"
+  }
+  config_parameter {
+    parameter_key   = "enable_case_sensitive_identifier"
+    parameter_value = "false"
+  }
 }
 `, rName)
 }
