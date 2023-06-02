@@ -53,7 +53,7 @@ jobs:
         with:
           node-version: "18.x"
       - name: Install cdktf-registry-docs
-        run: npm install -g cdktf-registry-docs@1.7.8
+        run: npm install -g cdktf-registry-docs@1.10.1
       - name: Run conversion
         run: |
           cdktf-registry-docs convert \
