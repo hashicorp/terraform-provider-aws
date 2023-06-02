@@ -85,14 +85,6 @@ func ResourceWorkgroup() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"vpc_endpoint_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"vpc_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
 									"network_interface": {
 										Type:     schema.TypeList,
 										Computed: true,
@@ -116,6 +108,14 @@ func ResourceWorkgroup() *schema.Resource {
 												},
 											},
 										},
+									},
+									"vpc_endpoint_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"vpc_id": {
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 								},
 							},
