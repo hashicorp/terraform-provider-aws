@@ -18,6 +18,7 @@ go test \
     ./internal/generate/... \
     ./internal/maps/... \
     ./internal/provider/... \
+    ./internal/schema/... \
     ./internal/sdktypes/... \
     ./internal/slices/... \
     ./internal/sweep/... \
