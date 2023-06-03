@@ -62,6 +62,7 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 			"bgp_transit_gateway_addresses": {
 				Type:     schema.TypeSet,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"inside_cidr_blocks": {
 				Type:     schema.TypeSet,

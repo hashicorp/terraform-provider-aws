@@ -41,6 +41,7 @@ func DataSourceTransitGatewayConnectPeer() *schema.Resource {
 			"bgp_transit_gateway_addresses": {
 				Type:     schema.TypeSet,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"filter": DataSourceFiltersSchema(),
 			"inside_cidr_blocks": {
