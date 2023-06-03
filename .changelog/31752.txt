@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/transitgateway_connect_peer: Add bgp_peer_address and bgp_transit_gateway_addresses attribute references
+data/transitgateway_connect_peer: Add bgp_peer_address and bgp_transit_gateway_addresses attribute references
+```
