@@ -55,6 +55,14 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.Valid4ByteASN,
 			},
+			"bgp_peer_address": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bgp_transit_gateway_addresses": {
+				Type:     schema.TypeSet,
+				Computed: true,
+			},
 			"inside_cidr_blocks": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -164,8 +172,16 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("transit-gateway-connect-peer/%s", d.Id()),
 	}.String()
+
+	bgpTransitGatewayAddresses := make([]string, 0, len(transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations))
+	for _, bgp := range transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations {
+		bgpTransitGatewayAddresses = append(bgpTransitGatewayAddresses, aws.StringValue(bgp.TransitGatewayAddress))
+	}
+
 	d.Set("arn", arn)
 	d.Set("bgp_asn", strconv.FormatInt(aws.Int64Value(transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations[0].PeerAsn), 10))
+	d.Set("bgp_peer_address", aws.StringValue(transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations[0].PeerAddress))
+	d.Set("bgp_transit_gateway_addresses", bgpTransitGatewayAddresses)
 	d.Set("inside_cidr_blocks", aws.StringValueSlice(transitGatewayConnectPeer.ConnectPeerConfiguration.InsideCidrBlocks))
 	d.Set("peer_address", transitGatewayConnectPeer.ConnectPeerConfiguration.PeerAddress)
 	d.Set("transit_gateway_address", transitGatewayConnectPeer.ConnectPeerConfiguration.TransitGatewayAddress)
