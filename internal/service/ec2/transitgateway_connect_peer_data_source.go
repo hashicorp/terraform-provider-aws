@@ -107,7 +107,7 @@ func dataSourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Reso
 
 	d.Set("arn", arn)
 	d.Set("bgp_asn", strconv.FormatInt(aws.Int64Value(transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations[0].PeerAsn), 10))
-	d.Set("bgp_peer_address", aws.StringValue(transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations[0].PeerAddress))
+	d.Set("bgp_peer_address", transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations[0].PeerAddress)
 	d.Set("bgp_transit_gateway_addresses", bgpTransitGatewayAddresses)
 	d.Set("inside_cidr_blocks", aws.StringValueSlice(transitGatewayConnectPeer.ConnectPeerConfiguration.InsideCidrBlocks))
 	d.Set("peer_address", transitGatewayConnectPeer.ConnectPeerConfiguration.PeerAddress)
