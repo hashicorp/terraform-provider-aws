@@ -494,7 +494,7 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 	}
 
 	cfg := make(map[string]interface{})
-	
+
 	if container.Image != nil {
 		cfg["image"] = aws.StringValue(container.Image)
 	}
