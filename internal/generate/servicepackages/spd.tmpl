@@ -5,6 +5,11 @@ package {{ .ProviderPackage }}
 import (
 	"context"
 
+{{- if eq .SDKVersion "1" "1,2" }}
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	{{ .GoV1Package }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
+{{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 {{- if ne .ProviderPackage "meta" }}
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -114,5 +119,11 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.{{ .ProviderNameUpper }}
 {{- end }}
 }
+
+{{if eq .SDKVersion "1" "1,2" }}
+func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session, endpoint string) *{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }} {
+	return {{ .GoV1Package }}_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(endpoint)}))
+}
+{{- end }}
 
 var ServicePackage = &servicePackage{}
