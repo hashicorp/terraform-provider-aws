@@ -195,6 +195,11 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
 
+	// Set each service package's overridden API endpoint.
+	for _, sp := range client.ServicePackages {
+		sp.SetEndpoint(c.Endpoints[sp.ServicePackageName()])
+	}
+
 	// API clients (generated).
 	c.sdkv1Conns(client, sess)
 	c.sdkv2Conns(client, cfg)
