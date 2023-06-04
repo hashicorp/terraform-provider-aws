@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct{}
+type servicePackage struct {
+	endpoint string
+}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
@@ -73,9 +75,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.SSOAdmin
 }
 
+func (p *servicePackage) SetEndpoint(endpoint string) {
+	p.endpoint = endpoint
+}
+
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session, endpoint string) *ssoadmin_sdkv1.SSOAdmin {
-	return ssoadmin_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(endpoint)}))
+func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) *ssoadmin_sdkv1.SSOAdmin {
+	return ssoadmin_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.endpoint)}))
 }
 
 var ServicePackage = &servicePackage{}

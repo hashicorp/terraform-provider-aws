@@ -10,7 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct{}
+type servicePackage struct {
+	endpoint string
+}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
@@ -45,11 +47,15 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.AccessAnalyzer
 }
 
+func (p *servicePackage) SetEndpoint(endpoint string) {
+	p.endpoint = endpoint
+}
+
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config, endpoint string) *accessanalyzer_sdkv2.Client {
+func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) *accessanalyzer_sdkv2.Client {
 	return accessanalyzer_sdkv2.NewFromConfig(cfg, func(o *accessanalyzer_sdkv2.Options) {
-		if endpoint != "" {
-			o.EndpointResolver = accessanalyzer_sdkv2.EndpointResolverFromURL(endpoint)
+		if p.endpoint != "" {
+			o.EndpointResolver = accessanalyzer_sdkv2.EndpointResolverFromURL(p.endpoint)
 		}
 	})
 }

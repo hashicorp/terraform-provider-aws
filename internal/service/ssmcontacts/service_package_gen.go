@@ -10,7 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct{}
+type servicePackage struct {
+	endpoint string
+}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
@@ -64,11 +66,15 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.SSMContacts
 }
 
+func (p *servicePackage) SetEndpoint(endpoint string) {
+	p.endpoint = endpoint
+}
+
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config, endpoint string) *ssmcontacts_sdkv2.Client {
+func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) *ssmcontacts_sdkv2.Client {
 	return ssmcontacts_sdkv2.NewFromConfig(cfg, func(o *ssmcontacts_sdkv2.Options) {
-		if endpoint != "" {
-			o.EndpointResolver = ssmcontacts_sdkv2.EndpointResolverFromURL(endpoint)
+		if p.endpoint != "" {
+			o.EndpointResolver = ssmcontacts_sdkv2.EndpointResolverFromURL(p.endpoint)
 		}
 	})
 }

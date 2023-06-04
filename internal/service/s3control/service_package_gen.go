@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct{}
+type servicePackage struct {
+	endpoint string
+}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
@@ -93,16 +95,20 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.S3Control
 }
 
+func (p *servicePackage) SetEndpoint(endpoint string) {
+	p.endpoint = endpoint
+}
+
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session, endpoint string) *s3control_sdkv1.S3Control {
-	return s3control_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(endpoint)}))
+func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) *s3control_sdkv1.S3Control {
+	return s3control_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.endpoint)}))
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config, endpoint string) *s3control_sdkv2.Client {
+func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) *s3control_sdkv2.Client {
 	return s3control_sdkv2.NewFromConfig(cfg, func(o *s3control_sdkv2.Options) {
-		if endpoint != "" {
-			o.EndpointResolver = s3control_sdkv2.EndpointResolverFromURL(endpoint)
+		if p.endpoint != "" {
+			o.EndpointResolver = s3control_sdkv2.EndpointResolverFromURL(p.endpoint)
 		}
 	})
 }

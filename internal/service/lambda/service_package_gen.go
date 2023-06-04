@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct{}
+type servicePackage struct {
+	endpoint string
+}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
@@ -113,16 +115,20 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Lambda
 }
 
+func (p *servicePackage) SetEndpoint(endpoint string) {
+	p.endpoint = endpoint
+}
+
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session, endpoint string) *lambda_sdkv1.Lambda {
-	return lambda_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(endpoint)}))
+func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) *lambda_sdkv1.Lambda {
+	return lambda_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.endpoint)}))
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config, endpoint string) *lambda_sdkv2.Client {
+func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) *lambda_sdkv2.Client {
 	return lambda_sdkv2.NewFromConfig(cfg, func(o *lambda_sdkv2.Options) {
-		if endpoint != "" {
-			o.EndpointResolver = lambda_sdkv2.EndpointResolverFromURL(endpoint)
+		if p.endpoint != "" {
+			o.EndpointResolver = lambda_sdkv2.EndpointResolverFromURL(p.endpoint)
 		}
 	})
 }
