@@ -109,15 +109,14 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string) (
 	}
 
 	v, ok := sp.(interface {
-		NewConn(context.Context, *session.Session, string) T
+		NewConn(context.Context, *session.Session) T
 	})
 	if !ok {
 		var zero T
 		return zero, fmt.Errorf("no AWS SDK for Go v1 API client factory: %s", servicePackageName)
 	}
 
-	// TODO: Add Endpoints to AWSClient.
-	return v.NewConn(ctx, c.Session, "" /*c.Endpoints[servicePackageName]*/), nil
+	return v.NewConn(ctx, c.Session), nil
 }
 
 // client returns the AWS SDK for Go v2 API client for the specified service.
@@ -129,14 +128,13 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string)
 	}
 
 	v, ok := sp.(interface {
-		NewClient(context.Context, aws_sdkv2.Config, string) T
+		NewClient(context.Context, aws_sdkv2.Config) T
 	})
 	if !ok {
 		var zero T
 		return zero, fmt.Errorf("no AWS SDK for Go v2 API client factory: %s", servicePackageName)
 	}
 
-	// TODO: Add Endpoints to AWSClient.
 	// TODO: Add Cfg to AWSClient.
-	return v.NewClient(ctx, aws_sdkv2.Config{} /*c.Config*/, "" /*c.Endpoints[servicePackageName]*/), nil
+	return v.NewClient(ctx, aws_sdkv2.Config{} /*c.Config*/), nil
 }
