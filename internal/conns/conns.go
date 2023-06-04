@@ -20,6 +20,7 @@ type ServicePackage interface {
 	SDKDataSources(context.Context) []*types.ServicePackageSDKDataSource
 	SDKResources(context.Context) []*types.ServicePackageSDKResource
 	ServicePackageName() string
+	SetEndpoint(string)
 }
 
 type (
