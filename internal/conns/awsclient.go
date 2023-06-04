@@ -1,10 +1,12 @@
 package conns
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
@@ -95,4 +97,24 @@ func (client *AWSClient) DefaultKMSKeyPolicy() string {
 // for AWS Global Accelerator accelerators in the configured AWS partition.
 func (client *AWSClient) GlobalAcceleratorHostedZoneID() string {
 	return "Z2BJ6XQ5FK7U4H" // See https://docs.aws.amazon.com/general/latest/gr/global_accelerator.html#global_accelerator_region
+}
+
+// conn returns the AWS SDK for Go v1 API client for the specified service.
+func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string) (T, error) {
+	sp, ok := c.ServicePackages[servicePackageName]
+	if !ok {
+		var zero T
+		return zero, fmt.Errorf("unknown service package: %s", servicePackageName)
+	}
+
+	v, ok := sp.(interface {
+		NewConn(context.Context, *session.Session, string) T
+	})
+	if !ok {
+		var zero T
+		return zero, fmt.Errorf("no AWS SDK for Go v1 API client factory: %s", servicePackageName)
+	}
+
+	// TODO: Add Endpoints to AWSClient.
+	return v.NewConn(ctx, c.Session, "" /*c.Endpoints[servicePackageName]*/), nil
 }
