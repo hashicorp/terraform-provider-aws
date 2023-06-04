@@ -4,7 +4,9 @@ package kinesisvideo
 
 import (
 	"context"
-
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,6 +40,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.KinesisVideo
+}
+
+func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session, endpoint string) *kinesisvideo_sdkv1.KinesisVideo {
+	return kinesisvideo_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(endpoint)}))
 }
 
 var ServicePackage = &servicePackage{}

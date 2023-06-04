@@ -4,7 +4,6 @@ package meta
 
 import (
 	"context"
-
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 

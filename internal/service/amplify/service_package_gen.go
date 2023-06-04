@@ -4,7 +4,9 @@ package amplify
 
 import (
 	"context"
-
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	amplify_sdkv1 "github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -58,6 +60,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.Amplify
+}
+
+func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session, endpoint string) *amplify_sdkv1.Amplify {
+	return amplify_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(endpoint)}))
 }
 
 var ServicePackage = &servicePackage{}

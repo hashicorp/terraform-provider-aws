@@ -4,7 +4,9 @@ package lakeformation
 
 import (
 	"context"
-
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	lakeformation_sdkv1 "github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -63,6 +65,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.LakeFormation
+}
+
+func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session, endpoint string) *lakeformation_sdkv1.LakeFormation {
+	return lakeformation_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(endpoint)}))
 }
 
 var ServicePackage = &servicePackage{}

@@ -4,7 +4,9 @@ package detective
 
 import (
 	"context"
-
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -46,6 +48,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.Detective
+}
+
+func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session, endpoint string) *detective_sdkv1.Detective {
+	return detective_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(endpoint)}))
 }
 
 var ServicePackage = &servicePackage{}

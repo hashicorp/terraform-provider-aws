@@ -4,7 +4,6 @@ package sesv2
 
 import (
 	"context"
-
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
