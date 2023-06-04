@@ -109,19 +109,24 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string) (
 	}
 
 	v, ok := sp.(interface {
-		NewConn(context.Context, *session.Session) T
+		NewConn(context.Context, *session.Session) (T, error)
 	})
 	if !ok {
 		var zero T
 		return zero, fmt.Errorf("no AWS SDK v1 API client factory: %s", servicePackageName)
 	}
 
-	conn := v.NewConn(ctx, c.Session)
+	conn, err := v.NewConn(ctx, c.Session)
+	if err != nil {
+		var zero T
+		return zero, err
+	}
 
 	if v, ok := sp.(interface {
 		CustomizeConn(context.Context, T, *session.Session) error
 	}); ok {
-		if err := v.CustomizeConn(ctx, conn, c.Session); err != nil {
+		err := v.CustomizeConn(ctx, conn, c.Session)
+		if err != nil {
 			var zero T
 			return zero, err
 		}
@@ -139,7 +144,7 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string)
 	}
 
 	v, ok := sp.(interface {
-		NewClient(context.Context, aws_sdkv2.Config) T
+		NewClient(context.Context, aws_sdkv2.Config) (T, error)
 	})
 	if !ok {
 		var zero T
@@ -147,12 +152,17 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string)
 	}
 
 	// TODO: Add Cfg to AWSClient.
-	client := v.NewClient(ctx, aws_sdkv2.Config{} /*c.Config*/)
+	client, err := v.NewClient(ctx, aws_sdkv2.Config{} /*c.Config*/)
+	if err != nil {
+		var zero T
+		return zero, err
+	}
 
 	if v, ok := sp.(interface {
 		CustomizeClient(context.Context, T, aws_sdkv2.Config) error
 	}); ok {
-		if err := v.CustomizeClient(ctx, client, aws_sdkv2.Config{} /*c.Config*/); err != nil {
+		err := v.CustomizeClient(ctx, client, aws_sdkv2.Config{} /*c.Config*/)
+		if err != nil {
 			var zero T
 			return zero, err
 		}
