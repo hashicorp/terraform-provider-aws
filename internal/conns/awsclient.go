@@ -113,10 +113,21 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string) (
 	})
 	if !ok {
 		var zero T
-		return zero, fmt.Errorf("no AWS SDK for Go v1 API client factory: %s", servicePackageName)
+		return zero, fmt.Errorf("no AWS SDK v1 API client factory: %s", servicePackageName)
 	}
 
-	return v.NewConn(ctx, c.Session), nil
+	conn := v.NewConn(ctx, c.Session)
+
+	if v, ok := sp.(interface {
+		CustomizeConn(context.Context, T, *session.Session) error
+	}); ok {
+		if err := v.CustomizeConn(ctx, conn, c.Session); err != nil {
+			var zero T
+			return zero, err
+		}
+	}
+
+	return conn, nil
 }
 
 // client returns the AWS SDK for Go v2 API client for the specified service.
@@ -132,9 +143,20 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string)
 	})
 	if !ok {
 		var zero T
-		return zero, fmt.Errorf("no AWS SDK for Go v2 API client factory: %s", servicePackageName)
+		return zero, fmt.Errorf("no AWS SDK v2 API client factory: %s", servicePackageName)
 	}
 
 	// TODO: Add Cfg to AWSClient.
-	return v.NewClient(ctx, aws_sdkv2.Config{} /*c.Config*/), nil
+	client := v.NewClient(ctx, aws_sdkv2.Config{} /*c.Config*/)
+
+	if v, ok := sp.(interface {
+		CustomizeClient(context.Context, T, aws_sdkv2.Config) error
+	}); ok {
+		if err := v.CustomizeClient(ctx, client, aws_sdkv2.Config{} /*c.Config*/); err != nil {
+			var zero T
+			return zero, err
+		}
+	}
+
+	return client, nil
 }
