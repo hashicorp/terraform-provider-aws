@@ -132,19 +132,19 @@ func (p *servicePackage) SetEndpoint(endpoint string) {
 
 {{if eq .SDKVersion "1" "1,2" }}
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) *{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }} {
-	return {{ .GoV1Package }}_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.endpoint)}))
+func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) (*{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}, error) {
+	return {{ .GoV1Package }}_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.endpoint)})), nil
 }
 {{- end }}
 
 {{if eq .SDKVersion "2" "1,2" }}
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) *{{ .GoV2Package }}_sdkv2.Client {
+func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) (*{{ .GoV2Package }}_sdkv2.Client, error) {
 	return {{ .GoV2Package }}_sdkv2.NewFromConfig(cfg, func(o *{{ .GoV2Package }}_sdkv2.Options) {
 		if p.endpoint != "" {
 			o.EndpointResolver = {{ .GoV2Package }}_sdkv2.EndpointResolverFromURL(p.endpoint)
 		}
-	})
+	}), nil
 }
 {{- end }}
 
