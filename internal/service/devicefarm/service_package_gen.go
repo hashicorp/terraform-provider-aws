@@ -78,6 +78,7 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.DeviceFarm
 }
 
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session, endpoint string) *devicefarm_sdkv1.DeviceFarm {
 	return devicefarm_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(endpoint)}))
 }

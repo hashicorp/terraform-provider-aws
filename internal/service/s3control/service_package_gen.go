@@ -4,6 +4,8 @@ package s3control
 
 import (
 	"context"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	s3control_sdkv1 "github.com/aws/aws-sdk-go/service/s3control"
@@ -91,8 +93,18 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.S3Control
 }
 
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session, endpoint string) *s3control_sdkv1.S3Control {
 	return s3control_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(endpoint)}))
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config, endpoint string) *s3control_sdkv2.Client {
+	return s3control_sdkv2.NewFromConfig(cfg, func(o *s3control_sdkv2.Options) {
+		if endpoint != "" {
+			o.EndpointResolver = s3control_sdkv2.EndpointResolverFromURL(endpoint)
+		}
+	})
 }
 
 var ServicePackage = &servicePackage{}

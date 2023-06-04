@@ -147,6 +147,7 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.ELBV2
 }
 
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session, endpoint string) *elbv2_sdkv1.ELBV2 {
 	return elbv2_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(endpoint)}))
 }

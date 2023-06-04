@@ -4,6 +4,8 @@ package accessanalyzer
 
 import (
 	"context"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	accessanalyzer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,6 +43,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.AccessAnalyzer
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config, endpoint string) *accessanalyzer_sdkv2.Client {
+	return accessanalyzer_sdkv2.NewFromConfig(cfg, func(o *accessanalyzer_sdkv2.Options) {
+		if endpoint != "" {
+			o.EndpointResolver = accessanalyzer_sdkv2.EndpointResolverFromURL(endpoint)
+		}
+	})
 }
 
 var ServicePackage = &servicePackage{}

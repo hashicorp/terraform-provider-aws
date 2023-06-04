@@ -4,6 +4,8 @@ package lambda
 
 import (
 	"context"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	lambda_sdkv1 "github.com/aws/aws-sdk-go/service/lambda"
@@ -111,8 +113,18 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Lambda
 }
 
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session, endpoint string) *lambda_sdkv1.Lambda {
 	return lambda_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(endpoint)}))
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config, endpoint string) *lambda_sdkv2.Client {
+	return lambda_sdkv2.NewFromConfig(cfg, func(o *lambda_sdkv2.Options) {
+		if endpoint != "" {
+			o.EndpointResolver = lambda_sdkv2.EndpointResolverFromURL(endpoint)
+		}
+	})
 }
 
 var ServicePackage = &servicePackage{}

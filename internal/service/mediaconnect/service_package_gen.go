@@ -33,6 +33,7 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.MediaConnect
 }
 
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session, endpoint string) *mediaconnect_sdkv1.MediaConnect {
 	return mediaconnect_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(endpoint)}))
 }

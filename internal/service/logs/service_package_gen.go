@@ -4,6 +4,8 @@ package logs
 
 import (
 	"context"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	cloudwatchlogs_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -89,8 +91,18 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Logs
 }
 
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session, endpoint string) *cloudwatchlogs_sdkv1.CloudWatchLogs {
 	return cloudwatchlogs_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(endpoint)}))
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config, endpoint string) *cloudwatchlogs_sdkv2.Client {
+	return cloudwatchlogs_sdkv2.NewFromConfig(cfg, func(o *cloudwatchlogs_sdkv2.Options) {
+		if endpoint != "" {
+			o.EndpointResolver = cloudwatchlogs_sdkv2.EndpointResolverFromURL(endpoint)
+		}
+	})
 }
 
 var ServicePackage = &servicePackage{}

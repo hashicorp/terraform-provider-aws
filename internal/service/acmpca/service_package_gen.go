@@ -67,6 +67,7 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.ACMPCA
 }
 
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session, endpoint string) *acmpca_sdkv1.ACMPCA {
 	return acmpca_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(endpoint)}))
 }
