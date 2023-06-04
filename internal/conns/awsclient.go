@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
@@ -117,4 +118,25 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string) (
 
 	// TODO: Add Endpoints to AWSClient.
 	return v.NewConn(ctx, c.Session, "" /*c.Endpoints[servicePackageName]*/), nil
+}
+
+// client returns the AWS SDK for Go v2 API client for the specified service.
+func client[T any](ctx context.Context, c *AWSClient, servicePackageName string) (T, error) {
+	sp, ok := c.ServicePackages[servicePackageName]
+	if !ok {
+		var zero T
+		return zero, fmt.Errorf("unknown service package: %s", servicePackageName)
+	}
+
+	v, ok := sp.(interface {
+		NewClient(context.Context, aws_sdkv2.Config, string) T
+	})
+	if !ok {
+		var zero T
+		return zero, fmt.Errorf("no AWS SDK for Go v2 API client factory: %s", servicePackageName)
+	}
+
+	// TODO: Add Endpoints to AWSClient.
+	// TODO: Add Cfg to AWSClient.
+	return v.NewClient(ctx, aws_sdkv2.Config{} /*c.Config*/, "" /*c.Endpoints[servicePackageName]*/), nil
 }
