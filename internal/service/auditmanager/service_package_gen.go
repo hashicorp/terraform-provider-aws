@@ -83,12 +83,12 @@ func (p *servicePackage) SetEndpoint(endpoint string) {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) *auditmanager_sdkv2.Client {
+func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) (*auditmanager_sdkv2.Client, error) {
 	return auditmanager_sdkv2.NewFromConfig(cfg, func(o *auditmanager_sdkv2.Options) {
 		if p.endpoint != "" {
 			o.EndpointResolver = auditmanager_sdkv2.EndpointResolverFromURL(p.endpoint)
 		}
-	})
+	}), nil
 }
 
 var ServicePackage = &servicePackage{}

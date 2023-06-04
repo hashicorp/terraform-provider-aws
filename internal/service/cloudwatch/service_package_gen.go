@@ -69,8 +69,8 @@ func (p *servicePackage) SetEndpoint(endpoint string) {
 }
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) *cloudwatch_sdkv1.CloudWatch {
-	return cloudwatch_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.endpoint)}))
+func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) (*cloudwatch_sdkv1.CloudWatch, error) {
+	return cloudwatch_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.endpoint)})), nil
 }
 
 var ServicePackage = &servicePackage{}

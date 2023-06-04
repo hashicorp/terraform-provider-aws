@@ -98,17 +98,17 @@ func (p *servicePackage) SetEndpoint(endpoint string) {
 }
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) *cloudwatchlogs_sdkv1.CloudWatchLogs {
-	return cloudwatchlogs_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.endpoint)}))
+func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) (*cloudwatchlogs_sdkv1.CloudWatchLogs, error) {
+	return cloudwatchlogs_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.endpoint)})), nil
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) *cloudwatchlogs_sdkv2.Client {
+func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) (*cloudwatchlogs_sdkv2.Client, error) {
 	return cloudwatchlogs_sdkv2.NewFromConfig(cfg, func(o *cloudwatchlogs_sdkv2.Options) {
 		if p.endpoint != "" {
 			o.EndpointResolver = cloudwatchlogs_sdkv2.EndpointResolverFromURL(p.endpoint)
 		}
-	})
+	}), nil
 }
 
 var ServicePackage = &servicePackage{}
