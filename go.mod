@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
-	github.com/aws/aws-sdk-go v1.44.272
+	github.com/aws/aws-sdk-go v1.44.273
 	github.com/aws/aws-sdk-go-v2 v1.18.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.19.12
@@ -20,7 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.10
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.98.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.10
-	github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.11
+	github.com/aws/aws-sdk-go-v2/service/healthlake v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.11
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.5
@@ -31,7 +31,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.4
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.6
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.12
-	github.com/aws/aws-sdk-go-v2/service/rds v1.44.1
+	github.com/aws/aws-sdk-go-v2/service/rds v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.13
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.10
@@ -49,8 +49,8 @@ require (
 	github.com/beevik/etree v1.2.0
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.20.0
-	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.27
-	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.28
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.28
+	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.29
 	github.com/hashicorp/awspolicyequivalence v1.6.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320

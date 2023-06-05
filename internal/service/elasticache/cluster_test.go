@@ -1903,14 +1903,14 @@ resource "aws_elasticache_cluster" "test" {
 func testAccClusterConfig_replicationGroupIDAvailabilityZone(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_description = "Terraform Acceptance Testing"
-  replication_group_id          = %[1]q
-  node_type                     = "cache.t3.medium"
-  number_cache_clusters         = 1
-  port                          = 6379
+  description          = "Terraform Acceptance Testing"
+  replication_group_id = %[1]q
+  node_type            = "cache.t3.medium"
+  num_cache_clusters   = 1
+  port                 = 6379
 
   lifecycle {
-    ignore_changes = [number_cache_clusters]
+    ignore_changes = [num_cache_clusters]
   }
 }
 
@@ -1925,14 +1925,14 @@ resource "aws_elasticache_cluster" "test" {
 func testAccClusterConfig_replicationGroupIDReplica(rName string, count int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_description = "Terraform Acceptance Testing"
-  replication_group_id          = %[1]q
-  node_type                     = "cache.t3.medium"
-  number_cache_clusters         = 1
-  port                          = 6379
+  description          = "Terraform Acceptance Testing"
+  replication_group_id = %[1]q
+  node_type            = "cache.t3.medium"
+  num_cache_clusters   = 1
+  port                 = 6379
 
   lifecycle {
-    ignore_changes = [number_cache_clusters]
+    ignore_changes = [num_cache_clusters]
   }
 }
 
@@ -2056,11 +2056,13 @@ resource "aws_iam_role" "r" {
 
 resource "aws_kinesis_firehose_delivery_stream" "ds" {
   name        = %[1]q
-  destination = "s3"
-  s3_configuration {
-    role_arn   = aws_iam_role.r.arn
+  destination = "extended_s3"
+
+  extended_s3_configuration {
     bucket_arn = aws_s3_bucket.b.arn
+    role_arn   = aws_iam_role.r.arn
   }
+
   lifecycle {
     ignore_changes = [
       tags["LogDeliveryEnabled"],

@@ -155,7 +155,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("permissions", flex.FlattenStringSet(permissions))
 	}
 
-	SetTagsOut(ctx, resp.SecurityProfile.AllowedAccessControlTags)
+	SetTagsOut(ctx, resp.SecurityProfile.Tags)
 
 	return nil
 }

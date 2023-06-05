@@ -250,11 +250,17 @@ resource "aws_ec2_transit_gateway" "peer" {
 }
 
 func testAccTransitGatewayPeeringAttachmentConfig_sameAccount_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), testAccTransitGatewayPeeringAttachmentConfig_base(rName))
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateRegionProvider(),
+		testAccTransitGatewayPeeringAttachmentConfig_base(rName),
+	)
 }
 
 func testAccTransitGatewayPeeringAttachmentConfig_differentAccount_base(rName string) string {
-	return acctest.ConfigCompose(testAccAlternateAccountAlternateRegionProviderConfig(), testAccTransitGatewayPeeringAttachmentConfig_base(rName))
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountAlternateRegionProvider(),
+		testAccTransitGatewayPeeringAttachmentConfig_base(rName),
+	)
 }
 
 func testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName string) string {
