@@ -285,19 +285,21 @@ func testAccCheck{{ .Resource }}Destroy(ctx context.Context) resource.TestCheckF
 				{{ .Resource }}Id: aws.String(rs.Primary.ID),
 			})
 			{{- end }}
+			{{- if .AWSGoSDKV2 }}
+			if errs.IsA[*types.ResourceNotFoundException](err){
+				return nil
+			}
 			if err != nil {
-				{{- if .AWSGoSDKV2 }}
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
-				{{- else }}
+				return err
+			}
+			{{ else }}
+			if err != nil {
 				if tfawserr.ErrCodeEquals(err, {{ .ServicePackage }}.ErrCodeNotFoundException) {
 					return nil
 				}
-				{{- end }}
-				return err
+				return nil
 			}
+			{{ end }}
 
 			return create.Error(names.{{ .Service }}, create.ErrActionCheckingDestroyed, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, errors.New("not destroyed"))
 		}

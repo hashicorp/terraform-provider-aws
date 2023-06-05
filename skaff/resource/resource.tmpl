@@ -60,6 +60,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -499,12 +500,10 @@ func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, 
 	// resource. If that happens, we don't want it to show up as an error.
 	{{- end }}
 	{{- if .AWSGoSDKV2 }}
+	if errs.IsA[*types.ResourceNotFoundException](err){
+		return diags
+	}
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
-
 		return append(diags, create.DiagError(names.{{ .Service }}, create.ErrActionDeleting, ResName{{ .Resource }}, d.Id(), err)...)
 	}
 	{{- else }}
@@ -670,15 +669,13 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 
 	{{- if .AWSGoSDKV2 }}
 	out, err := conn.Get{{ .Resource }}(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
+	if errs.IsA[*types.ResourceNotFoundException](err){
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
 		}
-
+	}
+	if err != nil {
 		return nil, err
 	}
 	{{- else }}
