@@ -344,7 +344,7 @@ storagegateway,storagegateway,storagegateway,storagegateway,,storagegateway,,,St
 sts,sts,sts,sts,,sts,,,STS,STS,x,1,,aws_caller_identity,aws_sts_,,caller_identity,STS (Security Token),AWS,,,AWS_STS_ENDPOINT,TF_AWS_STS_ENDPOINT,
 ,,,,,,,,,,,,,,,,,Sumerian,Amazon,x,,,,No SDK support
 support,support,support,support,,support,,,Support,Support,,1,,,aws_support_,,support_,Support,AWS,,,,,
-swf,swf,swf,swf,,swf,,,SWF,SWF,,1,,,aws_swf_,,swf_,SWF (Simple Workflow),Amazon,,,,,
+swf,swf,swf,swf,,swf,,,SWF,SWF,,,2,,aws_swf_,,swf_,SWF (Simple Workflow),Amazon,,,,,
 ,,,,,,,,,,,,,,,,,Tag Editor,AWS,x,,,,Part of Resource Groups Tagging
 textract,textract,textract,textract,,textract,,,Textract,Textract,,1,,,aws_textract_,,textract_,Textract,Amazon,,,,,
 timestream-query,timestreamquery,timestreamquery,timestreamquery,,timestreamquery,,,TimestreamQuery,TimestreamQuery,,1,,,aws_timestreamquery_,,timestreamquery_,Timestream Query,Amazon,,,,,
