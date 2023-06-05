@@ -39,6 +39,7 @@ import (
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
+	"github.com/aws/aws-sdk-go-v2/service/swf"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/xray"
@@ -309,7 +310,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/support"
-	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/synthetics"
 	"github.com/aws/aws-sdk-go/service/textract"
 	"github.com/aws/aws-sdk-go/service/timestreamquery"
@@ -624,7 +624,7 @@ type AWSClient struct {
 	ssoadminConn                     *ssoadmin.SSOAdmin
 	ssooidcConn                      *ssooidc.SSOOIDC
 	stsConn                          *sts.STS
-	swfConn                          *swf.SWF
+	swfClient                        *swf.Client
 	sagemakerConn                    *sagemaker.SageMaker
 	sagemakera2iruntimeConn          *augmentedairuntime.AugmentedAIRuntime
 	sagemakeredgeConn                *sagemakeredgemanager.SagemakerEdgeManager
@@ -1782,8 +1782,8 @@ func (client *AWSClient) STSConn() *sts.STS {
 	return client.stsConn
 }
 
-func (client *AWSClient) SWFConn() *swf.SWF {
-	return client.swfConn
+func (client *AWSClient) SWFClient() *swf.Client {
+	return client.swfClient
 }
 
 func (client *AWSClient) SageMakerConn() *sagemaker.SageMaker {
