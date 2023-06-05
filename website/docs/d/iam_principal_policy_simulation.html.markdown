@@ -3,12 +3,12 @@ subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_principal_policy_simulation"
 description: |-
-  Runs a simulation of the IAM policies of a particular princial against a given hypothetical request.
+  Runs a simulation of the IAM policies of a particular principal against a given hypothetical request.
 ---
 
 # Data Source: aws_iam_principal_policy_simulation
 
-Runs a simulation of the IAM policies of a particular princial against a given hypothetical request.
+Runs a simulation of the IAM policies of a particular principal against a given hypothetical request.
 
 You can use this data source in conjunction with
 [Preconditions and Postconditions](https://www.terraform.io/language/expressions/custom-conditions#preconditions-and-postconditions) so that your configuration can test either whether it should have sufficient access to do its own work, or whether policies your configuration declares itself are sufficient for their intended use elsewhere.
