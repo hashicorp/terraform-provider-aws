@@ -204,8 +204,8 @@ func TestAccVPCNATGateway_secondaryAllocationIds(t *testing.T) {
 				Config: testAccVPCNATGatewayConfig_secondaryAllocationIds(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
-					resource.TestCheckResourceAttrSet(resourceName, "secondary_private_ip_addresses"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_allocation_ids"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "1"),
 				),
 			},
 			{
@@ -264,8 +264,10 @@ func TestAccVPCNATGateway_secondaryPrivateIpAddresses(t *testing.T) {
 				Config: testAccVPCNATGatewayConfig_secondaryPrivateIpAddresses(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_allocation_ids"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "secondary_private_ip_addresses"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "1"),
 				),
 			},
 			{
@@ -476,10 +478,15 @@ resource "aws_nat_gateway" "test" {
 
 func testAccVPCNATGatewayConfig_secondaryPrivateIpAddresses(rName string) string {
 	return acctest.ConfigCompose(testAccNATGatewayConfig_base(rName), `
+resource "aws_eip" "secondary" {
+  domain = "vpc"
+}
+
 resource "aws_nat_gateway" "test" {
   allocation_id                  = aws_eip.test.id
-  subnet_id                      = aws_subnet.public.id
-  secondary_private_ip_addresses = ["10.0.1.1", "10.0.1.2", "10.0.1.3", "10.0.1.4"]
+  subnet_id                      = aws_subnet.private.id
+  secondary_allocation_ids       = [aws_eip.secondary.id]
+  secondary_private_ip_addresses = ["10.0.1.5"]
 
   depends_on = [aws_internet_gateway.test]
 }
