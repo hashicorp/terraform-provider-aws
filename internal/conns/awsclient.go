@@ -102,6 +102,18 @@ func (client *AWSClient) GlobalAcceleratorHostedZoneID() string {
 
 // conn returns the AWS SDK for Go v1 API client for the specified service.
 func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string) (T, error) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	if raw, ok := c.conns[servicePackageName]; ok {
+		if conn, ok := raw.(T); ok {
+			return conn, nil
+		} else {
+			var zero T
+			return zero, fmt.Errorf("AWS SDK v1 API client (%s): %T, want %T", servicePackageName, raw, zero)
+		}
+	}
+
 	sp, ok := c.ServicePackages[servicePackageName]
 	if !ok {
 		var zero T
@@ -132,11 +144,25 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string) (
 		}
 	}
 
+	c.conns[servicePackageName] = conn
+
 	return conn, nil
 }
 
 // client returns the AWS SDK for Go v2 API client for the specified service.
 func client[T any](ctx context.Context, c *AWSClient, servicePackageName string) (T, error) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	if raw, ok := c.clients[servicePackageName]; ok {
+		if client, ok := raw.(T); ok {
+			return client, nil
+		} else {
+			var zero T
+			return zero, fmt.Errorf("AWS SDK v2 API client (%s): %T, want %T", servicePackageName, raw, zero)
+		}
+	}
+
 	sp, ok := c.ServicePackages[servicePackageName]
 	if !ok {
 		var zero T
@@ -166,6 +192,8 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string)
 			return zero, err
 		}
 	}
+
+	c.clients[servicePackageName] = client
 
 	return client, nil
 }

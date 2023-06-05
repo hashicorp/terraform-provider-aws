@@ -195,6 +195,8 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
 	client.awsConfig = cfg
+	client.clients = make(map[string]any, 0)
+	client.conns = make(map[string]any, 0)
 
 	// Set each service package's overridden API endpoint.
 	for _, sp := range client.ServicePackages {
