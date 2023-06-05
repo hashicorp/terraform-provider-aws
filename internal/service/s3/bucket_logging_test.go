@@ -556,7 +556,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_bucket_ownership_controls" "test" {
   bucket = aws_s3_bucket.test.id
   rule {
-    object_ownership = "BucketOwnerPreferred"
+    object_ownership = "ObjectWriter"
   }
 }
 
@@ -654,7 +654,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_bucket_ownership_controls" "test" {
   bucket = aws_s3_bucket.test.id
   rule {
-    object_ownership = "BucketOwnerPreferred"
+    object_ownership = "ObjectWriter"
   }
 }
 
