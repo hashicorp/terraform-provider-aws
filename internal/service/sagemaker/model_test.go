@@ -645,6 +645,7 @@ resource "aws_s3_object" "test" {
 `, rName))
 }
 
+// lintignore:AWSAT003,AWSAT005
 func testAccModelConfig_primaryContainerPackageName(rName string) string {
 	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
 data "aws_region" "current" {}
