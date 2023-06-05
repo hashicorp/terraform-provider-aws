@@ -187,6 +187,40 @@ func TestAccVPCNATGateway_tags(t *testing.T) {
 	})
 }
 
+func TestAccVPCNATGateway_secondaryAllocationIds(t *testing.T) {
+	ctx := acctest.Context(t)
+	var natGateway ec2.NatGateway
+	resourceName := "aws_nat_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNATGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNATGatewayConfig_secondaryAllocationIds(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
+					resource.TestCheckResourceAttr(resourceName, "connectivity_type", "public"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckNATGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
@@ -353,4 +387,24 @@ resource "aws_nat_gateway" "test" {
   depends_on = [aws_internet_gateway.test]
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccVPCNATGatewayConfig_secondaryAllocationIds(rName string) string {
+	return acctest.ConfigCompose(testAccNATGatewayConfig_base(rName), `
+resource "aws_eip" "one" {
+  domain = "vpc"
+}
+
+resource "aws_eip" "two" {
+  domain = "vpc"
+}
+
+resource "aws_nat_gateway" "test" {
+  allocation_id            = aws_eip.test.id
+  subnet_id                = aws_subnet.public.id
+  secondary_allocation_ids = [aws_eip.one.id, aws_eip.two.id]
+
+  depends_on = [aws_internet_gateway.test]
+}
+`)
 }
