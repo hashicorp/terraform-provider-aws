@@ -280,7 +280,7 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 	// TIP: -- 4. Set the minimum arguments and/or attributes for the Read function to
 	// work.
 	{{- end }}
-	d.SetId(aws.ToString(out.{{ .Resource }}.{{ .Resource }}ID))
+	d.SetId({{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(out.{{ .Resource }}.{{ .Resource }}ID))
 	{{ if .IncludeComments }}
 	// TIP: -- 5. Use a waiter to wait for create to complete
 	{{- end }}
@@ -359,7 +359,7 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 	{{ if .IncludeComments }}
 	// TIP: Setting a JSON string to avoid errorneous diffs.
 	{{- end }}
-	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
+	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(out.Policy))
 	if err != nil {
 		return append(diags, create.DiagError(names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)...)
 	}
@@ -446,7 +446,7 @@ func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, 
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Use a waiter to wait for update to complete
 	{{- end }}
-	if _, err := wait{{ .Resource }}Updated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := wait{{ .Resource }}Updated(ctx, conn, {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return append(diags, create.DiagError(names.{{ .Service }}, create.ErrActionWaitingForUpdate, ResName{{ .Resource }}, d.Id(), err)...)
 	}
 	{{ if .IncludeComments }}
@@ -647,7 +647,7 @@ func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Se
 			return nil, "", err
 		}
 
-		return out, aws.ToString(out.Status), nil
+		return out, {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(out.Status), nil
 	}
 }
 {{ if .IncludeComments }}
@@ -717,11 +717,11 @@ func flattenComplexArgument(apiObject *{{ .ServiceLower }}.ComplexArgument) map[
 	m := map[string]interface{}{}
 
 	if v := apiObject.SubFieldOne; v != nil {
-		m["sub_field_one"] = aws.ToString(v)
+		m["sub_field_one"] = {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(v)
 	}
 
 	if v := apiObject.SubFieldTwo; v != nil {
-		m["sub_field_two"] = aws.ToString(v)
+		m["sub_field_two"] = {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(v)
 	}
 
 	return m

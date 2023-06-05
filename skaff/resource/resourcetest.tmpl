@@ -356,8 +356,8 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccCheck{{ .Resource }}NotRecreated(before, after *{{ .ServicePackage }}.Describe{{ .Resource }}Response) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.{{ .Resource }}Id), aws.StringValue(after.{{ .Resource }}Id); before != after {
-			return create.Error(names.{{ .Service }}, create.ErrActionCheckingNotRecreated, tf{{ .ServicePackage }}.ResName{{ .Resource }}, aws.StringValue(before.{{ .Resource }}Id), errors.New("recreated"))
+		if before, after := {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(before.{{ .Resource }}Id), {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(after.{{ .Resource }}Id); before != after {
+			return create.Error(names.{{ .Service }}, create.ErrActionCheckingNotRecreated, tf{{ .ServicePackage }}.ResName{{ .Resource }}, {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(before.{{ .Resource }}Id), errors.New("recreated"))
 		}
 
 		return nil
