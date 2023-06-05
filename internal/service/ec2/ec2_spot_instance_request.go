@@ -52,52 +52,6 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 				v.ForceNew = true
 			}
 
-			s["volume_tags"] = &schema.Schema{
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			}
-
-			s["spot_price"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					oldFloat, _ := strconv.ParseFloat(old, 64)
-					newFloat, _ := strconv.ParseFloat(new, 64)
-
-					return big.NewFloat(oldFloat).Cmp(big.NewFloat(newFloat)) == 0
-				},
-			}
-			s["spot_type"] = &schema.Schema{
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ec2.SpotInstanceTypePersistent,
-				ValidateFunc: validation.StringInSlice(ec2.SpotInstanceType_Values(), false),
-			}
-			s["wait_for_fulfillment"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			}
-			s["launch_group"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			}
-			s["spot_bid_status"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			}
-			s["spot_request_state"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			}
-			s["spot_instance_id"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			}
 			s["block_duration_minutes"] = &schema.Schema{
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -110,6 +64,41 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 				Default:      ec2.InstanceInterruptionBehaviorTerminate,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
+			}
+			s["launch_group"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			}
+			s["spot_bid_status"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			}
+			s["spot_instance_id"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			}
+			s["spot_price"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					oldFloat, _ := strconv.ParseFloat(old, 64)
+					newFloat, _ := strconv.ParseFloat(new, 64)
+
+					return big.NewFloat(oldFloat).Cmp(big.NewFloat(newFloat)) == 0
+				},
+			}
+			s["spot_request_state"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			}
+			s["spot_type"] = &schema.Schema{
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.SpotInstanceTypePersistent,
+				ValidateFunc: validation.StringInSlice(ec2.SpotInstanceType_Values(), false),
 			}
 			s["valid_from"] = &schema.Schema{
 				Type:         schema.TypeString,
@@ -125,6 +114,17 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 				ValidateFunc: validation.IsRFC3339Time,
 				Computed:     true,
 			}
+			s["volume_tags"] = &schema.Schema{
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			}
+			s["wait_for_fulfillment"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			}
+
 			return s
 		}(),
 
