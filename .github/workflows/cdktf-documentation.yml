@@ -9,27 +9,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  releasedVersion:
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.remove-leading-v.outputs.version }}
-    steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
-
-      - uses: actions-ecosystem/action-get-latest-tag@v1 # TSCCR: no entry for repository "actions-ecosystem/action-get-latest-tag"
-        id: get-latest-tag
-        with:
-          semver_only: true
-
-      - name: Remove leading v from tag
-        id: remove-leading-v
-        run: |
-          VERSION='${{ steps.get-latest-tag.outputs.tag }}'
-          echo "VERSION=${VERSION:1}" >> $GITHUB_OUTPUT
-
   cdktfDocs:
-    needs:
-      - releasedVersion
     runs-on: ubuntu-latest
     container:
       image: docker.mirror.hashicorp.services/hashicorp/jsii-terraform
@@ -53,14 +33,14 @@ jobs:
         with:
           node-version: "18.x"
       - name: Install cdktf-registry-docs
-        run: npm install -g cdktf-registry-docs@1.10.1
+        run: npm install -g cdktf-registry-docs@1.11.0
       - name: Run conversion
         run: |
           cdktf-registry-docs convert \
             --files='*/ec2_*.html.markdown' \
             --languages='typescript,python' \
             --parallel-conversions-per-document=1 \
-            --provider-from-registry="hashicorp/aws@~> ${{ needs.releasedVersion.outputs.version }}" \
+            --provider-from-registry="hashicorp/aws" \
             .
         env:
           TF_PLUGIN_CACHE_DIR: ${{ steps.global-cache-dir-path.outputs.dir }}/terraform-plugins
