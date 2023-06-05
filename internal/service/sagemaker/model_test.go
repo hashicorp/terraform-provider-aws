@@ -665,12 +665,12 @@ locals {
     sa-east-1      = "270155090741"
   }
 
-  account = region_account_map[data.aws_region.current]
+  account = local.region_account_map[data.aws_region.current.name]
 
   model_package_name = format(
     "arn:aws:sagemaker:%%s:%%s:model-package/gpt-2-1584040650-de7f6ab78d68d7fdf5f4f39a559d05ac",
-    data.aws_region.current,
-    account
+    data.aws_region.current.name,
+    local.account
   )
 }
 
