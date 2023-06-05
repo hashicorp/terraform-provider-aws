@@ -145,26 +145,16 @@ func ResourceModelQualityJobDefinition() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"constraints_resource": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
+						"baselining_job_name": {
+							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"s3_uri": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
-											validation.StringLenBetween(1, 512),
-										),
-									},
-								},
-							},
+							ValidateFunc: validation.All(
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}`), ""),
+								validation.StringLenBetween(1, 63),
+							),
 						},
-						"statistics_resource": {
+						"constraints_resource": {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
@@ -584,16 +574,13 @@ func resourceModelQualityJobDefinitionCreate(ctx context.Context, d *schema.Reso
 
 	createOpts := &sagemaker.CreateModelQualityJobDefinitionInput{
 		ModelQualityAppSpecification: expandModelQualityAppSpecification(d.Get("model_quality_app_specification").([]interface{})),
+		ModelQualityBaselineConfig:   expandModelQualityBaselineConfig(d.Get("model_quality_baseline_config").([]interface{})),
 		ModelQualityJobInput:         expandModelQualityJobInput(d.Get("model_quality_job_input").([]interface{})),
 		ModelQualityJobOutputConfig:  expandMonitoringOutputConfig(d.Get("model_quality_job_output_config").([]interface{})),
 		JobDefinitionName:            aws.String(name),
 		JobResources:                 expandMonitoringResources(d.Get("job_resources").([]interface{})),
 		RoleArn:                      aws.String(roleArn),
 		Tags:                         GetTagsIn(ctx),
-	}
-
-	if v, ok := d.GetOk("model_quality_baseline_config"); ok && len(v.([]interface{})) > 0 {
-		createOpts.ModelQualityBaselineConfig = expandModelQualityBaselineConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("network_config"); ok && len(v.([]interface{})) > 0 {
@@ -770,6 +757,10 @@ func flattenModelQualityBaselineConfig(config *sagemaker.ModelQualityBaselineCon
 
 	m := map[string]interface{}{}
 
+	if config.BaseliningJobName != nil {
+		m["baselining_job_name"] = aws.StringValue(config.BaseliningJobName)
+	}
+
 	if config.ConstraintsResource != nil {
 		m["constraints_resource"] = flattenConstraintsResource(config.ConstraintsResource)
 	}
@@ -855,6 +846,10 @@ func expandModelQualityBaselineConfig(configured []interface{}) *sagemaker.Model
 	m := configured[0].(map[string]interface{})
 
 	c := &sagemaker.ModelQualityBaselineConfig{}
+
+	if v, ok := m["baselining_job_name"].(string); ok && len(v) > 0 {
+		c.BaseliningJobName = aws.String(v)
+	}
 
 	if v, ok := m["constraints_resource"].([]interface{}); ok && len(v) > 0 {
 		c.ConstraintsResource = expandMonitoringConstraintsResource(v)
