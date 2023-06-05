@@ -3,6 +3,7 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -203,13 +204,68 @@ func TestAccVPCNATGateway_secondaryAllocationIds(t *testing.T) {
 				Config: testAccVPCNATGatewayConfig_secondaryAllocationIds(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
-					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
-					resource.TestCheckResourceAttr(resourceName, "connectivity_type", "public"),
-					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
-					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_private_ip_addresses"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCNATGateway_secondaryPrivateIpAddressCount(t *testing.T) {
+	ctx := acctest.Context(t)
+	var natGateway ec2.NatGateway
+	resourceName := "aws_nat_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	secondaryPrivateIpAddressCount := 3
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNATGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNATGatewayConfig_secondaryPrivateIpAddressCount(rName, secondaryPrivateIpAddressCount),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_private_ip_address_count"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", strconv.Itoa(secondaryPrivateIpAddressCount)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCNATGateway_secondaryPrivateIpAddresses(t *testing.T) {
+	ctx := acctest.Context(t)
+	var natGateway ec2.NatGateway
+	resourceName := "aws_nat_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNATGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNATGatewayConfig_secondaryPrivateIpAddresses(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_private_ip_addresses"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "4"),
 				),
 			},
 			{
@@ -391,18 +447,39 @@ resource "aws_nat_gateway" "test" {
 
 func testAccVPCNATGatewayConfig_secondaryAllocationIds(rName string) string {
 	return acctest.ConfigCompose(testAccNATGatewayConfig_base(rName), `
-resource "aws_eip" "one" {
-  domain = "vpc"
-}
-
-resource "aws_eip" "two" {
+resource "aws_eip" "secondary" {
   domain = "vpc"
 }
 
 resource "aws_nat_gateway" "test" {
   allocation_id            = aws_eip.test.id
   subnet_id                = aws_subnet.public.id
-  secondary_allocation_ids = [aws_eip.one.id, aws_eip.two.id]
+  secondary_allocation_ids = [aws_eip.secondary.id]
+
+  depends_on = [aws_internet_gateway.test]
+}
+`)
+}
+
+func testAccVPCNATGatewayConfig_secondaryPrivateIpAddressCount(rName string, secondaryPrivateIpAddressCount int) string {
+	return acctest.ConfigCompose(testAccNATGatewayConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_nat_gateway" "test" {
+  connectivity_type                  = "private"
+  subnet_id                          = aws_subnet.public.id
+  secondary_private_ip_address_count = %d
+
+  depends_on = [aws_internet_gateway.test]
+}
+`, secondaryPrivateIpAddressCount))
+}
+
+func testAccVPCNATGatewayConfig_secondaryPrivateIpAddresses(rName string) string {
+	return acctest.ConfigCompose(testAccNATGatewayConfig_base(rName), `
+resource "aws_nat_gateway" "test" {
+  allocation_id                  = aws_eip.test.id
+  subnet_id                      = aws_subnet.public.id
+  secondary_private_ip_addresses = ["10.0.1.1", "10.0.1.2", "10.0.1.3", "10.0.1.4"]
 
   depends_on = [aws_internet_gateway.test]
 }
