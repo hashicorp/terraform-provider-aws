@@ -402,6 +402,7 @@ func ResourceInstance() *schema.Resource {
 						"spot_options": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -416,6 +417,7 @@ func ResourceInstance() *schema.Resource {
 									"max_price": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
 										ForceNew: true,
 										DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 											if (oldValue != "" && newValue == "") || (strings.TrimRight(oldValue, "0") == strings.TrimRight(newValue, "0")) {
@@ -1997,13 +1999,13 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("instance_lifecycle"); ok && v == ec2.InstanceLifecycleSpot {
-		log.Printf("[INFO] Cancelling spot request: %s", d.Id())
+		spotInstanceRequestID := d.Get("spot_instance_request_id").(string)
 		_, err := conn.CancelSpotInstanceRequestsWithContext(ctx, &ec2.CancelSpotInstanceRequestsInput{
-			SpotInstanceRequestIds: []*string{aws.String(d.Get("spot_instance_request_id").(string))},
+			SpotInstanceRequestIds: aws.StringSlice([]string{spotInstanceRequestID}),
 		})
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error cancelling spot request (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "cancelling EC2 Spot Fleet Request (%s): %s", spotInstanceRequestID, err)
 		}
 	}
 
