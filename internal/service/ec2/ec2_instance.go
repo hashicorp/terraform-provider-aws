@@ -395,7 +395,7 @@ func ResourceInstance() *schema.Resource {
 						"market_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      "spot",
+							Default:      ec2.MarketTypeSpot,
 							ValidateFunc: validation.StringInSlice(ec2.MarketType_Values(), false),
 						},
 						"spot_options": {
@@ -408,7 +408,7 @@ func ResourceInstance() *schema.Resource {
 									"instance_interruption_behavior": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										Default:      "terminate",
+										Default:      ec2.InstanceInterruptionBehaviorTerminate,
 										ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
 									},
 									"max_price": {
@@ -424,7 +424,7 @@ func ResourceInstance() *schema.Resource {
 									"spot_instance_type": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										Default:      "one-time",
+										Default:      ec2.SpotInstanceTypeOneTime,
 										ValidateFunc: validation.StringInSlice(ec2.SpotInstanceType_Values(), false),
 									},
 									"valid_until": {
@@ -986,9 +986,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(instance.InstanceId))
 
-	d.Set("spot_instance_request_id", instance.SpotInstanceRequestId)
-	d.Set("instance_lifecycle", instance.InstanceLifecycle)
-
 	instance, err = WaitInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
@@ -1399,7 +1396,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			for _, req := range attr.SpotInstanceRequests {
 				if aws.StringValue(req.SpotInstanceRequestId) == aws.StringValue(instance.SpotInstanceRequestId) {
 					instanceMarketOptions := map[string]any{}
-					instanceMarketOptions["market_type"] = "spot"
+					instanceMarketOptions["market_type"] = ec2.MarketTypeSpot
 					spotOptions := map[string]any{}
 					if v := aws.StringValue(req.InstanceInterruptionBehavior); v != "" {
 						spotOptions["instance_interruption_behavior"] = v
@@ -1984,7 +1981,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if v, ok := d.GetOk("instance_lifecycle"); ok && v == "spot" {
+	if v, ok := d.GetOk("instance_lifecycle"); ok && v == ec2.InstanceLifecycleSpot {
 		log.Printf("[INFO] Cancelling spot request: %s", d.Id())
 		_, err := conn.CancelSpotInstanceRequestsWithContext(ctx, &ec2.CancelSpotInstanceRequestsInput{
 			SpotInstanceRequestIds: []*string{aws.String(d.Get("spot_instance_request_id").(string))},
