@@ -121,6 +121,8 @@ github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.10 h1:PkHIIJs8qvq0e5QybnZoG1K
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.10/go.mod h1:AFvkxc8xfBe8XA+5St5XIHHrQQtkxqrRincx4hmMHOk=
 github.com/aws/aws-sdk-go-v2/service/sts v1.19.0 h1:2DQLAKDteoEDI8zpCzqBMaZlJuoE9iTYD0gFmXVax9E=
 github.com/aws/aws-sdk-go-v2/service/sts v1.19.0/go.mod h1:BgQOMsg8av8jset59jelyPW7NoZcZXLVpDsXunGDrk8=
+github.com/aws/aws-sdk-go-v2/service/swf v1.15.0 h1:ZcQ8IYzUhmiVZ7lV4E0lttk+Tei/RZk/Oko8+G34cWI=
+github.com/aws/aws-sdk-go-v2/service/swf v1.15.0/go.mod h1:p5K3luEySutRPjMsXcmoc9dumbUus6ZOj4XBYC3XMII=
 github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.6 h1:I2Y2Y8V+uq2ZoD+yTxjKYuPOTtScHMXUWdbuCdjNZy4=
 github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.6/go.mod h1:VgAk4W80KzgqmBdm1jk+FjqiD5VgAz0FGvqECq7q79I=
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.5 h1:ZQizySv5AeKbYYtkDiUcxSnwTqAJ4URIxdoLWfZ7rhw=
