@@ -1,3 +1,3 @@
 ```release-note:new-data-source
-aws_iam_principal_policy_simulation: Run simulated requests against a user's, group's, or role's IAM policies.
+aws_iam_principal_policy_simulation
 ```
