@@ -623,7 +623,7 @@ resource "aws_fis_experiment_template" "test" {
 `, rName+"-fis", desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, paramK2, paramV2, paramK3, paramV3, paramK4, paramV4, paramK5, paramV5, targetResType, targetSelectMode, targetResTagK, targetResTagV))
 }
 
-func testAccExperimentTemplateConfig_baseEbsVolume(rName string) string {
+func testAccExperimentTemplateConfig_baseEBSVolume(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -639,7 +639,7 @@ resource "aws_ebs_volume" "test" {
 }
 
 func testAccExperimentTemplateConfig_ebsVolume(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
-	return acctest.ConfigCompose(testAccExperimentTemplateConfig_baseEbsVolume(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccExperimentTemplateConfig_baseEBSVolume(rName), fmt.Sprintf(`
 resource "aws_iam_role" "test_fis" {
   name = %[1]q
 
