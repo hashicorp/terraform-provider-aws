@@ -1602,7 +1602,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
-func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
+func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 
 	v, err := findDBInstanceByIDSDKv1(ctx, conn, d.Id())
@@ -1731,7 +1732,8 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
+func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient()
 	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutUpdate))
 
@@ -1919,7 +1921,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			})
 
 			if diags.HasError() {
-				return
+				return diags
 			}
 		} else {
 			oldID := d.Get("identifier").(string)
@@ -2202,7 +2204,8 @@ func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, resourceID st
 	return nil
 }
 
-func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
+func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.DeleteDBInstanceInput{
