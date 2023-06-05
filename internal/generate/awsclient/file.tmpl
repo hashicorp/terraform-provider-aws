@@ -7,7 +7,7 @@ import (
 	"sync"
 
 {{ range .Services }}
-	{{- if eq .SDKVersion "1" "1,2" }}
+	{{- if eq .SDKVersion "1" }}
 	{{ .GoV1Package }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
 	{{- end }}
 	{{- if eq .SDKVersion "2" "1,2" }}
@@ -41,12 +41,12 @@ type AWSClient struct {
 
 {{ range .Services }}
 	{{- if ne .SDKVersion "1,2" }}{{continue}}{{- end }}
-	{{ .ProviderPackage }}Client lazyClient[*{{ .GoV2PackageOverride }}.{{ .ClientTypeName }}]
+	{{ .ProviderPackage }}Client lazyClient[*{{ .GoV2Package }}_sdkv2.Client]
 {{- end }}
 
 {{ range .Services }}
 	{{- if eq .SDKVersion "1" }}
-	{{ .ProviderPackage }}Conn *{{ .GoV1Package }}_sdkv1.{{ .ClientTypeName }}
+	{{ .ProviderPackage }}Conn *{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}
 	{{- else if eq .SDKVersion "2" }}
 	{{ .ProviderPackage }}Client *{{ .GoV2Package }}_sdkv2.Client
 	{{- end }}
@@ -57,8 +57,8 @@ type AWSClient struct {
 
 {{ range .Services }}
 	{{- if eq .SDKVersion "1" }}
-func (c *AWSClient) {{ .ProviderNameUpper }}Conn() *{{ .GoV1Package }}_sdkv1.{{ .ClientTypeName }} {
-	return Must(conn[*{{ .GoV1Package }}_sdkv1.{{ .ClientTypeName }}](context.TODO(), c, names.{{ .ProviderNameUpper }}))
+func (c *AWSClient) {{ .ProviderNameUpper }}Conn() *{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }} {
+	return Must(conn[*{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}](context.TODO(), c, names.{{ .ProviderNameUpper }}))
 }
 	{{- else if eq .SDKVersion "2" "1,2"}}
 func (c *AWSClient) {{ .ProviderNameUpper }}Client() *{{ .GoV2Package }}_sdkv2.Client {
