@@ -675,8 +675,9 @@ locals {
 }
 
 resource "aws_sagemaker_model" "test" {
-  name               = %[1]q
-  execution_role_arn = aws_iam_role.test.arn
+  name                     = %[1]q
+  enable_network_isolation = true
+  execution_role_arn       = aws_iam_role.test.arn
 
   primary_container {
     model_package_name = local.model_package_name
