@@ -476,7 +476,7 @@ func testAccCheckModelExists(ctx context.Context, n string) resource.TestCheckFu
 	}
 }
 
-func testAccModelConfigBase(rName string) string {
+func testAccModelConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -502,7 +502,7 @@ data "aws_sagemaker_prebuilt_ecr_image" "test" {
 }
 
 func testAccModelConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -515,7 +515,7 @@ resource "aws_sagemaker_model" "test" {
 }
 
 func testAccModelConfig_inferenceExecution(rName string) string {
-	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -536,7 +536,7 @@ resource "aws_sagemaker_model" "test" {
 }
 
 func testAccModelConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -553,7 +553,7 @@ resource "aws_sagemaker_model" "test" {
 }
 
 func testAccModelConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -571,7 +571,7 @@ resource "aws_sagemaker_model" "test" {
 }
 
 func testAccModelConfig_primaryContainerDataURL(rName string) string {
-	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -632,11 +632,6 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_object" "test" {
   bucket  = aws_s3_bucket.test.bucket
   key     = "model.tar.gz"
@@ -647,7 +642,7 @@ resource "aws_s3_object" "test" {
 
 // lintignore:AWSAT003,AWSAT005
 func testAccModelConfig_primaryContainerPackageName(rName string) string {
-	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
 data "aws_region" "current" {}
 
 locals {
@@ -691,7 +686,7 @@ resource "aws_sagemaker_model" "test" {
 }
 
 func testAccModelConfig_primaryContainerHostname(rName string) string {
-	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -705,7 +700,7 @@ resource "aws_sagemaker_model" "test" {
 }
 
 func testAccModelConfig_primaryContainerImage(rName string) string {
-	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -722,7 +717,7 @@ resource "aws_sagemaker_model" "test" {
 }
 
 func testAccModelConfig_primaryContainerEnvironment(rName string) string {
-	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -739,7 +734,7 @@ resource "aws_sagemaker_model" "test" {
 }
 
 func testAccModelConfig_primaryContainerModeSingle(rName string) string {
-	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -753,7 +748,7 @@ resource "aws_sagemaker_model" "test" {
 }
 
 func testAccModelConfig_containers(rName string) string {
-	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -770,7 +765,7 @@ resource "aws_sagemaker_model" "test" {
 }
 
 func testAccModelConfig_networkIsolation(rName string) string {
-	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name                     = %[1]q
   execution_role_arn       = aws_iam_role.test.arn
@@ -784,7 +779,7 @@ resource "aws_sagemaker_model" "test" {
 }
 
 func testAccModelConfig_vpcBasic(rName string) string {
-	return acctest.ConfigCompose(testAccModelConfigBase(rName), acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name                     = %[1]q
   execution_role_arn       = aws_iam_role.test.arn
@@ -795,50 +790,15 @@ resource "aws_sagemaker_model" "test" {
   }
 
   vpc_config {
-    subnets            = [aws_subnet.test.id, aws_subnet.bar.id]
-    security_group_ids = [aws_security_group.test.id, aws_security_group.bar.id]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "bar" {
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
+    subnets            = aws_subnet.test[*].id
+    security_group_ids = aws_security_group.test[*].id
   }
 }
 
 resource "aws_security_group" "test" {
-  name   = "%[1]s-1"
-  vpc_id = aws_vpc.test.id
+  count = 2
 
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "bar" {
-  name   = "%[1]s-2"
+  name   = "%[1]s-${count.index}"
   vpc_id = aws_vpc.test.id
 
   tags = {
@@ -850,7 +810,7 @@ resource "aws_security_group" "bar" {
 
 // lintignore:AWSAT003,AWSAT005
 func testAccModelConfig_primaryContainerPrivateDockerRegistry(rName string) string {
-	return acctest.ConfigCompose(testAccModelConfigBase(rName), acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name                     = %[1]q
   execution_role_arn       = aws_iam_role.test.arn
@@ -869,31 +829,13 @@ resource "aws_sagemaker_model" "test" {
   }
 
   vpc_config {
-    subnets            = [aws_subnet.test.id]
+    subnets            = aws_subnet.test[*].id
     security_group_ids = [aws_security_group.test.id]
   }
 }
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_security_group" "test" {
-  name   = "%[1]s-1"
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
 
   tags = {
