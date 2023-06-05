@@ -48,6 +48,10 @@ func DataSourceFirewallPolicy() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
+									"stream_exception_policy": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
 								},
 							},
 						},
