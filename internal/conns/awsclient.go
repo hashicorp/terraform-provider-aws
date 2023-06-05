@@ -151,8 +151,7 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string)
 		return zero, fmt.Errorf("no AWS SDK v2 API client factory: %s", servicePackageName)
 	}
 
-	// TODO: Add Cfg to AWSClient.
-	client, err := v.NewClient(ctx, aws_sdkv2.Config{} /*c.Config*/)
+	client, err := v.NewClient(ctx, c.awsConfig)
 	if err != nil {
 		var zero T
 		return zero, err
@@ -161,7 +160,7 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string)
 	if v, ok := sp.(interface {
 		CustomizeClient(context.Context, T, aws_sdkv2.Config) error
 	}); ok {
-		err := v.CustomizeClient(ctx, client, aws_sdkv2.Config{} /*c.Config*/)
+		err := v.CustomizeClient(ctx, client, c.awsConfig)
 		if err != nil {
 			var zero T
 			return zero, err
