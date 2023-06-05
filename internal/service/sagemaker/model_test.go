@@ -668,7 +668,7 @@ locals {
   account = local.region_account_map[data.aws_region.current.name]
 
   model_package_name = format(
-    "arn:aws:sagemaker:%%s:%%s:model-package/gpt-2-1584040650-de7f6ab78d68d7fdf5f4f39a559d05ac",
+    "arn:aws:sagemaker:%%s:%%s:model-package/hf-textgeneration-gpt2-cpu-b73b575105d336b680d151277ebe4ee0",
     data.aws_region.current.name,
     local.account
   )
