@@ -3,6 +3,7 @@ package conns
 
 import (
 	"net/http"
+	"sync"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 
@@ -347,7 +348,10 @@ type AWSClient struct {
 	TerraformVersion        string
 
 	awsConfig  aws_sdkv2.Config
+	clients    map[string]any
+	conns      map[string]any
 	httpClient *http.Client
+	lock       sync.Mutex
 
 	dsClient        lazyClient[*directoryservice_sdkv2.Client]
 	ec2Client       lazyClient[*ec2_sdkv2.Client]
