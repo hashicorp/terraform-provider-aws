@@ -361,17 +361,21 @@ func resourceSpotInstanceRequestDelete(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	log.Printf("[INFO] Cancelling spot request: %s", d.Id())
+	log.Printf("[INFO] Cancelling EC2 Spot Instance Request: %s", d.Id())
 	_, err := conn.CancelSpotInstanceRequestsWithContext(ctx, &ec2.CancelSpotInstanceRequestsInput{
 		SpotInstanceRequestIds: []*string{aws.String(d.Id())},
 	})
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error cancelling spot request (%s): %s", d.Id(), err)
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSpotInstanceRequestIDNotFound) {
+		return diags
 	}
 
-	if instanceId := d.Get("spot_instance_id").(string); instanceId != "" {
-		if err := terminateInstance(ctx, conn, instanceId, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "cancelling EC2 Spot Instance Request (%s): %s", d.Id(), err)
+	}
+
+	if instanceID := d.Get("spot_instance_id").(string); instanceID != "" {
+		if err := terminateInstance(ctx, conn, instanceID, d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
