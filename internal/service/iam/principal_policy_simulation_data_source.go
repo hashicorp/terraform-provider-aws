@@ -209,11 +209,10 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	setAsAWSStringSlice := func(raw interface{}) []*string {
-		listOfInterface := raw.(*schema.Set).List()
-		if len(listOfInterface) == 0 {
+		if raw.(*schema.Set).Len() == 0 {
 			return nil
 		}
-		return flex.ExpandStringList(listOfInterface)
+		return flex.ExpandStringSet(raw.(*schema.Set))
 	}
 
 	input := &iam.SimulatePrincipalPolicyInput{
