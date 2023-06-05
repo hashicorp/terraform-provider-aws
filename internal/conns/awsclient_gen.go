@@ -4,6 +4,8 @@ package conns
 import (
 	"net/http"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
@@ -344,6 +346,7 @@ type AWSClient struct {
 	Session                 *session.Session
 	TerraformVersion        string
 
+	awsConfig  aws_sdkv2.Config
 	httpClient *http.Client
 
 	dsClient        lazyClient[*directoryservice_sdkv2.Client]
