@@ -388,32 +388,35 @@ func ResourceInstance() *schema.Resource {
 			"instance_market_options": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"market_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							ForceNew:     true,
 							Default:      ec2.MarketTypeSpot,
 							ValidateFunc: validation.StringInSlice(ec2.MarketType_Values(), false),
 						},
 						"spot_options": {
 							Type:     schema.TypeList,
 							Optional: true,
-							Computed: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"instance_interruption_behavior": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										ForceNew:     true,
 										Default:      ec2.InstanceInterruptionBehaviorTerminate,
 										ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
 									},
 									"max_price": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 											if (oldValue != "" && newValue == "") || (strings.TrimRight(oldValue, "0") == strings.TrimRight(newValue, "0")) {
 												return true
@@ -424,12 +427,14 @@ func ResourceInstance() *schema.Resource {
 									"spot_instance_type": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										ForceNew:     true,
 										Default:      ec2.SpotInstanceTypeOneTime,
 										ValidateFunc: validation.StringInSlice(ec2.SpotInstanceType_Values(), false),
 									},
 									"valid_until": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										ForceNew:     true,
 										ValidateFunc: verify.ValidUTCTimestamp,
 									},
 								},
