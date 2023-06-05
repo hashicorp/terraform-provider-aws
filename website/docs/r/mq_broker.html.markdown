@@ -18,7 +18,6 @@ Provides an Amazon MQ broker resource. This resources also manages users for the
 
 ~> **NOTE:** All arguments including the username and password will be stored in the raw state as plain-text. [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
-
 ## Example Usage
 
 ### Basic Example
@@ -95,7 +94,7 @@ The following arguments are optional:
 * `security_groups` - (Optional) List of security group IDs assigned to the broker.
 * `storage_type` - (Optional) Storage type of the broker. For `engine_type` `ActiveMQ`, the valid values are `efs` and `ebs`, and the AWS-default is `efs`. For `engine_type` `RabbitMQ`, only `ebs` is supported. When using `ebs`, only the `mq.m5` broker instance type family is supported.
 * `subnet_ids` - (Optional) List of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires multiple subnets.
-* `tags` - (Optional) Map of tags to assign to the broker. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the broker. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### configuration
 
@@ -158,7 +157,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the broker.
 * `id` - Unique ID that Amazon MQ generates for the broker.
 * `instances` - List of information about allocated brokers (both active & standby).
-    * `instances.0.console_url` - The URL of the broker's [ActiveMQ Web Console](http://activemq.apache.org/web-console.html).
+    * `instances.0.console_url` - The URL of the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) or the [RabbitMQ Management UI](https://www.rabbitmq.com/management.html#external-monitoring) depending on `engine_type`.
     * `instances.0.ip_address` - IP Address of the broker.
     * `instances.0.endpoints` - Broker's wire-level protocol endpoints in the following order & format referenceable e.g., as `instances.0.endpoints.0` (SSL):
         * For `ActiveMQ`:
@@ -169,7 +168,15 @@ In addition to all arguments above, the following attributes are exported:
             * `wss://broker-id.mq.us-west-2.amazonaws.com:61619`
         * For `RabbitMQ`:
             * `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 

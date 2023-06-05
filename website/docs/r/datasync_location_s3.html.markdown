@@ -32,13 +32,13 @@ The following arguments are supported:
 * `s3_config` - (Required) Configuration block containing information for connecting to S3.
 * `s3_storage_class` - (Optional) The Amazon S3 storage class that you want to store your files in when this location is used as a task destination. [Valid values](https://docs.aws.amazon.com/datasync/latest/userguide/create-s3-location.html#using-storage-classes)  
 * `subdirectory` - (Required) Prefix to perform actions as source or destination.
-* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### s3_config Argument Reference
 
 The following arguments are supported inside the `s3_config` configuration block:
 
-* `bucket_access_role_arn` - (Required) Amazon Resource Names (ARN) of the IAM Role used to connect to the S3 Bucket.
+* `bucket_access_role_arn` - (Required) ARN of the IAM Role used to connect to the S3 Bucket.
 
 ## Attributes Reference
 
@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Amazon Resource Name (ARN) of the DataSync Location.
 * `arn` - Amazon Resource Name (ARN) of the DataSync Location.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

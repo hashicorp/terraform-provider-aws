@@ -5,21 +5,25 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccCodeStarConnectionsConnectionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_codestarconnections_connection.test_arn"
 	dataSourceName2 := "data.aws_codestarconnections_connection.test_name"
 	resourceName := "aws_codestarconnections_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, codestarconnections.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionDataSourceConfig_basic(rName),
@@ -43,14 +47,18 @@ func TestAccCodeStarConnectionsConnectionDataSource_basic(t *testing.T) {
 }
 
 func TestAccCodeStarConnectionsConnectionDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_codestarconnections_connection.test"
 	resourceName := "aws_codestarconnections_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codestarconnections.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, codestarconnections.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionDataSourceConfig_tags(rName),

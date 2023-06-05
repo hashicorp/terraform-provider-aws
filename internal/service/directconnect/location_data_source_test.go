@@ -4,21 +4,23 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDirectConnectLocationDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dsResourceName := "data.aws_dx_location.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dsResourceName, "available_macsec_port_speeds.#"),
 					resource.TestCheckResourceAttrSet(dsResourceName, "available_port_speeds.#"),
 					resource.TestCheckResourceAttrSet(dsResourceName, "available_providers.#"),
 					resource.TestCheckResourceAttrSet(dsResourceName, "location_code"),

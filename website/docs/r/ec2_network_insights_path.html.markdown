@@ -33,7 +33,7 @@ The following arguments are optional:
 * `source_ip` - (Optional) IP address of the source resource.
 * `destination_ip` - (Optional) IP address of the destination resource.
 * `destination_port` - (Optional) Destination port to analyze access to.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the Network Insights Path.
 * `id` - ID of the Network Insights Path.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

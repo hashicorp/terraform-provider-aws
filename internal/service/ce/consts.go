@@ -1,9 +1,9 @@
 package ce
 
 const (
-	ResAnomalyMonitor      = "Anomaly Monitor"
-	ResAnomalySubscription = "Anomaly Subscription"
-	ResCostCategory        = "Cost Category"
-	ResCostAllocationTag   = "Cost Allocation Tags"
-	ResTags                = "Tags"
+	ResNameAnomalyMonitor      = "Anomaly Monitor"
+	ResNameAnomalySubscription = "Anomaly Subscription"
+	ResNameCostCategory        = "Cost Category"
+	ResNameCostAllocationTag   = "Cost Allocation Tags"
+	DSNameTags                 = "Tags Data Source"
 )

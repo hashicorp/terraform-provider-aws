@@ -1,0 +1,42 @@
+rules:
+  - id: destroy-check
+    languages: [go]
+    message: The check destroy function should match the pattern "testAccCheck<Resource>Destroy". See https://hashicorp.github.io/terraform-provider-aws/naming/#test-support-functions
+    paths:
+      include:
+        - "internal/**/*_test.go"
+    patterns:
+      - pattern: func $FUNCNAME(...) { ... }
+      - metavariable-regex:
+          metavariable: "$FUNCNAME"
+          regex: "^testAcc((?!Check)[a-zA-Z]+Destroy$|(Check)?Destroy)"
+          # regex: "^testAccCheckDestroy"
+    severity: WARNING
+
+  - id: destroy-check-with-provider
+    languages: [go]
+    message: The check destroy with provider function should match the pattern "testAccCheck<Resource>DestroyWithProvider".
+    paths:
+      include:
+        - "internal/**/*_test.go"
+    patterns:
+      - pattern: func $FUNCNAME(...) { ... }
+      - metavariable-regex:
+          metavariable: "$FUNCNAME"
+          regex: '^testAccCheck[a-zA-Z]+Destroy(?!With)Provider'
+    severity: WARNING
+
+  - id: destroy-check-signature
+    languages: [go]
+    message: The check destroy function should have the correct signature
+    paths:
+      include:
+        - "internal/**/*_test.go"
+    patterns:
+      - pattern: func $FUNCNAME(...) { ... }
+      - metavariable-regex:
+          metavariable: "$FUNCNAME"
+          regex: "^testAccCheck[a-zA-Z]+Destroy(?!WithProvider)"
+      - pattern-not: func $FUNCNAME(s *terraform.State) error { ... }
+      - pattern-not: func $FUNCNAME(...) resource.TestCheckFunc { ... }
+    severity: WARNING

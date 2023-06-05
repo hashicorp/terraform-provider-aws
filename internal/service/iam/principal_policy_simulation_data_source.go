@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_iam_principal_policy_simulation")
 func DataSourcePrincipalPolicySimulation() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourcePrincipalPolicySimulationRead,
@@ -201,7 +202,7 @@ func DataSourcePrincipalPolicySimulation() *schema.Resource {
 }
 
 func dataSourcePrincipalPolicySimulationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	setAsAWSStringSlice := func(raw interface{}) []*string {
 		listOfInterface := raw.(*schema.Set).List()

@@ -1,6 +1,8 @@
 package eks
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	IdentityProviderConfigTypeOIDC = "oidc"

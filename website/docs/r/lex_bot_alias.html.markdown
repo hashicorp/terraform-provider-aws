@@ -49,14 +49,6 @@ The settings for conversation logs.
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) of the CloudWatch Logs log group or S3 bucket where the logs are delivered. Must be less than or equal to 2048 characters in length.
 * `resource_prefix` - (Computed) The prefix of the S3 object key for `AUDIO` logs or the log stream name for `TEXT` logs.
 
-### Timeouts
-
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
-
-* `create` - (Defaults to 1 mins) Used when creating the bot alias
-* `update` - (Defaults to 1 mins) Used when updating the bot alias
-* `delete` - (Defaults to 5 mins) Used when deleting the bot alias
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -65,6 +57,14 @@ In addition to all arguments above, the following attributes are exported:
 * `checksum` - Checksum of the bot alias.
 * `created_date` - The date that the bot alias was created.
 * `last_updated_date` - The date that the bot alias was updated. When you create a resource, the creation date and the last updated date are the same.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

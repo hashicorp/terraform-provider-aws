@@ -63,6 +63,7 @@ The following arguments are supported:
 * `secondary_gids` - (Optional) The secondary POSIX group IDs used for all EFS operations by this user.
 
 ## Attributes Reference
+
 In addition to all arguments above, the following attributes are exported:
 
 * `id`  - The ID of the resource
@@ -74,4 +75,3 @@ Transfer Accesses can be imported using the `server_id` and `external_id`, e.g.,
 ```
 $ terraform import aws_transfer_access.example s-12345678/S-1-1-12-1234567890-123456789-1234567890-1234
 ```
-

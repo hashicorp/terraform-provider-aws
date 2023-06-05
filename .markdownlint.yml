@@ -20,17 +20,11 @@ heading-increment: false
 # MD004
 ul-style: false
 
-# MD012
-no-multiple-blanks: false
-
 # MD013
 line-length: false
 
 # MD014
 commands-show-output: false
-
-# MD022
-blanks-around-headings: false
 
 # MD024
 no-duplicate-heading: false

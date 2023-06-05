@@ -56,7 +56,7 @@ The following arguments are optional:
 * `ipv4_prefix_count` - (Optional) Number of IPv4 prefixes that AWS automatically assigns to the network interface.
 * `ipv4_prefixes` - (Optional) One or more IPv4 prefixes assigned to the network interface.
 * `ipv6_address_count` - (Optional) Number of IPv6 addresses to assign to a network interface. You can't use this option if specifying specific `ipv6_addresses`. If your subnet has the AssignIpv6AddressOnCreation attribute set to `true`, you can specify `0` to override this setting.
-* `ipv6_address_list_enable` - (Optional) Whether `ipv6_addreses_list` is allowed and controls the IPs to assign to the ENI and `ipv6_addresses` and `ipv6_addresses_count` become read-only. Default false.
+* `ipv6_address_list_enabled` - (Optional) Whether `ipv6_address_list` is allowed and controls the IPs to assign to the ENI and `ipv6_addresses` and `ipv6_address_count` become read-only. Default false.
 * `ipv6_address_list` - (Optional) List of private IPs to assign to the ENI in sequential order.
 * `ipv6_addresses` - (Optional) One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Addresses are assigned without regard to order. You can't use this option if you're specifying `ipv6_address_count`.
 * `ipv6_prefix_count` - (Optional) Number of IPv6 prefixes that AWS automatically assigns to the network interface.
@@ -67,7 +67,7 @@ The following arguments are optional:
 * `private_ips_count` - (Optional) Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + `private_ips_count`, as a primary private IP will be assiged to an ENI by default.
 * `security_groups` - (Optional) List of security group IDs to assign to the ENI.
 * `source_dest_check` - (Optional) Whether to enable source destination checking for the ENI. Default true.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Attachment
 
@@ -85,7 +85,7 @@ In addition to all arguments above, the following attributes are exported:
 * `mac_address` - MAC address of the network interface.
 * `owner_id` - AWS account ID of the owner of the network interface.
 * `private_dns_name` - Private DNS name of the network interface (IPv4).
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

@@ -14,21 +14,26 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_kendra_faq", name="FAQ")
+// @Tags(identifierAttribute="arn")
 func ResourceFaq() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFaqCreate,
-		ReadContext:   resourceFaqRead,
-		UpdateContext: resourceFaqUpdate,
-		DeleteContext: resourceFaqDelete,
+		CreateWithoutTimeout: resourceFaqCreate,
+		ReadWithoutTimeout:   resourceFaqRead,
+		UpdateWithoutTimeout: resourceFaqUpdate,
+		DeleteWithoutTimeout: resourceFaqDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -61,10 +66,10 @@ func ResourceFaq() *schema.Resource {
 				Computed: true,
 			},
 			"file_format": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(faqFileFormatValues(types.FaqFileFormat("").Values()...), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.FaqFileFormat](),
 			},
 			"index_id": {
 				Type:     schema.TypeString,
@@ -134,25 +139,23 @@ func ResourceFaq() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).KendraClient()
 
 	name := d.Get("name").(string)
-
 	input := &kendra.CreateFaqInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
 		RoleArn:     aws.String(d.Get("role_arn").(string)),
 		S3Path:      expandS3Path(d.Get("s3_path").([]interface{})),
+		Tags:        GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -167,14 +170,7 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.LanguageCode = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Kendra Faq %#v", input)
-
-	outputRaw, err := tfresource.RetryWhen(
-		propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateFaq(ctx, input)
 		},
@@ -212,9 +208,7 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).KendraClient()
 
 	id, indexId, err := FaqParseResourceID(d.Id())
 	if err != nil {
@@ -258,40 +252,16 @@ func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return diag.FromErr(err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-	if err != nil {
-		return diag.Errorf("listing tags for resource (%s): %s", arn, err)
-	}
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceFaqUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("updating Kendra Faq (%s) tags: %s", d.Id(), err))
-		}
-	}
-
+	// Tags only.
 	return resourceFaqRead(ctx, d, meta)
 }
 
 func resourceFaqDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient()
 
 	log.Printf("[INFO] Deleting Kendra Faq %s", d.Id())
 
@@ -322,10 +292,9 @@ func resourceFaqDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func waitFaqCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeFaqOutput, error) {
-
-	stateConf := &resource.StateChangeConf{
-		Pending:                   FaqStatusValues(types.FaqStatusCreating, "PENDING_CREATION"), // API currently returns PENDING_CREATION instead of CREATING
-		Target:                    FaqStatusValues(types.FaqStatusActive),
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(types.FaqStatusCreating, "PENDING_CREATION"), // API currently returns PENDING_CREATION instead of CREATING
+		Target:                    enum.Slice(types.FaqStatusActive),
 		Timeout:                   timeout,
 		Refresh:                   statusFaq(ctx, conn, id, indexId),
 		NotFoundChecks:            20,
@@ -345,8 +314,8 @@ func waitFaqCreated(ctx context.Context, conn *kendra.Client, id, indexId string
 }
 
 func waitFaqDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeFaqOutput, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: FaqStatusValues(types.FaqStatusDeleting, "PENDING_DELETION"), // API currently returns PENDING_DELETION instead of DELETING
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.FaqStatusDeleting, "PENDING_DELETION"), // API currently returns PENDING_DELETION instead of DELETING
 		Target:  []string{},
 		Timeout: timeout,
 		Refresh: statusFaq(ctx, conn, id, indexId),
@@ -363,7 +332,7 @@ func waitFaqDeleted(ctx context.Context, conn *kendra.Client, id, indexId string
 	return nil, err
 }
 
-func statusFaq(ctx context.Context, conn *kendra.Client, id, indexId string) resource.StateRefreshFunc {
+func statusFaq(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFaqByID(ctx, conn, id, indexId)
 
@@ -418,28 +387,4 @@ func flattenS3Path(apiObject *types.S3Path) []interface{} {
 	}
 
 	return []interface{}{m}
-}
-
-// Helpers added. Could be generated or somehow use go 1.18 generics?
-func faqFileFormatValues(input ...types.FaqFileFormat) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func FaqStatusValues(input ...types.FaqStatus) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	output = append(output, "PENDING_CREATION")
-	output = append(output, "PENDING_DELETION")
-
-	return output
 }

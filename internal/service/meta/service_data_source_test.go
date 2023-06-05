@@ -2,7 +2,6 @@ package meta_test
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -10,50 +9,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
 
-func TestInvertStringSlice(t *testing.T) {
-	testCases := []struct {
-		Name     string
-		Input    []string
-		Expected []string
-	}{
-		{
-			Name:     "DNS Suffix",
-			Input:    []string{"amazonaws", "com", "cn"},
-			Expected: []string{"cn", "com", "amazonaws"},
-		},
-		{
-			Name:     "Ordered List",
-			Input:    []string{"abc", "bcd", "cde", "xyz", "zzz"},
-			Expected: []string{"zzz", "xyz", "cde", "bcd", "abc"},
-		},
-		{
-			Name:     "Unordered List",
-			Input:    []string{"abc", "zzz", "bcd", "xyz", "cde"},
-			Expected: []string{"cde", "xyz", "bcd", "zzz", "abc"},
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
-			if !reflect.DeepEqual(tfmeta.InvertStringSlice(testCase.Input), testCase.Expected) {
-				t.Errorf("got %v, expected %v", tfmeta.InvertStringSlice(testCase.Input), testCase.Expected)
-			}
-		})
-	}
-}
-
 func TestAccMetaService_basic(t *testing.T) {
-	dataSourceName := "data.aws_service.default"
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_basic(),
@@ -72,12 +40,13 @@ func TestAccMetaService_basic(t *testing.T) {
 }
 
 func TestAccMetaService_byReverseDNSName(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_byReverseDNSName(),
@@ -94,12 +63,13 @@ func TestAccMetaService_byReverseDNSName(t *testing.T) {
 }
 
 func TestAccMetaService_byDNSName(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_byDNSName(),
@@ -116,12 +86,13 @@ func TestAccMetaService_byDNSName(t *testing.T) {
 }
 
 func TestAccMetaService_byParts(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_byPart(),
@@ -136,12 +107,13 @@ func TestAccMetaService_byParts(t *testing.T) {
 }
 
 func TestAccMetaService_unsupported(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_unsupported(),
@@ -161,7 +133,7 @@ func TestAccMetaService_unsupported(t *testing.T) {
 
 func testAccServiceDataSourceConfig_basic() string {
 	return fmt.Sprintf(`
-data "aws_service" "default" {
+data "aws_service" "test" {
   service_id = %[1]q
 }
 `, ec2.EndpointsID)

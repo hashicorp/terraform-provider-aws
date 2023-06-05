@@ -5,6 +5,8 @@ import (
 )
 
 func TestValidRoleProfileName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"tf-test-role-profile-1",
 	}
@@ -30,6 +32,8 @@ func TestValidRoleProfileName(t *testing.T) {
 }
 
 func TestValidAccountAlias(t *testing.T) {
+	t.Parallel()
+
 	validAliases := []string{
 		"tf-alias",
 		"0tf-alias1",
@@ -59,6 +63,8 @@ func TestValidAccountAlias(t *testing.T) {
 }
 
 func TestValidOpenIDURL(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -89,6 +95,34 @@ func TestValidOpenIDURL(t *testing.T) {
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %d of OpenID URL validation errors, got %d", tc.ErrCount, len(errors))
+		}
+	}
+}
+
+func TestValidRolePolicyRoleName(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value: "S3Access",
+		},
+		{
+			Value: "role/S3Access",
+		},
+		{
+			Value:    "arn:aws:iam::123456789012:role/S3Access", // lintignore:AWSAT005
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validRolePolicyRole(tc.Value, "role")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected %d Role Policy role name validation errors, got %d", tc.ErrCount, len(errors))
 		}
 	}
 }

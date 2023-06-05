@@ -1,6 +1,7 @@
 package s3
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,22 +9,25 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_s3_bucket_intelligent_tiering_configuration")
 func ResourceBucketIntelligentTieringConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBucketIntelligentTieringConfigurationPut,
-		Read:   resourceBucketIntelligentTieringConfigurationRead,
-		Update: resourceBucketIntelligentTieringConfigurationPut,
-		Delete: resourceBucketIntelligentTieringConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketIntelligentTieringConfigurationPut,
+		ReadWithoutTimeout:   resourceBucketIntelligentTieringConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketIntelligentTieringConfigurationPut,
+		DeleteWithoutTimeout: resourceBucketIntelligentTieringConfigurationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -85,8 +89,9 @@ func ResourceBucketIntelligentTieringConfiguration() *schema.Resource {
 	}
 }
 
-func resourceBucketIntelligentTieringConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketIntelligentTieringConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucketName := d.Get("bucket").(string)
 	configurationName := d.Get("name").(string)
@@ -97,7 +102,7 @@ func resourceBucketIntelligentTieringConfigurationPut(d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.Filter = expandIntelligentTieringFilter(v.([]interface{})[0].(map[string]interface{}))
+		apiObject.Filter = expandIntelligentTieringFilter(ctx, v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("tiering"); ok && v.(*schema.Set).Len() > 0 {
@@ -111,44 +116,45 @@ func resourceBucketIntelligentTieringConfigurationPut(d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Creating S3 Intelligent-Tiering Configuration: %s", input)
-	_, err := retryWhenBucketNotFound(func() (interface{}, error) {
-		return conn.PutBucketIntelligentTieringConfiguration(input)
+	_, err := retryWhenBucketNotFound(ctx, func() (interface{}, error) {
+		return conn.PutBucketIntelligentTieringConfigurationWithContext(ctx, input)
 	})
 
 	if err != nil {
-		return fmt.Errorf("error creating S3 Intelligent-Tiering Configuration (%s): %w", resourceID, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Intelligent-Tiering Configuration (%s): %s", resourceID, err)
 	}
 
 	d.SetId(resourceID)
 
-	return resourceBucketIntelligentTieringConfigurationRead(d, meta)
+	return append(diags, resourceBucketIntelligentTieringConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceBucketIntelligentTieringConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketIntelligentTieringConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucketName, configurationName, err := BucketIntelligentTieringConfigurationParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading S3 Intelligent-Tiering Configuration (%s): %s", d.Id(), err)
 	}
 
-	output, err := FindBucketIntelligentTieringConfiguration(conn, bucketName, configurationName)
+	output, err := FindBucketIntelligentTieringConfiguration(ctx, conn, bucketName, configurationName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Intelligent-Tiering Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Intelligent-Tiering Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Intelligent-Tiering Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("bucket", bucketName)
 	if output.Filter != nil {
-		if err := d.Set("filter", []interface{}{flattenIntelligentTieringFilter(output.Filter)}); err != nil {
-			return fmt.Errorf("error setting filter: %w", err)
+		if err := d.Set("filter", []interface{}{flattenIntelligentTieringFilter(ctx, output.Filter)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 		}
 	} else {
 		d.Set("filter", nil)
@@ -156,36 +162,37 @@ func resourceBucketIntelligentTieringConfigurationRead(d *schema.ResourceData, m
 	d.Set("name", output.Id)
 	d.Set("status", output.Status)
 	if err := d.Set("tiering", flattenTierings(output.Tierings)); err != nil {
-		return fmt.Errorf("error setting tiering: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tiering: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceBucketIntelligentTieringConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketIntelligentTieringConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucketName, configurationName, err := BucketIntelligentTieringConfigurationParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Intelligent-Tiering Configuration (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Intelligent-Tiering Configuration: (%s)", d.Id())
-	_, err = conn.DeleteBucketIntelligentTieringConfiguration(&s3.DeleteBucketIntelligentTieringConfigurationInput{
+	_, err = conn.DeleteBucketIntelligentTieringConfigurationWithContext(ctx, &s3.DeleteBucketIntelligentTieringConfigurationInput{
 		Bucket: aws.String(bucketName),
 		Id:     aws.String(configurationName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, ErrCodeNoSuchConfiguration) {
-		return nil
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, errCodeNoSuchConfiguration) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Intelligent-Tiering Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Intelligent-Tiering Configuration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const bucketIntelligentTieringConfigurationResourceIDSeparator = ":"
@@ -207,16 +214,16 @@ func BucketIntelligentTieringConfigurationParseResourceID(id string) (string, st
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected bucket-name%[2]sconfiguration-name", id, bucketIntelligentTieringConfigurationResourceIDSeparator)
 }
 
-func FindBucketIntelligentTieringConfiguration(conn *s3.S3, bucketName, configurationName string) (*s3.IntelligentTieringConfiguration, error) {
+func FindBucketIntelligentTieringConfiguration(ctx context.Context, conn *s3.S3, bucketName, configurationName string) (*s3.IntelligentTieringConfiguration, error) {
 	input := &s3.GetBucketIntelligentTieringConfigurationInput{
 		Bucket: aws.String(bucketName),
 		Id:     aws.String(configurationName),
 	}
 
-	output, err := conn.GetBucketIntelligentTieringConfiguration(input)
+	output, err := conn.GetBucketIntelligentTieringConfigurationWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, ErrCodeNoSuchConfiguration) {
-		return nil, &resource.NotFoundError{
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, errCodeNoSuchConfiguration) {
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -233,7 +240,7 @@ func FindBucketIntelligentTieringConfiguration(conn *s3.S3, bucketName, configur
 	return output.IntelligentTieringConfiguration, nil
 }
 
-func expandIntelligentTieringFilter(tfMap map[string]interface{}) *s3.IntelligentTieringFilter {
+func expandIntelligentTieringFilter(ctx context.Context, tfMap map[string]interface{}) *s3.IntelligentTieringFilter {
 	if tfMap == nil {
 		return nil
 	}
@@ -247,7 +254,7 @@ func expandIntelligentTieringFilter(tfMap map[string]interface{}) *s3.Intelligen
 	var tags []*s3.Tag
 
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok {
-		tags = Tags(tftags.New(v))
+		tags = Tags(tftags.New(ctx, v))
 	}
 
 	apiObject := &s3.IntelligentTieringFilter{}
@@ -322,7 +329,7 @@ func expandTierings(tfList []interface{}) []*s3.Tiering {
 	return apiObjects
 }
 
-func flattenIntelligentTieringFilter(apiObject *s3.IntelligentTieringFilter) map[string]interface{} {
+func flattenIntelligentTieringFilter(ctx context.Context, apiObject *s3.IntelligentTieringFilter) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -335,7 +342,7 @@ func flattenIntelligentTieringFilter(apiObject *s3.IntelligentTieringFilter) map
 		}
 
 		if v := apiObject.Tag; v != nil {
-			tfMap["tags"] = KeyValueTags([]*s3.Tag{v}).Map()
+			tfMap["tags"] = KeyValueTags(ctx, []*s3.Tag{v}).Map()
 		}
 	} else {
 		apiObject := apiObject.And
@@ -345,7 +352,7 @@ func flattenIntelligentTieringFilter(apiObject *s3.IntelligentTieringFilter) map
 		}
 
 		if v := apiObject.Tags; v != nil {
-			tfMap["tags"] = KeyValueTags(v).Map()
+			tfMap["tags"] = KeyValueTags(ctx, v).Map()
 		}
 	}
 

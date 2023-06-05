@@ -1,6 +1,8 @@
 package autoscaling
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	TagResourceTypeGroup = `auto-scaling-group`
@@ -44,6 +46,20 @@ const (
 )
 
 const (
+	DesiredCapacityTypeMemoryMiB = "memory-mib"
+	DesiredCapacityTypeUnits     = "units"
+	DesiredCapacityTypeVCPU      = "vcpu"
+)
+
+func DesiredCapacityType_Values() []string {
+	return []string{
+		DesiredCapacityTypeMemoryMiB,
+		DesiredCapacityTypeUnits,
+		DesiredCapacityTypeVCPU,
+	}
+}
+
+const (
 	PolicyTypePredictiveScaling     = "PredictiveScaling"
 	PolicyTypeSimpleScaling         = "SimpleScaling"
 	PolicyTypeStepScaling           = "StepScaling"
@@ -58,3 +74,11 @@ func PolicyType_Values() []string {
 		PolicyTypeTargetTrackingScaling,
 	}
 }
+
+const (
+	TrafficSourceStateAdding    = "Adding"
+	TrafficSourceStateAdded     = "Added"
+	TrafficSourceStateInService = "InService"
+	TrafficSourceStateRemoving  = "Removing"
+	TrafficSourceStateRemoved   = "Removed"
+)

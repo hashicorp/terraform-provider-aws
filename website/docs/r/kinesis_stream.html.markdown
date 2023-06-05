@@ -49,7 +49,7 @@ Amazon has guidelines for specifying the Stream size that should be referenced w
 * `encryption_type` - (Optional) The encryption type to use. The only acceptable values are `NONE` or `KMS`. The default value is `NONE`.
 * `kms_key_id` - (Optional) The GUID for the customer-managed KMS key to use for encryption. You can also use a Kinesis-owned master key by specifying the alias `alias/aws/kinesis`.
 * `stream_mode_details` - (Optional) Indicates the [capacity mode](https://docs.aws.amazon.com/streams/latest/dev/how-do-i-size-a-stream.html) of the data stream. Detailed below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### stream_mode_details Configuration Block
 
@@ -63,15 +63,15 @@ In addition to all arguments above, the following attributes are exported:
 * `name` - The unique Stream name
 * `shard_count` - The count of Shards for this Stream
 * `arn` - The Amazon Resource Name (ARN) specifying the Stream (same as `id`)
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_kinesis_stream` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `5 minutes`)  Used for Creating a Kinesis Stream
-- `update` - (Default `120 minutes`) Used for Updating a Kinesis Stream
-- `delete` - (Default `120 minutes`) Used for Destroying a Kinesis Stream
+- `create` - (Default `5m`)
+- `update` - (Default `120m`)
+- `delete` - (Default `120m`)
 
 ## Import
 

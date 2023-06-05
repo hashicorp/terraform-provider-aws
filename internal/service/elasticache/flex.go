@@ -15,16 +15,6 @@ func flattenSecurityGroupIDs(securityGroups []*elasticache.SecurityGroupMembersh
 	return result
 }
 
-func flattenSecurityGroupNames(securityGroups []*elasticache.CacheSecurityGroupMembership) []string {
-	result := make([]string, 0, len(securityGroups))
-	for _, sg := range securityGroups {
-		if sg.CacheSecurityGroupName != nil {
-			result = append(result, *sg.CacheSecurityGroupName)
-		}
-	}
-	return result
-}
-
 func flattenLogDeliveryConfigurations(logDeliveryConfiguration []*elasticache.LogDeliveryConfiguration) []map[string]interface{} {
 	if len(logDeliveryConfiguration) == 0 {
 		return nil
@@ -32,7 +22,6 @@ func flattenLogDeliveryConfigurations(logDeliveryConfiguration []*elasticache.Lo
 
 	var logDeliveryConfigurations []map[string]interface{}
 	for _, v := range logDeliveryConfiguration {
-
 		logDeliveryConfig := make(map[string]interface{})
 
 		switch aws.StringValue(v.DestinationType) {
@@ -60,7 +49,6 @@ func expandEmptyLogDeliveryConfigurations(v map[string]interface{}) elasticache.
 }
 
 func expandLogDeliveryConfigurations(v map[string]interface{}) elasticache.LogDeliveryConfigurationRequest {
-
 	logDeliveryConfigurationRequest := elasticache.LogDeliveryConfigurationRequest{}
 
 	logDeliveryConfigurationRequest.LogType = aws.String(v["log_type"].(string))

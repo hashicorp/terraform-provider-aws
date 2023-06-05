@@ -6,6 +6,8 @@ import (
 )
 
 func TestValidNamespaceName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"ValidName",
 		"V_-.dN01e",

@@ -3,20 +3,21 @@ package cloudtrail_test
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 )
 
 func TestAccCloudTrailServiceAccountDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	expectedAccountID := tfcloudtrail.ServiceAccountPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_cloudtrail_service_account.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceAccountDataSourceConfig_basic,
@@ -30,14 +31,15 @@ func TestAccCloudTrailServiceAccountDataSource_basic(t *testing.T) {
 }
 
 func TestAccCloudTrailServiceAccountDataSource_region(t *testing.T) {
+	ctx := acctest.Context(t)
 	expectedAccountID := tfcloudtrail.ServiceAccountPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_cloudtrail_service_account.regional"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceAccountDataSourceConfig_region,

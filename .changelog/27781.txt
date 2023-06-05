@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_acm_certificate: Add `key_algorithm` argument in support of [ECDSA TLS certificates](https://docs.aws.amazon.com/acm/latest/userguide/acm-certificate.html#algorithms)
+```

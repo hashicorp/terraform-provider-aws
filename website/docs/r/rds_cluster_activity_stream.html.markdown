@@ -14,7 +14,7 @@ Database Activity Streams have some limits and requirements, refer to the [Monit
 
 ~> **Note:** This resource always calls the RDS [`StartActivityStream`][2] API with the `ApplyImmediately` parameter set to `true`. This is because the Terraform needs the activity stream to be started in order for it to get the associated attributes.
 
-~> **Note:** This resource depends on having at least one `aws_rds_cluster_instance` created. To avoid race conditions when all resources are being created together, add an explicit resource reference using the [resource `depends_on` meta-argument](/docs/configuration/resources.html#depends_on-explicit-resource-dependencies).
+~> **Note:** This resource depends on having at least one `aws_rds_cluster_instance` created. To avoid race conditions when all resources are being created together, add an explicit resource reference using the [resource `depends_on` meta-argument](https://www.terraform.io/docs/configuration/resources.html#depends_on-explicit-resource-dependencies).
 
 ~> **Note:** This resource is available in all regions except the following: `cn-north-1`, `cn-northwest-1`, `us-gov-east-1`, `us-gov-west-1`
 
@@ -51,7 +51,6 @@ resource "aws_rds_cluster_activity_stream" "default" {
 }
 ```
 
-
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to
@@ -64,15 +63,12 @@ The following arguments are supported:
 * `kms_key_id` - (Required, Forces new resources) The AWS KMS key identifier for encrypting messages in the database activity stream. The AWS KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key.
 * `engine_native_audit_fields_included` - (Optional, Forces new resources) Specifies whether the database activity stream includes engine-native audit fields. This option only applies to an Oracle DB instance. By default, no engine-native audit fields are included. Defaults `false`.
 
-
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) of the DB cluster.
 * `kinesis_stream_name` - The name of the Amazon Kinesis data stream to be used for the database activity stream.
-
 
 ## Import
 

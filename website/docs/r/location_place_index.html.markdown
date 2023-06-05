@@ -30,7 +30,7 @@ The following arguments are optional:
 
 * `data_source_configuration` - (Optional) Configuration block with the data storage option chosen for requesting Places. Detailed below.
 * `description` - (Optional) The optional description for the place index resource.
-* `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### data_source_configuration
 
@@ -44,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `create_time` - The timestamp for when the place index resource was created in ISO 8601 format.
 * `index_arn` - The Amazon Resource Name (ARN) for the place index resource. Used to specify a resource across AWS.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `update_time` - The timestamp for when the place index resource was last update in ISO 8601.
 
 ## Import

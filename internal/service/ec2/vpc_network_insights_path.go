@@ -14,8 +14,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ec2_network_insights_path", name="Network Insights Path")
+// @Tags(identifierAttribute="id")
 func ResourceNetworkInsightsPath() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInsightsPathCreate,
@@ -63,8 +66,8 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -72,15 +75,13 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 }
 
 func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.CreateNetworkInsightsPathInput{
 		Destination:       aws.String(d.Get("destination").(string)),
 		Protocol:          aws.String(d.Get("protocol").(string)),
 		Source:            aws.String(d.Get("source").(string)),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkInsightsPath),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeNetworkInsightsPath),
 	}
 
 	if v, ok := d.GetOk("destination_ip"); ok {
@@ -99,7 +100,7 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 	output, err := conn.CreateNetworkInsightsPathWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating EC2 Network Insights Path: %s", err)
+		return diag.Errorf("creating EC2 Network Insights Path: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.NetworkInsightsPath.NetworkInsightsPathId))
@@ -108,11 +109,9 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	nip, err := FindNetworkInsightsPathByID(conn, d.Id())
+	nip, err := FindNetworkInsightsPathByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Network Insights Path %s not found, removing from state", d.Id())
@@ -121,7 +120,7 @@ func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Network Insights Path (%s): %s", d.Id(), err)
+		return diag.Errorf("reading EC2 Network Insights Path (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", nip.NetworkInsightsPathArn)
@@ -132,36 +131,18 @@ func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData
 	d.Set("source", nip.Source)
 	d.Set("source_ip", nip.SourceIp)
 
-	tags := KeyValueTags(nip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, nip.Tags)
 
 	return nil
 }
 
 func resourceNetworkInsightsPathUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("error updating EC2 Network Insights Path (%s) tags: %s", d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceNetworkInsightsPathRead(ctx, d, meta)
 }
 
 func resourceNetworkInsightsPathDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Network Insights Path: %s", d.Id())
 	_, err := conn.DeleteNetworkInsightsPathWithContext(ctx, &ec2.DeleteNetworkInsightsPathInput{
@@ -173,7 +154,7 @@ func resourceNetworkInsightsPathDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting EC2 Network Insights Path (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting EC2 Network Insights Path (%s): %s", d.Id(), err)
 	}
 
 	return nil

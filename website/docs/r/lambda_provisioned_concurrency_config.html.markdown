@@ -10,6 +10,8 @@ description: |-
 
 Manages a Lambda Provisioned Concurrency Configuration.
 
+~> **NOTE:** Setting `skip_destroy` to `true` means that the AWS Provider will _not_ destroy a provisioned concurrency configuration, even when running `terraform destroy`. The configuration is thus an intentional dangling resource that is _not_ managed by Terraform and may incur extra expense in your AWS account.
+
 ## Example Usage
 
 ### Alias Name
@@ -40,6 +42,10 @@ The following arguments are required:
 * `provisioned_concurrent_executions` - (Required) Amount of capacity to allocate. Must be greater than or equal to `1`.
 * `qualifier` - (Required) Lambda Function version or Lambda Alias name.
 
+The following arguments are optional:
+
+* `skip_destroy` - (Optional) Whether to retain the provisoned concurrency configuration upon destruction. Defaults to `false`. If set to `true`, the resource in simply removed from state instead.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -48,10 +54,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_lambda_provisioned_concurrency_config` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `15 minutes`) How long to wait for the Lambda Provisioned Concurrency Config to be ready on creation.
-* `update` - (Default `15 minutes`) How long to wait for the Lambda Provisioned Concurrency Config to be ready on update.
+* `create` - (Default `15m`)
+* `update` - (Default `15m`)
 
 ## Import
 
