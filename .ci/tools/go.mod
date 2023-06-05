@@ -3,7 +3,7 @@ module github.com/hashicorp/terraform-provider-aws/tools
 go 1.19
 
 require (
-	github.com/bflad/tfproviderdocs v0.10.0
+	github.com/bflad/tfproviderdocs v0.11.0
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint v1.53.2
 	github.com/hashicorp/go-changelog v0.0.0-20201005170154-56335215ce3a
@@ -245,7 +245,7 @@ require (
 	github.com/yeya24/promlinter v0.2.0 // indirect
 	github.com/ykadowak/zerologlint v0.1.1 // indirect
 	github.com/yuin/goldmark v1.5.4 // indirect
-	github.com/yuin/goldmark-meta v0.0.0-20191126180153-f0638e958b60 // indirect
+	github.com/yuin/goldmark-meta v1.1.0 // indirect
 	github.com/zclconf/go-cty v1.13.1 // indirect
 	github.com/zclconf/go-cty-yaml v1.0.3 // indirect
 	gitlab.com/bosi/decorder v0.2.3 // indirect
