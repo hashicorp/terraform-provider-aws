@@ -50,7 +50,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 {{- end }}
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -58,16 +57,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/names"
 {{- if .IncludeComments }}
 
 	// TIP: You will often need to import the package that this test file lives
-    // in. Since it is in the "test" context, it must import the package to use
-    // any normal context constants, variables, or functions.
+	// in. Since it is in the "test" context, it must import the package to use
+	// any normal context constants, variables, or functions.
 {{- end }}
 	tf{{ .ServicePackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ServicePackage }}"
-{{- if .AWSGoSDKV2 }}
-	"github.com/hashicorp/terraform-provider-aws/names"
-{{- end }}
 )
 {{ if .IncludeComments }}
 // TIP: File Structure. The basic outline for all test files should be as
@@ -83,7 +80,7 @@ import (
 // 7. Helper functions (exists, destroy, check, etc.)
 // 8. Functions that return Terraform configurations
 {{- end }}
-{{ if .IncludeComments }}
+{{- if .IncludeComments }}
 
 // TIP: ==== UNIT TESTS ====
 // This is an example of a unit test. Its name is not prefixed with
@@ -146,7 +143,6 @@ func Test{{ .Resource }}ExampleUnitTest(t *testing.T) {
 	}
 }
 {{ if .IncludeComments }}
-
 // TIP: ==== ACCEPTANCE TESTS ====
 // This is an example of a basic acceptance test. This should test as much of
 // standard functionality of the resource as possible, and test importing, if
@@ -158,8 +154,8 @@ func Test{{ .Resource }}ExampleUnitTest(t *testing.T) {
 func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 	ctx := acctest.Context(t)
     {{- if .IncludeComments }}
-    // TIP: This is a long-running test guard for tests that run longer than
-    // 300s (5 min) generally.
+	// TIP: This is a long-running test guard for tests that run longer than
+	// 300s (5 min) generally.
     {{- end }}
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -266,7 +262,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 
 func testAccCheck{{ .Resource }}Destroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}" {
@@ -290,17 +286,14 @@ func testAccCheck{{ .Resource }}Destroy(ctx context.Context) resource.TestCheckF
 			if errs.IsA[*types.ResourceNotFoundException](err){
 				return nil
 			}
-			if err != nil {
-				return err
-			}
 			{{ else }}
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, {{ .ServicePackage }}.ErrCodeNotFoundException) {
-					return nil
-				}
+			if tfawserr.ErrCodeEquals(err, {{ .ServicePackage }}.ErrCodeNotFoundException) {
 				return nil
 			}
-			{{ end }}
+			{{ end -}}
+			if err != nil {
+				return nil
+			}
 
 			return create.Error(names.{{ .Service }}, create.ErrActionCheckingDestroyed, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, errors.New("not destroyed"))
 		}
@@ -356,7 +349,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
-
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}

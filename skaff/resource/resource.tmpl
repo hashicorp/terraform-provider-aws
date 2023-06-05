@@ -510,7 +510,6 @@ func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, 
 	if tfawserr.ErrCodeEquals(err, {{ .ServiceLower }}.ErrCodeResourceNotFoundException) {
 		return diags
 	}
-
 	if err != nil {
 		return append(diags, create.DiagError(names.{{ .Service }}, create.ErrActionDeleting, ResName{{ .Resource }}, d.Id(), err)...)
 	}
@@ -686,7 +685,6 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 			LastRequest: in,
 		}
 	}
-
 	if err != nil {
 		return nil, err
 	}
