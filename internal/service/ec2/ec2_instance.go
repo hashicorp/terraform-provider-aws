@@ -1383,38 +1383,48 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("capacity_reservation_specification", nil)
 	}
 
-	if instance.SpotInstanceRequestId != nil && instance.InstanceLifecycle != nil {
-		d.Set("spot_instance_request_id", instance.SpotInstanceRequestId)
+	if spotInstanceRequestID := aws.StringValue(instance.SpotInstanceRequestId); spotInstanceRequestID != "" && instance.InstanceLifecycle != nil {
 		d.Set("instance_lifecycle", instance.InstanceLifecycle)
-		attr, err := conn.DescribeSpotInstanceRequestsWithContext(ctx, &ec2.DescribeSpotInstanceRequestsInput{
-			SpotInstanceRequestIds: []*string{instance.SpotInstanceRequestId},
-		})
+		d.Set("spot_instance_request_id", spotInstanceRequestID)
+
+		input := &ec2.DescribeSpotInstanceRequestsInput{
+			SpotInstanceRequestIds: aws.StringSlice([]string{spotInstanceRequestID}),
+		}
+
+		apiObject, err := FindSpotInstanceRequest(ctx, conn, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Instance Request (%s): %s", spotInstanceRequestID, err)
 		}
-		if attr.SpotInstanceRequests != nil {
-			for _, req := range attr.SpotInstanceRequests {
-				if aws.StringValue(req.SpotInstanceRequestId) == aws.StringValue(instance.SpotInstanceRequestId) {
-					instanceMarketOptions := map[string]any{}
-					instanceMarketOptions["market_type"] = ec2.MarketTypeSpot
-					spotOptions := map[string]any{}
-					if v := aws.StringValue(req.InstanceInterruptionBehavior); v != "" {
-						spotOptions["instance_interruption_behavior"] = v
-					}
-					if v := aws.StringValue(req.SpotPrice); v != "" {
-						spotOptions["max_price"] = v
-					}
-					if v := aws.StringValue(req.Type); v != "" {
-						spotOptions["spot_instance_type"] = v
-					}
-					if v := req.ValidUntil; v != nil {
-						spotOptions["valid_until"] = v.String()
-					}
-					instanceMarketOptions["spot_options"] = []interface{}{spotOptions}
-					d.Set("instance_market_options", []interface{}{instanceMarketOptions})
-				}
-			}
+
+		tfMap := map[string]interface{}{}
+
+		if v := apiObject.InstanceInterruptionBehavior; v != nil {
+			tfMap["instance_interruption_behavior"] = aws.StringValue(v)
 		}
+
+		if v := apiObject.SpotPrice; v != nil {
+			tfMap["max_price"] = aws.StringValue(v)
+		}
+
+		if v := apiObject.Type; v != nil {
+			tfMap["spot_instance_type"] = aws.StringValue(v)
+		}
+
+		if v := apiObject.ValidUntil; v != nil {
+			tfMap["valid_until"] = aws.TimeValue(v).Format(time.RFC3339)
+		}
+
+		if err := d.Set("instance_market_options", []interface{}{map[string]interface{}{
+			"market_type":  ec2.MarketTypeSpot,
+			"spot_options": []interface{}{tfMap},
+		}}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting instance_market_options: %s", err)
+		}
+	} else {
+		d.Set("instance_lifecycle", nil)
+		d.Set("instance_market_options", nil)
+		d.Set("spot_instance_request_id", nil)
 	}
 
 	return diags
@@ -3422,6 +3432,44 @@ func flattenPrivateDNSNameOptionsResponse(apiObject *ec2.PrivateDnsNameOptionsRe
 	return tfMap
 }
 
+func expandInstanceMarketOptionsRequest(tfMap map[string]interface{}) *ec2.InstanceMarketOptionsRequest {
+	apiObject := &ec2.InstanceMarketOptionsRequest{}
+
+	if v, ok := tfMap["market_type"]; ok && v.(string) != "" {
+		apiObject.MarketType = aws.String(tfMap["market_type"].(string))
+	}
+
+	if v, ok := tfMap["spot_options"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.SpotOptions = expandSpotMarketOptions(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandSpotMarketOptions(tfMap map[string]interface{}) *ec2.SpotMarketOptions {
+	apiObject := &ec2.SpotMarketOptions{}
+
+	if v, ok := tfMap["instance_interruption_behavior"].(string); ok && v != "" {
+		apiObject.InstanceInterruptionBehavior = aws.String(v)
+	}
+
+	if v, ok := tfMap["max_price"].(string); ok && v != "" {
+		apiObject.MaxPrice = aws.String(v)
+	}
+
+	if v, ok := tfMap["spot_instance_type"].(string); ok && v != "" {
+		apiObject.SpotInstanceType = aws.String(v)
+	}
+
+	if v, ok := tfMap["valid_until"].(string); ok && v != "" {
+		v, _ := time.Parse(time.RFC3339, v)
+
+		apiObject.ValidUntil = aws.Time(v)
+	}
+
+	return apiObject
+}
+
 func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *ec2.LaunchTemplateSpecification {
 	if tfMap == nil {
 		return nil
@@ -3637,39 +3685,4 @@ func ParseInstanceType(s string) (*InstanceType, error) {
 		AdditionalCapabilities: matches[4],
 		Size:                   matches[5],
 	}, nil
-}
-
-func expandInstanceMarketOptionsRequest(tfMap map[string]interface{}) *ec2.InstanceMarketOptionsRequest {
-	apiObject := &ec2.InstanceMarketOptionsRequest{}
-
-	if v, ok := tfMap["market_type"]; ok && v.(string) != "" {
-		apiObject.MarketType = aws.String(tfMap["market_type"].(string))
-	}
-	if v, ok := tfMap["spot_options"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.SpotOptions = expandSpotMarketOptions(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	return apiObject
-}
-
-func expandSpotMarketOptions(tfMap map[string]interface{}) *ec2.SpotMarketOptions {
-	apiObject := &ec2.SpotMarketOptions{}
-
-	if v, ok := tfMap["instance_interruption_behavior"].(string); ok && v != "" {
-		apiObject.InstanceInterruptionBehavior = aws.String(v)
-	}
-	if v, ok := tfMap["max_price"].(string); ok && v != "" {
-		apiObject.MaxPrice = aws.String(v)
-	}
-	if v, ok := tfMap["spot_instance_type"].(string); ok && v != "" {
-		apiObject.SpotInstanceType = aws.String(v)
-	}
-	if v, ok := tfMap["valid_until"].(string); ok && v != "" {
-		validUntil, err := time.Parse(time.RFC3339, v)
-		if err == nil {
-			apiObject.ValidUntil = &validUntil
-		}
-	}
-
-	return apiObject
 }
