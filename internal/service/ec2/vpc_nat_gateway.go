@@ -118,6 +118,18 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.SubnetId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("secondary_allocation_ids"); ok {
+		input.SecondaryAllocationIds = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("secondary_private_ip_addresses"); ok {
+		input.SecondaryPrivateIpAddresses = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("secondary_private_ip_address_count"); ok {
+		input.SecondaryPrivateIpAddressCount = aws.Int64(int64(v.(int)))
+	}
+
 	output, err := conn.CreateNatGatewayWithContext(ctx, input)
 
 	if err != nil {
