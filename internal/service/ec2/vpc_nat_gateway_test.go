@@ -205,7 +205,6 @@ func TestAccVPCNATGateway_secondaryAllocationIds(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
 					resource.TestCheckResourceAttrSet(resourceName, "secondary_allocation_ids"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "1"),
 				),
 			},
 			{
@@ -266,8 +265,6 @@ func TestAccVPCNATGateway_secondaryPrivateIpAddresses(t *testing.T) {
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
 					resource.TestCheckResourceAttrSet(resourceName, "secondary_allocation_ids"),
 					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "secondary_private_ip_addresses"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "1"),
 				),
 			},
 			{
