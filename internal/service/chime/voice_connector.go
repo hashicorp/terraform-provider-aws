@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_chime_voice_connector")
+// @SDKResource("aws_chime_voice_connector", name="Voice Connector")
 // @Tags(identifierAttribute="arn")
 func ResourceVoiceConnector() *schema.Resource {
 	return &schema.Resource{
