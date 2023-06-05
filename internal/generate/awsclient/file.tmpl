@@ -2,22 +2,22 @@
 package conns
 
 import (
+	"context"
 	"net/http"
 	"sync"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 {{ range .Services }}
-	{{- if eq .SDKVersion "1" }}
-	"github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
-	{{- else if eq .SDKVersion "2" }}
-	"github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
-	{{- else if eq .SDKVersion "1,2" }}
-	"github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
-	{{ .GoV2PackageOverride }} "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+	{{- if eq .SDKVersion "1" "1,2" }}
+	{{ .GoV1Package }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
+	{{- end }}
+	{{- if eq .SDKVersion "2" "1,2" }}
+	{{ .GoV2Package }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
 	{{- end }}
 {{- end }}
-	"github.com/aws/aws-sdk-go/aws/session"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type AWSClient struct {
@@ -25,12 +25,12 @@ type AWSClient struct {
 	DefaultTagsConfig         *tftags.DefaultConfig
 	DNSSuffix                 string
 	IgnoreTagsConfig          *tftags.IgnoreConfig
-	MediaConvertAccountConn   *mediaconvert.MediaConvert
+	MediaConvertAccountConn   *mediaconvert_sdkv1.MediaConvert
 	Partition                 string
 	Region                    string
 	ReverseDNSPrefix          string
 	ServicePackages           map[string]ServicePackage
-	Session                   *session.Session
+	Session                   *session_sdkv1.Session
 	TerraformVersion          string
 
 	awsConfig                 aws_sdkv2.Config
@@ -46,27 +46,23 @@ type AWSClient struct {
 
 {{ range .Services }}
 	{{- if eq .SDKVersion "1" }}
-	{{ .ProviderPackage }}Conn *{{ .GoV1Package }}.{{ .ClientTypeName }}
+	{{ .ProviderPackage }}Conn *{{ .GoV1Package }}_sdkv1.{{ .ClientTypeName }}
 	{{- else if eq .SDKVersion "2" }}
-	{{ .ProviderPackage }}Client *{{ .GoV2Package }}.{{ .ClientTypeName }}
+	{{ .ProviderPackage }}Client *{{ .GoV2Package }}_sdkv2.Client
 	{{- end }}
 {{- end }}
 
-    s3ConnURICleaningDisabled *s3.S3
+    s3ConnURICleaningDisabled *s3_sdkv1.S3
 }
 
 {{ range .Services }}
 	{{- if eq .SDKVersion "1" }}
-func (client *AWSClient) {{ .ProviderNameUpper }}Conn() *{{ .GoV1Package }}.{{ .ClientTypeName }} {
-	return client.{{ .ProviderPackage }}Conn
+func (c *AWSClient) {{ .ProviderNameUpper }}Conn() *{{ .GoV1Package }}_sdkv1.{{ .ClientTypeName }} {
+	return Must(conn[*{{ .GoV1Package }}_sdkv1.{{ .ClientTypeName }}](context.TODO(), c, names.{{ .ProviderNameUpper }}))
 }
-	{{- else if eq .SDKVersion "2" }}
-func (client *AWSClient) {{ .ProviderNameUpper }}Client() *{{ .GoV2Package }}.{{ .ClientTypeName }} {
-	return client.{{ .ProviderPackage }}Client
-}
-	{{- else if eq .SDKVersion "1,2" }}
-func (client *AWSClient) {{ .ProviderNameUpper }}Client() *{{ .GoV2PackageOverride }}.{{ .ClientTypeName }} {
-	return client.{{ .ProviderPackage }}Client.Client()
+	{{- else if eq .SDKVersion "2" "1,2"}}
+func (c *AWSClient) {{ .ProviderNameUpper }}Client() *{{ .GoV2Package }}_sdkv2.Client {
+	return Must(client[*{{ .GoV2Package }}_sdkv2.Client](context.TODO(), c, names.{{ .ProviderNameUpper }}))
 }
 	{{- end }}
 {{ end }}
