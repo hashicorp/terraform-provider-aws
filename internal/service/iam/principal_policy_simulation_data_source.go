@@ -1,20 +1,23 @@
 package iam
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKDataSource("aws_iam_principal_policy_simulation")
 func DataSourcePrincipalPolicySimulation() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePrincipalPolicySimulationRead,
+		ReadWithoutTimeout: dataSourcePrincipalPolicySimulationRead,
 
 		Schema: map[string]*schema.Schema{
 			// Arguments
@@ -201,7 +204,8 @@ func DataSourcePrincipalPolicySimulation() *schema.Resource {
 	}
 }
 
-func dataSourcePrincipalPolicySimulationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	setAsAWSStringSlice := func(raw interface{}) []*string {
@@ -209,12 +213,7 @@ func dataSourcePrincipalPolicySimulationRead(d *schema.ResourceData, meta interf
 		if len(listOfInterface) == 0 {
 			return nil
 		}
-		ret := make([]*string, len(listOfInterface))
-		for i, iface := range listOfInterface {
-			str := iface.(string)
-			ret[i] = &str
-		}
-		return ret
+		return flex.ExpandStringList(listOfInterface)
 	}
 
 	input := &iam.SimulatePrincipalPolicyInput{
@@ -257,20 +256,20 @@ func dataSourcePrincipalPolicySimulationRead(d *schema.ResourceData, meta interf
 	var results []*iam.EvaluationResult
 
 	for { // Terminates below, once we see a result that does not set IsTruncated.
-		resp, err := conn.SimulatePrincipalPolicy(input)
+		output, err := conn.SimulatePrincipalPolicyWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("policy simulation error (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "simulating IAM Principal Policy: %s", err)
 		}
 
-		results = append(results, resp.EvaluationResults...)
+		results = append(results, output.EvaluationResults...)
 
-		if !aws.BoolValue(resp.IsTruncated) {
+		if !aws.BoolValue(output.IsTruncated) {
 			break // All done!
 		}
 
 		// If we're making another request then we need to specify the marker
 		// to get the next page of results.
-		input.Marker = resp.Marker
+		input.Marker = output.Marker
 	}
 
 	// While we build the result we'll also tally up the number of allowed
@@ -332,5 +331,5 @@ func dataSourcePrincipalPolicySimulationRead(d *schema.ResourceData, meta interf
 
 	d.SetId("-")
 
-	return nil
+	return diags
 }

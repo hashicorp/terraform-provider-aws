@@ -13,7 +13,7 @@ import (
 
 func TestAccIAMPrincipalPolicySimulationDataSource(t *testing.T) {
 	ctx := acctest.Context(t)
-	uniqueName := fmt.Sprintf("policy-simulation-test-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -21,7 +21,7 @@ func TestAccIAMPrincipalPolicySimulationDataSource(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrincipalPolicySimulationDataSourceConfig_main(uniqueName),
+				Config: testAccPrincipalPolicySimulationDataSourceConfig_main(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_simple", "all_allowed", "true"),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_simple", "results.#", "1"),
@@ -34,7 +34,7 @@ func TestAccIAMPrincipalPolicySimulationDataSource(t *testing.T) {
 					// hard-coded bits. Not sure if this is constractual, so
 					// if this turns out to change in future it may be better
 					// to test this in a different way.
-					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_simple", "results.0.matched_statements.0.source_policy_id", fmt.Sprintf("user_%s_%s", uniqueName, uniqueName)),
+					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_simple", "results.0.matched_statements.0.source_policy_id", fmt.Sprintf("user_%s_%s", rName, rName)),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_simple", "results.0.matched_statements.0.source_policy_type", "IAM Policy"),
 
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.deny_explicit", "all_allowed", "false"),
@@ -77,18 +77,22 @@ func TestAccIAMPrincipalPolicySimulationDataSource(t *testing.T) {
 	})
 }
 
-func testAccPrincipalPolicySimulationDataSourceConfig_main(name string) string {
+func testAccPrincipalPolicySimulationDataSourceConfig_main(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_iam_user_policy" "test" {
-  name = "%s"
+  name = %[1]q
   user = aws_iam_user.test.name
 
   policy = jsonencode({
@@ -203,7 +207,5 @@ data "aws_iam_principal_policy_simulation" "multiple_allow" {
 output "vpc_arn" {
   value = aws_vpc.test.arn
 }
-`,
-		name, name,
-	)
+`, rName)
 }
