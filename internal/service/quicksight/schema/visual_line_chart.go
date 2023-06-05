@@ -149,7 +149,7 @@ func lineChartVisualSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"axis_options": axisDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
-										"missing_data_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MissingDataConfiguration.html
+										"missing_data_configurations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MissingDataConfiguration.html
 											Type:     schema.TypeList,
 											Optional: true,
 											MinItems: 1,
@@ -173,7 +173,7 @@ func lineChartVisualSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"axis_options": axisDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
-										"missing_data_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MissingDataConfiguration.html
+										"missing_data_configurations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MissingDataConfiguration.html
 											Type:     schema.TypeList,
 											Optional: true,
 											MinItems: 1,
@@ -750,7 +750,7 @@ func expandLineSeriesAxisDisplayOptions(tfList []interface{}) *quicksight.LineSe
 	if v, ok := tfMap["axis_options"].([]interface{}); ok && len(v) > 0 {
 		options.AxisOptions = expandAxisDisplayOptions(v)
 	}
-	if v, ok := tfMap["missing_data_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["missing_data_configurations"].([]interface{}); ok && len(v) > 0 {
 		options.MissingDataConfigurations = expandMissingDataConfigurations(v)
 	}
 
