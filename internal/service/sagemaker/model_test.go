@@ -650,35 +650,38 @@ func testAccModelConfig_primaryContainerPackageName(rName string) string {
 data "aws_region" "current" {}
 
 locals {
-   	region_account_map = {
-		us-east-1      = "865070037744"
-		us-east-2      = "057799348421"
-		us-west-1      = "382657785993"
-		us-west-2      = "594846645681"
-		ca-central-1   = "470592106596"
-		eu-central-1   = "446921602837"
-		eu-west-1      = "985815980388"
-		eu-west-2      = "856760150666"
-		eu-west-3      = "843114510376"
-		eu-north-1     = "136758871317"
-		ap-southeast-1 = "192199979996"
-		ap-southeast-2 = "666831318237"
-		ap-northeast-2 = "745090734665"
-		ap-northeast-1 = "977537786026"
-		ap-south-1     = "077584701553"
-		sa-east-1      = "270155090741"
-	}
-	account = region_account_map[data.aws_region.current]
-	model_package_name = format(
-		"arn:aws:sagemaker:%%s:%%s:model-package/gpt-2-1584040650-de7f6ab78d68d7fdf5f4f39a559d05ac",
-		data.aws_region.current,
-		account
-	)
+  region_account_map = {
+    us-east-1      = "865070037744"
+    us-east-2      = "057799348421"
+    us-west-1      = "382657785993"
+    us-west-2      = "594846645681"
+    ca-central-1   = "470592106596"
+    eu-central-1   = "446921602837"
+    eu-west-1      = "985815980388"
+    eu-west-2      = "856760150666"
+    eu-west-3      = "843114510376"
+    eu-north-1     = "136758871317"
+    ap-southeast-1 = "192199979996"
+    ap-southeast-2 = "666831318237"
+    ap-northeast-2 = "745090734665"
+    ap-northeast-1 = "977537786026"
+    ap-south-1     = "077584701553"
+    sa-east-1      = "270155090741"
+  }
+
+  account = region_account_map[data.aws_region.current]
+
+  model_package_name = format(
+    "arn:aws:sagemaker:%%s:%%s:model-package/gpt-2-1584040650-de7f6ab78d68d7fdf5f4f39a559d05ac",
+    data.aws_region.current,
+    account
+  )
 }
 
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
+
   primary_container {
     model_package_name = local.model_package_name
   }
