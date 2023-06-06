@@ -72,14 +72,14 @@ func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.
 	})
 
 	if err != nil {
-		return diag.Errorf("error reading Glue Data Catalog Encryption Settings (%s): %s", catalogID, err)
+		return diag.Errorf("reading Glue Data Catalog Encryption Settings (%s): %s", catalogID, err)
 	}
 
 	d.SetId(catalogID)
 	d.Set("catalog_id", d.Id())
 	if output.DataCatalogEncryptionSettings != nil {
 		if err := d.Set("data_catalog_encryption_settings", []interface{}{flattenDataCatalogEncryptionSettings(output.DataCatalogEncryptionSettings)}); err != nil {
-			return diag.Errorf("error setting data_catalog_encryption_settings: %s", err)
+			return diag.Errorf("setting data_catalog_encryption_settings: %s", err)
 		}
 	} else {
 		d.Set("data_catalog_encryption_settings", nil)
