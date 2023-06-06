@@ -345,7 +345,7 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 				dbName)
 		}
 
-		return diag.Errorf("Error reading Glue Catalog Table: %s", err)
+		return diag.Errorf("reading Glue Catalog Table: %s", err)
 	}
 
 	table := out.Table
