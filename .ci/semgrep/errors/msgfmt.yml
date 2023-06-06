@@ -14,3 +14,13 @@ rules:
     patterns:
       - pattern-regex: diag.FromErr\(fmt.Errorf\(
     severity: ERROR
+
+  - id: no-diag.Errorf-leading-error
+    languages: [go]
+    message: Remove leading 'error ' from diag.Errorf("error ...")
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-regex: 'diag.Errorf\("\s*[Ee]rror '
+    severity: ERROR
