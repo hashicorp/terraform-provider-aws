@@ -1,0 +1,10 @@
+rules:
+  - id: no-diag.FromErr-fmt.Errorf
+    languages: [go]
+    message: Use diag.Errorf(...) instead of diag.FromErr(fmt.Errorf(...))
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-regex: diag.FromErr\(fmt.Errorf\(
+    severity: ERROR
