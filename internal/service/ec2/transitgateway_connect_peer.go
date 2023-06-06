@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -173,16 +174,13 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("transit-gateway-connect-peer/%s", d.Id()),
 	}.String()
-
-	bgpTransitGatewayAddresses := make([]string, 0, len(transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations))
-	for _, bgp := range transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations {
-		bgpTransitGatewayAddresses = append(bgpTransitGatewayAddresses, aws.StringValue(bgp.TransitGatewayAddress))
-	}
-
+	bgpConfigurations := transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations
 	d.Set("arn", arn)
-	d.Set("bgp_asn", strconv.FormatInt(aws.Int64Value(transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations[0].PeerAsn), 10))
-	d.Set("bgp_peer_address", transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations[0].PeerAddress)
-	d.Set("bgp_transit_gateway_addresses", bgpTransitGatewayAddresses)
+	d.Set("bgp_asn", strconv.FormatInt(aws.Int64Value(bgpConfigurations[0].PeerAsn), 10))
+	d.Set("bgp_peer_address", bgpConfigurations[0].PeerAddress)
+	d.Set("bgp_transit_gateway_addresses", slices.ApplyToAll(bgpConfigurations, func(v *ec2.TransitGatewayAttachmentBgpConfiguration) string {
+		return aws.StringValue(v.TransitGatewayAddress)
+	}))
 	d.Set("inside_cidr_blocks", aws.StringValueSlice(transitGatewayConnectPeer.ConnectPeerConfiguration.InsideCidrBlocks))
 	d.Set("peer_address", transitGatewayConnectPeer.ConnectPeerConfiguration.PeerAddress)
 	d.Set("transit_gateway_address", transitGatewayConnectPeer.ConnectPeerConfiguration.TransitGatewayAddress)
