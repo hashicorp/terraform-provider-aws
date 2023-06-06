@@ -39,6 +39,9 @@ func (d *dataSourceFindingIds) Schema(ctx context.Context, req datasource.Schema
 			"detector_id": schema.StringAttribute{
 				Required: true,
 			},
+			"has_findings": schema.BoolAttribute{
+				Computed: true,
+			},
 			"finding_ids": schema.ListAttribute{
 				Computed:    true,
 				ElementType: types.StringType,
@@ -68,6 +71,7 @@ func (d *dataSourceFindingIds) Read(ctx context.Context, req datasource.ReadRequ
 
 	data.ID = types.StringValue(data.DetectorID.ValueString())
 	data.FindingIDs = flex.FlattenFrameworkStringList(ctx, out)
+	data.HasFindings = types.BoolValue((len(out) > 0))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -98,7 +102,8 @@ func findFindingIds(ctx context.Context, conn *guardduty.GuardDuty, id string) (
 }
 
 type dataSourceFindingIdsData struct {
-	DetectorID types.String `tfsdk:"detector_id"`
-	FindingIDs types.List   `tfsdk:"finding_ids"`
-	ID         types.String `tfsdk:"id"`
+	DetectorID  types.String `tfsdk:"detector_id"`
+	HasFindings types.Bool   `tfsdk:"has_findings"`
+	FindingIDs  types.List   `tfsdk:"finding_ids"`
+	ID          types.String `tfsdk:"id"`
 }
