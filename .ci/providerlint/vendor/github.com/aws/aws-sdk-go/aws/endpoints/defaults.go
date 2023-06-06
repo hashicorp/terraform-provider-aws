@@ -38388,6 +38388,15 @@ var awsusgovPartition = partition{
 		"workspaces": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
+					Region: "fips-us-gov-east-1",
+				}: endpoint{
+					Hostname: "workspaces-fips.us-gov-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-east-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
 					Region: "fips-us-gov-west-1",
 				}: endpoint{
 					Hostname: "workspaces-fips.us-gov-west-1.amazonaws.com",
@@ -38399,6 +38408,12 @@ var awsusgovPartition = partition{
 				endpointKey{
 					Region: "us-gov-east-1",
 				}: endpoint{},
+				endpointKey{
+					Region:  "us-gov-east-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "workspaces-fips.us-gov-east-1.amazonaws.com",
+				},
 				endpointKey{
 					Region: "us-gov-west-1",
 				}: endpoint{},
