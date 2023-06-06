@@ -18,6 +18,7 @@ import (
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/glacier"
 	"github.com/aws/aws-sdk-go-v2/service/healthlake"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
@@ -159,7 +160,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/frauddetector"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/gluedatabrew"
@@ -476,7 +476,7 @@ type AWSClient struct {
 	forecastqueryConn                *forecastqueryservice.ForecastQueryService
 	frauddetectorConn                *frauddetector.FraudDetector
 	gameliftConn                     *gamelift.GameLift
-	glacierConn                      *glacier.Glacier
+	glacierClient                    *glacier.Client
 	globalacceleratorConn            *globalaccelerator.GlobalAccelerator
 	glueConn                         *glue.Glue
 	grafanaConn                      *managedgrafana.ManagedGrafana
@@ -1170,8 +1170,8 @@ func (client *AWSClient) GameLiftConn() *gamelift.GameLift {
 	return client.gameliftConn
 }
 
-func (client *AWSClient) GlacierConn() *glacier.Glacier {
-	return client.glacierConn
+func (client *AWSClient) GlacierClient() *glacier.Client {
+	return client.glacierClient
 }
 
 func (client *AWSClient) GlobalAcceleratorConn() *globalaccelerator.GlobalAccelerator {
