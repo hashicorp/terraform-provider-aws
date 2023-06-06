@@ -192,7 +192,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 
 	if err := d.Set("global_cluster_members", flattenGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
-		return diag.Errorf("error setting global_cluster_members: %s", err)
+		return diag.Errorf("setting global_cluster_members: %s", err)
 	}
 
 	d.Set("global_cluster_resource_id", globalCluster.GlobalClusterResourceId)
