@@ -2,7 +2,6 @@ package apprunner
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -93,17 +92,17 @@ func resourceVPCIngressConnectionCreate(ctx context.Context, d *schema.ResourceD
 	output, err := conn.CreateVpcIngressConnectionWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating App Runner VPC Ingress Configuration (%s): %w", name, err))
+		return diag.Errorf("error creating App Runner VPC Ingress Configuration (%s): %s", name, err)
 	}
 
 	if output == nil || output.VpcIngressConnection == nil {
-		return diag.FromErr(fmt.Errorf("error creating App Runner VPC Ingress Configuration (%s): empty output", name))
+		return diag.Errorf("error creating App Runner VPC Ingress Configuration (%s): empty output", name)
 	}
 
 	d.SetId(aws.StringValue(output.VpcIngressConnection.VpcIngressConnectionArn))
 
 	if err := WaitVPCIngressConnectionActive(ctx, conn, d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for App Runner VPC Ingress Configuration (%s) creation: %w", d.Id(), err))
+		return diag.Errorf("error waiting for App Runner VPC Ingress Configuration (%s) creation: %s", d.Id(), err)
 	}
 
 	return resourceVPCIngressConnectionRead(ctx, d, meta)
@@ -125,16 +124,16 @@ func resourceVPCIngressConnectionRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading App Runner VPC Ingress Configuration (%s): %w", d.Id(), err))
+		return diag.Errorf("error reading App Runner VPC Ingress Configuration (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.VpcIngressConnection == nil {
-		return diag.FromErr(fmt.Errorf("error reading App Runner VPC Ingress Configuration (%s): empty output", d.Id()))
+		return diag.Errorf("error reading App Runner VPC Ingress Configuration (%s): empty output", d.Id())
 	}
 
 	if aws.StringValue(output.VpcIngressConnection.Status) == VPCIngressConnectionStatusDeleted {
 		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading App Runner VPC Ingress Configuration (%s): %s after creation", d.Id(), aws.StringValue(output.VpcIngressConnection.Status)))
+			return diag.Errorf("error reading App Runner VPC Ingress Configuration (%s): %s after creation", d.Id(), aws.StringValue(output.VpcIngressConnection.Status))
 		}
 		log.Printf("[WARN] App Runner VPC Ingress Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -176,14 +175,14 @@ func resourceVPCIngressConnectionDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting App Runner VPC Ingress Configuration (%s): %w", d.Id(), err))
+		return diag.Errorf("error deleting App Runner VPC Ingress Configuration (%s): %s", d.Id(), err)
 	}
 
 	if err := WaitVPCIngressConnectionDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error waiting for App Runner VPC Ingress Configuration (%s) deletion: %w", d.Id(), err))
+		return diag.Errorf("error waiting for App Runner VPC Ingress Configuration (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil
