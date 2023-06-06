@@ -2,7 +2,6 @@ package connect
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -35,11 +34,11 @@ func dataSourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Reso
 
 	lfaArn, err := FindLambdaFunctionAssociationByARNWithContext(ctx, conn, instanceID.(string), functionArn.(string))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Function Association by ARN (%s): %w", functionArn, err))
+		return diag.Errorf("error finding Connect Lambda Function Association by ARN (%s): %s", functionArn, err)
 	}
 
 	if lfaArn == "" {
-		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Function Association by ARN (%s): not found", functionArn))
+		return diag.Errorf("error finding Connect Lambda Function Association by ARN (%s): not found", functionArn)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

@@ -135,11 +135,11 @@ func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceDat
 	output, err := conn.CreateUserHierarchyGroupWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect User Hierarchy Group (%s): %w", userHierarchyGroupName, err))
+		return diag.Errorf("error creating Connect User Hierarchy Group (%s): %s", userHierarchyGroupName, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect User Hierarchy Group (%s): empty output", userHierarchyGroupName))
+		return diag.Errorf("error creating Connect User Hierarchy Group (%s): empty output", userHierarchyGroupName)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.HierarchyGroupId)))
@@ -168,11 +168,11 @@ func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect User Hierarchy Group (%s): %w", d.Id(), err))
+		return diag.Errorf("error getting Connect User Hierarchy Group (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.HierarchyGroup == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect User Hierarchy Group (%s): empty response", d.Id()))
+		return diag.Errorf("error getting Connect User Hierarchy Group (%s): empty response", d.Id())
 	}
 
 	d.Set("arn", resp.HierarchyGroup.Arn)
@@ -182,7 +182,7 @@ func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("name", resp.HierarchyGroup.Name)
 
 	if err := d.Set("hierarchy_path", flattenUserHierarchyPath(resp.HierarchyGroup.HierarchyPath)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting Connect User Hierarchy Group hierarchy_path (%s): %w", d.Id(), err))
+		return diag.Errorf("error setting Connect User Hierarchy Group hierarchy_path (%s): %s", d.Id(), err)
 	}
 
 	SetTagsOut(ctx, resp.HierarchyGroup.Tags)
@@ -206,7 +206,7 @@ func resourceUserHierarchyGroupUpdate(ctx context.Context, d *schema.ResourceDat
 			Name:             aws.String(d.Get("name").(string)),
 		})
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating User Hierarchy Group (%s): %w", d.Id(), err))
+			return diag.Errorf("updating User Hierarchy Group (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -228,7 +228,7 @@ func resourceUserHierarchyGroupDelete(ctx context.Context, d *schema.ResourceDat
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting User Hierarchy Group (%s): %w", d.Id(), err))
+		return diag.Errorf("error deleting User Hierarchy Group (%s): %s", d.Id(), err)
 	}
 
 	return nil

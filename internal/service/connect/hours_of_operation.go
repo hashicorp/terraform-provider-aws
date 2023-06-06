@@ -146,11 +146,11 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 	output, err := conn.CreateHoursOfOperationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Hours of Operation (%s): %w", name, err))
+		return diag.Errorf("error creating Connect Hours of Operation (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Hours of Operation (%s): empty output", name))
+		return diag.Errorf("error creating Connect Hours of Operation (%s): empty output", name)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.HoursOfOperationId)))
@@ -179,11 +179,11 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Hours of Operation (%s): %w", d.Id(), err))
+		return diag.Errorf("error getting Connect Hours of Operation (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.HoursOfOperation == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Hours of Operation (%s): empty response", d.Id()))
+		return diag.Errorf("error getting Connect Hours of Operation (%s): empty response", d.Id())
 	}
 
 	if err := d.Set("config", flattenConfigs(resp.HoursOfOperation.Config)); err != nil {
@@ -221,7 +221,7 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 			TimeZone:           aws.String(d.Get("time_zone").(string)),
 		})
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating HoursOfOperation (%s): %w", d.Id(), err))
+			return diag.Errorf("updating HoursOfOperation (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -243,7 +243,7 @@ func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData,
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting HoursOfOperation (%s): %w", d.Id(), err))
+		return diag.Errorf("error deleting HoursOfOperation (%s): %s", d.Id(), err)
 	}
 
 	return nil
