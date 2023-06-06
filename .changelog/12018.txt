@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_autoscaling_group: Prevent infinite wait for capacity when increasing `min_size` and not specifying `desired_capacity`
+```

@@ -1,0 +1,3 @@
+```release-note:bug
+ resource/aws_redshift_cluster: Adds retries to enabling and disabling the redshift cluster's logging
+ ```

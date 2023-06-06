@@ -1,7 +1,7 @@
 ---
+subcategory: "Organizations"
 layout: "aws"
 page_title: "AWS: aws_organizations_policy_attachment"
-sidebar_current: "docs-aws-resource-organizations-policy-attachment"
 description: |-
   Provides a resource to attach an AWS Organizations policy to an organization account, root, or unit.
 ---
@@ -14,28 +14,28 @@ Provides a resource to attach an AWS Organizations policy to an organization acc
 
 ### Organization Account
 
-```hcl
+```terraform
 resource "aws_organizations_policy_attachment" "account" {
-  policy_id = "${aws_organizations_policy.example.id}"
+  policy_id = aws_organizations_policy.example.id
   target_id = "123456789012"
 }
 ```
 
 ### Organization Root
 
-```hcl
+```terraform
 resource "aws_organizations_policy_attachment" "root" {
-  policy_id = "${aws_organizations_policy.example.id}"
-  target_id = "r-12345678"
+  policy_id = aws_organizations_policy.example.id
+  target_id = aws_organizations_organization.example.roots[0].id
 }
 ```
 
 ### Organization Unit
 
-```hcl
+```terraform
 resource "aws_organizations_policy_attachment" "unit" {
-  policy_id = "${aws_organizations_policy.example.id}"
-  target_id = "ou-12345678"
+  policy_id = aws_organizations_policy.example.id
+  target_id = aws_organizations_organizational_unit.example.id
 }
 ```
 
@@ -45,10 +45,15 @@ The following arguments are supported:
 
 * `policy_id` - (Required) The unique identifier (ID) of the policy that you want to attach to the target.
 * `target_id` - (Required) The unique identifier (ID) of the root, organizational unit, or account number that you want to attach the policy to.
+* `skip_destroy` - (Optional) If set to `true`, destroy will **not** detach the policy and instead just remove the resource from state. This can be useful in situations where the attachment must be preserved to meet the AWS minimum requirement of 1 attached policy.
+
+## Attributes Reference
+
+No additional attributes are exported.
 
 ## Import
 
-`aws_organizations_policy_attachment` can be imported by using the target ID and policy ID, e.g. with an account target
+`aws_organizations_policy_attachment` can be imported by using the target ID and policy ID, e.g., with an account target
 
 ```
 $ terraform import aws_organizations_policy_attachment.account 123456789012:p-12345678

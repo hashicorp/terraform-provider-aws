@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_grafana_workspace: Add plan time validations for `authentication_providers`, `authentication_providers`, `authentication_providers`.
+```

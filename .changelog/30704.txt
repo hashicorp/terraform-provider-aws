@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_quicksight_data_set: Fix to properly send `physical_table_map.*.relational_table.catalog` when set
+```
+
+```release-note:bug
+resource/aws_quicksight_data_set: Fix to properly send `physical_table_map.*.relational_table.schema` when set
+```

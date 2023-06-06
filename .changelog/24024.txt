@@ -1,0 +1,27 @@
+```release-note:bug
+resource/aws_route: Ensure that resource ID is set in case of wait-for-creation time out
+```
+
+```release-note:enhancement
+resource/aws_route: Add `core_network_arn` argument
+```
+
+```release-note:enhancement
+data-source/aws_route: Add `core_network_arn` argument
+```
+
+```release-note:enhancement
+resource/aws_route_table: Add `core_network_arn` argument to the `route` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_route_table: Add 'routes.core_network_arn' attribute'
+```
+
+```release-note:enhancement
+resource/aws_default_route_table: Add `core_network_arn` argument to the `route` configuration block
+```
+
+```release-note:enhancement
+resource/aws_vpn_connection: Add `core_network_arn` and `core_network_attachment_arn` attributes
+```

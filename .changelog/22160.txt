@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudformation_stack_set: Consider `QUEUED` a valid pending state for resource creation
+```

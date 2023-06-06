@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dx_connection: Add support for `100Gbps` `bandwidth`
+```
+
+```release-note:enhancement
+resource/aws_dx_lag: Add support for `100Gbps` `connections_bandwidth`
+```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket_replication_configuration: Mark `event_threshold` in `destination` `metrics` configuration block as `Optional`
+```

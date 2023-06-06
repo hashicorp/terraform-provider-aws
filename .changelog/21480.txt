@@ -1,0 +1,2 @@
+```release-note:enhancement
+resource/aws_sagemaker_code_repository: Add tagging support.

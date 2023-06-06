@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/iam_service_linked_role: Add `tags` argument
+```

@@ -1,0 +1,54 @@
+<script src="https://assets.crowd.aws/crowd-html-elements.js"></script>
+
+<crowd-form>
+    <crowd-instructions link-text="View instructions" link-type="button">
+        <short-summary>
+            <p>Collect utterances for intent</p>
+        </short-summary>
+
+        <detailed-instructions>
+            <h3>Collect utterances for intent</h3>
+            <p>Given a context and an intent, write how you would express the intent using natural language. Don't try to be overly formal, simply write what you would say if you were in the given situation.</p>
+        </detailed-instructions>
+
+        <positive-example>
+            <h3>Context</h3>
+            <p>You bought a pair of shoes online but they don't fit</p>
+
+            <h3>Intent</h3>
+            <p>You want to try to return the shoes via an online customer service chat bot</p>
+
+            <h3>Response</h3>
+            <p>I would like to return a pair of shoes</p>
+        </positive-example>
+
+        <positive-example>
+            <h3>Context</h3>
+            <p>You bought a pair of shoes online but they don't fit</p>
+
+            <h3>Intent</h3>
+            <p>You want to try to return the shoes via an online customer service chat bot</p>
+
+            <h3>Response</h3>
+            <p>Hi, I'm trying to buy a plane ticket for tomorrow morning and your website isn't working</p>
+        </positive-example>
+
+        <negative-example>
+            <h3>Context</h3>
+            <p>You bought a pair of shoes online but they don't fit</p>
+
+            <h3>Intent</h3>
+            <p>You want to try to return the shoes via an online customer service chat bot</p>
+
+            <h3>Response</h3>
+            <p>Don't fit</p>
+        </negative-example>
+    </crowd-instructions>
+
+
+    <p>Write what you would say in the given situation:</p>
+    <p><strong>Context: </strong>{{ task.input.context }}</p>
+    <p><strong>Intent: </strong>{{ task.input.intent }}</p>
+
+    <crowd-input name="utterance"></crowd-input>
+</crowd-form>

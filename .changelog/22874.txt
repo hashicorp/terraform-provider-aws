@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_grafana_workspace
+```
+
+```release-note:new-data-source
+aws_grafana_workspace
+```

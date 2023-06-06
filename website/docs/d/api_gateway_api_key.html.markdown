@@ -1,9 +1,9 @@
 ---
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_api_key"
-sidebar_current: "docs-aws_api_gateway_api_key"
 description: |-
-  Get information on an API Gateway API Key
+  Get information on an API Gateway REST API Key
 ---
 
 # Data Source: aws_api_gateway_api_key
@@ -13,7 +13,7 @@ example to supply credentials for a dependency microservice.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_api_gateway_api_key" "my_api_key" {
   id = "ru3mpjgse6"
 }
@@ -21,10 +21,15 @@ data "aws_api_gateway_api_key" "my_api_key" {
 
 ## Argument Reference
 
- * `id` - (Required) The ID of the API Key to look up.
+* `id` - (Required) ID of the API Key to look up.
 
 ## Attributes Reference
 
- * `id` - Set to the ID of the API Key.
- * `name` - Set to the name of the API Key.
- * `value` - Set to the value of the API Key.
+* `id` - Set to the ID of the API Key.
+* `name` - Set to the name of the API Key.
+* `value` - Set to the value of the API Key.
+* `created_date` - Date and time when the API Key was created.
+* `last_updated_date` - Date and time when the API Key was last updated.
+* `description` - Description of the API Key.
+* `enabled` - Whether the API Key is enabled.
+* `tags` - Map of tags for the resource.

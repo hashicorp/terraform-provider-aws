@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Properly updates tags on the Replication Group in addition to the member clusters
+```
+
+```release-note:bug
+resource/aws_elasticache_replication_group: Properly updates tags on Replication Group member clusters when scaling up
+```

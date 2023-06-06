@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_datasync_s3_location: Add validation to `agent_arns`, `s3_bucket_arn` and `s3_config.bucket_access_role_arn` arguments
+```

@@ -1,0 +1,35 @@
+```release-note:new-resource
+aws_vpc_ipam
+```
+
+```release-note:new-resource
+aws_vpc_ipam_pool
+```
+
+```release-note:new-resource
+aws_vpc_ipam_scope
+```
+
+```release-note:new-resource
+aws_vpc_ipam_pool_cidr
+```
+
+```release-note:new-resource
+aws_vpc_ipam_pool_cidr_allocation
+```
+
+```release-note:new-resource
+vpc_ipv6_cidr_block_association
+```
+
+```release-note:new-data-source
+aws_vpc_pool_data_source
+```
+
+```release-note:enhancement
+resource/aws_vpc: `cidr_block` value can now either be set explicitly or computed via AWS IPAM
+```
+
+```release-note:enhancement
+resource/aws_vpc_ipv4_cidr_block_association: `cidr_block` value can now either be set explicitly or computed via AWS IPAM
+```

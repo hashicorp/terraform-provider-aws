@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_s3_bucket_lifecycle_configuration: Correctly configure `rule.filter.object_size_greater_than` and `rule.filter.object_size_less_than` in API requests and terraform state
+```
+
+```release-note:bug
+resource/aws_s3_bucket_lifecycle_configuration: Prevent drift when `rule.noncurrent_version_expiration.newer_noncurrent_versions` or `rule.noncurrent_version_transition.newer_noncurrent_versions` is not specified
+```

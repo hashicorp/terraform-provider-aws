@@ -1,0 +1,15 @@
+```release-note:enhancement
+data-source/aws_elb: Add `desync_mitigation_mode` attribute
+```
+
+```release-note:enhancement
+data-source/aws_lb: Add `desync_mitigation_mode` attribute
+```
+
+```release-note:enhancement
+resource/aws_elb: Add `desync_mitigation_mode` argument
+```
+
+```release-note:enhancement
+resource/aws_lb: Add `desync_mitigation_mode` argument
+```

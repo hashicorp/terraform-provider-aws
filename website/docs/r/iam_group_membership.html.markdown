@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_group_membership"
-sidebar_current: "docs-aws-resource-iam-group-membership"
 description: |-
   Provides a top level resource to manage IAM Group membership for IAM Users.
 ---
@@ -19,16 +19,16 @@ more information on managing IAM Groups or IAM Users, see [IAM Groups][1] or
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_group_membership" "team" {
   name = "tf-testing-group-membership"
 
   users = [
-    "${aws_iam_user.user_one.name}",
-    "${aws_iam_user.user_two.name}",
+    aws_iam_user.user_one.name,
+    aws_iam_user.user_two.name,
   ]
 
-  group = "${aws_iam_group.group.name}"
+  group = aws_iam_group.group.name
 }
 
 resource "aws_iam_group" "group" {
@@ -54,10 +54,11 @@ The following arguments are supported:
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `name` - The name to identify the Group Membership
 * `users` - list of IAM User names
 * `group` – IAM Group name
-
 
 [1]: /docs/providers/aws/r/iam_group.html
 [2]: /docs/providers/aws/r/iam_user.html

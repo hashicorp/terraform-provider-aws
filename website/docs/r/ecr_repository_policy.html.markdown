@@ -1,59 +1,56 @@
 ---
+subcategory: "ECR (Elastic Container Registry)"
 layout: "aws"
 page_title: "AWS: aws_ecr_repository_policy"
-sidebar_current: "docs-aws-resource-ecr-repository-policy"
 description: |-
-  Provides an ECR Repository Policy.
+  Provides an Elastic Container Registry Repository Policy.
 ---
 
 # Resource: aws_ecr_repository_policy
 
-Provides an ECR repository policy.
+Provides an Elastic Container Registry Repository Policy.
 
 Note that currently only one policy may be applied to a repository.
 
-~> **NOTE on ECR Availability**: The EC2 Container Registry is not yet rolled out
-in all regions - available regions are listed
-[the AWS Docs](https://docs.aws.amazon.com/general/latest/gr/rande.html#ecr_region).
-
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ecr_repository" "foo" {
   name = "bar"
 }
 
-resource "aws_ecr_repository_policy" "foopolicy" {
-  repository = "${aws_ecr_repository.foo.name}"
+data "aws_iam_policy_document" "foopolicy" {
+  statement {
+    sid    = "new policy"
+    effect = "Allow"
 
-  policy = <<EOF
-{
-    "Version": "2008-10-17",
-    "Statement": [
-        {
-            "Sid": "new policy",
-            "Effect": "Allow",
-            "Principal": "*",
-            "Action": [
-                "ecr:GetDownloadUrlForLayer",
-                "ecr:BatchGetImage",
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:PutImage",
-                "ecr:InitiateLayerUpload",
-                "ecr:UploadLayerPart",
-                "ecr:CompleteLayerUpload",
-                "ecr:DescribeRepositories",
-                "ecr:GetRepositoryPolicy",
-                "ecr:ListImages",
-                "ecr:DeleteRepository",
-                "ecr:BatchDeleteImage",
-                "ecr:SetRepositoryPolicy",
-                "ecr:DeleteRepositoryPolicy"
-            ]
-        }
+    principals {
+      type        = "AWS"
+      identifiers = ["123456789012"]
+    }
+
+    actions = [
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:PutImage",
+      "ecr:InitiateLayerUpload",
+      "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
+      "ecr:DescribeRepositories",
+      "ecr:GetRepositoryPolicy",
+      "ecr:ListImages",
+      "ecr:DeleteRepository",
+      "ecr:BatchDeleteImage",
+      "ecr:SetRepositoryPolicy",
+      "ecr:DeleteRepositoryPolicy",
     ]
+  }
 }
-EOF
+
+resource "aws_ecr_repository_policy" "foopolicy" {
+  repository = aws_ecr_repository.foo.name
+  policy     = data.aws_iam_policy_document.foopolicy.json
 }
 ```
 
@@ -62,7 +59,7 @@ EOF
 The following arguments are supported:
 
 * `repository` - (Required) Name of the repository to apply the policy.
-* `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](/docs/providers/aws/guides/iam-policy-documents.html)
+* `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 
 ## Attributes Reference
 
@@ -73,7 +70,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECR Repository Policy can be imported using the repository name, e.g.
+ECR Repository Policy can be imported using the repository name, e.g.,
 
 ```
 $ terraform import aws_ecr_repository_policy.example example

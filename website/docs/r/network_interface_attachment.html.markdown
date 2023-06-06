@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_network_interface_attachment"
-sidebar_current: "docs-aws-resource-network-interface-attachment"
 description: |-
   Attach an Elastic network interface (ENI) resource with EC2 instance.
 ---
@@ -12,10 +12,10 @@ Attach an Elastic network interface (ENI) resource with EC2 instance.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_network_interface_attachment" "test" {
-  instance_id          = "${aws_instance.test.id}"
-  network_interface_id = "${aws_network_interface.test.id}"
+  instance_id          = aws_instance.test.id
+  network_interface_id = aws_network_interface.test.id
   device_index         = 0
 }
 ```
@@ -36,3 +36,11 @@ In addition to all arguments above, the following attributes are exported:
 * `network_interface_id` - Network interface ID.
 * `attachment_id` - The ENI Attachment ID.
 * `status` - The status of the Network Interface Attachment.
+
+## Import
+
+Elastic network interface (ENI) Attachments can be imported using its Attachment ID e.g.,
+
+```
+terraform import aws_network_interface_attachment.secondary_nic eni-attach-0a33842b4ec347c4c
+```

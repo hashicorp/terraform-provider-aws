@@ -1,7 +1,7 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_mysql_layer"
-sidebar_current: "docs-aws-resource-opsworks-mysql-layer"
 description: |-
   Provides an OpsWorks MySQL layer resource.
 ---
@@ -11,13 +11,13 @@ description: |-
 Provides an OpsWorks MySQL layer resource.
 
 ~> **Note:** All arguments including the root password will be stored in the raw state as plain-text.
-[Read more about sensitive data in state](/docs/state/sensitive-data.html).
+[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_opsworks_mysql_layer" "db" {
-  stack_id = "${aws_opsworks_stack.main.id}"
+  stack_id = aws_opsworks_stack.main.id
 }
 ```
 
@@ -25,7 +25,7 @@ resource "aws_opsworks_mysql_layer" "db" {
 
 The following arguments are supported:
 
-* `stack_id` - (Required) The id of the stack the layer will belong to.
+* `stack_id` - (Required) ID of the stack the layer will belong to.
 * `name` - (Optional) A human-readable name for the layer.
 * `auto_assign_elastic_ips` - (Optional) Whether to automatically assign an elastic IP address to the layer's instances.
 * `auto_assign_public_ips` - (Optional) For stacks belonging to a VPC, whether to automatically assign a public IP address to each of the layer's instances.
@@ -42,6 +42,7 @@ The following arguments are supported:
 * `use_ebs_optimized_instances` - (Optional) Whether to use EBS-optimized instances.
 * `ebs_volume` - (Optional) `ebs_volume` blocks, as described below, will each create an EBS volume and connect it to the layer's instances.
 * `custom_json` - (Optional) Custom JSON attributes to apply to the layer.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The following extra optional arguments, all lists of Chef recipe names, allow
 custom Chef recipes to be applied to layer instances at the five different
@@ -67,3 +68,5 @@ An `ebs_volume` block supports the following arguments:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the layer.
+* `arn` - The Amazon Resource Name(ARN) of the layer.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

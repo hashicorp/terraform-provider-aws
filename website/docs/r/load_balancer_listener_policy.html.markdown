@@ -1,7 +1,7 @@
 ---
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_load_balancer_listener_policy"
-sidebar_current: "docs-aws-resource-load-balancer-listener-policy"
 description: |-
   Attaches a load balancer policy to an ELB Listener.
 ---
@@ -10,10 +10,11 @@ description: |-
 
 Attaches a load balancer policy to an ELB Listener.
 
+## Example Usage
 
-## Example Usage for Custom Policy
+### Custom Policy
 
-```hcl
+```terraform
 resource "aws_elb" "wu-tang" {
   name               = "wu-tang"
   availability_zones = ["us-east-1a"]
@@ -32,7 +33,7 @@ resource "aws_elb" "wu-tang" {
 }
 
 resource "aws_load_balancer_policy" "wu-tang-ssl" {
-  load_balancer_name = "${aws_elb.wu-tang.name}"
+  load_balancer_name = aws_elb.wu-tang.name
   policy_name        = "wu-tang-ssl"
   policy_type_name   = "SSLNegotiationPolicyType"
 
@@ -48,20 +49,20 @@ resource "aws_load_balancer_policy" "wu-tang-ssl" {
 }
 
 resource "aws_load_balancer_listener_policy" "wu-tang-listener-policies-443" {
-  load_balancer_name = "${aws_elb.wu-tang.name}"
+  load_balancer_name = aws_elb.wu-tang.name
   load_balancer_port = 443
 
   policy_names = [
-    "${aws_load_balancer_policy.wu-tang-ssl.policy_name}",
+    aws_load_balancer_policy.wu-tang-ssl.policy_name,
   ]
 }
 ```
 
 This example shows how to customize the TLS settings of an HTTPS listener.
 
-## Example Usage for AWS Predefined Security Policy
+### AWS Predefined Security Policy
 
-```hcl
+```terraform
 resource "aws_elb" "wu-tang" {
   name               = "wu-tang"
   availability_zones = ["us-east-1a"]
@@ -80,7 +81,7 @@ resource "aws_elb" "wu-tang" {
 }
 
 resource "aws_load_balancer_policy" "wu-tang-ssl-tls-1-1" {
-  load_balancer_name = "${aws_elb.wu-tang.name}"
+  load_balancer_name = aws_elb.wu-tang.name
   policy_name        = "wu-tang-ssl"
   policy_type_name   = "SSLNegotiationPolicyType"
 
@@ -91,11 +92,11 @@ resource "aws_load_balancer_policy" "wu-tang-ssl-tls-1-1" {
 }
 
 resource "aws_load_balancer_listener_policy" "wu-tang-listener-policies-443" {
-  load_balancer_name = "${aws_elb.wu-tang.name}"
+  load_balancer_name = aws_elb.wu-tang.name
   load_balancer_port = 443
 
   policy_names = [
-    "${aws_load_balancer_policy.wu-tang-ssl-tls-1-1.policy_name}",
+    aws_load_balancer_policy.wu-tang-ssl-tls-1-1.policy_name,
   ]
 }
 ```
@@ -109,6 +110,7 @@ The following arguments are supported:
 * `load_balancer_name` - (Required) The load balancer to attach the policy to.
 * `load_balancer_port` - (Required) The load balancer listener port to apply the policy to.
 * `policy_names` - (Required) List of Policy Names to apply to the backend server.
+* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an update. To force an update without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
 
 ## Attributes Reference
 

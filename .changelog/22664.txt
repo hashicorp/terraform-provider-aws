@@ -1,0 +1,7 @@
+```release-note:note
+resource/aws_route: The `instance_id` argument has been deprecated. All configurations using `instance_id` should be updated to use the `network_interface_id` argument instead
+```
+
+```release-note:note
+resource/aws_route_table: The `instance_id` argument of the `route` configuration block has been deprecated. All configurations using `route` `instance_id` should be updated to use the `route` `network_interface_id` argument instead
+```

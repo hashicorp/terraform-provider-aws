@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_transfer_server: Add `directory_id` argument to support Microsoft Active Directory (AD) authentication
+```
+
+```release-note:new-resource
+aws_transfer_access
+```

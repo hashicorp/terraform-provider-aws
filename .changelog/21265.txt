@@ -1,0 +1,15 @@
+```release-note:bug-fix
+resource/aws_route_table: Remove cross-account ENIs managed by AWS services like FSX for ONTAP from Terraform-managed routes to avoid diffs
+```
+
+```release-note:enhancement
+resource/aws_network_interface: Add `arn` and `owner_id` attributes
+```
+
+```release-note:enhancement
+resource/aws_network_interface: Add `ipv4_prefix`, `ipv4_prefix_count`, `ipv6_prefix` and `ipv6_prefix_count` arguments
+```
+
+```release-note:enhancement
+data-source/aws_network_interface: Add `arn` attribute
+```

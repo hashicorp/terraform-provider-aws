@@ -1,0 +1,3 @@
+```release-note:bug-fix
+resource/aws_eip: Set `allocation_id` attribute for value for VPC domain EIPs
+```
