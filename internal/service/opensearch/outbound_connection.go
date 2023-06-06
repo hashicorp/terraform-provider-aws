@@ -61,7 +61,7 @@ func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceDat
 
 	resp, err := conn.CreateOutboundConnectionWithContext(ctx, createOpts)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error creating Outbound Connection: %s", err))
+		return diag.Errorf("Error creating Outbound Connection: %s", err)
 	}
 
 	// Get the ID and store it
@@ -70,7 +70,7 @@ func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceDat
 
 	err = outboundConnectionWaitUntilAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error waiting for Outbound Connection to become available: %s", err))
+		return diag.Errorf("Error waiting for Outbound Connection to become available: %s", err)
 	}
 
 	return resourceOutboundConnectionRead(ctx, d, meta)
@@ -82,7 +82,7 @@ func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData,
 	ccscRaw, statusCode, err := outboundConnectionRefreshState(ctx, conn, d.Id())()
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error reading Outbound Connection: %s", err))
+		return diag.Errorf("Error reading Outbound Connection: %s", err)
 	}
 
 	ccsc := ccscRaw.(*opensearchservice.OutboundConnection)
@@ -116,11 +116,11 @@ func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error deleting Outbound Connection (%s): %s", d.Id(), err))
+		return diag.Errorf("Error deleting Outbound Connection (%s): %s", d.Id(), err)
 	}
 
 	if err := waitForOutboundConnectionDeletion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.FromErr(fmt.Errorf("Error waiting for VPC Peering Connection (%s) to be deleted: %s", d.Id(), err))
+		return diag.Errorf("Error waiting for VPC Peering Connection (%s) to be deleted: %s", d.Id(), err)
 	}
 
 	return nil
