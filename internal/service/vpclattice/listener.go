@@ -185,7 +185,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if in.ServiceIdentifier == nil {
-		return diag.FromErr(fmt.Errorf("must specify either service_arn or service_identifier"))
+		return diag.Errorf("must specify either service_arn or service_identifier")
 	}
 
 	out, err := conn.CreateListener(ctx, in)

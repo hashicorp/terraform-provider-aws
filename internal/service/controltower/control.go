@@ -72,7 +72,7 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(id)
 
 	if _, err := waitOperationSucceeded(ctx, conn, aws.StringValue(output.OperationIdentifier), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.FromErr(fmt.Errorf("waiting for ControlTower Control (%s) create: %w", d.Id(), err))
+		return diag.Errorf("waiting for ControlTower Control (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceControlRead(ctx, d, meta)

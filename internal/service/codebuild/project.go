@@ -795,7 +795,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		resp, err = conn.CreateProjectWithContext(ctx, input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating CodeBuild project: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeBuild project: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.Project.Arn))
@@ -812,7 +812,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err = conn.UpdateProjectVisibilityWithContext(ctx, visInput)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error updating CodeBuild project (%s) visibility: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CodeBuild project (%s) visibility: %s", d.Id(), err)
 		}
 	}
 	return append(diags, resourceProjectRead(ctx, d, meta)...)
@@ -1385,7 +1385,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err := conn.UpdateProjectVisibilityWithContext(ctx, visInput)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error updating CodeBuild project (%s) visibility: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CodeBuild project (%s) visibility: %s", d.Id(), err)
 		}
 	}
 
