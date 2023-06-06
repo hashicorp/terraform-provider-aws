@@ -55,7 +55,7 @@ func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, me
 	output, err := findReleaseLabels(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("error reading EMR Release Labels: %s", err)
+		return diag.Errorf("reading EMR Release Labels: %s", err)
 	}
 
 	releaseLabels := aws.StringValueSlice(output)
