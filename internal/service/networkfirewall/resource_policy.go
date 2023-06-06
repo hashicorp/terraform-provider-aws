@@ -69,7 +69,7 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 
 	_, err = conn.PutResourcePolicyWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("error putting NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
+		return diag.Errorf("putting NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
 	}
 
 	d.SetId(resourceArn)
@@ -90,11 +90,11 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return nil
 	}
 	if err != nil {
-		return diag.Errorf("error reading NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
+		return diag.Errorf("reading NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
 	}
 
 	if policy == nil {
-		return diag.Errorf("error reading NetworkFirewall Resource Policy (for resource: %s): empty output", resourceArn)
+		return diag.Errorf("reading NetworkFirewall Resource Policy (for resource: %s): empty output", resourceArn)
 	}
 
 	d.Set("resource_arn", resourceArn)

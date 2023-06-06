@@ -103,17 +103,17 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Logging Configuration for NetworkFirewall Firewall: %s: %s", d.Id(), err)
+		return diag.Errorf("reading Logging Configuration for NetworkFirewall Firewall: %s: %s", d.Id(), err)
 	}
 
 	if output == nil {
-		return diag.Errorf("error reading Logging Configuration for NetworkFirewall Firewall: %s: empty output", d.Id())
+		return diag.Errorf("reading Logging Configuration for NetworkFirewall Firewall: %s: empty output", d.Id())
 	}
 
 	d.Set("firewall_arn", output.FirewallArn)
 
 	if err := d.Set("logging_configuration", flattenLoggingConfiguration(output.LoggingConfiguration)); err != nil {
-		return diag.Errorf("error setting logging_configuration: %s", err)
+		return diag.Errorf("setting logging_configuration: %s", err)
 	}
 
 	return nil
@@ -158,7 +158,7 @@ func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Logging Configuration for NetworkFirewall Firewall: %s: %s", d.Id(), err)
+		return diag.Errorf("deleting Logging Configuration for NetworkFirewall Firewall: %s: %s", d.Id(), err)
 	}
 
 	if output != nil && output.LoggingConfiguration != nil {
