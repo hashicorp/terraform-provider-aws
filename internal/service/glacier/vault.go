@@ -7,8 +7,8 @@ import (
 	"log"
 	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glacier"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glacier"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -24,7 +24,7 @@ import (
 
 // @SDKResource("aws_glacier_vault", name="Vault")
 // @Tags(identifierAttribute="id")
-func ResourceVault() *schema.Resource {
+func resourceVault() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultCreate,
 		ReadWithoutTimeout:   resourceVaultRead,
@@ -36,27 +36,6 @@ func ResourceVault() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^[.0-9A-Za-z-_]+$`),
-						"only alphanumeric characters, hyphens, underscores, and periods are allowed"),
-				),
-			},
-
-			"location": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"access_policy": {
 				Type:                  schema.TypeString,
 				Optional:              true,
@@ -68,7 +47,24 @@ func ResourceVault() *schema.Resource {
 					return json
 				},
 			},
-
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"location": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 255),
+					validation.StringMatch(regexp.MustCompile(`^[.0-9A-Za-z-_]+$`),
+						"only alphanumeric characters, hyphens, underscores, and periods are allowed"),
+				),
+			},
 			"notification": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -85,7 +81,6 @@ func ResourceVault() *schema.Resource {
 									"InventoryRetrievalCompleted",
 								}, false),
 							},
-							Set: schema.HashString,
 						},
 						"sns_topic": {
 							Type:         schema.TypeString,
@@ -95,7 +90,6 @@ func ResourceVault() *schema.Resource {
 					},
 				},
 			},
-
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -106,18 +100,19 @@ func ResourceVault() *schema.Resource {
 
 func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlacierConn()
+	conn := meta.(*conns.AWSClient).GlacierClient()
 
+	name := d.Get("name").(string)
 	input := &glacier.CreateVaultInput{
-		VaultName: aws.String(d.Get("name").(string)),
+		VaultName: aws.String(name),
 	}
 
-	_, err := conn.CreateVaultWithContext(ctx, input)
+	_, err := conn.CreateVault(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Glacier Vault: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Glacier Vault (%s): %s", name, err)
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(name)
 
 	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Glacier Vault (%s) tags: %s", d.Id(), err)
@@ -140,13 +135,13 @@ func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlacierConn()
+	conn := meta.(*conns.AWSClient).GlacierClient()
 
 	input := &glacier.DescribeVaultInput{
 		VaultName: aws.String(d.Id()),
 	}
 
-	out, err := conn.DescribeVaultWithContext(ctx, input)
+	out, err := conn.DescribeVault(ctx, input)
 	if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Glaier Vault (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -167,7 +162,7 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("location", location)
 
 	log.Printf("[DEBUG] Getting the access_policy for Vault %s", d.Id())
-	pol, err := conn.GetVaultAccessPolicyWithContext(ctx, &glacier.GetVaultAccessPolicyInput{
+	pol, err := conn.GetVaultAccessPolicy(ctx, &glacier.GetVaultAccessPolicyInput{
 		VaultName: aws.String(d.Id()),
 	})
 
@@ -199,7 +194,7 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceVaultUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlacierConn()
+	conn := meta.(*conns.AWSClient).GlacierClient()
 
 	if d.HasChange("access_policy") {
 		if err := resourceVaultPolicyUpdate(ctx, conn, d); err != nil {
@@ -218,15 +213,17 @@ func resourceVaultUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlacierConn()
+	conn := meta.(*conns.AWSClient).GlacierClient()
 
 	log.Printf("[DEBUG] Deleting Glacier Vault: %s", d.Id())
-	_, err := conn.DeleteVaultWithContext(ctx, &glacier.DeleteVaultInput{
+	_, err := conn.DeleteVault(ctx, &glacier.DeleteVaultInput{
 		VaultName: aws.String(d.Id()),
 	})
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Glacier Vault: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Glacier Vault (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
@@ -236,7 +233,7 @@ func resourceVaultNotificationUpdate(ctx context.Context, conn *glacier.Glacier,
 
 		s := settings[0].(map[string]interface{})
 
-		_, err := conn.SetVaultNotificationsWithContext(ctx, &glacier.SetVaultNotificationsInput{
+		_, err := conn.SetVaultNotifications(ctx, &glacier.SetVaultNotificationsInput{
 			VaultName: aws.String(d.Id()),
 			VaultNotificationConfig: &glacier.VaultNotificationConfig{
 				SNSTopic: aws.String(s["sns_topic"].(string)),
@@ -248,7 +245,7 @@ func resourceVaultNotificationUpdate(ctx context.Context, conn *glacier.Glacier,
 			return fmt.Errorf("Error Updating Glacier Vault Notifications: %w", err)
 		}
 	} else {
-		_, err := conn.DeleteVaultNotificationsWithContext(ctx, &glacier.DeleteVaultNotificationsInput{
+		_, err := conn.DeleteVaultNotifications(ctx, &glacier.DeleteVaultNotificationsInput{
 			VaultName: aws.String(d.Id()),
 		})
 
@@ -275,7 +272,7 @@ func resourceVaultPolicyUpdate(ctx context.Context, conn *glacier.Glacier, d *sc
 	if policyContents != "" {
 		log.Printf("[DEBUG] Glacier Vault: %s, put policy", vaultName)
 
-		_, err := conn.SetVaultAccessPolicyWithContext(ctx, &glacier.SetVaultAccessPolicyInput{
+		_, err := conn.SetVaultAccessPolicy(ctx, &glacier.SetVaultAccessPolicyInput{
 			VaultName: aws.String(d.Id()),
 			Policy:    policy,
 		})
@@ -285,7 +282,7 @@ func resourceVaultPolicyUpdate(ctx context.Context, conn *glacier.Glacier, d *sc
 		}
 	} else {
 		log.Printf("[DEBUG] Glacier Vault: %s, delete policy: %s", vaultName, policy)
-		_, err := conn.DeleteVaultAccessPolicyWithContext(ctx, &glacier.DeleteVaultAccessPolicyInput{
+		_, err := conn.DeleteVaultAccessPolicy(ctx, &glacier.DeleteVaultAccessPolicyInput{
 			VaultName: aws.String(d.Id()),
 		})
 
@@ -309,7 +306,7 @@ func getVaultNotification(ctx context.Context, conn *glacier.Glacier, vaultName 
 		VaultName: aws.String(vaultName),
 	}
 
-	response, err := conn.GetVaultNotificationsWithContext(ctx, request)
+	response, err := conn.GetVaultNotifications(ctx, request)
 	if err != nil {
 		return nil, fmt.Errorf("Error reading Glacier Vault Notifications: %w", err)
 	}
