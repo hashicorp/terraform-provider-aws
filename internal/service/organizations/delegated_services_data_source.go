@@ -60,11 +60,11 @@ func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData
 		return !lastPage
 	})
 	if err != nil {
-		return diag.Errorf("error describing organizations delegated services: %s", err)
+		return diag.Errorf("describing organizations delegated services: %s", err)
 	}
 
 	if err = d.Set("delegated_services", flattenDelegatedServices(delegators)); err != nil {
-		return diag.Errorf("error setting delegated_services: %s", err)
+		return diag.Errorf("setting delegated_services: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
