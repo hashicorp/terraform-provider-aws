@@ -19,7 +19,7 @@ import (
 
 const (
 	ResNameGlobalSettings            = "Global Settings"
-	globalSettingsPropagationTimeout = time.Second * 30
+	globalSettingsPropagationTimeout = time.Second * 10
 )
 
 // @SDKResource("aws_chimesdkvoice_global_settings")
