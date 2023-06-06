@@ -788,45 +788,21 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 		}
 
 		if !c.IsNull() && c.IsKnown() {
-			for k, v := range c.AsValueMap() {
-				if _, ok := configTags[k]; !ok {
-					// config tags can be null values. Ignore.
-					if !v.IsNull() {
-						configTags[k] = configTag{
-							value:  v.AsString(),
-							source: configuration,
-						}
-					}
-				}
-			}
+			normalizeTagsFromRaw(c.AsValueMap(), configTags, configuration)
 		}
 	}
 
-	if config := d.GetRawPlan(); !config.IsNull() && config.IsKnown() {
-		c := config.GetAttr(names.AttrTags)
+	if pl := d.GetRawPlan(); !pl.IsNull() && pl.IsKnown() {
+		c := pl.GetAttr(names.AttrTags)
 		if !c.IsNull() && c.IsKnown() {
-			for k, v := range c.AsValueMap() {
-				if _, ok := configTags[k]; !ok {
-					configTags[k] = configTag{
-						value:  v.AsString(),
-						source: plan,
-					}
-				}
-			}
+			normalizeTagsFromRaw(c.AsValueMap(), configTags, plan)
 		}
 	}
 
 	if st := d.GetRawState(); !st.IsNull() && st.IsKnown() {
 		c := st.GetAttr(names.AttrTags)
 		if !c.IsNull() {
-			for k, v := range c.AsValueMap() {
-				if _, ok := configTags[k]; !ok {
-					configTags[k] = configTag{
-						value:  v.AsString(),
-						source: state,
-					}
-				}
-			}
+			normalizeTagsFromRaw(c.AsValueMap(), configTags, state)
 		}
 	}
 
@@ -898,4 +874,17 @@ func ToSnakeCase(str string) string {
 	result := regexp.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
 	result = regexp.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(result, "${1}_${2}")
 	return strings.ToLower(result)
+}
+
+func normalizeTagsFromRaw(m map[string]cty.Value, incoming map[string]configTag, source tagSource) {
+	for k, v := range m {
+		if !v.IsNull() {
+			if _, ok := incoming[k]; !ok {
+				incoming[k] = configTag{
+					value:  v.AsString(),
+					source: source,
+				}
+			}
+		}
+	}
 }
