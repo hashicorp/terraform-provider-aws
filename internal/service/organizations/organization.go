@@ -248,6 +248,11 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "describing Organization: %s", err)
 	}
 
+	orgId := aws.StringValue(org.Organization.Id)
+	if orgId != d.Id() {
+		return sdkdiag.AppendErrorf(diags, "The current Organization ID (%s) does not match the one retrieved from API (%s)", d.Id(), orgId)
+	}
+
 	log.Printf("[INFO] Listing Accounts for Organization: %s", d.Id())
 	var accounts []*organizations.Account
 	var nonMasterAccounts []*organizations.Account
