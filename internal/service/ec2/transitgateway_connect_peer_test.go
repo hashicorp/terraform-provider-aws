@@ -34,7 +34,7 @@ func testAccTransitGatewayConnectPeer_basic(t *testing.T) {
 					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", "64512"),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_peer_address"),
-					resource.TestCheckResourceAttrSet(resourceName, "bgp_transit_gateway_addresses"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "bgp_transit_gateway_addresses.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "peer_address", "1.1.1.1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
