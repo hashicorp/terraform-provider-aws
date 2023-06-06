@@ -85,7 +85,7 @@ func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.Resourc
 
 	_, err := conn.RegisterDelegatedAdministratorWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Organizations DelegatedAdministrator (%s): %w", accountID, err))
+		return diag.Errorf("error creating Organizations DelegatedAdministrator (%s): %s", accountID, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", accountID, servicePrincipal))
@@ -98,7 +98,7 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 
 	accountID, servicePrincipal, err := DecodeOrganizationDelegatedAdministratorID(d.Id())
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding ID AWS Organization (%s) DelegatedAdministrators: %w", d.Id(), err))
+		return diag.Errorf("error decoding ID AWS Organization (%s) DelegatedAdministrators: %s", d.Id(), err)
 	}
 	input := &organizations.ListDelegatedAdministratorsInput{
 		ServicePrincipal: aws.String(servicePrincipal),
@@ -114,7 +114,7 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 		return !lastPage
 	})
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing AWS Organization (%s) DelegatedAdministrators: %w", d.Id(), err))
+		return diag.Errorf("error listing AWS Organization (%s) DelegatedAdministrators: %s", d.Id(), err)
 	}
 
 	if delegatedAccount == nil {
@@ -145,7 +145,7 @@ func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.Resourc
 
 	accountID, servicePrincipal, err := DecodeOrganizationDelegatedAdministratorID(d.Id())
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding ID AWS Organization (%s) DelegatedAdministrators: %w", d.Id(), err))
+		return diag.Errorf("error decoding ID AWS Organization (%s) DelegatedAdministrators: %s", d.Id(), err)
 	}
 	input := &organizations.DeregisterDelegatedAdministratorInput{
 		AccountId:        aws.String(accountID),
@@ -154,7 +154,7 @@ func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.Resourc
 
 	_, err = conn.DeregisterDelegatedAdministratorWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Organizations DelegatedAdministrator (%s): %w", d.Id(), err))
+		return diag.Errorf("error deleting Organizations DelegatedAdministrator (%s): %s", d.Id(), err)
 	}
 	return nil
 }

@@ -106,7 +106,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Organizations Policy (%s): %w", name, err))
+		return diag.Errorf("error creating Organizations Policy (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(resp.Policy.PolicySummary.Id))
@@ -131,7 +131,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Organizations Policy (%s): %w", d.Id(), err))
+		return diag.Errorf("error reading Organizations Policy (%s): %s", d.Id(), err)
 	}
 
 	if resp.Policy == nil || resp.Policy.PolicySummary == nil {
@@ -185,7 +185,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Updating Organizations Policy: %s", input)
 	_, err := conn.UpdatePolicyWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating Organizations policy (%s): %w", d.Id(), err))
+		return diag.Errorf("error updating Organizations policy (%s): %s", d.Id(), err)
 	}
 
 	return resourcePolicyRead(ctx, d, meta)
@@ -209,7 +209,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error deleting Organizations policy (%s): %w", d.Id(), err))
+		return diag.Errorf("error deleting Organizations policy (%s): %s", d.Id(), err)
 	}
 	return nil
 }
