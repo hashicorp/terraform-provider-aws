@@ -50,7 +50,7 @@ func dataSourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta in
 	tags := KeyValueTags(ctx, v.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	d.SetId(pipelineId)
