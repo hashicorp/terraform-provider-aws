@@ -175,9 +175,8 @@ func ResourceCluster() *schema.Resource {
 			},
 			"engine": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ForceNew:     true,
-				Default:      ClusterEngineAurora,
 				ValidateFunc: validClusterEngine(),
 			},
 			"engine_mode": {
@@ -474,6 +473,11 @@ func ResourceCluster() *schema.Resource {
 					// to prevent an apply with unexpected results (ie. a regional
 					// cluster which is not joined to the provided global cluster).
 					"global_cluster_identifier",
+				},
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// allow snapshot_idenfitier to be removed without forcing re-creation
+					return new == ""
 				},
 			},
 			"source_region": {
@@ -1231,7 +1235,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("db_cluster_instance_class") {
-			input.EngineVersion = aws.String(d.Get("db_cluster_instance_class").(string))
+			input.DBClusterInstanceClass = aws.String(d.Get("db_cluster_instance_class").(string))
 		}
 
 		if d.HasChange("db_cluster_parameter_group_name") {
@@ -1670,6 +1674,7 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, timeout
 			ClusterStatusModifying,
 			ClusterStatusRenaming,
 			ClusterStatusResettingMasterCredentials,
+			ClusterStatusScalingCompute,
 			ClusterStatusUpgrading,
 		},
 		Target:     []string{ClusterStatusAvailable},

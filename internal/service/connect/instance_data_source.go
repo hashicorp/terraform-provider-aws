@@ -3,7 +3,6 @@ package connect
 import (
 	"context"
 	"fmt"
-	"log"
 	"strconv"
 	"time"
 
@@ -93,25 +92,14 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	var matchedInstance *connect.Instance
 
 	if v, ok := d.GetOk("instance_id"); ok {
-		instanceId := v.(string)
-
-		input := connect.DescribeInstanceInput{
-			InstanceId: aws.String(instanceId),
-		}
-
-		log.Printf("[DEBUG] Reading Connect Instance by instance_id: %s", input)
-
-		output, err := conn.DescribeInstanceWithContext(ctx, &input)
+		instanceID := v.(string)
+		instance, err := FindInstanceByID(ctx, conn, instanceID)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error getting Connect Instance by instance_id (%s): %w", instanceId, err))
+			return diag.Errorf("reading Connect Instance (%s): %s", instanceID, err)
 		}
 
-		if output == nil {
-			return diag.FromErr(fmt.Errorf("error getting Connect Instance by instance_id (%s): empty output", instanceId))
-		}
-
-		matchedInstance = output.Instance
+		matchedInstance = instance
 	} else if v, ok := d.GetOk("instance_alias"); ok {
 		instanceAlias := v.(string)
 
@@ -143,9 +131,10 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.SetId(aws.StringValue(matchedInstance.Id))
-
 	d.Set("arn", matchedInstance.Arn)
-	d.Set("created_time", matchedInstance.CreatedTime.Format(time.RFC3339))
+	if matchedInstance.CreatedTime != nil {
+		d.Set("created_time", matchedInstance.CreatedTime.Format(time.RFC3339))
+	}
 	d.Set("identity_management_type", matchedInstance.IdentityManagementType)
 	d.Set("inbound_calls_enabled", matchedInstance.InboundCallsEnabled)
 	d.Set("instance_alias", matchedInstance.InstanceAlias)

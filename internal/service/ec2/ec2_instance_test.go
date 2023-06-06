@@ -17,10 +17,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -7324,7 +7324,7 @@ resource "aws_instance" "test" {
 
 resource "aws_eip" "test" {
   instance   = aws_instance.test.id
-  vpc        = true
+  domain     = "vpc"
   depends_on = [aws_internet_gateway.test]
 
   tags = {
@@ -7354,7 +7354,7 @@ resource "aws_instance" "test" {
 
 resource "aws_eip" "test" {
   instance   = aws_instance.test.id
-  vpc        = true
+  domain     = "vpc"
   depends_on = [aws_internet_gateway.test]
 
   tags = {
@@ -7384,7 +7384,7 @@ resource "aws_instance" "test" {
 
 resource "aws_eip" "test" {
   instance   = aws_instance.test.id
-  vpc        = true
+  domain     = "vpc"
   depends_on = [aws_internet_gateway.test]
 
   tags = {

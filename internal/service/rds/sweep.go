@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -379,10 +379,11 @@ func sweepInstances(region string) error {
 		for _, v := range page.DBInstances {
 			r := ResourceInstance()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.DBInstanceIdentifier))
+			d.SetId(aws.StringValue(v.DbiResourceId))
 			d.Set("apply_immediately", true)
 			d.Set("delete_automated_backups", true)
 			d.Set("deletion_protection", false)
+			d.Set("identifier", v.DBInstanceIdentifier)
 			d.Set("skip_final_snapshot", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

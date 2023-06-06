@@ -18,7 +18,7 @@ resource "aws_db_instance" "example" {
   engine            = "mysql"
   engine_version    = "5.6.21"
   instance_class    = "db.t2.micro"
-  name              = "baz"
+  db_name           = "baz"
   password          = "barbarbarbar"
   username          = "foo"
 
@@ -28,7 +28,7 @@ resource "aws_db_instance" "example" {
 }
 
 resource "aws_db_snapshot" "example" {
-  db_instance_identifier = aws_db_instance.example.id
+  db_instance_identifier = aws_db_instance.example.identifier
   db_snapshot_identifier = "testsnapshot1234"
 }
 

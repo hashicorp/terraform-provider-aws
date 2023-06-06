@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -2930,8 +2930,8 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "disabled"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", ""),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", ""),
 				),
 			},
 			{
@@ -2948,7 +2948,7 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "enabled"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", ""),
 				),
 			},
 			{
@@ -2981,7 +2981,7 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"), //Setting any of the values in metadata options will set the http_endpoint to enabled, you will not see it via the Console, but will in the API for any instance made from the template
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "enabled"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "enabled"),
 				),
 			},

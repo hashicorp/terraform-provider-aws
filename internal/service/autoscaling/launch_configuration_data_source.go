@@ -181,17 +181,6 @@ func DataSourceLaunchConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_classic_link_id": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: `With the retirement of EC2-Classic the vpc_classic_link_id attribute has been deprecated and will be removed in a future version.`,
-			},
-			"vpc_classic_link_security_groups": {
-				Type:       schema.TypeSet,
-				Computed:   true,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				Deprecated: `With the retirement of EC2-Classic the vpc_classic_link_security_groups attribute has been deprecated and will be removed in a future version.`,
-			},
 		},
 	}
 }
@@ -234,8 +223,6 @@ func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("security_groups", aws.StringValueSlice(lc.SecurityGroups))
 	d.Set("spot_price", lc.SpotPrice)
 	d.Set("user_data", lc.UserData)
-	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
-	d.Set("vpc_classic_link_security_groups", aws.StringValueSlice(lc.ClassicLinkVPCSecurityGroups))
 
 	rootDeviceName, err := findImageRootDeviceName(ctx, ec2conn, d.Get("image_id").(string))
 

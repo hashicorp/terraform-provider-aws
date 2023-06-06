@@ -37,6 +37,7 @@ import (
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
+	"github.com/aws/aws-sdk-go-v2/service/swf"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/xray"
@@ -301,7 +302,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssooidc"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/support"
-	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/synthetics"
 	"github.com/aws/aws-sdk-go/service/textract"
 	"github.com/aws/aws-sdk-go/service/timestreamquery"
@@ -563,7 +563,6 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.ssoConn = sso.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSO])}))
 	client.ssoadminConn = ssoadmin.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSOAdmin])}))
 	client.ssooidcConn = ssooidc.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSOOIDC])}))
-	client.swfConn = swf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SWF])}))
 	client.sagemakerConn = sagemaker.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SageMaker])}))
 	client.sagemakera2iruntimeConn = augmentedairuntime.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SageMakerA2IRuntime])}))
 	client.sagemakeredgeConn = sagemakeredgemanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SageMakerEdge])}))
@@ -730,6 +729,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 	client.ssmincidentsClient = ssmincidents.NewFromConfig(cfg, func(o *ssmincidents.Options) {
 		if endpoint := c.Endpoints[names.SSMIncidents]; endpoint != "" {
 			o.EndpointResolver = ssmincidents.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.swfClient = swf.NewFromConfig(cfg, func(o *swf.Options) {
+		if endpoint := c.Endpoints[names.SWF]; endpoint != "" {
+			o.EndpointResolver = swf.EndpointResolverFromURL(endpoint)
 		}
 	})
 	client.schedulerClient = scheduler.NewFromConfig(cfg, func(o *scheduler.Options) {

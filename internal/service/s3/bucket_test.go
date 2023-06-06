@@ -16,11 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
@@ -423,7 +423,7 @@ func TestAccS3Bucket_Duplicate_UsEast1AltAccount(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketConfig_duplicateAltAccount(endpoints.UsEast1RegionID, bucketName),
-				ExpectError: regexp.MustCompile(s3.ErrCodeBucketAlreadyOwnedByYou),
+				ExpectError: regexp.MustCompile(s3.ErrCodeBucketAlreadyExists),
 			},
 		},
 	})
@@ -2345,7 +2345,7 @@ func TestBucketRegionalDomainName(t *testing.T) {
 		{
 			Region:           endpoints.UsEast1RegionID,
 			ExpectedErrCount: 0,
-			ExpectedOutput:   bucket + ".s3.amazonaws.com",
+			ExpectedOutput:   bucket + fmt.Sprintf(".s3.%s.%s", endpoints.UsEast1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
 			Region:           endpoints.UsWest2RegionID,

@@ -12,6 +12,8 @@ Gives an external source (like an EventBridge Rule, SNS, or S3) permission to ac
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_lambda_permission" "allow_cloudwatch" {
   statement_id  = "AllowExecutionFromCloudWatch"
@@ -58,7 +60,7 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 ```
 
-## Usage with SNS
+### With SNS
 
 ```terraform
 resource "aws_lambda_permission" "with_sns" {
@@ -108,7 +110,7 @@ resource "aws_iam_role" "default" {
 }
 ```
 
-## Specify Lambda permissions for API Gateway REST API
+### With API Gateway REST API
 
 ```terraform
 resource "aws_api_gateway_rest_api" "MyDemoAPI" {
@@ -128,7 +130,7 @@ resource "aws_lambda_permission" "lambda_permission" {
 }
 ```
 
-## Usage with CloudWatch log group
+### With CloudWatch Log Group
 
 ```terraform
 resource "aws_lambda_permission" "logging" {
@@ -177,7 +179,7 @@ resource "aws_iam_role" "default" {
 }
 ```
 
-## Example function URL cross-account invoke policy
+### With Cross-Account Invocation Policy
 
 ```terraform
 resource "aws_lambda_function_url" "url" {
@@ -201,6 +203,25 @@ resource "aws_lambda_permission" "url" {
   #      }
   #    }
 
+}
+```
+
+### With `replace_triggered_by` Lifecycle Configuration
+
+If omitting the `qualifier` argument (which forces re-creation each time a function version is published), a `lifecycle` block can be used to ensure permissions are re-applied on any change to the underlying function.
+
+```terraform
+resource "aws_lambda_permission" "logging" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.example.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = "arn:aws:events:eu-west-1:111122223333:rule/RunDaily"
+
+  lifecycle {
+    replace_triggered_by = [
+      aws_lambda_function.example
+    ]
+  }
 }
 ```
 

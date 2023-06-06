@@ -81,6 +81,11 @@ build: fmtcheck
 cleango:
 	@echo "==> Cleaning Go..."
 	@echo "WARNING: This will kill gopls and clean Go caches"
+	@vscode=`ps -ef | grep Visual\ Studio\ Code | wc -l | xargs` ; \
+	if [ $$vscode -gt 1 ] ; then \
+		echo "ALERT: vscode is running. Close it and try again." ; \
+		exit 1 ; \
+	fi
 	@for proc in `pgrep gopls` ; do \
 		echo "Killing gopls process $$proc" ; \
 		kill -9 $$proc ; \
@@ -209,7 +214,7 @@ providerlint:
 
 sane:
 	@echo "==> Sane Check (48 tests of Top 30 resources)"
-	@echo "==> Like 'sanity' except full output, stops soon after error"
+	@echo "==> Like 'sanity' except full output and stops soon after 1st error"
 	@echo "==> NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
@@ -232,7 +237,7 @@ sane:
 
 sanity:
 	@echo "==> Sanity Check (48 tests of Top 30 resources)"
-	@echo "==> Like 'sane' but little output, runs all tests despite errors"
+	@echo "==> Like 'sane' but less output and runs all tests despite most errors"
 	@echo "==> NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@iam=`TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \

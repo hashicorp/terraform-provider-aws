@@ -545,7 +545,7 @@ func ResourceDistribution() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Default:      5,
-										ValidateFunc: validation.IntBetween(1, 180),
+										ValidateFunc: validation.IntAtLeast(1),
 									},
 									"origin_read_timeout": {
 										Type:         schema.TypeInt,
