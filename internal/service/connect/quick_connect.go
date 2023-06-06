@@ -156,11 +156,11 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.CreateQuickConnectWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Connect Quick Connect (%s): %s", name, err)
+		return diag.Errorf("creating Connect Quick Connect (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.Errorf("error creating Connect Quick Connect (%s): empty output", name)
+		return diag.Errorf("creating Connect Quick Connect (%s): empty output", name)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.QuickConnectId)))
@@ -189,11 +189,11 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting Connect Quick Connect (%s): %s", d.Id(), err)
+		return diag.Errorf("getting Connect Quick Connect (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.QuickConnect == nil {
-		return diag.Errorf("error getting Connect Quick Connect (%s): empty response", d.Id())
+		return diag.Errorf("getting Connect Quick Connect (%s): empty response", d.Id())
 	}
 
 	if err := d.Set("quick_connect_config", flattenQuickConnectConfig(resp.QuickConnect.QuickConnectConfig)); err != nil {
@@ -275,7 +275,7 @@ func resourceQuickConnectDelete(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if err != nil {
-		return diag.Errorf("error deleting QuickConnect (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting QuickConnect (%s): %s", d.Id(), err)
 	}
 
 	return nil

@@ -152,11 +152,11 @@ func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	output, err := conn.CreateRoutingProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Connect Routing Profile (%s): %s", name, err)
+		return diag.Errorf("creating Connect Routing Profile (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.Errorf("error creating Connect Routing Profile (%s): empty output", name)
+		return diag.Errorf("creating Connect Routing Profile (%s): empty output", name)
 	}
 
 	// call the batched association API if the number of queues to associate with the routing profile is > CreateRoutingProfileQueuesMaxItems
@@ -195,11 +195,11 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting Connect Routing Profile (%s): %s", d.Id(), err)
+		return diag.Errorf("getting Connect Routing Profile (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.RoutingProfile == nil {
-		return diag.Errorf("error getting Connect Routing Profile (%s): empty response", d.Id())
+		return diag.Errorf("getting Connect Routing Profile (%s): empty response", d.Id())
 	}
 
 	routingProfile := resp.RoutingProfile
@@ -220,7 +220,7 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	queueConfigs, err := getRoutingProfileQueueConfigs(ctx, conn, instanceID, routingProfileID)
 
 	if err != nil {
-		return diag.Errorf("error finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %s", routingProfileID, err)
+		return diag.Errorf("finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %s", routingProfileID, err)
 	}
 
 	d.Set("queue_configs", queueConfigs)
@@ -385,7 +385,7 @@ func updateQueueConfigs(ctx context.Context, conn *connect.Connect, instanceID, 
 // 	})
 
 // 	if err != nil {
-// 		return diag.Errorf("error deleting RoutingProfile (%s): %s", d.Id(), err)
+// 		return diag.Errorf("deleting RoutingProfile (%s): %s", d.Id(), err)
 // 	}
 
 // 	return nil

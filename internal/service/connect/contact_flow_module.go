@@ -120,11 +120,11 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 	output, err := conn.CreateContactFlowModuleWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Connect Contact Flow Module (%s): %s", name, err)
+		return diag.Errorf("creating Connect Contact Flow Module (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.Errorf("error creating Connect Contact Flow Module (%s): empty output", name)
+		return diag.Errorf("creating Connect Contact Flow Module (%s): empty output", name)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.Id)))
@@ -153,11 +153,11 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting Connect Contact Flow Module (%s): %s", d.Id(), err)
+		return diag.Errorf("getting Connect Contact Flow Module (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.ContactFlowModule == nil {
-		return diag.Errorf("error getting Connect Contact Flow Module (%s): empty response", d.Id())
+		return diag.Errorf("getting Connect Contact Flow Module (%s): empty response", d.Id())
 	}
 
 	d.Set("arn", resp.ContactFlowModule.Arn)
@@ -192,7 +192,7 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 		_, updateMetadataInputErr := conn.UpdateContactFlowModuleMetadataWithContext(ctx, updateMetadataInput)
 
 		if updateMetadataInputErr != nil {
-			return diag.Errorf("error updating Connect Contact Flow Module (%s): %s", d.Id(), updateMetadataInputErr)
+			return diag.Errorf("updating Connect Contact Flow Module (%s): %s", d.Id(), updateMetadataInputErr)
 		}
 	}
 
@@ -221,7 +221,7 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 		_, updateContentInputErr := conn.UpdateContactFlowModuleContentWithContext(ctx, updateContentInput)
 
 		if updateContentInputErr != nil {
-			return diag.Errorf("error updating Connect Contact Flow Module content (%s): %s", d.Id(), updateContentInputErr)
+			return diag.Errorf("updating Connect Contact Flow Module content (%s): %s", d.Id(), updateContentInputErr)
 		}
 	}
 
@@ -243,7 +243,7 @@ func resourceContactFlowModuleDelete(ctx context.Context, d *schema.ResourceData
 
 	_, deleteContactFlowModuleErr := conn.DeleteContactFlowModuleWithContext(ctx, input)
 	if deleteContactFlowModuleErr != nil {
-		return diag.Errorf("error deleting Connect Contact Flow Module (%s): %s", d.Id(), deleteContactFlowModuleErr)
+		return diag.Errorf("deleting Connect Contact Flow Module (%s): %s", d.Id(), deleteContactFlowModuleErr)
 	}
 	return nil
 }

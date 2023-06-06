@@ -71,11 +71,11 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 		contactFlowSummary, err := dataSourceGetContactFlowSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.Errorf("error finding Connect Contact Flow Summary by name (%s): %s", name, err)
+			return diag.Errorf("finding Connect Contact Flow Summary by name (%s): %s", name, err)
 		}
 
 		if contactFlowSummary == nil {
-			return diag.Errorf("error finding Connect Contact Flow Summary by name (%s): not found", name)
+			return diag.Errorf("finding Connect Contact Flow Summary by name (%s): not found", name)
 		}
 
 		input.ContactFlowId = contactFlowSummary.Id
@@ -84,11 +84,11 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 	resp, err := conn.DescribeContactFlowWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error getting Connect Contact Flow: %s", err)
+		return diag.Errorf("getting Connect Contact Flow: %s", err)
 	}
 
 	if resp == nil || resp.ContactFlow == nil {
-		return diag.Errorf("error getting Connect Contact Flow: empty response")
+		return diag.Errorf("getting Connect Contact Flow: empty response")
 	}
 
 	contactFlow := resp.ContactFlow
@@ -102,7 +102,7 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("type", contactFlow.Type)
 
 	if err := d.Set("tags", KeyValueTags(ctx, contactFlow.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(contactFlow.Id)))

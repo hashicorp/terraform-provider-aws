@@ -97,11 +97,11 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 		queueSummary, err := dataSourceGetQueueSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.Errorf("error finding Connect Queue Summary by name (%s): %s", name, err)
+			return diag.Errorf("finding Connect Queue Summary by name (%s): %s", name, err)
 		}
 
 		if queueSummary == nil {
-			return diag.Errorf("error finding Connect Queue Summary by name (%s): not found", name)
+			return diag.Errorf("finding Connect Queue Summary by name (%s): not found", name)
 		}
 
 		input.QueueId = queueSummary.Id
@@ -110,11 +110,11 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 	resp, err := conn.DescribeQueueWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error getting Connect Queue: %s", err)
+		return diag.Errorf("getting Connect Queue: %s", err)
 	}
 
 	if resp == nil || resp.Queue == nil {
-		return diag.Errorf("error getting Connect Queue: empty response")
+		return diag.Errorf("getting Connect Queue: empty response")
 	}
 
 	queue := resp.Queue
@@ -128,11 +128,11 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("status", queue.Status)
 
 	if err := d.Set("outbound_caller_config", flattenOutboundCallerConfig(queue.OutboundCallerConfig)); err != nil {
-		return diag.Errorf("error setting outbound_caller_config: %s", err)
+		return diag.Errorf("setting outbound_caller_config: %s", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(ctx, queue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(queue.QueueId)))

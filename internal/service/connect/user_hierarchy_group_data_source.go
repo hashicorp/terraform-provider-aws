@@ -98,11 +98,11 @@ func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceDat
 		hierarchyGroupSummary, err := userHierarchyGroupSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.Errorf("error finding Connect Hierarchy Group Summary by name (%s): %s", name, err)
+			return diag.Errorf("finding Connect Hierarchy Group Summary by name (%s): %s", name, err)
 		}
 
 		if hierarchyGroupSummary == nil {
-			return diag.Errorf("error finding Connect Hierarchy Group Summary by name (%s): not found", name)
+			return diag.Errorf("finding Connect Hierarchy Group Summary by name (%s): not found", name)
 		}
 
 		input.HierarchyGroupId = hierarchyGroupSummary.Id
@@ -111,11 +111,11 @@ func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceDat
 	resp, err := conn.DescribeUserHierarchyGroupWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error getting Connect Hierarchy Group: %s", err)
+		return diag.Errorf("getting Connect Hierarchy Group: %s", err)
 	}
 
 	if resp == nil || resp.HierarchyGroup == nil {
-		return diag.Errorf("error getting Connect Hierarchy Group: empty response")
+		return diag.Errorf("getting Connect Hierarchy Group: empty response")
 	}
 
 	hierarchyGroup := resp.HierarchyGroup
@@ -127,11 +127,11 @@ func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("name", hierarchyGroup.Name)
 
 	if err := d.Set("hierarchy_path", flattenUserHierarchyPath(hierarchyGroup.HierarchyPath)); err != nil {
-		return diag.Errorf("error setting Connect User Hierarchy Group hierarchy_path (%s): %s", d.Id(), err)
+		return diag.Errorf("setting Connect User Hierarchy Group hierarchy_path (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(ctx, hierarchyGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(hierarchyGroup.Id)))

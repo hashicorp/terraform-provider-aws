@@ -146,11 +146,11 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	output, err := conn.CreateQueueWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Connect Queue (%s): %s", name, err)
+		return diag.Errorf("creating Connect Queue (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.Errorf("error creating Connect Queue (%s): empty output", name)
+		return diag.Errorf("creating Connect Queue (%s): empty output", name)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.QueueId)))
@@ -179,11 +179,11 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting Connect Queue (%s): %s", d.Id(), err)
+		return diag.Errorf("getting Connect Queue (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.Queue == nil {
-		return diag.Errorf("error getting Connect Queue (%s): empty response", d.Id())
+		return diag.Errorf("getting Connect Queue (%s): empty response", d.Id())
 	}
 
 	if err := d.Set("outbound_caller_config", flattenOutboundCallerConfig(resp.Queue.OutboundCallerConfig)); err != nil {
@@ -203,7 +203,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	quickConnectIds, err := getQueueQuickConnectIDs(ctx, conn, instanceID, queueID)
 
 	if err != nil {
-		return diag.Errorf("error finding Connect Queue Quick Connect ID for Queue (%s): %s", queueID, err)
+		return diag.Errorf("finding Connect Queue Quick Connect ID for Queue (%s): %s", queueID, err)
 	}
 
 	d.Set("quick_connect_ids", aws.StringValueSlice(quickConnectIds))

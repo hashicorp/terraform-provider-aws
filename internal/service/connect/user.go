@@ -176,11 +176,11 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := conn.CreateUserWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Connect User (%s): %s", name, err)
+		return diag.Errorf("creating Connect User (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.Errorf("error creating Connect User (%s): empty output", name)
+		return diag.Errorf("creating Connect User (%s): empty output", name)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.UserId)))
@@ -209,11 +209,11 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting Connect User (%s): %s", d.Id(), err)
+		return diag.Errorf("getting Connect User (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.User == nil {
-		return diag.Errorf("error getting Connect User (%s): empty response", d.Id())
+		return diag.Errorf("getting Connect User (%s): empty response", d.Id())
 	}
 
 	user := resp.User
@@ -228,11 +228,11 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("user_id", user.Id)
 
 	if err := d.Set("identity_info", flattenIdentityInfo(user.IdentityInfo)); err != nil {
-		return diag.Errorf("error setting identity_info: %s", err)
+		return diag.Errorf("setting identity_info: %s", err)
 	}
 
 	if err := d.Set("phone_config", flattenPhoneConfig(user.PhoneConfig)); err != nil {
-		return diag.Errorf("error setting phone_config: %s", err)
+		return diag.Errorf("setting phone_config: %s", err)
 	}
 
 	SetTagsOut(ctx, resp.User.Tags)
@@ -352,7 +352,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if err != nil {
-		return diag.Errorf("error deleting User (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting User (%s): %s", d.Id(), err)
 	}
 
 	return nil

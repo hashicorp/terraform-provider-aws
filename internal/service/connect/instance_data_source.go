@@ -105,11 +105,11 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		instanceSummary, err := dataSourceGetInstanceSummaryByInstanceAlias(ctx, conn, instanceAlias)
 
 		if err != nil {
-			return diag.Errorf("error finding Connect Instance Summary by instance_alias (%s): %s", instanceAlias, err)
+			return diag.Errorf("finding Connect Instance Summary by instance_alias (%s): %s", instanceAlias, err)
 		}
 
 		if instanceSummary == nil {
-			return diag.Errorf("error finding Connect Instance Summary by instance_alias (%s): not found", instanceAlias)
+			return diag.Errorf("finding Connect Instance Summary by instance_alias (%s): not found", instanceAlias)
 		}
 
 		matchedInstance = &connect.Instance{
@@ -144,7 +144,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	for att := range InstanceAttributeMapping() {
 		value, err := dataSourceInstanceReadAttribute(ctx, conn, d.Id(), att)
 		if err != nil {
-			return diag.Errorf("error reading Connect Instance (%s) attribute (%s): %s", d.Id(), att, err)
+			return diag.Errorf("reading Connect Instance (%s) attribute (%s): %s", d.Id(), att, err)
 		}
 		d.Set(InstanceAttributeMapping()[att], value)
 	}

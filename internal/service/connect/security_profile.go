@@ -97,11 +97,11 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	output, err := conn.CreateSecurityProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Connect Security Profile (%s): %s", securityProfileName, err)
+		return diag.Errorf("creating Connect Security Profile (%s): %s", securityProfileName, err)
 	}
 
 	if output == nil {
-		return diag.Errorf("error creating Connect Security Profile (%s): empty output", securityProfileName)
+		return diag.Errorf("creating Connect Security Profile (%s): empty output", securityProfileName)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.SecurityProfileId)))
@@ -130,11 +130,11 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting Connect Security Profile (%s): %s", d.Id(), err)
+		return diag.Errorf("getting Connect Security Profile (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.SecurityProfile == nil {
-		return diag.Errorf("error getting Connect Security Profile (%s): empty response", d.Id())
+		return diag.Errorf("getting Connect Security Profile (%s): empty response", d.Id())
 	}
 
 	d.Set("arn", resp.SecurityProfile.Arn)
@@ -148,7 +148,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 	permissions, err := getSecurityProfilePermissions(ctx, conn, instanceID, securityProfileID)
 
 	if err != nil {
-		return diag.Errorf("error finding Connect Security Profile Permissions for Security Profile (%s): %s", securityProfileID, err)
+		return diag.Errorf("finding Connect Security Profile Permissions for Security Profile (%s): %s", securityProfileID, err)
 	}
 
 	if permissions != nil {
@@ -206,7 +206,7 @@ func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	})
 
 	if err != nil {
-		return diag.Errorf("error deleting SecurityProfile (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting SecurityProfile (%s): %s", d.Id(), err)
 	}
 
 	return nil

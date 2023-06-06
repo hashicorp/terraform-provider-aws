@@ -34,11 +34,11 @@ func dataSourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Reso
 
 	lfaArn, err := FindLambdaFunctionAssociationByARNWithContext(ctx, conn, instanceID.(string), functionArn.(string))
 	if err != nil {
-		return diag.Errorf("error finding Connect Lambda Function Association by ARN (%s): %s", functionArn, err)
+		return diag.Errorf("finding Connect Lambda Function Association by ARN (%s): %s", functionArn, err)
 	}
 
 	if lfaArn == "" {
-		return diag.Errorf("error finding Connect Lambda Function Association by ARN (%s): not found", functionArn)
+		return diag.Errorf("finding Connect Lambda Function Association by ARN (%s): not found", functionArn)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

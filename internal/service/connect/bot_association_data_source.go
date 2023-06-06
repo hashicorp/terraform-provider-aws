@@ -56,18 +56,18 @@ func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, m
 
 	lexBot, err := FindBotAssociationV1ByNameAndRegionWithContext(ctx, conn, instanceID, name, region)
 	if err != nil {
-		return diag.Errorf("error finding Connect Bot Association (%s,%s): %s", instanceID, name, err)
+		return diag.Errorf("finding Connect Bot Association (%s,%s): %s", instanceID, name, err)
 	}
 
 	if lexBot == nil {
-		return diag.Errorf("error finding Connect Bot Association (%s,%s) : not found", instanceID, name)
+		return diag.Errorf("finding Connect Bot Association (%s,%s) : not found", instanceID, name)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
 	d.Set("instance_id", instanceID)
 	if err := d.Set("lex_bot", flattenLexBot(lexBot)); err != nil {
-		return diag.Errorf("error setting lex_bot: %s", err)
+		return diag.Errorf("setting lex_bot: %s", err)
 	}
 
 	return nil
