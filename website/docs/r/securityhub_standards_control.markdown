@@ -53,3 +53,15 @@ In addition to all arguments above, the following attributes are exported:
 * `remediation_url` – A link to remediation information for the control in the Security Hub user documentation.
 * `severity_rating` – The severity of findings generated from this security standard control.
 * `title` – The standard control title.
+
+## Obtaining Control ARNs
+
+List all enabled security standards with:
+```bash
+aws securityhub get-enabled-standards
+```
+
+List all controls with:
+```bash
+aws securityhub describe-standards-controls --standards-subscription-arn <StandardsSubscriptionArn>
+```
