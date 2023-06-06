@@ -388,6 +388,7 @@ func ResourceInstance() *schema.Resource {
 			"instance_market_options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
