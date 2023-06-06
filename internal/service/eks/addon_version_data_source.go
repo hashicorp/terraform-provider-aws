@@ -47,7 +47,7 @@ func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, met
 	versionInfo, err := FindAddonVersionByAddonNameAndKubernetesVersion(ctx, conn, id, kubernetesVersion, mostRecent)
 
 	if err != nil {
-		return diag.Errorf("error reading EKS Add-On version info (%s, %s): %s", id, kubernetesVersion, err)
+		return diag.Errorf("reading EKS Add-On version info (%s, %s): %s", id, kubernetesVersion, err)
 	}
 
 	d.SetId(id)

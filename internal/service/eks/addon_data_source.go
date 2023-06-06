@@ -67,7 +67,7 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta inter
 	addon, err := FindAddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
 
 	if err != nil {
-		return diag.Errorf("error reading EKS Add-On (%s): %s", id, err)
+		return diag.Errorf("reading EKS Add-On (%s): %s", id, err)
 	}
 
 	d.SetId(id)
@@ -79,7 +79,7 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
 	if err := d.Set("tags", KeyValueTags(ctx, addon.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil
