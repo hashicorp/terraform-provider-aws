@@ -156,7 +156,7 @@ func resourcePoolCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	entity, err := conn.CreateIdentityPoolWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating Cognito Identity Pool: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Cognito Identity Pool: %s", err)
 	}
 
 	d.SetId(aws.StringValue(entity.IdentityPoolId))
@@ -197,19 +197,19 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	SetTagsOut(ctx, ip.IdentityPoolTags)
 
 	if err := d.Set("cognito_identity_providers", flattenIdentityProviders(ip.CognitoIdentityProviders)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error setting cognito_identity_providers error: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting cognito_identity_providers error: %s", err)
 	}
 
 	if err := d.Set("openid_connect_provider_arns", flex.FlattenStringList(ip.OpenIdConnectProviderARNs)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error setting openid_connect_provider_arns error: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting openid_connect_provider_arns error: %s", err)
 	}
 
 	if err := d.Set("saml_provider_arns", flex.FlattenStringList(ip.SamlProviderARNs)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error setting saml_provider_arns error: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting saml_provider_arns error: %s", err)
 	}
 
 	if err := d.Set("supported_login_providers", aws.StringValueMap(ip.SupportedLoginProviders)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error setting supported_login_providers error: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting supported_login_providers error: %s", err)
 	}
 
 	return diags
@@ -251,7 +251,7 @@ func resourcePoolDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error deleting Cognito identity pool (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Cognito identity pool (%s): %s", d.Id(), err)
 	}
 	return diags
 }

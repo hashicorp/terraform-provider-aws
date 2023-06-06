@@ -229,7 +229,7 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = conn.PutConfigRuleWithContext(ctx, &input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating AWSConfig rule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating AWSConfig rule: %s", err)
 	}
 
 	d.SetId(name)

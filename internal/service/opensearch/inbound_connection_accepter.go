@@ -60,7 +60,7 @@ func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.Reso
 
 	resp, err := conn.AcceptInboundConnectionWithContext(ctx, acceptOpts)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error accepting Inbound Connection: %s", err))
+		return diag.Errorf("accepting Inbound Connection: %s", err)
 	}
 
 	// Get the ID and store it
@@ -69,7 +69,7 @@ func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.Reso
 
 	err = inboundConnectionWaitUntilActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error waiting for Inbound Connection to become active: %s", err))
+		return diag.Errorf("waiting for Inbound Connection to become active: %s", err)
 	}
 
 	return resourceInboundConnectionRead(ctx, d, meta)
@@ -81,7 +81,7 @@ func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, 
 	ccscRaw, statusCode, err := inboundConnectionRefreshState(ctx, conn, d.Id())()
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error reading Inbound Connection: %s", err))
+		return diag.Errorf("reading Inbound Connection: %s", err)
 	}
 
 	ccsc := ccscRaw.(*opensearchservice.InboundConnection)
@@ -106,11 +106,11 @@ func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error deleting Inbound Connection (%s): %s", d.Id(), err))
+		return diag.Errorf("deleting Inbound Connection (%s): %s", d.Id(), err)
 	}
 
 	if err := waitForInboundConnectionDeletion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.FromErr(fmt.Errorf("Error waiting for VPC Peering Connection (%s) to be deleted: %s", d.Id(), err))
+		return diag.Errorf("waiting for VPC Peering Connection (%s) to be deleted: %s", d.Id(), err)
 	}
 
 	return nil

@@ -89,7 +89,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	out, err := conn.CreateRepositoryWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating CodeCommit Repository: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeCommit Repository: %s", err)
 	}
 
 	d.SetId(d.Get("repository_name").(string))
@@ -168,7 +168,7 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 		RepositoryName: aws.String(d.Id()),
 	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error deleting CodeCommit Repository: %s", err.Error())
+		return sdkdiag.AppendErrorf(diags, "deleting CodeCommit Repository: %s", err.Error())
 	}
 
 	return diags

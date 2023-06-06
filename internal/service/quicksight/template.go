@@ -208,11 +208,11 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if err != nil {
-		return diag.Errorf("error describing QuickSight Template (%s) Definition: %s", d.Id(), err)
+		return diag.Errorf("describing QuickSight Template (%s) Definition: %s", d.Id(), err)
 	}
 
 	if err := d.Set("definition", quicksightschema.FlattenTemplateDefinition(descResp.Definition)); err != nil {
-		return diag.Errorf("error setting definition: %s", err)
+		return diag.Errorf("setting definition: %s", err)
 	}
 
 	permsResp, err := conn.DescribeTemplatePermissionsWithContext(ctx, &quicksight.DescribeTemplatePermissionsInput{
@@ -221,11 +221,11 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if err != nil {
-		return diag.Errorf("error describing QuickSight Template (%s) Permissions: %s", d.Id(), err)
+		return diag.Errorf("describing QuickSight Template (%s) Permissions: %s", d.Id(), err)
 	}
 
 	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("error setting permissions: %s", err)
+		return diag.Errorf("setting permissions: %s", err)
 	}
 
 	return nil
@@ -288,7 +288,7 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err = conn.UpdateTemplatePermissionsWithContext(ctx, params)
 
 		if err != nil {
-			return diag.Errorf("error updating QuickSight Template (%s) permissions: %s", templateId, err)
+			return diag.Errorf("updating QuickSight Template (%s) permissions: %s", templateId, err)
 		}
 	}
 

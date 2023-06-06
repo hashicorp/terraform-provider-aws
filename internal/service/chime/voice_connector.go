@@ -78,7 +78,7 @@ func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, m
 
 	resp, err := conn.CreateVoiceConnectorWithContext(ctx, createInput)
 	if err != nil || resp.VoiceConnector == nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating Chime Voice connector: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Chime Voice connector: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.VoiceConnector.VoiceConnectorId))
@@ -107,7 +107,7 @@ func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil || resp.VoiceConnector == nil {
-		return sdkdiag.AppendErrorf(diags, "Error getting Voice connector (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Voice connector (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", resp.VoiceConnector.VoiceConnectorArn)
@@ -131,7 +131,7 @@ func resourceVoiceConnectorUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if _, err := conn.UpdateVoiceConnectorWithContext(ctx, updateInput); err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error updating Voice connector (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Voice connector (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -151,7 +151,7 @@ func resourceVoiceConnectorDelete(ctx context.Context, d *schema.ResourceData, m
 			log.Printf("[WARN] Chime Voice connector %s not found", d.Id())
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "Error deleting Voice connector (%s)", d.Id())
+		return sdkdiag.AppendErrorf(diags, "deleting Voice connector (%s)", d.Id())
 	}
 
 	return diags
