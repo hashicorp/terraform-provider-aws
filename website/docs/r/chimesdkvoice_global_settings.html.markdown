@@ -3,12 +3,16 @@ subcategory: "Chime SDK Voice"
 layout: "aws"
 page_title: "AWS: aws_chimesdkvoice_global_settings"
 description: |-
-  Updates global settings for the Amazon Chime SDK Voice Connectors in an AWS account.
+  Terraform resource for managing Amazon Chime SDK Voice Global Settings.
 ---
 
 # Resource: aws_chimesdkvoice_global_settings
 
-Updates global settings for the Amazon Chime SDK Voice Connectors in an AWS account.
+Terraform resource for managing Amazon Chime SDK Voice Global Settings.
+
+## Example Usage
+
+### Basic Usage
 
 ```terraform
 resource "aws_chimesdkvoice_global_settings" "example" {
@@ -22,7 +26,7 @@ resource "aws_chimesdkvoice_global_settings" "example" {
 
 The following arguments are supported:
 
-* `voice_connector` - (Required) The Voice Connector settings. See [voice_connector](#voice_connector) below for more details
+* `voice_connector` - (Required) The Voice Connector settings. See [voice_connector](#voice_connector).
 
 ### `voice_connector`
 
@@ -38,7 +42,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AWS Chime SDK Global Settings can be imported using the `id` (AWS account ID), e.g.,
+AWS Chime SDK Voice Global Settings can be imported using the `id` (AWS account ID), e.g.,
 
 ```
 $ terraform import aws_chimesdkvoice_global_settings.example 123456789012
