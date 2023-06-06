@@ -22,15 +22,15 @@ func TestAccChimeSDKVoiceGlobalSettings_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccChimeSDKVoiceGlobalSettings_basic,
-		"disappears": testAccChimeSDKVoiceGlobalSettings_disappears,
-		"update":     testAccChimeSDKVoiceGlobalSettings_update,
+		"basic":      testAccGlobalSettings_basic,
+		"disappears": testAccGlobalSettings_disappears,
+		"update":     testAccGlobalSettings_update,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccChimeSDKVoiceGlobalSettings_basic(t *testing.T) {
+func testAccGlobalSettings_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_global_settings.test"
@@ -40,10 +40,10 @@ func testAccChimeSDKVoiceGlobalSettings_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChimeSdkVoiceGlobalSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckGlobalSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccChimeSdkVoiceGlobalSettingsConfig_basic(rName),
+				Config: testAccGlobalSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, "id"),
 				),
@@ -57,7 +57,7 @@ func testAccChimeSDKVoiceGlobalSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccChimeSDKVoiceGlobalSettings_disappears(t *testing.T) {
+func testAccGlobalSettings_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_global_settings.test"
@@ -66,10 +66,10 @@ func testAccChimeSDKVoiceGlobalSettings_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChimeSdkVoiceGlobalSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckGlobalSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccChimeSdkVoiceGlobalSettingsConfig_basic(rName),
+				Config: testAccGlobalSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkvoice.ResourceGlobalSettings(), resourceName),
 				),
@@ -79,7 +79,7 @@ func testAccChimeSDKVoiceGlobalSettings_disappears(t *testing.T) {
 	})
 }
 
-func testAccChimeSDKVoiceGlobalSettings_update(t *testing.T) {
+func testAccGlobalSettings_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -90,10 +90,10 @@ func testAccChimeSDKVoiceGlobalSettings_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChimeSdkVoiceGlobalSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckGlobalSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccChimeSdkVoiceGlobalSettingsConfig_basic(rName),
+				Config: testAccGlobalSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, "id"),
 				),
@@ -102,7 +102,7 @@ func testAccChimeSDKVoiceGlobalSettings_update(t *testing.T) {
 			// return the previous cdr_bucket name, causing this test to fail. Running
 			// in us-east-1 produces the most consistent results.
 			{
-				Config: testAccChimeSdkVoiceGlobalSettingsConfig_basic(rNameUpdated),
+				Config: testAccGlobalSettingsConfig_basic(rNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, "id"),
 				),
@@ -111,7 +111,7 @@ func testAccChimeSDKVoiceGlobalSettings_update(t *testing.T) {
 	})
 }
 
-func testAccCheckChimeSdkVoiceGlobalSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGlobalSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_chimesdkvoice_global_settings" {
@@ -141,7 +141,7 @@ func testAccCheckChimeSdkVoiceGlobalSettingsDestroy(ctx context.Context) resourc
 	}
 }
 
-func testAccChimeSdkVoiceGlobalSettingsConfig_basic(rName string) string {
+func testAccGlobalSettingsConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
