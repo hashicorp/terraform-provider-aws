@@ -779,7 +779,7 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 
 	configTags := make(map[string]configTag)
 	if configExists {
-		c := cf.GetAttr("tags")
+		c := cf.GetAttr(names.AttrTags)
 
 		// if the config is null just return the incoming tags
 		// no duplicates to calculate
@@ -803,7 +803,7 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 	}
 
 	if config := d.GetRawPlan(); !config.IsNull() && config.IsKnown() {
-		c := config.GetAttr("tags")
+		c := config.GetAttr(names.AttrTags)
 		if !c.IsNull() && c.IsKnown() {
 			for k, v := range c.AsValueMap() {
 				if _, ok := configTags[k]; !ok {
@@ -817,7 +817,7 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 	}
 
 	if st := d.GetRawState(); !st.IsNull() && st.IsKnown() {
-		c := st.GetAttr("tags")
+		c := st.GetAttr(names.AttrTags)
 		if !c.IsNull() {
 			for k, v := range c.AsValueMap() {
 				if _, ok := configTags[k]; !ok {
