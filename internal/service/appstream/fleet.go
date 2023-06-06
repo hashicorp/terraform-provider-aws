@@ -285,7 +285,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		output, err = conn.CreateFleetWithContext(ctx, input)
 	}
 	if err != nil {
-		return diag.Errorf("error creating Appstream Fleet (%s): %s", d.Id(), err)
+		return diag.Errorf("creating Appstream Fleet (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(output.Fleet.Name))
@@ -295,11 +295,11 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {
-		return diag.Errorf("error starting Appstream Fleet (%s): %s", d.Id(), err)
+		return diag.Errorf("starting Appstream Fleet (%s): %s", d.Id(), err)
 	}
 
 	if _, err = waitFleetStateRunning(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("error waiting for Appstream Fleet (%s) to be running: %s", d.Id(), err)
+		return diag.Errorf("waiting for Appstream Fleet (%s) to be running: %s", d.Id(), err)
 	}
 
 	return resourceFleetRead(ctx, d, meta)
@@ -317,15 +317,15 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Appstream Fleet (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Appstream Fleet (%s): %s", d.Id(), err)
 	}
 
 	if len(resp.Fleets) == 0 {
-		return diag.Errorf("error reading Appstream Fleet (%s): %s", d.Id(), "empty response")
+		return diag.Errorf("reading Appstream Fleet (%s): %s", d.Id(), "empty response")
 	}
 
 	if len(resp.Fleets) > 1 {
-		return diag.Errorf("error reading Appstream Fleet (%s): %s", d.Id(), "multiple fleets found")
+		return diag.Errorf("reading Appstream Fleet (%s): %s", d.Id(), "multiple fleets found")
 	}
 
 	fleet := resp.Fleets[0]
@@ -393,10 +393,10 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			Name: aws.String(d.Id()),
 		})
 		if err != nil {
-			return diag.Errorf("error stopping Appstream Fleet (%s): %s", d.Id(), err)
+			return diag.Errorf("stopping Appstream Fleet (%s): %s", d.Id(), err)
 		}
 		if _, err = waitFleetStateStopped(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("error waiting for Appstream Fleet (%s) to be stopped: %s", d.Id(), err)
+			return diag.Errorf("waiting for Appstream Fleet (%s) to be stopped: %s", d.Id(), err)
 		}
 	}
 
@@ -458,7 +458,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	_, err := conn.UpdateFleetWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("error updating Appstream Fleet (%s): %s", d.Id(), err)
+		return diag.Errorf("updating Appstream Fleet (%s): %s", d.Id(), err)
 	}
 
 	// Start fleet workflow if stopped
@@ -467,11 +467,11 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			Name: aws.String(d.Id()),
 		})
 		if err != nil {
-			return diag.Errorf("error starting Appstream Fleet (%s): %s", d.Id(), err)
+			return diag.Errorf("starting Appstream Fleet (%s): %s", d.Id(), err)
 		}
 
 		if _, err = waitFleetStateRunning(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("error waiting for Appstream Fleet (%s) to be running: %s", d.Id(), err)
+			return diag.Errorf("waiting for Appstream Fleet (%s) to be running: %s", d.Id(), err)
 		}
 	}
 
@@ -487,11 +487,11 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {
-		return diag.Errorf("error stopping Appstream Fleet (%s): %s", d.Id(), err)
+		return diag.Errorf("stopping Appstream Fleet (%s): %s", d.Id(), err)
 	}
 
 	if _, err = waitFleetStateStopped(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("error waiting for Appstream Fleet (%s) to be stopped: %s", d.Id(), err)
+		return diag.Errorf("waiting for Appstream Fleet (%s) to be stopped: %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting AppStream Fleet: (%s)", d.Id())
@@ -504,7 +504,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Appstream Fleet (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Appstream Fleet (%s): %s", d.Id(), err)
 	}
 
 	return nil
