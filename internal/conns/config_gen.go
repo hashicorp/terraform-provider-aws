@@ -15,6 +15,7 @@ import (
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/healthlake"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
@@ -149,7 +150,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
 	"github.com/aws/aws-sdk-go/service/emrserverless"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/aws/aws-sdk-go/service/finspace"
 	"github.com/aws/aws-sdk-go/service/finspacedata"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fms"
@@ -430,7 +430,6 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.evidentlyConn = cloudwatchevidently.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Evidently])}))
 	client.fmsConn = fms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.FMS])}))
 	client.fsxConn = fsx.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.FSx])}))
-	client.finspaceConn = finspace.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.FinSpace])}))
 	client.finspacedataConn = finspacedata.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.FinSpaceData])}))
 	client.firehoseConn = firehose.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Firehose])}))
 	client.forecastConn = forecastservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Forecast])}))
@@ -654,6 +653,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 	client.fisClient = fis.NewFromConfig(cfg, func(o *fis.Options) {
 		if endpoint := c.Endpoints[names.FIS]; endpoint != "" {
 			o.EndpointResolver = fis.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.finspaceClient = finspace.NewFromConfig(cfg, func(o *finspace.Options) {
+		if endpoint := c.Endpoints[names.FinSpace]; endpoint != "" {
+			o.EndpointResolver = finspace.EndpointResolverFromURL(endpoint)
 		}
 	})
 	client.healthlakeClient = healthlake.NewFromConfig(cfg, func(o *healthlake.Options) {
