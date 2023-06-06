@@ -145,13 +145,13 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	output, err := conn.CreateGlobalClusterWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("creating DocumentDB Global Cluster: %w", err))
+		return diag.Errorf("creating DocumentDB Global Cluster: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.GlobalCluster.GlobalClusterIdentifier))
 
 	if err := waitForGlobalClusterCreation(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.FromErr(fmt.Errorf("waiting for DocumentDB Global Cluster (%s) availability: %w", d.Id(), err))
+		return diag.Errorf("waiting for DocumentDB Global Cluster (%s) availability: %s", d.Id(), err)
 	}
 
 	return resourceGlobalClusterRead(ctx, d, meta)
@@ -169,7 +169,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("reading DocumentDB Global Cluster: %w", err))
+		return diag.Errorf("reading DocumentDB Global Cluster: %s", err)
 	}
 
 	if !d.IsNewResource() && globalCluster == nil {
@@ -192,7 +192,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 
 	if err := d.Set("global_cluster_members", flattenGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting global_cluster_members: %w", err))
+		return diag.Errorf("error setting global_cluster_members: %s", err)
 	}
 
 	d.Set("global_cluster_resource_id", globalCluster.GlobalClusterResourceId)
@@ -224,11 +224,11 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("updating DocumentDB Global Cluster: %w", err))
+		return diag.Errorf("updating DocumentDB Global Cluster: %s", err)
 	}
 
 	if err := waitForGlobalClusterUpdate(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return diag.FromErr(fmt.Errorf("waiting for DocumentDB Global Cluster (%s) update: %w", d.Id(), err))
+		return diag.Errorf("waiting for DocumentDB Global Cluster (%s) update: %s", d.Id(), err)
 	}
 
 	return resourceGlobalClusterRead(ctx, d, meta)
@@ -258,11 +258,11 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 			continue
 		}
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("removing DocumentDB Cluster (%s) from Global Cluster (%s): %w", dbClusterArn, d.Id(), err))
+			return diag.Errorf("removing DocumentDB Cluster (%s) from Global Cluster (%s): %s", dbClusterArn, d.Id(), err)
 		}
 
 		if err := waitForGlobalClusterRemoval(ctx, conn, dbClusterArn, d.Timeout(schema.TimeoutDelete)); err != nil {
-			return diag.FromErr(fmt.Errorf("waiting for DocumentDB Cluster (%s) removal from DocumentDB Global Cluster (%s): %w", dbClusterArn, d.Id(), err))
+			return diag.Errorf("waiting for DocumentDB Cluster (%s) removal from DocumentDB Global Cluster (%s): %s", dbClusterArn, d.Id(), err)
 		}
 	}
 
@@ -294,11 +294,11 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("deleting DocumentDB Global Cluster: %w", err))
+		return diag.Errorf("deleting DocumentDB Global Cluster: %s", err)
 	}
 
 	if err := WaitForGlobalClusterDeletion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.FromErr(fmt.Errorf("waiting for DocumentDB Global Cluster (%s) deletion: %w", d.Id(), err))
+		return diag.Errorf("waiting for DocumentDB Global Cluster (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil
