@@ -121,7 +121,7 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 		}, s3.ErrCodeNoSuchBucket)
 
 		if err != nil {
-			return diag.Errorf("error creating S3 bucket versioning for %s: %s", bucket, err)
+			return diag.Errorf("creating S3 bucket versioning for %s: %s", bucket, err)
 		}
 	} else {
 		log.Printf("[DEBUG] Creating S3 bucket versioning for unversioned bucket: %s", bucket)
@@ -151,13 +151,13 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting S3 bucket versioning (%s): %s", d.Id(), err)
+		return diag.Errorf("getting S3 bucket versioning (%s): %s", d.Id(), err)
 	}
 
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	if err := d.Set("versioning_configuration", flattenBucketVersioningConfiguration(output)); err != nil {
-		return diag.Errorf("error setting versioning_configuration: %s", err)
+		return diag.Errorf("setting versioning_configuration: %s", err)
 	}
 
 	return nil
@@ -187,7 +187,7 @@ func resourceBucketVersioningUpdate(ctx context.Context, d *schema.ResourceData,
 	_, err = conn.PutBucketVersioningWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating S3 bucket versioning (%s): %s", d.Id(), err)
+		return diag.Errorf("updating S3 bucket versioning (%s): %s", d.Id(), err)
 	}
 
 	return resourceBucketVersioningRead(ctx, d, meta)
@@ -231,7 +231,7 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting S3 bucket versioning (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting S3 bucket versioning (%s): %s", d.Id(), err)
 	}
 
 	return nil

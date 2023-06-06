@@ -155,7 +155,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return diag.Errorf("error creating S3 bucket ACL for %s: %s", bucket, err)
+		return diag.Errorf("creating S3 bucket ACL for %s: %s", bucket, err)
 	}
 
 	d.SetId(BucketACLCreateResourceID(bucket, expectedBucketOwner, acl))
@@ -188,18 +188,18 @@ func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting S3 bucket ACL (%s): %s", d.Id(), err)
+		return diag.Errorf("getting S3 bucket ACL (%s): %s", d.Id(), err)
 	}
 
 	if output == nil {
-		return diag.Errorf("error getting S3 bucket ACL (%s): empty output", d.Id())
+		return diag.Errorf("getting S3 bucket ACL (%s): empty output", d.Id())
 	}
 
 	d.Set("acl", acl)
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	if err := d.Set("access_control_policy", flattenBucketACLAccessControlPolicy(output)); err != nil {
-		return diag.Errorf("error setting access_control_policy: %s", err)
+		return diag.Errorf("setting access_control_policy: %s", err)
 	}
 
 	return nil
@@ -233,7 +233,7 @@ func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	_, err = conn.PutBucketAclWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating S3 bucket ACL (%s): %s", d.Id(), err)
+		return diag.Errorf("updating S3 bucket ACL (%s): %s", d.Id(), err)
 	}
 
 	if d.HasChange("acl") {

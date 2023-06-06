@@ -105,7 +105,7 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return diag.Errorf("error creating S3 bucket (%s) CORS configuration: %s", bucket, err)
+		return diag.Errorf("creating S3 bucket (%s) CORS configuration: %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
@@ -140,13 +140,13 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading S3 bucket CORS configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("reading S3 bucket CORS configuration (%s): %s", d.Id(), err)
 	}
 
 	output, ok := corsResponse.(*s3.GetBucketCorsOutput)
 	if !ok || output == nil {
 		if d.IsNewResource() {
-			return diag.Errorf("error reading S3 bucket CORS configuration (%s): empty output", d.Id())
+			return diag.Errorf("reading S3 bucket CORS configuration (%s): empty output", d.Id())
 		}
 		log.Printf("[WARN] S3 Bucket CORS Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -157,7 +157,7 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 
 	if err := d.Set("cors_rule", flattenBucketCorsConfigurationCorsRules(output.CORSRules)); err != nil {
-		return diag.Errorf("error setting cors_rule: %s", err)
+		return diag.Errorf("setting cors_rule: %s", err)
 	}
 
 	return nil
@@ -185,7 +185,7 @@ func resourceBucketCorsConfigurationUpdate(ctx context.Context, d *schema.Resour
 	_, err = conn.PutBucketCorsWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating S3 bucket CORS configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("updating S3 bucket CORS configuration (%s): %s", d.Id(), err)
 	}
 
 	return resourceBucketCorsConfigurationRead(ctx, d, meta)
@@ -214,7 +214,7 @@ func resourceBucketCorsConfigurationDelete(ctx context.Context, d *schema.Resour
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting S3 bucket CORS configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting S3 bucket CORS configuration (%s): %s", d.Id(), err)
 	}
 
 	return nil

@@ -99,7 +99,7 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 	)
 
 	if err != nil {
-		return diag.Errorf("error creating S3 bucket (%s) server-side encryption configuration: %s", bucket, err)
+		return diag.Errorf("creating S3 bucket (%s) server-side encryption configuration: %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
@@ -138,13 +138,13 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading S3 bucket server-side encryption configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("reading S3 bucket server-side encryption configuration (%s): %s", d.Id(), err)
 	}
 
 	output, ok := resp.(*s3.GetBucketEncryptionOutput)
 	if !ok || output.ServerSideEncryptionConfiguration == nil {
 		if d.IsNewResource() {
-			return diag.Errorf("error reading S3 bucket server-side encryption configuration (%s): empty output", d.Id())
+			return diag.Errorf("reading S3 bucket server-side encryption configuration (%s): empty output", d.Id())
 		}
 		log.Printf("[WARN] S3 Bucket Server-Side Encryption Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -156,7 +156,7 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	if err := d.Set("rule", flattenBucketServerSideEncryptionConfigurationRules(sse.Rules)); err != nil {
-		return diag.Errorf("error setting rule: %s", err)
+		return diag.Errorf("setting rule: %s", err)
 	}
 
 	return nil
@@ -190,7 +190,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 	)
 
 	if err != nil {
-		return diag.Errorf("error updating S3 bucket (%s) server-side encryption configuration: %s", d.Id(), err)
+		return diag.Errorf("updating S3 bucket (%s) server-side encryption configuration: %s", d.Id(), err)
 	}
 
 	return resourceBucketServerSideEncryptionConfigurationRead(ctx, d, meta)
@@ -219,7 +219,7 @@ func resourceBucketServerSideEncryptionConfigurationDelete(ctx context.Context, 
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting S3 bucket server-side encryption configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting S3 bucket server-side encryption configuration (%s): %s", d.Id(), err)
 	}
 
 	return nil
