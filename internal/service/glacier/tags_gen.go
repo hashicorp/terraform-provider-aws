@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glacier"
-	"github.com/aws/aws-sdk-go/service/glacier/glacieriface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glacier"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glacier/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -17,12 +17,12 @@ import (
 // ListTags lists glacier service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn glacieriface.GlacierAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn *glacier.Client, identifier string) (tftags.KeyValueTags, error) {
 	input := &glacier.ListTagsForVaultInput{
 		VaultName: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForVaultWithContext(ctx, input)
+	output, err := conn.ListTagsForVault(ctx, input)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn glacieriface.GlacierAPI, identifier stri
 // ListTags lists glacier service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).GlacierConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).GlacierClient(), identifier)
 
 	if err != nil {
 		return err
@@ -79,7 +79,7 @@ func SetTagsOut(ctx context.Context, tags map[string]*string) {
 }
 
 // createTags creates glacier service tags for new resources.
-func createTags(ctx context.Context, conn glacieriface.GlacierAPI, identifier string, tags map[string]*string) error {
+func createTags(ctx context.Context, conn *glacier.Client, identifier string, tags map[string]*string) error {
 	if len(tags) == 0 {
 		return nil
 	}
@@ -90,7 +90,7 @@ func createTags(ctx context.Context, conn glacieriface.GlacierAPI, identifier st
 // UpdateTags updates glacier service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn glacieriface.GlacierAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func UpdateTags(ctx context.Context, conn *glacier.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -99,10 +99,10 @@ func UpdateTags(ctx context.Context, conn glacieriface.GlacierAPI, identifier st
 	if len(removedTags) > 0 {
 		input := &glacier.RemoveTagsFromVaultInput{
 			VaultName: aws.String(identifier),
-			TagKeys:   aws.StringSlice(removedTags.Keys()),
+			TagKeys:   removedTags.Keys(),
 		}
 
-		_, err := conn.RemoveTagsFromVaultWithContext(ctx, input)
+		_, err := conn.RemoveTagsFromVault(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -117,7 +117,7 @@ func UpdateTags(ctx context.Context, conn glacieriface.GlacierAPI, identifier st
 			Tags:      Tags(updatedTags),
 		}
 
-		_, err := conn.AddTagsToVaultWithContext(ctx, input)
+		_, err := conn.AddTagsToVault(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -130,5 +130,5 @@ func UpdateTags(ctx context.Context, conn glacieriface.GlacierAPI, identifier st
 // UpdateTags updates glacier service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).GlacierConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).GlacierClient(), identifier, oldTags, newTags)
 }
