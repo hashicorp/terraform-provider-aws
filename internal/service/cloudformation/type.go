@@ -156,17 +156,17 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := conn.RegisterTypeWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error registering CloudFormation Type (%s): %s", typeName, err)
+		return diag.Errorf("registering CloudFormation Type (%s): %s", typeName, err)
 	}
 
 	if output == nil || output.RegistrationToken == nil {
-		return diag.Errorf("error registering CloudFormation Type (%s): empty result", typeName)
+		return diag.Errorf("registering CloudFormation Type (%s): empty result", typeName)
 	}
 
 	registrationOutput, err := WaitTypeRegistrationProgressStatusComplete(ctx, conn, aws.StringValue(output.RegistrationToken))
 
 	if err != nil {
-		return diag.Errorf("error waiting for CloudFormation Type (%s) register: %s", typeName, err)
+		return diag.Errorf("waiting for CloudFormation Type (%s) register: %s", typeName, err)
 	}
 
 	// Type Version ARN is not available until after registration is complete
@@ -187,13 +187,13 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading CloudFormation Type (%s): %s", d.Id(), err)
+		return diag.Errorf("reading CloudFormation Type (%s): %s", d.Id(), err)
 	}
 
 	typeARN, versionID, err := TypeVersionARNToTypeARNAndVersionID(d.Id())
 
 	if err != nil {
-		return diag.Errorf("error parsing CloudFormation Type (%s) ARN: %s", d.Id(), err)
+		return diag.Errorf("parsing CloudFormation Type (%s) ARN: %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.Arn)
@@ -205,7 +205,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("is_default_version", output.IsDefaultVersion)
 	if output.LoggingConfig != nil {
 		if err := d.Set("logging_config", []interface{}{flattenLoggingConfig(output.LoggingConfig)}); err != nil {
-			return diag.Errorf("error setting logging_config: %s", err)
+			return diag.Errorf("setting logging_config: %s", err)
 		}
 	} else {
 		d.Set("logging_config", nil)
@@ -237,7 +237,7 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		typeARN, _, err := TypeVersionARNToTypeARNAndVersionID(d.Id())
 
 		if err != nil {
-			return diag.Errorf("error parsing CloudFormation Type (%s) ARN: %s", d.Id(), err)
+			return diag.Errorf("parsing CloudFormation Type (%s) ARN: %s", d.Id(), err)
 		}
 
 		input := &cloudformation.ListTypeVersionsInput{
@@ -262,7 +262,7 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		})
 
 		if err != nil {
-			return diag.Errorf("error listing CloudFormation Type (%s) Versions: %s", d.Id(), err)
+			return diag.Errorf("listing CloudFormation Type (%s) Versions: %s", d.Id(), err)
 		}
 
 		if len(typeVersionSummaries) <= 1 {
@@ -277,7 +277,7 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 			}
 
 			if err != nil {
-				return diag.Errorf("error deregistering CloudFormation Type (%s): %s", d.Id(), err)
+				return diag.Errorf("deregistering CloudFormation Type (%s): %s", d.Id(), err)
 			}
 
 			return nil
@@ -289,7 +289,7 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return diag.Errorf("error deregistering CloudFormation Type (%s): %s", d.Id(), err)
+		return diag.Errorf("deregistering CloudFormation Type (%s): %s", d.Id(), err)
 	}
 
 	return nil
