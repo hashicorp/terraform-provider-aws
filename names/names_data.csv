@@ -154,7 +154,7 @@ emr-serverless,emrserverless,emrserverless,emrserverless,,emrserverless,,,EMRSer
 events,events,eventbridge,eventbridge,,events,,eventbridge;cloudwatchevents,Events,EventBridge,,1,,aws_cloudwatch_event_,aws_events_,,cloudwatch_event_,EventBridge,Amazon,,,,,
 schemas,schemas,schemas,schemas,,schemas,,,Schemas,Schemas,,1,,,aws_schemas_,,schemas_,EventBridge Schemas,Amazon,,,,,
 fis,fis,fis,fis,,fis,,,FIS,FIS,,,2,,aws_fis_,,fis_,FIS (Fault Injection Simulator),AWS,,,,,
-finspace,finspace,finspace,finspace,,finspace,,,FinSpace,Finspace,,1,,,aws_finspace_,,finspace_,FinSpace,Amazon,,,,,
+finspace,finspace,finspace,finspace,,finspace,,,FinSpace,Finspace,,,2,,aws_finspace_,,finspace_,FinSpace,Amazon,,,,,
 finspace-data,finspacedata,finspacedata,finspacedata,,finspacedata,,,FinSpaceData,FinSpaceData,,1,,,aws_finspacedata_,,finspacedata_,FinSpace Data,Amazon,,,,,
 fms,fms,fms,fms,,fms,,,FMS,FMS,,1,,,aws_fms_,,fms_,FMS (Firewall Manager),AWS,,,,,
 forecast,forecast,forecastservice,forecast,,forecast,,forecastservice,Forecast,ForecastService,,1,,,aws_forecast_,,forecast_,Forecast,Amazon,,,,,
