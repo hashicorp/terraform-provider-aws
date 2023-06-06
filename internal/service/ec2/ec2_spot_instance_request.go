@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/big"
 	"strconv"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -200,9 +202,23 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 		input.LaunchSpecification.Placement = instanceOpts.SpotPlacement
 	}
 
-	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return conn.RequestSpotInstancesWithContext(ctx, input)
+			output, err := conn.RequestSpotInstancesWithContext(ctx, input)
+
+			if err != nil {
+				return nil, fmt.Errorf("requesting EC2 Spot Instance: %w", err)
+			}
+
+			d.SetId(aws.StringValue(output.SpotInstanceRequests[0].SpotInstanceRequestId))
+
+			if d.Get("wait_for_fulfillment").(bool) {
+				if _, err := WaitSpotInstanceRequestFulfilled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+					return nil, fmt.Errorf("waiting for EC2 Spot Instance Request (%s) to be fulfilled: %s", d.Id(), err)
+				}
+			}
+
+			return output, nil
 		},
 		func(err error) (bool, error) {
 			// IAM instance profiles can take ~10 seconds to propagate in AWS:
@@ -216,21 +232,14 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 				return true, err
 			}
 
+			// https://github.com/hashicorp/terraform-provider-aws/issues/8164,
+			if errs.Contains(err, "Invalid IAM Instance Profile name") {
+				return true, err
+			}
+
 			return false, err
 		},
 	)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "requesting EC2 Spot Instance: %s", err)
-	}
-
-	d.SetId(aws.StringValue(outputRaw.(*ec2.RequestSpotInstancesOutput).SpotInstanceRequests[0].SpotInstanceRequestId))
-
-	if d.Get("wait_for_fulfillment").(bool) {
-		if _, err := WaitSpotInstanceRequestFulfilled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Spot Instance Request (%s) to be fulfilled: %s", d.Id(), err)
-		}
-	}
 
 	return append(diags, resourceSpotInstanceRequestRead(ctx, d, meta)...)
 }
