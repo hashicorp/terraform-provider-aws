@@ -225,9 +225,9 @@ func transitGatewayDisassociateLinkedRouteTable(ctx context.Context, conn *ec2.E
 	if transitGatewayAttachment.Association == nil {
 		return nil // If no Association object was found then Gateway Attachment is not linked to a Route Table
 	}
-	transitGatewayRouteTableID := *transitGatewayAttachment.Association.TransitGatewayRouteTableId
+	transitGatewayRouteTableID := aws.StringValue(transitGatewayAttachment.Association.TransitGatewayRouteTableId)
 
-	if *transitGatewayAttachment.Association.State != ec2.AssociationStatusCodeAssociated {
+	if aws.StringValue(transitGatewayAttachment.Association.State) != ec2.AssociationStatusCodeAssociated {
 		return fmt.Errorf("associated Route Table with Transit Gateway Attachment is not in correct state (%s): expected attachment in %s state got %s", transitGatewayAttachmentID, ec2.AssociationStatusCodeAssociated, *transitGatewayAttachment.Association.State)
 	}
 
