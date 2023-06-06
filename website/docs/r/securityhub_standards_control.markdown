@@ -37,7 +37,7 @@ resource "aws_securityhub_standards_control" "ensure_iam_password_policy_prevent
 
 The following arguments are supported:
 
-* `standards_control_arn` - (Required) The standards control ARN.
+* `standards_control_arn` - (Required) The standards control ARN. See the AWS tool documentation for how to list existing controls, https://docs.aws.amazon.com/cli/latest/reference/securityhub/get-enabled-standards.html and https://docs.aws.amazon.com/cli/latest/reference/securityhub/describe-standards-controls.html.
 * `control_status` – (Required) The control status could be `ENABLED` or `DISABLED`. You have to specify `disabled_reason` argument for `DISABLED` control status.
 * `disabled_reason` – (Optional) A description of the reason why you are disabling a security standard control. If you specify this attribute, `control_status` will be set to `DISABLED` automatically.
 
@@ -53,15 +53,3 @@ In addition to all arguments above, the following attributes are exported:
 * `remediation_url` – A link to remediation information for the control in the Security Hub user documentation.
 * `severity_rating` – The severity of findings generated from this security standard control.
 * `title` – The standard control title.
-
-## Obtaining Control ARNs
-
-List all enabled security standards with:
-```bash
-aws securityhub get-enabled-standards
-```
-
-List all controls with:
-```bash
-aws securityhub describe-standards-controls --standards-subscription-arn <StandardsSubscriptionArn>
-```
