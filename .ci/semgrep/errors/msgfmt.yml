@@ -17,6 +17,7 @@ rules:
 
   # To fix:
   #   find internal/service/*/*.go -print | xargs ruby -p -i -e 'gsub(/diag.Errorf\((")error (.*)\)/, "diag.Errorf(\\1\\2)")'
+  #   find internal/service/*/*.go -print | xargs ruby -p -i -e 'gsub(/diag.Errorf\((")Error (.*)\)/, "diag.Errorf(\\1\\2)")'
   - id: no-diag.Errorf-leading-error
     languages: [go]
     message: Remove leading 'error ' from diag.Errorf("error ...")
