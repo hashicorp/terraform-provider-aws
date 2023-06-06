@@ -56,15 +56,15 @@ func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.Re
 	output, err := conn.EnableKinesisStreamingDestinationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error enabling DynamoDB Kinesis streaming destination (stream: %s, table: %s): %w", streamArn, tableName, err))
+		return diag.Errorf("error enabling DynamoDB Kinesis streaming destination (stream: %s, table: %s): %s", streamArn, tableName, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error enabling DynamoDB Kinesis streaming destination (stream: %s, table: %s): empty output", streamArn, tableName))
+		return diag.Errorf("error enabling DynamoDB Kinesis streaming destination (stream: %s, table: %s): empty output", streamArn, tableName)
 	}
 
 	if err := waitKinesisStreamingDestinationActive(ctx, conn, streamArn, tableName); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for DynamoDB Kinesis streaming destination (stream: %s, table: %s) to be active: %w", streamArn, tableName, err))
+		return diag.Errorf("error waiting for DynamoDB Kinesis streaming destination (stream: %s, table: %s) to be active: %s", streamArn, tableName, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(output.TableName), aws.StringValue(output.StreamArn)))
@@ -90,12 +90,12 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error retrieving DynamoDB Kinesis streaming destination (stream: %s, table: %s): %w", streamArn, tableName, err))
+		return diag.Errorf("error retrieving DynamoDB Kinesis streaming destination (stream: %s, table: %s): %s", streamArn, tableName, err)
 	}
 
 	if output == nil || aws.StringValue(output.DestinationStatus) == dynamodb.DestinationStatusDisabled {
 		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error retrieving DynamoDB Kinesis streaming destination (stream: %s, table: %s): empty output after creation", streamArn, tableName))
+			return diag.Errorf("error retrieving DynamoDB Kinesis streaming destination (stream: %s, table: %s): empty output after creation", streamArn, tableName)
 		}
 		log.Printf("[WARN] DynamoDB Kinesis Streaming Destination (stream: %s, table: %s) not found, removing from state", streamArn, tableName)
 		d.SetId("")
@@ -125,11 +125,11 @@ func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.Re
 	_, err = conn.DisableKinesisStreamingDestinationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error disabling DynamoDB Kinesis streaming destination (stream: %s, table: %s): %w", streamArn, tableName, err))
+		return diag.Errorf("error disabling DynamoDB Kinesis streaming destination (stream: %s, table: %s): %s", streamArn, tableName, err)
 	}
 
 	if err := waitKinesisStreamingDestinationDisabled(ctx, conn, streamArn, tableName); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for DynamoDB Kinesis streaming destination (stream: %s, table: %s) to be disabled: %w", streamArn, tableName, err))
+		return diag.Errorf("error waiting for DynamoDB Kinesis streaming destination (stream: %s, table: %s) to be disabled: %s", streamArn, tableName, err)
 	}
 
 	return nil
