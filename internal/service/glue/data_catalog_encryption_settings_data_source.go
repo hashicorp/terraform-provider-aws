@@ -2,7 +2,6 @@ package glue
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -73,14 +72,14 @@ func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Glue Data Catalog Encryption Settings (%s): %w", catalogID, err))
+		return diag.Errorf("error reading Glue Data Catalog Encryption Settings (%s): %s", catalogID, err)
 	}
 
 	d.SetId(catalogID)
 	d.Set("catalog_id", d.Id())
 	if output.DataCatalogEncryptionSettings != nil {
 		if err := d.Set("data_catalog_encryption_settings", []interface{}{flattenDataCatalogEncryptionSettings(output.DataCatalogEncryptionSettings)}); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting data_catalog_encryption_settings: %w", err))
+			return diag.Errorf("error setting data_catalog_encryption_settings: %s", err)
 		}
 	} else {
 		d.Set("data_catalog_encryption_settings", nil)
