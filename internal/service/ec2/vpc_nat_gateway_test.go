@@ -252,6 +252,7 @@ func TestAccVPCNATGateway_secondaryPrivateIpAddresses(t *testing.T) {
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	eipResourceName := "aws_eip.secondary"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -263,8 +264,9 @@ func TestAccVPCNATGateway_secondaryPrivateIpAddresses(t *testing.T) {
 				Config: testAccVPCNATGatewayConfig_secondaryPrivateIpAddresses(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
-					resource.TestCheckResourceAttrSet(resourceName, "secondary_allocation_ids"),
 					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "secondary_allocation_ids.*", eipResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "1"),
 				),
 			},
 			{
