@@ -200,7 +200,7 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 	if v, ok := d.GetOk("routing_rules"); ok {
 		var unmarshalledRules []*s3.RoutingRule
 		if err := json.Unmarshal([]byte(v.(string)), &unmarshalledRules); err != nil {
-			return diag.FromErr(fmt.Errorf("error creating S3 Bucket (%s) website configuration: %w", bucket, err))
+			return diag.Errorf("error creating S3 Bucket (%s) website configuration: %s", bucket, err)
 		}
 		websiteConfig.RoutingRules = unmarshalledRules
 	}
@@ -219,7 +219,7 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating S3 bucket (%s) website configuration: %w", bucket, err))
+		return diag.Errorf("error creating S3 bucket (%s) website configuration: %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
@@ -253,7 +253,7 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 
 	if output == nil {
 		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading S3 bucket website configuration (%s): empty output", d.Id()))
+			return diag.Errorf("error reading S3 bucket website configuration (%s): empty output", d.Id())
 		}
 		log.Printf("[WARN] S3 Bucket Website Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -264,25 +264,25 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 
 	if err := d.Set("error_document", flattenBucketWebsiteConfigurationErrorDocument(output.ErrorDocument)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting error_document: %w", err))
+		return diag.Errorf("error setting error_document: %s", err)
 	}
 
 	if err := d.Set("index_document", flattenBucketWebsiteConfigurationIndexDocument(output.IndexDocument)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting index_document: %w", err))
+		return diag.Errorf("error setting index_document: %s", err)
 	}
 
 	if err := d.Set("redirect_all_requests_to", flattenBucketWebsiteConfigurationRedirectAllRequestsTo(output.RedirectAllRequestsTo)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting redirect_all_requests_to: %w", err))
+		return diag.Errorf("error setting redirect_all_requests_to: %s", err)
 	}
 
 	if err := d.Set("routing_rule", flattenBucketWebsiteConfigurationRoutingRules(output.RoutingRules)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting routing_rule: %w", err))
+		return diag.Errorf("error setting routing_rule: %s", err)
 	}
 
 	if output.RoutingRules != nil {
 		rr, err := normalizeRoutingRules(output.RoutingRules)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error while marshaling routing rules: %w", err))
+			return diag.Errorf("error while marshaling routing rules: %s", err)
 		}
 		d.Set("routing_rules", rr)
 	} else {
@@ -331,7 +331,7 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 		} else {
 			var unmarshalledRules []*s3.RoutingRule
 			if err := json.Unmarshal([]byte(d.Get("routing_rules").(string)), &unmarshalledRules); err != nil {
-				return diag.FromErr(fmt.Errorf("error updating S3 Bucket (%s) website configuration: %w", bucket, err))
+				return diag.Errorf("error updating S3 Bucket (%s) website configuration: %s", bucket, err)
 			}
 			websiteConfig.RoutingRules = unmarshalledRules
 		}
@@ -344,7 +344,7 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 		if v, ok := d.GetOk("routing_rules"); ok {
 			var unmarshalledRules []*s3.RoutingRule
 			if err := json.Unmarshal([]byte(v.(string)), &unmarshalledRules); err != nil {
-				return diag.FromErr(fmt.Errorf("error updating S3 Bucket (%s) website configuration: %w", bucket, err))
+				return diag.Errorf("error updating S3 Bucket (%s) website configuration: %s", bucket, err)
 			}
 			websiteConfig.RoutingRules = unmarshalledRules
 		}
@@ -362,7 +362,7 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 	_, err = conn.PutBucketWebsiteWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating S3 bucket website configuration (%s): %w", d.Id(), err))
+		return diag.Errorf("error updating S3 bucket website configuration (%s): %s", d.Id(), err)
 	}
 
 	return resourceBucketWebsiteConfigurationRead(ctx, d, meta)
@@ -391,7 +391,7 @@ func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.Res
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting S3 bucket website configuration (%s): %w", d.Id(), err))
+		return diag.Errorf("error deleting S3 bucket website configuration (%s): %s", d.Id(), err)
 	}
 
 	return nil
