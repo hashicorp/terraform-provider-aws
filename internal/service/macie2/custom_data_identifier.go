@@ -2,7 +2,6 @@ package macie2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -149,7 +148,7 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Macie CustomDataIdentifier: %w", err))
+		return diag.Errorf("error creating Macie CustomDataIdentifier: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.CustomDataIdentifierId))
@@ -174,15 +173,15 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Macie CustomDataIdentifier (%s): %w", d.Id(), err))
+		return diag.Errorf("error reading Macie CustomDataIdentifier (%s): %s", d.Id(), err)
 	}
 
 	d.Set("regex", resp.Regex)
 	if err = d.Set("keywords", flex.FlattenStringList(resp.Keywords)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "keywords", d.Id(), err))
+		return diag.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %s", "keywords", d.Id(), err)
 	}
 	if err = d.Set("ignore_words", flex.FlattenStringList(resp.IgnoreWords)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "ignore_words", d.Id(), err))
+		return diag.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %s", "ignore_words", d.Id(), err)
 	}
 	d.Set("name", resp.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
@@ -215,7 +214,7 @@ func resourceCustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceD
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error deleting Macie CustomDataIdentifier (%s): %w", d.Id(), err))
+		return diag.Errorf("error deleting Macie CustomDataIdentifier (%s): %s", d.Id(), err)
 	}
 	return nil
 }
