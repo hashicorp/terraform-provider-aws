@@ -28,6 +28,9 @@ rules:
       - pattern-regex: 'diag.Errorf\("\s*[Ee]rror '
     severity: ERROR
 
+  # To fix:
+  #   find internal/service/*/*.go -print | xargs ruby -p -i -e 'gsub(/AppendErrorf\(diags, (")Error (.*)\)/, "AppendErrorf(diags, \\1\\2)")'
+  #   find internal/service/*/*.go -print | xargs ruby -p -i -e 'gsub(/AppendErrorf\(diags, (")error (.*)\)/, "AppendErrorf(diags, \\1\\2)")'
   - id: no-AppendErrorf-leading-error
     languages: [go]
     message: Remove leading 'Error ' from AppendErrorf(diags, "Error ...")
