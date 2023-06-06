@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_redshift_cluster: Fix crash reading clusters in `modifying` state
+```
