@@ -43,7 +43,7 @@ func ResourceGlobalSettings() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"cdr_bucket": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 					},
 				},
