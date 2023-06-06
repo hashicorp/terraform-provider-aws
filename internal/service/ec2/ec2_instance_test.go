@@ -8897,8 +8897,13 @@ func testAccInstanceConfig_basicWithSpot(rName string) string {
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
-  instance_market_options {}
+
+  instance_market_options {
+    market_type = "spot"
+  }
+
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
   tags = {
     Name = %[1]q
   }

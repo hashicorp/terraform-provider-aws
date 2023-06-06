@@ -395,8 +395,8 @@ func ResourceInstance() *schema.Resource {
 						"market_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ForceNew:     true,
-							Default:      ec2.MarketTypeSpot,
 							ValidateFunc: validation.StringInSlice(ec2.MarketType_Values(), false),
 						},
 						"spot_options": {
@@ -410,8 +410,8 @@ func ResourceInstance() *schema.Resource {
 									"instance_interruption_behavior": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										Computed:     true,
 										ForceNew:     true,
-										Default:      ec2.InstanceInterruptionBehaviorTerminate,
 										ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
 									},
 									"max_price": {
@@ -429,13 +429,14 @@ func ResourceInstance() *schema.Resource {
 									"spot_instance_type": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										Computed:     true,
 										ForceNew:     true,
-										Default:      ec2.SpotInstanceTypeOneTime,
 										ValidateFunc: validation.StringInSlice(ec2.SpotInstanceType_Values(), false),
 									},
 									"valid_until": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										Computed:     true,
 										ForceNew:     true,
 										ValidateFunc: verify.ValidUTCTimestamp,
 									},
