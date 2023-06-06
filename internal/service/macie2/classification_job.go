@@ -620,7 +620,7 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if err != nil {
-		return diag.Errorf("error creating Macie ClassificationJob: %s", err)
+		return diag.Errorf("creating Macie ClassificationJob: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.JobId))
@@ -646,14 +646,14 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Macie ClassificationJob (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Macie ClassificationJob (%s): %s", d.Id(), err)
 	}
 
 	if err = d.Set("custom_data_identifier_ids", flex.FlattenStringList(resp.CustomDataIdentifierIds)); err != nil {
-		return diag.Errorf("error setting `%s` for Macie ClassificationJob (%s): %s", "custom_data_identifier_ids", d.Id(), err)
+		return diag.Errorf("setting `%s` for Macie ClassificationJob (%s): %s", "custom_data_identifier_ids", d.Id(), err)
 	}
 	if err = d.Set("schedule_frequency", flattenScheduleFrequency(resp.ScheduleFrequency)); err != nil {
-		return diag.Errorf("error setting `%s` for Macie ClassificationJob (%s): %s", "schedule_frequency", d.Id(), err)
+		return diag.Errorf("setting `%s` for Macie ClassificationJob (%s): %s", "schedule_frequency", d.Id(), err)
 	}
 	d.Set("sampling_percentage", resp.SamplingPercentage)
 	d.Set("name", resp.Name)
@@ -662,7 +662,7 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("initial_run", resp.InitialRun)
 	d.Set("job_type", resp.JobType)
 	if err = d.Set("s3_job_definition", flattenS3JobDefinition(resp.S3JobDefinition)); err != nil {
-		return diag.Errorf("error setting `%s` for Macie ClassificationJob (%s): %s", "s3_job_definition", d.Id(), err)
+		return diag.Errorf("setting `%s` for Macie ClassificationJob (%s): %s", "s3_job_definition", d.Id(), err)
 	}
 
 	SetTagsOut(ctx, resp.Tags)
@@ -676,7 +676,7 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("job_status", status)
 	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
 	if err = d.Set("user_paused_details", flattenUserPausedDetails(resp.UserPausedDetails)); err != nil {
-		return diag.Errorf("error setting `%s` for Macie ClassificationJob (%s): %s", "user_paused_details", d.Id(), err)
+		return diag.Errorf("setting `%s` for Macie ClassificationJob (%s): %s", "user_paused_details", d.Id(), err)
 	}
 
 	return nil
@@ -693,7 +693,7 @@ func resourceClassificationJobUpdate(ctx context.Context, d *schema.ResourceData
 		status := d.Get("job_status").(string)
 
 		if status == macie2.JobStatusCancelled {
-			return diag.Errorf("error updating Macie ClassificationJob (%s): %s", d.Id(), fmt.Sprintf("%s cannot be set", macie2.JobStatusCancelled))
+			return diag.Errorf("updating Macie ClassificationJob (%s): %s", d.Id(), fmt.Sprintf("%s cannot be set", macie2.JobStatusCancelled))
 		}
 
 		input.JobStatus = aws.String(status)
@@ -701,7 +701,7 @@ func resourceClassificationJobUpdate(ctx context.Context, d *schema.ResourceData
 
 	_, err := conn.UpdateClassificationJobWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("error updating Macie ClassificationJob (%s): %s", d.Id(), err)
+		return diag.Errorf("updating Macie ClassificationJob (%s): %s", d.Id(), err)
 	}
 
 	return resourceClassificationJobRead(ctx, d, meta)
@@ -722,7 +722,7 @@ func resourceClassificationJobDelete(ctx context.Context, d *schema.ResourceData
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "cannot update cancelled job for job") {
 			return nil
 		}
-		return diag.Errorf("error deleting Macie ClassificationJob (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Macie ClassificationJob (%s): %s", d.Id(), err)
 	}
 
 	return nil

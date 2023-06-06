@@ -123,7 +123,7 @@ func resourceClassificationExportConfigurationRead(ctx context.Context, d *schem
 		if (macie2.S3Destination{}) != *output.Configuration.S3Destination { // nosemgrep: ci.prefer-aws-go-sdk-pointer-conversion-conditional
 			var flattenedS3Destination = flattenClassificationExportConfigurationS3DestinationResult(output.Configuration.S3Destination)
 			if err := d.Set("s3_destination", []interface{}{flattenedS3Destination}); err != nil {
-				return diag.Errorf("error setting Macie classification export configuration s3_destination: %s", err)
+				return diag.Errorf("setting Macie classification export configuration s3_destination: %s", err)
 			}
 		}
 		d.SetId(fmt.Sprintf("%s:%s:%s", "macie:classification_export_configuration", meta.(*conns.AWSClient).AccountID, meta.(*conns.AWSClient).Region))

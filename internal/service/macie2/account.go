@@ -89,7 +89,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.Errorf("error enabling Macie Account: %s", err)
+		return diag.Errorf("enabling Macie Account: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
@@ -112,7 +112,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Macie Account (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Macie Account (%s): %s", d.Id(), err)
 	}
 
 	d.Set("status", resp.Status)
@@ -139,7 +139,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	_, err := conn.UpdateMacieSessionWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("error updating Macie Account (%s): %s", d.Id(), err)
+		return diag.Errorf("updating Macie Account (%s): %s", d.Id(), err)
 	}
 
 	return resourceAccountRead(ctx, d, meta)
@@ -177,7 +177,7 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			return nil
 		}
-		return diag.Errorf("error disabling Macie Account (%s): %s", d.Id(), err)
+		return diag.Errorf("disabling Macie Account (%s): %s", d.Id(), err)
 	}
 
 	return nil
