@@ -2,7 +2,6 @@ package networkfirewall
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -91,11 +90,11 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return nil
 	}
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Resource Policy (for resource: %s): %w", resourceArn, err))
+		return diag.Errorf("error reading NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
 	}
 
 	if policy == nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Resource Policy (for resource: %s): empty output", resourceArn))
+		return diag.Errorf("error reading NetworkFirewall Resource Policy (for resource: %s): empty output", resourceArn)
 	}
 
 	d.Set("resource_arn", resourceArn)
