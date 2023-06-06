@@ -23,7 +23,7 @@ func testAccOrganizationalUnitChildAccountsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationalUnitChildAccountsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "accounts.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "accounts.#", 0),
 				),
 			},
 		},

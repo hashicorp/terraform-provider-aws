@@ -22,14 +22,14 @@ func TestAccIPAMPoolsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccIPAMPoolsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ipam_pools.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ipam_pools.#", 0),
 				),
 			},
 			{
 				Config: testAccIPAMPoolsDataSourceConfig_basicTwoPools,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// DS 1 finds all 3 pools
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ipam_pools.#", "2"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ipam_pools.#", 2),
 
 					// DS 2 filters on 1 specific pool to validate attributes
 					resource.TestCheckResourceAttr(dataSourceNameTwo, "ipam_pools.#", "1"),
