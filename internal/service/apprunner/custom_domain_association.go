@@ -96,18 +96,18 @@ func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.Resour
 	output, err := conn.AssociateCustomDomainWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error associating App Runner Custom Domain (%s) for Service (%s): %s", domainName, serviceArn, err)
+		return diag.Errorf("associating App Runner Custom Domain (%s) for Service (%s): %s", domainName, serviceArn, err)
 	}
 
 	if output == nil {
-		return diag.Errorf("error associating App Runner Custom Domain (%s) for Service (%s): empty output", domainName, serviceArn)
+		return diag.Errorf("associating App Runner Custom Domain (%s) for Service (%s): empty output", domainName, serviceArn)
 	}
 
 	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(output.CustomDomain.DomainName), aws.StringValue(output.ServiceArn)))
 	d.Set("dns_target", output.DNSTarget)
 
 	if err := WaitCustomDomainAssociationCreated(ctx, conn, domainName, serviceArn); err != nil {
-		return diag.Errorf("error waiting for App Runner Custom Domain Association (%s) creation: %s", d.Id(), err)
+		return diag.Errorf("waiting for App Runner Custom Domain Association (%s) creation: %s", d.Id(), err)
 	}
 
 	return resourceCustomDomainAssociationRead(ctx, d, meta)
@@ -132,7 +132,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 
 	if customDomain == nil {
 		if d.IsNewResource() {
-			return diag.Errorf("error reading App Runner Custom Domain Association (%s): empty output after creation", d.Id())
+			return diag.Errorf("reading App Runner Custom Domain Association (%s): empty output after creation", d.Id())
 		}
 		log.Printf("[WARN] App Runner Custom Domain Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -140,7 +140,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 	}
 
 	if err := d.Set("certificate_validation_records", flattenCustomDomainCertificateValidationRecords(customDomain.CertificateValidationRecords)); err != nil {
-		return diag.Errorf("error setting certificate_validation_records: %s", err)
+		return diag.Errorf("setting certificate_validation_records: %s", err)
 	}
 
 	d.Set("domain_name", customDomain.DomainName)
@@ -172,7 +172,7 @@ func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.Resour
 	}
 
 	if err != nil {
-		return diag.Errorf("error disassociating App Runner Custom Domain (%s) for Service (%s): %s", domainName, serviceArn, err)
+		return diag.Errorf("disassociating App Runner Custom Domain (%s) for Service (%s): %s", domainName, serviceArn, err)
 	}
 
 	if err := WaitCustomDomainAssociationDeleted(ctx, conn, domainName, serviceArn); err != nil {
@@ -180,7 +180,7 @@ func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.Resour
 			return nil
 		}
 
-		return diag.Errorf("error waiting for App Runner Custom Domain Association (%s) deletion: %s", d.Id(), err)
+		return diag.Errorf("waiting for App Runner Custom Domain Association (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil

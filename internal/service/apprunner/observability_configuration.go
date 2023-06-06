@@ -89,17 +89,17 @@ func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.Res
 	output, err := conn.CreateObservabilityConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating App Runner Observability Configuration (%s): %s", name, err)
+		return diag.Errorf("creating App Runner Observability Configuration (%s): %s", name, err)
 	}
 
 	if output == nil || output.ObservabilityConfiguration == nil {
-		return diag.Errorf("error creating App Runner Observability Configuration (%s): empty output", name)
+		return diag.Errorf("creating App Runner Observability Configuration (%s): empty output", name)
 	}
 
 	d.SetId(aws.StringValue(output.ObservabilityConfiguration.ObservabilityConfigurationArn))
 
 	if err := WaitObservabilityConfigurationActive(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("error waiting for App Runner Observability Configuration (%s) creation: %s", d.Id(), err)
+		return diag.Errorf("waiting for App Runner Observability Configuration (%s) creation: %s", d.Id(), err)
 	}
 
 	return resourceObservabilityConfigurationRead(ctx, d, meta)
@@ -121,16 +121,16 @@ func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading App Runner Observability Configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("reading App Runner Observability Configuration (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.ObservabilityConfiguration == nil {
-		return diag.Errorf("error reading App Runner Observability Configuration (%s): empty output", d.Id())
+		return diag.Errorf("reading App Runner Observability Configuration (%s): empty output", d.Id())
 	}
 
 	if aws.StringValue(output.ObservabilityConfiguration.Status) == ObservabilityConfigurationStatusInactive {
 		if d.IsNewResource() {
-			return diag.Errorf("error reading App Runner Observability Configuration (%s): %s after creation", d.Id(), aws.StringValue(output.ObservabilityConfiguration.Status))
+			return diag.Errorf("reading App Runner Observability Configuration (%s): %s after creation", d.Id(), aws.StringValue(output.ObservabilityConfiguration.Status))
 		}
 		log.Printf("[WARN] App Runner Observability Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -147,7 +147,7 @@ func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.Resou
 	d.Set("status", config.Status)
 
 	if err := d.Set("trace_configuration", flattenTraceConfiguration(config.TraceConfiguration)); err != nil {
-		return diag.Errorf("error setting trace_configuration: %s", err)
+		return diag.Errorf("setting trace_configuration: %s", err)
 	}
 
 	return nil
@@ -172,14 +172,14 @@ func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.Res
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting App Runner Observability Configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting App Runner Observability Configuration (%s): %s", d.Id(), err)
 	}
 
 	if err := WaitObservabilityConfigurationInactive(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.Errorf("error waiting for App Runner Observability Configuration (%s) deletion: %s", d.Id(), err)
+		return diag.Errorf("waiting for App Runner Observability Configuration (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil
