@@ -16,6 +16,7 @@ import (
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/healthlake"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
@@ -150,7 +151,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
 	"github.com/aws/aws-sdk-go/service/emrserverless"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/aws/aws-sdk-go/service/finspace"
 	"github.com/aws/aws-sdk-go/service/finspacedata"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fms"
@@ -469,7 +469,7 @@ type AWSClient struct {
 	fisClient                        *fis.Client
 	fmsConn                          *fms.FMS
 	fsxConn                          *fsx.FSx
-	finspaceConn                     *finspace.Finspace
+	finspaceClient                   *finspace.Client
 	finspacedataConn                 *finspacedata.FinSpaceData
 	firehoseConn                     *firehose.Firehose
 	forecastConn                     *forecastservice.ForecastService
@@ -1142,8 +1142,8 @@ func (client *AWSClient) FSxConn() *fsx.FSx {
 	return client.fsxConn
 }
 
-func (client *AWSClient) FinSpaceConn() *finspace.Finspace {
-	return client.finspaceConn
+func (client *AWSClient) FinSpaceClient() *finspace.Client {
+	return client.finspaceClient
 }
 
 func (client *AWSClient) FinSpaceDataConn() *finspacedata.FinSpaceData {
