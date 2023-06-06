@@ -85,7 +85,7 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 
 	resp, err := conn.CreateGroupMembershipWithContext(ctx, createOpts)
 	if err != nil {
-		return diag.Errorf("error adding QuickSight user (%s) to group (%s): %s", memberName, groupName, err)
+		return diag.Errorf("adding QuickSight user (%s) to group (%s): %s", memberName, groupName, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s/%s/%s", awsAccountID, namespace, groupName, aws.StringValue(resp.GroupMember.MemberName)))
