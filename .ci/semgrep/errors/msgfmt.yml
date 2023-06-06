@@ -27,3 +27,13 @@ rules:
     patterns:
       - pattern-regex: 'diag.Errorf\("\s*[Ee]rror '
     severity: ERROR
+
+  - id: no-AppendErrorf-leading-error
+    languages: [go]
+    message: Remove leading 'Error ' from AppendErrorf(diags, "Error ...")
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-regex: 'AppendErrorf\(diags, "\s*[Ee]rror '
+    severity: ERROR
