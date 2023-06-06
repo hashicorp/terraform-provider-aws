@@ -24,9 +24,9 @@ func TestAccEC2InstanceTypeOfferingsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccInstanceTypeOfferingsDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "locations.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "location_types.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "locations.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "location_types.#", 0),
 				),
 			},
 		},
@@ -46,9 +46,9 @@ func TestAccEC2InstanceTypeOfferingsDataSource_locationType(t *testing.T) {
 			{
 				Config: testAccInstanceTypeOfferingsDataSourceConfig_location(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "locations.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "location_types.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "locations.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "location_types.#", 0),
 				),
 			},
 		},

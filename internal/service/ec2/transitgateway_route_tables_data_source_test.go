@@ -23,7 +23,7 @@ func testAccTransitGatewayRouteTablesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccTransitGatewayRouteTablesDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", 0),
 				),
 			},
 		},

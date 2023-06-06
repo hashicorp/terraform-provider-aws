@@ -24,7 +24,7 @@ func TestAccVPCNetworkACLsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCNetworkACLsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", 1),
 				),
 			},
 		},
