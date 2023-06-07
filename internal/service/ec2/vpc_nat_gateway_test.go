@@ -192,6 +192,7 @@ func TestAccVPCNATGateway_secondaryAllocationIds(t *testing.T) {
 	ctx := acctest.Context(t)
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
+	eipResourceName := "aws_eip.secondary"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -204,7 +205,8 @@ func TestAccVPCNATGateway_secondaryAllocationIds(t *testing.T) {
 				Config: testAccVPCNATGatewayConfig_secondaryAllocationIds(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
-					resource.TestCheckResourceAttrSet(resourceName, "secondary_allocation_ids"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "secondary_allocation_ids.*", eipResourceName, "id"),
 				),
 			},
 			{
