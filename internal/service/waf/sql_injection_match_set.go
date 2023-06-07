@@ -176,7 +176,7 @@ func updateSQLInjectionMatchSetResource(ctx context.Context, id string, oldT, ne
 		return conn.UpdateSqlInjectionMatchSetWithContext(ctx, req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error updating SqlInjectionMatchSet: %s", err)
+		return fmt.Errorf("updating SqlInjectionMatchSet: %s", err)
 	}
 
 	return nil
