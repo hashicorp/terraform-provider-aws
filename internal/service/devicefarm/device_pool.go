@@ -273,7 +273,7 @@ func flattenDevicePoolRules(list []*devicefarm.Rule) []map[string]interface{} {
 func decodeProjectARN(id, typ string, meta interface{}) (string, error) {
 	poolArn, err := arn.Parse(id)
 	if err != nil {
-		return "", fmt.Errorf("Error parsing '%s': %w", id, err)
+		return "", fmt.Errorf("parsing '%s': %w", id, err)
 	}
 
 	poolArnResouce := poolArn.Resource

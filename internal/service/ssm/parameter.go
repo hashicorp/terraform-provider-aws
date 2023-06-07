@@ -225,7 +225,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 		resp, err = conn.GetParameterWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeParameterNotFound) && d.IsNewResource() && d.Get("data_type").(string) == "aws:ec2:image" {
-			return retry.RetryableError(fmt.Errorf("error reading SSM Parameter (%s) after creation: this can indicate that the provided parameter value could not be validated by SSM", d.Id()))
+			return retry.RetryableError(fmt.Errorf("reading SSM Parameter (%s) after creation: this can indicate that the provided parameter value could not be validated by SSM", d.Id()))
 		}
 
 		if err != nil {

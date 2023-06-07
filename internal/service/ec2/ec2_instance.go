@@ -2315,7 +2315,7 @@ func FetchRootDeviceName(ctx context.Context, conn *ec2.EC2, amiID string) (*str
 	}
 
 	if rootDeviceName == nil {
-		return nil, fmt.Errorf("Error finding Root Device Name for AMI (%s)", amiID)
+		return nil, fmt.Errorf("finding Root Device Name for AMI (%s)", amiID)
 	}
 
 	return rootDeviceName, nil
@@ -2431,7 +2431,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 					} else {
 						// Enforce IOPs usage with a valid volume type
 						// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
-						return nil, fmt.Errorf("error creating resource: iops attribute not supported for ebs_block_device with volume_type %s", v)
+						return nil, fmt.Errorf("creating resource: iops attribute not supported for ebs_block_device with volume_type %s", v)
 					}
 				}
 				if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
@@ -2439,7 +2439,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 					if ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						ebs.Throughput = aws.Int64(int64(throughput))
 					} else {
-						return nil, fmt.Errorf("error creating resource: throughput attribute not supported for ebs_block_device with volume_type %s", v)
+						return nil, fmt.Errorf("creating resource: throughput attribute not supported for ebs_block_device with volume_type %s", v)
 					}
 				}
 			}
@@ -2506,7 +2506,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 					} else {
 						// Enforce IOPs usage with a valid volume type
 						// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
-						return nil, fmt.Errorf("error creating resource: iops attribute not supported for root_block_device with volume_type %s", v)
+						return nil, fmt.Errorf("creating resource: iops attribute not supported for root_block_device with volume_type %s", v)
 					}
 				}
 				if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
@@ -2515,7 +2515,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 						ebs.Throughput = aws.Int64(int64(throughput))
 					} else {
 						// Enforce throughput usage with a valid volume type
-						return nil, fmt.Errorf("error creating resource: throughput attribute not supported for root_block_device with volume_type %s", v)
+						return nil, fmt.Errorf("creating resource: throughput attribute not supported for root_block_device with volume_type %s", v)
 					}
 				}
 			}

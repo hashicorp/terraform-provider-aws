@@ -191,7 +191,7 @@ func HostedConfigurationVersionParseID(id string) (string, string, int, error) {
 
 	version, err := strconv.Atoi(parts[2])
 	if err != nil {
-		return "", "", 0, fmt.Errorf("error parsing Hosted Configuration Version version_number: %w", err)
+		return "", "", 0, fmt.Errorf("parsing Hosted Configuration Version version_number: %w", err)
 	}
 
 	return parts[0], parts[1], version, nil

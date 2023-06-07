@@ -97,11 +97,11 @@ func engineVersionIsDowngrade(diff getChangeDiffer) (bool, error) {
 	o, n := diff.GetChange("engine_version")
 	oVersion, err := normalizeEngineVersion(o.(string))
 	if err != nil {
-		return false, fmt.Errorf("error parsing old engine_version: %w", err)
+		return false, fmt.Errorf("parsing old engine_version: %w", err)
 	}
 	nVersion, err := normalizeEngineVersion(n.(string))
 	if err != nil {
-		return false, fmt.Errorf("error parsing new engine_version: %w", err)
+		return false, fmt.Errorf("parsing new engine_version: %w", err)
 	}
 
 	return nVersion.LessThan(oVersion), nil
