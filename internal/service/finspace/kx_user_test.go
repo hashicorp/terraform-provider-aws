@@ -347,7 +347,7 @@ resource "aws_iam_role" "test" {
 resource "aws_finspace_kx_user" "test" {
   name           = %[2]q
   environment_id = aws_finspace_kx_environment.test.id
-  iam_role	 = aws_iam_role.test.arn
+  iam_role       = aws_iam_role.test.arn
   tags = {
     %[3]q = %[4]q
   }
@@ -388,7 +388,7 @@ resource "aws_iam_role" "test" {
 resource "aws_finspace_kx_user" "test" {
   name           = %[2]q
   environment_id = aws_finspace_kx_environment.test.id
-  iam_role	 = aws_iam_role.test.arn
+  iam_role       = aws_iam_role.test.arn
   tags = {
     %[3]q = %[4]q
     %[5]q = %[6]q
