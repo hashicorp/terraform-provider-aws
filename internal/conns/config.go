@@ -218,9 +218,6 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 	client.s3Conn = s3.New(sess.Copy(s3Config))
 
-	s3Config.DisableRestProtocolURICleaning = aws.Bool(true)
-	client.s3ConnURICleaningDisabled = s3.New(sess.Copy(s3Config))
-
 	// "Global" services that require customizations.
 	globalAcceleratorConfig := &aws.Config{
 		Endpoint: aws.String(c.Endpoints[names.GlobalAccelerator]),
