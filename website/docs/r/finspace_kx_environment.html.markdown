@@ -41,7 +41,7 @@ resource "aws_ec2_transit_gateway" "example" {
 resource "aws_finspace_kx_environment" "example_env" {
   name        = "my-tf-kx-environment"
   description = "Environment description"
-  kms_key_id  = aws_kms_key.test.arn
+  kms_key_id  = aws_kms_key.example.arn
 
   transit_gateway_configuration {
     transit_gateway_id  = aws_ec2_transit_gateway.example.id
@@ -106,8 +106,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-FinSpace kdb environments can be imported using the `id`, e.g.,
+An AWS FinSpace Kx Environment can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_finspace_kx_environment.a n3ceo7wqxoxcti5tujqwzs
+$ terraform import aws_finspace_kx_environment.example n3ceo7wqxoxcti5tujqwzs
 ```
