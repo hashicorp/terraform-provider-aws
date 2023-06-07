@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_finspace_kx_environment")
+// @SDKResource("aws_finspace_kx_environment", name="Kx Environment")
 // @Tags(identifierAttribute="arn")
 func ResourceKxEnvironment() *schema.Resource {
 	return &schema.Resource{
