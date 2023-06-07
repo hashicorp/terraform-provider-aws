@@ -493,6 +493,22 @@ func DataSourceGroup() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"traffic_source": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"identifier": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"vpc_zone_identifier": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -589,6 +605,9 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("target_group_arns", aws.StringValueSlice(group.TargetGroupARNs))
 	d.Set("termination_policies", aws.StringValueSlice(group.TerminationPolicies))
+	if err := d.Set("traffic_source", flattenTrafficSourceIdentifiers(group.TrafficSources)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting traffic_source: %s", err)
+	}
 	d.Set("vpc_zone_identifier", group.VPCZoneIdentifier)
 	if group.WarmPoolConfiguration != nil {
 		if err := d.Set("warm_pool", []interface{}{flattenWarmPoolConfiguration(group.WarmPoolConfiguration)}); err != nil {

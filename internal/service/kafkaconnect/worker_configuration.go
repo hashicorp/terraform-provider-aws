@@ -78,7 +78,7 @@ func resourceWorkerConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	output, err := conn.CreateWorkerConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating MSK Connect Worker Configuration (%s): %s", name, err)
+		return diag.Errorf("creating MSK Connect Worker Configuration (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.WorkerConfigurationArn))
@@ -98,7 +98,7 @@ func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading MSK Connect Worker Configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("reading MSK Connect Worker Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", config.WorkerConfigurationArn)

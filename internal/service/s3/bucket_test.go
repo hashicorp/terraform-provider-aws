@@ -423,7 +423,7 @@ func TestAccS3Bucket_Duplicate_UsEast1AltAccount(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketConfig_duplicateAltAccount(endpoints.UsEast1RegionID, bucketName),
-				ExpectError: regexp.MustCompile(s3.ErrCodeBucketAlreadyOwnedByYou),
+				ExpectError: regexp.MustCompile(s3.ErrCodeBucketAlreadyExists),
 			},
 		},
 	})

@@ -285,11 +285,11 @@ func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err := d.Set("pipeline_config", flattenPipelineConfig(resolver.PipelineConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error setting pipeline_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting pipeline_config: %s", err)
 	}
 
 	if err := d.Set("caching_config", flattenCachingConfig(resolver.CachingConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error setting caching_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting caching_config: %s", err)
 	}
 
 	if err := d.Set("runtime", flattenRuntime(resolver.Runtime)); err != nil {

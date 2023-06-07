@@ -143,7 +143,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 	_, err := conn.AssociateIdentityProviderConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error associating EKS Identity Provider Config (%s): %s", idpID, err)
+		return diag.Errorf("associating EKS Identity Provider Config (%s): %s", idpID, err)
 	}
 
 	d.SetId(idpID)
@@ -151,7 +151,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 	_, err = waitOIDCIdentityProviderConfigCreated(ctx, conn, clusterName, configName, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return diag.Errorf("error waiting for EKS Identity Provider Config (%s) association: %s", d.Id(), err)
+		return diag.Errorf("waiting for EKS Identity Provider Config (%s) association: %s", d.Id(), err)
 	}
 
 	return resourceIdentityProviderConfigRead(ctx, d, meta)
@@ -175,14 +175,14 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading EKS Identity Provider Config (%s): %s", d.Id(), err)
+		return diag.Errorf("reading EKS Identity Provider Config (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", oidc.IdentityProviderConfigArn)
 	d.Set("cluster_name", oidc.ClusterName)
 
 	if err := d.Set("oidc", []interface{}{flattenOIDCIdentityProviderConfig(oidc)}); err != nil {
-		return diag.Errorf("error setting oidc: %s", err)
+		return diag.Errorf("setting oidc: %s", err)
 	}
 
 	d.Set("status", oidc.Status)
@@ -224,13 +224,13 @@ func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	if err != nil {
-		return diag.Errorf("error disassociating EKS Identity Provider Config (%s): %s", d.Id(), err)
+		return diag.Errorf("disassociating EKS Identity Provider Config (%s): %s", d.Id(), err)
 	}
 
 	_, err = waitOIDCIdentityProviderConfigDeleted(ctx, conn, clusterName, configName, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return diag.Errorf("error waiting for EKS Identity Provider Config (%s) disassociation: %s", d.Id(), err)
+		return diag.Errorf("waiting for EKS Identity Provider Config (%s) disassociation: %s", d.Id(), err)
 	}
 
 	return nil

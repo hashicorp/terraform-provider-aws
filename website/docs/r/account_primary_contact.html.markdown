@@ -48,3 +48,11 @@ The following arguments are supported:
 ## Attributes Reference
 
 No additional attributes are exported.
+
+## Import
+
+The Primary Contact can be imported using the `account_id`, e.g.,
+
+```
+$ terraform import aws_account_primary_contact.test 1234567890
+```

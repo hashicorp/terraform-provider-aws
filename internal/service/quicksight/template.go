@@ -58,7 +58,7 @@ func ResourceTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"definition": quicksightschema.DefinitionSchema(),
+			"definition": quicksightschema.TemplateDefinitionSchema(),
 			"last_updated_time": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -90,7 +90,7 @@ func ResourceTemplate() *schema.Resource {
 					},
 				},
 			},
-			"source_entity": quicksightschema.SourceEntitySchema(),
+			"source_entity": quicksightschema.TemplateSourceEntitySchema(),
 			"source_entity_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -147,11 +147,11 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("source_entity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SourceEntity = quicksightschema.ExpandSourceEntity(v.([]interface{}))
+		input.SourceEntity = quicksightschema.ExpandTemplateSourceEntity(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("definition"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Definition = quicksightschema.ExpandDefinition(d.Get("definition").([]interface{}))
+		input.Definition = quicksightschema.ExpandTemplateDefinition(d.Get("definition").([]interface{}))
 	}
 
 	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -208,11 +208,11 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if err != nil {
-		return diag.Errorf("error describing QuickSight Template (%s) Definition: %s", d.Id(), err)
+		return diag.Errorf("describing QuickSight Template (%s) Definition: %s", d.Id(), err)
 	}
 
 	if err := d.Set("definition", quicksightschema.FlattenTemplateDefinition(descResp.Definition)); err != nil {
-		return diag.Errorf("error setting definition: %s", err)
+		return diag.Errorf("setting definition: %s", err)
 	}
 
 	permsResp, err := conn.DescribeTemplatePermissionsWithContext(ctx, &quicksight.DescribeTemplatePermissionsInput{
@@ -221,11 +221,11 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if err != nil {
-		return diag.Errorf("error describing QuickSight Template (%s) Permissions: %s", d.Id(), err)
+		return diag.Errorf("describing QuickSight Template (%s) Permissions: %s", d.Id(), err)
 	}
 
 	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("error setting permissions: %s", err)
+		return diag.Errorf("setting permissions: %s", err)
 	}
 
 	return nil
@@ -247,12 +247,11 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			VersionDescription: aws.String(d.Get("version_description").(string)),
 		}
 
-		if d.HasChange("source_entity") {
-			in.SourceEntity = quicksightschema.ExpandSourceEntity(d.Get("source_entity").([]interface{}))
-		}
-
-		if d.HasChange("definition") {
-			in.Definition = quicksightschema.ExpandDefinition(d.Get("definition").([]interface{}))
+		// One of source_entity or definition is required for update
+		if _, ok := d.GetOk("source_entity"); ok {
+			in.SourceEntity = quicksightschema.ExpandTemplateSourceEntity(d.Get("source_entity").([]interface{}))
+		} else {
+			in.Definition = quicksightschema.ExpandTemplateDefinition(d.Get("definition").([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating QuickSight Template (%s): %#v", d.Id(), in)
@@ -289,7 +288,7 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err = conn.UpdateTemplatePermissionsWithContext(ctx, params)
 
 		if err != nil {
-			return diag.Errorf("error updating QuickSight Template (%s) permissions: %s", templateId, err)
+			return diag.Errorf("updating QuickSight Template (%s) permissions: %s", templateId, err)
 		}
 	}
 

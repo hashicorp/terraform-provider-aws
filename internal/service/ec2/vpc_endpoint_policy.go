@@ -77,7 +77,7 @@ func resourceVPCEndpointPolicyPut(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Updating VPC Endpoint Policy: %#v", req)
 	if _, err := conn.ModifyVpcEndpointWithContext(ctx, req); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error updating VPC Endpoint Policy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating VPC Endpoint Policy: %s", err)
 	}
 	d.SetId(endpointID)
 
@@ -135,7 +135,7 @@ func resourceVPCEndpointPolicyDelete(ctx context.Context, d *schema.ResourceData
 
 	log.Printf("[DEBUG] Resetting VPC Endpoint Policy: %#v", req)
 	if _, err := conn.ModifyVpcEndpointWithContext(ctx, req); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error Resetting VPC Endpoint Policy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "Resetting VPC Endpoint Policy: %s", err)
 	}
 
 	_, err := WaitVPCEndpointAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))

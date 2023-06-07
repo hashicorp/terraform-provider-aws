@@ -1403,7 +1403,7 @@ func updateReplica(ctx context.Context, d *schema.ResourceData, conn *dynamodb.D
 	return nil
 }
 
-func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dynamodb.GlobalSecondaryIndexUpdate, e error) {
+func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) ([]*dynamodb.GlobalSecondaryIndexUpdate, error) {
 	// Transform slices into maps
 	oldGsis := make(map[string]interface{})
 	for _, gsidata := range oldGsi {
@@ -1414,11 +1414,13 @@ func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dyn
 	for _, gsidata := range newGsi {
 		m := gsidata.(map[string]interface{})
 		// validate throughput input early, to avoid unnecessary processing
-		if e = validateGSIProvisionedThroughput(m, billingMode); e != nil {
-			return
+		if err := validateGSIProvisionedThroughput(m, billingMode); err != nil {
+			return nil, err
 		}
 		newGsis[m[names.AttrName].(string)] = m
 	}
+
+	var ops []*dynamodb.GlobalSecondaryIndexUpdate
 
 	for _, data := range newGsi {
 		newMap := data.(map[string]interface{})

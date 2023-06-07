@@ -780,7 +780,10 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 		if !c.IsNull() && c.IsKnown() {
 			for k, v := range c.AsValueMap() {
 				if _, ok := configTags[k]; !ok {
-					configTags[k] = v.AsString()
+					// config tags can be null values. Ignore.
+					if !v.IsNull() {
+						configTags[k] = v.AsString()
+					}
 				}
 			}
 		}

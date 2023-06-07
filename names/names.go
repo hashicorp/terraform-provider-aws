@@ -47,6 +47,7 @@ const (
 	SSMEndpointID                        = "ssm"
 	SSMContactsEndpointID                = "ssm-contacts"
 	SSMIncidentsEndpointID               = "ssm-incidents"
+	SWFEndpointID                        = "swf"
 	TranscribeEndpointID                 = "transcribe"
 	VPCLatticeEndpointID                 = "vpc-lattice"
 	XRayEndpointID                       = "xray"

@@ -219,7 +219,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		log.Printf("[DEBUG] Updating WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), input)
 		if _, err := conn.PutLoggingConfigurationWithContext(ctx, input); err != nil {
-			return sdkdiag.AppendErrorf(diags, "Updating WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), err)
 		}
 	}
 
@@ -236,7 +236,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			return conn.UpdateWebACLWithContext(ctx, req)
 		})
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Updating WAF Regional ACL: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Web ACL (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -333,7 +333,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return conn.UpdateWebACLWithContext(ctx, req)
 		})
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Updating WAF Regional ACL: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Web ACL (%s): %s", d.Id(), err)
 		}
 	}
 

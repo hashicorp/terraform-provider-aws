@@ -15,7 +15,7 @@ Creates and manages an AWS XRay Sampling Rule.
 ```terraform
 resource "aws_xray_sampling_rule" "example" {
   rule_name      = "example"
-  priority       = 10000
+  priority       = 9999
   version        = 1
   reservoir_size = 1
   fixed_rate     = 0.05

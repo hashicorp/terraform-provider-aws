@@ -33,7 +33,7 @@ func TestAccVPCEndpoint_gatewayBasic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "cidr_blocks.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "cidr_blocks.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", ""),

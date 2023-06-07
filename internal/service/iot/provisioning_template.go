@@ -144,7 +144,7 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 		iot.ErrCodeInvalidRequestException, "The provisioning role cannot be assumed by AWS IoT")
 
 	if err != nil {
-		return diag.Errorf("error creating IoT Provisioning Template (%s): %s", name, err)
+		return diag.Errorf("creating IoT Provisioning Template (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*iot.CreateProvisioningTemplateOutput).TemplateName))
@@ -164,7 +164,7 @@ func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading IoT Provisioning Template (%s): %s", d.Id(), err)
+		return diag.Errorf("reading IoT Provisioning Template (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.TemplateArn)
@@ -174,7 +174,7 @@ func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("name", output.TemplateName)
 	if output.PreProvisioningHook != nil {
 		if err := d.Set("pre_provisioning_hook", []interface{}{flattenProvisioningHook(output.PreProvisioningHook)}); err != nil {
-			return diag.Errorf("error setting pre_provisioning_hook: %s", err)
+			return diag.Errorf("setting pre_provisioning_hook: %s", err)
 		}
 	} else {
 		d.Set("pre_provisioning_hook", nil)
@@ -199,7 +199,7 @@ func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceD
 		_, err := conn.CreateProvisioningTemplateVersionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("error creating IoT Provisioning Template (%s) version: %s", d.Id(), err)
+			return diag.Errorf("creating IoT Provisioning Template (%s) version: %s", d.Id(), err)
 		}
 	}
 
@@ -219,7 +219,7 @@ func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceD
 			iot.ErrCodeInvalidRequestException, "The provisioning role cannot be assumed by AWS IoT")
 
 		if err != nil {
-			return diag.Errorf("error updating IoT Provisioning Template (%s): %s", d.Id(), err)
+			return diag.Errorf("updating IoT Provisioning Template (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -239,7 +239,7 @@ func resourceProvisioningTemplateDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting IoT Provisioning Template (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting IoT Provisioning Template (%s): %s", d.Id(), err)
 	}
 
 	return nil

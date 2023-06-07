@@ -2491,7 +2491,7 @@ func FindSpotInstanceRequest(ctx context.Context, conn *ec2.EC2, input *ec2.Desc
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil || output[0].State == nil {
+	if len(output) == 0 || output[0] == nil || output[0].Status == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
