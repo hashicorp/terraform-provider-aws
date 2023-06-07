@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/ec2_transit_gateway_route_table_association: added `remove_current_attachment_association` attribute to allow for disassociating a transit gateways currently associated route table before associating the new route table
+resource/ec2_transit_gateway_route_table_association: Add `remove_current_attachment_association` argument
 ```
