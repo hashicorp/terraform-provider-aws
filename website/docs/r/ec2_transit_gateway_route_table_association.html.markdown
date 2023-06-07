@@ -25,7 +25,7 @@ The following arguments are supported:
 
 * `transit_gateway_attachment_id` - (Required) Identifier of EC2 Transit Gateway Attachment.
 * `transit_gateway_route_table_id` - (Required) Identifier of EC2 Transit Gateway Route Table.
-* `remove_current_attachment_association` - (Optional) Boolean whether the Gateway Attachment should remove its current Route Table association before associating with the new Route Table. Default value: `false`.
+* `replace_existing_association` - (Optional) Boolean whether the Gateway Attachment should remove any current Route Table association before associating with the specified Route Table. Default value: `false`.
 
 ## Attributes Reference
 

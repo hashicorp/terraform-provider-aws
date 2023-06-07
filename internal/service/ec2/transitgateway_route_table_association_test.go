@@ -33,17 +33,18 @@ func testAccTransitGatewayRouteTableAssociation_basic(t *testing.T) {
 				Config: testAccTransitGatewayRouteTableAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAssociationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "replace_existing_association", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", transitGatewayVpcAttachmentResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayRouteTableResourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "remove_current_attachment_association"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"replace_existing_association"},
 			},
 		},
 	})
@@ -137,24 +138,7 @@ func testAccCheckTransitGatewayRouteTableAssociationDestroy(ctx context.Context)
 }
 
 func testAccTransitGatewayRouteTableAssociationConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
@@ -162,7 +146,7 @@ resource "aws_ec2_transit_gateway" "test" {
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids                                      = [aws_subnet.test.id]
+  subnet_ids                                      = aws_subnet.test[*].id
   transit_gateway_default_route_table_association = false
   transit_gateway_id                              = aws_ec2_transit_gateway.test.id
   vpc_id                                          = aws_vpc.test.id
@@ -184,5 +168,5 @@ resource "aws_ec2_transit_gateway_route_table_association" "test" {
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test.id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
 }
-`, rName)
+`, rName))
 }

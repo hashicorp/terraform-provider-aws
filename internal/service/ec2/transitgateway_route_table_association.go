@@ -29,7 +29,7 @@ func ResourceTransitGatewayRouteTableAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"remove_current_attachment_association": {
+			"replace_existing_association": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -66,7 +66,7 @@ func resourceTransitGatewayRouteTableAssociationCreate(ctx context.Context, d *s
 	transitGatewayRouteTableID := d.Get("transit_gateway_route_table_id").(string)
 	id := TransitGatewayRouteTableAssociationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-	if d.Get("remove_current_attachment_association").(bool) {
+	if d.Get("replace_existing_association").(bool) {
 		transitGatewayAttachment, err := FindTransitGatewayAttachmentByID(ctx, conn, transitGatewayAttachmentID)
 
 		if err != nil {
