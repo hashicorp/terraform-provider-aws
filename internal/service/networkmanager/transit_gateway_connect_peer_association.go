@@ -153,11 +153,11 @@ func disassociateTransitGatewayConnectPeer(ctx context.Context, conn *networkman
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Network Manager Transit Gateway Connect Peer Association (%s): %w", id, err)
+		return fmt.Errorf("deleting Network Manager Transit Gateway Connect Peer Association (%s): %w", id, err)
 	}
 
 	if _, err := waitTransitGatewayConnectPeerAssociationDeleted(ctx, conn, globalNetworkID, connectPeerARN, timeout); err != nil {
-		return fmt.Errorf("error waiting for Network Manager Transit Gateway Connect Peer Association (%s) delete: %w", id, err)
+		return fmt.Errorf("waiting for Network Manager Transit Gateway Connect Peer Association (%s) delete: %w", id, err)
 	}
 
 	return nil

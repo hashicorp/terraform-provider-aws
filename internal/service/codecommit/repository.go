@@ -182,7 +182,7 @@ func resourceUpdateDescription(ctx context.Context, conn *codecommit.CodeCommit,
 
 	_, err := conn.UpdateRepositoryDescriptionWithContext(ctx, branchInput)
 	if err != nil {
-		return fmt.Errorf("Error Updating Repository Description for CodeCommit Repository: %s", err.Error())
+		return fmt.Errorf("Updating Repository Description for CodeCommit Repository: %s", err.Error())
 	}
 
 	return nil
@@ -195,7 +195,7 @@ func resourceUpdateDefaultBranch(ctx context.Context, conn *codecommit.CodeCommi
 
 	out, err := conn.ListBranchesWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error reading CodeCommit Repository branches: %s", err.Error())
+		return fmt.Errorf("reading CodeCommit Repository branches: %s", err.Error())
 	}
 
 	if len(out.Branches) == 0 {
@@ -210,7 +210,7 @@ func resourceUpdateDefaultBranch(ctx context.Context, conn *codecommit.CodeCommi
 
 	_, err = conn.UpdateDefaultBranchWithContext(ctx, branchInput)
 	if err != nil {
-		return fmt.Errorf("Error Updating Default Branch for CodeCommit Repository: %s", err.Error())
+		return fmt.Errorf("Updating Default Branch for CodeCommit Repository: %s", err.Error())
 	}
 
 	return nil
