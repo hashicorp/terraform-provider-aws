@@ -4641,7 +4641,6 @@ func FindTransitGatewayStaticRoute(ctx context.Context, conn *ec2.EC2, transitGa
 	}
 
 	return nil, &retry.NotFoundError{}
-
 }
 
 func FindTransitGatewayRoutes(ctx context.Context, conn *ec2.EC2, input *ec2.SearchTransitGatewayRoutesInput) ([]*ec2.TransitGatewayRoute, error) {
@@ -4663,7 +4662,6 @@ func FindTransitGatewayRoutes(ctx context.Context, conn *ec2.EC2, input *ec2.Sea
 	}
 
 	return output.Routes, err
-
 }
 
 func FindTransitGatewayPolicyTable(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeTransitGatewayPolicyTablesInput) (*ec2.TransitGatewayPolicyTable, error) {

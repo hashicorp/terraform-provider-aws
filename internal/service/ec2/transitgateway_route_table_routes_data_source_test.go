@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -23,7 +23,7 @@ func testAccTransitGatewayRouteTableRoutesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccTransitGatewayRouteTableRoutesDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "routes.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "routes.#", 0),
 				),
 			},
 		},
@@ -43,7 +43,7 @@ func testAccTransitGatewayRouteTableRoutesDataSource_filter(t *testing.T) {
 			{
 				Config: testAccTransitGatewayRouteTableRoutesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "routes.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "routes.#", 1),
 				),
 			},
 		},
@@ -92,9 +92,7 @@ data "aws_ec2_transit_gateway_route_table_routes" "test" {
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
   depends_on                     = [aws_ec2_transit_gateway_route_table_association.test, aws_ec2_transit_gateway_route_table_propagation.test]
 }
-
-
-  `, rName))
+`, rName))
 }
 
 func testAccTransitGatewayRouteTableRoutesDataSourceConfig_filter(rName string) string {
@@ -145,6 +143,5 @@ data "aws_ec2_transit_gateway_route_table_routes" "test" {
 
   depends_on = [aws_ec2_transit_gateway_route_table_association.test, aws_ec2_transit_gateway_route_table_propagation.test]
 }
-
-  `, rName))
+`, rName))
 }
