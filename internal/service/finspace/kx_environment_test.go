@@ -28,6 +28,7 @@ func TestAccFinSpaceKxEnvironment_basic(t *testing.T) {
 	var kxenvironment finspace.GetKxEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_environment.test"
+	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -42,6 +43,8 @@ func TestAccFinSpaceKxEnvironment_basic(t *testing.T) {
 				Config: testAccKxEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(resourceName, &kxenvironment),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
 			{
@@ -112,7 +115,7 @@ func TestAccFinSpaceKxEnvironment_updateName(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccKxEnvironmentConfig_updateName(rName, rName2),
+				Config: testAccKxEnvironmentConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(resourceName, &kxenvironment),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
@@ -338,56 +341,41 @@ func testAccCheckKxEnvironmentExists(name string, kxenvironment *finspace.GetKxE
 	}
 }
 
-func testAccKxEnvironmentConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+func testAccKxEnvironmentConfigBase() string {
+	return `
 resource "aws_kms_key" "test" {
-  description             = %[1]q
   deletion_window_in_days = 7
 }
+`
+}
 
+func testAccKxEnvironmentConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKxEnvironmentConfigBase(),
+		fmt.Sprintf(`
 resource "aws_finspace_kx_environment" "test" {
   name       = %[1]q
   kms_key_id = aws_kms_key.test.arn
 }
-`, rName)
-}
-
-func testAccKxEnvironmentConfig_updateName(rName, rName2 string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
-resource "aws_finspace_kx_environment" "test" {
-  name       = %[2]q
-  kms_key_id = aws_kms_key.test.arn
-}
-`, rName, rName2)
+`, rName))
 }
 
 func testAccKxEnvironmentConfig_description(rName, desc string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
+	return acctest.ConfigCompose(
+		testAccKxEnvironmentConfigBase(),
+		fmt.Sprintf(`
 resource "aws_finspace_kx_environment" "test" {
   name        = %[1]q
   kms_key_id  = aws_kms_key.test.arn
   description = %[2]q
 }
-`, rName, desc)
+`, rName, desc))
 }
 
 func testAccKxEnvironmentConfig_tgwConfig(rName, cidr string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
+	return acctest.ConfigCompose(
+		testAccKxEnvironmentConfigBase(),
+		fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   description = "test"
 }
@@ -395,67 +383,58 @@ resource "aws_ec2_transit_gateway" "test" {
 resource "aws_finspace_kx_environment" "test" {
   name       = %[1]q
   kms_key_id = aws_kms_key.test.arn
+
   transit_gateway_configuration {
     transit_gateway_id  = aws_ec2_transit_gateway.test.id
     routable_cidr_space = %[2]q
   }
-
 }
-`, rName, cidr)
+`, rName, cidr))
 }
 
 func testAccKxEnvironmentConfig_dnsConfig(rName, serverName, serverIP string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
+	return acctest.ConfigCompose(
+		testAccKxEnvironmentConfigBase(),
+		fmt.Sprintf(`
 resource "aws_finspace_kx_environment" "test" {
   name       = %[1]q
   kms_key_id = aws_kms_key.test.arn
+
   custom_dns_configuration {
     custom_dns_server_name = %[2]q
     custom_dns_server_ip   = %[3]q
   }
-
 }
-`, rName, serverName, serverIP)
+`, rName, serverName, serverIP))
 }
 
 func testAccKxEnvironmentConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
+	return acctest.ConfigCompose(
+		testAccKxEnvironmentConfigBase(),
+		fmt.Sprintf(`
 resource "aws_finspace_kx_environment" "test" {
   name       = %[1]q
   kms_key_id = aws_kms_key.test.arn
+
   tags = {
     %[2]q = %[3]q
   }
-
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccKxEnvironmentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
+	return acctest.ConfigCompose(
+		testAccKxEnvironmentConfigBase(),
+		fmt.Sprintf(`
 resource "aws_finspace_kx_environment" "test" {
   name       = %[1]q
   kms_key_id = aws_kms_key.test.arn
+
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
-
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
