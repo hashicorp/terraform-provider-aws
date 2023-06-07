@@ -70,7 +70,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	out, err := conn.CreateDataSetWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating DataExchange DataSet: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DataExchange DataSet: %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.Id))
@@ -124,7 +124,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		log.Printf("[DEBUG] Updating DataExchange DataSet: %s", d.Id())
 		_, err := conn.UpdateDataSetWithContext(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error Updating DataExchange DataSet: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating DataExchange DataSet (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -145,7 +145,7 @@ func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta int
 		if tfawserr.ErrCodeEquals(err, dataexchange.ErrCodeResourceNotFoundException) {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "Error deleting DataExchange DataSet: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting DataExchange DataSet: %s", err)
 	}
 
 	return diags

@@ -251,7 +251,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
 
 	if err != nil {
-		return diag.Errorf("error reading Route 53 Domains Domain (%s): %s", domainName, err)
+		return diag.Errorf("reading Route 53 Domains Domain (%s): %s", domainName, err)
 	}
 
 	d.SetId(aws.ToString(domainDetail.DomainName))
@@ -313,7 +313,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
-		return diag.Errorf("error listing tags for Route 53 Domains Domain (%s): %s", d.Id(), err)
+		return diag.Errorf("listing tags for Route 53 Domains Domain (%s): %s", d.Id(), err)
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -322,7 +322,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 
 	if !oldTags.Equal(newTags) {
 		if err := UpdateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
-			return diag.Errorf("error updating Route 53 Domains Domain (%s) tags: %s", d.Id(), err)
+			return diag.Errorf("updating Route 53 Domains Domain (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -341,14 +341,14 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Route 53 Domains Domain (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Route 53 Domains Domain (%s): %s", d.Id(), err)
 	}
 
 	d.Set("abuse_contact_email", domainDetail.AbuseContactEmail)
 	d.Set("abuse_contact_phone", domainDetail.AbuseContactPhone)
 	if domainDetail.AdminContact != nil {
 		if err := d.Set("admin_contact", []interface{}{flattenContactDetail(domainDetail.AdminContact)}); err != nil {
-			return diag.Errorf("error setting admin_contact: %s", err)
+			return diag.Errorf("setting admin_contact: %s", err)
 		}
 	} else {
 		d.Set("admin_contact", nil)
@@ -367,11 +367,11 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("expiration_date", nil)
 	}
 	if err := d.Set("name_server", flattenNameservers(domainDetail.Nameservers)); err != nil {
-		return diag.Errorf("error setting name_servers: %s", err)
+		return diag.Errorf("setting name_servers: %s", err)
 	}
 	if domainDetail.RegistrantContact != nil {
 		if err := d.Set("registrant_contact", []interface{}{flattenContactDetail(domainDetail.RegistrantContact)}); err != nil {
-			return diag.Errorf("error setting registrant_contact: %s", err)
+			return diag.Errorf("setting registrant_contact: %s", err)
 		}
 	} else {
 		d.Set("registrant_contact", nil)
@@ -384,7 +384,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("status_list", statusList)
 	if domainDetail.TechContact != nil {
 		if err := d.Set("tech_contact", []interface{}{flattenContactDetail(domainDetail.TechContact)}); err != nil {
-			return diag.Errorf("error setting tech_contact: %s", err)
+			return diag.Errorf("setting tech_contact: %s", err)
 		}
 	} else {
 		d.Set("tech_contact", nil)

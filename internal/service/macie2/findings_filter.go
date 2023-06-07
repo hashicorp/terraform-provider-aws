@@ -144,7 +144,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 	var err error
 	input.FindingCriteria, err = expandFindingCriteriaFilter(d.Get("finding_criteria").([]interface{}))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Macie FindingsFilter: %w", err))
+		return diag.Errorf("creating Macie FindingsFilter: %s", err)
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -174,7 +174,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Macie FindingsFilter: %w", err))
+		return diag.Errorf("creating Macie FindingsFilter: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Id))
@@ -199,11 +199,11 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Macie FindingsFilter (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Macie FindingsFilter (%s): %s", d.Id(), err)
 	}
 
 	if err = d.Set("finding_criteria", flattenFindingCriteriaFindingsFilter(resp.FindingCriteria)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie FindingsFilter (%s): %w", "finding_criteria", d.Id(), err))
+		return diag.Errorf("setting `%s` for Macie FindingsFilter (%s): %s", "finding_criteria", d.Id(), err)
 	}
 	d.Set("name", resp.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
@@ -229,7 +229,7 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange("finding_criteria") {
 		input.FindingCriteria, err = expandFindingCriteriaFilter(d.Get("finding_criteria").([]interface{}))
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Macie FindingsFilter (%s): %w", d.Id(), err))
+			return diag.Errorf("updating Macie FindingsFilter (%s): %s", d.Id(), err)
 		}
 	}
 	if d.HasChange("name") {
@@ -250,7 +250,7 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	_, err = conn.UpdateFindingsFilterWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating Macie FindingsFilter (%s): %w", d.Id(), err))
+		return diag.Errorf("updating Macie FindingsFilter (%s): %s", d.Id(), err)
 	}
 
 	return resourceFindingsFilterRead(ctx, d, meta)
@@ -269,7 +269,7 @@ func resourceFindingsFilterDelete(ctx context.Context, d *schema.ResourceData, m
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error deleting Macie FindingsFilter (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Macie FindingsFilter (%s): %s", d.Id(), err)
 	}
 	return nil
 }

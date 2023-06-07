@@ -34,7 +34,7 @@ func dataSourceEBSDefaultKMSKeyRead(ctx context.Context, d *schema.ResourceData,
 
 	res, err := conn.GetEbsDefaultKmsKeyIdWithContext(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error reading EBS default KMS key: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading EBS default KMS key: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

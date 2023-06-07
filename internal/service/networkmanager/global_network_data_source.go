@@ -40,7 +40,7 @@ func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, me
 	globalNetwork, err := FindGlobalNetworkByID(ctx, conn, globalNetworkID)
 
 	if err != nil {
-		return diag.Errorf("error reading Network Manager Global Network (%s): %s", globalNetworkID, err)
+		return diag.Errorf("reading Network Manager Global Network (%s): %s", globalNetworkID, err)
 	}
 
 	d.SetId(globalNetworkID)
@@ -49,7 +49,7 @@ func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("global_network_id", globalNetwork.GlobalNetworkId)
 
 	if err := d.Set("tags", KeyValueTags(ctx, globalNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil
