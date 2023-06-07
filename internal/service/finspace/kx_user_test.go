@@ -226,25 +226,25 @@ func testAccCheckKxUserExists(name string, kxuser *finspace.GetKxUserOutput) res
 func testAccKxUserConfig_basic(rName, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
- description             = %[1]q
- deletion_window_in_days = 7
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_finspace_kx_environment" "test" {
- name     		= %[1]q
- kms_key_id 	= aws_kms_key.test.arn
+  name     	 = %[1]q
+  kms_key_id = aws_kms_key.test.arn
 }
 
 resource "aws_iam_role" "test" {
-  name               = %[1]q
+  name = %[1]q
 
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
-        Sid       = ""
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
         Principal = {
           Service = "ec2.amazonaws.com"
         }
@@ -254,9 +254,9 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_finspace_kx_user" "test" {
-  name           	= %[2]q
-  environment_id	= aws_finspace_kx_environment.test.id
-  iam_role			= aws_iam_role.test.arn
+  name           = %[2]q
+  environment_id = aws_finspace_kx_environment.test.id
+  iam_role		 = aws_iam_role.test.arn
 }
 `, rName, userName)
 }
@@ -264,25 +264,24 @@ resource "aws_finspace_kx_user" "test" {
 func testAccKxUserConfig_updateRole(rName, rName2, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
- description             = %[1]q
- deletion_window_in_days = 7
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_finspace_kx_environment" "test" {
- name     		= %[1]q
- kms_key_id 	= aws_kms_key.test.arn
+  name     	 = %[1]q
+  kms_key_id = aws_kms_key.test.arn
 }
 
 resource "aws_iam_role" "test" {
-  name               = %[1]q
-
+  name = %[1]q
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
-        Sid       = ""
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
         Principal = {
           Service = "ec2.amazonaws.com"
         }
@@ -293,14 +292,13 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iam_role" "updated" {
   name = %[2]q
-
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
-        Sid       = ""
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
         Principal = {
           Service = "ec2.amazonaws.com"
         }
@@ -310,9 +308,9 @@ resource "aws_iam_role" "updated" {
 }
 
 resource "aws_finspace_kx_user" "test" {
-  name           	= %[3]q
-  environment_id	= aws_finspace_kx_environment.test.id
-  iam_role			= aws_iam_role.updated.arn
+  name           = %[3]q
+  environment_id = aws_finspace_kx_environment.test.id
+  iam_role		 = aws_iam_role.updated.arn
 }
 `, rName, rName2, userName)
 }
@@ -320,25 +318,24 @@ resource "aws_finspace_kx_user" "test" {
 func testAccKxUserConfig_tags1(rName, userName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
- description             = %[1]q
- deletion_window_in_days = 7
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_finspace_kx_environment" "test" {
- name     		= %[1]q
- kms_key_id 	= aws_kms_key.test.arn
+  name     	 = %[1]q
+  kms_key_id = aws_kms_key.test.arn
 }
 
 resource "aws_iam_role" "test" {
   name = %[1]q
-
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
-        Sid       = ""
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
         Principal = {
           Service = "ec2.amazonaws.com"
         }
@@ -348,9 +345,9 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_finspace_kx_user" "test" {
-  name           	= %[2]q
-  environment_id	= aws_finspace_kx_environment.test.id
-  iam_role			= aws_iam_role.test.arn
+  name           = %[2]q
+  environment_id = aws_finspace_kx_environment.test.id
+  iam_role		 = aws_iam_role.test.arn
   tags = {
     %[3]q = %[4]q
   }
@@ -362,25 +359,24 @@ resource "aws_finspace_kx_user" "test" {
 func testAccKxUserConfig_tags2(rName, userName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
- description             = %[1]q
- deletion_window_in_days = 7
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_finspace_kx_environment" "test" {
- name     		= %[1]q
- kms_key_id 	= aws_kms_key.test.arn
+  name     	 = %[1]q
+  kms_key_id = aws_kms_key.test.arn
 }
 
 resource "aws_iam_role" "test" {
   name = %[1]q
-
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
-        Sid       = ""
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
         Principal = {
           Service = "ec2.amazonaws.com"
         }
@@ -390,12 +386,12 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_finspace_kx_user" "test" {
-  name           	= %[2]q
-  environment_id	= aws_finspace_kx_environment.test.id
-  iam_role			= aws_iam_role.test.arn
+  name           = %[2]q
+  environment_id = aws_finspace_kx_environment.test.id
+  iam_role		 = aws_iam_role.test.arn
   tags = {
     %[3]q = %[4]q
-	%[5]q = %[6]q
+    %[5]q = %[6]q
   }
 }
 `, rName, userName, tagKey1, tagValue1, tagKey2, tagValue2)
