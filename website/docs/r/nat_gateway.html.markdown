@@ -33,10 +33,10 @@ resource "aws_nat_gateway" "example" {
 
 ```terraform
 resource "aws_nat_gateway" "example" {
-  allocation_id                     = aws_eip.example.id
-  subnet_id                         = aws_subnet.example.id
-  secondary_allocation_ids          = [aws_eip.secondary.id]
-  secondary_private_ip_addresses    = ["10.0.1.5"]
+  allocation_id                   = aws_eip.example.id
+  subnet_id                       = aws_subnet.example.id
+  secondary_allocation_ids        = [aws_eip.secondary.id]
+  secondary_private_ip_addresses  = ["10.0.1.5"]
 }
 ```
 
