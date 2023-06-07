@@ -17,6 +17,7 @@ import (
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/glacier"
 	"github.com/aws/aws-sdk-go-v2/service/healthlake"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
@@ -158,7 +159,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/frauddetector"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/gluedatabrew"
 	"github.com/aws/aws-sdk-go/service/greengrass"
@@ -436,7 +436,6 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.forecastqueryConn = forecastqueryservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ForecastQuery])}))
 	client.frauddetectorConn = frauddetector.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.FraudDetector])}))
 	client.gameliftConn = gamelift.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.GameLift])}))
-	client.glacierConn = glacier.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Glacier])}))
 	client.glueConn = glue.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Glue])}))
 	client.grafanaConn = managedgrafana.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Grafana])}))
 	client.greengrassConn = greengrass.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Greengrass])}))
@@ -658,6 +657,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 	client.finspaceClient = finspace.NewFromConfig(cfg, func(o *finspace.Options) {
 		if endpoint := c.Endpoints[names.FinSpace]; endpoint != "" {
 			o.EndpointResolver = finspace.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.glacierClient = glacier.NewFromConfig(cfg, func(o *glacier.Options) {
+		if endpoint := c.Endpoints[names.Glacier]; endpoint != "" {
+			o.EndpointResolver = glacier.EndpointResolverFromURL(endpoint)
 		}
 	})
 	client.healthlakeClient = healthlake.NewFromConfig(cfg, func(o *healthlake.Options) {
