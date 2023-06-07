@@ -36,7 +36,7 @@ func resourceSerialConsoleAccessCreate(ctx context.Context, d *schema.ResourceDa
 
 	enabled := d.Get("enabled").(bool)
 	if err := setSerialConsoleAccess(ctx, conn, enabled); err != nil {
-		return diag.Errorf("error setting EC2 Serial Console Access (%t): %s", enabled, err)
+		return diag.Errorf("setting EC2 Serial Console Access (%t): %s", enabled, err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
@@ -50,7 +50,7 @@ func resourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData
 	output, err := conn.GetSerialConsoleAccessStatusWithContext(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Serial Console Access: %s", err)
+		return diag.Errorf("reading EC2 Serial Console Access: %s", err)
 	}
 
 	d.Set("enabled", output.SerialConsoleAccessEnabled)
@@ -63,7 +63,7 @@ func resourceSerialConsoleAccessUpdate(ctx context.Context, d *schema.ResourceDa
 
 	enabled := d.Get("enabled").(bool)
 	if err := setSerialConsoleAccess(ctx, conn, enabled); err != nil {
-		return diag.Errorf("error updating EC2 Serial Console Access (%t): %s", enabled, err)
+		return diag.Errorf("updating EC2 Serial Console Access (%t): %s", enabled, err)
 	}
 
 	return resourceSerialConsoleAccessRead(ctx, d, meta)
@@ -74,7 +74,7 @@ func resourceSerialConsoleAccessDelete(ctx context.Context, d *schema.ResourceDa
 
 	// Removing the resource disables serial console access.
 	if err := setSerialConsoleAccess(ctx, conn, false); err != nil {
-		return diag.Errorf("error disabling EC2 Serial Console Access: %s", err)
+		return diag.Errorf("disabling EC2 Serial Console Access: %s", err)
 	}
 
 	return nil

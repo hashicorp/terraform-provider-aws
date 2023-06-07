@@ -115,7 +115,7 @@ func resourceIdentityProviderCreate(ctx context.Context, d *schema.ResourceData,
 
 	_, err := conn.CreateIdentityProviderWithContext(ctx, params)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating Cognito Identity Provider: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Cognito Identity Provider: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", userPoolID, providerName))

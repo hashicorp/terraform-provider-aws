@@ -116,7 +116,7 @@ func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta
 		defer conns.GlobalMutexKV.Unlock(contactFlowMutexKey)
 		file, err := resourceContactFlowLoadFileContent(filename)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
+			return diag.Errorf("unable to load %q: %s", filename, err)
 		}
 		input.Content = aws.String(file)
 	} else if v, ok := d.GetOk("content"); ok {
@@ -126,11 +126,11 @@ func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta
 	output, err := conn.CreateContactFlowWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Contact Flow (%s): %w", name, err))
+		return diag.Errorf("creating Connect Contact Flow (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Contact Flow (%s): empty output", name))
+		return diag.Errorf("creating Connect Contact Flow (%s): empty output", name)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.ContactFlowId)))
@@ -159,11 +159,11 @@ func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow (%s): %w", d.Id(), err))
+		return diag.Errorf("getting Connect Contact Flow (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.ContactFlow == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow (%s): empty response", d.Id()))
+		return diag.Errorf("getting Connect Contact Flow (%s): empty response", d.Id())
 	}
 
 	d.Set("arn", resp.ContactFlow.Arn)
@@ -199,7 +199,7 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, updateMetadataInputErr := conn.UpdateContactFlowNameWithContext(ctx, updateMetadataInput)
 
 		if updateMetadataInputErr != nil {
-			return diag.FromErr(fmt.Errorf("error updating Connect Contact Flow (%s): %w", d.Id(), updateMetadataInputErr))
+			return diag.Errorf("updating Connect Contact Flow (%s): %s", d.Id(), updateMetadataInputErr)
 		}
 	}
 
@@ -218,7 +218,7 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 			defer conns.GlobalMutexKV.Unlock(contactFlowMutexKey)
 			file, err := resourceContactFlowLoadFileContent(filename)
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
+				return diag.Errorf("unable to load %q: %s", filename, err)
 			}
 			updateContentInput.Content = aws.String(file)
 		} else if v, ok := d.GetOk("content"); ok {
@@ -228,7 +228,7 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, updateContentInputErr := conn.UpdateContactFlowContentWithContext(ctx, updateContentInput)
 
 		if updateContentInputErr != nil {
-			return diag.FromErr(fmt.Errorf("error updating Connect Contact Flow content (%s): %w", d.Id(), updateContentInputErr))
+			return diag.Errorf("updating Connect Contact Flow content (%s): %s", d.Id(), updateContentInputErr)
 		}
 	}
 
@@ -254,7 +254,7 @@ func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta
 	_, deleteContactFlowErr := conn.DeleteContactFlowWithContext(ctx, input)
 
 	if deleteContactFlowErr != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Connect Contact Flow (%s): %w", d.Id(), deleteContactFlowErr))
+		return diag.Errorf("deleting Connect Contact Flow (%s): %s", d.Id(), deleteContactFlowErr)
 	}
 
 	return nil

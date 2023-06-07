@@ -143,7 +143,7 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	webhook, err := conn.PutWebhookWithContext(ctx, request)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating webhook: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating webhook: %s", err)
 	}
 
 	d.SetId(aws.StringValue(webhook.Webhook.Arn))
@@ -220,7 +220,7 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err := conn.PutWebhookWithContext(ctx, request)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error updating webhook: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating webhook: %s", err)
 		}
 	}
 

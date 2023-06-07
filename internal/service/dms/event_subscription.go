@@ -154,7 +154,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error reading DMS event subscription: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading DMS event subscription: %s", err)
 	}
 
 	if response == nil || len(response.EventSubscriptionsList) == 0 || response.EventSubscriptionsList[0] == nil {

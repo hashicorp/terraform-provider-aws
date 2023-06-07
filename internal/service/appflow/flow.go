@@ -1280,26 +1280,26 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrDescription, out2.Description)
 
 	if err := d.Set("destination_flow_config", flattenDestinationFlowConfigs(out2.DestinationFlowConfigList)); err != nil {
-		return diag.Errorf("error setting destination_flow_config: %s", err)
+		return diag.Errorf("setting destination_flow_config: %s", err)
 	}
 
 	d.Set("kms_arn", out2.KmsArn)
 
 	if out2.SourceFlowConfig != nil {
 		if err := d.Set("source_flow_config", []interface{}{flattenSourceFlowConfig(out2.SourceFlowConfig)}); err != nil {
-			return diag.Errorf("error setting source_flow_config: %s", err)
+			return diag.Errorf("setting source_flow_config: %s", err)
 		}
 	} else {
 		d.Set("source_flow_config", nil)
 	}
 
 	if err := d.Set("task", flattenTasks(out2.Tasks)); err != nil {
-		return diag.Errorf("error setting task: %s", err)
+		return diag.Errorf("setting task: %s", err)
 	}
 
 	if out2.TriggerConfig != nil {
 		if err := d.Set("trigger_config", []interface{}{flattenTriggerConfig(out2.TriggerConfig)}); err != nil {
-			return diag.Errorf("error setting trigger_config: %s", err)
+			return diag.Errorf("setting trigger_config: %s", err)
 		}
 	} else {
 		d.Set("trigger_config", nil)

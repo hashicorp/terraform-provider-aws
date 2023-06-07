@@ -64,7 +64,7 @@ func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceD
 	_, err := conn.CreatePullThroughCacheRuleWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
+		return diag.Errorf("creating ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
 	}
 
 	d.SetId(repositoryPrefix)
@@ -84,7 +84,7 @@ func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
+		return diag.Errorf("reading ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
 	}
 
 	d.Set("ecr_repository_prefix", rule.EcrRepositoryPrefix)
@@ -108,7 +108,7 @@ func resourcePullThroughCacheRuleDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
 	}
 
 	return nil
