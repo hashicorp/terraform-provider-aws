@@ -2,7 +2,6 @@ package macie2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -126,7 +125,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Macie Member: %w", err))
+		return diag.Errorf("creating Macie Member: %s", err)
 	}
 
 	d.SetId(accountId)
@@ -170,15 +169,15 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error inviting Macie Member: %w", err))
+		return diag.Errorf("inviting Macie Member: %s", err)
 	}
 
 	if len(output.UnprocessedAccounts) != 0 {
-		return diag.FromErr(fmt.Errorf("error inviting Macie Member: %s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage)))
+		return diag.Errorf("inviting Macie Member: %s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage))
 	}
 
 	if _, err = waitMemberInvited(ctx, conn, d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for Macie Member (%s) invitation: %w", d.Id(), err))
+		return diag.Errorf("waiting for Macie Member (%s) invitation: %s", d.Id(), err)
 	}
 
 	return resourceMemberRead(ctx, d, meta)
@@ -203,7 +202,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Macie Member (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Macie Member (%s): %s", d.Id(), err)
 	}
 
 	d.Set("account_id", resp.AccountId)
@@ -280,15 +279,15 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("error inviting Macie Member: %w", err))
+				return diag.Errorf("inviting Macie Member: %s", err)
 			}
 
 			if len(output.UnprocessedAccounts) != 0 {
-				return diag.FromErr(fmt.Errorf("error inviting Macie Member: %s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage)))
+				return diag.Errorf("inviting Macie Member: %s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage))
 			}
 
 			if _, err = waitMemberInvited(ctx, conn, d.Id()); err != nil {
-				return diag.FromErr(fmt.Errorf("error waiting for Macie Member (%s) invitation: %w", d.Id(), err))
+				return diag.Errorf("waiting for Macie Member (%s) invitation: %s", d.Id(), err)
 			}
 		} else {
 			input := &macie2.DisassociateMemberInput{
@@ -301,7 +300,7 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 					tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 					return nil
 				}
-				return diag.FromErr(fmt.Errorf("error disassociating Macie Member invite (%s): %w", d.Id(), err))
+				return diag.Errorf("disassociating Macie Member invite (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -316,7 +315,7 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		_, err := conn.UpdateMemberSessionWithContext(ctx, input)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Macie Member (%s): %w", d.Id(), err))
+			return diag.Errorf("updating Macie Member (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -338,7 +337,7 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "account is not associated with your account") {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error deleting Macie Member (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Macie Member (%s): %s", d.Id(), err)
 	}
 	return nil
 }

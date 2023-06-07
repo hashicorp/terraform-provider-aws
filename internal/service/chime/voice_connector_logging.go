@@ -57,7 +57,7 @@ func resourceVoiceConnectorLoggingCreate(ctx context.Context, d *schema.Resource
 	}
 
 	if _, err := conn.PutVoiceConnectorLoggingConfigurationWithContext(ctx, input); err != nil {
-		return diag.Errorf("error creating Chime Voice Connector (%s) logging configuration: %s", vcId, err)
+		return diag.Errorf("creating Chime Voice Connector (%s) logging configuration: %s", vcId, err)
 	}
 
 	d.SetId(vcId)
@@ -79,7 +79,7 @@ func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if err != nil || resp.LoggingConfiguration == nil {
-		return diag.Errorf("error getting Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
+		return diag.Errorf("getting Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
 	}
 	d.Set("enable_media_metric_logs", resp.LoggingConfiguration.EnableMediaMetricLogs)
 	d.Set("enable_sip_logs", resp.LoggingConfiguration.EnableSIPLogs)
@@ -101,7 +101,7 @@ func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		if _, err := conn.PutVoiceConnectorLoggingConfigurationWithContext(ctx, input); err != nil {
-			return diag.Errorf("error updating Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
+			return diag.Errorf("updating Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
 		}
 	}
 
@@ -126,7 +126,7 @@ func resourceVoiceConnectorLoggingDelete(ctx context.Context, d *schema.Resource
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
+		return diag.Errorf("deleting Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
 	}
 
 	return nil

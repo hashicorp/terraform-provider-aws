@@ -1203,7 +1203,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			networkInterfaces = append(networkInterfaces, ni)
 		}
 		if err := d.Set("network_interface", networkInterfaces); err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error setting network_interfaces: %v", err)
+			return sdkdiag.AppendErrorf(diags, "setting network_interfaces: %v", err)
 		}
 
 		// Set primary network interface details
@@ -1241,7 +1241,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err := d.Set("secondary_private_ips", secondaryPrivateIPs); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error setting private_ips for AWS Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting private_ips for AWS Instance (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {
@@ -1779,7 +1779,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			})
 		}
 		if mErr != nil {
-			return sdkdiag.AppendErrorf(diags, "Error updating Instance monitoring: %s", mErr)
+			return sdkdiag.AppendErrorf(diags, "updating Instance monitoring: %s", mErr)
 		}
 	}
 

@@ -580,7 +580,7 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		resp, err = conn.CreateDeploymentGroupWithContext(ctx, &input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating CodeDeploy deployment group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy deployment group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.DeploymentGroupId))
