@@ -191,7 +191,7 @@ func vaultLockRefreshFunc(ctx context.Context, conn *glacier.Glacier, vaultName 
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error reading Glacier Vault Lock (%s): %s", vaultName, err)
+			return nil, "", fmt.Errorf("reading Glacier Vault Lock (%s): %s", vaultName, err)
 		}
 
 		if output == nil {
