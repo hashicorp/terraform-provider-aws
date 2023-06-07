@@ -229,7 +229,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name.      = %[1]q
+  name       = %[1]q
   kms_key_id = aws_kms_key.test.arn
 }
 
