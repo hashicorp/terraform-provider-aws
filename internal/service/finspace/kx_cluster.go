@@ -538,8 +538,8 @@ func resourceKxClusterDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 func waitKxClusterCreated(ctx context.Context, conn *finspace.Client, clusterName string, environmentId string, timeout time.Duration) (*finspace.GetKxClusterOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(types.KxClusterStatusPending), string(types.KxClusterStatusCreating)},
-		Target:                    []string{string(types.KxClusterStatusRunning)},
+		Pending:                   enum.Slice(types.KxClusterStatusPending, types.KxClusterStatusCreating),
+		Target:                    enum.Slice(types.KxClusterStatusRunning),
 		Refresh:                   statusKxCluster(ctx, conn, clusterName, environmentId),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -556,8 +556,8 @@ func waitKxClusterCreated(ctx context.Context, conn *finspace.Client, clusterNam
 
 func waitKxClusterDeleted(ctx context.Context, conn *finspace.Client, clusterName string, environmentId string, timeout time.Duration) (*finspace.GetKxClusterOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(types.KxClusterStatusDeleting)},
-		Target:  []string{string(types.KxClusterStatusDeleted)},
+		Pending: enum.Slice(types.KxClusterStatusDeleting),
+		Target:  enum.Slice(types.KxClusterStatusDeleted),
 		Refresh: statusKxCluster(ctx, conn, clusterName, environmentId),
 		Timeout: timeout,
 	}
