@@ -42,7 +42,7 @@ resource "aws_finspace_kx_environment" "example_env" {
   name        = "my-tf-kx-environment"
   description = "Environment description"
   kms_key_id  = aws_kms_key.test.arn
-  
+
   transit_gateway_configuration {
     transit_gateway_id  = aws_ec2_transit_gateway.example.id
     routable_cidr_space = "100.64.0.0/26"
