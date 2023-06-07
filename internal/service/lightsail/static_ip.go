@@ -4,12 +4,13 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -44,11 +45,11 @@ func ResourceStaticIP() *schema.Resource {
 
 func resourceStaticIPCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient()
 
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Allocating Lightsail Static IP: %q", name)
-	_, err := conn.AllocateStaticIpWithContext(ctx, &lightsail.AllocateStaticIpInput{
+	_, err := conn.AllocateStaticIp(ctx, &lightsail.AllocateStaticIpInput{
 		StaticIpName: aws.String(name),
 	})
 	if err != nil {
@@ -62,15 +63,15 @@ func resourceStaticIPCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceStaticIPRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient()
 
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Reading Lightsail Static IP: %q", name)
-	out, err := conn.GetStaticIpWithContext(ctx, &lightsail.GetStaticIpInput{
+	out, err := conn.GetStaticIp(ctx, &lightsail.GetStaticIpInput{
 		StaticIpName: aws.String(name),
 	})
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		if errs.IsA[*types.NotFoundException](err) {
 			log.Printf("[WARN] Lightsail Static IP (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -87,11 +88,11 @@ func resourceStaticIPRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStaticIPDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient()
 
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Deleting Lightsail Static IP: %q", name)
-	_, err := conn.ReleaseStaticIpWithContext(ctx, &lightsail.ReleaseStaticIpInput{
+	_, err := conn.ReleaseStaticIp(ctx, &lightsail.ReleaseStaticIpInput{
 		StaticIpName: aws.String(name),
 	})
 	if err != nil {
