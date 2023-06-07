@@ -224,18 +224,18 @@ func testAccCheckKxDatabaseExists(name string, kxdatabase *finspace.GetKxDatabas
 func testAccKxDatabaseConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
- description             = %[1]q
- deletion_window_in_days = 7
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_finspace_kx_environment" "test" {
- name     		= %[1]q
- kms_key_id 	= aws_kms_key.test.arn
+  name     		= %[1]q
+  kms_key_id 	= aws_kms_key.test.arn
 }
 
 resource "aws_finspace_kx_database" "test" {
-  name           	= %[1]q
-  environment_id	= aws_finspace_kx_environment.test.id
+  name           = %[1]q
+  environment_id = aws_finspace_kx_environment.test.id
 }
 `, rName)
 }
@@ -248,14 +248,14 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     		= %[1]q
-  kms_key_id 	= aws_kms_key.test.arn
+  name     	 = %[1]q
+  kms_key_id = aws_kms_key.test.arn
 }
 
 resource "aws_finspace_kx_database" "test" {
-  name           	= %[1]q
-  environment_id	= aws_finspace_kx_environment.test.id
-  description		= %[2]q
+  name           = %[1]q
+  environment_id = aws_finspace_kx_environment.test.id
+  description	 = %[2]q
 }
 `, rName, description)
 }
@@ -273,8 +273,8 @@ resource "aws_finspace_kx_environment" "test" {
 }
 
 resource "aws_finspace_kx_database" "test" {
-  name           	= %[1]q
-  environment_id	= aws_finspace_kx_environment.test.id
+  name           = %[1]q
+  environment_id = aws_finspace_kx_environment.test.id
   tags = {
     %[2]q = %[3]q
   }
@@ -290,16 +290,16 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     		= %[1]q
-  kms_key_id 	= aws_kms_key.test.arn
+  name     	 = %[1]q
+  kms_key_id = aws_kms_key.test.arn
 }
 
 resource "aws_finspace_kx_database" "test" {
-  name           	= %[1]q
-  environment_id	= aws_finspace_kx_environment.test.id
+  name           = %[1]q
+  environment_id = aws_finspace_kx_environment.test.id
   tags = {
     %[2]q = %[3]q
-	%[4]q = %[5]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
