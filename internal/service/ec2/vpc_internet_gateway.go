@@ -195,13 +195,13 @@ func attachInternetGateway(ctx context.Context, conn *ec2.EC2, internetGatewayID
 	}, errCodeInvalidInternetGatewayIDNotFound)
 
 	if err != nil {
-		return fmt.Errorf("error attaching EC2 Internet Gateway (%s) to VPC (%s): %w", internetGatewayID, vpcID, err)
+		return fmt.Errorf("attaching EC2 Internet Gateway (%s) to VPC (%s): %w", internetGatewayID, vpcID, err)
 	}
 
 	_, err = WaitInternetGatewayAttached(ctx, conn, internetGatewayID, vpcID, timeout)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Internet Gateway (%s) to attach to VPC (%s): %w", internetGatewayID, vpcID, err)
+		return fmt.Errorf("waiting for EC2 Internet Gateway (%s) to attach to VPC (%s): %w", internetGatewayID, vpcID, err)
 	}
 
 	return nil
@@ -223,13 +223,13 @@ func detachInternetGateway(ctx context.Context, conn *ec2.EC2, internetGatewayID
 	}
 
 	if err != nil {
-		return fmt.Errorf("error detaching EC2 Internet Gateway (%s) from VPC (%s): %w", internetGatewayID, vpcID, err)
+		return fmt.Errorf("detaching EC2 Internet Gateway (%s) from VPC (%s): %w", internetGatewayID, vpcID, err)
 	}
 
 	_, err = WaitInternetGatewayDetached(ctx, conn, internetGatewayID, vpcID, timeout)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Internet Gateway (%s) to detach from VPC (%s): %w", internetGatewayID, vpcID, err)
+		return fmt.Errorf("waiting for EC2 Internet Gateway (%s) to detach from VPC (%s): %w", internetGatewayID, vpcID, err)
 	}
 
 	return nil

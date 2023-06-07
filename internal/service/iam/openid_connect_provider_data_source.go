@@ -124,7 +124,7 @@ func dataSourceGetOpenIDConnectProviderByURL(ctx context.Context, conn *iam.IAM,
 func urlFromOpenIDConnectProviderARN(arn string) (string, error) {
 	parts := strings.SplitN(arn, "/", 2)
 	if len(parts) != 2 {
-		return "", fmt.Errorf("error reading OpenID Connect Provider expected the arn to be like: arn:PARTITION:iam::ACCOUNT:oidc-provider/URL but got: %s", arn)
+		return "", fmt.Errorf("reading OpenID Connect Provider expected the arn to be like: arn:PARTITION:iam::ACCOUNT:oidc-provider/URL but got: %s", arn)
 	}
 	return parts[1], nil
 }

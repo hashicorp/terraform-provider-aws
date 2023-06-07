@@ -59,7 +59,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		_, err := conn.RegisterInstancesWithLoadBalancerWithContext(ctx, &registerInstancesOpts)
 
 		if tfawserr.ErrCodeEquals(err, "InvalidTarget") {
-			return retry.RetryableError(fmt.Errorf("Error attaching instance to ELB, retrying: %s", err))
+			return retry.RetryableError(fmt.Errorf("attaching instance to ELB, retrying: %s", err))
 		}
 
 		if err != nil {

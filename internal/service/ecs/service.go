@@ -762,7 +762,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(service.ServiceConnectConfiguration)); err != nil {
-	// 	return fmt.Errorf("error setting service_connect_configuration for (%s): %w", d.Id(), err)
+	// 	return fmt.Errorf("setting service_connect_configuration for (%s): %w", d.Id(), err)
 	// }
 
 	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {

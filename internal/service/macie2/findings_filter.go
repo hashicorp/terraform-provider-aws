@@ -315,28 +315,28 @@ func expandFindingCriteriaFilter(findingCriterias []interface{}) (*macie2.Findin
 		if v, ok := crit["lt"].(string); ok && v != "" {
 			i, err := expandConditionIntField(field, v)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "lt", field, err)
+				return nil, fmt.Errorf("parsing condition %q for field %q: %w", "lt", field, err)
 			}
 			conditional.Lt = aws.Int64(i)
 		}
 		if v, ok := crit["lte"].(string); ok && v != "" {
 			i, err := expandConditionIntField(field, v)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "lte", field, err)
+				return nil, fmt.Errorf("parsing condition %q for field %q: %w", "lte", field, err)
 			}
 			conditional.Lte = aws.Int64(i)
 		}
 		if v, ok := crit["gt"].(string); ok && v != "" {
 			i, err := expandConditionIntField(field, v)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "gt", field, err)
+				return nil, fmt.Errorf("parsing condition %q for field %q: %w", "gt", field, err)
 			}
 			conditional.Gt = aws.Int64(i)
 		}
 		if v, ok := crit["gte"].(string); ok && v != "" {
 			i, err := expandConditionIntField(field, v)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "gte", field, err)
+				return nil, fmt.Errorf("parsing condition %q for field %q: %w", "gte", field, err)
 			}
 			conditional.Gte = aws.Int64(i)
 		}
