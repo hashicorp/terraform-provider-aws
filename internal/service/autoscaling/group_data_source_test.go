@@ -49,7 +49,8 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "tag.#", resourceName, "tag.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "target_group_arns.#", resourceName, "target_group_arns.#"),
 					resource.TestCheckResourceAttr(datasourceName, "termination_policies.#", "1"), // Not set in resource.
-					resource.TestCheckResourceAttr(datasourceName, "vpc_zone_identifier", ""),     // Not set in resource.
+					resource.TestCheckResourceAttrPair(datasourceName, "traffic_source.#", resourceName, "traffic_source.#"),
+					resource.TestCheckResourceAttr(datasourceName, "vpc_zone_identifier", ""), // Not set in resource.
 					resource.TestCheckResourceAttrPair(datasourceName, "warm_pool.#", resourceName, "warm_pool.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "warm_pool_size", resourceName, "warm_pool_size"),
 				),

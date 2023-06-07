@@ -503,7 +503,7 @@ func getOrganizationDefaultRootPolicyTypeRefreshFunc(ctx context.Context, conn *
 		defaultRoot, err := getOrganizationDefaultRoot(ctx, conn)
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error getting default root: %s", err)
+			return nil, "", fmt.Errorf("getting default root: %s", err)
 		}
 
 		for _, pt := range defaultRoot.PolicyTypes {

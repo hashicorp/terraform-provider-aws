@@ -2,7 +2,6 @@ package appstream
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -79,11 +78,11 @@ func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, 
 
 	output, err := conn.CreateDirectoryConfigWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating AppStream Directory Config (%s): %w", directoryName, err))
+		return diag.Errorf("creating AppStream Directory Config (%s): %s", directoryName, err)
 	}
 
 	if output == nil || output.DirectoryConfig == nil {
-		return diag.Errorf("error creating AppStream Directory Config (%s): empty response", directoryName)
+		return diag.Errorf("creating AppStream Directory Config (%s): empty response", directoryName)
 	}
 
 	d.SetId(aws.StringValue(output.DirectoryConfig.DirectoryName))
@@ -103,15 +102,15 @@ func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading AppStream Directory Config (%s): %w", d.Id(), err))
+		return diag.Errorf("reading AppStream Directory Config (%s): %s", d.Id(), err)
 	}
 
 	if len(resp.DirectoryConfigs) == 0 {
-		return diag.FromErr(fmt.Errorf("error reading AppStream Directory Config (%s): %s", d.Id(), "empty response"))
+		return diag.Errorf("reading AppStream Directory Config (%s): %s", d.Id(), "empty response")
 	}
 
 	if len(resp.DirectoryConfigs) > 1 {
-		return diag.FromErr(fmt.Errorf("error reading AppStream Directory Config (%s): %s", d.Id(), "multiple Directory Configs found"))
+		return diag.Errorf("reading AppStream Directory Config (%s): %s", d.Id(), "multiple Directory Configs found")
 	}
 
 	directoryConfig := resp.DirectoryConfigs[0]
@@ -121,7 +120,7 @@ func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("organizational_unit_distinguished_names", flex.FlattenStringSet(directoryConfig.OrganizationalUnitDistinguishedNames))
 
 	if err = d.Set("service_account_credentials", flattenServiceAccountCredentials(directoryConfig.ServiceAccountCredentials, d)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Directory Config (%s): %w", "service_account_credentials", d.Id(), err))
+		return diag.Errorf("setting `%s` for AppStream Directory Config (%s): %s", "service_account_credentials", d.Id(), err)
 	}
 
 	return nil
@@ -143,7 +142,7 @@ func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	_, err := conn.UpdateDirectoryConfigWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating AppStream Directory Config (%s): %w", d.Id(), err))
+		return diag.Errorf("updating AppStream Directory Config (%s): %s", d.Id(), err)
 	}
 
 	return resourceDirectoryConfigRead(ctx, d, meta)
@@ -162,7 +161,7 @@ func resourceDirectoryConfigDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting AppStream Directory Config (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting AppStream Directory Config (%s): %s", d.Id(), err)
 	}
 
 	return nil

@@ -99,7 +99,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	out, err := conn.CreateApplicationWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating ApplicationInsights Application: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating ApplicationInsights Application: %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.ApplicationInfo.ResourceGroupName))
@@ -178,7 +178,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		log.Printf("[DEBUG] Updating ApplicationInsights Application: %s", d.Id())
 		_, err := conn.UpdateApplicationWithContext(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error Updating ApplicationInsights Application: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating ApplicationInsights Application (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -199,7 +199,7 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 		if tfawserr.ErrCodeEquals(err, applicationinsights.ErrCodeResourceNotFoundException) {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "Error deleting ApplicationInsights Application: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting ApplicationInsights Application: %s", err)
 	}
 
 	if _, err := waitApplicationTerminated(ctx, conn, d.Id()); err != nil {

@@ -87,7 +87,7 @@ The following arguments are supported:
 
 * `reference_name` - (Optional) This is a reference name used in Caller Reference
     (helpful for identifying single health_check set amongst others)
-* `fqdn` - (Optional) The fully qualified domain name of the endpoint to be checked.
+* `fqdn` - (Optional) The fully qualified domain name of the endpoint to be checked. If a value is set for `ip_address`, the value set for `fqdn` will be passed in the `Host` header.
 * `ip_address` - (Optional) The IP address of the endpoint to be checked.
 * `port` - (Optional) The port of the endpoint to be checked.
 * `type` - (Required) The protocol to use when performing health checks. Valid values are `HTTP`, `HTTPS`, `HTTP_STR_MATCH`, `HTTPS_STR_MATCH`, `TCP`, `CALCULATED`, `CLOUDWATCH_METRIC` and `RECOVERY_CONTROL`.

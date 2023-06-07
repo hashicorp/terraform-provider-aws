@@ -128,11 +128,11 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
-		return diag.Errorf("error listing tags for MemoryDB Snapshot (%s): %s", d.Id(), err)
+		return diag.Errorf("listing tags for MemoryDB Snapshot (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil

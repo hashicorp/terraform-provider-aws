@@ -17,7 +17,7 @@ import (
 func validateMonthlySpend(v interface{}, k string) (ws []string, errors []error) {
 	vInt := v.(int)
 	if vInt < 0 {
-		errors = append(errors, fmt.Errorf("error setting SMS preferences: monthly spend limit value [%d] must be >= 0", vInt))
+		errors = append(errors, fmt.Errorf("setting SMS preferences: monthly spend limit value [%d] must be >= 0", vInt))
 	}
 	return
 }
@@ -25,7 +25,7 @@ func validateMonthlySpend(v interface{}, k string) (ws []string, errors []error)
 func validateDeliverySamplingRate(v interface{}, k string) (ws []string, errors []error) {
 	vInt, _ := strconv.Atoi(v.(string))
 	if vInt < 0 || vInt > 100 {
-		errors = append(errors, fmt.Errorf("error setting SMS preferences: default percentage of success to sample value [%d] must be between 0 and 100", vInt))
+		errors = append(errors, fmt.Errorf("setting SMS preferences: default percentage of success to sample value [%d] must be between 0 and 100", vInt))
 	}
 	return
 }

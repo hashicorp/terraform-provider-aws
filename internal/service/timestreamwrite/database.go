@@ -2,7 +2,6 @@ package timestreamwrite
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 
@@ -86,11 +85,11 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 	resp, err := conn.CreateDatabaseWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Timestream Database (%s): %w", dbName, err))
+		return diag.Errorf("creating Timestream Database (%s): %s", dbName, err)
 	}
 
 	if resp == nil || resp.Database == nil {
-		return diag.FromErr(fmt.Errorf("error creating Timestream Database (%s): empty output", dbName))
+		return diag.Errorf("creating Timestream Database (%s): empty output", dbName)
 	}
 
 	d.SetId(aws.StringValue(resp.Database.DatabaseName))
@@ -114,11 +113,11 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Timestream Database (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Timestream Database (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.Database == nil {
-		return diag.FromErr(fmt.Errorf("error reading Timestream Database (%s): empty output", d.Id()))
+		return diag.Errorf("reading Timestream Database (%s): empty output", d.Id())
 	}
 
 	db := resp.Database
@@ -144,7 +143,7 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.UpdateDatabaseWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Timestream Database (%s): %w", d.Id(), err))
+			return diag.Errorf("updating Timestream Database (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -164,7 +163,7 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Timestream Database (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Timestream Database (%s): %s", d.Id(), err)
 	}
 
 	return nil

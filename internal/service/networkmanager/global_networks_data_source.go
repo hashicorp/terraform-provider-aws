@@ -35,7 +35,7 @@ func dataSourceGlobalNetworksRead(ctx context.Context, d *schema.ResourceData, m
 	output, err := FindGlobalNetworks(ctx, conn, &networkmanager.DescribeGlobalNetworksInput{})
 
 	if err != nil {
-		return diag.Errorf("error listing Network Manager Global Networks: %s", err)
+		return diag.Errorf("listing Network Manager Global Networks: %s", err)
 	}
 
 	var globalNetworkIDs []string

@@ -9,26 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-func statusInstance(ctx context.Context, conn *connect.Connect, instanceId string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &connect.DescribeInstanceInput{
-			InstanceId: aws.String(instanceId),
-		}
-
-		output, err := conn.DescribeInstanceWithContext(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
-			return output, connect.ErrCodeResourceNotFoundException, nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Instance.InstanceStatus), nil
-	}
-}
-
 func statusPhoneNumber(ctx context.Context, conn *connect.Connect, phoneNumberId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &connect.DescribePhoneNumberInput{

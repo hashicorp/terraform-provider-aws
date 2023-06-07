@@ -61,14 +61,14 @@ resource "aws_db_instance" "default" {
 resource "aws_kms_key" "default" {
   description = "Encryption key for automated backups"
 
-  provider = "aws.replica"
+  provider = aws.replica
 }
 
 resource "aws_db_instance_automated_backups_replication" "default" {
   source_db_instance_arn = aws_db_instance.default.arn
   kms_key_id             = aws_kms_key.default.arn
 
-  provider = "aws.replica"
+  provider = aws.replica
 }
 ```
 

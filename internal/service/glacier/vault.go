@@ -245,7 +245,7 @@ func resourceVaultNotificationUpdate(ctx context.Context, conn *glacier.Glacier,
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error Updating Glacier Vault Notifications: %w", err)
+			return fmt.Errorf("Updating Glacier Vault Notifications: %w", err)
 		}
 	} else {
 		_, err := conn.DeleteVaultNotificationsWithContext(ctx, &glacier.DeleteVaultNotificationsInput{
@@ -253,7 +253,7 @@ func resourceVaultNotificationUpdate(ctx context.Context, conn *glacier.Glacier,
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error Removing Glacier Vault Notifications: %w", err)
+			return fmt.Errorf("Removing Glacier Vault Notifications: %w", err)
 		}
 	}
 
@@ -281,7 +281,7 @@ func resourceVaultPolicyUpdate(ctx context.Context, conn *glacier.Glacier, d *sc
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error putting Glacier Vault policy: %w", err)
+			return fmt.Errorf("putting Glacier Vault policy: %w", err)
 		}
 	} else {
 		log.Printf("[DEBUG] Glacier Vault: %s, delete policy: %s", vaultName, policy)
@@ -290,7 +290,7 @@ func resourceVaultPolicyUpdate(ctx context.Context, conn *glacier.Glacier, d *sc
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error deleting Glacier Vault policy: %w", err)
+			return fmt.Errorf("deleting Glacier Vault policy: %w", err)
 		}
 	}
 
@@ -311,7 +311,7 @@ func getVaultNotification(ctx context.Context, conn *glacier.Glacier, vaultName 
 
 	response, err := conn.GetVaultNotificationsWithContext(ctx, request)
 	if err != nil {
-		return nil, fmt.Errorf("Error reading Glacier Vault Notifications: %w", err)
+		return nil, fmt.Errorf("reading Glacier Vault Notifications: %w", err)
 	}
 
 	notifications := make(map[string]interface{})

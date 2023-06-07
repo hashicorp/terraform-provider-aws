@@ -52,8 +52,9 @@ func TestAccRedshiftServerlessNamespace_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "namespace_id"),
 					resource.TestCheckResourceAttr(resourceName, "log_exports.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "iam_roles.*", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "iam_roles.*", "aws_iam_role.test.0", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "iam_roles.*", "aws_iam_role.test.1", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -77,7 +78,7 @@ func TestAccRedshiftServerlessNamespace_defaultIAMRole(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "default_iam_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_iam_role_arn", "aws_iam_role.test.0", "arn"),
 				),
 			},
 			{
@@ -189,6 +190,31 @@ func TestAccRedshiftServerlessNamespace_disappears(t *testing.T) {
 	})
 }
 
+func TestAccRedshiftServerlessNamespace_withWorkgroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_namespace.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNamespaceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNamespaceConfig_withWorkgroup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNamespaceExists(ctx, resourceName),
+				),
+			},
+			{
+				Config:   testAccNamespaceConfig_withWorkgroup(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func testAccCheckNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn()
@@ -233,6 +259,46 @@ func testAccCheckNamespaceExists(ctx context.Context, name string) resource.Test
 	}
 }
 
+func testAccNamespaceConfig_baseIAMRole(rName string, n int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  count = %[2]d
+
+  name = "%[1]s-${count.index}"
+  path = "/service-role/"
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": [
+                    "redshift-serverless.amazonaws.com",
+                    "redshift.amazonaws.com",
+                    "sagemaker.amazonaws.com"
+                ]
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}
+EOF
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  count = %[2]d
+
+  role       = aws_iam_role.test[count.index].name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonRedshiftAllCommandsFullAccess"
+}
+
+`, rName, n)
+}
+
 func testAccNamespaceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
@@ -251,35 +317,12 @@ resource "aws_redshiftserverless_namespace" "test" {
 }
 
 func testAccNamespaceConfig_updated(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "ec2.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-}
-
+	return acctest.ConfigCompose(testAccNamespaceConfig_baseIAMRole(rName, 2), fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
-  iam_roles      = [aws_iam_role.test.arn]
+  iam_roles      = aws_iam_role.test[*].arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccNamespaceConfig_tags1(rName, tagKey1, tagValue1 string) string {
@@ -308,34 +351,26 @@ resource "aws_redshiftserverless_namespace" "test" {
 }
 
 func testAccNamespaceConfig_defaultIAMRole(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "ec2.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
-}
-
+	return acctest.ConfigCompose(testAccNamespaceConfig_baseIAMRole(rName, 1), fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name       = %[1]q
-  default_iam_role_arn = aws_iam_role.test.arn
-  iam_roles            = [aws_iam_role.test.arn]
+  default_iam_role_arn = aws_iam_role.test[0].arn
+  iam_roles            = aws_iam_role.test[*].arn
 }
-`, rName)
+`, rName))
+}
+
+func testAccNamespaceConfig_withWorkgroup(rName string) string {
+	return acctest.ConfigCompose(testAccNamespaceConfig_baseIAMRole(rName, 2), fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name       = %[1]q
+  default_iam_role_arn = aws_iam_role.test[0].arn
+  iam_roles            = aws_iam_role.test[*].arn
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+}
+`, rName))
 }
