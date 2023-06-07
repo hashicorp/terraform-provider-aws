@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glacier"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/glacier/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -47,21 +46,21 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	return nil
 }
 
-// map[string]*string handling
+// map[string]string handling
 
 // Tags returns glacier service tags.
-func Tags(tags tftags.KeyValueTags) map[string]*string {
-	return aws.StringMap(tags.Map())
+func Tags(tags tftags.KeyValueTags) map[string]string {
+	return tags.Map()
 }
 
 // KeyValueTags creates KeyValueTags from glacier service tags.
-func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
 // GetTagsIn returns glacier service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) map[string]*string {
+func GetTagsIn(ctx context.Context) map[string]string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -72,14 +71,14 @@ func GetTagsIn(ctx context.Context) map[string]*string {
 }
 
 // SetTagsOut sets glacier service tags in Context.
-func SetTagsOut(ctx context.Context, tags map[string]*string) {
+func SetTagsOut(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
 // createTags creates glacier service tags for new resources.
-func createTags(ctx context.Context, conn *glacier.Client, identifier string, tags map[string]*string) error {
+func createTags(ctx context.Context, conn *glacier.Client, identifier string, tags map[string]string) error {
 	if len(tags) == 0 {
 		return nil
 	}
