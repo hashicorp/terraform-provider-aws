@@ -119,7 +119,7 @@ func resourceCustomPluginCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.CreateCustomPluginWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating MSK Connect Custom Plugin (%s): %s", name, err)
+		return diag.Errorf("creating MSK Connect Custom Plugin (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.CustomPluginArn))
@@ -127,7 +127,7 @@ func resourceCustomPluginCreate(ctx context.Context, d *schema.ResourceData, met
 	_, err = waitCustomPluginCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return diag.Errorf("error waiting for MSK Connect Custom Plugin (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for MSK Connect Custom Plugin (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceCustomPluginRead(ctx, d, meta)
@@ -145,7 +145,7 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading MSK Connect Custom Plugin (%s): %s", d.Id(), err)
+		return diag.Errorf("reading MSK Connect Custom Plugin (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", plugin.CustomPluginArn)
@@ -158,7 +158,7 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("latest_revision", plugin.LatestRevision.Revision)
 		if plugin.LatestRevision.Location != nil {
 			if err := d.Set("location", []interface{}{flattenCustomPluginLocationDescription(plugin.LatestRevision.Location)}); err != nil {
-				return diag.Errorf("error setting location: %s", err)
+				return diag.Errorf("setting location: %s", err)
 			}
 		} else {
 			d.Set("location", nil)
@@ -185,13 +185,13 @@ func resourceCustomPluginDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting MSK Connect Custom Plugin (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting MSK Connect Custom Plugin (%s): %s", d.Id(), err)
 	}
 
 	_, err = waitCustomPluginDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return diag.Errorf("error waiting for MSK Connect Custom Plugin (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for MSK Connect Custom Plugin (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

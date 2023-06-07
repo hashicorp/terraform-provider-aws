@@ -426,11 +426,11 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	)
 
 	if err != nil {
-		return diag.Errorf("error creating Kendra Index (%s): %s", name, err)
+		return diag.Errorf("creating Kendra Index (%s): %s", name, err)
 	}
 
 	if outputRaw == nil {
-		return diag.Errorf("error creating Kendra Index (%s): empty output", name)
+		return diag.Errorf("creating Kendra Index (%s): empty output", name)
 	}
 
 	output := outputRaw.(*kendra.CreateIndexOutput)
@@ -439,7 +439,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// waiter since the status changes from CREATING to either ACTIVE or FAILED
 	if _, err := waitIndexCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Index (%s) creation: %s", d.Id(), err)
+		return diag.Errorf("waiting for Index (%s) creation: %s", d.Id(), err)
 	}
 
 	callUpdateIndex := false
@@ -473,7 +473,7 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting Kendra Index (%s): %s", d.Id(), err)
+		return diag.Errorf("getting Kendra Index (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -572,12 +572,12 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		)
 
 		if err != nil {
-			return diag.Errorf("error updating Index (%s): %s", d.Id(), err)
+			return diag.Errorf("updating Index (%s): %s", d.Id(), err)
 		}
 
 		// waiter since the status changes from UPDATING to either ACTIVE or FAILED
 		if _, err := waitIndexUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("error waiting for Index (%s) update: %s", d.Id(), err)
+			return diag.Errorf("waiting for Index (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -594,11 +594,11 @@ func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return diag.Errorf("error deleting Index (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Index (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitIndexDeleted(ctx, conn, id, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("error waiting for Index (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for Index (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

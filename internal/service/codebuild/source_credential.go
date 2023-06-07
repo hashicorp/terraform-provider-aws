@@ -76,7 +76,7 @@ func resourceSourceCredentialCreate(ctx context.Context, d *schema.ResourceData,
 
 	resp, err := conn.ImportSourceCredentialsWithContext(ctx, createOpts)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error importing source credentials: %s", err)
+		return sdkdiag.AppendErrorf(diags, "importing source credentials: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.Arn))
@@ -118,7 +118,7 @@ func resourceSourceCredentialDelete(ctx context.Context, d *schema.ResourceData,
 		if tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "Error deleting CodeBuild Source Credentials(%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CodeBuild Source Credentials(%s): %s", d.Id(), err)
 	}
 
 	return diags

@@ -91,7 +91,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	_, err := conn.CreateSubnetGroupWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating MemoryDB Subnet Group (%s): %s", name, err)
+		return diag.Errorf("creating MemoryDB Subnet Group (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -113,7 +113,7 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, err := conn.UpdateSubnetGroupWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("error updating MemoryDB Subnet Group (%s): %s", d.Id(), err)
+			return diag.Errorf("updating MemoryDB Subnet Group (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -132,7 +132,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading MemoryDB Subnet Group (%s): %s", d.Id(), err)
+		return diag.Errorf("reading MemoryDB Subnet Group (%s): %s", d.Id(), err)
 	}
 
 	var subnetIds []*string
@@ -163,7 +163,7 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting MemoryDB Subnet Group (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting MemoryDB Subnet Group (%s): %s", d.Id(), err)
 	}
 
 	return nil

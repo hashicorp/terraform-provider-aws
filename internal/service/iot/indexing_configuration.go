@@ -166,7 +166,7 @@ func resourceIndexingConfigurationPut(ctx context.Context, d *schema.ResourceDat
 	_, err := conn.UpdateIndexingConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating IoT Indexing Configuration: %s", err)
+		return diag.Errorf("updating IoT Indexing Configuration: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
@@ -180,19 +180,19 @@ func resourceIndexingConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	output, err := conn.GetIndexingConfigurationWithContext(ctx, &iot.GetIndexingConfigurationInput{})
 
 	if err != nil {
-		return diag.Errorf("error reading IoT Indexing Configuration: %s", err)
+		return diag.Errorf("reading IoT Indexing Configuration: %s", err)
 	}
 
 	if output.ThingGroupIndexingConfiguration != nil {
 		if err := d.Set("thing_group_indexing_configuration", []interface{}{flattenThingGroupIndexingConfiguration(output.ThingGroupIndexingConfiguration)}); err != nil {
-			return diag.Errorf("error setting thing_group_indexing_configuration: %s", err)
+			return diag.Errorf("setting thing_group_indexing_configuration: %s", err)
 		}
 	} else {
 		d.Set("thing_group_indexing_configuration", nil)
 	}
 	if output.ThingIndexingConfiguration != nil {
 		if err := d.Set("thing_indexing_configuration", []interface{}{flattenThingIndexingConfiguration(output.ThingIndexingConfiguration)}); err != nil {
-			return diag.Errorf("error setting thing_indexing_configuration: %s", err)
+			return diag.Errorf("setting thing_indexing_configuration: %s", err)
 		}
 	} else {
 		d.Set("thing_indexing_configuration", nil)

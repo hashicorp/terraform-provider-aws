@@ -251,7 +251,7 @@ func resourceMultiRegionAccessPointDelete(ctx context.Context, d *schema.Resourc
 	_, err = waitMultiRegionAccessPointRequestSucceeded(ctx, conn, accountID, aws.StringValue(output.RequestTokenARN), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return diag.Errorf("error waiting for S3 Multi-Region Access Point (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for S3 Multi-Region Access Point (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

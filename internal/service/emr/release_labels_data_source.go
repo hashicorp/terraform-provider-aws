@@ -2,7 +2,6 @@ package emr
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -56,7 +55,7 @@ func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, me
 	output, err := findReleaseLabels(ctx, conn, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading EMR Release Labels: %w", err))
+		return diag.Errorf("reading EMR Release Labels: %s", err)
 	}
 
 	releaseLabels := aws.StringValueSlice(output)
