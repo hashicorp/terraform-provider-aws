@@ -295,6 +295,39 @@ func TestAccVPCNATGateway_secondaryPrivateIPAddresses(t *testing.T) {
 	})
 }
 
+func TestAccVPCNATGateway_secondaryPrivateIPAddresses_private(t *testing.T) {
+	ctx := acctest.Context(t)
+	var natGateway ec2.NatGateway
+	resourceName := "aws_nat_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNATGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNATGatewayConfig_secondaryPrivateIpAddresses_private(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "7"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"secondary_allocation_ids",
+					"secondary_private_ip_addresses",
+					"secondary_private_ip_address_count",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckNATGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
@@ -503,6 +536,18 @@ resource "aws_nat_gateway" "test" {
   subnet_id                      = aws_subnet.private.id
   secondary_allocation_ids       = [aws_eip.secondary.id]
   secondary_private_ip_addresses = ["10.0.1.5"]
+
+  depends_on = [aws_internet_gateway.test]
+}
+`)
+}
+
+func testAccVPCNATGatewayConfig_secondaryPrivateIpAddresses_private(rName string) string {
+	return acctest.ConfigCompose(testAccNATGatewayConfig_base(rName), `
+resource "aws_nat_gateway" "test" {
+  connectivity_type              = "private"
+  subnet_id                      = aws_subnet.private.id
+  secondary_private_ip_addresses = ["10.0.1.5", "10.0.1.6", "10.0.1.7", "10.0.1.8", "10.0.1.9", "10.0.1.10", "10.0.1.11"]
 
   depends_on = [aws_internet_gateway.test]
 }
