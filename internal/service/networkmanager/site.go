@@ -127,13 +127,13 @@ func resourceSiteCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := conn.CreateSiteWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Network Manager Site: %s", err)
+		return diag.Errorf("creating Network Manager Site: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Site.SiteId))
 
 	if _, err := waitSiteCreated(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Network Manager Site (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for Network Manager Site (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceSiteRead(ctx, d, meta)
@@ -152,7 +152,7 @@ func resourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Network Manager Site (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Network Manager Site (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", site.SiteArn)
@@ -160,7 +160,7 @@ func resourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("global_network_id", site.GlobalNetworkId)
 	if site.Location != nil {
 		if err := d.Set("location", []interface{}{flattenLocation(site.Location)}); err != nil {
-			return diag.Errorf("error setting location: %s", err)
+			return diag.Errorf("setting location: %s", err)
 		}
 	} else {
 		d.Set("location", nil)
@@ -190,11 +190,11 @@ func resourceSiteUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err := conn.UpdateSiteWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("error updating Network Manager Site (%s): %s", d.Id(), err)
+			return diag.Errorf("updating Network Manager Site (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitSiteUpdated(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("error waiting for Network Manager Site (%s) update: %s", d.Id(), err)
+			return diag.Errorf("waiting for Network Manager Site (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -228,11 +228,11 @@ func resourceSiteDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Network Manager Site (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Network Manager Site (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitSiteDeleted(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("error waiting for Network Manager Site (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for Network Manager Site (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

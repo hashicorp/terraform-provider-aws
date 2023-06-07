@@ -51,7 +51,7 @@ func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := FindDevices(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("error listing Network Manager Devices: %s", err)
+		return diag.Errorf("listing Network Manager Devices: %s", err)
 	}
 
 	var deviceIDs []string

@@ -85,7 +85,7 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 
 	resp, err := conn.CreateGroupMembershipWithContext(ctx, createOpts)
 	if err != nil {
-		return diag.Errorf("error adding QuickSight user (%s) to group (%s): %s", memberName, groupName, err)
+		return diag.Errorf("adding QuickSight user (%s) to group (%s): %s", memberName, groupName, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s/%s/%s", awsAccountID, namespace, groupName, aws.StringValue(resp.GroupMember.MemberName)))
@@ -109,7 +109,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 
 	found, err := FindGroupMembership(ctx, conn, listInput, userName)
 	if err != nil {
-		return diag.Errorf("Error listing QuickSight Group Memberships (%s): %s", d.Id(), err)
+		return diag.Errorf("listing QuickSight Group Memberships (%s): %s", d.Id(), err)
 	}
 
 	if !d.IsNewResource() && !found {
@@ -145,7 +145,7 @@ func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, 
 		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.Errorf("Error deleting QuickSight User-group membership %s: %s", d.Id(), err)
+		return diag.Errorf("deleting QuickSight User-group membership %s: %s", d.Id(), err)
 	}
 
 	return nil

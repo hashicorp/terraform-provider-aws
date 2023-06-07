@@ -67,7 +67,7 @@ func dataSourceuserPoolClientsRead(ctx context.Context, d *schema.ResourceData, 
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error getting user pool clients: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting user pool clients: %s", err)
 	}
 
 	d.SetId(userPoolID)
