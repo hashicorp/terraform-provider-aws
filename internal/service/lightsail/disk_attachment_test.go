@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,6 @@ import (
 
 func TestAccLightsailDiskAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var disk lightsail.Disk
 	resourceName := "aws_lightsail_disk_attachment.test"
 	dName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	liName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -31,17 +30,17 @@ func TestAccLightsailDiskAttachment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, lightsail.ServiceID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDiskAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDiskAttachmentConfig_basic(dName, liName, diskPath),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiskAttachmentExists(ctx, resourceName, disk),
+					testAccCheckDiskAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "disk_name", dName),
 					resource.TestCheckResourceAttr(resourceName, "disk_path", diskPath),
 					resource.TestCheckResourceAttr(resourceName, "instance_name", liName),
@@ -57,7 +56,6 @@ func TestAccLightsailDiskAttachment_basic(t *testing.T) {
 
 func TestAccLightsailDiskAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var disk lightsail.Disk
 	resourceName := "aws_lightsail_disk_attachment.test"
 	dName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	liName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -66,17 +64,17 @@ func TestAccLightsailDiskAttachment_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, lightsail.ServiceID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDiskAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDiskAttachmentConfig_basic(dName, liName, diskPath),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiskAttachmentExists(ctx, resourceName, disk),
+					testAccCheckDiskAttachmentExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceDiskAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -85,7 +83,7 @@ func TestAccLightsailDiskAttachment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDiskAttachmentExists(ctx context.Context, n string, disk lightsail.Disk) resource.TestCheckFunc {
+func testAccCheckDiskAttachmentExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -96,7 +94,7 @@ func testAccCheckDiskAttachmentExists(ctx context.Context, n string, disk lights
 			return errors.New("No LightsailDiskAttachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient()
 
 		out, err := tflightsail.FindDiskAttachmentById(ctx, conn, rs.Primary.ID)
 
@@ -107,8 +105,6 @@ func testAccCheckDiskAttachmentExists(ctx context.Context, n string, disk lights
 		if out == nil {
 			return fmt.Errorf("Disk Attachment %q does not exist", rs.Primary.ID)
 		}
-
-		disk = *out
 
 		return nil
 	}
@@ -121,7 +117,7 @@ func testAccCheckDiskAttachmentDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient()
 
 			_, err := tflightsail.FindDiskAttachmentById(ctx, conn, rs.Primary.ID)
 
