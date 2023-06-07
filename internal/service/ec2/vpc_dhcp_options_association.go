@@ -136,7 +136,7 @@ func resourceVPCDHCPOptionsAssociationImport(ctx context.Context, d *schema.Reso
 	vpc, err := FindVPCByID(ctx, conn, d.Id())
 
 	if err != nil {
-		return nil, fmt.Errorf("error reading EC2 VPC (%s): %w", d.Id(), err)
+		return nil, fmt.Errorf("reading EC2 VPC (%s): %w", d.Id(), err)
 	}
 
 	dhcpOptionsID := aws.StringValue(vpc.DhcpOptionsId)
