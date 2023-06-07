@@ -491,7 +491,7 @@ func modifyDomainAutoRenew(ctx context.Context, conn *route53domains.Client, dom
 		_, err := conn.EnableDomainAutoRenew(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error enabling Route 53 Domains Domain (%s) auto-renew: %w", domainName, err)
+			return fmt.Errorf("enabling Route 53 Domains Domain (%s) auto-renew: %w", domainName, err)
 		}
 	} else {
 		input := &route53domains.DisableDomainAutoRenewInput{
@@ -502,7 +502,7 @@ func modifyDomainAutoRenew(ctx context.Context, conn *route53domains.Client, dom
 		_, err := conn.DisableDomainAutoRenew(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error disabling Route 53 Domains Domain (%s) auto-renew: %w", domainName, err)
+			return fmt.Errorf("disabling Route 53 Domains Domain (%s) auto-renew: %w", domainName, err)
 		}
 	}
 
@@ -521,11 +521,11 @@ func modifyDomainContact(ctx context.Context, conn *route53domains.Client, domai
 	output, err := conn.UpdateDomainContact(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Route 53 Domains Domain (%s) contacts: %w", domainName, err)
+		return fmt.Errorf("updating Route 53 Domains Domain (%s) contacts: %w", domainName, err)
 	}
 
 	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), timeout); err != nil {
-		return fmt.Errorf("error waiting for Route 53 Domains Domain (%s) contacts update: %w", domainName, err)
+		return fmt.Errorf("waiting for Route 53 Domains Domain (%s) contacts update: %w", domainName, err)
 	}
 
 	return nil
@@ -543,11 +543,11 @@ func modifyDomainContactPrivacy(ctx context.Context, conn *route53domains.Client
 	output, err := conn.UpdateDomainContactPrivacy(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error enabling Route 53 Domains Domain (%s) contact privacy: %w", domainName, err)
+		return fmt.Errorf("enabling Route 53 Domains Domain (%s) contact privacy: %w", domainName, err)
 	}
 
 	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), timeout); err != nil {
-		return fmt.Errorf("error waiting for Route 53 Domains Domain (%s) contact privacy update: %w", domainName, err)
+		return fmt.Errorf("waiting for Route 53 Domains Domain (%s) contact privacy update: %w", domainName, err)
 	}
 
 	return nil
@@ -563,11 +563,11 @@ func modifyDomainNameservers(ctx context.Context, conn *route53domains.Client, d
 	output, err := conn.UpdateDomainNameservers(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Route 53 Domains Domain (%s) name servers: %w", domainName, err)
+		return fmt.Errorf("updating Route 53 Domains Domain (%s) name servers: %w", domainName, err)
 	}
 
 	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), timeout); err != nil {
-		return fmt.Errorf("error waiting for Route 53 Domains Domain (%s) name servers update: %w", domainName, err)
+		return fmt.Errorf("waiting for Route 53 Domains Domain (%s) name servers update: %w", domainName, err)
 	}
 
 	return nil
@@ -583,11 +583,11 @@ func modifyDomainTransferLock(ctx context.Context, conn *route53domains.Client, 
 		output, err := conn.EnableDomainTransferLock(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error enabling Route 53 Domains Domain (%s) transfer lock: %w", domainName, err)
+			return fmt.Errorf("enabling Route 53 Domains Domain (%s) transfer lock: %w", domainName, err)
 		}
 
 		if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), timeout); err != nil {
-			return fmt.Errorf("error waiting for Route 53 Domains Domain (%s) transfer lock enable: %w", domainName, err)
+			return fmt.Errorf("waiting for Route 53 Domains Domain (%s) transfer lock enable: %w", domainName, err)
 		}
 	} else {
 		input := &route53domains.DisableDomainTransferLockInput{
@@ -598,11 +598,11 @@ func modifyDomainTransferLock(ctx context.Context, conn *route53domains.Client, 
 		output, err := conn.DisableDomainTransferLock(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error disabling Route 53 Domains Domain (%s) transfer lock: %w", domainName, err)
+			return fmt.Errorf("disabling Route 53 Domains Domain (%s) transfer lock: %w", domainName, err)
 		}
 
 		if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), timeout); err != nil {
-			return fmt.Errorf("error waiting for Route 53 Domains Domain (%s) transfer lock disable: %w", domainName, err)
+			return fmt.Errorf("waiting for Route 53 Domains Domain (%s) transfer lock disable: %w", domainName, err)
 		}
 	}
 
