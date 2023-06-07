@@ -29,12 +29,33 @@ resource "aws_nat_gateway" "example" {
 }
 ```
 
+### Public NAT with Secondary Private IP Addresses
+
+```terraform
+resource "aws_nat_gateway" "example" {
+  allocation_id                     = aws_eip.example.id
+  subnet_id                         = aws_subnet.example.id
+  secondary_allocation_ids          = [aws_eip.secondary.id]
+  secondary_private_ip_addresses    = ["10.0.1.5"]
+}
+```
+
 ### Private NAT
 
 ```terraform
 resource "aws_nat_gateway" "example" {
   connectivity_type = "private"
   subnet_id         = aws_subnet.example.id
+}
+```
+
+### Private NAT with Secondary Private IP Addresses
+
+```terraform
+resource "aws_nat_gateway" "example" {
+  connectivity_type                  = "private"
+  subnet_id                          = aws_subnet.example.id
+  secondary_private_ip_address_count = 7
 }
 ```
 
