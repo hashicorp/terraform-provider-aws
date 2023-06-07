@@ -670,8 +670,6 @@ type AWSClient struct {
 	workspacesConn                   *workspaces.WorkSpaces
 	workspaceswebConn                *workspacesweb.WorkSpacesWeb
 	xrayClient                       *xray.Client
-
-	s3ConnURICleaningDisabled *s3.S3
 }
 
 func (client *AWSClient) ACMClient() *acm.Client {

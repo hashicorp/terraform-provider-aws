@@ -410,7 +410,7 @@ func resourceBucketWebsiteConfigurationWebsiteEndpoint(ctx context.Context, clie
 
 	output, err := conn.GetBucketLocationWithContext(ctx, input)
 	if err != nil {
-		return nil, fmt.Errorf("error getting S3 Bucket (%s) Location: %w", bucket, err)
+		return nil, fmt.Errorf("getting S3 Bucket (%s) Location: %w", bucket, err)
 	}
 
 	var region string

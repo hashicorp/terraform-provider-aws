@@ -542,7 +542,7 @@ func defineIndexFields(ctx context.Context, conn *cloudsearch.CloudSearch, domai
 			_, err = conn.DefineIndexFieldWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error defining CloudSearch Domain (%s) index field (%s): %w", domainName, aws.StringValue(apiObject.IndexFieldName), err)
+				return fmt.Errorf("defining CloudSearch Domain (%s) index field (%s): %w", domainName, aws.StringValue(apiObject.IndexFieldName), err)
 			}
 		}
 	}

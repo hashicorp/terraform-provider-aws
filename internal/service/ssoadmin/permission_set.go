@@ -293,16 +293,16 @@ func provisionPermissionSet(ctx context.Context, conn *ssoadmin.SSOAdmin, arn, i
 	}
 
 	if err != nil {
-		return fmt.Errorf("error provisioning SSO Permission Set (%s): %w", arn, err)
+		return fmt.Errorf("provisioning SSO Permission Set (%s): %w", arn, err)
 	}
 
 	if output == nil || output.PermissionSetProvisioningStatus == nil {
-		return fmt.Errorf("error provisioning SSO Permission Set (%s): empty output", arn)
+		return fmt.Errorf("provisioning SSO Permission Set (%s): empty output", arn)
 	}
 
 	_, err = waitPermissionSetProvisioned(ctx, conn, instanceArn, aws.StringValue(output.PermissionSetProvisioningStatus.RequestId))
 	if err != nil {
-		return fmt.Errorf("error waiting for SSO Permission Set (%s) to provision: %w", arn, err)
+		return fmt.Errorf("waiting for SSO Permission Set (%s) to provision: %w", arn, err)
 	}
 
 	return nil

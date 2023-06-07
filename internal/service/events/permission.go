@@ -205,7 +205,7 @@ func getPolicyStatement(output *eventbridge.DescribeEventBusOutput, statementID 
 
 	err := json.Unmarshal([]byte(*output.Policy), &policyDoc)
 	if err != nil {
-		return nil, fmt.Errorf("error reading EventBridge permission (%s): %w", statementID, err)
+		return nil, fmt.Errorf("reading EventBridge permission (%s): %w", statementID, err)
 	}
 
 	return FindPermissionPolicyStatementByID(&policyDoc, statementID)

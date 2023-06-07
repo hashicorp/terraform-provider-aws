@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
-	github.com/aws/aws-sdk-go v1.44.276
+	github.com/aws/aws-sdk-go v1.44.277
 	github.com/aws/aws-sdk-go-v2 v1.18.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.19.12
@@ -24,9 +24,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.14.11
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.11
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.13.0
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.5
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.40.1
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.40.2
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/oam v1.1.11

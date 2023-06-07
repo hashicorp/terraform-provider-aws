@@ -137,16 +137,16 @@ func backupPolicyPut(ctx context.Context, conn *efs.EFS, fsID string, tfMap map[
 	_, err := conn.PutBackupPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error putting EFS Backup Policy (%s): %w", fsID, err)
+		return fmt.Errorf("putting EFS Backup Policy (%s): %w", fsID, err)
 	}
 
 	if aws.StringValue(input.BackupPolicy.Status) == efs.StatusEnabled {
 		if _, err := waitBackupPolicyEnabled(ctx, conn, fsID); err != nil {
-			return fmt.Errorf("error waiting for EFS Backup Policy (%s) to enable: %w", fsID, err)
+			return fmt.Errorf("waiting for EFS Backup Policy (%s) to enable: %w", fsID, err)
 		}
 	} else {
 		if _, err := waitBackupPolicyDisabled(ctx, conn, fsID); err != nil {
-			return fmt.Errorf("error waiting for EFS Backup Policy (%s) to disable: %w", fsID, err)
+			return fmt.Errorf("waiting for EFS Backup Policy (%s) to disable: %w", fsID, err)
 		}
 	}
 

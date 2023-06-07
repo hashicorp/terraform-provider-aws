@@ -82,7 +82,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		_, err := conn.RegisterTargetsWithContext(ctx, params)
 
 		if tfawserr.ErrCodeEquals(err, "InvalidTarget") {
-			return retry.RetryableError(fmt.Errorf("Error attaching instance to LB, retrying: %s", err))
+			return retry.RetryableError(fmt.Errorf("attaching instance to LB, retrying: %s", err))
 		}
 
 		if err != nil {

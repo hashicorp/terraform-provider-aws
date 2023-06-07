@@ -195,7 +195,7 @@ func deleteRuleGroup(ctx context.Context, id string, oldRules []interface{}, con
 		noRules := []interface{}{}
 		err := updateRuleGroupResource(ctx, id, oldRules, noRules, conn)
 		if err != nil {
-			return fmt.Errorf("Error updating WAF Rule Group Predicates: %s", err)
+			return fmt.Errorf("updating WAF Rule Group Predicates: %s", err)
 		}
 	}
 
@@ -209,7 +209,7 @@ func deleteRuleGroup(ctx context.Context, id string, oldRules []interface{}, con
 		return conn.DeleteRuleGroupWithContext(ctx, req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting WAF Rule Group: %s", err)
+		return fmt.Errorf("deleting WAF Rule Group: %s", err)
 	}
 	return nil
 }
@@ -226,7 +226,7 @@ func updateRuleGroupResource(ctx context.Context, id string, oldRules, newRules 
 		return conn.UpdateRuleGroupWithContext(ctx, req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error Updating WAF Rule Group: %s", err)
+		return fmt.Errorf("Updating WAF Rule Group: %s", err)
 	}
 
 	return nil

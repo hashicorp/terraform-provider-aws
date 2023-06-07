@@ -15002,6 +15002,9 @@ var awsPartition = partition{
 					Region: "eu-west-1",
 				}: endpoint{},
 				endpointKey{
+					Region: "eu-west-2",
+				}: endpoint{},
+				endpointKey{
 					Region: "fips-us-east-1",
 				}: endpoint{
 					Hostname: "kendra-fips.us-east-1.amazonaws.com",
@@ -15131,6 +15134,12 @@ var awsPartition = partition{
 					Hostname: "kendra-ranking.ca-central-1.api.aws",
 				},
 				endpointKey{
+					Region:  "ca-central-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "kendra-ranking-fips.ca-central-1.api.aws",
+				},
+				endpointKey{
 					Region: "eu-central-2",
 				}: endpoint{
 					Hostname: "kendra-ranking.eu-central-2.api.aws",
@@ -15181,9 +15190,21 @@ var awsPartition = partition{
 					Hostname: "kendra-ranking.us-east-1.api.aws",
 				},
 				endpointKey{
+					Region:  "us-east-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "kendra-ranking-fips.us-east-1.api.aws",
+				},
+				endpointKey{
 					Region: "us-east-2",
 				}: endpoint{
 					Hostname: "kendra-ranking.us-east-2.api.aws",
+				},
+				endpointKey{
+					Region:  "us-east-2",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "kendra-ranking-fips.us-east-2.api.aws",
 				},
 				endpointKey{
 					Region: "us-west-1",
@@ -15194,6 +15215,12 @@ var awsPartition = partition{
 					Region: "us-west-2",
 				}: endpoint{
 					Hostname: "kendra-ranking.us-west-2.api.aws",
+				},
+				endpointKey{
+					Region:  "us-west-2",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "kendra-ranking-fips.us-west-2.api.aws",
 				},
 			},
 		},
