@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -254,17 +255,14 @@ func resourceKxEnvironmentDelete(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[INFO] Deleting FinSpace KxEnvironment %s", d.Id())
 
-	out, getErr := conn.GetKxEnvironment(ctx, &finspace.GetKxEnvironmentInput{
-		EnvironmentId: aws.String(d.Id()),
-	})
-	var nfe *types.ResourceNotFoundException
-	if (getErr != nil && errors.As(getErr, &nfe)) || out.Status == types.EnvironmentStatusDeleted {
-		log.Printf("[DEBUG] FinSpace KxEnvironment %s already deleted. Nothing to delete.", d.Id())
-		return nil
-	}
 	_, err := conn.DeleteKxEnvironment(ctx, &finspace.DeleteKxEnvironmentInput{
 		EnvironmentId: aws.String(d.Id()),
 	})
+	if errs.IsA[*types.ResourceNotFoundException](err) ||
+		errs.IsAErrorMessageContains[*types.ValidationException](err, "The Environment is in DELETED state") {
+		log.Printf("[DEBUG] FinSpace KxEnvironment %s already deleted. Nothing to delete.", d.Id())
+		return nil
+	}
 
 	if err != nil {
 		return create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxEnvironment, d.Id(), err)
@@ -277,12 +275,8 @@ func resourceKxEnvironmentDelete(ctx context.Context, d *schema.ResourceData, me
 	return nil
 }
 
-/*
-*
-
-	As of 2023-02-09 updating network configuration requires 2 separate requests if both DNS and transit gateway
-	configuration is set.
-*/
+// As of 2023-02-09, updating network configuration requires 2 separate requests if both DNS
+// and transit gateway configurationtions are set.
 func updateKxEnvironmentNetwork(ctx context.Context, d *schema.ResourceData, client *finspace.Client) (*finspace.UpdateKxEnvironmentNetworkOutput, error) {
 
 	transitGatewayConfigIn := &finspace.UpdateKxEnvironmentNetworkInput{
@@ -391,7 +385,7 @@ func waitCustomDNSConfigurationUpdated(ctx context.Context, conn *finspace.Clien
 func waitKxEnvironmentDeleted(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EnvironmentStatusDeleteRequested, types.EnvironmentStatusDeleting),
-		Target:  enum.Slice(types.EnvironmentStatusDeleted),
+		Target:  []string{},
 		Refresh: statusKxEnvironment(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -464,6 +458,13 @@ func findKxEnvironmentByID(ctx context.Context, conn *finspace.Client, id string
 		}
 
 		return nil, err
+	}
+	// Treat DELETED status as NotFound
+	if out != nil && out.Status == types.EnvironmentStatusDeleted {
+		return nil, &retry.NotFoundError{
+			LastError:   errors.New("status is deleted"),
+			LastRequest: in,
+		}
 	}
 
 	if out == nil || out.EnvironmentArn == nil {
