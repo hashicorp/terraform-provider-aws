@@ -341,7 +341,7 @@ func expandValidity(l []interface{}) (*acmpca.Validity, error) {
 
 	i, err := ExpandValidityValue(valueType, m["value"].(string))
 	if err != nil {
-		return nil, fmt.Errorf("error parsing value %q: %w", m["value"].(string), err)
+		return nil, fmt.Errorf("parsing value %q: %w", m["value"].(string), err)
 	}
 	result.Value = aws.Int64(i)
 

@@ -183,7 +183,7 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 				return retry.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(fmt.Errorf("error creating Lake Formation data lake settings: %w", err))
+			return retry.NonRetryableError(fmt.Errorf("creating Lake Formation data lake settings: %w", err))
 		}
 		return nil
 	})

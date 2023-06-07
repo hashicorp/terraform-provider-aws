@@ -1164,7 +1164,7 @@ func flattenTargetGroupStickiness(attributes []*elbv2.TargetGroupAttribute) ([]i
 			if sType, ok := m["type"].(string); !ok || sType == "app_cookie" {
 				duration, err := strconv.Atoi(aws.StringValue(attr.Value))
 				if err != nil {
-					return nil, fmt.Errorf("Error converting stickiness.app_cookie.duration_seconds to int: %s", aws.StringValue(attr.Value))
+					return nil, fmt.Errorf("converting stickiness.app_cookie.duration_seconds to int: %s", aws.StringValue(attr.Value))
 				}
 				m["cookie_duration"] = duration
 			}

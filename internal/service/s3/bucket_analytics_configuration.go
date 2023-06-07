@@ -468,7 +468,7 @@ func WaitForDeleteBucketAnalyticsConfiguration(ctx context.Context, conn *s3.S3,
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Bucket Analytics Configuration \"%s:%s\": %w", bucket, name, err)
+		return fmt.Errorf("deleting S3 Bucket Analytics Configuration \"%s:%s\": %w", bucket, name, err)
 	}
 
 	return nil

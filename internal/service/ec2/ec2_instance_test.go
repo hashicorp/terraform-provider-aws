@@ -430,7 +430,7 @@ func TestAccEC2Instance_EBSBlockDevice_invalidIopsForVolumeType(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccInstanceConfig_ebsBlockDeviceInvalidIOPS,
-				ExpectError: regexp.MustCompile(`error creating resource: iops attribute not supported for ebs_block_device with volume_type gp2`),
+				ExpectError: regexp.MustCompile(`creating resource: iops attribute not supported for ebs_block_device with volume_type gp2`),
 			},
 		},
 	})
@@ -446,7 +446,7 @@ func TestAccEC2Instance_EBSBlockDevice_invalidThroughputForVolumeType(t *testing
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccInstanceConfig_ebsBlockDeviceInvalidThroughput,
-				ExpectError: regexp.MustCompile(`error creating resource: throughput attribute not supported for ebs_block_device with volume_type gp2`),
+				ExpectError: regexp.MustCompile(`creating resource: throughput attribute not supported for ebs_block_device with volume_type gp2`),
 			},
 		},
 	})
@@ -713,7 +713,7 @@ func TestAccEC2Instance_gp2WithIopsValue(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccInstanceConfig_gp2IOPSValue(rName),
-				ExpectError: regexp.MustCompile(`error creating resource: iops attribute not supported for root_block_device with volume_type gp2`),
+				ExpectError: regexp.MustCompile(`creating resource: iops attribute not supported for root_block_device with volume_type gp2`),
 			},
 		},
 	})

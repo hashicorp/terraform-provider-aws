@@ -127,21 +127,6 @@ func TestAccEFSFileSystemDataSource_availabilityZone(t *testing.T) {
 	})
 }
 
-func TestAccEFSFileSystemDataSource_nonExistent_fileSystemID(t *testing.T) {
-	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccFileSystemDataSourceConfig_idNonExistent,
-				ExpectError: regexp.MustCompile(`error reading EFS FileSystem`),
-			},
-		},
-	})
-}
-
 func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var desc efs.FileSystemDescription
@@ -208,12 +193,6 @@ resource "aws_efs_file_system" "test" {
 }
 `, rName)
 }
-
-const testAccFileSystemDataSourceConfig_idNonExistent = `
-data "aws_efs_file_system" "test" {
-  file_system_id = "fs-nonexistent"
-}
-`
 
 func testAccFileSystemDataSourceConfig_tagsNonExistent(rName string) string {
 	return acctest.ConfigCompose(

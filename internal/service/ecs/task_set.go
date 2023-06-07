@@ -537,7 +537,7 @@ func retryTaskSetCreate(ctx context.Context, conn *ecs.ECS, input *ecs.CreateTas
 
 	output, ok := outputRaw.(*ecs.CreateTaskSetOutput)
 	if !ok || output == nil || output.TaskSet == nil {
-		return nil, fmt.Errorf("error creating ECS TaskSet: empty output")
+		return nil, fmt.Errorf("creating ECS TaskSet: empty output")
 	}
 
 	return output, err
