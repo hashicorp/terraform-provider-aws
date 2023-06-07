@@ -6,6 +6,7 @@ description: |-
   Terraform resource for managing an AWS {{ .HumanFriendlyService }} {{ .HumanResourceName }}.
 ---
 
+{{- if .IncludeComments }}
 <!---
 TIP: A few guiding principles for writing documentation:
 1. Use simple language while avoiding jargon and figures of speech.
@@ -14,7 +15,7 @@ TIP: A few guiding principles for writing documentation:
 4. Document your feature as it exists now; do not mention the future or past if you can help it.
 5. Use accessible and inclusive language.
 --->`
-
+{{- end }}
 # Resource: aws_{{ .ServicePackage }}_{{ .ResourceSnake }}
 
 Terraform resource for managing an AWS {{ .HumanFriendlyService }} {{ .HumanResourceName }}.
