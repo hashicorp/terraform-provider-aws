@@ -188,7 +188,7 @@ func clearRegexMatchTuples(ctx context.Context, conn *wafregional.WAFRegional, r
 			return conn.UpdateRegexMatchSetWithContext(ctx, input)
 		})
 		if err != nil {
-			return fmt.Errorf("error clearing WAF Regional Regex Match Set (%s): %w", id, err)
+			return fmt.Errorf("clearing WAF Regional Regex Match Set (%s): %w", id, err)
 		}
 	}
 	return nil
@@ -205,7 +205,7 @@ func deleteRegexMatchSet(ctx context.Context, conn *wafregional.WAFRegional, reg
 		return conn.DeleteRegexMatchSetWithContext(ctx, req)
 	})
 	if err != nil {
-		return fmt.Errorf("error deleting WAF Regional Regex Match Set (%s): %w", id, err)
+		return fmt.Errorf("deleting WAF Regional Regex Match Set (%s): %w", id, err)
 	}
 	return nil
 }
