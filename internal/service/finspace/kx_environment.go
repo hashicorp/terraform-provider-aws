@@ -170,7 +170,7 @@ func resourceKxEnvironmentCreate(ctx context.Context, d *schema.ResourceData, me
 		return create.DiagError(names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxEnvironment, d.Id(), err)
 	}
 
-	if _, err := updateKxEnvironmentNetwork(ctx, d, client); err != nil {
+	if err := updateKxEnvironmentNetwork(ctx, d, client); err != nil {
 		return create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Id(), err)
 	}
 
@@ -239,7 +239,7 @@ func resourceKxEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	if d.HasChanges("transit_gateway_configuration") || d.HasChanges("custom_dns_configuration") {
 		update = true
-		if _, err := updateKxEnvironmentNetwork(ctx, d, conn); err != nil {
+		if err := updateKxEnvironmentNetwork(ctx, d, conn); err != nil {
 			return create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxEnvironment, d.Id(), err)
 		}
 	}
@@ -277,8 +277,7 @@ func resourceKxEnvironmentDelete(ctx context.Context, d *schema.ResourceData, me
 
 // As of 2023-02-09, updating network configuration requires 2 separate requests if both DNS
 // and transit gateway configurationtions are set.
-func updateKxEnvironmentNetwork(ctx context.Context, d *schema.ResourceData, client *finspace.Client) (*finspace.UpdateKxEnvironmentNetworkOutput, error) {
-
+func updateKxEnvironmentNetwork(ctx context.Context, d *schema.ResourceData, client *finspace.Client) error {
 	transitGatewayConfigIn := &finspace.UpdateKxEnvironmentNetworkInput{
 		EnvironmentId: aws.String(d.Id()),
 		ClientToken:   aws.String(id.UniqueId()),
@@ -304,32 +303,27 @@ func updateKxEnvironmentNetwork(ctx context.Context, d *schema.ResourceData, cli
 		updateCustomDnsConfig = true
 	}
 
-	var out *finspace.UpdateKxEnvironmentNetworkOutput
-	var err error
-
 	if updateTransitGatewayConfig {
-		out, err = client.UpdateKxEnvironmentNetwork(ctx, transitGatewayConfigIn)
-		if err != nil {
-			return nil, err
+		if _, err := client.UpdateKxEnvironmentNetwork(ctx, transitGatewayConfigIn); err != nil {
+			return err
 		}
 
 		if _, err := waitTransitGatewayConfigurationUpdated(ctx, client, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return nil, err
+			return err
 		}
 	}
 
 	if updateCustomDnsConfig {
-		out, err = client.UpdateKxEnvironmentNetwork(ctx, customDnsConfigIn)
-		if err != nil {
-			return nil, err
+		if _, err := client.UpdateKxEnvironmentNetwork(ctx, customDnsConfigIn); err != nil {
+			return err
 		}
 
 		if _, err := waitCustomDNSConfigurationUpdated(ctx, client, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return out, nil
+	return nil
 }
 
 func waitKxEnvironmentCreated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxEnvironmentOutput, error) {
