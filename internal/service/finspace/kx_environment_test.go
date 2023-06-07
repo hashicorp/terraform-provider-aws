@@ -346,8 +346,8 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     = %[1]q
-  kms_key_id =aws_kms_key.test.arn
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.arn
 }
 `, rName)
 }
@@ -360,8 +360,8 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     = %[2]q
-  kms_key_id =aws_kms_key.test.arn
+  name       = %[2]q
+  kms_key_id = aws_kms_key.test.arn
 }
 `, rName, rName2)
 }
@@ -374,8 +374,8 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     = %[1]q
-  kms_key_id =aws_kms_key.test.arn
+  name        = %[1]q
+  kms_key_id  = aws_kms_key.test.arn
   description = %[2]q
 }
 `, rName, desc)
@@ -389,14 +389,14 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_ec2_transit_gateway" "test" {
-    description = "test"
+  description = "test"
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     = %[1]q
-  kms_key_id =aws_kms_key.test.arn
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.arn
   transit_gateway_configuration {
-    transit_gateway_id = aws_ec2_transit_gateway.test.id
+    transit_gateway_id  = aws_ec2_transit_gateway.test.id
     routable_cidr_space = %[2]q
   }
 
@@ -412,11 +412,11 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     = %[1]q
-  kms_key_id =aws_kms_key.test.arn
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.arn
   custom_dns_configuration {
     custom_dns_server_name = %[2]q
-    custom_dns_server_ip = %[3]q
+    custom_dns_server_ip   = %[3]q
   }
 
 }
@@ -431,8 +431,8 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     = %[1]q
-  kms_key_id =aws_kms_key.test.arn
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.arn
   tags = {
     %[2]q = %[3]q
   }
@@ -449,8 +449,8 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     = %[1]q
-  kms_key_id =aws_kms_key.test.arn
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.arn
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q

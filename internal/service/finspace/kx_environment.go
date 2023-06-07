@@ -3,6 +3,7 @@ package finspace
 import (
 	"context"
 	"errors"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"log"
 	"time"
 
@@ -205,7 +206,7 @@ func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 		return create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxEnvironment, d.Id(), err)
 	}
 
-	if err := d.Set("custom_dns_configuration", flattenCustomDnsConfigurations(out.CustomDNSConfiguration)); err != nil {
+	if err := d.Set("custom_dns_configuration", flattenCustomDNSConfigurations(out.CustomDNSConfiguration)); err != nil {
 		return create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxEnvironment, d.Id(), err)
 	}
 
@@ -305,7 +306,7 @@ func updateKxEnvironmentNetwork(ctx context.Context, d *schema.ResourceData, cli
 
 	if v, ok := d.GetOk("custom_dns_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil &&
 		d.HasChanges("custom_dns_configuration") {
-		customDnsConfigIn.CustomDNSConfiguration = expandCustomDnsConfigurations(v.([]interface{}))
+		customDnsConfigIn.CustomDNSConfiguration = expandCustomDNSConfigurations(v.([]interface{}))
 		updateCustomDnsConfig = true
 	}
 
@@ -329,7 +330,7 @@ func updateKxEnvironmentNetwork(ctx context.Context, d *schema.ResourceData, cli
 			return nil, err
 		}
 
-		if _, err := waitCustomDnsConfigurationUpdated(ctx, client, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitCustomDNSConfigurationUpdated(ctx, client, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return nil, err
 		}
 	}
@@ -339,8 +340,8 @@ func updateKxEnvironmentNetwork(ctx context.Context, d *schema.ResourceData, cli
 
 func waitKxEnvironmentCreated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(types.EnvironmentStatusCreateRequested), string(types.EnvironmentStatusCreating)},
-		Target:                    []string{string(types.EnvironmentStatusCreated)},
+		Pending:                   enum.Slice(types.EnvironmentStatusCreateRequested, types.EnvironmentStatusCreating),
+		Target:                    enum.Slice(types.EnvironmentStatusCreated),
 		Refresh:                   statusKxEnvironment(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -357,8 +358,8 @@ func waitKxEnvironmentCreated(ctx context.Context, conn *finspace.Client, id str
 
 func waitTransitGatewayConfigurationUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(types.TgwStatusUpdateRequested), string(types.TgwStatusUpdating)},
-		Target:  []string{string(types.TgwStatusSuccessfullyUpdated)},
+		Pending: enum.Slice(types.TgwStatusUpdateRequested, types.TgwStatusUpdating),
+		Target:  enum.Slice(types.TgwStatusSuccessfullyUpdated),
 		Refresh: statusTransitGatewayConfiguration(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -371,11 +372,11 @@ func waitTransitGatewayConfigurationUpdated(ctx context.Context, conn *finspace.
 	return nil, err
 }
 
-func waitCustomDnsConfigurationUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxEnvironmentOutput, error) {
+func waitCustomDNSConfigurationUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(types.DnsStatusUpdateRequested), string(types.DnsStatusUpdating)},
-		Target:  []string{string(types.DnsStatusSuccessfullyUpdated)},
-		Refresh: statusCustomDnsConfiguration(ctx, conn, id),
+		Pending: enum.Slice(types.DnsStatusUpdateRequested, types.DnsStatusUpdating),
+		Target:  enum.Slice(types.DnsStatusSuccessfullyUpdated),
+		Refresh: statusCustomDNSConfiguration(ctx, conn, id),
 		Timeout: timeout,
 	}
 
@@ -389,8 +390,8 @@ func waitCustomDnsConfigurationUpdated(ctx context.Context, conn *finspace.Clien
 
 func waitKxEnvironmentDeleted(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(types.EnvironmentStatusDeleteRequested), string(types.EnvironmentStatusDeleting)},
-		Target:  []string{string(types.EnvironmentStatusDeleted)},
+		Pending: enum.Slice(types.EnvironmentStatusDeleteRequested, types.EnvironmentStatusDeleting),
+		Target:  enum.Slice(types.EnvironmentStatusDeleted),
 		Refresh: statusKxEnvironment(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -433,7 +434,7 @@ func statusTransitGatewayConfiguration(ctx context.Context, conn *finspace.Clien
 	}
 }
 
-func statusCustomDnsConfiguration(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
+func statusCustomDNSConfiguration(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findKxEnvironmentByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -492,7 +493,7 @@ func expandTransitGatewayConfiguration(tfList []interface{}) *types.TransitGatew
 	return a
 }
 
-func expandCustomDnsConfiguration(tfMap map[string]interface{}) *types.CustomDNSServer {
+func expandCustomDNSConfiguration(tfMap map[string]interface{}) *types.CustomDNSServer {
 	if tfMap == nil {
 		return nil
 	}
@@ -510,7 +511,7 @@ func expandCustomDnsConfiguration(tfMap map[string]interface{}) *types.CustomDNS
 	return a
 }
 
-func expandCustomDnsConfigurations(tfList []interface{}) []types.CustomDNSServer {
+func expandCustomDNSConfigurations(tfList []interface{}) []types.CustomDNSServer {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -524,7 +525,7 @@ func expandCustomDnsConfigurations(tfList []interface{}) []types.CustomDNSServer
 			continue
 		}
 
-		a := expandCustomDnsConfiguration(m)
+		a := expandCustomDNSConfiguration(m)
 
 		if a == nil {
 			continue
@@ -554,7 +555,7 @@ func flattenTransitGatewayConfiguration(apiObject *types.TransitGatewayConfigura
 	return []interface{}{m}
 }
 
-func flattenCustomDnsConfiguration(apiObject *types.CustomDNSServer) map[string]interface{} {
+func flattenCustomDNSConfiguration(apiObject *types.CustomDNSServer) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -572,7 +573,7 @@ func flattenCustomDnsConfiguration(apiObject *types.CustomDNSServer) map[string]
 	return m
 }
 
-func flattenCustomDnsConfigurations(apiObjects []types.CustomDNSServer) []interface{} {
+func flattenCustomDNSConfigurations(apiObjects []types.CustomDNSServer) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -580,7 +581,7 @@ func flattenCustomDnsConfigurations(apiObjects []types.CustomDNSServer) []interf
 	var l []interface{}
 
 	for _, apiObject := range apiObjects {
-		l = append(l, flattenCustomDnsConfiguration(&apiObject))
+		l = append(l, flattenCustomDNSConfiguration(&apiObject))
 	}
 
 	return l

@@ -21,8 +21,8 @@ resource "aws_kms_key" "example" {
 }
 
 resource "aws_finspace_kx_environment" "example" {
-  name     = "my-tf-kx-environment"
-  kms_key_id =aws_kms_key.example.arn
+  name       = "my-tf-kx-environment"
+  kms_key_id = aws_kms_key.example.arn
 }
 ```
 
@@ -39,18 +39,18 @@ resource "aws_ec2_transit_gateway" "example" {
 }
 
 resource "aws_finspace_kx_environment" "example_env" {
-  name = "my-tf-kx-environment"
+  name        = "my-tf-kx-environment"
   description = "Environment description"
-  kms_key_id = aws_kms_key.test.arn
+  kms_key_id  = aws_kms_key.test.arn
   
   transit_gateway_configuration {
-    transit_gateway_id = aws_ec2_transit_gateway.example.id
+    transit_gateway_id  = aws_ec2_transit_gateway.example.id
     routable_cidr_space = "100.64.0.0/26"
   }
 
   custom_dns_configuration {
     custom_dns_server_name = "example.finspace.amazonaws.com"
-    custom_dns_server_ip = "10.0.0.76"
+    custom_dns_server_ip   = "10.0.0.76"
   }
 }
 ```
