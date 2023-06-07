@@ -2,7 +2,9 @@ package glacier
 
 // Exports for use in tests only.
 var (
-	ResourceVault = resourceVault
+	ResourceVault     = resourceVault
+	ResourceVaultLock = resourceVaultLock
 
-	FindVaultByName = findVaultByName
+	FindVaultByName     = findVaultByName
+	FindVaultLockByName = findVaultLockByName
 )

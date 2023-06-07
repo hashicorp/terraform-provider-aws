@@ -34,7 +34,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVaultLock,
+			Factory:  resourceVaultLock,
 			TypeName: "aws_glacier_vault_lock",
 		},
 	}

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfglacier "github.com/hashicorp/terraform-provider-aws/internal/service/glacier"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGlacierVault_basic(t *testing.T) {
@@ -24,7 +25,7 @@ func TestAccGlacierVault_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glacier.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlacierEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVaultDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -57,7 +58,7 @@ func TestAccGlacierVault_notification(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glacier.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlacierEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVaultDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,7 +104,7 @@ func TestAccGlacierVault_policy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glacier.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlacierEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVaultDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -147,7 +148,7 @@ func TestAccGlacierVault_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glacier.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlacierEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVaultDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -193,7 +194,7 @@ func TestAccGlacierVault_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glacier.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlacierEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVaultDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -217,7 +218,7 @@ func TestAccGlacierVault_ignoreEquivalent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glacier.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlacierEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVaultDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -251,9 +252,9 @@ func testAccCheckVaultExists(ctx context.Context, n string, v *glacier.DescribeV
 			return fmt.Errorf("No Glacier Vault ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierClient()
 
-		_, err := tfglacier.FindVaultByName(ctx, conn, rs.Primary.ID)
+		output, err := tfglacier.FindVaultByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -267,7 +268,7 @@ func testAccCheckVaultExists(ctx context.Context, n string, v *glacier.DescribeV
 
 func testAccCheckVaultDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierClient()
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glacier_vault" {
