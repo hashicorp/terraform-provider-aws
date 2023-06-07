@@ -241,10 +241,6 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 		},
 	)
 
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
 	return append(diags, resourceSpotInstanceRequestRead(ctx, d, meta)...)
 }
 
