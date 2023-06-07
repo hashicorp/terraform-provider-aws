@@ -188,7 +188,7 @@ func TestAccVPCNATGateway_tags(t *testing.T) {
 	})
 }
 
-func TestAccVPCNATGateway_secondaryAllocationIds(t *testing.T) {
+func TestAccVPCNATGateway_secondaryAllocationIDs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
@@ -223,7 +223,7 @@ func TestAccVPCNATGateway_secondaryAllocationIds(t *testing.T) {
 	})
 }
 
-func TestAccVPCNATGateway_secondaryPrivateIpAddressCount(t *testing.T) {
+func TestAccVPCNATGateway_secondaryPrivateIPAddressCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
@@ -259,7 +259,7 @@ func TestAccVPCNATGateway_secondaryPrivateIpAddressCount(t *testing.T) {
 	})
 }
 
-func TestAccVPCNATGateway_secondaryPrivateIpAddresses(t *testing.T) {
+func TestAccVPCNATGateway_secondaryPrivateIPAddresses(t *testing.T) {
 	ctx := acctest.Context(t)
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
