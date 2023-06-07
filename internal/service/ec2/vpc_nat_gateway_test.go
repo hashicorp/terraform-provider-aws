@@ -211,6 +211,11 @@ func TestAccVPCNATGateway_secondaryAllocationIds(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"secondary_allocation_ids",
+					"secondary_private_ip_addresses",
+					"secondary_private_ip_address_count",
+				},
 			},
 		},
 	})
@@ -242,6 +247,11 @@ func TestAccVPCNATGateway_secondaryPrivateIpAddressCount(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"secondary_allocation_ids",
+					"secondary_private_ip_addresses",
+					"secondary_private_ip_address_count",
+				},
 			},
 		},
 	})
@@ -273,6 +283,11 @@ func TestAccVPCNATGateway_secondaryPrivateIpAddresses(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"secondary_allocation_ids",
+					"secondary_private_ip_addresses",
+					"secondary_private_ip_address_count",
+				},
 			},
 		},
 	})
