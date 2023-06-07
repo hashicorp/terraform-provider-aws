@@ -139,6 +139,7 @@ const (
 )
 
 func resourceKxEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).FinSpaceClient()
 
 	in := &finspace.CreateKxEnvironmentInput{
@@ -157,27 +158,28 @@ func resourceKxEnvironmentCreate(ctx context.Context, d *schema.ResourceData, me
 
 	out, err := client.CreateKxEnvironment(ctx, in)
 	if err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get("name").(string), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get("name").(string), err)...)
 	}
 
 	if out == nil || out.EnvironmentId == nil {
-		return create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get("name").(string), errors.New("empty output"))
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get("name").(string), errors.New("empty output"))...)
 	}
 
 	d.SetId(aws.ToString(out.EnvironmentId))
 
 	if _, err := waitKxEnvironmentCreated(ctx, client, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxEnvironment, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxEnvironment, d.Id(), err)...)
 	}
 
 	if err := updateKxEnvironmentNetwork(ctx, d, client); err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Id(), err)...)
 	}
 
-	return resourceKxEnvironmentRead(ctx, d, meta)
+	return append(diags, resourceKxEnvironmentRead(ctx, d, meta)...)
 }
 
 func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
 	out, err := findKxEnvironmentByID(ctx, conn, d.Id())
@@ -185,11 +187,11 @@ func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FinSpace KxEnvironment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxEnvironment, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxEnvironment, d.Id(), err)...)
 	}
 
 	d.Set("id", out.EnvironmentId)
@@ -204,17 +206,18 @@ func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("last_modified_timestamp", out.UpdateTimestamp.String())
 
 	if err := d.Set("transit_gateway_configuration", flattenTransitGatewayConfiguration(out.TransitGatewayConfiguration)); err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxEnvironment, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxEnvironment, d.Id(), err)...)
 	}
 
 	if err := d.Set("custom_dns_configuration", flattenCustomDNSConfigurations(out.CustomDNSConfiguration)); err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxEnvironment, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxEnvironment, d.Id(), err)...)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceKxEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
 	update := false
@@ -233,24 +236,25 @@ func resourceKxEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, me
 		log.Printf("[DEBUG] Updating FinSpace KxEnvironment (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateKxEnvironment(ctx, in)
 		if err != nil {
-			return create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxEnvironment, d.Id(), err)
+			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxEnvironment, d.Id(), err)...)
 		}
 	}
 
 	if d.HasChanges("transit_gateway_configuration") || d.HasChanges("custom_dns_configuration") {
 		update = true
 		if err := updateKxEnvironmentNetwork(ctx, d, conn); err != nil {
-			return create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxEnvironment, d.Id(), err)
+			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxEnvironment, d.Id(), err)...)
 		}
 	}
 
 	if !update {
-		return nil
+		return diags
 	}
-	return resourceKxEnvironmentRead(ctx, d, meta)
+	return append(diags, resourceKxEnvironmentRead(ctx, d, meta)...)
 }
 
 func resourceKxEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
 	log.Printf("[INFO] Deleting FinSpace KxEnvironment %s", d.Id())
@@ -261,18 +265,18 @@ func resourceKxEnvironmentDelete(ctx context.Context, d *schema.ResourceData, me
 	if errs.IsA[*types.ResourceNotFoundException](err) ||
 		errs.IsAErrorMessageContains[*types.ValidationException](err, "The Environment is in DELETED state") {
 		log.Printf("[DEBUG] FinSpace KxEnvironment %s already deleted. Nothing to delete.", d.Id())
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxEnvironment, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxEnvironment, d.Id(), err)...)
 	}
 
 	if _, err := waitKxEnvironmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxEnvironment, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxEnvironment, d.Id(), err)...)
 	}
 
-	return nil
+	return diags
 }
 
 // As of 2023-02-09, updating network configuration requires 2 separate requests if both DNS
