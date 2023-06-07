@@ -101,7 +101,7 @@ func resourceResourceServerCreate(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.CreateResourceServerWithContext(ctx, params)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating Cognito Resource Server: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Cognito Resource Server: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s|%s", userPoolID, identifier))

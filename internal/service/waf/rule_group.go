@@ -172,7 +172,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		err := updateRuleGroupResource(ctx, d.Id(), oldRules, newRules, conn)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Updating WAF Rule Group: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating WAF Rule Group (%s): %s", d.Id(), err)
 		}
 	}
 

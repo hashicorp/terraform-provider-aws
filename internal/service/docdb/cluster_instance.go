@@ -391,7 +391,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			_, err = conn.ModifyDBInstanceWithContext(ctx, req)
 		}
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error modifying DB Instance %s: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying DB Instance %s: %s", d.Id(), err)
 		}
 
 		// reuse db_instance refresh func

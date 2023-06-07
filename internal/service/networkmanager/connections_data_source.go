@@ -51,7 +51,7 @@ func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta
 	output, err := FindConnections(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("error listing Network Manager Connections: %s", err)
+		return diag.Errorf("listing Network Manager Connections: %s", err)
 	}
 
 	var connectionIDs []string
