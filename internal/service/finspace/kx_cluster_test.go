@@ -455,37 +455,37 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     		= %[1]q
-  kms_key_id 	= aws_kms_key.test.arn
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.arn
 }
 
 data "aws_iam_policy_document" "key_policy" {
   statement {
     actions = [
       "kms:Decrypt",
-	  "kms:GenerateDataKey"
+      "kms:GenerateDataKey"
     ]
 
     resources = [
-      "${aws_kms_key.test.arn}",
+      aws_kms_key.test.arn,
     ]
 
-	principals {
+    principals {
       type        = "Service"
       identifiers = ["finspace.amazonaws.com"]
     }
 
-	condition {
-	  test		= "ArnLike"
-	  variable 	= "aws:SourceArn"
-	  values    = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
+    condition {
+      test	   = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
 
-	condition {
-	  test		= "StringEquals"
-	  variable 	= "aws:SourceAccount"
-	  values    = ["${data.aws_caller_identity.current.account_id}"]
-	}
+    condition {
+      test	   = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
   }
 
   statement {
@@ -497,7 +497,7 @@ data "aws_iam_policy_document" "key_policy" {
       "*",
     ]
 
-	principals {
+    principals {
       type        = "AWS"
       identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
@@ -521,21 +521,21 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name       = %[1]q
-  vpc_id     = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
@@ -554,23 +554,23 @@ resource "aws_route" "r" {
 }
 
 resource "aws_finspace_kx_cluster" "test" {
- name                 = %[1]q
- environment_id	      = aws_finspace_kx_environment.test.id
- type                 = "HDB"
- release_label        = "1.0"
- az_mode              = "SINGLE"
- availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
- capacity_configuration {
-	node_count = 2
-	node_type  = "kx.s.xlarge"
- }
+  name                 = %[1]q
+  environment_id	   = aws_finspace_kx_environment.test.id
+  type                 = "HDB"
+  release_label        = "1.0"
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  capacity_configuration {
+    node_count = 2
+    node_type  = "kx.s.xlarge"
+  }
 
- vpc_configuration {
-	vpc_id             = aws_vpc.test.id
-	security_group_ids = [aws_security_group.test.id]
-	subnet_ids         = [aws_subnet.test.id]
-	ip_address_type    = "IP_V4"
- }
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
 }
 `, rName)
 }
@@ -584,42 +584,42 @@ output "account_id" {
 }
 
 resource "aws_kms_key" "test" {
-description             = %[1]q
-deletion_window_in_days = 7
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_finspace_kx_environment" "test" {
-name     		= %[1]q
-kms_key_id 	    = aws_kms_key.test.arn
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.arn
 }
 
 data "aws_iam_policy_document" "key_policy" {
   statement {
     actions = [
       "kms:Decrypt",
-	  "kms:GenerateDataKey"
+      "kms:GenerateDataKey"
     ]
 
     resources = [
-      "${aws_kms_key.test.arn}",
+      aws_kms_key.test.arn,
     ]
 
-	principals {
+    principals {
       type        = "Service"
       identifiers = ["finspace.amazonaws.com"]
     }
 
-	condition {
-	  test		= "ArnLike"
-	  variable 	= "aws:SourceArn"
-	  values    = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
+    condition {
+      test	   = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
 
-	condition {
-	  test		= "StringEquals"
-	  variable 	= "aws:SourceAccount"
-	  values    = ["${data.aws_caller_identity.current.account_id}"]
-	}
+    condition {
+      test	   = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
   }
 
   statement {
@@ -631,7 +631,7 @@ data "aws_iam_policy_document" "key_policy" {
       "*",
     ]
 
-	principals {
+    principals {
       type        = "AWS"
       identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
@@ -655,21 +655,21 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name       = %[1]q
-  vpc_id     = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
@@ -682,30 +682,30 @@ data "aws_route_tables" "rts" {
 }
 
 resource "aws_route" "r" {
-  route_table_id              = tolist(data.aws_route_tables.rts.ids)[0]
-  destination_cidr_block      = "0.0.0.0/0"
-  gateway_id                  = aws_internet_gateway.test.id
+  route_table_id         = tolist(data.aws_route_tables.rts.ids)[0]
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.test.id
 }
 
 resource "aws_finspace_kx_cluster" "test" {
- name                 = %[1]q
- description	      = %[2]q
- environment_id	      = aws_finspace_kx_environment.test.id
- az_mode              = "SINGLE"
- availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
- type                 = "HDB"
- release_label        = "1.0"
- capacity_configuration {
-	node_count = 2
-	node_type  = "kx.s.xlarge"
- }
+  name                 = %[1]q
+  description	       = %[2]q
+  environment_id	   = aws_finspace_kx_environment.test.id
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  type                 = "HDB"
+  release_label        = "1.0"
+  capacity_configuration {
+    node_count = 2
+    node_type  = "kx.s.xlarge"
+  }
 
- vpc_configuration {
-	vpc_id             = aws_vpc.test.id
-	security_group_ids = [aws_security_group.test.id]
-	subnet_ids         = [aws_subnet.test.id]
-	ip_address_type    = "IP_V4"
- }
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
 }
 `, rName, description)
 }
@@ -719,42 +719,42 @@ output "account_id" {
 }
 
 resource "aws_kms_key" "test" {
-description             = %[1]q
-deletion_window_in_days = 7
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_finspace_kx_environment" "test" {
-name     		= %[1]q
-kms_key_id 	    = aws_kms_key.test.arn
+  name     	 = %[1]q
+  kms_key_id = aws_kms_key.test.arn
 }
 
 data "aws_iam_policy_document" "key_policy" {
   statement {
     actions = [
       "kms:Decrypt",
-	  "kms:GenerateDataKey"
+      "kms:GenerateDataKey"
     ]
 
     resources = [
-      "${aws_kms_key.test.arn}",
+      aws_kms_key.test.arn,
     ]
 
-	principals {
+    principals {
       type        = "Service"
       identifiers = ["finspace.amazonaws.com"]
     }
 
-	condition {
-	  test		= "ArnLike"
-	  variable 	= "aws:SourceArn"
-	  values = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
+    condition {
+      test	   = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
 
-	condition {
-	  test		= "StringEquals"
-	  variable 	= "aws:SourceAccount"
-	  values    = ["${data.aws_caller_identity.current.account_id}"]
-	}
+    condition {
+      test	   = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
   }
 
   statement {
@@ -766,7 +766,7 @@ data "aws_iam_policy_document" "key_policy" {
       "*",
     ]
 
-	principals {
+    principals {
       type        = "AWS"
       identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
@@ -790,21 +790,21 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name       = %[1]q
-  vpc_id     = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
@@ -823,27 +823,27 @@ resource "aws_route" "r" {
 }
 
 resource "aws_finspace_kx_cluster" "test" {
- name                 = %[1]q
- environment_id	      = aws_finspace_kx_environment.test.id
- az_mode              = "SINGLE"
- availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
- type                 = "HDB"
- release_label	      = "1.0"
- capacity_configuration {
-	node_count = 2
-	node_type  = "kx.s.xlarge"
- }
+  name                 = %[1]q
+  environment_id	   = aws_finspace_kx_environment.test.id
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  type                 = "HDB"
+  release_label	       = "1.0"
+  capacity_configuration {
+    node_count = 2
+    node_type  = "kx.s.xlarge"
+  }
 
- vpc_configuration {
-	vpc_id             = aws_vpc.test.id
-	security_group_ids = [aws_security_group.test.id]
-	subnet_ids         = [aws_subnet.test.id]
-	ip_address_type    = "IP_V4"
- }
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
 
- command_line_arguments = {
-   %[2]q = %[3]q
- }
+  command_line_arguments = {
+    %[2]q = %[3]q
+  }
 }
 `, rName, arg1, val1)
 }
@@ -862,37 +862,37 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     		= %[1]q
-  kms_key_id 	= aws_kms_key.test.arn
+  name     	 = %[1]q
+  kms_key_id = aws_kms_key.test.arn
 }
 
 data "aws_iam_policy_document" "key_policy" {
   statement {
     actions = [
       "kms:Decrypt",
-	  "kms:GenerateDataKey"
+      "kms:GenerateDataKey"
     ]
 
     resources = [
-      "${aws_kms_key.test.arn}",
+      aws_kms_key.test.arn,
     ]
 
-	principals {
+    principals {
       type        = "Service"
       identifiers = ["finspace.amazonaws.com"]
     }
 
-	condition {
-	  test		= "ArnLike"
-	  variable 	= "aws:SourceArn"
-	  values    = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
+    condition {
+      test	   = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
 
-	condition {
-	  test		= "StringEquals"
-	  variable 	= "aws:SourceAccount"
-	  values    = ["${data.aws_caller_identity.current.account_id}"]
-	}
+    condition {
+      test	   = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
   }
 
   statement {
@@ -904,7 +904,7 @@ data "aws_iam_policy_document" "key_policy" {
       "*",
     ]
 
-	principals {
+    principals {
       type        = "AWS"
       identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
@@ -928,21 +928,21 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name    = %[1]q
-  vpc_id  = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
@@ -961,27 +961,27 @@ resource "aws_route" "r" {
 }
 
 resource "aws_finspace_kx_cluster" "test" {
- name                 = %[1]q
- environment_id	      = aws_finspace_kx_environment.test.id
- type                 = "HDB"
- az_mode              = "SINGLE"
- availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
- release_label	      = "1.0"
- capacity_configuration {
-	node_count = 2
-	node_type  = "kx.s.xlarge"
- }
+  name                 = %[1]q
+  environment_id	   = aws_finspace_kx_environment.test.id
+  type                 = "HDB"
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  release_label	       = "1.0"
+  capacity_configuration {
+    node_count = 2
+    node_type  = "kx.s.xlarge"
+  }
 
- vpc_configuration {
-	vpc_id             = aws_vpc.test.id
-	security_group_ids = [aws_security_group.test.id]
-	subnet_ids         = [aws_subnet.test.id]
-	ip_address_type    = "IP_V4"
- }
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
 
- tags = {
-   %[2]q = %[3]q
- }
+  tags = {
+    %[2]q = %[3]q
+  }
 }
 `, rName, tagKey1, tagValue1)
 }
@@ -995,42 +995,42 @@ output "account_id" {
 }
 
 resource "aws_kms_key" "test" {
-description             = %[1]q
-deletion_window_in_days = 7
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_finspace_kx_environment" "test" {
-name     		= %[1]q
-kms_key_id 	    = aws_kms_key.test.arn
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.arn
 }
 
 data "aws_iam_policy_document" "key_policy" {
   statement {
     actions = [
       "kms:Decrypt",
-	  "kms:GenerateDataKey"
+      "kms:GenerateDataKey"
     ]
 
     resources = [
-      "${aws_kms_key.test.arn}",
+      aws_kms_key.test.arn,
     ]
 
-	principals {
+    principals {
       type        = "Service"
       identifiers = ["finspace.amazonaws.com"]
     }
 
-	condition {
-	  test		= "ArnLike"
-	  variable 	= "aws:SourceArn"
-	  values    = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
+    condition {
+      test		= "ArnLike"
+      variable 	= "aws:SourceArn"
+      values    = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
 
-	condition {
-	  test		= "StringEquals"
-	  variable 	= "aws:SourceAccount"
-	  values    = ["${data.aws_caller_identity.current.account_id}"]
-	}
+    condition {
+      test		= "StringEquals"
+      variable 	= "aws:SourceAccount"
+      values    = [data.aws_caller_identity.current.account_id]
+    }
   }
 
   statement {
@@ -1042,7 +1042,7 @@ data "aws_iam_policy_document" "key_policy" {
       "*",
     ]
 
-	principals {
+    principals {
       type        = "AWS"
       identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
@@ -1066,21 +1066,21 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name       = %[1]q
-  vpc_id     = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
@@ -1099,17 +1099,17 @@ resource "aws_route" "r" {
 }
 
 resource "aws_finspace_kx_database" "test" {
-name           	= %[1]q
-environment_id	= aws_finspace_kx_environment.test.id
+  name           	= %[1]q
+  environment_id	= aws_finspace_kx_environment.test.id
 }
 
 resource "aws_finspace_kx_cluster" "test" {
- name                 = %[1]q
- environment_id	      = aws_finspace_kx_environment.test.id
- type                 = "HDB"
- release_label	      = "1.0"
- az_mode              = "SINGLE"
- availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  name                 = %[1]q
+  environment_id	   = aws_finspace_kx_environment.test.id
+  type                 = "HDB"
+  release_label	       = "1.0"
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
 
   cache_storage_configurations {
     type = "CACHE_1000"
@@ -1117,24 +1117,24 @@ resource "aws_finspace_kx_cluster" "test" {
   }
 
   database {
-	database_name = aws_finspace_kx_database.test.name
-	cache_configurations {
+    database_name = aws_finspace_kx_database.test.name
+    cache_configurations {
       cache_type = "CACHE_1000"
-	  db_paths   = ["/"]
-	}
+      db_paths   = ["/"]
+    }
   }
 
- capacity_configuration {
-	node_count = 2
-	node_type  = "kx.s.xlarge"
- }
+  capacity_configuration {
+    node_count = 2
+    node_type  = "kx.s.xlarge"
+  }
 
- vpc_configuration {
-	vpc_id             = aws_vpc.test.id
-	security_group_ids = [aws_security_group.test.id]
-	subnet_ids         = [aws_subnet.test.id]
-	ip_address_type    = "IP_V4"
- }
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
 }
 `, rName)
 }
@@ -1153,37 +1153,37 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     		= %[1]q
-  kms_key_id 	= aws_kms_key.test.arn
+  name     	 = %[1]q
+  kms_key_id = aws_kms_key.test.arn
 }
 
 data "aws_iam_policy_document" "key_policy" {
   statement {
     actions = [
       "kms:Decrypt",
-	  "kms:GenerateDataKey"
+      "kms:GenerateDataKey"
     ]
 
     resources = [
-      "${aws_kms_key.test.arn}",
+      aws_kms_key.test.arn,
     ]
 
-	principals {
+    principals {
       type        = "Service"
       identifiers = ["finspace.amazonaws.com"]
     }
 
-	condition {
-	  test		= "ArnLike"
-	  variable 	= "aws:SourceArn"
-	  values    = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
+    condition {
+      test	   = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
 
-	condition {
-	  test		= "StringEquals"
-	  variable 	= "aws:SourceAccount"
-	  values    = ["${data.aws_caller_identity.current.account_id}"]
-	}
+    condition {
+      test	   = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
   }
 
   statement {
@@ -1195,7 +1195,7 @@ data "aws_iam_policy_document" "key_policy" {
       "*",
     ]
 
-	principals {
+    principals {
       type        = "AWS"
       identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
@@ -1219,21 +1219,21 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name    = %[1]q
-  vpc_id  = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
@@ -1256,60 +1256,59 @@ resource "aws_s3_bucket" "test" {
 }
 
 data "aws_iam_policy_document" "bucket_policy" {
-
   statement {
     actions = [
       "s3:GetObject",
-	  "s3:GetObjectTagging"
+      "s3:GetObjectTagging"
     ]
 
     resources = [
       "arn:aws:s3:::${aws_s3_bucket.test.id}/*",
     ]
 
-	principals {
+    principals {
       type        = "Service"
       identifiers = ["finspace.amazonaws.com"]
     }
 
-	condition {
-	  test		= "ArnLike"
-	  variable 	= "aws:SourceArn"
-	  values    = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
+    condition {
+      test	   = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
 
-	condition {
-	  test		= "StringEquals"
-	  variable 	= "aws:SourceAccount"
-	  values    = ["${data.aws_caller_identity.current.account_id}"]
-	}
+    condition {
+      test	   = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
   }
 
   statement {
     actions = [
-	  "s3:ListBucket"
+      "s3:ListBucket"
     ]
 
     resources = [
       "arn:aws:s3:::${aws_s3_bucket.test.id}",
     ]
-	
-	principals {
+    
+    principals {
       type        = "Service"
       identifiers = ["finspace.amazonaws.com"]
     }
 
-	condition {
-	  test		= "ArnLike"
-	  variable 	= "aws:SourceArn"
-	  values    = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
+    condition {
+      test	   = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
 
-	condition {
-	  test		= "StringEquals"
-	  variable 	= "aws:SourceAccount"
-	  values    = ["${data.aws_caller_identity.current.account_id}"]
-	}
+    condition {
+      test	   = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
   }
 }
 
@@ -1319,33 +1318,33 @@ resource "aws_s3_bucket_policy" "test" {
 }
 
 resource "aws_s3_object" "object" {
-    bucket = aws_s3_bucket.test.id
-    key    = %[2]q
-    source = %[2]q
+  bucket = aws_s3_bucket.test.id
+  key    = %[2]q
+  source = %[2]q
 }
 
 resource "aws_finspace_kx_cluster" "test" {
- name                 = %[1]q
- environment_id	      = aws_finspace_kx_environment.test.id
- type                 = "HDB"
- release_label	      = "1.0"
- az_mode              = "SINGLE"
- availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
- capacity_configuration {
-	node_count = 2
-	node_type  = "kx.s.xlarge"
- }
+  name                 = %[1]q
+  environment_id	   = aws_finspace_kx_environment.test.id
+  type                 = "HDB"
+  release_label	       = "1.0"
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  capacity_configuration {
+    node_count = 2
+    node_type  = "kx.s.xlarge"
+  }
 
- vpc_configuration {
-	vpc_id             = aws_vpc.test.id
-	security_group_ids = [aws_security_group.test.id]
-	subnet_ids         = [aws_subnet.test.id]
-	ip_address_type    = "IP_V4"
- }
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
 
   code {
-	s3_bucket = aws_s3_bucket.test.id
-	s3_key    = aws_s3_object.object.key
+    s3_bucket = aws_s3_bucket.test.id
+    s3_key    = aws_s3_object.object.key
   }
 }
 `, rName, path)
@@ -1360,42 +1359,42 @@ output "account_id" {
 }
 
 resource "aws_kms_key" "test" {
-description             = %[1]q
-deletion_window_in_days = 7
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_finspace_kx_environment" "test" {
-name       = %[1]q
-kms_key_id = aws_kms_key.test.arn
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.arn
 }
 
 data "aws_iam_policy_document" "key_policy" {
   statement {
     actions = [
       "kms:Decrypt",
-	  "kms:GenerateDataKey"
+      "kms:GenerateDataKey"
     ]
 
     resources = [
-      "${aws_kms_key.test.arn}",
+      aws_kms_key.test.arn,
     ]
 
-	principals {
+    principals {
       type        = "Service"
       identifiers = ["finspace.amazonaws.com"]
     }
 
-	condition {
-	  test		= "ArnLike"
-	  variable 	= "aws:SourceArn"
-	  values    = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
+    condition {
+      test	   = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
 
-	condition {
-	  test		= "StringEquals"
-	  variable 	= "aws:SourceAccount"
-	  values    = ["${data.aws_caller_identity.current.account_id}"]
-	}
+    condition {
+      test	   = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
   }
 
   statement {
@@ -1407,7 +1406,7 @@ data "aws_iam_policy_document" "key_policy" {
       "*",
     ]
 
-	principals {
+    principals {
       type        = "AWS"
       identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
@@ -1447,17 +1446,17 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 
   ingress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
@@ -1476,22 +1475,22 @@ resource "aws_route" "r" {
 }
 
 resource "aws_finspace_kx_cluster" "test" {
- name             = %[1]q
- environment_id	  = aws_finspace_kx_environment.test.id
- type             = "HDB"
- release_label	  = "1.0"
- az_mode	      = "MULTI"
- capacity_configuration {
-	node_count = 3
-	node_type  = "kx.s.xlarge"
- }
+  name           = %[1]q
+  environment_id = aws_finspace_kx_environment.test.id
+  type           = "HDB"
+  release_label	 = "1.0"
+  az_mode	     = "MULTI"
+  capacity_configuration {
+    node_count = 3
+    node_type  = "kx.s.xlarge"
+  }
 
- vpc_configuration {
-	vpc_id             = aws_vpc.test.id
-	security_group_ids = [aws_security_group.test.id]
-	subnet_ids         = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
-	ip_address_type    = "IP_V4"
- }
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
+    ip_address_type    = "IP_V4"
+  }
 }
 `, rName)
 }
@@ -1505,355 +1504,42 @@ output "account_id" {
 }
 
 resource "aws_kms_key" "test" {
-description             = %[1]q
-deletion_window_in_days = 7
-}
-
-resource "aws_finspace_kx_environment" "test" {
-name     		= %[1]q
-kms_key_id 	    = aws_kms_key.test.arn
-}
-
-data "aws_iam_policy_document" "key_policy" {
-  statement {
-    actions = [
-      "kms:Decrypt",
-	  "kms:GenerateDataKey"
-    ]
-
-    resources = [
-      "${aws_kms_key.test.arn}",
-    ]
-
-	principals {
-      type        = "Service"
-      identifiers = ["finspace.amazonaws.com"]
-    }
-
-	condition {
-	  test		= "ArnLike"
-	  variable 	= "aws:SourceArn"
-	  values    = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
-
-	condition {
-	  test		= "StringEquals"
-	  variable 	= "aws:SourceAccount"
-	  values    = ["${data.aws_caller_identity.current.account_id}"]
-	}
-  }
-
-  statement {
-    actions = [
-      "kms:*",
-    ]
-
-    resources = [
-      "*",
-    ]
-
-	principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
-    }
-  }
-}
-
-resource "aws_kms_key_policy" "test" {
-  key_id = aws_kms_key.test.id
-  policy = data.aws_iam_policy_document.key_policy.json
-}
-
-resource "aws_vpc" "test" {
-  cidr_block           = "172.31.0.0/16"
-  enable_dns_hostnames = true
-}
-
-resource "aws_subnet" "test" {
-  vpc_id               = aws_vpc.test.id
-  cidr_block           = "172.31.32.0/20"
-  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
-}
-
-resource "aws_security_group" "test" {
-  name    = %[1]q
-  vpc_id  = aws_vpc.test.id
-
-  ingress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
-  }
-
-  egress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
-data "aws_route_tables" "rts" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_route" "r" {
-  route_table_id              = tolist(data.aws_route_tables.rts.ids)[0]
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id      = aws_internet_gateway.test.id
-}
-
-resource "aws_finspace_kx_cluster" "test" {
-  name                 = %[1]q
-  environment_id	   = aws_finspace_kx_environment.test.id
-  type                 = "RDB"
-  release_label	       = "1.0"
-  az_mode              = "SINGLE"
-  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
-
-  savedown_storage_configuration {
-    type = "SDS01"
-    size = 500
-  }
-
- capacity_configuration {
-	node_count = 2
-	node_type  = "kx.s.xlarge"
- }
-
- vpc_configuration {
-	vpc_id             = aws_vpc.test.id
-	security_group_ids = [aws_security_group.test.id]
-	subnet_ids         = [aws_subnet.test.id]
-	ip_address_type    = "IP_V4"
- }
-}
-`, rName)
-}
-
-func testAccKxClusterConfig_executionRole(rName string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-output "account_id" {
-  value = data.aws_caller_identity.current.account_id
-}
-
-resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     		= %[1]q
-  kms_key_id 	= aws_kms_key.test.arn
-}
-
-data "aws_iam_policy_document" "key_policy" {
-  statement {
-    actions = [
-      "kms:Decrypt",
-	  "kms:GenerateDataKey"
-    ]
-
-    resources = [
-      "${aws_kms_key.test.arn}",
-    ]
-
-	principals {
-      type        = "Service"
-      identifiers = ["finspace.amazonaws.com"]
-    }
-
-	condition {
-	  test		= "ArnLike"
-	  variable 	= "aws:SourceArn"
-	  values    = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
-
-	condition {
-	  test		= "StringEquals"
-	  variable 	= "aws:SourceAccount"
-	  values    = ["${data.aws_caller_identity.current.account_id}"]
-	}
-  }
-
-  statement {
-    actions = [
-      "kms:*",
-    ]
-
-    resources = [
-      "*",
-    ]
-
-	principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
-    }
-  }
-}
-
-resource "aws_kms_key_policy" "test" {
-  key_id = aws_kms_key.test.id
-  policy = data.aws_iam_policy_document.key_policy.json
-}
-
-resource "aws_vpc" "test" {
-  cidr_block           = "172.31.0.0/16"
-  enable_dns_hostnames = true
-}
-
-resource "aws_subnet" "test" {
-  vpc_id               = aws_vpc.test.id
-  cidr_block           = "172.31.32.0/20"
-  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
-}
-
-resource "aws_security_group" "test" {
   name       = %[1]q
-  vpc_id     = aws_vpc.test.id
-
-  ingress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
-  }
-
-  egress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
-data "aws_route_tables" "rts" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_route" "r" {
-  route_table_id         = tolist(data.aws_route_tables.rts.ids)[0]
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.test.id
-}
-
-resource "aws_iam_policy" "test" {
-  name = %[1]q
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action   = ["finspace:ConnectKxCluster", "finspace:GetKxConnectionString"]
-        Effect   = "Allow"
-        Resource = "*"
-      },
-    ]
-  })
-}
-
-resource "aws_iam_role" "test" {
-    name = %[1]q
-
-    assume_role_policy = jsonencode({
-      Version   = "2012-10-17"
-      Statement = [
-      {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
-        Sid       = ""
-        Principal = {
-          "Service": "prod.finspacekx.aws.internal",
-		  "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-      },
-    ]
-    })
-
-	managed_policy_arns = [aws_iam_policy.test.arn]
-}
-
-resource "aws_finspace_kx_cluster" "test" {
- name                 = %[1]q
- environment_id	      = aws_finspace_kx_environment.test.id
- type                 = "HDB"
- release_label        = "1.0"
- az_mode              = "SINGLE"
- availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
- execution_role       = aws_iam_role.test.arn
-
-
- capacity_configuration {
-	node_count = 2
-	node_type  = "kx.s.xlarge"
- }
-
- vpc_configuration {
-	vpc_id             = aws_vpc.test.id
-	security_group_ids = [aws_security_group.test.id]
-	subnet_ids         = [aws_subnet.test.id]
-	ip_address_type    = "IP_V4"
- }
-}
-`, rName)
-}
-
-func testAccKxClusterConfig_autoScaling(rName string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-output "account_id" {
-  value = data.aws_caller_identity.current.account_id
-}
-
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
-resource "aws_finspace_kx_environment" "test" {
-  name     		= %[1]q
-  kms_key_id 	= aws_kms_key.test.arn
+  kms_key_id = aws_kms_key.test.arn
 }
 
 data "aws_iam_policy_document" "key_policy" {
   statement {
     actions = [
       "kms:Decrypt",
-	  "kms:GenerateDataKey"
+      "kms:GenerateDataKey"
     ]
 
     resources = [
-      "${aws_kms_key.test.arn}",
+      aws_kms_key.test.arn,
     ]
 
-	principals {
+    principals {
       type        = "Service"
       identifiers = ["finspace.amazonaws.com"]
     }
 
-	condition {
-	  test		= "ArnLike"
-	  variable 	= "aws:SourceArn"
-	  values    = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
+    condition {
+      test		= "ArnLike"
+      variable 	= "aws:SourceArn"
+      values    = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
 
-	condition {
-	  test		= "StringEquals"
-	  variable 	= "aws:SourceAccount"
-	  values    = ["${data.aws_caller_identity.current.account_id}"]
-	}
+    condition {
+      test		= "StringEquals"
+      variable 	= "aws:SourceAccount"
+      values    = [data.aws_caller_identity.current.account_id]
+    }
   }
 
   statement {
@@ -1865,150 +1551,7 @@ data "aws_iam_policy_document" "key_policy" {
       "*",
     ]
 
-	principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
-    }
-  }
-}
-
-resource "aws_kms_key_policy" "test" {
-  key_id = aws_kms_key.test.id
-  policy = data.aws_iam_policy_document.key_policy.json
-}
-
-resource "aws_vpc" "test" {
-  cidr_block           = "172.31.0.0/16"
-  enable_dns_hostnames = true
-}
-
-resource "aws_subnet" "test" {
-  vpc_id               = aws_vpc.test.id
-  cidr_block           = "172.31.32.0/20"
-  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
-}
-
-resource "aws_security_group" "test" {
-  name       = %[1]q
-  vpc_id     = aws_vpc.test.id
-
-  ingress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
-  }
-
-  egress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
-data "aws_route_tables" "rts" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_route" "r" {
-  route_table_id         = tolist(data.aws_route_tables.rts.ids)[0]
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.test.id
-}
-
-resource "aws_finspace_kx_cluster" "test" {
-  name                 = %[1]q
-  environment_id	   = aws_finspace_kx_environment.test.id
-  type                 = "HDB"
-  release_label        = "1.0"
-  az_mode              = "SINGLE"
-  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
-  capacity_configuration {
-	node_count = 3
-	node_type = "kx.s.xlarge"
-  }
-
- auto_scaling_configuration {
-	min_node_count             = 3
-    max_node_count             = 5
-	auto_scaling_metric        = "CPU_UTILIZATION_PERCENTAGE"
-	metric_target              = 25.0
-	scale_in_cooldown_seconds  = 30.0
-	scale_out_cooldown_seconds = 30.0
- }
-
- vpc_configuration {
-	vpc_id             = aws_vpc.test.id
-	security_group_ids = [aws_security_group.test.id]
-	subnet_ids         = [aws_subnet.test.id]
-	ip_address_type    = "IP_V4"
- }
-}
-`, rName)
-}
-
-func testAccKxClusterConfig_initScript(rName, codePath, relPath string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-output "account_id" {
-  value = data.aws_caller_identity.current.account_id
-}
-
-resource "aws_kms_key" "test" {
-description             = %[1]q
-deletion_window_in_days = 7
-}
-
-resource "aws_finspace_kx_environment" "test" {
-name     		= %[1]q
-kms_key_id 	    = aws_kms_key.test.arn
-}
-
-data "aws_iam_policy_document" "key_policy" {
-  statement {
-    actions = [
-      "kms:Decrypt",
-	  "kms:GenerateDataKey"
-    ]
-
-    resources = [
-      "${aws_kms_key.test.arn}",
-    ]
-
-	principals {
-      type        = "Service"
-      identifiers = ["finspace.amazonaws.com"]
-    }
-
-	condition {
-	  test		= "ArnLike"
-	  variable 	= "aws:SourceArn"
-	  values    = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
-
-	condition {
-	  test		= "StringEquals"
-	  variable 	= "aws:SourceAccount"
-	  values    = ["${data.aws_caller_identity.current.account_id}"]
-	}
-  }
-
-  statement {
-    actions = [
-      "kms:*",
-    ]
-
-    resources = [
-      "*",
-    ]
-
-	principals {
+    principals {
       type        = "AWS"
       identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
@@ -2036,17 +1579,469 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 
   ingress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-	from_port        = 0
-	to_port          = 0
-	protocol         = "-1"
-	cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+data "aws_route_tables" "rts" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_route" "r" {
+  route_table_id         = tolist(data.aws_route_tables.rts.ids)[0]
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.test.id
+}
+
+resource "aws_finspace_kx_cluster" "test" {
+  name                 = %[1]q
+  environment_id	   = aws_finspace_kx_environment.test.id
+  type                 = "RDB"
+  release_label	       = "1.0"
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+
+  savedown_storage_configuration {
+    type = "SDS01"
+    size = 500
+  }
+
+  capacity_configuration {
+    node_count = 2
+    node_type  = "kx.s.xlarge"
+  }
+
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
+}
+`, rName)
+}
+
+func testAccKxClusterConfig_executionRole(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+output "account_id" {
+  value = data.aws_caller_identity.current.account_id
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_finspace_kx_environment" "test" {
+  name     	 = %[1]q
+  kms_key_id = aws_kms_key.test.arn
+}
+
+data "aws_iam_policy_document" "key_policy" {
+  statement {
+    actions = [
+      "kms:Decrypt",
+      "kms:GenerateDataKey"
+    ]
+
+    resources = [
+      aws_kms_key.test.arn,
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["finspace.amazonaws.com"]
+    }
+
+    condition {
+      test	   = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
+
+    condition {
+      test	   = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+
+  statement {
+    actions = [
+      "kms:*",
+    ]
+
+    resources = [
+      "*",
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
+}
+
+resource "aws_kms_key_policy" "test" {
+  key_id = aws_kms_key.test.id
+  policy = data.aws_iam_policy_document.key_policy.json
+}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "172.31.0.0/16"
+  enable_dns_hostnames = true
+}
+
+resource "aws_subnet" "test" {
+  vpc_id               = aws_vpc.test.id
+  cidr_block           = "172.31.32.0/20"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+data "aws_route_tables" "rts" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_route" "r" {
+  route_table_id         = tolist(data.aws_route_tables.rts.ids)[0]
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.test.id
+}
+
+resource "aws_iam_policy" "test" {
+  name   = %[1]q
+  policy = jsonencode({
+    Version   = "2012-10-17"
+    Statement = [
+      {
+        Action   = ["finspace:ConnectKxCluster", "finspace:GetKxConnectionString"]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role" "test" {
+  name                = %[1]q
+  managed_policy_arns = [aws_iam_policy.test.arn]
+  assume_role_policy  = jsonencode({
+      Version   = "2012-10-17"
+      Statement = [
+      {
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Sid       = ""
+        Principal = {
+          "Service": "prod.finspacekx.aws.internal",
+          "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+      },
+    ]
+    })
+}
+
+resource "aws_finspace_kx_cluster" "test" {
+  name                 = %[1]q
+  environment_id	      = aws_finspace_kx_environment.test.id
+  type                 = "HDB"
+  release_label        = "1.0"
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  execution_role       = aws_iam_role.test.arn
+
+  capacity_configuration {
+    node_count = 2
+    node_type  = "kx.s.xlarge"
+  }
+
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
+}
+`, rName)
+}
+
+func testAccKxClusterConfig_autoScaling(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+output "account_id" {
+  value = data.aws_caller_identity.current.account_id
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_finspace_kx_environment" "test" {
+  name     	 = %[1]q
+  kms_key_id = aws_kms_key.test.arn
+}
+
+data "aws_iam_policy_document" "key_policy" {
+  statement {
+    actions = [
+      "kms:Decrypt",
+       "kms:GenerateDataKey"
+    ]
+
+    resources = [
+      aws_kms_key.test.arn,
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["finspace.amazonaws.com"]
+    }
+
+    condition {
+      test	   = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
+
+    condition {
+      test	   = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+
+  statement {
+    actions = [
+      "kms:*",
+    ]
+
+    resources = [
+      "*",
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
+}
+
+resource "aws_kms_key_policy" "test" {
+  key_id = aws_kms_key.test.id
+  policy = data.aws_iam_policy_document.key_policy.json
+}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "172.31.0.0/16"
+  enable_dns_hostnames = true
+}
+
+resource "aws_subnet" "test" {
+  vpc_id               = aws_vpc.test.id
+  cidr_block           = "172.31.32.0/20"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+data "aws_route_tables" "rts" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_route" "r" {
+  route_table_id         = tolist(data.aws_route_tables.rts.ids)[0]
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.test.id
+}
+
+resource "aws_finspace_kx_cluster" "test" {
+  name                 = %[1]q
+  environment_id	   = aws_finspace_kx_environment.test.id
+  type                 = "HDB"
+  release_label        = "1.0"
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  capacity_configuration {
+    node_count = 3
+    node_type = "kx.s.xlarge"
+  }
+
+  auto_scaling_configuration {
+    min_node_count             = 3
+    max_node_count             = 5
+    auto_scaling_metric        = "CPU_UTILIZATION_PERCENTAGE"
+    metric_target              = 25.0
+    scale_in_cooldown_seconds  = 30.0
+    scale_out_cooldown_seconds = 30.0
+  }
+
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
+}
+`, rName)
+}
+
+func testAccKxClusterConfig_initScript(rName, codePath, relPath string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+output "account_id" {
+  value = data.aws_caller_identity.current.account_id
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_finspace_kx_environment" "test" {
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.arn
+}
+
+data "aws_iam_policy_document" "key_policy" {
+  statement {
+    actions = [
+      "kms:Decrypt",
+      "kms:GenerateDataKey"
+    ]
+
+    resources = [
+      aws_kms_key.test.arn,
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["finspace.amazonaws.com"]
+    }
+
+    condition {
+      test		= "ArnLike"
+      variable 	= "aws:SourceArn"
+      values    = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
+
+    condition {
+      test		= "StringEquals"
+      variable 	= "aws:SourceAccount"
+      values    = [data.aws_caller_identity.current.account_id]
+    }
+  }
+
+  statement {
+    actions = [
+      "kms:*",
+    ]
+
+    resources = [
+      "*",
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
+}
+
+resource "aws_kms_key_policy" "test" {
+  key_id = aws_kms_key.test.id
+  policy = data.aws_iam_policy_document.key_policy.json
+}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "172.31.0.0/16"
+  enable_dns_hostnames = true
+}
+
+resource "aws_subnet" "test" {
+  vpc_id               = aws_vpc.test.id
+  cidr_block           = "172.31.32.0/20"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port    = 0
+    to_port      = 0
+    protocol     = "-1"
+    cidr_blocks  = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
@@ -2065,63 +2060,63 @@ resource "aws_route" "r" {
 }
 
 resource "aws_s3_bucket" "test" {
-    bucket = %[1]q
+  bucket = %[1]q
 }
 
 data "aws_iam_policy_document" "test" {
   statement {
     actions = [
       "s3:GetObject",
-	  "s3:GetObjectTagging"
+      "s3:GetObjectTagging"
     ]
 
     resources = [
       "arn:aws:s3:::${aws_s3_bucket.test.id}/*",
     ]
 
-	principals {
+    principals {
       type        = "Service"
       identifiers = ["finspace.amazonaws.com"]
     }
 
-	condition {
-	  test		= "ArnLike"
-	  variable 	= "aws:SourceArn"
-	  values    = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
+    condition {
+      test	   = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
 
-	condition {
-	  test		= "StringEquals"
-	  variable 	= "aws:SourceAccount"
-	  values    = ["${data.aws_caller_identity.current.account_id}"]
-	}
+    condition {
+      test	   = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
   }
 
   statement {
     actions = [
-	  "s3:ListBucket"
+      "s3:ListBucket"
     ]
 
     resources = [
       "arn:aws:s3:::${aws_s3_bucket.test.id}",
     ]
-	
-	principals {
+    
+    principals {
       type        = "Service"
       identifiers = ["finspace.amazonaws.com"]
     }
 
-	condition {
-	  test		= "ArnLike"
-	  variable 	= "aws:SourceArn"
-	  values    = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
+    condition {
+      test	   = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
 
-	condition {
-	  test		= "StringEquals"
-	  variable 	= "aws:SourceAccount"
-	  values    = ["${data.aws_caller_identity.current.account_id}"]
-	}
+    condition {
+      test	   = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
   }
 }
 
@@ -2137,46 +2132,46 @@ resource "aws_s3_object" "object" {
 }
 
 resource "aws_finspace_kx_database" "test" {
- name           	= %[1]q
- environment_id	    = aws_finspace_kx_environment.test.id
+ name           = %[1]q
+ environment_id	= aws_finspace_kx_environment.test.id
 }
 
 resource "aws_finspace_kx_cluster" "test" {
- name                 = %[1]q
- environment_id	      = aws_finspace_kx_environment.test.id
- type                 = "HDB"
- release_label	      = "1.0"
- az_mode              = "SINGLE"
- availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
- capacity_configuration {
-	node_count = 2
-	node_type  = "kx.s.xlarge"
- }
- initialization_script = %[3]q
+  name                  = %[1]q
+  environment_id        = aws_finspace_kx_environment.test.id
+  type                  = "HDB"
+  release_label	        = "1.0"
+  az_mode               = "SINGLE"
+  availability_zone_id  = aws_finspace_kx_environment.test.availability_zones[0]
+  initialization_script = %[3]q
+  capacity_configuration {
+    node_count = 2
+    node_type  = "kx.s.xlarge"
+  }
 
- vpc_configuration {
-	vpc_id             = aws_vpc.test.id
-	security_group_ids = [aws_security_group.test.id]
-	subnet_ids         = [aws_subnet.test.id]
-	ip_address_type    = "IP_V4"
- }
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
 
- cache_storage_configurations {
+  cache_storage_configurations {
     type = "CACHE_1000"
     size = 1200
   }
 
   database {
-	database_name = aws_finspace_kx_database.test.name
-	cache_configurations {
+    database_name = aws_finspace_kx_database.test.name
+    cache_configurations {
       cache_type = "CACHE_1000"
-	  db_paths   = ["/"]
-	}
+      db_paths   = ["/"]
+    }
   }
 
   code {
-	s3_bucket = aws_s3_bucket.test.id
-	s3_key    = aws_s3_object.object.key
+    s3_bucket = aws_s3_bucket.test.id
+    s3_key    = aws_s3_object.object.key
   }
 }
 `, rName, codePath, relPath)

@@ -175,12 +175,10 @@ func ResourceKxCluster() *schema.Resource {
 							},
 						},
 						"ip_address_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(types.IPAddressTypeIpV4),
-							}, true),
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(enum.Slice(types.IPAddressTypeIpV4), true),
 						},
 					},
 				},
@@ -196,9 +194,8 @@ func ResourceKxCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(types.AutoScalingMetricCpuUtilizationPercentage),
-							}, true),
+							ValidateFunc: validation.StringInSlice(
+								enum.Slice(types.AutoScalingMetricCpuUtilizationPercentage), true),
 						},
 						"min_node_count": {
 							Type:         schema.TypeInt,
@@ -244,9 +241,8 @@ func ResourceKxCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(types.KxSavedownStorageTypeSds01),
-							}, true),
+							ValidateFunc: validation.StringInSlice(
+								enum.Slice(types.KxSavedownStorageTypeSds01), true),
 						},
 						"size": {
 							Type:         schema.TypeInt,
@@ -398,7 +394,7 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("vpc_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.VpcConfiguration = expandVpcConfiguration(v.([]interface{}))
+		in.VpcConfiguration = expandVPCConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("auto_scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -474,7 +470,7 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
-	if err := d.Set("vpc_configuration", flattenVpcConfiguration(out.VpcConfiguration)); err != nil {
+	if err := d.Set("vpc_configuration", flattenVPCConfiguration(out.VpcConfiguration)); err != nil {
 		return create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
@@ -687,7 +683,7 @@ func expandSavedownStorageConfiguration(tfList []interface{}) *types.KxSavedownS
 	return a
 }
 
-func expandVpcConfiguration(tfList []interface{}) *types.VpcConfiguration {
+func expandVPCConfiguration(tfList []interface{}) *types.VpcConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -977,7 +973,7 @@ func flattenSavedownStorageConfiguration(apiObject *types.KxSavedownStorageConfi
 	return []interface{}{m}
 }
 
-func flattenVpcConfiguration(apiObject *types.VpcConfiguration) []interface{} {
+func flattenVPCConfiguration(apiObject *types.VpcConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1032,8 +1028,8 @@ func flattenCacheStorageConfiguration(apiObject *types.KxCacheStorageConfigurati
 
 	m := map[string]interface{}{}
 
-	if v := apiObject.Type; *v != "" {
-		m["type"] = *v
+	if v := apiObject.Type; aws.ToString(v) != "" {
+		m["type"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Size; v != nil {
