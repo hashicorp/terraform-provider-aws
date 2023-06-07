@@ -22,6 +22,7 @@ func ResourceTransitGatewayRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteTableAssociationCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayRouteTableAssociationRead,
+		UpdateWithoutTimeout: schema.NoopContext,
 		DeleteWithoutTimeout: resourceTransitGatewayRouteTableAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
