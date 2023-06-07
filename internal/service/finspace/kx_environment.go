@@ -3,7 +3,6 @@ package finspace
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"log"
 	"time"
 
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -43,15 +43,7 @@ func ResourceKxEnvironment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,51 +54,9 @@ func ResourceKxEnvironment() *schema.Resource {
 				},
 				Computed: true,
 			},
-			"infrastructure_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"created_timestamp": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"last_modified_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
-			},
-			"kms_key_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"transit_gateway_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"transit_gateway_id": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 32),
-						},
-						"routable_cidr_space": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.IsCIDR,
-						},
-					},
-				},
 			},
 			"custom_dns_configuration": {
 				Type:     schema.TypeList,
@@ -126,8 +76,58 @@ func ResourceKxEnvironment() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 1000),
+			},
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"infrastructure_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kms_key_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"last_modified_timestamp": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"transit_gateway_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"transit_gateway_id": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 32),
+						},
+						"routable_cidr_space": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.IsCIDR,
+						},
+					},
+				},
+			},
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
