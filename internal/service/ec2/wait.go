@@ -2589,12 +2589,7 @@ func WaitSpotInstanceRequestFulfilled(ctx context.Context, conn *ec2.EC2, id str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.SpotInstanceRequest); ok {
-		if fault := output.Fault; fault != nil {
-			errFault := fmt.Errorf("%s: %s", aws.StringValue(fault.Code), aws.StringValue(fault.Message))
-			tfresource.SetLastError(err, fmt.Errorf("%s %w", aws.StringValue(output.Status.Message), errFault))
-		} else {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
-		}
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
 
 		return output, err
 	}
