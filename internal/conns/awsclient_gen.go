@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
@@ -206,7 +207,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/lexruntimeservice"
 	"github.com/aws/aws-sdk-go/service/lexruntimev2"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
-	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/locationservice"
 	"github.com/aws/aws-sdk-go/service/lookoutequipment"
 	"github.com/aws/aws-sdk-go/service/lookoutforvision"
@@ -529,7 +529,7 @@ type AWSClient struct {
 	lexruntimeConn                   *lexruntimeservice.LexRuntimeService
 	lexruntimev2Conn                 *lexruntimev2.LexRuntimeV2
 	licensemanagerConn               *licensemanager.LicenseManager
-	lightsailConn                    *lightsail.Lightsail
+	lightsailClient                  *lightsail.Client
 	locationConn                     *locationservice.LocationService
 	logsConn                         *cloudwatchlogs.CloudWatchLogs
 	lookoutequipmentConn             *lookoutequipment.LookoutEquipment
@@ -1386,8 +1386,8 @@ func (client *AWSClient) LicenseManagerConn() *licensemanager.LicenseManager {
 	return client.licensemanagerConn
 }
 
-func (client *AWSClient) LightsailConn() *lightsail.Lightsail {
-	return client.lightsailConn
+func (client *AWSClient) LightsailClient() *lightsail.Client {
+	return client.lightsailClient
 }
 
 func (client *AWSClient) LocationConn() *locationservice.LocationService {
