@@ -2595,7 +2595,7 @@ func testAccCheckBucketExistsWithProvider(ctx context.Context, n string, provide
 func testAccCheckBucketAddObjects(ctx context.Context, n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ConnURICleaningDisabled()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ConnURICleaningDisabled(ctx)
 
 		for _, key := range keys {
 			_, err := conn.PutObjectWithContext(ctx, &s3.PutObjectInput{
