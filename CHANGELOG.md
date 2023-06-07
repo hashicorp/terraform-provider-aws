@@ -27,7 +27,6 @@ BUG FIXES:
 * resource/aws_redshiftserverless_namespace: Fix perpetual `iam_roles` diffs when the namespace contains a workgroup ([#31749](https://github.com/hashicorp/terraform-provider-aws/issues/31749))
 * resource/aws_redshiftserverless_workgroup: Change `config_parameter` from `TypeList` to `TypeSet` as order is not significant ([#31747](https://github.com/hashicorp/terraform-provider-aws/issues/31747))
 * resource/aws_redshiftserverless_workgroup: Fix `ValidationException: Can't update multiple configurations at the same time` errors ([#31747](https://github.com/hashicorp/terraform-provider-aws/issues/31747))
-* resource/aws_spot_instance_request: Fix IAM eventual consistency errors on resource Create ([#31800](https://github.com/hashicorp/terraform-provider-aws/issues/31800))
 
 ## 5.1.0 (June  1, 2023)
 
