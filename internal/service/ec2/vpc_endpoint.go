@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -228,6 +229,12 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	output, err := conn.CreateVpcEndpointWithContext(ctx, input)
 
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.TagSpecifications != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		input.TagSpecifications = nil
+		output, err = conn.CreateVpcEndpointWithContext(ctx, input)
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Endpoint (%s): %s", serviceName, err)
 	}
@@ -243,6 +250,20 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if _, err = WaitVPCEndpointAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Endpoint (%s): waiting for completion: %s", serviceName, err)
+	}
+
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := GetTagsIn(ctx); input.TagSpecifications == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, d.Id(), tags)
+
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+			return append(diags, resourceVPCEndpointRead(ctx, d, meta)...)
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting EC2 VPC Endpoint (%s) tags: %s", serviceName, err)
+		}
 	}
 
 	return append(diags, resourceVPCEndpointRead(ctx, d, meta)...)
