@@ -232,19 +232,19 @@ resource "aws_kms_key" "test" {
 
 resource "aws_finspace_kx_environment" "test" {
  name     		= %[1]q
- kms_key_id 	=aws_kms_key.test.arn
+ kms_key_id 	= aws_kms_key.test.arn
 }
 
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name               = %[1]q
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [
       {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Sid       = ""
         Principal = {
           Service = "ec2.amazonaws.com"
         }
@@ -255,8 +255,8 @@ resource "aws_iam_role" "test" {
 
 resource "aws_finspace_kx_user" "test" {
   name           	= %[2]q
-  environment_id	=aws_finspace_kx_environment.test.id
-  iam_role			=aws_iam_role.test.arn
+  environment_id	= aws_finspace_kx_environment.test.id
+  iam_role			= aws_iam_role.test.arn
 }
 `, rName, userName)
 }
@@ -270,19 +270,19 @@ resource "aws_kms_key" "test" {
 
 resource "aws_finspace_kx_environment" "test" {
  name     		= %[1]q
- kms_key_id 	=aws_kms_key.test.arn
+ kms_key_id 	= aws_kms_key.test.arn
 }
 
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name               = %[1]q
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [
       {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Sid       = ""
         Principal = {
           Service = "ec2.amazonaws.com"
         }
@@ -295,12 +295,12 @@ resource "aws_iam_role" "updated" {
   name = %[2]q
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [
       {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Sid       = ""
         Principal = {
           Service = "ec2.amazonaws.com"
         }
@@ -311,8 +311,8 @@ resource "aws_iam_role" "updated" {
 
 resource "aws_finspace_kx_user" "test" {
   name           	= %[3]q
-  environment_id	=aws_finspace_kx_environment.test.id
-  iam_role			=aws_iam_role.updated.arn
+  environment_id	= aws_finspace_kx_environment.test.id
+  iam_role			= aws_iam_role.updated.arn
 }
 `, rName, rName2, userName)
 }
@@ -326,19 +326,19 @@ resource "aws_kms_key" "test" {
 
 resource "aws_finspace_kx_environment" "test" {
  name     		= %[1]q
- kms_key_id 	=aws_kms_key.test.arn
+ kms_key_id 	= aws_kms_key.test.arn
 }
 
 resource "aws_iam_role" "test" {
   name = %[1]q
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [
       {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Sid       = ""
         Principal = {
           Service = "ec2.amazonaws.com"
         }
@@ -349,8 +349,8 @@ resource "aws_iam_role" "test" {
 
 resource "aws_finspace_kx_user" "test" {
   name           	= %[2]q
-  environment_id	=aws_finspace_kx_environment.test.id
-  iam_role			=aws_iam_role.test.arn
+  environment_id	= aws_finspace_kx_environment.test.id
+  iam_role			= aws_iam_role.test.arn
   tags = {
     %[3]q = %[4]q
   }
@@ -368,19 +368,19 @@ resource "aws_kms_key" "test" {
 
 resource "aws_finspace_kx_environment" "test" {
  name     		= %[1]q
- kms_key_id 	=aws_kms_key.test.arn
+ kms_key_id 	= aws_kms_key.test.arn
 }
 
 resource "aws_iam_role" "test" {
   name = %[1]q
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [
       {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Sid       = ""
         Principal = {
           Service = "ec2.amazonaws.com"
         }
@@ -391,8 +391,8 @@ resource "aws_iam_role" "test" {
 
 resource "aws_finspace_kx_user" "test" {
   name           	= %[2]q
-  environment_id	=aws_finspace_kx_environment.test.id
-  iam_role			=aws_iam_role.test.arn
+  environment_id	= aws_finspace_kx_environment.test.id
+  iam_role			= aws_iam_role.test.arn
   tags = {
     %[3]q = %[4]q
 	%[5]q = %[6]q
