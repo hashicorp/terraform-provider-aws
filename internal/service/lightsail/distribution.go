@@ -544,7 +544,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 		DistributionName: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*types.NotFoundException](err) || errs.IsA[*types.InvalidInputException](err) {
+	if IsANotFoundError(err) || errs.IsA[*types.InvalidInputException](err) {
 		return nil
 	}
 
@@ -566,7 +566,7 @@ func FindDistributionByID(ctx context.Context, conn *lightsail.Client, id string
 		DistributionName: aws.String(id),
 	}
 	out, err := conn.GetDistributions(ctx, in)
-	if errs.IsA[*types.NotFoundException](err) || errs.IsA[*types.InvalidInputException](err) {
+	if IsANotFoundError(err) || errs.IsA[*types.InvalidInputException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

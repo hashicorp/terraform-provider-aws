@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -141,6 +140,10 @@ func resourceDiskDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		DiskName: aws.String(d.Id()),
 	})
 
+	if IsANotFoundError(err) {
+		return nil
+	}
+
 	if err != nil {
 		return create.DiagError(names.Lightsail, string(types.OperationTypeDeleteDisk), ResDisk, d.Get("name").(string), err)
 	}
@@ -161,7 +164,7 @@ func FindDiskById(ctx context.Context, conn *lightsail.Client, id string) (*type
 
 	out, err := conn.GetDisk(ctx, in)
 
-	if errs.IsA[*types.NotFoundException](err) {
+	if IsANotFoundError(err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

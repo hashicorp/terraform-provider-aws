@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -151,7 +150,7 @@ func FindLoadBalancerHTTPSRedirectionPolicyById(ctx context.Context, conn *light
 	in := &lightsail.GetLoadBalancerInput{LoadBalancerName: aws.String(id)}
 	out, err := conn.GetLoadBalancer(ctx, in)
 
-	if errs.IsA[*types.NotFoundException](err) {
+	if IsANotFoundError(err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

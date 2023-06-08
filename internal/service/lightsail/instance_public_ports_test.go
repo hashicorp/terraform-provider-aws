@@ -8,13 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
-	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 )
 
@@ -245,7 +243,7 @@ func testAccCheckInstancePublicPortsDestroy(ctx context.Context) resource.TestCh
 
 			output, err := conn.GetInstancePortStates(ctx, input)
 
-			if errs.IsA[*types.NotFoundException](err) {
+			if tflightsail.IsANotFoundError(err) {
 				continue
 			}
 

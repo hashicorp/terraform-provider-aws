@@ -179,7 +179,7 @@ func FindBucketById(ctx context.Context, conn *lightsail.Client, id string) (*ty
 	in := &lightsail.GetBucketsInput{BucketName: aws.String(id)}
 	out, err := conn.GetBuckets(ctx, in)
 
-	if errs.IsA[*types.NotFoundException](err) {
+	if IsANotFoundError(err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 )
 
@@ -105,7 +104,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 				DomainName: aws.String(rs.Primary.ID),
 			})
 
-			if errs.IsA[*types.NotFoundException](err) {
+			if tflightsail.IsANotFoundError(err) {
 				continue
 			}
 

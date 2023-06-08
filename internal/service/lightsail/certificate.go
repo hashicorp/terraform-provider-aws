@@ -265,7 +265,7 @@ func FindCertificateById(ctx context.Context, conn *lightsail.Client, name strin
 
 	out, err := conn.GetCertificates(ctx, in)
 
-	if errs.IsA[*types.NotFoundException](err) {
+	if IsANotFoundError(err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

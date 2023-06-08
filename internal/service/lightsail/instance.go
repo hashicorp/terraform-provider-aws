@@ -433,7 +433,7 @@ func FindInstanceById(ctx context.Context, conn *lightsail.Client, id string) (*
 	in := &lightsail.GetInstanceInput{InstanceName: aws.String(id)}
 	out, err := conn.GetInstance(ctx, in)
 
-	if errs.IsA[*types.NotFoundException](err) {
+	if IsANotFoundError(err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

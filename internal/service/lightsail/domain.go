@@ -6,11 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
-	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -59,7 +57,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if err != nil {
-		if errs.IsA[*types.NotFoundException](err) {
+		if IsANotFoundError(err) {
 			log.Printf("[WARN] Lightsail Domain (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags

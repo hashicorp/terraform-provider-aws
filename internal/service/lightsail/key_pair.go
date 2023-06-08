@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 )
@@ -178,7 +177,7 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		if errs.IsA[*types.NotFoundException](err) {
+		if IsANotFoundError(err) {
 			log.Printf("[WARN] Lightsail KeyPair (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags

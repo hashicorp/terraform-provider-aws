@@ -355,7 +355,7 @@ func FindDomainEntryById(ctx context.Context, conn *lightsail.Client, id string)
 
 	out, err := conn.GetDomain(ctx, in)
 
-	if errs.IsA[*types.NotFoundException](err) {
+	if IsANotFoundError(err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

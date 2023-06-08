@@ -155,7 +155,7 @@ func FindBucketResourceAccessById(ctx context.Context, conn *lightsail.Client, i
 
 	out, err := conn.GetBuckets(ctx, in)
 
-	if errs.IsA[*types.NotFoundException](err) {
+	if IsANotFoundError(err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

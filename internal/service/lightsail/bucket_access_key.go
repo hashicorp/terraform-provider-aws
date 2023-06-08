@@ -156,7 +156,7 @@ func FindBucketAccessKeyById(ctx context.Context, conn *lightsail.Client, id str
 	in := &lightsail.GetBucketAccessKeysInput{BucketName: aws.String(parts[0])}
 	out, err := conn.GetBucketAccessKeys(ctx, in)
 
-	if errs.IsA[*types.NotFoundException](err) {
+	if IsANotFoundError(err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
