@@ -272,12 +272,14 @@ func ResourceEnvironment() *schema.Resource {
 
 				if oldVersion, err := gversion.NewVersion(o.(string)); err != nil {
 					if newVersion, err := gversion.NewVersion(n.(string)); err != nil {
-						// https://docs.aws.amazon.com/mwaa/latest/userguide/airflow-versions.html#airflow-versions-upgrade:
-						// 	Amazon MWAA supports minor version upgrades.
-						// 	This means you can upgrade your environment from version x.4.z to x.5.z.
-						// 	However, you cannot upgrade your environment to a new major version of Apache Airflow.
-						// 	For example, upgrading from version 1.y.z to 2.y.z is not supported.
-						return oldVersion.Segments()[0] < newVersion.Segments()[0]
+						if len(oldVersion.Segments()) > 0 && len(newVersion.Segments()) > 0 {
+							// https://docs.aws.amazon.com/mwaa/latest/userguide/airflow-versions.html#airflow-versions-upgrade:
+							// 	Amazon MWAA supports minor version upgrades.
+							// 	This means you can upgrade your environment from version x.4.z to x.5.z.
+							// 	However, you cannot upgrade your environment to a new major version of Apache Airflow.
+							// 	For example, upgrading from version 1.y.z to 2.y.z is not supported.
+							return oldVersion.Segments()[0] < newVersion.Segments()[0]
+						}
 					}
 				}
 
