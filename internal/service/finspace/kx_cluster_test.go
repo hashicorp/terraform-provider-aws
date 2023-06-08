@@ -36,12 +36,12 @@ func TestAccFinSpaceKxCluster_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
 				),
@@ -72,12 +72,12 @@ func TestAccFinSpaceKxCluster_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -103,12 +103,12 @@ func TestAccFinSpaceKxCluster_description(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_description(rName, "cluster description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "description", "cluster description"),
 				),
 			},
@@ -133,12 +133,12 @@ func TestAccFinSpaceKxCluster_database(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_database(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -164,12 +164,12 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_code(rName, codePath),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 				),
 			},
 		},
@@ -193,12 +193,12 @@ func TestAccFinSpaceKxCluster_multiAZ(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_multiAZ(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -223,12 +223,12 @@ func TestAccFinSpaceKxCluster_rdb(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_rdb(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -253,12 +253,12 @@ func TestAccFinSpaceKxCluster_executionRole(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_executionRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -283,12 +283,12 @@ func TestAccFinSpaceKxCluster_autoScaling(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_autoScaling(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -316,12 +316,12 @@ func TestAccFinSpaceKxCluster_initializationScript(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_initScript(rName, codePath, initScriptPath),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 				),
 			},
 		},
@@ -345,12 +345,12 @@ func TestAccFinSpaceKxCluster_commandLineArgs(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_commandLineArgs1(rName, "arg1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.arg1", "value1"),
 				),
@@ -376,12 +376,12 @@ func TestAccFinSpaceKxCluster_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -390,35 +390,36 @@ func TestAccFinSpaceKxCluster_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckKxClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
-	ctx := context.Background()
+func testAccCheckKxClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_finspace_kx_cluster" {
-			continue
-		}
-
-		input := &finspace.GetKxClusterInput{
-			ClusterName:   aws.String(rs.Primary.Attributes["name"]),
-			EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
-		}
-		_, err := conn.GetKxCluster(ctx, input)
-		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_finspace_kx_cluster" {
+				continue
 			}
-			return err
+
+			input := &finspace.GetKxClusterInput{
+				ClusterName:   aws.String(rs.Primary.Attributes["name"]),
+				EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
+			}
+			_, err := conn.GetKxCluster(ctx, input)
+			if err != nil {
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					return nil
+				}
+				return err
+			}
+
+			return create.Error(names.FinSpace, create.ErrActionCheckingDestroyed, tffinspace.ResNameKxCluster, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		return create.Error(names.FinSpace, create.ErrActionCheckingDestroyed, tffinspace.ResNameKxCluster, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckKxClusterExists(name string, kxcluster *finspace.GetKxClusterOutput) resource.TestCheckFunc {
+func testAccCheckKxClusterExists(ctx context.Context, name string, kxcluster *finspace.GetKxClusterOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -430,7 +431,6 @@ func testAccCheckKxClusterExists(name string, kxcluster *finspace.GetKxClusterOu
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
-		ctx := context.Background()
 		resp, err := conn.GetKxCluster(ctx, &finspace.GetKxClusterInput{
 			ClusterName:   aws.String(rs.Primary.Attributes["name"]),
 			EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
