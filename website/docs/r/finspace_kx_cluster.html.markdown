@@ -61,13 +61,13 @@ The following arguments are required:
 * `environment_id` - (Required) Unique identifier for the KX environment.
 * `name` - (Required) Unique name for the cluster that you want to create.
 * `type` - (Required) Type of KDB database. The following types are available:
-  * HDB - Historical Database. The data is only accessible with read-only permissions from one of the FinSpace managed KX databases mounted to the cluster.
-  * RDB - Realtime Database. This type of database captures all the data from a ticker plant and stores it in memory until the end of day, after which it writes all of its data to a disk and reloads the HDB. This cluster type requires local storage for temporary storage of data during the savedown process. If you specify this field in your request, you must provide the `savedownStorageConfiguration` parameter.
-  * GATEWAY - A gateway cluster allows you to access data across processes in kdb systems. It allows you to create your own routing logic using the initialization scripts and custom code. This type of cluster does not require a  writable local storage.
+    * HDB - Historical Database. The data is only accessible with read-only permissions from one of the FinSpace managed KX databases mounted to the cluster.
+    * RDB - Realtime Database. This type of database captures all the data from a ticker plant and stores it in memory until the end of day, after which it writes all of its data to a disk and reloads the HDB. This cluster type requires local storage for temporary storage of data during the savedown process. If you specify this field in your request, you must provide the `savedownStorageConfiguration` parameter.
+    * GATEWAY - A gateway cluster allows you to access data across processes in kdb systems. It allows you to create your own routing logic using the initialization scripts and custom code. This type of cluster does not require a  writable local storage.
 * `release_label` - (Required) Version of FinSpace Managed kdb to run.
 * `az_mode` - (Required) The number of availability zones you want to assign per cluster. This can be one of the following:
-  * SINGLE - Assigns one availability zone per cluster.
-  * MULTI - Assigns all the availability zones per cluster.
+    * SINGLE - Assigns one availability zone per cluster.
+    * MULTI - Assigns all the availability zones per cluster.
 * `capacity_configuration` - (Required) Structure for the metadata of a cluster. Includes information like the CPUs needed, memory of instances, number of instances, and the port used while establishing a connection. Defined below.
 * `vpc_configuration` - (Required) Configuration details about the network where the Privatelink endpoint of the cluster resides. Defined below.
 
@@ -86,21 +86,23 @@ The following arguments are optional:
 * `tags` - (Optional) List of key-value pairs to label the cluster.
 
 ### capacity_configuration
+
 The capacity_configuration block supports the following arguments:
 
 * `node_type` - (Required) Determines the hardware of the host computer used for your cluster instance. Each node type offers different memory and storage capabilities. Choose a node type based on the requirements of the application or software that you plan to run on your instance.
   
   You can only specify one of the following values:
-  * kx.s.large – The node type with a configuration of 12 GiB memory and 2 vCPUs. 
-  * kx.s.xlarge – The node type with a configuration of 27 GiB memory and 4 vCPUs. 
-  * kx.s.2xlarge – The node type with a configuration of 54 GiB memory and 8 vCPUs. 
-  * kx.s.4xlarge – The node type with a configuration of 108 GiB memory and 16 vCPUs. Confidential 
-  * kx.s.8xlarge – The node type with a configuration of 216 GiB memory and 32 vCPUs. 
-  * kx.s.16xlarge – The node type with a configuration of 432 GiB memory and 64 vCPUs. 
-  * kx.s.32xlarge – The node type with a configuration of 864 GiB memory and 128 vCPUs.
+    * kx.s.large – The node type with a configuration of 12 GiB memory and 2 vCPUs. 
+    * kx.s.xlarge – The node type with a configuration of 27 GiB memory and 4 vCPUs.
+    * kx.s.2xlarge – The node type with a configuration of 54 GiB memory and 8 vCPUs.
+    * kx.s.4xlarge – The node type with a configuration of 108 GiB memory and 16 vCPUs.
+    * kx.s.8xlarge – The node type with a configuration of 216 GiB memory and 32 vCPUs.
+    * kx.s.16xlarge – The node type with a configuration of 432 GiB memory and 64 vCPUs.
+    * kx.s.32xlarge – The node type with a configuration of 864 GiB memory and 128 vCPUs.
 * `node_count` - (Required) Number of instances running in a cluster. Must be at least 1 and at most 5.
 
 ### vpc_configuration
+
 The vpc_configuration block supports the following arguments:
 
 * `vpc_id` - (Required) Identifier of the VPC endpoint
@@ -109,6 +111,7 @@ The vpc_configuration block supports the following arguments:
 * `ip_address_type` - (Required) IP address type for cluster network configuration parameters. The following type is available: IP_V4 - IP address version 4.
 
 ### code
+
 The code block supports the following arguments:
 
 * `s3_bucket` - (Required) Unique name for the S3 bucket.
@@ -116,6 +119,7 @@ The code block supports the following arguments:
 * `s3_object_version` - (Optional) Version of an S3 Object.
 
 ### database
+
 The database block supports the following arguments:
 
 * `database_name` - (Required) Name of the KX database.
@@ -123,26 +127,30 @@ The database block supports the following arguments:
 * `changeset_id` - (Optional) A unique identifier of the changeset that is associated with the cluster.
 
 #### cache_configuration
+
 The cache_configuration block supports the following arguments:
 
 * `cache_type` - (Required) Type of disk cache.
 * `db_paths` - (Required) Paths within the database to cache.
 
 ### cache_storage_configurations
+
 The cache_storage_configurations block supports the following arguments:
 
 * `type` - (Required) Type of cache storage . The valid values are:
-  * CACHE_1000 - This type provides at least 1000 MB/s disk access throughput.
+    * CACHE_1000 - This type provides at least 1000 MB/s disk access throughput.
 * `size` - (Required) Size of cache in Gigabytes.
 
 ### savedown_storage_configuration
+
 The savedown_storage_configuration block supports the following arguments:
 
 * `type` - (Required) Type of writeable storage space for temporarily storing your savedown data. The valid values are:
-  * SDS01 - This type represents 3000 IOPS and io2 ebs volume type.
+    * SDS01 - This type represents 3000 IOPS and io2 ebs volume type.
 * `size` - (Required) Size of temporary storage in bytes.
 
 ### auto_scaling_configuration
+
 The auto_scaling_configuration block supports the following arguments:
 
 * `auto_scaling_metric` - (Required) Metric your cluster will track in order to scale in and out. For example, CPU_UTILIZATION_PERCENTAGE is the average CPU usage across all nodes in a cluster.

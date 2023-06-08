@@ -476,13 +476,13 @@ data "aws_iam_policy_document" "key_policy" {
     }
 
     condition {
-      test	   = "ArnLike"
+      test     = "ArnLike"
       variable = "aws:SourceArn"
       values   = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test	   = "StringEquals"
+      test     = "StringEquals"
       variable = "aws:SourceAccount"
       values   = [data.aws_caller_identity.current.account_id]
     }
@@ -555,7 +555,7 @@ resource "aws_route" "r" {
 
 resource "aws_finspace_kx_cluster" "test" {
   name                 = %[1]q
-  environment_id	   = aws_finspace_kx_environment.test.id
+  environment_id       = aws_finspace_kx_environment.test.id
   type                 = "HDB"
   release_label        = "1.0"
   az_mode              = "SINGLE"
@@ -610,13 +610,13 @@ data "aws_iam_policy_document" "key_policy" {
     }
 
     condition {
-      test	   = "ArnLike"
+      test     = "ArnLike"
       variable = "aws:SourceArn"
       values   = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test	   = "StringEquals"
+      test     = "StringEquals"
       variable = "aws:SourceAccount"
       values   = [data.aws_caller_identity.current.account_id]
     }
@@ -689,8 +689,8 @@ resource "aws_route" "r" {
 
 resource "aws_finspace_kx_cluster" "test" {
   name                 = %[1]q
-  description	       = %[2]q
-  environment_id	   = aws_finspace_kx_environment.test.id
+  description          = %[2]q
+  environment_id       = aws_finspace_kx_environment.test.id
   az_mode              = "SINGLE"
   availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
   type                 = "HDB"
@@ -724,7 +724,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     	 = %[1]q
+  name       = %[1]q
   kms_key_id = aws_kms_key.test.arn
 }
 
@@ -745,13 +745,13 @@ data "aws_iam_policy_document" "key_policy" {
     }
 
     condition {
-      test	   = "ArnLike"
+      test     = "ArnLike"
       variable = "aws:SourceArn"
       values   = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test	   = "StringEquals"
+      test     = "StringEquals"
       variable = "aws:SourceAccount"
       values   = [data.aws_caller_identity.current.account_id]
     }
@@ -824,11 +824,11 @@ resource "aws_route" "r" {
 
 resource "aws_finspace_kx_cluster" "test" {
   name                 = %[1]q
-  environment_id	   = aws_finspace_kx_environment.test.id
+  environment_id       = aws_finspace_kx_environment.test.id
   az_mode              = "SINGLE"
   availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
   type                 = "HDB"
-  release_label	       = "1.0"
+  release_label        = "1.0"
   capacity_configuration {
     node_count = 2
     node_type  = "kx.s.xlarge"
@@ -862,7 +862,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     	 = %[1]q
+  name       = %[1]q
   kms_key_id = aws_kms_key.test.arn
 }
 
@@ -883,13 +883,13 @@ data "aws_iam_policy_document" "key_policy" {
     }
 
     condition {
-      test	   = "ArnLike"
+      test     = "ArnLike"
       variable = "aws:SourceArn"
       values   = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test	   = "StringEquals"
+      test     = "StringEquals"
       variable = "aws:SourceAccount"
       values   = [data.aws_caller_identity.current.account_id]
     }
@@ -962,11 +962,11 @@ resource "aws_route" "r" {
 
 resource "aws_finspace_kx_cluster" "test" {
   name                 = %[1]q
-  environment_id	   = aws_finspace_kx_environment.test.id
+  environment_id       = aws_finspace_kx_environment.test.id
   type                 = "HDB"
   az_mode              = "SINGLE"
   availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
-  release_label	       = "1.0"
+  release_label        = "1.0"
   capacity_configuration {
     node_count = 2
     node_type  = "kx.s.xlarge"
@@ -1021,14 +1021,14 @@ data "aws_iam_policy_document" "key_policy" {
     }
 
     condition {
-      test		= "ArnLike"
-      variable 	= "aws:SourceArn"
+      test      = "ArnLike"
+      variable  = "aws:SourceArn"
       values    = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test		= "StringEquals"
-      variable 	= "aws:SourceAccount"
+      test      = "StringEquals"
+      variable  = "aws:SourceAccount"
       values    = [data.aws_caller_identity.current.account_id]
     }
   }
@@ -1099,15 +1099,15 @@ resource "aws_route" "r" {
 }
 
 resource "aws_finspace_kx_database" "test" {
-  name           	= %[1]q
-  environment_id	= aws_finspace_kx_environment.test.id
+  name           = %[1]q
+  environment_id = aws_finspace_kx_environment.test.id
 }
 
 resource "aws_finspace_kx_cluster" "test" {
   name                 = %[1]q
-  environment_id	   = aws_finspace_kx_environment.test.id
+  environment_id       = aws_finspace_kx_environment.test.id
   type                 = "HDB"
-  release_label	       = "1.0"
+  release_label        = "1.0"
   az_mode              = "SINGLE"
   availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
 
@@ -1153,7 +1153,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     	 = %[1]q
+  name       = %[1]q
   kms_key_id = aws_kms_key.test.arn
 }
 
@@ -1174,13 +1174,13 @@ data "aws_iam_policy_document" "key_policy" {
     }
 
     condition {
-      test	   = "ArnLike"
+      test     = "ArnLike"
       variable = "aws:SourceArn"
       values   = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test	   = "StringEquals"
+      test     = "StringEquals"
       variable = "aws:SourceAccount"
       values   = [data.aws_caller_identity.current.account_id]
     }
@@ -1252,7 +1252,7 @@ resource "aws_route" "r" {
 }
 
 resource "aws_s3_bucket" "test" {
-    bucket = %[1]q
+  bucket = %[1]q
 }
 
 data "aws_iam_policy_document" "bucket_policy" {
@@ -1272,13 +1272,13 @@ data "aws_iam_policy_document" "bucket_policy" {
     }
 
     condition {
-      test	   = "ArnLike"
+      test     = "ArnLike"
       variable = "aws:SourceArn"
       values   = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test	   = "StringEquals"
+      test     = "StringEquals"
       variable = "aws:SourceAccount"
       values   = [data.aws_caller_identity.current.account_id]
     }
@@ -1292,20 +1292,20 @@ data "aws_iam_policy_document" "bucket_policy" {
     resources = [
       "arn:aws:s3:::${aws_s3_bucket.test.id}",
     ]
-    
+
     principals {
       type        = "Service"
       identifiers = ["finspace.amazonaws.com"]
     }
 
     condition {
-      test	   = "ArnLike"
+      test     = "ArnLike"
       variable = "aws:SourceArn"
       values   = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test	   = "StringEquals"
+      test     = "StringEquals"
       variable = "aws:SourceAccount"
       values   = [data.aws_caller_identity.current.account_id]
     }
@@ -1325,9 +1325,9 @@ resource "aws_s3_object" "object" {
 
 resource "aws_finspace_kx_cluster" "test" {
   name                 = %[1]q
-  environment_id	   = aws_finspace_kx_environment.test.id
+  environment_id       = aws_finspace_kx_environment.test.id
   type                 = "HDB"
-  release_label	       = "1.0"
+  release_label        = "1.0"
   az_mode              = "SINGLE"
   availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
   capacity_configuration {
@@ -1385,13 +1385,13 @@ data "aws_iam_policy_document" "key_policy" {
     }
 
     condition {
-      test	   = "ArnLike"
+      test     = "ArnLike"
       variable = "aws:SourceArn"
       values   = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test	   = "StringEquals"
+      test     = "StringEquals"
       variable = "aws:SourceAccount"
       values   = [data.aws_caller_identity.current.account_id]
     }
@@ -1478,8 +1478,8 @@ resource "aws_finspace_kx_cluster" "test" {
   name           = %[1]q
   environment_id = aws_finspace_kx_environment.test.id
   type           = "HDB"
-  release_label	 = "1.0"
-  az_mode	     = "MULTI"
+  release_label  = "1.0"
+  az_mode        = "MULTI"
   capacity_configuration {
     node_count = 3
     node_type  = "kx.s.xlarge"
@@ -1530,14 +1530,14 @@ data "aws_iam_policy_document" "key_policy" {
     }
 
     condition {
-      test		= "ArnLike"
-      variable 	= "aws:SourceArn"
+      test      = "ArnLike"
+      variable  = "aws:SourceArn"
       values    = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test		= "StringEquals"
-      variable 	= "aws:SourceAccount"
+      test      = "StringEquals"
+      variable  = "aws:SourceAccount"
       values    = [data.aws_caller_identity.current.account_id]
     }
   }
@@ -1609,9 +1609,9 @@ resource "aws_route" "r" {
 
 resource "aws_finspace_kx_cluster" "test" {
   name                 = %[1]q
-  environment_id	   = aws_finspace_kx_environment.test.id
+  environment_id       = aws_finspace_kx_environment.test.id
   type                 = "RDB"
-  release_label	       = "1.0"
+  release_label        = "1.0"
   az_mode              = "SINGLE"
   availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
 
@@ -1649,7 +1649,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     	 = %[1]q
+  name       = %[1]q
   kms_key_id = aws_kms_key.test.arn
 }
 
@@ -1670,13 +1670,13 @@ data "aws_iam_policy_document" "key_policy" {
     }
 
     condition {
-      test	   = "ArnLike"
+      test     = "ArnLike"
       variable = "aws:SourceArn"
       values   = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test	   = "StringEquals"
+      test     = "StringEquals"
       variable = "aws:SourceAccount"
       values   = [data.aws_caller_identity.current.account_id]
     }
@@ -1748,9 +1748,9 @@ resource "aws_route" "r" {
 }
 
 resource "aws_iam_policy" "test" {
-  name   = %[1]q
+  name = %[1]q
   policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
         Action   = ["finspace:ConnectKxCluster", "finspace:GetKxConnectionString"]
@@ -1764,25 +1764,25 @@ resource "aws_iam_policy" "test" {
 resource "aws_iam_role" "test" {
   name                = %[1]q
   managed_policy_arns = [aws_iam_policy.test.arn]
-  assume_role_policy  = jsonencode({
-      Version   = "2012-10-17"
-      Statement = [
+  assume_role_policy = jsonencode({
+    Version   = "2012-10-17"
+    Statement = [
       {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
-        Sid       = ""
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
         Principal = {
-          "Service": "prod.finspacekx.aws.internal",
-          "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+          "Service" : "prod.finspacekx.aws.internal",
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
         }
       },
     ]
-    })
+  })
 }
 
 resource "aws_finspace_kx_cluster" "test" {
   name                 = %[1]q
-  environment_id	      = aws_finspace_kx_environment.test.id
+  environment_id       = aws_finspace_kx_environment.test.id
   type                 = "HDB"
   release_label        = "1.0"
   az_mode              = "SINGLE"
@@ -1818,7 +1818,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-  name     	 = %[1]q
+  name       = %[1]q
   kms_key_id = aws_kms_key.test.arn
 }
 
@@ -1826,7 +1826,7 @@ data "aws_iam_policy_document" "key_policy" {
   statement {
     actions = [
       "kms:Decrypt",
-       "kms:GenerateDataKey"
+      "kms:GenerateDataKey"
     ]
 
     resources = [
@@ -1839,13 +1839,13 @@ data "aws_iam_policy_document" "key_policy" {
     }
 
     condition {
-      test	   = "ArnLike"
+      test     = "ArnLike"
       variable = "aws:SourceArn"
       values   = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test	   = "StringEquals"
+      test     = "StringEquals"
       variable = "aws:SourceAccount"
       values   = [data.aws_caller_identity.current.account_id]
     }
@@ -1918,14 +1918,14 @@ resource "aws_route" "r" {
 
 resource "aws_finspace_kx_cluster" "test" {
   name                 = %[1]q
-  environment_id	   = aws_finspace_kx_environment.test.id
+  environment_id       = aws_finspace_kx_environment.test.id
   type                 = "HDB"
   release_label        = "1.0"
   az_mode              = "SINGLE"
   availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
   capacity_configuration {
     node_count = 3
-    node_type = "kx.s.xlarge"
+    node_type  = "kx.s.xlarge"
   }
 
   auto_scaling_configuration {
@@ -1982,15 +1982,15 @@ data "aws_iam_policy_document" "key_policy" {
     }
 
     condition {
-      test		= "ArnLike"
-      variable 	= "aws:SourceArn"
-      values    = ["${aws_finspace_kx_environment.test.arn}/*"]
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test		= "StringEquals"
-      variable 	= "aws:SourceAccount"
-      values    = [data.aws_caller_identity.current.account_id]
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
     }
   }
 
@@ -2031,10 +2031,10 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 
   ingress {
-    from_port    = 0
-    to_port      = 0
-    protocol     = "-1"
-    cidr_blocks  = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -2080,13 +2080,13 @@ data "aws_iam_policy_document" "test" {
     }
 
     condition {
-      test	   = "ArnLike"
+      test     = "ArnLike"
       variable = "aws:SourceArn"
       values   = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test	   = "StringEquals"
+      test     = "StringEquals"
       variable = "aws:SourceAccount"
       values   = [data.aws_caller_identity.current.account_id]
     }
@@ -2100,20 +2100,20 @@ data "aws_iam_policy_document" "test" {
     resources = [
       "arn:aws:s3:::${aws_s3_bucket.test.id}",
     ]
-    
+
     principals {
       type        = "Service"
       identifiers = ["finspace.amazonaws.com"]
     }
 
     condition {
-      test	   = "ArnLike"
+      test     = "ArnLike"
       variable = "aws:SourceArn"
       values   = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test	   = "StringEquals"
+      test     = "StringEquals"
       variable = "aws:SourceAccount"
       values   = [data.aws_caller_identity.current.account_id]
     }
@@ -2126,21 +2126,21 @@ resource "aws_s3_bucket_policy" "test" {
 }
 
 resource "aws_s3_object" "object" {
-    bucket = aws_s3_bucket.test.id
-    key    = %[2]q
-    source = %[2]q
+  bucket = aws_s3_bucket.test.id
+  key    = %[2]q
+  source = %[2]q
 }
 
 resource "aws_finspace_kx_database" "test" {
- name           = %[1]q
- environment_id	= aws_finspace_kx_environment.test.id
+  name           = %[1]q
+  environment_id = aws_finspace_kx_environment.test.id
 }
 
 resource "aws_finspace_kx_cluster" "test" {
   name                  = %[1]q
   environment_id        = aws_finspace_kx_environment.test.id
   type                  = "HDB"
-  release_label	        = "1.0"
+  release_label         = "1.0"
   az_mode               = "SINGLE"
   availability_zone_id  = aws_finspace_kx_environment.test.availability_zones[0]
   initialization_script = %[3]q
