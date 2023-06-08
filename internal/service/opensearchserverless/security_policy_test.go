@@ -40,6 +40,7 @@ func TestAccOpenSearchServerlessSecurityPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
 					resource.TestCheckResourceAttr(resourceName, "type", "encryption"),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
 				),
 			},
 			{
@@ -47,6 +48,42 @@ func TestAccOpenSearchServerlessSecurityPolicy_basic(t *testing.T) {
 				ImportStateIdFunc: testAccSecurityPolicyImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchServerlessSecurityPolicy_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var securitypolicy types.SecurityPolicyDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_security_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityPolicyConfig_update(rName, "description"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
+					resource.TestCheckResourceAttr(resourceName, "type", "encryption"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description"),
+				),
+			},
+			{
+				Config: testAccSecurityPolicyConfig_update(rName, "description updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
+					resource.TestCheckResourceAttr(resourceName, "type", "encryption"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description updated"),
+				),
 			},
 		},
 	})
@@ -163,8 +200,9 @@ func testAccSecurityPolicyConfig_basic(rName string) string {
 	collection := fmt.Sprintf("collection/%s", rName)
 	return fmt.Sprintf(`
 resource "aws_opensearchserverless_security_policy" "test" {
-  name = %[1]q
-  type = "encryption"
+  name        = %[1]q
+  type        = "encryption"
+  description = %[1]q
   policy = jsonencode({
     "Rules" = [
       {
@@ -178,4 +216,26 @@ resource "aws_opensearchserverless_security_policy" "test" {
   })
 }
 `, rName, collection)
+}
+
+func testAccSecurityPolicyConfig_update(rName, description string) string {
+	collection := fmt.Sprintf("collection/%s", rName)
+	return fmt.Sprintf(`
+resource "aws_opensearchserverless_security_policy" "test" {
+  name        = %[1]q
+  type        = "encryption"
+  description = %[3]q
+  policy = jsonencode({
+    "Rules" = [
+      {
+        "Resource" = [
+				%[2]q
+        ],
+        "ResourceType" = "collection"
+      }
+    ],
+    "AWSOwnedKey" = true
+  })
+}
+`, rName, collection, description)
 }

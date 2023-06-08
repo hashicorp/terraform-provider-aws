@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -67,6 +69,9 @@ func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.Schema
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"policy": schema.StringAttribute{
 				Required: true,
@@ -81,6 +86,9 @@ func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.Schema
 				Required: true,
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.SecurityPolicyType](),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 		},
@@ -158,8 +166,12 @@ func (r *resourceSecurityPolicy) Update(ctx context.Context, req resource.Update
 		input := &opensearchserverless.UpdateSecurityPolicyInput{
 			ClientToken:   aws.String(id.UniqueId()),
 			Name:          flex.StringFromFramework(ctx, plan.Name),
-			PolicyVersion: flex.StringFromFramework(ctx, plan.PolicyVersion),
+			PolicyVersion: flex.StringFromFramework(ctx, state.PolicyVersion),
 			Type:          awstypes.SecurityPolicyType(plan.Type.ValueString()),
+		}
+
+		if !plan.Policy.Equal(state.Policy) {
+			input.Policy = aws.String(plan.Policy.ValueString())
 		}
 
 		if !plan.Description.Equal(state.Description) {
@@ -175,7 +187,7 @@ func (r *resourceSecurityPolicy) Update(ctx context.Context, req resource.Update
 		resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.SecurityPolicyDetail)...)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceSecurityPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
