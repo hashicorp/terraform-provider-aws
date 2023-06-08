@@ -343,6 +343,28 @@ func Float64ToFrameworkLegacy(_ context.Context, v *float64) types.Float64 {
 	return types.Float64Value(aws.ToFloat64(v))
 }
 
+type FrameworkElementExpanderFunc[T any, U any] func(context.Context, T) U
+
+func ExpandFrameworkListNestedBlock[T any, U any](ctx context.Context, tfList types.List, f FrameworkElementExpanderFunc[T, U]) []U {
+	if tfList.IsNull() || tfList.IsUnknown() {
+		return nil
+	}
+
+	var data []T
+
+	if diags := tfList.ElementsAs(ctx, &data, false); diags.HasError() {
+		return nil
+	}
+
+	var apiObjects []U
+
+	for _, v := range data {
+		apiObjects = append(apiObjects, f(ctx, v))
+	}
+
+	return apiObjects
+}
+
 type FrameworkElementFlattenerFunc[T any] func(context.Context, T) map[string]attr.Value
 
 func FlattenFrameworkListNestedBlock[T any, U any](ctx context.Context, apiObjects []U, f FrameworkElementFlattenerFunc[U]) types.List {
