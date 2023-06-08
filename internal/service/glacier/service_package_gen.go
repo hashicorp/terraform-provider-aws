@@ -26,7 +26,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceVault,
+			Factory:  resourceVault,
 			TypeName: "aws_glacier_vault",
 			Name:     "Vault",
 			Tags: &types.ServicePackageResourceTags{
@@ -34,7 +34,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVaultLock,
+			Factory:  resourceVaultLock,
 			TypeName: "aws_glacier_vault_lock",
 		},
 	}
