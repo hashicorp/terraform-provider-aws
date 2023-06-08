@@ -34,6 +34,10 @@ func ResourceKxCluster() *schema.Resource {
 		UpdateWithoutTimeout: resourceKxClusterUpdate,
 		DeleteWithoutTimeout: resourceKxClusterDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(2 * time.Minute), // Tags only
