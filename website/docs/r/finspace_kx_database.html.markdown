@@ -50,6 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) identifier of the KX database.
 * `created_timestamp` - Timestamp at which the databse is created in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
+* `id` - A comma-delimited string joining environment ID and database name.
 * `last_modified_timestamp` - Last timestamp at which the database was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
 * `tags_all` - Map of tags assigned to the resource.
 
@@ -60,3 +61,11 @@ In addition to all arguments above, the following attributes are exported:
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)
 * `delete` - (Default `30m`)
+
+## Import
+
+An AWS FinSpace Kx Database can be imported using the `id` (environment ID and database name, comma-delimited), e.g.,
+
+```
+$ terraform import aws_finspace_kx_database.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-database
+```
