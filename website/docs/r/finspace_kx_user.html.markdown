@@ -67,6 +67,7 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) identifier of the KX user.
+* `id` - A comma-delimited string joining environment ID and user name.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
@@ -76,3 +77,11 @@ In addition to all arguments above, the following attributes are exported:
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)
 * `delete` - (Default `30m`)
+
+## Import
+
+An AWS FinSpace Kx User can be imported using the `id` (environment ID and user name, comma-delimited), e.g.,
+
+```
+$ terraform import aws_finspace_kx_database.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-user
+```

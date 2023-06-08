@@ -46,6 +46,11 @@ func TestAccFinSpaceKxUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", userName),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
