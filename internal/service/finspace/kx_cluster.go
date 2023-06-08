@@ -962,7 +962,7 @@ func flattenAutoScalingConfiguration(apiObject *types.AutoScalingConfiguration) 
 	m := map[string]interface{}{}
 
 	if v := apiObject.AutoScalingMetric; v != "" {
-		m["auto_scaling_metric"] = types.AutoScalingMetric(v)
+		m["auto_scaling_metric"] = v
 	}
 
 	if v := apiObject.MinNodeCount; v != nil {
@@ -996,11 +996,11 @@ func flattenSavedownStorageConfiguration(apiObject *types.KxSavedownStorageConfi
 	m := map[string]interface{}{}
 
 	if v := apiObject.Type; v != "" {
-		m["type"] = types.KxSavedownStorageType(v)
+		m["type"] = v
 	}
 
 	if v := apiObject.Size; v >= 4 && v <= 16000 {
-		m["size"] = int32(v)
+		m["size"] = v
 	}
 
 	return []interface{}{m}
