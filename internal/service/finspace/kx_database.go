@@ -80,6 +80,7 @@ const (
 )
 
 func resourceKxDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
 	in := &finspace.CreateKxDatabaseInput{
@@ -95,19 +96,20 @@ func resourceKxDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	out, err := conn.CreateKxDatabase(ctx, in)
 	if err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxDatabase, d.Get("name").(string), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxDatabase, d.Get("name").(string), err)...)
 	}
 
 	if out == nil || out.DatabaseArn == nil {
-		return create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxDatabase, d.Get("name").(string), errors.New("empty output"))
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxDatabase, d.Get("name").(string), errors.New("empty output"))...)
 	}
 
 	d.SetId(aws.ToString(out.EnvironmentId) + "," + aws.ToString(out.DatabaseName))
 
-	return resourceKxDatabaseRead(ctx, d, meta)
+	return append(diags, resourceKxDatabaseRead(ctx, d, meta)...)
 }
 
 func resourceKxDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
 	out, err := findKxDatabaseByName(ctx, conn, d.Get("name").(string), d.Get("environment_id").(string))
@@ -115,11 +117,11 @@ func resourceKxDatabaseRead(ctx context.Context, d *schema.ResourceData, meta in
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FinSpace KxDatabase (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxDatabase, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxDatabase, d.Id(), err)...)
 	}
 
 	d.Set("arn", out.DatabaseArn)
@@ -129,10 +131,11 @@ func resourceKxDatabaseRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("created_timestamp", out.CreatedTimestamp.String())
 	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
 
-	return nil
+	return diags
 }
 
 func resourceKxDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
 	update := false
@@ -148,19 +151,20 @@ func resourceKxDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if !update {
-		return nil
+		return diags
 	}
 
 	log.Printf("[DEBUG] Updating FinSpace KxDatabase (%s): %#v", d.Id(), in)
 	_, err := conn.UpdateKxDatabase(ctx, in)
 	if err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxDatabase, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxDatabase, d.Id(), err)...)
 	}
 
-	return resourceKxDatabaseRead(ctx, d, meta)
+	return append(diags, resourceKxDatabaseRead(ctx, d, meta)...)
 }
 
 func resourceKxDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
 	log.Printf("[INFO] Deleting FinSpace KxDatabase %s", d.Id())
@@ -173,13 +177,13 @@ func resourceKxDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta 
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxDatabase, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxDatabase, d.Id(), err)...)
 	}
 
-	return nil
+	return diags
 }
 
 func findKxDatabaseByName(ctx context.Context, conn *finspace.Client, name string, environmentId string) (*finspace.GetKxDatabaseOutput, error) {
