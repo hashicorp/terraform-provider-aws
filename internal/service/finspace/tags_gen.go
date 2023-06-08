@@ -77,6 +77,15 @@ func SetTagsOut(ctx context.Context, tags map[string]string) {
 	}
 }
 
+// createTags creates finspace service tags for new resources.
+func createTags(ctx context.Context, conn *finspace.Client, identifier string, tags map[string]string) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return UpdateTags(ctx, conn, identifier, nil, tags)
+}
+
 // UpdateTags updates finspace service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

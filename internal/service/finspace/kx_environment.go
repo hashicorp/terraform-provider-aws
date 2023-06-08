@@ -140,12 +140,11 @@ const (
 
 func resourceKxEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
 	in := &finspace.CreateKxEnvironmentInput{
 		Name:        aws.String(d.Get("name").(string)),
 		ClientToken: aws.String(id.UniqueId()),
-		Tags:        GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -156,7 +155,7 @@ func resourceKxEnvironmentCreate(ctx context.Context, d *schema.ResourceData, me
 		in.KmsKeyId = aws.String(v.(string))
 	}
 
-	out, err := client.CreateKxEnvironment(ctx, in)
+	out, err := conn.CreateKxEnvironment(ctx, in)
 	if err != nil {
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get("name").(string), err)...)
 	}
@@ -167,11 +166,17 @@ func resourceKxEnvironmentCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(aws.ToString(out.EnvironmentId))
 
-	if _, err := waitKxEnvironmentCreated(ctx, client, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitKxEnvironmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxEnvironment, d.Id(), err)...)
 	}
 
-	if err := updateKxEnvironmentNetwork(ctx, d, client); err != nil {
+	if err := updateKxEnvironmentNetwork(ctx, d, conn); err != nil {
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Id(), err)...)
+	}
+
+	// The CreateKxEnvironment API currently fails to tag the environment when the
+	// Tags field is set. Until the API is fixed, tag after creation instead.
+	if err := createTags(ctx, conn, aws.ToString(out.EnvironmentArn), GetTagsIn(ctx)); err != nil {
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Id(), err)...)
 	}
 
