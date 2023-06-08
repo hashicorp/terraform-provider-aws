@@ -21,7 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ivs_recording_configuration")
+// @SDKResource("aws_ivs_recording_configuration", name="Recording Configuration")
+// @Tags(identifierAttribute="id")
 func ResourceRecordingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRecordingConfigurationCreate,
@@ -38,7 +39,6 @@ func ResourceRecordingConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -85,8 +85,8 @@ func ResourceRecordingConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchemaForceNew(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchemaForceNew(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"thumbnail_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -125,6 +125,7 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 
 	in := &ivs.CreateRecordingConfigurationInput{
 		DestinationConfiguration: expandDestinationConfiguration(d.Get("destination_configuration").([]interface{})),
+		Tags:                     GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -133,13 +134,6 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 
 	if v, ok := d.GetOk("recording_reconnect_window_seconds"); ok {
 		in.RecordingReconnectWindowSeconds = aws.Int64(int64(v.(int)))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("thumbnail_configuration"); ok {
@@ -194,23 +188,6 @@ func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceD
 	d.Set("state", out.State)
 
 	if err := d.Set("thumbnail_configuration", flattenThumbnailConfiguration(out.ThumbnailConfiguration)); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
-	}
-
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.DiagError(names.IVS, create.ErrActionReading, ResNameRecordingConfiguration, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return create.DiagError(names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
 	}
 

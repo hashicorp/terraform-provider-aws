@@ -37,10 +37,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceActivity,
 			TypeName: "aws_sfn_activity",
+			Name:     "Activity",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceStateMachine,
 			TypeName: "aws_sfn_state_machine",
+			Name:     "State Machine",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }

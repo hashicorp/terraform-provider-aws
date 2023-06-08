@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +18,7 @@ func FindAuthorizerByName(ctx context.Context, conn *iot.IoT, name string) (*iot
 	output, err := conn.DescribeAuthorizerWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -43,7 +43,7 @@ func FindThingByName(ctx context.Context, conn *iot.IoT, name string) (*iot.Desc
 	output, err := conn.DescribeThingWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -68,7 +68,7 @@ func FindThingGroupByName(ctx context.Context, conn *iot.IoT, name string) (*iot
 	output, err := conn.DescribeThingGroupWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -109,7 +109,7 @@ func FindThingGroupMembership(ctx context.Context, conn *iot.IoT, thingGroupName
 	})
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		return &resource.NotFoundError{
+		return &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

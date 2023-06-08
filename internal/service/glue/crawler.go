@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,13 +22,15 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func targets() []string {
 	return []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"}
 }
 
-// @SDKResource("aws_glue_crawler")
+// @SDKResource("aws_glue_crawler", name="Crawler")
+// @Tags(identifierAttribute="arn")
 func ResourceCrawler() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCrawlerCreate,
@@ -358,8 +360,8 @@ func ResourceCrawler() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -369,35 +371,35 @@ func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	glueConn := meta.(*conns.AWSClient).GlueConn()
 	name := d.Get("name").(string)
 
-	crawlerInput, err := createCrawlerInput(ctx, d, name, meta.(*conns.AWSClient).DefaultTagsConfig)
+	crawlerInput, err := createCrawlerInput(ctx, d, name)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Crawler (%s): %s", name, err)
 	}
 
 	// Retry for IAM eventual consistency
-	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err = glueConn.CreateCrawlerWithContext(ctx, crawlerInput)
 		if err != nil {
 			// InvalidInputException: Insufficient Lake Formation permission(s) on xxx
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Insufficient Lake Formation permission") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume role") {
-				return resource.RetryableError(err)
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume provided role") {
+				return retry.RetryableError(err)
 			}
 
 			// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "is not authorized") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			// InvalidInputException: SQS queue arn:aws:sqs:us-west-2:*******:tf-acc-test-4317277351691904203 does not exist or the role provided does not have access to it.
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "SQS queue") && tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "does not exist or the role provided does not have access to it") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -415,8 +417,6 @@ func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	crawler, err := FindCrawlerByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -484,23 +484,6 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	tags, err := ListTags(ctx, conn, crawlerARN)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Crawler (%s): %s", crawlerARN, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	if err := d.Set("lineage_configuration", flattenCrawlerLineageConfiguration(crawler.LineageConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lineage_configuration: %s", err)
 	}
@@ -528,29 +511,29 @@ func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		// Retry for IAM eventual consistency
-		err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 			_, err := glueConn.UpdateCrawlerWithContext(ctx, updateCrawlerInput)
 			if err != nil {
 				// InvalidInputException: Insufficient Lake Formation permission(s) on xxx
 				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Insufficient Lake Formation permission") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume role") {
-					return resource.RetryableError(err)
+				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume provided role") {
+					return retry.RetryableError(err)
 				}
 
 				// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
 				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "is not authorized") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
 				// InvalidInputException: SQS queue arn:aws:sqs:us-west-2:*******:tf-acc-test-4317277351691904203 does not exist or the role provided does not have access to it.
 				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "SQS queue") && tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "does not exist or the role provided does not have access to it") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -561,13 +544,6 @@ func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Crawler (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, glueConn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
@@ -594,14 +570,12 @@ func resourceCrawlerDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName string, defaultTagsConfig *tftags.DefaultConfig) (*glue.CreateCrawlerInput, error) {
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
+func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName string) (*glue.CreateCrawlerInput, error) {
 	crawlerInput := &glue.CreateCrawlerInput{
 		Name:         aws.String(crawlerName),
 		DatabaseName: aws.String(d.Get("database_name").(string)),
 		Role:         aws.String(d.Get("role").(string)),
-		Tags:         Tags(tags.IgnoreAWS()),
+		Tags:         GetTagsIn(ctx),
 		Targets:      expandCrawlerTargets(d),
 	}
 	if description, ok := d.GetOk("description"); ok {

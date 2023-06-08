@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +18,7 @@ const (
 	proxyEndpointStatusUnknown = "Unknown"
 )
 
-func statusEventSubscription(ctx context.Context, conn *rds.RDS, id string) resource.StateRefreshFunc {
+func statusEventSubscription(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindEventSubscriptionByID(ctx, conn, id)
 
@@ -35,10 +35,9 @@ func statusEventSubscription(ctx context.Context, conn *rds.RDS, id string) reso
 }
 
 // statusDBProxyEndpoint fetches the ProxyEndpoint and its Status
-func statusDBProxyEndpoint(ctx context.Context, conn *rds.RDS, id string) resource.StateRefreshFunc {
+func statusDBProxyEndpoint(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBProxyEndpoint(ctx, conn, id)
-
 		if err != nil {
 			return nil, proxyEndpointStatusUnknown, err
 		}
@@ -51,7 +50,7 @@ func statusDBProxyEndpoint(ctx context.Context, conn *rds.RDS, id string) resour
 	}
 }
 
-func statusDBClusterRole(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string) resource.StateRefreshFunc {
+func statusDBClusterRole(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBClusterRoleByDBClusterIDAndRoleARN(ctx, conn, dbClusterID, roleARN)
 
@@ -67,7 +66,7 @@ func statusDBClusterRole(ctx context.Context, conn *rds.RDS, dbClusterID, roleAR
 	}
 }
 
-func statusDBInstanceAutomatedBackup(ctx context.Context, conn *rds.RDS, arn string) resource.StateRefreshFunc {
+func statusDBInstanceAutomatedBackup(ctx context.Context, conn *rds.RDS, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBInstanceAutomatedBackupByARN(ctx, conn, arn)
 
@@ -85,7 +84,7 @@ func statusDBInstanceAutomatedBackup(ctx context.Context, conn *rds.RDS, arn str
 
 // statusDBInstanceHasAutomatedBackup returns whether or not a database instance has a specified automated backup.
 // The connection must be valid for the database instance's Region.
-func statusDBInstanceHasAutomatedBackup(ctx context.Context, conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupsARN string) resource.StateRefreshFunc {
+func statusDBInstanceHasAutomatedBackup(ctx context.Context, conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupsARN string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findDBInstanceByIDSDKv1(ctx, conn, dbInstanceID)
 
@@ -107,7 +106,7 @@ func statusDBInstanceHasAutomatedBackup(ctx context.Context, conn *rds.RDS, dbIn
 	}
 }
 
-func statusDBProxy(ctx context.Context, conn *rds.RDS, name string) resource.StateRefreshFunc {
+func statusDBProxy(ctx context.Context, conn *rds.RDS, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBProxyByName(ctx, conn, name)
 
@@ -123,7 +122,7 @@ func statusDBProxy(ctx context.Context, conn *rds.RDS, name string) resource.Sta
 	}
 }
 
-func statusReservedInstance(ctx context.Context, conn *rds.RDS, id string) resource.StateRefreshFunc {
+func statusReservedInstance(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindReservedDBInstanceByID(ctx, conn, id)
 
@@ -139,7 +138,7 @@ func statusReservedInstance(ctx context.Context, conn *rds.RDS, id string) resou
 	}
 }
 
-func statusDBSnapshot(ctx context.Context, conn *rds.RDS, id string) resource.StateRefreshFunc {
+func statusDBSnapshot(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBSnapshotByID(ctx, conn, id)
 

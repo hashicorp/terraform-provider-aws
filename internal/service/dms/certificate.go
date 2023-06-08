@@ -16,9 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dms_certificate")
+// @SDKResource("aws_dms_certificate", name="Certificate")
+// @Tags(identifierAttribute="certificate_arn")
 func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
@@ -58,8 +60,8 @@ func ResourceCertificate() *schema.Resource {
 				ForceNew:  true,
 				Sensitive: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -69,13 +71,11 @@ func ResourceCertificate() *schema.Resource {
 func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-	certificateID := d.Get("certificate_id").(string)
 
+	certificateID := d.Get("certificate_id").(string)
 	request := &dms.ImportCertificateInput{
 		CertificateIdentifier: aws.String(certificateID),
-		Tags:                  Tags(tags.IgnoreAWS()),
+		Tags:                  GetTagsIn(ctx),
 	}
 
 	pem, pemSet := d.GetOk("certificate_pem")
@@ -111,8 +111,6 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	response, err := conn.DescribeCertificatesWithContext(ctx, &dms.DescribeCertificatesInput{
 		Filters: []*dms.Filter{
@@ -144,38 +142,13 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	resourceCertificateSetState(d, response.Certificates[0])
 
-	tags, err := ListTags(ctx, conn, d.Get("certificate_arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Certificate (%s): %s", d.Get("certificate_arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
 
-	if d.HasChange("tags_all") {
-		arn := d.Get("certificate_arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DMS Certificate (%s) tags: %s", arn, err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }

@@ -50,7 +50,7 @@ func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interf
 		BackupPlanId: aws.String(id),
 	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error getting Backup Plan: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Backup Plan: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.BackupPlanId))

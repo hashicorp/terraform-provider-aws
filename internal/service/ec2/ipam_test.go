@@ -8,8 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -278,7 +279,7 @@ func testAccCheckIPAMScopeCreate(ctx context.Context, ipam *ec2.Ipam) resource.T
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		_, err := conn.CreateIpamScopeWithContext(ctx, &ec2.CreateIpamScopeInput{
-			ClientToken: aws.String(resource.UniqueId()),
+			ClientToken: aws.String(id.UniqueId()),
 			IpamId:      aws.String(*ipam.IpamId),
 		})
 

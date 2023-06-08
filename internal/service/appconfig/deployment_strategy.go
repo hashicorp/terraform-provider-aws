@@ -16,9 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appconfig_deployment_strategy")
+// @SDKResource("aws_appconfig_deployment_strategy", name="Deployment Strategy")
+// @Tags(identifierAttribute="arn")
 func ResourceDeploymentStrategy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentStrategyCreate,
@@ -72,8 +74,8 @@ func ResourceDeploymentStrategy() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(appconfig.ReplicateTo_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -82,18 +84,15 @@ func ResourceDeploymentStrategy() *schema.Resource {
 func resourceDeploymentStrategyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
-
 	input := &appconfig.CreateDeploymentStrategyInput{
 		DeploymentDurationInMinutes: aws.Int64(int64(d.Get("deployment_duration_in_minutes").(int))),
 		GrowthFactor:                aws.Float64(d.Get("growth_factor").(float64)),
 		GrowthType:                  aws.String(d.Get("growth_type").(string)),
 		Name:                        aws.String(name),
 		ReplicateTo:                 aws.String(d.Get("replicate_to").(string)),
-		Tags:                        Tags(tags.IgnoreAWS()),
+		Tags:                        GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -118,8 +117,6 @@ func resourceDeploymentStrategyCreate(ctx context.Context, d *schema.ResourceDat
 func resourceDeploymentStrategyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &appconfig.GetDeploymentStrategyInput{
 		DeploymentStrategyId: aws.String(d.Id()),
@@ -158,23 +155,6 @@ func resourceDeploymentStrategyRead(ctx context.Context, d *schema.ResourceData,
 	}.String()
 	d.Set("arn", arn)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for AppConfig Deployment Strategy (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -211,13 +191,6 @@ func resourceDeploymentStrategyUpdate(ctx context.Context, d *schema.ResourceDat
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating AppConfig Deployment Strategy (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating AppConfig Deployment Strategy (%s) tags: %s", d.Id(), err)
 		}
 	}
 

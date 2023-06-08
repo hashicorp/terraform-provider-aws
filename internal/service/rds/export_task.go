@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -277,7 +277,7 @@ func FindExportTaskByID(ctx context.Context, conn *rds.Client, id string) (*awst
 		return nil, err
 	}
 	if out == nil || len(out.ExportTasks) == 0 {
-		return nil, &sdkv2resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: in,
 		}
 	}
@@ -288,7 +288,7 @@ func FindExportTaskByID(ctx context.Context, conn *rds.Client, id string) (*awst
 	return &out.ExportTasks[0], nil
 }
 
-func statusExportTask(ctx context.Context, conn *rds.Client, id string) sdkv2resource.StateRefreshFunc {
+func statusExportTask(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindExportTaskByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -304,7 +304,7 @@ func statusExportTask(ctx context.Context, conn *rds.Client, id string) sdkv2res
 }
 
 func waitExportTaskCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*awstypes.ExportTask, error) {
-	stateConf := &sdkv2resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{StatusStarting, StatusInProgress},
 		Target:     []string{StatusComplete, StatusFailed},
 		Refresh:    statusExportTask(ctx, conn, id),
@@ -322,7 +322,7 @@ func waitExportTaskCreated(ctx context.Context, conn *rds.Client, id string, tim
 }
 
 func waitExportTaskDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*awstypes.ExportTask, error) {
-	stateConf := &sdkv2resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{StatusStarting, StatusInProgress, StatusCanceling},
 		Target:  []string{},
 		Refresh: statusExportTask(ctx, conn, id),

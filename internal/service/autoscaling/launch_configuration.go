@@ -13,7 +13,8 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -211,7 +212,7 @@ func ResourceLaunchConfiguration() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.StringLenBetween(1, 255-resource.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(1, 255-id.UniqueIDSuffixLength),
 			},
 			"placement_tenancy": {
 				Type:     schema.TypeString,
@@ -308,19 +309,6 @@ func ResourceLaunchConfiguration() *schema.Resource {
 					return
 				},
 			},
-			"vpc_classic_link_id": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				ForceNew:   true,
-				Deprecated: `With the retirement of EC2-Classic the vpc_classic_link_id attribute has been deprecated and will be removed in a future version.`,
-			},
-			"vpc_classic_link_security_groups": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				ForceNew:   true,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				Deprecated: `With the retirement of EC2-Classic the vpc_classic_link_security_groups attribute has been deprecated and will be removed in a future version.`,
-			},
 		},
 	}
 }
@@ -329,14 +317,6 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn()
 	ec2conn := meta.(*conns.AWSClient).EC2Conn()
-
-	if _, ok := d.GetOk("vpc_classic_link_id"); ok {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new Auto Scaling Launch Configurations can be created referencing ClassicLink`)
-	}
-
-	if v, ok := d.GetOk("vpc_classic_link_security_groups"); ok && v.(*schema.Set).Len() > 0 {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new Auto Scaling Launch Configurations can be created referencing ClassicLink`)
-	}
 
 	lcName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := autoscaling.CreateLaunchConfigurationInput{
@@ -496,8 +476,6 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 			d.Set("user_data", userDataHashSum(v))
 		}
 	}
-	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
-	d.Set("vpc_classic_link_security_groups", aws.StringValueSlice(lc.ClassicLinkVPCSecurityGroups))
 
 	rootDeviceName, err := findImageRootDeviceName(ctx, ec2conn, d.Get("image_id").(string))
 
@@ -891,7 +869,7 @@ func FindLaunchConfigurationByName(ctx context.Context, conn *autoscaling.AutoSc
 
 	// Eventual consistency check.
 	if aws.StringValue(output.LaunchConfigurationName) != name {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -937,7 +915,7 @@ func findImageRootDeviceName(ctx context.Context, conn *ec2.EC2, imageID string)
 	}
 
 	if rootDeviceName == "" {
-		return "", &resource.NotFoundError{
+		return "", &retry.NotFoundError{
 			Message: fmt.Sprintf("finding root device name for EC2 AMI (%s)", imageID),
 		}
 	}

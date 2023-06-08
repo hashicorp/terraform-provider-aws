@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,9 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_apigatewayv2_domain_name")
+// @SDKResource("aws_apigatewayv2_domain_name", name="Domain Name")
+// @Tags(identifierAttribute="arn")
 func ResourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainNameCreate,
@@ -114,8 +116,8 @@ func ResourceDomainName() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -125,15 +127,13 @@ func ResourceDomainName() *schema.Resource {
 func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	domainName := d.Get("domain_name").(string)
 	input := &apigatewayv2.CreateDomainNameInput{
 		DomainName:               aws.String(domainName),
 		DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]interface{})),
 		MutualTlsAuthentication:  expandMutualTLSAuthentication(d.Get("mutual_tls_authentication").([]interface{})),
-		Tags:                     Tags(tags.IgnoreAWS()),
+		Tags:                     GetTagsIn(ctx),
 	}
 
 	output, err := conn.CreateDomainNameWithContext(ctx, input)
@@ -154,8 +154,6 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindDomainName(ctx, conn, d.Id())
 
@@ -185,16 +183,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting mutual_tls_authentication: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, output.Tags)
 
 	return diags
 }
@@ -241,13 +230,6 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 Domain Name (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceDomainNameRead(ctx, d, meta)...)
 }
 
@@ -279,7 +261,7 @@ func FindDomainName(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name s
 	output, err := conn.GetDomainNameWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -296,7 +278,7 @@ func FindDomainName(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name s
 	return output, nil
 }
 
-func statusDomainName(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name string) resource.StateRefreshFunc {
+func statusDomainName(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDomainName(ctx, conn, name)
 
@@ -313,7 +295,7 @@ func statusDomainName(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name
 }
 
 func waitDomainNameAvailable(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name string, timeout time.Duration) (*apigatewayv2.GetDomainNameOutput, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{apigatewayv2.DomainNameStatusUpdating},
 		Target:  []string{apigatewayv2.DomainNameStatusAvailable},
 		Refresh: statusDomainName(ctx, conn, name),

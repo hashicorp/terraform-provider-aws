@@ -139,7 +139,7 @@ func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
-	stage, err := FindStageByName(ctx, conn, d.Get("rest_api_id").(string), d.Get("stage_name").(string))
+	stage, err := FindStageByTwoPartKey(ctx, conn, d.Get("rest_api_id").(string), d.Get("stage_name").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Stage Method Settings (%s) not found, removing from state", d.Id())

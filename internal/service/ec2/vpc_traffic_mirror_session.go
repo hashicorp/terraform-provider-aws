@@ -16,9 +16,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_traffic_mirror_session")
+// @SDKResource("aws_ec2_traffic_mirror_session", name="Traffic Mirror Session")
+// @Tags(identifierAttribute="id")
 func ResourceTrafficMirrorSession() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficMirrorSessionCreate,
@@ -58,8 +60,8 @@ func ResourceTrafficMirrorSession() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.IntBetween(1, 32766),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"traffic_mirror_filter_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -81,11 +83,10 @@ func ResourceTrafficMirrorSession() *schema.Resource {
 func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateTrafficMirrorSessionInput{
 		NetworkInterfaceId:    aws.String(d.Get("network_interface_id").(string)),
+		TagSpecifications:     getTagSpecificationsIn(ctx, ec2.ResourceTypeTrafficMirrorSession),
 		TrafficMirrorFilterId: aws.String(d.Get("traffic_mirror_filter_id").(string)),
 		TrafficMirrorTargetId: aws.String(d.Get("traffic_mirror_target_id").(string)),
 	}
@@ -106,10 +107,6 @@ func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceD
 		input.VirtualNetworkId = aws.Int64(int64(v.(int)))
 	}
 
-	if len(tags) > 0 {
-		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTrafficMirrorSession)
-	}
-
 	output, err := conn.CreateTrafficMirrorSessionWithContext(ctx, input)
 
 	if err != nil {
@@ -124,8 +121,6 @@ func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceD
 func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	session, err := FindTrafficMirrorSessionByID(ctx, conn, d.Id())
 
@@ -157,16 +152,7 @@ func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("traffic_mirror_target_id", session.TrafficMirrorTargetId)
 	d.Set("virtual_network_id", session.VirtualNetworkId)
 
-	tags := KeyValueTags(ctx, session.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, session.Tags)
 
 	return diags
 }
@@ -226,14 +212,6 @@ func resourceTrafficMirrorSessionUpdate(ctx context.Context, d *schema.ResourceD
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Traffic Mirror Session (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Traffic Mirror Session (%s) tags: %s", d.Id(), err)
 		}
 	}
 

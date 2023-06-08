@@ -2,7 +2,6 @@ package securityhub
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strconv"
 
@@ -161,11 +160,11 @@ func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := conn.CreateInsightWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Security Hub Insight (%s): %w", name, err))
+		return diag.Errorf("creating Security Hub Insight (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Security Hub Insight (%s): empty output", name))
+		return diag.Errorf("creating Security Hub Insight (%s): empty output", name)
 	}
 
 	d.SetId(aws.StringValue(output.InsightArn))
@@ -185,12 +184,12 @@ func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Security Hub Insight (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Security Hub Insight (%s): %s", d.Id(), err)
 	}
 
 	if insight == nil {
 		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading Security Hub Insight (%s): empty output", d.Id()))
+			return diag.Errorf("reading Security Hub Insight (%s): empty output", d.Id())
 		}
 		log.Printf("[WARN] Security Hub Insight (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -199,7 +198,7 @@ func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("arn", insight.InsightArn)
 	if err := d.Set("filters", flattenSecurityFindingFilters(insight.Filters)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting filters: %w", err))
+		return diag.Errorf("setting filters: %s", err)
 	}
 	d.Set("group_by_attribute", insight.GroupByAttribute)
 	d.Set("name", insight.Name)
@@ -229,7 +228,7 @@ func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	_, err := conn.UpdateInsightWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating Security Hub Insight (%s): %w", d.Id(), err))
+		return diag.Errorf("updating Security Hub Insight (%s): %s", d.Id(), err)
 	}
 
 	return resourceInsightRead(ctx, d, meta)
@@ -248,7 +247,7 @@ func resourceInsightDelete(ctx context.Context, d *schema.ResourceData, meta int
 		if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error deleting Security Hub Insight (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Security Hub Insight (%s): %s", d.Id(), err)
 	}
 
 	return nil

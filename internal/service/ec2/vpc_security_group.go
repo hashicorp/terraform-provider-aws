@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,9 +24,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_security_group")
+// @SDKResource("aws_security_group", name="Security Group")
+// @Tags(identifierAttribute="id")
 func ResourceSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -81,7 +83,7 @@ func ResourceSecurityGroup() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 255-resource.UniqueIDSuffixLength),
+					validation.StringLenBetween(0, 255-id.UniqueIDSuffixLength),
 					validation.StringDoesNotMatch(regexp.MustCompile(`^sg-`), "cannot begin with sg-"),
 				),
 			},
@@ -94,8 +96,8 @@ func ResourceSecurityGroup() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -178,27 +180,22 @@ var (
 
 func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-	input := &ec2.CreateSecurityGroupInput{
-		GroupName: aws.String(name),
+	inputC := &ec2.CreateSecurityGroupInput{
+		GroupName:         aws.String(name),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeSecurityGroup),
 	}
 
 	if v := d.Get("description"); v != nil {
-		input.Description = aws.String(v.(string))
+		inputC.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("vpc_id"); ok {
-		input.VpcId = aws.String(v.(string))
+		inputC.VpcId = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSecurityGroup)
-	}
-
-	output, err := conn.CreateSecurityGroupWithContext(ctx, input)
+	output, err := conn.CreateSecurityGroupWithContext(ctx, inputC)
 
 	if err != nil {
 		return diag.Errorf("creating Security Group (%s): %s", name, err)
@@ -207,57 +204,52 @@ func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(aws.StringValue(output.GroupId))
 
 	// Wait for the security group to truly exist
-	group, err := WaitSecurityGroupCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
+	if _, err := WaitSecurityGroupCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for Security Group (%s) create: %s", d.Id(), err)
 	}
 
 	// AWS defaults all Security Groups to have an ALLOW ALL egress rule.
 	// Here we revoke that rule, so users don't unknowingly have/use it.
-	// This will only be false for Security Groups in EC2-Classic
-	if aws.StringValue(group.VpcId) != "" {
-		input := &ec2.RevokeSecurityGroupEgressInput{
-			GroupId: aws.String(d.Id()),
-			IpPermissions: []*ec2.IpPermission{
-				{
-					FromPort: aws.Int64(0),
-					ToPort:   aws.Int64(0),
-					IpRanges: []*ec2.IpRange{
-						{
-							CidrIp: aws.String("0.0.0.0/0"),
-						},
+	inputR := &ec2.RevokeSecurityGroupEgressInput{
+		GroupId: aws.String(d.Id()),
+		IpPermissions: []*ec2.IpPermission{
+			{
+				FromPort: aws.Int64(0),
+				ToPort:   aws.Int64(0),
+				IpRanges: []*ec2.IpRange{
+					{
+						CidrIp: aws.String("0.0.0.0/0"),
 					},
-					IpProtocol: aws.String("-1"),
 				},
+				IpProtocol: aws.String("-1"),
 			},
-		}
+		},
+	}
 
-		if _, err := conn.RevokeSecurityGroupEgressWithContext(ctx, input); err != nil {
-			return diag.Errorf("revoking default IPv4 egress rule for Security Group (%s): %s", d.Id(), err)
-		}
+	if _, err := conn.RevokeSecurityGroupEgressWithContext(ctx, inputR); err != nil {
+		return diag.Errorf("revoking default IPv4 egress rule for Security Group (%s): %s", d.Id(), err)
+	}
 
-		input = &ec2.RevokeSecurityGroupEgressInput{
-			GroupId: aws.String(d.Id()),
-			IpPermissions: []*ec2.IpPermission{
-				{
-					FromPort: aws.Int64(0),
-					ToPort:   aws.Int64(0),
-					Ipv6Ranges: []*ec2.Ipv6Range{
-						{
-							CidrIpv6: aws.String("::/0"),
-						},
+	inputR = &ec2.RevokeSecurityGroupEgressInput{
+		GroupId: aws.String(d.Id()),
+		IpPermissions: []*ec2.IpPermission{
+			{
+				FromPort: aws.Int64(0),
+				ToPort:   aws.Int64(0),
+				Ipv6Ranges: []*ec2.Ipv6Range{
+					{
+						CidrIpv6: aws.String("::/0"),
 					},
-					IpProtocol: aws.String("-1"),
 				},
+				IpProtocol: aws.String("-1"),
 			},
-		}
+		},
+	}
 
-		if _, err := conn.RevokeSecurityGroupEgressWithContext(ctx, input); err != nil {
-			// If we have a NotFound or InvalidParameterValue, then we are trying to remove the default IPv6 egress of a non-IPv6 enabled SG.
-			if !tfawserr.ErrCodeEquals(err, errCodeInvalidPermissionNotFound) && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "remote-ipv6-range") {
-				return diag.Errorf("revoking default IPv6 egress rule for Security Group (%s): %s", d.Id(), err)
-			}
+	if _, err := conn.RevokeSecurityGroupEgressWithContext(ctx, inputR); err != nil {
+		// If we have a NotFound or InvalidParameterValue, then we are trying to remove the default IPv6 egress of a non-IPv6 enabled SG.
+		if !tfawserr.ErrCodeEquals(err, errCodeInvalidPermissionNotFound) && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "remote-ipv6-range") {
+			return diag.Errorf("revoking default IPv6 egress rule for Security Group (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -266,8 +258,6 @@ func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	sg, err := FindSecurityGroupByID(ctx, conn, d.Id())
 
@@ -315,16 +305,7 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("setting egress: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, sg.Tags)
 
 	return nil
 }
@@ -344,21 +325,10 @@ func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("updating Security Group (%s) %s rules: %s", d.Id(), securityGroupRuleTypeIngress, err)
 	}
 
-	// This will only be false for Security Groups in EC2-Classic
-	if d.Get("vpc_id") != nil {
-		err = updateSecurityGroupRules(ctx, conn, d, securityGroupRuleTypeEgress, group)
+	err = updateSecurityGroupRules(ctx, conn, d, securityGroupRuleTypeEgress, group)
 
-		if err != nil {
-			return diag.Errorf("updating Security Group (%s) %s rules: %s", d.Id(), securityGroupRuleTypeEgress, err)
-		}
-	}
-
-	if d.HasChange("tags_all") && !d.IsNewResource() {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating Security Group (%s) tags: %s", d.Id(), err)
-		}
+	if err != nil {
+		return diag.Errorf("updating Security Group (%s) %s rules: %s", d.Id(), securityGroupRuleTypeEgress, err)
 	}
 
 	return resourceSecurityGroupRead(ctx, d, meta)
@@ -781,8 +751,6 @@ func updateSecurityGroupRules(ctx context.Context, conn *ec2.EC2, d *schema.Reso
 	// adding is easier here, and Terraform should be fast enough to
 	// not have service issues.
 
-	isVPC := aws.StringValue(group.VpcId) != ""
-
 	if len(del) > 0 {
 		if ruleType == securityGroupRuleTypeEgress {
 			input := &ec2.RevokeSecurityGroupEgressInput{
@@ -793,13 +761,8 @@ func updateSecurityGroupRules(ctx context.Context, conn *ec2.EC2, d *schema.Reso
 			_, err = conn.RevokeSecurityGroupEgressWithContext(ctx, input)
 		} else {
 			input := &ec2.RevokeSecurityGroupIngressInput{
+				GroupId:       group.GroupId,
 				IpPermissions: del,
-			}
-
-			if isVPC {
-				input.GroupId = group.GroupId
-			} else {
-				input.GroupName = group.GroupName
 			}
 
 			_, err = conn.RevokeSecurityGroupIngressWithContext(ctx, input)
@@ -820,13 +783,8 @@ func updateSecurityGroupRules(ctx context.Context, conn *ec2.EC2, d *schema.Reso
 			_, err = conn.AuthorizeSecurityGroupEgressWithContext(ctx, input)
 		} else {
 			input := &ec2.AuthorizeSecurityGroupIngressInput{
+				GroupId:       group.GroupId,
 				IpPermissions: add,
-			}
-
-			if isVPC {
-				input.GroupId = group.GroupId
-			} else {
-				input.GroupName = group.GroupName
 			}
 
 			_, err = conn.AuthorizeSecurityGroupIngressWithContext(ctx, input)
@@ -845,8 +803,6 @@ func updateSecurityGroupRules(ctx context.Context, conn *ec2.EC2, d *schema.Reso
 // if it finds invalid permissions input, namely a protocol of "-1" with either
 // to_port or from_port set to a non-zero value.
 func ExpandIPPerms(group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.IpPermission, error) {
-	vpc := aws.StringValue(group.VpcId) != ""
-
 	perms := make([]*ec2.IpPermission, len(configured))
 	for i, mRaw := range configured {
 		var perm ec2.IpPermission
@@ -876,11 +832,7 @@ func ExpandIPPerms(group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.I
 			}
 		}
 		if v, ok := m["self"]; ok && v.(bool) {
-			if vpc {
-				groups = append(groups, *group.GroupId)
-			} else {
-				groups = append(groups, *group.GroupName)
-			}
+			groups = append(groups, aws.StringValue(group.GroupId))
 		}
 
 		if len(groups) > 0 {
@@ -897,11 +849,6 @@ func ExpandIPPerms(group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.I
 
 				if ownerId != "" {
 					perm.UserIdGroupPairs[i].UserId = aws.String(ownerId)
-				}
-
-				if !vpc {
-					perm.UserIdGroupPairs[i].GroupId = nil
-					perm.UserIdGroupPairs[i].GroupName = aws.String(id)
 				}
 			}
 		}
@@ -964,41 +911,25 @@ type GroupIdentifier struct {
 // Flattens an array of UserSecurityGroups into a []*GroupIdentifier
 func FlattenSecurityGroups(list []*ec2.UserIdGroupPair, ownerId *string) []*GroupIdentifier {
 	result := make([]*GroupIdentifier, 0, len(list))
+
 	for _, g := range list {
-		var userId *string
+		var userID string
 		if aws.StringValue(g.UserId) != "" && (ownerId == nil || aws.StringValue(ownerId) != aws.StringValue(g.UserId)) {
-			userId = g.UserId
+			userID = aws.StringValue(g.UserId)
 		}
 		// userid nil here for same vpc groups
 
-		vpc := aws.StringValue(g.GroupName) == ""
-		var id *string
-		if vpc {
-			id = g.GroupId
-		} else {
-			id = g.GroupName
+		id := aws.StringValue(g.GroupId)
+		if userID != "" {
+			id = userID + "/" + id
 		}
 
-		// id is groupid for vpcs
-		// id is groupname for non vpc (classic)
-
-		if userId != nil {
-			id = aws.String(*userId + "/" + *id)
-		}
-
-		if vpc {
-			result = append(result, &GroupIdentifier{
-				GroupId:     id,
-				Description: g.Description,
-			})
-		} else {
-			result = append(result, &GroupIdentifier{
-				GroupId:     g.GroupId,
-				GroupName:   id,
-				Description: g.Description,
-			})
-		}
+		result = append(result, &GroupIdentifier{
+			GroupId:     aws.String(id),
+			Description: g.Description,
+		})
 	}
+
 	return result
 }
 

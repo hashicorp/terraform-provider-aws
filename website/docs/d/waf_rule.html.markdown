@@ -26,6 +26,7 @@ The following arguments are supported:
 * `name` - (Required) Name of the WAF rule.
 
 ## Attributes Reference
+
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the WAF rule.

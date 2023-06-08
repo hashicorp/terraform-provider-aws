@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
@@ -21,7 +21,7 @@ func TestAccMetaRegionsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccRegionsDataSourceConfig_empty(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", 0),
 				),
 			},
 		},
@@ -40,7 +40,7 @@ func TestAccMetaRegionsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccRegionsDataSourceConfig_optInStatusFilter("opt-in-not-required"),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", 0),
 				),
 			},
 		},
@@ -59,7 +59,7 @@ func TestAccMetaRegionsDataSource_allRegions(t *testing.T) {
 			{
 				Config: testAccRegionsDataSourceConfig_allRegions(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", 0),
 				),
 			},
 		},

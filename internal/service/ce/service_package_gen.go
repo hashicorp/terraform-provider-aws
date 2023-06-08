@@ -37,10 +37,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAnomalyMonitor,
 			TypeName: "aws_ce_anomaly_monitor",
+			Name:     "Anomaly Monitor",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceAnomalySubscription,
 			TypeName: "aws_ce_anomaly_subscription",
+			Name:     "Anomaly Subscription",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceCostAllocationTag,
@@ -49,6 +57,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCostCategory,
 			TypeName: "aws_ce_cost_category",
+			Name:     "Cost Category",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }

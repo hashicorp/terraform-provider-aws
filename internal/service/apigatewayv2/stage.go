@@ -18,13 +18,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	defaultStageName = "$default"
 )
 
-// @SDKResource("aws_apigatewayv2_stage")
+// @SDKResource("aws_apigatewayv2_stage", name="Stage")
+// @Tags(identifierAttribute="arn")
 func ResourceStage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStageCreate,
@@ -182,8 +184,8 @@ func ResourceStage() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -193,8 +195,6 @@ func ResourceStage() *schema.Resource {
 func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	apiId := d.Get("api_id").(string)
 
@@ -211,7 +211,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		ApiId:      aws.String(apiId),
 		AutoDeploy: aws.Bool(d.Get("auto_deploy").(bool)),
 		StageName:  aws.String(d.Get("name").(string)),
-		Tags:       Tags(tags.IgnoreAWS()),
+		Tags:       GetTagsIn(ctx),
 	}
 	if v, ok := d.GetOk("access_log_settings"); ok {
 		req.AccessLogSettings = expandAccessLogSettings(v.([]interface{}))
@@ -249,8 +249,6 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	apiId := d.Get("api_id").(string)
 	resp, err := conn.GetStageWithContext(ctx, &apigatewayv2.GetStageInput{
@@ -305,16 +303,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting stage_variables: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, resp.Tags)
 
 	apiOutput, err := conn.GetApiWithContext(ctx, &apigatewayv2.GetApiInput{
 		ApiId: aws.String(apiId),
@@ -419,13 +408,6 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateStageWithContext(ctx, req)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 stage (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 stage (%s) tags: %s", d.Id(), err)
 		}
 	}
 

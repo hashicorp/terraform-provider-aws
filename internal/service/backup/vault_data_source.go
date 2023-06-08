@@ -51,7 +51,7 @@ func dataSourceVaultRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	resp, err := conn.DescribeBackupVaultWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error getting Backup Vault: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Backup Vault: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.BackupVaultName))

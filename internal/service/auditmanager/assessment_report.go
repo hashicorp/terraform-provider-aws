@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -160,7 +160,7 @@ func (r *resourceAssessmentReport) Delete(ctx context.Context, req resource.Dele
 	// Example:
 	//   ValidationException: The assessment report is currently being generated and can’t be
 	//   deleted. You can only delete assessment reports that are completed or failed
-	err := tfresource.Retry(ctx, reportCompletionTimeout, func() *sdkv2resource.RetryError {
+	err := tfresource.Retry(ctx, reportCompletionTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteAssessmentReport(ctx, &auditmanager.DeleteAssessmentReportInput{
 			AssessmentId:       aws.String(state.AssessmentID.ValueString()),
 			AssessmentReportId: aws.String(state.ID.ValueString()),
@@ -168,9 +168,9 @@ func (r *resourceAssessmentReport) Delete(ctx context.Context, req resource.Dele
 		if err != nil {
 			var ve *awstypes.ValidationException
 			if errors.As(err, &ve) {
-				return sdkv2resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return sdkv2resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -209,7 +209,7 @@ func FindAssessmentReportByID(ctx context.Context, conn *auditmanager.Client, id
 		}
 	}
 
-	return nil, &sdkv2resource.NotFoundError{
+	return nil, &retry.NotFoundError{
 		LastRequest: in,
 	}
 }

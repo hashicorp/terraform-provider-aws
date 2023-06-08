@@ -7,9 +7,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -139,7 +140,7 @@ func testAccCheckAssessmentReportDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfauditmanager.FindAssessmentReportByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
-				var nfe *resource.NotFoundError
+				var nfe *retry.NotFoundError
 				if errors.As(err, &nfe) {
 					return nil
 				}
@@ -181,7 +182,8 @@ func testAccAssessmentReportConfigBase(rName string) string {
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_acl" "test" {

@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -578,7 +578,6 @@ func testAccCheckOptionGroupExists(ctx context.Context, n string, v *rds.OptionG
 		}
 
 		resp, err := conn.DescribeOptionGroupsWithContext(ctx, &opts)
-
 		if err != nil {
 			return err
 		}
@@ -674,7 +673,7 @@ resource "aws_db_instance" "test" {
   engine            = data.aws_rds_orderable_db_instance.test.engine
   engine_version    = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class    = data.aws_rds_orderable_db_instance.test.instance_class
-  name              = "baz"
+  db_name           = "baz"
   password          = "barbarbarbar"
   username          = "foo"
 

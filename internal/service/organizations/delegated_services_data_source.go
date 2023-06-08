@@ -2,7 +2,6 @@ package organizations
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -61,11 +60,11 @@ func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData
 		return !lastPage
 	})
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error describing organizations delegated services: %w", err))
+		return diag.Errorf("describing organizations delegated services: %s", err)
 	}
 
 	if err = d.Set("delegated_services", flattenDelegatedServices(delegators)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting delegated_services: %w", err))
+		return diag.Errorf("setting delegated_services: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)

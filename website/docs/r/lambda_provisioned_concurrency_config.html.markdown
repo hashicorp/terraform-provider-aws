@@ -10,6 +10,8 @@ description: |-
 
 Manages a Lambda Provisioned Concurrency Configuration.
 
+~> **NOTE:** Setting `skip_destroy` to `true` means that the AWS Provider will _not_ destroy a provisioned concurrency configuration, even when running `terraform destroy`. The configuration is thus an intentional dangling resource that is _not_ managed by Terraform and may incur extra expense in your AWS account.
+
 ## Example Usage
 
 ### Alias Name
@@ -39,6 +41,10 @@ The following arguments are required:
 * `function_name` - (Required) Name or Amazon Resource Name (ARN) of the Lambda Function.
 * `provisioned_concurrent_executions` - (Required) Amount of capacity to allocate. Must be greater than or equal to `1`.
 * `qualifier` - (Required) Lambda Function version or Lambda Alias name.
+
+The following arguments are optional:
+
+* `skip_destroy` - (Optional) Whether to retain the provisoned concurrency configuration upon destruction. Defaults to `false`. If set to `true`, the resource in simply removed from state instead.
 
 ## Attributes Reference
 

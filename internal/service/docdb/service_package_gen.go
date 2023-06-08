@@ -37,14 +37,26 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCluster,
 			TypeName: "aws_docdb_cluster",
+			Name:     "Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceClusterInstance,
 			TypeName: "aws_docdb_cluster_instance",
+			Name:     "Cluster Instance",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceClusterParameterGroup,
 			TypeName: "aws_docdb_cluster_parameter_group",
+			Name:     "Cluster Parameter Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceClusterSnapshot,
@@ -53,6 +65,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceEventSubscription,
 			TypeName: "aws_docdb_event_subscription",
+			Name:     "Event Subscription",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceGlobalCluster,
@@ -61,6 +77,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSubnetGroup,
 			TypeName: "aws_docdb_subnet_group",
+			Name:     "Subnet Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

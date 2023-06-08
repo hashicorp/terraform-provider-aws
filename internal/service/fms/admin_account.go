@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -60,7 +60,7 @@ func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, met
 		accountID = v.(string)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			fms.AccountRoleStatusDeleted, // Recreating association can return this status
 			fms.AccountRoleStatusCreating,
@@ -80,7 +80,7 @@ func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceAdminAccountRead(ctx, d, meta)...)
 }
 
-func associateAdminAccountRefreshFunc(ctx context.Context, conn *fms.FMS, accountId string) resource.StateRefreshFunc {
+func associateAdminAccountRefreshFunc(ctx context.Context, conn *fms.FMS, accountId string) retry.StateRefreshFunc {
 	// This is all wrapped in a refresh func since AssociateAdminAccount returns
 	// success even though it failed if called too quickly after creating an organization
 	return func() (interface{}, string, error) {
@@ -163,7 +163,7 @@ func resourceAdminAccountDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func waitForAdminAccountDeletion(ctx context.Context, conn *fms.FMS) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			fms.AccountRoleStatusDeleting,
 			fms.AccountRoleStatusPendingDeletion,

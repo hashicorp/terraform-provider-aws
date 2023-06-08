@@ -89,7 +89,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	resp, err := conn.CreateGroupWithContext(ctx, params)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating Cognito User Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Cognito User Group: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", *resp.Group.UserPoolId, *resp.Group.GroupName))
@@ -151,7 +151,7 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	_, err := conn.UpdateGroupWithContext(ctx, params)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error updating Cognito User Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating Cognito User Group: %s", err)
 	}
 
 	return append(diags, resourceUserGroupRead(ctx, d, meta)...)
@@ -170,7 +170,7 @@ func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	_, err := conn.DeleteGroupWithContext(ctx, params)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error deleting Cognito User Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Cognito User Group: %s", err)
 	}
 
 	return diags

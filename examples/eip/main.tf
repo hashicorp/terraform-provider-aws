@@ -8,7 +8,7 @@ provider "aws" {
 
 resource "aws_eip" "default" {
   instance = aws_instance.web.id
-  vpc      = true
+  domain   = "vpc"
 }
 
 # Our default security group to access

@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -50,6 +50,11 @@ func ResourceProvisionedConcurrencyConfig() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
+			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 		},
 	}
@@ -147,6 +152,11 @@ func resourceProvisionedConcurrencyConfigUpdate(ctx context.Context, d *schema.R
 
 func resourceProvisionedConcurrencyConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Lambda Provisioned Concurrency Config %q", d.Id())
+		return diags
+	}
+
 	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
@@ -183,7 +193,7 @@ func ProvisionedConcurrencyConfigParseID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func refreshProvisionedConcurrencyConfigStatus(ctx context.Context, conn *lambda.Lambda, functionName, qualifier string) resource.StateRefreshFunc {
+func refreshProvisionedConcurrencyConfigStatus(ctx context.Context, conn *lambda.Lambda, functionName, qualifier string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lambda.GetProvisionedConcurrencyConfigInput{
 			FunctionName: aws.String(functionName),
@@ -207,7 +217,7 @@ func refreshProvisionedConcurrencyConfigStatus(ctx context.Context, conn *lambda
 }
 
 func waitForProvisionedConcurrencyConfigStatusReady(ctx context.Context, conn *lambda.Lambda, functionName, qualifier string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{lambda.ProvisionedConcurrencyStatusEnumInProgress},
 		Target:  []string{lambda.ProvisionedConcurrencyStatusEnumReady},
 		Refresh: refreshProvisionedConcurrencyConfigStatus(ctx, conn, functionName, qualifier),

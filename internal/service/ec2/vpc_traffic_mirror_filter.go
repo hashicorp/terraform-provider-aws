@@ -17,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_traffic_mirror_filter")
+// @SDKResource("aws_ec2_traffic_mirror_filter", name="Traffic Mirror Filter")
+// @Tags(identifierAttribute="id")
 func ResourceTrafficMirrorFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficMirrorFilterCreate,
@@ -51,8 +53,8 @@ func ResourceTrafficMirrorFilter() *schema.Resource {
 					}, false),
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -60,17 +62,13 @@ func ResourceTrafficMirrorFilter() *schema.Resource {
 func resourceTrafficMirrorFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	input := &ec2.CreateTrafficMirrorFilterInput{}
+	input := &ec2.CreateTrafficMirrorFilterInput{
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeTrafficMirrorFilter),
+	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTrafficMirrorFilter)
 	}
 
 	out, err := conn.CreateTrafficMirrorFilterWithContext(ctx, input)
@@ -100,8 +98,6 @@ func resourceTrafficMirrorFilterCreate(ctx context.Context, d *schema.ResourceDa
 func resourceTrafficMirrorFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	trafficMirrorFilter, err := FindTrafficMirrorFilterByID(ctx, conn, d.Id())
 
@@ -126,16 +122,7 @@ func resourceTrafficMirrorFilterRead(ctx context.Context, d *schema.ResourceData
 	d.Set("description", trafficMirrorFilter.Description)
 	d.Set("network_services", aws.StringValueSlice(trafficMirrorFilter.NetworkServices))
 
-	tags := KeyValueTags(ctx, trafficMirrorFilter.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, trafficMirrorFilter.Tags)
 
 	return diags
 }
@@ -163,14 +150,6 @@ func resourceTrafficMirrorFilterUpdate(ctx context.Context, d *schema.ResourceDa
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Traffic Mirror Filter (%s) network services: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Traffic Mirror Filter (%s) tags: %s", d.Id(), err)
 		}
 	}
 

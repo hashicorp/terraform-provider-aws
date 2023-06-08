@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
@@ -520,7 +520,7 @@ resource "aws_storagegateway_cached_iscsi_volume" "test" {
 `, rName))
 }
 
-func testAccCachediSCSIVolumeConfig_sourceARN(rName string) string { //nolint:unused // This function is used in a skipped accteptance test.
+func testAccCachediSCSIVolumeConfig_sourceARN(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCachediSCSIVolumeBaseConfig(rName),
 		fmt.Sprintf(`

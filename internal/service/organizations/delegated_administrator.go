@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -85,7 +85,7 @@ func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.Resourc
 
 	_, err := conn.RegisterDelegatedAdministratorWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Organizations DelegatedAdministrator (%s): %w", accountID, err))
+		return diag.Errorf("creating Organizations DelegatedAdministrator (%s): %s", accountID, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", accountID, servicePrincipal))
@@ -98,7 +98,7 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 
 	accountID, servicePrincipal, err := DecodeOrganizationDelegatedAdministratorID(d.Id())
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding ID AWS Organization (%s) DelegatedAdministrators: %w", d.Id(), err))
+		return diag.Errorf("decoding ID AWS Organization (%s) DelegatedAdministrators: %s", d.Id(), err)
 	}
 	input := &organizations.ListDelegatedAdministratorsInput{
 		ServicePrincipal: aws.String(servicePrincipal),
@@ -114,7 +114,7 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 		return !lastPage
 	})
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing AWS Organization (%s) DelegatedAdministrators: %w", d.Id(), err))
+		return diag.Errorf("listing AWS Organization (%s) DelegatedAdministrators: %s", d.Id(), err)
 	}
 
 	if delegatedAccount == nil {
@@ -124,7 +124,7 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 			return nil
 		}
 
-		return diag.FromErr(&resource.NotFoundError{})
+		return diag.FromErr(&retry.NotFoundError{})
 	}
 
 	d.Set("arn", delegatedAccount.Arn)
@@ -145,7 +145,7 @@ func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.Resourc
 
 	accountID, servicePrincipal, err := DecodeOrganizationDelegatedAdministratorID(d.Id())
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding ID AWS Organization (%s) DelegatedAdministrators: %w", d.Id(), err))
+		return diag.Errorf("decoding ID AWS Organization (%s) DelegatedAdministrators: %s", d.Id(), err)
 	}
 	input := &organizations.DeregisterDelegatedAdministratorInput{
 		AccountId:        aws.String(accountID),
@@ -154,7 +154,7 @@ func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.Resourc
 
 	_, err = conn.DeregisterDelegatedAdministratorWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Organizations DelegatedAdministrator (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Organizations DelegatedAdministrator (%s): %s", d.Id(), err)
 	}
 	return nil
 }

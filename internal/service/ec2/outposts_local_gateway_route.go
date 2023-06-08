@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -88,16 +88,16 @@ func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	var localGatewayRoute *ec2.LocalGatewayRoute
-	err = resource.RetryContext(ctx, localGatewayRouteEventualConsistencyTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, localGatewayRouteEventualConsistencyTimeout, func() *retry.RetryError {
 		var err error
 		localGatewayRoute, err = GetLocalGatewayRoute(ctx, conn, localGatewayRouteTableID, destination)
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if d.IsNewResource() && localGatewayRoute == nil {
-			return resource.RetryableError(&resource.NotFoundError{})
+			return retry.RetryableError(&retry.NotFoundError{})
 		}
 
 		return nil

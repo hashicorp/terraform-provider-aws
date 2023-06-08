@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -182,7 +182,7 @@ func FindLifecycleHook(ctx context.Context, conn *autoscaling.AutoScaling, asgNa
 	output, err := conn.DescribeLifecycleHooksWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -202,7 +202,7 @@ func FindLifecycleHook(ctx context.Context, conn *autoscaling.AutoScaling, asgNa
 		}
 	}
 
-	return nil, &resource.NotFoundError{LastRequest: input}
+	return nil, &retry.NotFoundError{LastRequest: input}
 }
 
 func resourceLifecycleHookImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

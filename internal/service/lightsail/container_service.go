@@ -17,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_container_service")
+// @SDKResource("aws_lightsail_container_service", name="Container Service")
+// @Tags(identifierAttribute="id")
 func ResourceContainerService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerServiceCreate,
@@ -152,8 +154,8 @@ func ResourceContainerService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -164,14 +166,13 @@ func ResourceContainerService() *schema.Resource {
 
 func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-	serviceName := d.Get("name").(string)
 
+	serviceName := d.Get("name").(string)
 	input := &lightsail.CreateContainerServiceInput{
 		ServiceName: aws.String(serviceName),
 		Power:       aws.String(d.Get("power").(string)),
 		Scale:       aws.Int64(int64(d.Get("scale").(int))),
+		Tags:        GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("public_domain_names"); ok {
@@ -182,19 +183,15 @@ func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData,
 		input.PrivateRegistryAccess = expandPrivateRegistryAccess(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	_, err := conn.CreateContainerServiceWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("error creating Lightsail Container Service (%s): %s", serviceName, err)
+		return diag.Errorf("creating Lightsail Container Service (%s): %s", serviceName, err)
 	}
 
 	d.SetId(serviceName)
 
 	if err := waitContainerServiceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Lightsail Container Service (%s) creation: %s", d.Id(), err)
+		return diag.Errorf("waiting for Lightsail Container Service (%s) creation: %s", d.Id(), err)
 	}
 
 	// once container service creation and/or deployment successful (now enabled by default), disable it if "is_disabled" is true
@@ -206,11 +203,11 @@ func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData,
 
 		_, err := conn.UpdateContainerServiceWithContext(ctx, input)
 		if err != nil {
-			return diag.Errorf("error disabling Lightsail Container Service (%s): %s", d.Id(), err)
+			return diag.Errorf("disabling Lightsail Container Service (%s): %s", d.Id(), err)
 		}
 
 		if err := waitContainerServiceDisabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return diag.Errorf("error waiting for Lightsail Container Service (%s) to be disabled: %s", d.Id(), err)
+			return diag.Errorf("waiting for Lightsail Container Service (%s) to be disabled: %s", d.Id(), err)
 		}
 	}
 
@@ -219,8 +216,6 @@ func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	cs, err := FindContainerServiceByName(ctx, conn, d.Id())
 
@@ -231,7 +226,7 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Lightsail Container Service (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Lightsail Container Service (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", cs.ContainerServiceName)
@@ -240,10 +235,10 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("is_disabled", cs.IsDisabled)
 
 	if err := d.Set("public_domain_names", flattenContainerServicePublicDomainNames(cs.PublicDomainNames)); err != nil {
-		return diag.Errorf("error setting public_domain_names for Lightsail Container Service (%s): %s", d.Id(), err)
+		return diag.Errorf("setting public_domain_names for Lightsail Container Service (%s): %s", d.Id(), err)
 	}
 	if err := d.Set("private_registry_access", []interface{}{flattenPrivateRegistryAccess(cs.PrivateRegistryAccess)}); err != nil {
-		return diag.Errorf("error setting private_registry_access for Lightsail Container Service (%s): %s", d.Id(), err)
+		return diag.Errorf("setting private_registry_access for Lightsail Container Service (%s): %s", d.Id(), err)
 	}
 	d.Set("arn", cs.Arn)
 	d.Set("availability_zone", cs.Location.AvailabilityZone)
@@ -255,14 +250,7 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("state", cs.State)
 	d.Set("url", cs.Url)
 
-	tags := KeyValueTags(ctx, cs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
-	}
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, cs.Tags)
 
 	return nil
 }
@@ -283,25 +271,17 @@ func resourceContainerServiceUpdate(ctx context.Context, d *schema.ResourceData,
 
 		_, err := conn.UpdateContainerServiceWithContext(ctx, input)
 		if err != nil {
-			return diag.Errorf("error updating Lightsail Container Service (%s): %s", d.Id(), err)
+			return diag.Errorf("updating Lightsail Container Service (%s): %s", d.Id(), err)
 		}
 
 		if d.HasChange("is_disabled") && d.Get("is_disabled").(bool) {
 			if err := waitContainerServiceDisabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return diag.Errorf("error waiting for Lightsail Container Service (%s) update: %s", d.Id(), err)
+				return diag.Errorf("waiting for Lightsail Container Service (%s) update: %s", d.Id(), err)
 			}
 		} else {
 			if err := waitContainerServiceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return diag.Errorf("error waiting for Lightsail Container Service (%s) update: %s", d.Id(), err)
+				return diag.Errorf("waiting for Lightsail Container Service (%s) update: %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("error updating Lightsail Container Service (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -322,11 +302,11 @@ func resourceContainerServiceDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Lightsail Container Service (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Lightsail Container Service (%s): %s", d.Id(), err)
 	}
 
 	if err := waitContainerServiceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("error waiting for Lightsail Container Service (%s) deletion: %s", d.Id(), err)
+		return diag.Errorf("waiting for Lightsail Container Service (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil

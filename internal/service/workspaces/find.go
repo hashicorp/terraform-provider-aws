@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 func FindDirectoryByID(ctx context.Context, conn *workspaces.WorkSpaces, id string) (*workspaces.WorkspaceDirectory, error) {
@@ -20,7 +20,7 @@ func FindDirectoryByID(ctx context.Context, conn *workspaces.WorkSpaces, id stri
 	}
 
 	if output == nil || len(output.Directories) == 0 || output.Directories[0] == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -32,7 +32,7 @@ func FindDirectoryByID(ctx context.Context, conn *workspaces.WorkSpaces, id stri
 	directory := output.Directories[0]
 
 	if state := aws.StringValue(directory.State); state == workspaces.WorkspaceDirectoryStateDeregistered {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     state,
 			LastRequest: input,
 		}

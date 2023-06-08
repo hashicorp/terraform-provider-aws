@@ -14,23 +14,27 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	propagationTimeout = 2 * time.Minute
 )
 
-// @SDKResource("aws_alb_target_group")
-// @SDKResource("aws_lb_target_group")
+// @SDKResource("aws_alb_target_group", name="Target Group")
+// @SDKResource("aws_lb_target_group", name="Target Group")
+// @Tags(identifierAttribute="id")
 func ResourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupCreate,
@@ -281,8 +285,8 @@ func ResourceTargetGroup() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target_failover": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -333,16 +337,14 @@ func suppressIfTargetType(t string) schema.SchemaDiffSuppressFunc {
 func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var groupName string
 	if v, ok := d.GetOk("name"); ok {
 		groupName = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = resource.PrefixedUniqueId(v.(string))
+		groupName = id.PrefixedUniqueId(v.(string))
 	} else {
-		groupName = resource.PrefixedUniqueId("tf-")
+		groupName = id.PrefixedUniqueId("tf-")
 	}
 
 	existingTg, err := FindTargetGroupByName(ctx, conn, groupName)
@@ -357,6 +359,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	input := &elbv2.CreateTargetGroupInput{
 		Name:       aws.String(groupName),
+		Tags:       GetTagsIn(ctx),
 		TargetType: aws.String(d.Get("target_type").(string)),
 	}
 
@@ -428,24 +431,20 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	output, err := conn.CreateTargetGroupWithContext(ctx, input)
 
-	// Some partitions may not support tag-on-create
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] ELBv2 Target Group (%s) create failed (%s) with tags. Trying create without tags.", groupName, err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
+
 		output, err = conn.CreateTargetGroupWithContext(ctx, input)
 	}
 
 	// Tags are not supported on creation with some protocol types(i.e. GENEVE)
 	// Retry creation without tags
 	if input.Tags != nil && tfawserr.ErrMessageContains(err, ErrValidationError, TagsOnCreationErrMessage) {
-		log.Printf("[WARN] ELBv2 Target Group (%s) create failed (%s) with tags. Trying create without tags.", groupName, err)
 		input.Tags = nil
+
 		output, err = conn.CreateTargetGroupWithContext(ctx, input)
 	}
 
@@ -598,18 +597,17 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	// Post-create tagging supported in some partitions
-	if input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, d.Id(), tags)
 
-		// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] error adding tags after create for ELBv2 Target Group (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating ELBv2 Target Group (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting ELBv2 Target Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -829,39 +827,6 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := resource.RetryContext(ctx, loadBalancerTagPropagationTimeout, func() *resource.RetryError {
-			err := UpdateTags(ctx, conn, d.Id(), o, n)
-
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
-				log.Printf("[DEBUG] Retrying tagging of LB (%s)", d.Id())
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			err = UpdateTags(ctx, conn, d.Id(), o, n)
-		}
-
-		// ISO partitions may not support tagging, giving error
-		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] Unable to update tags for ELBv2 Target Group %s: %s", d.Id(), err)
-			return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating LB Target Group (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 }
 
@@ -877,15 +842,15 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[DEBUG] Deleting Target Group (%s): %s", d.Id(), input)
-	err := resource.RetryContext(ctx, targetGroupDeleteTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, targetGroupDeleteTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteTargetGroupWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, "ResourceInUse", "is currently in use by a listener or a rule") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -915,7 +880,7 @@ func FindTargetGroupByARN(ctx context.Context, conn *elbv2.ELBV2, arn string) (*
 
 	// Eventual consistency check.
 	if aws.StringValue(output.TargetGroupArn) != arn {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -936,7 +901,7 @@ func FindTargetGroupByName(ctx context.Context, conn *elbv2.ELBV2, name string) 
 
 	// Eventual consistency check.
 	if aws.StringValue(output.TargetGroupName) != name {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -962,7 +927,7 @@ func FindTargetGroups(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.Descr
 	})
 
 	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1055,8 +1020,6 @@ func TargetGroupSuffixFromARN(arn *string) string {
 // flattenTargetGroupResource takes a *elbv2.TargetGroup and populates all respective resource fields.
 func flattenTargetGroupResource(ctx context.Context, d *schema.ResourceData, meta interface{}, targetGroup *elbv2.TargetGroup) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
@@ -1148,28 +1111,6 @@ func flattenTargetGroupResource(ctx context.Context, d *schema.ResourceData, met
 		return fmt.Errorf("setting target failover: %w", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] Unable to list tags for ELBv2 Target Group %s: %s", d.Id(), err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("listing tags for LB Target Group (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
 	return nil
 }
 
@@ -1223,7 +1164,7 @@ func flattenTargetGroupStickiness(attributes []*elbv2.TargetGroupAttribute) ([]i
 			if sType, ok := m["type"].(string); !ok || sType == "app_cookie" {
 				duration, err := strconv.Atoi(aws.StringValue(attr.Value))
 				if err != nil {
-					return nil, fmt.Errorf("Error converting stickiness.app_cookie.duration_seconds to int: %s", aws.StringValue(attr.Value))
+					return nil, fmt.Errorf("converting stickiness.app_cookie.duration_seconds to int: %s", aws.StringValue(attr.Value))
 				}
 				m["cookie_duration"] = duration
 			}

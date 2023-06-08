@@ -28,10 +28,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAutoScalingConfigurationVersion,
 			TypeName: "aws_apprunner_auto_scaling_configuration_version",
+			Name:     "AutoScaling Configuration Version",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceConnection,
 			TypeName: "aws_apprunner_connection",
+			Name:     "Connection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceCustomDomainAssociation,
@@ -40,18 +48,34 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceObservabilityConfiguration,
 			TypeName: "aws_apprunner_observability_configuration",
+			Name:     "Observability Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceService,
 			TypeName: "aws_apprunner_service",
+			Name:     "Service",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceVPCConnector,
 			TypeName: "aws_apprunner_vpc_connector",
+			Name:     "VPC Connector",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceVPCIngressConnection,
 			TypeName: "aws_apprunner_vpc_ingress_connection",
+			Name:     "VPC Ingress Connection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

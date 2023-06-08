@@ -18,9 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appconfig_configuration_profile")
+// @SDKResource("aws_appconfig_configuration_profile", name="Connection Profile")
+// @Tags(identifierAttribute="arn")
 func ResourceConfigurationProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationProfileCreate,
@@ -67,8 +69,8 @@ func ResourceConfigurationProfile() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -108,17 +110,14 @@ func ResourceConfigurationProfile() *schema.Resource {
 func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	appId := d.Get("application_id").(string)
 	name := d.Get("name").(string)
-
 	input := &appconfig.CreateConfigurationProfileInput{
 		ApplicationId: aws.String(appId),
 		LocationUri:   aws.String(d.Get("location_uri").(string)),
 		Name:          aws.String(name),
-		Tags:          Tags(tags.IgnoreAWS()),
+		Tags:          GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -155,8 +154,6 @@ func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceD
 func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	confProfID, appID, err := ConfigurationProfileParseID(d.Id())
 
@@ -206,23 +203,6 @@ func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceDat
 	}.String()
 	d.Set("arn", arn)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for AppConfig Configuration Profile (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -262,13 +242,6 @@ func resourceConfigurationProfileUpdate(ctx context.Context, d *schema.ResourceD
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating AppConfig Configuration Profile (%s) for Application (%s): %s", confProfID, appID, err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating AppConfig Configuration Profile (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 

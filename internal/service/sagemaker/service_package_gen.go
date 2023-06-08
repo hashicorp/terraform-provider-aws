@@ -33,14 +33,34 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceApp,
 			TypeName: "aws_sagemaker_app",
+			Name:     "App",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceAppImageConfig,
 			TypeName: "aws_sagemaker_app_image_config",
+			Name:     "App Image Config",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceCodeRepository,
 			TypeName: "aws_sagemaker_code_repository",
+			Name:     "Code Repository",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceDataQualityJobDefinition,
+			TypeName: "aws_sagemaker_data_quality_job_definition",
+			Name:     "Data Quality Job Definition",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceDevice,
@@ -49,34 +69,66 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDeviceFleet,
 			TypeName: "aws_sagemaker_device_fleet",
+			Name:     "Device Fleet",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceDomain,
 			TypeName: "aws_sagemaker_domain",
+			Name:     "Domain",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceEndpoint,
 			TypeName: "aws_sagemaker_endpoint",
+			Name:     "Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceEndpointConfiguration,
 			TypeName: "aws_sagemaker_endpoint_configuration",
+			Name:     "Endpoint Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceFeatureGroup,
 			TypeName: "aws_sagemaker_feature_group",
+			Name:     "Feature Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceFlowDefinition,
 			TypeName: "aws_sagemaker_flow_definition",
+			Name:     "Flow Definition",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceHumanTaskUI,
 			TypeName: "aws_sagemaker_human_task_ui",
+			Name:     "Human Task UI",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceImage,
 			TypeName: "aws_sagemaker_image",
+			Name:     "Image",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceImageVersion,
@@ -85,18 +137,37 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceModel,
 			TypeName: "aws_sagemaker_model",
+			Name:     "Model",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceModelPackageGroup,
 			TypeName: "aws_sagemaker_model_package_group",
+			Name:     "Model Package Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceModelPackageGroupPolicy,
 			TypeName: "aws_sagemaker_model_package_group_policy",
 		},
 		{
+			Factory:  ResourceMonitoringSchedule,
+			TypeName: "aws_sagemaker_monitoring_schedule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceNotebookInstance,
 			TypeName: "aws_sagemaker_notebook_instance",
+			Name:     "Notebook Instance",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceNotebookInstanceLifeCycleConfiguration,
@@ -105,6 +176,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceProject,
 			TypeName: "aws_sagemaker_project",
+			Name:     "Project",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceServicecatalogPortfolioStatus,
@@ -113,14 +188,26 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSpace,
 			TypeName: "aws_sagemaker_space",
+			Name:     "Space",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceStudioLifecycleConfig,
 			TypeName: "aws_sagemaker_studio_lifecycle_config",
+			Name:     "Studio Lifecycle Config",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUserProfile,
 			TypeName: "aws_sagemaker_user_profile",
+			Name:     "User Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceWorkforce,
@@ -129,6 +216,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceWorkteam,
 			TypeName: "aws_sagemaker_workteam",
+			Name:     "Workteam",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

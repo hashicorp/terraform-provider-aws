@@ -22,7 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_instance")
+// @SDKResource("aws_lightsail_instance", name="Instance")
+// @Tags(identifierAttribute="id")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
@@ -128,11 +129,6 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Default:  "dualstack",
 			},
-			"ipv6_address": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "use `ipv6_addresses` attribute instead",
-			},
 			"ipv6_addresses": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -154,8 +150,8 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: customdiff.All(
 			customdiff.ValidateChange("availability_zone", func(ctx context.Context, old, new, meta any) error {
@@ -172,8 +168,6 @@ func ResourceInstance() *schema.Resource {
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	iName := d.Get("name").(string)
 
@@ -182,6 +176,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		BlueprintId:      aws.String(d.Get("blueprint_id").(string)),
 		BundleId:         aws.String(d.Get("bundle_id").(string)),
 		InstanceNames:    aws.StringSlice([]string{iName}),
+		Tags:             GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("key_pair_name"); ok {
@@ -194,10 +189,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
 		in.IpAddressType = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateInstancesWithContext(ctx, &in)
@@ -238,8 +229,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	out, err := FindInstanceById(ctx, conn, d.Id())
 
@@ -267,27 +256,13 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("cpu_count", out.Hardware.CpuCount)
 	d.Set("ram_size", out.Hardware.RamSizeInGb)
 
-	// Deprecated: AWS Go SDK v1.36.25 removed Ipv6Address field
-	if len(out.Ipv6Addresses) > 0 {
-		d.Set("ipv6_address", out.Ipv6Addresses[0])
-	}
-
 	d.Set("ipv6_addresses", aws.StringValueSlice(out.Ipv6Addresses))
 	d.Set("ip_address_type", out.IpAddressType)
 	d.Set("is_static_ip", out.IsStaticIp)
 	d.Set("private_ip_address", out.PrivateIpAddress)
 	d.Set("public_ip_address", out.PublicIpAddress)
 
-	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResInstance, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResInstance, d.Id(), err)
-	}
+	SetTagsOut(ctx, out.Tags)
 
 	return nil
 }
@@ -334,22 +309,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if diag != nil {
 			return diag
-		}
-	}
-
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResInstance, d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResInstance, d.Id(), err)
 		}
 	}
 

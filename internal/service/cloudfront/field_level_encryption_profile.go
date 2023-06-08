@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -92,7 +92,7 @@ func resourceFieldLevelEncryptionProfileCreate(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	apiObject := &cloudfront.FieldLevelEncryptionProfileConfig{
-		CallerReference: aws.String(resource.UniqueId()),
+		CallerReference: aws.String(id.UniqueId()),
 		Name:            aws.String(d.Get("name").(string)),
 	}
 

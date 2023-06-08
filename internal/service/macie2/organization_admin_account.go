@@ -2,7 +2,6 @@ package macie2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -10,7 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -40,19 +40,19 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	adminAccountID := d.Get("admin_account_id").(string)
 	input := &macie2.EnableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(adminAccountID),
-		ClientToken:    aws.String(resource.UniqueId()),
+		ClientToken:    aws.String(id.UniqueId()),
 	}
 
 	var err error
-	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 		_, err := conn.EnableOrganizationAdminAccountWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -63,7 +63,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Macie OrganizationAdminAccount: %w", err))
+		return diag.Errorf("creating Macie OrganizationAdminAccount: %s", err)
 	}
 
 	d.SetId(adminAccountID)
@@ -86,7 +86,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Macie OrganizationAdminAccount (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Macie OrganizationAdminAccount (%s): %s", d.Id(), err)
 	}
 
 	if res == nil {
@@ -96,7 +96,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 			return nil
 		}
 
-		return diag.FromErr(&resource.NotFoundError{})
+		return diag.FromErr(&retry.NotFoundError{})
 	}
 
 	d.Set("admin_account_id", res.AccountId)
@@ -117,7 +117,7 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error deleting Macie OrganizationAdminAccount (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Macie OrganizationAdminAccount (%s): %s", d.Id(), err)
 	}
 	return nil
 }

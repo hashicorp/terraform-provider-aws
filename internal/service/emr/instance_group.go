@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -358,7 +358,7 @@ func resourceInstanceGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func instanceGroupStateRefresh(ctx context.Context, conn *emr.EMR, clusterID, groupID string) resource.StateRefreshFunc {
+func instanceGroupStateRefresh(ctx context.Context, conn *emr.EMR, clusterID, groupID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		ig, err := FetchInstanceGroup(ctx, conn, clusterID, groupID)
 		if err != nil {
@@ -401,7 +401,7 @@ func FetchInstanceGroup(ctx context.Context, conn *emr.EMR, clusterID, groupID s
 	}
 
 	if ig == nil {
-		return nil, &resource.NotFoundError{}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return ig, nil
@@ -439,7 +439,7 @@ func readEBSConfig(d *schema.ResourceData) *emr.EbsConfiguration {
 }
 
 func waitForInstanceGroupStateRunning(ctx context.Context, conn *emr.EMR, clusterID string, instanceGroupID string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			emr.InstanceGroupStateBootstrapping,
 			emr.InstanceGroupStateProvisioning,

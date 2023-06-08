@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sagemaker_feature_group")
+// @SDKResource("aws_sagemaker_feature_group", name="Feature Group")
+// @Tags(identifierAttribute="arn")
 func ResourceFeatureGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFeatureGroupCreate,
@@ -35,25 +37,11 @@ func ResourceFeatureGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"feature_group_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}`),
-						"Must start and end with an alphanumeric character and Can only contain alphanumeric character and hyphens. Spaces are not allowed."),
-				),
-			},
-			"record_identifier_feature_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
-						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
-				),
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
 			"event_time_feature_name": {
 				Type:     schema.TypeString,
@@ -64,18 +52,6 @@ func ResourceFeatureGroup() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
 						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
 				),
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
-			"role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
 			},
 			"feature_definition": {
 				Type:     schema.TypeList,
@@ -102,6 +78,16 @@ func ResourceFeatureGroup() *schema.Resource {
 						},
 					},
 				},
+			},
+			"feature_group_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}`),
+						"Must start and end with an alphanumeric character and Can only contain alphanumeric character and hyphens. Spaces are not allowed."),
+				),
 			},
 			"offline_store_config": {
 				Type:         schema.TypeList,
@@ -136,6 +122,10 @@ func ResourceFeatureGroup() *schema.Resource {
 								},
 							},
 						},
+						"disable_glue_table_creation": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 						"s3_storage_config": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -154,9 +144,11 @@ func ResourceFeatureGroup() *schema.Resource {
 								},
 							},
 						},
-						"disable_glue_table_creation": {
-							Type:     schema.TypeBool,
-							Optional: true,
+						"table_format": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      sagemaker.TableFormatGlue,
+							ValidateFunc: validation.StringInSlice(sagemaker.TableFormat_Values(), false),
 						},
 					},
 				},
@@ -169,6 +161,11 @@ func ResourceFeatureGroup() *schema.Resource {
 				AtLeastOneOf: []string{"offline_store_config", "online_store_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"enable_online_store": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"security_config": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -183,16 +180,27 @@ func ResourceFeatureGroup() *schema.Resource {
 								},
 							},
 						},
-						"enable_online_store": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"record_identifier_feature_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
+						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
+				),
+			},
+			"role_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -202,25 +210,19 @@ func ResourceFeatureGroup() *schema.Resource {
 func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("feature_group_name").(string)
-
 	input := &sagemaker.CreateFeatureGroupInput{
 		FeatureGroupName:            aws.String(name),
 		EventTimeFeatureName:        aws.String(d.Get("event_time_feature_name").(string)),
 		RecordIdentifierFeatureName: aws.String(d.Get("record_identifier_feature_name").(string)),
 		RoleArn:                     aws.String(d.Get("role_arn").(string)),
 		FeatureDefinitions:          expandFeatureGroupFeatureDefinition(d.Get("feature_definition").([]interface{})),
+		Tags:                        GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("offline_store_config"); ok {
@@ -232,16 +234,16 @@ func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] SageMaker Feature Group create config: %#v", *input)
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.CreateFeatureGroupWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "ValidationException", "The execution role ARN is invalid.") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "ValidationException", "Invalid S3Uri provided") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -266,8 +268,6 @@ func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, met
 func resourceFeatureGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindFeatureGroupByName(ctx, conn, d.Id())
 
@@ -301,36 +301,13 @@ func resourceFeatureGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting offline_store_config for SageMaker Feature Group (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Feature Group (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceFeatureGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Feature Group (%s) tags: %s", d.Id(), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceFeatureGroupRead(ctx, d, meta)...)
 }
@@ -472,6 +449,10 @@ func expandFeatureGroupOfflineStoreConfig(l []interface{}) *sagemaker.OfflineSto
 		config.DisableGlueTableCreation = aws.Bool(v)
 	}
 
+	if v, ok := m["table_format"].(string); ok {
+		config.TableFormat = aws.String(v)
+	}
+
 	return config
 }
 
@@ -482,6 +463,7 @@ func flattenFeatureGroupOfflineStoreConfig(config *sagemaker.OfflineStoreConfig)
 
 	m := map[string]interface{}{
 		"disable_glue_table_creation": aws.BoolValue(config.DisableGlueTableCreation),
+		"table_format":                aws.StringValue(config.TableFormat),
 	}
 
 	if config.DataCatalogConfig != nil {

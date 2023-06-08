@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -142,15 +143,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Description: "The region where AWS operations will take place. Examples\n" +
 					"are us-east-1, us-west-2, etc.", // lintignore:AWSAT003,
 			},
-			"s3_force_path_style": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Deprecated: "Use s3_use_path_style instead.",
-				Description: "Set this to true to enable the request to use path-style addressing,\n" +
-					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
-					"use virtual hosted bucket addressing when possible\n" +
-					"(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
-			},
 			"s3_use_path_style": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -171,32 +163,17 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Description: "List of paths to shared config files. If not set, defaults to [~/.aws/config].",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"shared_credentials_file": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Deprecated:    "Use shared_credentials_files instead.",
-				ConflictsWith: []string{"shared_credentials_files"},
-				Description:   "The path to the shared credentials file. If not set, defaults to ~/.aws/credentials.",
-			},
 			"shared_credentials_files": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ConflictsWith: []string{"shared_credentials_file"},
-				Description:   "List of paths to shared credentials files. If not set, defaults to [~/.aws/credentials].",
-				Elem:          &schema.Schema{Type: schema.TypeString},
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "List of paths to shared credentials files. If not set, defaults to [~/.aws/credentials].",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"skip_credentials_validation": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Description: "Skip the credentials validation via STS API. " +
 					"Used for AWS API implementations that do not have STS available/implemented.",
-			},
-			"skip_get_ec2_platforms": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Description: "Skip getting the supported EC2 platforms. " +
-					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
-				Deprecated: `With the retirement of EC2-Classic the skip_get_ec2_platforms attribute has been deprecated and will be removed in a future version.`,
 			},
 			"skip_metadata_api_check": {
 				Type:         nullable.TypeNullableBool,
@@ -253,10 +230,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	}
 
 	var errs *multierror.Error
-	servicePackages := servicePackages(ctx)
+	servicePackageMap := make(map[string]conns.ServicePackage)
 
-	for _, sp := range servicePackages {
+	for _, sp := range servicePackages(ctx) {
+		servicePackageName := sp.ServicePackageName()
+		servicePackageMap[servicePackageName] = sp
+
 		for _, v := range sp.SDKDataSources(ctx) {
+			v := v
 			typeName := v.TypeName
 
 			if _, ok := provider.DataSourcesMap[typeName]; ok {
@@ -264,22 +245,38 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
-			ds := v.Factory()
+			r := v.Factory()
 
 			// Ensure that the correct CRUD handler variants are used.
-			if ds.Read != nil || ds.ReadContext != nil {
+			if r.Read != nil || r.ReadContext != nil {
 				errs = multierror.Append(errs, fmt.Errorf("incorrect Read handler variant: %s", typeName))
 				continue
 			}
 
-			if v := ds.ReadWithoutTimeout; v != nil {
-				ds.ReadWithoutTimeout = wrappedReadContextFunc(v)
+			// bootstrapContext is run on all wrapped methods before any interceptors.
+			bootstrapContext := func(ctx context.Context, meta any) context.Context {
+				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
+				if v, ok := meta.(*conns.AWSClient); ok {
+					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+				}
+
+				return ctx
+			}
+			interceptors := interceptorItems{}
+			ds := &wrappedDataSource{
+				bootstrapContext: bootstrapContext,
+				interceptors:     interceptors,
 			}
 
-			provider.DataSourcesMap[typeName] = ds
+			if v := r.ReadWithoutTimeout; v != nil {
+				r.ReadWithoutTimeout = ds.Read(v)
+			}
+
+			provider.DataSourcesMap[typeName] = r
 		}
 
 		for _, v := range sp.SDKResources(ctx) {
+			v := v
 			typeName := v.TypeName
 
 			if _, ok := provider.ResourcesMap[typeName]; ok {
@@ -307,29 +304,78 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				continue
 			}
 
+			// bootstrapContext is run on all wrapped methods before any interceptors.
+			bootstrapContext := func(ctx context.Context, meta any) context.Context {
+				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
+				if v, ok := meta.(*conns.AWSClient); ok {
+					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+				}
+
+				return ctx
+			}
+			interceptors := interceptorItems{}
+
+			if v.Tags != nil {
+				// The resource has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				if v, ok := r.Schema[names.AttrTags]; ok {
+					if v.Computed {
+						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					continue
+				}
+				if v, ok := r.Schema[names.AttrTagsAll]; ok {
+					if !v.Computed {
+						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTagsAll, typeName))
+					continue
+				}
+
+				interceptors = append(interceptors, interceptorItem{
+					when: Before | After | Finally,
+					why:  Create | Read | Update,
+					interceptor: tagsInterceptor{
+						tags:       v.Tags,
+						updateFunc: tagsUpdateFunc,
+						readFunc:   tagsReadFunc,
+					},
+				})
+			}
+
+			rs := &wrappedResource{
+				bootstrapContext: bootstrapContext,
+				interceptors:     interceptors,
+			}
+
 			if v := r.CreateWithoutTimeout; v != nil {
-				r.CreateWithoutTimeout = wrappedCreateContextFunc(v)
+				r.CreateWithoutTimeout = rs.Create(v)
 			}
 			if v := r.ReadWithoutTimeout; v != nil {
-				r.ReadWithoutTimeout = wrappedReadContextFunc(v)
+				r.ReadWithoutTimeout = rs.Read(v)
 			}
 			if v := r.UpdateWithoutTimeout; v != nil {
-				r.UpdateWithoutTimeout = wrappedUpdateContextFunc(v)
+				r.UpdateWithoutTimeout = rs.Update(v)
 			}
 			if v := r.DeleteWithoutTimeout; v != nil {
-				r.DeleteWithoutTimeout = wrappedDeleteContextFunc(v)
+				r.DeleteWithoutTimeout = rs.Delete(v)
 			}
 			if v := r.Importer; v != nil {
 				if v := v.StateContext; v != nil {
-					r.Importer.StateContext = wrappedStateContextFunc(v)
+					r.Importer.StateContext = rs.State(v)
 				}
 			}
 			if v := r.CustomizeDiff; v != nil {
-				r.CustomizeDiff = wrappedCustomizeDiffFunc(v)
+				r.CustomizeDiff = rs.CustomizeDiff(v)
 			}
 			for _, stateUpgrader := range r.StateUpgraders {
 				if v := stateUpgrader.Upgrade; v != nil {
-					stateUpgrader.Upgrade = wrappedStateUpgradeFunc(v)
+					stateUpgrader.Upgrade = rs.StateUpgrade(v)
 				}
 			}
 
@@ -350,7 +396,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	} else {
 		meta = new(conns.AWSClient)
 	}
-	meta.ServicePackages = servicePackages
+	meta.ServicePackages = servicePackageMap
 	provider.SetMeta(meta)
 
 	return provider, nil
@@ -376,10 +422,9 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		MaxRetries:                     25, // Set default here, not in schema (muxing with v6 provider).
 		Profile:                        d.Get("profile").(string),
 		Region:                         d.Get("region").(string),
-		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool) || d.Get("s3_force_path_style").(bool),
+		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool),
 		SecretKey:                      d.Get("secret_key").(string),
 		SkipCredsValidation:            d.Get("skip_credentials_validation").(bool),
-		SkipGetEC2Platforms:            d.Get("skip_get_ec2_platforms").(bool),
 		SkipRegionValidation:           d.Get("skip_region_validation").(bool),
 		SkipRequestingAccountId:        d.Get("skip_requesting_account_id").(bool),
 		STSRegion:                      d.Get("sts_region").(string),
@@ -395,12 +440,20 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 
 	if v, ok := d.GetOk("assume_role"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		config.AssumeRole = expandAssumeRole(ctx, v.([]interface{})[0].(map[string]interface{}))
-		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, SourceIdentity: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID, config.AssumeRole.SourceIdentity)
+		tflog.Info(ctx, "assume_role configuration set", map[string]any{
+			"tf_aws.assume_role.role_arn":        config.AssumeRole.RoleARN,
+			"tf_aws.assume_role.session_name":    config.AssumeRole.SessionName,
+			"tf_aws.assume_role.external_id":     config.AssumeRole.ExternalID,
+			"tf_aws.assume_role.source_identity": config.AssumeRole.SourceIdentity,
+		})
 	}
 
 	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(ctx, v.([]interface{})[0].(map[string]interface{}))
-		log.Printf("[INFO] assume_role_with_web_identity configuration set: (ARN: %q, SessionID: %q)", config.AssumeRoleWithWebIdentity.RoleARN, config.AssumeRoleWithWebIdentity.SessionName)
+		tflog.Info(ctx, "assume_role_with_web_identity configuration set", map[string]any{
+			"tf_aws.assume_role_with_web_identity.role_arn":     config.AssumeRoleWithWebIdentity.RoleARN,
+			"tf_aws.assume_role_with_web_identity.session_name": config.AssumeRoleWithWebIdentity.SessionName,
+		})
 	}
 
 	if v, ok := d.GetOk("default_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -429,9 +482,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.MaxRetries = v.(int)
 	}
 
-	if v, ok := d.GetOk("shared_credentials_file"); ok {
-		config.SharedCredentialsFiles = []string{v.(string)}
-	} else if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]interface{})) > 0 {
 		config.SharedCredentialsFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
@@ -470,19 +521,10 @@ func assumeRoleSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"duration": {
-					Type:          schema.TypeString,
-					Optional:      true,
-					Description:   "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
-					ValidateFunc:  validAssumeRoleDuration,
-					ConflictsWith: []string{"assume_role.0.duration_seconds"},
-				},
-				"duration_seconds": {
-					Type:          schema.TypeInt,
-					Optional:      true,
-					Deprecated:    "Use assume_role.duration instead",
-					Description:   "The duration, in seconds, of the role session.",
-					ValidateFunc:  validation.IntBetween(900, 43200),
-					ConflictsWith: []string{"assume_role.0.duration"},
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
+					ValidateFunc: validAssumeRoleDuration,
 				},
 				"external_id": {
 					Type:        schema.TypeString,
@@ -630,8 +672,6 @@ func expandAssumeRole(_ context.Context, tfMap map[string]interface{}) *awsbase.
 	if v, ok := tfMap["duration"].(string); ok && v != "" {
 		duration, _ := time.ParseDuration(v)
 		assumeRole.Duration = duration
-	} else if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
-		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
 	if v, ok := tfMap["external_id"].(string); ok && v != "" {
@@ -679,8 +719,6 @@ func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]interfa
 	if v, ok := tfMap["duration"].(string); ok && v != "" {
 		duration, _ := time.ParseDuration(v)
 		assumeRole.Duration = duration
-	} else if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
-		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
 	if v, ok := tfMap["policy"].(string); ok && v != "" {
@@ -786,6 +824,7 @@ func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string
 
 		if deprecatedEnvVar := names.DeprecatedEnvVar(pkg); deprecatedEnvVar != "" {
 			if v := os.Getenv(deprecatedEnvVar); v != "" {
+				// TODO: Make this a Warning Diagnostic
 				log.Printf("[WARN] The environment variable %q is deprecated. Use %q instead.", deprecatedEnvVar, envVar)
 				endpoints[pkg] = v
 			}
@@ -793,60 +832,4 @@ func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string
 	}
 
 	return endpoints, nil
-}
-
-func wrappedCreateContextFunc(f schema.CreateContextFunc) schema.CreateContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedReadContextFunc(f schema.ReadContextFunc) schema.ReadContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedUpdateContextFunc(f schema.UpdateContextFunc) schema.UpdateContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedDeleteContextFunc(f schema.DeleteContextFunc) schema.DeleteContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedStateContextFunc(f schema.StateContextFunc) schema.StateContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedCustomizeDiffFunc(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
-	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, d, meta)
-	}
-}
-
-func wrappedStateUpgradeFunc(f schema.StateUpgradeFunc) schema.StateUpgradeFunc {
-	return func(ctx context.Context, rawState map[string]interface{}, meta any) (map[string]interface{}, error) {
-		ctx = meta.(*conns.AWSClient).InitContext(ctx)
-
-		return f(ctx, rawState, meta)
-	}
 }

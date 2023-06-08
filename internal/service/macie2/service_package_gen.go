@@ -36,14 +36,20 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceClassificationJob,
 			TypeName: "aws_macie2_classification_job",
+			Name:     "Classification Job",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceCustomDataIdentifier,
 			TypeName: "aws_macie2_custom_data_identifier",
+			Name:     "Custom Data Identifier",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceFindingsFilter,
 			TypeName: "aws_macie2_findings_filter",
+			Name:     "Findings Filter",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceInvitationAccepter,
@@ -52,6 +58,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceMember,
 			TypeName: "aws_macie2_member",
+			Name:     "Member",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceOrganizationAdminAccount,
