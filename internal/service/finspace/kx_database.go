@@ -138,26 +138,17 @@ func resourceKxDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
-	update := false
-
-	in := &finspace.UpdateKxDatabaseInput{
-		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-		DatabaseName:  aws.String(d.Get("name").(string)),
-	}
-
 	if d.HasChanges("description") {
-		in.Description = aws.String(d.Get("description").(string))
-		update = true
-	}
+		in := &finspace.UpdateKxDatabaseInput{
+			EnvironmentId: aws.String(d.Get("environment_id").(string)),
+			DatabaseName:  aws.String(d.Get("name").(string)),
+			Description:   aws.String(d.Get("description").(string)),
+		}
 
-	if !update {
-		return diags
-	}
-
-	log.Printf("[DEBUG] Updating FinSpace KxDatabase (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateKxDatabase(ctx, in)
-	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxDatabase, d.Id(), err)...)
+		_, err := conn.UpdateKxDatabase(ctx, in)
+		if err != nil {
+			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxDatabase, d.Id(), err)...)
+		}
 	}
 
 	return append(diags, resourceKxDatabaseRead(ctx, d, meta)...)
