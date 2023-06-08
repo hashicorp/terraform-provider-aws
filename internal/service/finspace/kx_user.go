@@ -47,19 +47,19 @@ func ResourceKxUser() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 32),
 			},
+			"iam_role": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"iam_role": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
