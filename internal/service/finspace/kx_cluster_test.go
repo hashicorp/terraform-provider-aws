@@ -466,6 +466,7 @@ func testAccCheckKxClusterExists(ctx context.Context, name string, kxcluster *fi
 func testAccKxClusterConfigBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 output "account_id" {
   value = data.aws_caller_identity.current.account_id
@@ -520,7 +521,7 @@ data "aws_iam_policy_document" "key_policy" {
 
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
   }
 }
@@ -781,7 +782,7 @@ data "aws_iam_policy_document" "bucket_policy" {
     ]
 
     resources = [
-      "arn:aws:s3:::${aws_s3_bucket.test.id}/*",
+      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*",
     ]
 
     principals {
@@ -808,7 +809,7 @@ data "aws_iam_policy_document" "bucket_policy" {
     ]
 
     resources = [
-      "arn:aws:s3:::${aws_s3_bucket.test.id}",
+      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}",
     ]
 
     principals {
@@ -967,7 +968,7 @@ resource "aws_iam_role" "test" {
         Sid    = ""
         Principal = {
           "Service" : "prod.finspacekx.aws.internal",
-          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+          "AWS" : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
         }
       },
     ]
@@ -1049,7 +1050,7 @@ data "aws_iam_policy_document" "test" {
     ]
 
     resources = [
-      "arn:aws:s3:::${aws_s3_bucket.test.id}/*",
+      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*",
     ]
 
     principals {
@@ -1076,7 +1077,7 @@ data "aws_iam_policy_document" "test" {
     ]
 
     resources = [
-      "arn:aws:s3:::${aws_s3_bucket.test.id}",
+      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}",
     ]
 
     principals {
