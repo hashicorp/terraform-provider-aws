@@ -3,6 +3,7 @@ package finspace
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -360,6 +361,8 @@ func ResourceKxCluster() *schema.Resource {
 
 const (
 	ResNameKxCluster = "Kx Cluster"
+
+	kxClusterIDPartCount = 2
 )
 
 func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -430,9 +433,17 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxCluster, d.Get("name").(string), errors.New("empty output"))...)
 	}
 
-	d.SetId(aws.ToString(out.EnvironmentId) + "," + aws.ToString(out.ClusterName))
+	idParts := []string{
+		aws.ToString(out.EnvironmentId),
+		aws.ToString(out.ClusterName),
+	}
+	id, err := flex.FlattenResourceId(idParts, kxClusterIDPartCount, false)
+	if err != nil {
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxCluster, d.Get("name").(string), err)...)
+	}
+	d.SetId(id)
 
-	if _, err := waitKxClusterCreated(ctx, conn, d.Get("name").(string), d.Get("environment_id").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitKxClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxCluster, d.Id(), err)...)
 	}
 
@@ -443,8 +454,7 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
-	out, err := findKxClusterByID(ctx, conn, d.Get("name").(string), d.Get("environment_id").(string))
-
+	out, err := findKxClusterByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FinSpace KxCluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -467,9 +477,6 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("availability_zone_id", out.AvailabilityZoneId)
 	d.Set("execution_role", out.ExecutionRole)
 	d.Set("initialization_script", out.InitializationScript)
-
-	env, err := findKxEnvironmentByID(ctx, conn, d.Get("environment_id").(string))
-	d.Set("arn", *env.EnvironmentArn+"/kxCluster/"+*out.ClusterName)
 
 	if err := d.Set("capacity_configuration", flattenCapacityConfiguration(out.CapacityConfiguration)); err != nil {
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
@@ -507,6 +514,14 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
 	}
 
+	// compose cluster ARN using environment ARN
+	env, err := findKxEnvironmentByID(ctx, conn, d.Get("environment_id").(string))
+	if err != nil {
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
+	}
+	arn := fmt.Sprintf("%s/kxCluster/%s", aws.ToString(env.EnvironmentArn), aws.ToString(out.ClusterName))
+	d.Set("arn", arn)
+
 	return diags
 }
 
@@ -534,7 +549,7 @@ func resourceKxClusterDelete(ctx context.Context, d *schema.ResourceData, meta i
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxCluster, d.Id(), err)...)
 	}
 
-	_, err = waitKxClusterDeleted(ctx, conn, d.Get("name").(string), d.Get("environment_id").(string), d.Timeout(schema.TimeoutDelete))
+	_, err = waitKxClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil && !tfresource.NotFound(err) {
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxCluster, d.Id(), err)...)
 	}
@@ -542,11 +557,11 @@ func resourceKxClusterDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func waitKxClusterCreated(ctx context.Context, conn *finspace.Client, clusterName string, environmentId string, timeout time.Duration) (*finspace.GetKxClusterOutput, error) {
+func waitKxClusterCreated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxClusterOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxClusterStatusPending, types.KxClusterStatusCreating),
 		Target:                    enum.Slice(types.KxClusterStatusRunning),
-		Refresh:                   statusKxCluster(ctx, conn, clusterName, environmentId),
+		Refresh:                   statusKxCluster(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -560,11 +575,11 @@ func waitKxClusterCreated(ctx context.Context, conn *finspace.Client, clusterNam
 	return nil, err
 }
 
-func waitKxClusterDeleted(ctx context.Context, conn *finspace.Client, clusterName string, environmentId string, timeout time.Duration) (*finspace.GetKxClusterOutput, error) {
+func waitKxClusterDeleted(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxClusterOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.KxClusterStatusDeleting),
 		Target:  enum.Slice(types.KxClusterStatusDeleted),
-		Refresh: statusKxCluster(ctx, conn, clusterName, environmentId),
+		Refresh: statusKxCluster(ctx, conn, id),
 		Timeout: timeout,
 	}
 
@@ -576,9 +591,9 @@ func waitKxClusterDeleted(ctx context.Context, conn *finspace.Client, clusterNam
 	return nil, err
 }
 
-func statusKxCluster(ctx context.Context, conn *finspace.Client, clusterName string, environmentId string) retry.StateRefreshFunc {
+func statusKxCluster(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findKxClusterByID(ctx, conn, clusterName, environmentId)
+		out, err := findKxClusterByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -591,10 +606,14 @@ func statusKxCluster(ctx context.Context, conn *finspace.Client, clusterName str
 	}
 }
 
-func findKxClusterByID(ctx context.Context, conn *finspace.Client, clusterName string, environmentId string) (*finspace.GetKxClusterOutput, error) {
+func findKxClusterByID(ctx context.Context, conn *finspace.Client, id string) (*finspace.GetKxClusterOutput, error) {
+	parts, err := flex.ExpandResourceId(id, kxUserIDPartCount, false)
+	if err != nil {
+		return nil, err
+	}
 	in := &finspace.GetKxClusterInput{
-		ClusterName:   aws.String(clusterName),
-		EnvironmentId: aws.String(environmentId),
+		EnvironmentId: aws.String(parts[0]),
+		ClusterName:   aws.String(parts[1]),
 	}
 
 	out, err := conn.GetKxCluster(ctx, in)
