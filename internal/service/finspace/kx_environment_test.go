@@ -328,7 +328,6 @@ func testAccCheckKxEnvironmentExists(ctx context.Context, name string, kxenviron
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
-		ctx := context.Background()
 		resp, err := conn.GetKxEnvironment(ctx, &finspace.GetKxEnvironmentInput{
 			EnvironmentId: aws.String(rs.Primary.ID),
 		})
