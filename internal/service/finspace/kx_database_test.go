@@ -255,7 +255,7 @@ resource "aws_finspace_kx_environment" "test" {
 resource "aws_finspace_kx_database" "test" {
   name           = %[1]q
   environment_id = aws_finspace_kx_environment.test.id
-  description	 = %[2]q
+  description.   = %[2]q
 }
 `, rName, description)
 }
