@@ -570,6 +570,40 @@ func TestAccCloudWatchMetricAlarm_missingStatistic(t *testing.T) {
 	})
 }
 
+func TestAccCloudWatchMetricAlarm_missingReturnDataFromMetricQuery(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccMetricAlarmConfig_missingReturnDataMetricQuery(rName),
+				ExpectError: regexp.MustCompile("One of `metric_query` must have `return_data` as `true` for a cloudwatch metric alarm"),
+			},
+		},
+	})
+}
+
+func TestAccCloudWatchMetricAlarm_moreThanOneReturnDataFromMetricQuery(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccMetricAlarmConfig_moreThanOneReturnDataFromMetricQuery(rName),
+				ExpectError: regexp.MustCompile("Multiple `metric_query` blocks have `return_data` as `true` for a cloudwatch metric alarm"),
+			},
+		},
+	})
+}
+
 func TestAccCloudWatchMetricAlarm_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var alarm cloudwatch.MetricAlarm
@@ -879,6 +913,84 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 
   dimensions = {
     InstanceId = "i-abcd1234"
+  }
+}
+`, rName)
+}
+
+func testAccMetricAlarmConfig_missingReturnDataMetricQuery(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name                = "%s"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+  threshold                 = "80"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+
+  metric_query {
+    id         = "e1"
+    expression = "m1"
+    label      = "cat"
+  }
+
+  metric_query {
+    id = "m1"
+
+    metric {
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
+      period      = "120"
+      stat        = "Average"
+      unit        = "Count"
+
+      dimensions = {
+        InstanceId = "i-abc123"
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccMetricAlarmConfig_moreThanOneReturnDataFromMetricQuery(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name                = "%s"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+  threshold                 = "80"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+
+  metric_query {
+    id          = "e1"
+    expression  = "m1"
+    label       = "cat"
+    return_data = "true"
+  }
+
+  metric_query {
+    id          = "e2"
+    expression  = "m1"
+    label       = "dog"
+    return_data = "true"
+  }
+
+  metric_query {
+    id = "m1"
+
+    metric {
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
+      period      = "120"
+      stat        = "Average"
+      unit        = "Count"
+
+      dimensions = {
+        InstanceId = "i-abc123"
+      }
+    }
   }
 }
 `, rName)

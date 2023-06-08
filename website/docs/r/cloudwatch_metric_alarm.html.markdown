@@ -223,6 +223,7 @@ The following values are supported: `ignore`, and `evaluate`.
 * `return_data` - (Optional) Specify exactly one `metric_query` to be `true` to use that `metric_query` result as the alarm.
 
 ~> **NOTE:**  You must specify either `metric` or `expression`. Not both.
+~> **NOTE:**  One `metric_query` block must set `return_data` as `true` and only one.
 
 #### `metric`
 

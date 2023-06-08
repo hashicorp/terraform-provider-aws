@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_cloudwatch_metric_alarm: Add validation for `return_data` on `metric_query` that one and only one has `return_data` as `true`
+```
