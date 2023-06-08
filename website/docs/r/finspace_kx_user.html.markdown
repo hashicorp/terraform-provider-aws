@@ -83,5 +83,5 @@ In addition to all arguments above, the following attributes are exported:
 An AWS FinSpace Kx User can be imported using the `id` (environment ID and user name, comma-delimited), e.g.,
 
 ```
-$ terraform import aws_finspace_kx_database.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-user
+$ terraform import aws_finspace_kx_user.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-user
 ```
