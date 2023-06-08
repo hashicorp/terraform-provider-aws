@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
@@ -38,9 +38,10 @@ func TestAccDirectConnectConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "partner_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vlan_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vlan_id", "0"),
 				),
 			},
 			// Test import.
@@ -277,6 +278,78 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/31732.
+func TestAccDirectConnectConnection_vlanIDMigration501(t *testing.T) {
+	ctx := acctest.Context(t)
+	var connection directconnect.Connection
+	resourceName := "aws_dx_connection.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
+		CheckDestroy: testAccCheckConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// At v5.0.1 the resource's schema is v0 and vlan_id is TypeString.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.0.1",
+					},
+				},
+				Config: testAccConnectionConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "vlan_id", ""),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccConnectionConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "vlan_id", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDirectConnectConnection_vlanIDMigration510(t *testing.T) {
+	ctx := acctest.Context(t)
+	var connection directconnect.Connection
+	resourceName := "aws_dx_connection.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
+		CheckDestroy: testAccCheckConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// At v5.1.0 the resource's schema is v0 and vlan_id is TypeInt.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.1.0",
+					},
+				},
+				Config: testAccConnectionConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "vlan_id", "0"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccConnectionConfig_basic(rName),
+				PlanOnly:                 true,
 			},
 		},
 	})

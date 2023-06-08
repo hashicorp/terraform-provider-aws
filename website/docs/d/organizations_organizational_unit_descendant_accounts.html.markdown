@@ -7,6 +7,7 @@ description: |-
 ---
 
 # Data Source: aws_organizations_organizational_unit_descendant_accounts
+
 Get all direct child accounts under a parent organizational unit. This provides all children.
 
 ## Example Usage

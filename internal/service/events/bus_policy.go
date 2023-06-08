@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -38,7 +38,7 @@ func ResourceBusPolicy() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validBusNameOrARN,
+				ValidateFunc: validBusName,
 				Default:      DefaultEventBusName,
 			},
 			"policy": {
@@ -99,16 +99,16 @@ func resourceBusPolicyRead(ctx context.Context, d *schema.ResourceData, meta int
 	var policy *string
 
 	// Especially with concurrent PutPermission calls there can be a slight delay
-	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		log.Printf("[DEBUG] Reading EventBridge bus: %s", input)
 		output, err = conn.DescribeEventBusWithContext(ctx, &input)
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("reading EventBridge permission (%s) failed: %w", d.Id(), err))
+			return retry.NonRetryableError(fmt.Errorf("reading EventBridge permission (%s) failed: %w", d.Id(), err))
 		}
 
 		policy, err = getEventBusPolicy(output)
 		if err != nil {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		return nil
 	})
@@ -147,7 +147,7 @@ func resourceBusPolicyRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func getEventBusPolicy(output *eventbridge.DescribeEventBusOutput) (*string, error) {
 	if output == nil || output.Policy == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:      fmt.Sprintf("Policy for EventBridge Bus (%s) not found", *output.Name),
 			LastResponse: output,
 		}

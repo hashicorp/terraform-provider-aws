@@ -31,8 +31,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
+			Factory:  ResourceBlockPublicAccessConfiguration,
+			TypeName: "aws_emr_block_public_access_configuration",
+		},
+		{
 			Factory:  ResourceCluster,
 			TypeName: "aws_emr_cluster",
+			Name:     "Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceInstanceFleet,
@@ -53,6 +61,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceStudio,
 			TypeName: "aws_emr_studio",
+			Name:     "Studio",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceStudioSessionMapping,

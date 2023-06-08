@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +18,7 @@ func FindAgentByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*
 	output, err := conn.DescribeAgentWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "does not exist") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -43,7 +43,7 @@ func FindTaskByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*d
 	output, err := conn.DescribeTaskWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -68,7 +68,7 @@ func FindLocationHDFSByARN(ctx context.Context, conn *datasync.DataSync, arn str
 	output, err := conn.DescribeLocationHdfsWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -93,7 +93,7 @@ func FindFSxLustreLocationByARN(ctx context.Context, conn *datasync.DataSync, ar
 	output, err := conn.DescribeLocationFsxLustreWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -118,7 +118,7 @@ func FindFSxOpenZFSLocationByARN(ctx context.Context, conn *datasync.DataSync, a
 	output, err := conn.DescribeLocationFsxOpenZfsWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -143,7 +143,7 @@ func FindLocationObjectStorageByARN(ctx context.Context, conn *datasync.DataSync
 	output, err := conn.DescribeLocationObjectStorageWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

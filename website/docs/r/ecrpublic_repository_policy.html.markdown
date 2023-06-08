@@ -12,7 +12,7 @@ Provides an Elastic Container Registry Public Repository Policy.
 
 Note that currently only one policy may be applied to a repository.
 
-~> **NOTE:** This resource can only be used with `us-east-1` region.
+~> **NOTE:** This resource can only be used in the `us-east-1` region.
 
 ## Example Usage
 
@@ -27,8 +27,8 @@ data "aws_iam_policy_document" "example" {
     effect = "Allow"
 
     principals {
-      type        = "*"
-      identifiers = ["*"]
+      type        = "AWS"
+      identifiers = ["123456789012"]
     }
 
     actions = [

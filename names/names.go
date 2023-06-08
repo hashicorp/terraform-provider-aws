@@ -10,7 +10,6 @@
 // It is very important that information in the names_data.csv be exactly
 // correct because the Terrform AWS Provider relies on the information to
 // function correctly.
-
 package names
 
 import (
@@ -23,10 +22,15 @@ import (
 
 // This "should" be defined by the AWS Go SDK v2, but currently isn't.
 const (
+	AccessAnalyzerEndpointID             = "access-analyzer"
+	AccountEndpointID                    = "account"
+	ACMEndpointID                        = "acm"
 	AuditManagerEndpointID               = "auditmanager"
 	CloudWatchLogsEndpointID             = "logs"
 	ComprehendEndpointID                 = "comprehend"
 	ComputeOptimizerEndpointID           = "computeoptimizer"
+	DSEndpointID                         = "ds"
+	GlacierEndpointID                    = "glacier"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
 	IVSChatEndpointID                    = "ivschat"
@@ -42,8 +46,12 @@ const (
 	SchedulerEndpointID                  = "scheduler"
 	SESV2EndpointID                      = "sesv2"
 	SSMEndpointID                        = "ssm"
-	SSMContactsEndpointId                = "ssm-contacts"
+	SSMContactsEndpointID                = "ssm-contacts"
+	SSMIncidentsEndpointID               = "ssm-incidents"
+	SWFEndpointID                        = "swf"
 	TranscribeEndpointID                 = "transcribe"
+	VPCLatticeEndpointID                 = "vpc-lattice"
+	XRayEndpointID                       = "xray"
 )
 
 // Type ServiceDatum corresponds closely to columns in `names_data.csv` and are

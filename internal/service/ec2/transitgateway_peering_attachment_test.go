@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -82,7 +82,7 @@ func testAccTransitGatewayPeeringAttachment_disappears(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayPeeringAttachment_Tags(t *testing.T) {
+func testAccTransitGatewayPeeringAttachment_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -250,11 +250,17 @@ resource "aws_ec2_transit_gateway" "peer" {
 }
 
 func testAccTransitGatewayPeeringAttachmentConfig_sameAccount_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), testAccTransitGatewayPeeringAttachmentConfig_base(rName))
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateRegionProvider(),
+		testAccTransitGatewayPeeringAttachmentConfig_base(rName),
+	)
 }
 
 func testAccTransitGatewayPeeringAttachmentConfig_differentAccount_base(rName string) string {
-	return acctest.ConfigCompose(testAccAlternateAccountAlternateRegionProviderConfig(), testAccTransitGatewayPeeringAttachmentConfig_base(rName))
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountAlternateRegionProvider(),
+		testAccTransitGatewayPeeringAttachmentConfig_base(rName),
+	)
 }
 
 func testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName string) string {

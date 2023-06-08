@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -84,13 +84,13 @@ func resourceResourceDataSyncCreate(ctx context.Context, d *schema.ResourceData,
 		SyncName:      aws.String(name),
 	}
 
-	err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 		_, err := conn.CreateResourceDataSyncWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, ssm.ErrCodeResourceDataSyncInvalidConfigurationException, "S3 write failed for bucket") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -169,7 +169,7 @@ func FindResourceDataSyncItem(ctx context.Context, conn *ssm.SSM, name string) (
 		return nil, err
 	}
 	if result == nil {
-		return nil, &resource.NotFoundError{}
+		return nil, &retry.NotFoundError{}
 	}
 	return result, nil
 }

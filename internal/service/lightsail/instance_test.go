@@ -8,15 +8,24 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	availabilityZoneKey = "TF_AWS_LIGHTSAIL_AVAILABILITY_ZONE"
+)
+
+const (
+	envVarAvailabilityZoneKeyError = "The availability zone that is outside the providers current region."
 )
 
 func TestAccLightsailInstance_basic(t *testing.T) {
@@ -41,8 +50,8 @@ func TestAccLightsailInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
-					resource.TestMatchResourceAttr(resourceName, "ipv6_address", regexp.MustCompile(`([a-f0-9]{1,4}:){7}[a-f0-9]{1,4}`)),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "ipv6_addresses.0", regexp.MustCompile(`([a-f0-9]{1,4}:){7}[a-f0-9]{1,4}`)),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "ram_size", regexp.MustCompile(`\d+(.\d+)?`)),
@@ -263,6 +272,29 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 	})
 }
 
+func TestAccLightsailInstance_availabilityZone(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// This test is expecting a region to be set in an environment variable that it outside the current provider region
+	availabilityZone := envvar.SkipIfEmpty(t, availabilityZoneKey, envVarAvailabilityZoneKeyError)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccInstanceConfig_availabilityZone(rName, availabilityZone),
+				ExpectError: regexp.MustCompile(`availability_zone must be within the same region as provider region.`),
+			},
+		},
+	})
+}
+
 func TestAccLightsailInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -382,6 +414,19 @@ resource "aws_lightsail_instance" "test" {
   bundle_id         = "nano_1_0"
 }
 `, rName))
+}
+
+func testAccInstanceConfig_availabilityZone(rName string, availabilityZone string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfigBase(),
+		fmt.Sprintf(`	
+resource "aws_lightsail_instance" "test" {
+  name              = %[1]q
+  availability_zone = %[2]q
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "nano_1_0"
+}
+`, rName, availabilityZone))
 }
 
 func testAccInstanceConfig_tags1(rName string) string {

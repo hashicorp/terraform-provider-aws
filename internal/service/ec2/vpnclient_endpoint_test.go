@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
@@ -61,11 +61,9 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			"disappearsEndpoint": testAccClientVPNAuthorizationRule_Disappears_endpoint,
 		},
 		"NetworkAssociation": {
-			"basic":                    testAccClientVPNNetworkAssociation_basic,
-			"multipleSubnets":          testAccClientVPNNetworkAssociation_multipleSubnets,
-			"disappears":               testAccClientVPNNetworkAssociation_disappears,
-			"securityGroups":           testAccClientVPNNetworkAssociation_securityGroups,
-			"securityGroupsOnEndpoint": testAccClientVPNNetworkAssociation_securityGroupsOnEndpoint,
+			"basic":           testAccClientVPNNetworkAssociation_basic,
+			"multipleSubnets": testAccClientVPNNetworkAssociation_multipleSubnets,
+			"disappears":      testAccClientVPNNetworkAssociation_disappears,
 		},
 		"Route": {
 			"basic":       testAccClientVPNRoute_basic,
@@ -80,7 +78,7 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			tc := tc
 			t.Run(fmt.Sprintf("%s_%s", group, name), func(t *testing.T) {
 				t.Cleanup(func() {
-					if os.Getenv(resource.TestEnvVar) != "" {
+					if os.Getenv(resource.EnvTfAcc) != "" {
 						testAccEc2ClientVpnEndpointSemaphore.Notify()
 					}
 				})
@@ -129,7 +127,6 @@ func testAccClientVPNEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "server_certificate_arn"),
 					resource.TestCheckResourceAttr(resourceName, "session_timeout_hours", "24"),
 					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", ec2.ClientVpnEndpointStatusCodePendingAssociate),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "transport_protocol", "udp"),

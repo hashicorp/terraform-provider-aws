@@ -43,19 +43,21 @@ data "aws_iam_policy_document" "policy" {
 }
 
 resource "aws_efs_file_system_policy" "policy" {
-  file_system_id                     = aws_efs_file_system.fs.id
-  bypass_policy_lockout_safety_check = true
-  policy                             = data.aws_iam_policy_document.policy.json
+  file_system_id = aws_efs_file_system.fs.id
+  policy         = data.aws_iam_policy_document.policy.json
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
 * `file_system_id` - (Required) The ID of the EFS file system.
-* `bypass_policy_lockout_safety_check` - (Optional) A flag to indicate whether to bypass the `aws_efs_file_system_policy` lockout safety check. The policy lockout safety check determines whether the policy in the request will prevent the principal making the request will be locked out from making future `PutFileSystemPolicy` requests on the file system. Set `bypass_policy_lockout_safety_check` to `true` only when you intend to prevent the principal that is making the request from making a subsequent `PutFileSystemPolicy` request on the file system. The default value is `false`.
 * `policy` - (Required) The JSON formatted file system policy for the EFS file system. see [Docs](https://docs.aws.amazon.com/efs/latest/ug/access-control-overview.html#access-control-manage-access-intro-resource-policies) for more info.
+
+The following arguments are optional:
+
+* `bypass_policy_lockout_safety_check` - (Optional) A flag to indicate whether to bypass the `aws_efs_file_system_policy` lockout safety check. The policy lockout safety check determines whether the policy in the request will prevent the principal making the request will be locked out from making future `PutFileSystemPolicy` requests on the file system. Set `bypass_policy_lockout_safety_check` to `true` only when you intend to prevent the principal that is making the request from making a subsequent `PutFileSystemPolicy` request on the file system. The default value is `false`.
 
 ## Attributes Reference
 

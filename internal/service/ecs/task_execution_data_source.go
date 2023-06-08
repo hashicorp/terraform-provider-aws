@@ -361,6 +361,7 @@ func expandTaskOverride(tfList []interface{}) *ecs.TaskOverride {
 	if len(tfList) == 0 {
 		return nil
 	}
+
 	apiObject := &ecs.TaskOverride{}
 	tfMap := tfList[0].(map[string]interface{})
 
@@ -377,7 +378,7 @@ func expandTaskOverride(tfList []interface{}) *ecs.TaskOverride {
 		apiObject.TaskRoleArn = aws.String(v.(string))
 	}
 	if v, ok := tfMap["inference_accelerator_overrides"]; ok {
-		apiObject.InferenceAcceleratorOverrides = expandInferenceAcceleratorOverrides(v.([]interface{}))
+		apiObject.InferenceAcceleratorOverrides = expandInferenceAcceleratorOverrides(v.(*schema.Set))
 	}
 	if v, ok := tfMap["container_overrides"]; ok {
 		apiObject.ContainerOverrides = expandContainerOverride(v.([]interface{}))
@@ -386,13 +387,13 @@ func expandTaskOverride(tfList []interface{}) *ecs.TaskOverride {
 	return apiObject
 }
 
-func expandInferenceAcceleratorOverrides(tfList []interface{}) []*ecs.InferenceAcceleratorOverride {
-	if len(tfList) == 0 {
+func expandInferenceAcceleratorOverrides(tfSet *schema.Set) []*ecs.InferenceAcceleratorOverride {
+	if tfSet.Len() == 0 {
 		return nil
 	}
 	apiObject := make([]*ecs.InferenceAcceleratorOverride, 0)
 
-	for _, item := range tfList {
+	for _, item := range tfSet.List() {
 		tfMap := item.(map[string]interface{})
 		iao := &ecs.InferenceAcceleratorOverride{
 			DeviceName: aws.String(tfMap["device_name"].(string)),
@@ -420,19 +421,19 @@ func expandContainerOverride(tfList []interface{}) []*ecs.ContainerOverride {
 			co.Command = flex.ExpandStringList(commandStrings)
 		}
 		if v, ok := tfMap["cpu"]; ok {
-			co.Cpu = aws.Int64(v.(int64))
+			co.Cpu = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := tfMap["environment"]; ok {
-			co.Environment = expandTaskEnvironment(v.([]interface{}))
+			co.Environment = expandTaskEnvironment(v.(*schema.Set))
 		}
 		if v, ok := tfMap["memory"]; ok {
-			co.Memory = aws.Int64(v.(int64))
+			co.Memory = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := tfMap["memory_reservation"]; ok {
-			co.Memory = aws.Int64(v.(int64))
+			co.Memory = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := tfMap["resource_requirements"]; ok {
-			co.ResourceRequirements = expandResourceRequirements(v.([]interface{}))
+			co.ResourceRequirements = expandResourceRequirements(v.(*schema.Set))
 		}
 		apiObject = append(apiObject, co)
 	}
@@ -440,16 +441,16 @@ func expandContainerOverride(tfList []interface{}) []*ecs.ContainerOverride {
 	return apiObject
 }
 
-func expandTaskEnvironment(tfList []interface{}) []*ecs.KeyValuePair {
-	if len(tfList) == 0 {
+func expandTaskEnvironment(tfSet *schema.Set) []*ecs.KeyValuePair {
+	if tfSet.Len() == 0 {
 		return nil
 	}
 	apiObject := make([]*ecs.KeyValuePair, 0)
 
-	for _, item := range tfList {
+	for _, item := range tfSet.List() {
 		tfMap := item.(map[string]interface{})
 		te := &ecs.KeyValuePair{
-			Name:  aws.String(tfMap["name"].(string)),
+			Name:  aws.String(tfMap["key"].(string)),
 			Value: aws.String(tfMap["value"].(string)),
 		}
 		apiObject = append(apiObject, te)
@@ -458,13 +459,13 @@ func expandTaskEnvironment(tfList []interface{}) []*ecs.KeyValuePair {
 	return apiObject
 }
 
-func expandResourceRequirements(tfList []interface{}) []*ecs.ResourceRequirement {
-	if len(tfList) == 0 {
+func expandResourceRequirements(tfSet *schema.Set) []*ecs.ResourceRequirement {
+	if tfSet.Len() == 0 {
 		return nil
 	}
 
 	apiObject := make([]*ecs.ResourceRequirement, 0)
-	for _, item := range tfList {
+	for _, item := range tfSet.List() {
 		tfMap := item.(map[string]interface{})
 		rr := &ecs.ResourceRequirement{
 			Type:  aws.String(tfMap["type"].(string)),

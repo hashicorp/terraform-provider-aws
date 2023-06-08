@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -250,7 +250,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	if name, ok := d.GetOk("name"); ok {
 		req.Name = aws.String(name.(string))
 	} else {
-		name := resource.PrefixedUniqueId("tf-et-")
+		name := id.PrefixedUniqueId("tf-et-")
 		d.Set("name", name)
 		req.Name = aws.String(name)
 	}

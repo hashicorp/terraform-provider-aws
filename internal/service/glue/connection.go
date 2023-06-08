@@ -19,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_connection")
+// @SDKResource("aws_glue_connection", name="Connection")
+// @Tags(identifierAttribute="arn")
 func ResourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,
@@ -100,8 +102,8 @@ func ResourceConnection() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -109,8 +111,6 @@ func ResourceConnection() *schema.Resource {
 func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var catalogID string
 	if v, ok := d.GetOkExists("catalog_id"); ok {
@@ -123,7 +123,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &glue.CreateConnectionInput{
 		CatalogId:       aws.String(catalogID),
 		ConnectionInput: expandConnectionInput(d),
-		Tags:            Tags(tags.IgnoreAWS()),
+		Tags:            GetTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating Glue Connection: %s", input)
@@ -140,8 +140,6 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	catalogID, connectionName, err := DecodeConnectionID(d.Id())
 	if err != nil {
@@ -182,23 +180,6 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting physical_connection_requirements: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, connectionArn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Connection (%s): %s", connectionArn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -222,13 +203,6 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		_, err = conn.UpdateConnectionWithContext(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Connection (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
@@ -127,7 +127,6 @@ func testAccCheckProxyTargetDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			dbProxyName, targetGroupName, targetType, rdsResourceId, err := tfrds.ProxyTargetParseID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -173,13 +172,11 @@ func testAccCheckProxyTargetExists(ctx context.Context, n string, v *rds.DBProxy
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		dbProxyName, targetGroupName, targetType, rdsResourceId, err := tfrds.ProxyTargetParseID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
 		dbProxyTarget, err := tfrds.FindDBProxyTarget(ctx, conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
-
 		if err != nil {
 			return err
 		}
@@ -306,7 +303,7 @@ func testAccProxyTargetConfig_instance(rName string) string {
 	return acctest.ConfigCompose(testAccProxyTargetBaseConfig(rName), fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = "mysql"
-  preferred_versions = ["5.7.31", "5.7.30"]
+  preferred_versions = ["8.0.33", "8.0.32", "8.0.31"]
 }
 
 data "aws_rds_orderable_db_instance" "test" {
@@ -333,7 +330,7 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_db_proxy_target" "test" {
-  db_instance_identifier = aws_db_instance.test.id
+  db_instance_identifier = aws_db_instance.test.identifier
   db_proxy_name          = aws_db_proxy.test.name
   target_group_name      = "default"
 }

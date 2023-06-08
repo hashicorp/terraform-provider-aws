@@ -41,6 +41,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSigningProfile,
 			TypeName: "aws_signer_signing_profile",
+			Name:     "Signing Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceSigningProfilePermission,

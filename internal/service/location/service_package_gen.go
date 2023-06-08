@@ -57,22 +57,42 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceGeofenceCollection,
 			TypeName: "aws_location_geofence_collection",
+			Name:     "Geofence Collection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "collection_arn",
+			},
 		},
 		{
 			Factory:  ResourceMap,
 			TypeName: "aws_location_map",
+			Name:     "Map",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "map_arn",
+			},
 		},
 		{
 			Factory:  ResourcePlaceIndex,
 			TypeName: "aws_location_place_index",
+			Name:     "Map",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "index_arn",
+			},
 		},
 		{
 			Factory:  ResourceRouteCalculator,
 			TypeName: "aws_location_route_calculator",
+			Name:     "Route Calculator",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "calculator_arn",
+			},
 		},
 		{
 			Factory:  ResourceTracker,
 			TypeName: "aws_location_tracker",
+			Name:     "Route Calculator",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "tracker_arn",
+			},
 		},
 		{
 			Factory:  ResourceTrackerAssociation,

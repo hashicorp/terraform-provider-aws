@@ -45,6 +45,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAccessPoint,
 			TypeName: "aws_efs_access_point",
+			Name:     "Access Point",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceBackupPolicy,
@@ -53,6 +57,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceFileSystem,
 			TypeName: "aws_efs_file_system",
+			Name:     "File System",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceFileSystemPolicy,

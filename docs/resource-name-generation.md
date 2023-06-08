@@ -67,7 +67,7 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
         Check: resource.ComposeTestCheckFunc(
           testAccCheckThingExists(ctx, resourceName, &thing),
           acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-          resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
+          resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
         ),
       },
       // If the resource supports import:

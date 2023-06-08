@@ -221,7 +221,7 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var err error
 	filterGroups := expandWebhookFilterGroups(d)
 
-	var buildType *string = nil
+	var buildType *string
 	if v, ok := d.GetOk("build_type"); ok {
 		buildType = aws.String(v.(string))
 	}

@@ -113,7 +113,7 @@ func FindingAggregatorCheckExists(ctx context.Context, conn *securityhub.Securit
 	input := &securityhub.ListFindingAggregatorsInput{}
 
 	var found *securityhub.GetFindingAggregatorOutput
-	var err error = nil
+	var err error
 
 	err = conn.ListFindingAggregatorsPagesWithContext(ctx, input, func(page *securityhub.ListFindingAggregatorsOutput, lastPage bool) bool {
 		for _, aggregator := range page.FindingAggregators {

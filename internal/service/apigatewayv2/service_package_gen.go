@@ -41,6 +41,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAPI,
 			TypeName: "aws_apigatewayv2_api",
+			Name:     "API",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceAPIMapping,
@@ -57,6 +61,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDomainName,
 			TypeName: "aws_apigatewayv2_domain_name",
+			Name:     "Domain Name",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceIntegration,
@@ -81,10 +89,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceStage,
 			TypeName: "aws_apigatewayv2_stage",
+			Name:     "Stage",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceVPCLink,
 			TypeName: "aws_apigatewayv2_vpc_link",
+			Name:     "VPC Link",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

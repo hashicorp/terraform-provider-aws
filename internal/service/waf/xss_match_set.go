@@ -196,7 +196,7 @@ func updateXSSMatchSetResource(ctx context.Context, id string, oldT, newT []inte
 		return conn.UpdateXssMatchSetWithContext(ctx, req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error updating WAF XSS Match Set: %w", err)
+		return fmt.Errorf("updating WAF XSS Match Set: %w", err)
 	}
 
 	return nil

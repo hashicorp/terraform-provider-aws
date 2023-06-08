@@ -19,9 +19,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_guardduty_filter")
+// @SDKResource("aws_guardduty_filter", name="Filter")
+// @Tags(identifierAttribute="arn")
 func ResourceFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFilterCreate,
@@ -53,8 +55,8 @@ func ResourceFilter() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"finding_criteria": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -130,8 +132,6 @@ func ResourceFilter() *schema.Resource {
 func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := guardduty.CreateFilterInput{
 		Action:      aws.String(d.Get("action").(string)),
@@ -139,16 +139,13 @@ func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		DetectorId:  aws.String(d.Get("detector_id").(string)),
 		Name:        aws.String(d.Get("name").(string)),
 		Rank:        aws.Int64(int64(d.Get("rank").(int))),
+		Tags:        GetTagsIn(ctx),
 	}
 
 	var err error
 	input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]interface{}))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Filter: %s", err)
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating GuardDuty Filter: %s", input)
@@ -165,8 +162,6 @@ func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var detectorID, name string
 	var err error
@@ -219,16 +214,8 @@ func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("detector_id", detectorID)
 	d.Set("rank", filter.Rank)
 
-	tags := KeyValueTags(ctx, filter.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	SetTagsOut(ctx, filter.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 	d.SetId(filterCreateID(detectorID, name))
 
 	return diags
@@ -256,14 +243,6 @@ func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		_, err = conn.UpdateFilterWithContext(ctx, &input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Filter %s: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Filter (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 

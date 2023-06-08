@@ -102,11 +102,11 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	id := EncodeUserID(userName, authType)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating AppStream User (%s): %w", id, err))
+		return diag.Errorf("creating AppStream User (%s): %s", id, err)
 	}
 
 	if _, err = waitUserAvailable(ctx, conn, userName, authType); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for AppStream User (%s) to be available: %w", id, err))
+		return diag.Errorf("waiting for AppStream User (%s) to be available: %s", id, err)
 	}
 
 	// Enabling/disabling workflow
@@ -118,7 +118,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		_, err = conn.DisableUserWithContext(ctx, input)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error disabling AppStream User (%s): %w", id, err))
+			return diag.Errorf("disabling AppStream User (%s): %s", id, err)
 		}
 	}
 
@@ -132,7 +132,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	userName, authType, err := DecodeUserID(d.Id())
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding AppStream User ID (%s): %w", d.Id(), err))
+		return diag.Errorf("decoding AppStream User ID (%s): %s", d.Id(), err)
 	}
 
 	user, err := FindUserByUserNameAndAuthType(ctx, conn, userName, authType)
@@ -142,7 +142,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return nil
 	}
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading AppStream User (%s): %w", d.Id(), err))
+		return diag.Errorf("reading AppStream User (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", user.Arn)
@@ -162,7 +162,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	userName, authType, err := DecodeUserID(d.Id())
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding AppStream User ID (%s): %w", d.Id(), err))
+		return diag.Errorf("decoding AppStream User ID (%s): %s", d.Id(), err)
 	}
 
 	if d.HasChange("enabled") {
@@ -174,7 +174,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 			_, err = conn.EnableUserWithContext(ctx, input)
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("error enabling AppStream User (%s): %w", d.Id(), err))
+				return diag.Errorf("enabling AppStream User (%s): %s", d.Id(), err)
 			}
 		} else {
 			input := &appstream.DisableUserInput{
@@ -184,7 +184,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 			_, err = conn.DisableUserWithContext(ctx, input)
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("error disabling AppStream User (%s): %w", d.Id(), err))
+				return diag.Errorf("disabling AppStream User (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -197,7 +197,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 
 	userName, authType, err := DecodeUserID(d.Id())
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding AppStream User ID (%s): %w", d.Id(), err))
+		return diag.Errorf("decoding AppStream User ID (%s): %s", d.Id(), err)
 	}
 
 	_, err = conn.DeleteUserWithContext(ctx, &appstream.DeleteUserInput{
@@ -209,7 +209,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error deleting AppStream User (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting AppStream User (%s): %s", d.Id(), err)
 	}
 
 	return nil

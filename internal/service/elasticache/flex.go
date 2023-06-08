@@ -15,16 +15,6 @@ func flattenSecurityGroupIDs(securityGroups []*elasticache.SecurityGroupMembersh
 	return result
 }
 
-func flattenSecurityGroupNames(securityGroups []*elasticache.CacheSecurityGroupMembership) []string {
-	result := make([]string, 0, len(securityGroups))
-	for _, sg := range securityGroups {
-		if sg.CacheSecurityGroupName != nil {
-			result = append(result, *sg.CacheSecurityGroupName)
-		}
-	}
-	return result
-}
-
 func flattenLogDeliveryConfigurations(logDeliveryConfiguration []*elasticache.LogDeliveryConfiguration) []map[string]interface{} {
 	if len(logDeliveryConfiguration) == 0 {
 		return nil

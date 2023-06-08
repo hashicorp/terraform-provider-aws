@@ -28,18 +28,34 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceFeature,
 			TypeName: "aws_evidently_feature",
+			Name:     "Feature",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceLaunch,
 			TypeName: "aws_evidently_launch",
+			Name:     "Launch",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceProject,
 			TypeName: "aws_evidently_project",
+			Name:     "Project",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceSegment,
 			TypeName: "aws_evidently_segment",
+			Name:     "Segment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

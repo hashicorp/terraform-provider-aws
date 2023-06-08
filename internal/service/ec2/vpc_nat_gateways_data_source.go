@@ -67,7 +67,7 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 	output, err := FindNATGateways(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 NAT Gateways: %s", err)
+		return diag.Errorf("reading EC2 NAT Gateways: %s", err)
 	}
 
 	var natGatewayIDs []string

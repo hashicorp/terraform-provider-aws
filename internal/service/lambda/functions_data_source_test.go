@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/lambda"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -22,8 +22,8 @@ func TestAccLambdaFunctionsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccFunctionsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "function_arns.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "function_names.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "function_arns.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "function_names.#", 0),
 				),
 			},
 		},

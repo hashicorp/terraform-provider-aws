@@ -28,10 +28,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDataSet,
 			TypeName: "aws_dataexchange_data_set",
+			Name:     "Data Set",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceRevision,
 			TypeName: "aws_dataexchange_revision",
+			Name:     "Revision",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

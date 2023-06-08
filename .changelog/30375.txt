@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dx_gateway: Add plan time validation to `name` argument
+```
+
+```release-note:enhancement
+resource/aws_dx_gateway: Allow updates to `name` without forcing resource replacement
+```

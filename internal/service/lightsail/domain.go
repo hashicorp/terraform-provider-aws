@@ -77,5 +77,9 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		DomainName: aws.String(d.Id()),
 	})
 
-	return sdkdiag.AppendErrorf(diags, "deleting Lightsail Domain (%s):%s", d.Id(), err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Lightsail Domain (%s):%s", d.Id(), err)
+	}
+
+	return nil
 }

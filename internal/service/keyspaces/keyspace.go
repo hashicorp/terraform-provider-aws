@@ -16,9 +16,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_keyspaces_keyspace")
+// @SDKResource("aws_keyspaces_keyspace", name="Keyspace")
+// @Tags(identifierAttribute="arn")
 func ResourceKeyspace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyspaceCreate,
@@ -54,28 +56,21 @@ func ResourceKeyspace() *schema.Resource {
 					),
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KeyspacesConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &keyspaces.CreateKeyspaceInput{
 		KeyspaceName: aws.String(name),
+		Tags:         GetTagsIn(ctx),
 	}
 
-	if tags := Tags(tags.IgnoreAWS()); len(tags) > 0 {
-		// The Keyspaces API requires that when Tags is set, it's non-empty.
-		input.Tags = tags
-	}
-
-	log.Printf("[DEBUG] Creating Keyspaces Keyspace: %s", input)
 	_, err := conn.CreateKeyspaceWithContext(ctx, input)
 
 	if err != nil {
@@ -97,8 +92,6 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceKeyspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KeyspacesConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	keyspace, err := FindKeyspaceByName(ctx, conn, d.Id())
 
@@ -115,37 +108,11 @@ func resourceKeyspaceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", keyspace.ResourceArn)
 	d.Set("name", keyspace.KeyspaceName)
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return diag.Errorf("listing tags for Keyspaces Keyspace (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceKeyspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating Keyspaces Keyspace (%s) tags: %s", d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceKeyspaceRead(ctx, d, meta)
 }
 

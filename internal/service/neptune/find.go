@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 func FindEndpointByID(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
@@ -23,7 +23,7 @@ func FindEndpointByID(ctx context.Context, conn *neptune.Neptune, id string) (*n
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterEndpointNotFoundFault) ||
 		tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -34,7 +34,7 @@ func FindEndpointByID(ctx context.Context, conn *neptune.Neptune, id string) (*n
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -42,7 +42,7 @@ func FindEndpointByID(ctx context.Context, conn *neptune.Neptune, id string) (*n
 
 	endpoints := output.DBClusterEndpoints
 	if len(endpoints) == 0 {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}

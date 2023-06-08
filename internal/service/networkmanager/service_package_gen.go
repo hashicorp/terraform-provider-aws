@@ -77,18 +77,34 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceConnectAttachment,
 			TypeName: "aws_networkmanager_connect_attachment",
+			Name:     "Connect Attachment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceConnectPeer,
 			TypeName: "aws_networkmanager_connect_peer",
+			Name:     "Connect Peer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceConnection,
 			TypeName: "aws_networkmanager_connection",
+			Name:     "Connection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceCoreNetwork,
 			TypeName: "aws_networkmanager_core_network",
+			Name:     "Core Network",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceCoreNetworkPolicyAttachment,
@@ -101,14 +117,26 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDevice,
 			TypeName: "aws_networkmanager_device",
+			Name:     "Device",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceGlobalNetwork,
 			TypeName: "aws_networkmanager_global_network",
+			Name:     "Global Network",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceLink,
 			TypeName: "aws_networkmanager_link",
+			Name:     "Link",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceLinkAssociation,
@@ -117,10 +145,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSite,
 			TypeName: "aws_networkmanager_site",
+			Name:     "Site",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceSiteToSiteVPNAttachment,
 			TypeName: "aws_networkmanager_site_to_site_vpn_attachment",
+			Name:     "Site To Site VPN Attachment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceTransitGatewayConnectPeerAssociation,
@@ -129,6 +165,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceTransitGatewayPeering,
 			TypeName: "aws_networkmanager_transit_gateway_peering",
+			Name:     "Transit Gateway Peering",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceTransitGatewayRegistration,
@@ -137,10 +177,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceTransitGatewayRouteTableAttachment,
 			TypeName: "aws_networkmanager_transit_gateway_route_table_attachment",
+			Name:     "Transit Gateway Route Table Attachment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceVPCAttachment,
 			TypeName: "aws_networkmanager_vpc_attachment",
+			Name:     "VPC Attachment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

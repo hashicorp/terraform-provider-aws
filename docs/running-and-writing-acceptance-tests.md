@@ -221,7 +221,7 @@ When executing the test, the following steps are taken for each `TestStep`:
 
     ```terraform
     resource "aws_cloudwatch_dashboard" "foobar" {
-      dashboard_name = "terraform-test-dashboard-%d"
+      dashboard_name = "terraform-test-dashboard-%[1]d"
       dashboard_body = <<EOF
       {
         "widgets": [{
@@ -361,6 +361,15 @@ For consistency, resources in the test configuration should be named `resource "
 We discourage re-using test configurations across test files (except for some common configuration helpers we provide) as it is much harder to discover potential testing regressions.
 
 Please also note that the newline on the first line of the configuration (before `resource`) and the newline after the last line of configuration (after `}`) are important to allow test configurations to be easily combined without generating Terraform configuration language syntax errors.
+
+#### Test Configuration Independence
+
+_Across the entire provider_, all test configurations should be as indepedent from each other as possible. For example, a common place this concept comes up is with the default VPC. Since we have tests that reconfigure the default VPC, if your configuration requires a VPC, it should not rely on the default VPC. Instead, include a VPC that will be created and destroyed as part of the test.
+
+Make sure that your test configuration:
+
+1. Includes everything required for Terraform to run the test
+1. Does not assume that any user-managed infrastructure will be in place, such as S3 buckets, IAM roles, KMS keys, VPCs, subnets, etc.
 
 #### Combining Test Configurations
 
@@ -1001,7 +1010,7 @@ Writing acceptance testing for data sources is similar to resources, with the bi
 - Adding `DataSource` to the test and configuration naming, such as `TestAccExampleThingDataSource_Filter`
 - The basic test _may_ be named after the easiest lookup attribute instead, e.g., `TestAccExampleThingDataSource_Name`
 - No disappears testing
-- Almost all checks should be done with [`resource.TestCheckResourceAttrPair()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource?tab=doc#TestCheckResourceAttrPair) to compare the data source attributes to the resource attributes
+- Almost all checks should be done with [`resource.TestCheckResourceAttrPair()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-testing/helper/resource?tab=doc#TestCheckResourceAttrPair) to compare the data source attributes to the resource attributes
 - The usage of an additional `dataSourceName` variable to store a data source reference, e.g., `data.aws_example_thing.test`
 
 Data sources testing should still use the `CheckDestroy` function of the resource, just to continue verifying that there are no dangling AWS resources after a test is run.

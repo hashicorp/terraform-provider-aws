@@ -41,11 +41,11 @@ func ResourceAccessKey() *schema.Resource {
 				output, err := conn.GetAccessKeyLastUsedWithContext(ctx, input)
 
 				if err != nil {
-					return nil, fmt.Errorf("error fetching IAM Access Key (%s) username via GetAccessKeyLastUsed: %w", d.Id(), err)
+					return nil, fmt.Errorf("fetching IAM Access Key (%s) username via GetAccessKeyLastUsed: %w", d.Id(), err)
 				}
 
 				if output == nil || output.UserName == nil {
-					return nil, fmt.Errorf("error fetching IAM Access Key (%s) username via GetAccessKeyLastUsed: empty response", d.Id())
+					return nil, fmt.Errorf("fetching IAM Access Key (%s) username via GetAccessKeyLastUsed: empty response", d.Id())
 				}
 
 				d.Set("user", output.UserName)

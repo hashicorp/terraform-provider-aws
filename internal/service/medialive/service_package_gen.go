@@ -32,18 +32,34 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceChannel,
 			TypeName: "aws_medialive_channel",
+			Name:     "Channel",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceInput,
 			TypeName: "aws_medialive_input",
+			Name:     "Input",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceInputSecurityGroup,
 			TypeName: "aws_medialive_input_security_group",
+			Name:     "Input Security Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceMultiplex,
 			TypeName: "aws_medialive_multiplex",
+			Name:     "Multiplex",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

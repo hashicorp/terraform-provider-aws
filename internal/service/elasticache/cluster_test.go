@@ -11,9 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
@@ -1721,11 +1721,9 @@ resource "aws_elasticache_cluster" "test" {
   node_type              = "cache.t3.small"
   num_cache_nodes        = 1
   engine                 = "redis"
-  engine_version         = "2.8.19"
   port                   = 6379
   subnet_group_name      = aws_elasticache_subnet_group.test.name
   security_group_ids     = [aws_security_group.test.id]
-  parameter_group_name   = "default.redis2.8"
   notification_topic_arn = aws_sns_topic.test.arn
   availability_zone      = data.aws_availability_zones.available.names[0]
 }
@@ -1799,12 +1797,10 @@ resource "aws_security_group_rule" "test" {
 }
 
 resource "aws_elasticache_cluster" "test" {
-  cluster_id           = %[1]q
-  engine               = "redis"
-  engine_version       = "5.0.4"
-  node_type            = "cache.t2.micro"
-  num_cache_nodes      = 1
-  parameter_group_name = "default.redis5.0"
+  cluster_id      = %[1]q
+  engine          = "redis"
+  node_type       = "cache.t2.micro"
+  num_cache_nodes = 1
 }
 `, rName)
 }
@@ -1907,14 +1903,14 @@ resource "aws_elasticache_cluster" "test" {
 func testAccClusterConfig_replicationGroupIDAvailabilityZone(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_description = "Terraform Acceptance Testing"
-  replication_group_id          = %[1]q
-  node_type                     = "cache.t3.medium"
-  number_cache_clusters         = 1
-  port                          = 6379
+  description          = "Terraform Acceptance Testing"
+  replication_group_id = %[1]q
+  node_type            = "cache.t3.medium"
+  num_cache_clusters   = 1
+  port                 = 6379
 
   lifecycle {
-    ignore_changes = [number_cache_clusters]
+    ignore_changes = [num_cache_clusters]
   }
 }
 
@@ -1929,14 +1925,14 @@ resource "aws_elasticache_cluster" "test" {
 func testAccClusterConfig_replicationGroupIDReplica(rName string, count int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_description = "Terraform Acceptance Testing"
-  replication_group_id          = %[1]q
-  node_type                     = "cache.t3.medium"
-  number_cache_clusters         = 1
-  port                          = 6379
+  description          = "Terraform Acceptance Testing"
+  replication_group_id = %[1]q
+  node_type            = "cache.t3.medium"
+  num_cache_clusters   = 1
+  port                 = 6379
 
   lifecycle {
-    ignore_changes = [number_cache_clusters]
+    ignore_changes = [num_cache_clusters]
   }
 }
 
@@ -2060,11 +2056,13 @@ resource "aws_iam_role" "r" {
 
 resource "aws_kinesis_firehose_delivery_stream" "ds" {
   name        = %[1]q
-  destination = "s3"
-  s3_configuration {
-    role_arn   = aws_iam_role.r.arn
+  destination = "extended_s3"
+
+  extended_s3_configuration {
     bucket_arn = aws_s3_bucket.b.arn
+    role_arn   = aws_iam_role.r.arn
   }
+
   lifecycle {
     ignore_changes = [
       tags["LogDeliveryEnabled"],

@@ -45,26 +45,50 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceApplication,
 			TypeName: "aws_appconfig_application",
+			Name:     "Application",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceConfigurationProfile,
 			TypeName: "aws_appconfig_configuration_profile",
+			Name:     "Connection Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceDeployment,
 			TypeName: "aws_appconfig_deployment",
+			Name:     "Deployment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceDeploymentStrategy,
 			TypeName: "aws_appconfig_deployment_strategy",
+			Name:     "Deployment Strategy",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceEnvironment,
 			TypeName: "aws_appconfig_environment",
+			Name:     "Environment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceExtension,
 			TypeName: "aws_appconfig_extension",
+			Name:     "Extension",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceExtensionAssociation,

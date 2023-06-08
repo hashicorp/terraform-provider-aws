@@ -123,6 +123,7 @@ The following arguments are supported:
 * `type` - (Required) The type of sticky sessions. The only current possible values are `lb_cookie`, `app_cookie` for ALBs, `source_ip` for NLBs, and `source_ip_dest_ip`, `source_ip_dest_ip_proto` for GWLBs.
 
 ### target_failover
+
 ~> **NOTE:** This block is only applicable for a Gateway Load Balancer (GWLB). The two attributes `on_deregistration` and `on_unhealthy` cannot be set independently. The value you set for both attributes must be the same.
 
 * `on_deregistration` - (Optional) Indicates how the GWLB handles existing flows when a target is deregistered. Possible values are `rebalance` and `no_rebalance`. Must match the attribute value set for `on_unhealthy`. Default: `no_rebalance`.

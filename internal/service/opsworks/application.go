@@ -376,19 +376,20 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
-	req := &opsworks.DeleteAppInput{
+	log.Printf("[DEBUG] Deleting OpsWorks Application: %s", d.Id())
+	_, err := conn.DeleteAppWithContext(ctx, &opsworks.DeleteAppInput{
 		AppId: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting OpsWorks application: %s", d.Id())
-
-	_, err := conn.DeleteAppWithContext(ctx, req)
+	})
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
 		return diags
 	}
 
-	return sdkdiag.AppendErrorf(diags, "deleting OpsWorks Application (%s): %s", d.Id(), err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting OpsWorks Application (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
 func resourceFindEnvironmentVariable(key string, vs []*opsworks.EnvironmentVariable) *opsworks.EnvironmentVariable {

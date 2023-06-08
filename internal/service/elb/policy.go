@@ -226,7 +226,7 @@ func resourcePolicyAssigned(ctx context.Context, policyName, loadBalancerName st
 	}
 
 	if err != nil {
-		return false, fmt.Errorf("Error retrieving ELB description: %s", err)
+		return false, fmt.Errorf("retrieving ELB description: %s", err)
 	}
 
 	if len(describeResp.LoadBalancerDescriptions) != 1 {
@@ -275,7 +275,7 @@ func resourcePolicyUnassign(ctx context.Context, policyName, loadBalancerName st
 	}
 
 	if err != nil {
-		return reassignments, fmt.Errorf("Error retrieving ELB description: %s", err)
+		return reassignments, fmt.Errorf("retrieving ELB description: %s", err)
 	}
 
 	if len(describeResp.LoadBalancerDescriptions) != 1 {
@@ -310,7 +310,7 @@ func resourcePolicyUnassign(ctx context.Context, policyName, loadBalancerName st
 
 			_, err = conn.SetLoadBalancerPoliciesForBackendServerWithContext(ctx, setOpts)
 			if err != nil {
-				return reassignments, fmt.Errorf("Error Setting Load Balancer Policies for Backend Server: %s", err)
+				return reassignments, fmt.Errorf("Setting Load Balancer Policies for Backend Server: %s", err)
 			}
 		}
 	}
@@ -341,7 +341,7 @@ func resourcePolicyUnassign(ctx context.Context, policyName, loadBalancerName st
 
 			_, err = conn.SetLoadBalancerPoliciesOfListenerWithContext(ctx, setOpts)
 			if err != nil {
-				return reassignments, fmt.Errorf("Error Setting Load Balancer Policies of Listener: %s", err)
+				return reassignments, fmt.Errorf("Setting Load Balancer Policies of Listener: %s", err)
 			}
 		}
 	}

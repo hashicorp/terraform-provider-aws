@@ -28,10 +28,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDatabase,
 			TypeName: "aws_timestreamwrite_database",
+			Name:     "Database",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceTable,
 			TypeName: "aws_timestreamwrite_table",
+			Name:     "Table",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

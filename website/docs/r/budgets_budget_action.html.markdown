@@ -139,6 +139,13 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the budget action.
 * `status` - The status of the budget action.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+
 ## Import
 
 Budgets can be imported using `AccountID:ActionID:BudgetName`, e.g.,

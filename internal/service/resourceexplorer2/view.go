@@ -21,7 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -30,9 +31,11 @@ import (
 	fwboolplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/boolplanmodifier"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource(name="View")
+// @Tags(identifierAttribute="id")
 func newResourceView(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceView{}, nil
 }
@@ -72,8 +75,8 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9\-]+$`), `can include letters, digits, and the dash (-) character`),
 				},
 			},
-			"tags":     tftags.TagsAttribute(),
-			"tags_all": tftags.TagsAttributeComputedOnly(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"filters": schema.ListNestedBlock{
@@ -118,16 +121,12 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 
 	conn := r.Meta().ResourceExplorer2Client()
 
-	tags := r.ExpandTags(ctx, data.Tags)
 	input := &resourceexplorer2.CreateViewInput{
-		ClientToken:        aws.String(sdkresource.UniqueId()),
+		ClientToken:        aws.String(id.UniqueId()),
 		Filters:            r.expandSearchFilter(ctx, data.Filters),
 		IncludedProperties: r.expandIncludedProperties(ctx, data.IncludedProperties),
+		Tags:               GetTagsIn(ctx),
 		ViewName:           aws.String(data.Name.ValueString()),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateView(ctx, input)
@@ -157,7 +156,6 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 	// Set values for unknowns.
 	data.ARN = types.StringValue(arn)
 	data.ID = types.StringValue(arn)
-	data.TagsAll = r.FlattenTagsAll(ctx, tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -222,9 +220,7 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 	name := parts[1]
 	data.Name = types.StringValue(name)
 
-	apiTags := KeyValueTags(ctx, output.Tags)
-	data.Tags = r.FlattenTags(ctx, apiTags)
-	data.TagsAll = r.FlattenTagsAll(ctx, apiTags)
+	SetTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -257,14 +253,6 @@ func (r *resourceView) Update(ctx context.Context, request resource.UpdateReques
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating Resource Explorer View (%s)", new.ID.ValueString()), err.Error())
-
-			return
-		}
-	}
-
-	if !new.TagsAll.Equal(old.TagsAll) {
-		if err := UpdateTags(ctx, conn, new.ID.ValueString(), old.TagsAll, new.TagsAll); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Resource Explorer View (%s) tags", new.ID.ValueString()), err.Error())
 
 			return
 		}
@@ -472,7 +460,7 @@ func findViewByARN(ctx context.Context, conn *resourceexplorer2.Client, arn stri
 	output, err := conn.GetView(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.UnauthorizedException](err) {
-		return nil, &sdkresource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

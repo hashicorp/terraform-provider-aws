@@ -27,7 +27,7 @@ resource "aws_scheduler_schedule" "example" {
     mode = "OFF"
   }
 
-  schedule_expression = "rate(1 hour)"
+  schedule_expression = "rate(1 hours)"
 
   target {
     arn      = aws_sqs_queue.example.arn
@@ -48,7 +48,7 @@ resource "aws_scheduler_schedule" "example" {
     mode = "OFF"
   }
 
-  schedule_expression = "rate(1 hour)"
+  schedule_expression = "rate(1 hours)"
 
   target {
     arn      = "arn:aws:scheduler:::aws-sdk:sqs:sendMessage"
@@ -107,7 +107,7 @@ The following arguments are optional:
 
 #### dead_letter_config Configuration Block
 
-* `arn` - (Optional) ARN of the SQS queue specified as the destination for the dead-letter queue.
+* `arn` - (Required) ARN of the SQS queue specified as the destination for the dead-letter queue.
 
 #### ecs_parameters Configuration Block
 

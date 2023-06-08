@@ -17,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_customer_gateway")
+// @SDKResource("aws_customer_gateway", name="Customer Gateway")
+// @Tags(identifierAttribute="id")
 func ResourceCustomerGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomerGatewayCreate,
@@ -60,8 +62,8 @@ func ResourceCustomerGateway() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsIPv4Address,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -76,11 +78,9 @@ func ResourceCustomerGateway() *schema.Resource {
 
 func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateCustomerGatewayInput{
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeCustomerGateway),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeCustomerGateway),
 		Type:              aws.String(d.Get("type").(string)),
 	}
 
@@ -123,8 +123,6 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	customerGateway, err := FindCustomerGatewayByID(ctx, conn, d.Id())
 
@@ -152,31 +150,13 @@ func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("ip_address", customerGateway.IpAddress)
 	d.Set("type", customerGateway.Type)
 
-	tags := KeyValueTags(ctx, customerGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, customerGateway.Tags)
 
 	return nil
 }
 
 func resourceCustomerGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating EC2 Customer Gateway (%s) tags: %s", d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceCustomerGatewayRead(ctx, d, meta)
 }
 

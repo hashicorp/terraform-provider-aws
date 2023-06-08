@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/inspector"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfinspector "github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
@@ -168,11 +168,11 @@ func testAccCheckTargetAssessmentDestroy(ctx context.Context) resource.TestCheck
 			assessmentTarget, err := tfinspector.DescribeAssessmentTarget(ctx, conn, rs.Primary.ID)
 
 			if err != nil {
-				return fmt.Errorf("Error finding Inspector Assessment Target: %s", err)
+				return fmt.Errorf("finding Inspector Classic Assessment Target: %s", err)
 			}
 
 			if assessmentTarget != nil {
-				return fmt.Errorf("Inspector Assessment Target (%s) still exists", rs.Primary.ID)
+				return fmt.Errorf("Inspector Classic Assessment Target (%s) still exists", rs.Primary.ID)
 			}
 		}
 
@@ -192,11 +192,11 @@ func testAccCheckTargetExists(ctx context.Context, name string, target *inspecto
 		assessmentTarget, err := tfinspector.DescribeAssessmentTarget(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Error finding Inspector Assessment Target: %s", err)
+			return fmt.Errorf("finding Inspector Classic Assessment Target: %s", err)
 		}
 
 		if assessmentTarget == nil {
-			return fmt.Errorf("Inspector Assessment Target (%s) not found", rs.Primary.ID)
+			return fmt.Errorf("Inspector Classic Assessment Target (%s) not found", rs.Primary.ID)
 		}
 
 		*target = *assessmentTarget

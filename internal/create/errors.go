@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -57,6 +58,13 @@ func DiagError(service, action, resource, id string, gotError error) diag.Diagno
 			Summary:  ProblemStandardMessage(service, action, resource, id, gotError),
 		},
 	}
+}
+
+func DiagErrorFramework(service, action, resource, id string, gotError error) fwdiag.Diagnostic {
+	return fwdiag.NewErrorDiagnostic(
+		ProblemStandardMessage(service, action, resource, id, nil),
+		gotError.Error(),
+	)
 }
 
 func DiagErrorMessage(service, action, resource, id, message string) diag.Diagnostics {

@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -143,7 +143,7 @@ func expandOriginAccessIdentityConfig(d *schema.ResourceData) *cloudfront.Origin
 	}
 	// This sets CallerReference if it's still pending computation (ie: new resource)
 	if v, ok := d.GetOk("caller_reference"); !ok {
-		originAccessIdentityConfig.CallerReference = aws.String(resource.UniqueId())
+		originAccessIdentityConfig.CallerReference = aws.String(id.UniqueId())
 	} else {
 		originAccessIdentityConfig.CallerReference = aws.String(v.(string))
 	}

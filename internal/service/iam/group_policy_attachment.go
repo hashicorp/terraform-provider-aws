@@ -10,7 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -55,7 +56,7 @@ func resourceGroupPolicyAttachmentCreate(ctx context.Context, d *schema.Resource
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", group)))
+	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", group)))
 
 	return append(diags, resourceGroupPolicyAttachmentRead(ctx, d, meta)...)
 }
@@ -70,21 +71,21 @@ func resourceGroupPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDa
 
 	var attachedPolicy *iam.AttachedPolicy
 
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 
 		attachedPolicy, err = FindGroupAttachedPolicy(ctx, conn, group, arn)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if d.IsNewResource() && attachedPolicy == nil {
-			return resource.RetryableError(&resource.NotFoundError{
+			return retry.RetryableError(&retry.NotFoundError{
 				LastError: fmt.Errorf("IAM Group Managed Policy Attachment (%s) not found", id),
 			})
 		}

@@ -67,6 +67,8 @@ func DataSourceBucketObjects() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
+
+		DeprecationMessage: `use the aws_s3_objects data source instead`,
 	}
 }
 

@@ -5,11 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusClusterAvailability(ctx context.Context, conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+func statusClusterAvailability(ctx context.Context, conn *redshift.Redshift, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClusterByID(ctx, conn, id)
 
@@ -25,7 +25,7 @@ func statusClusterAvailability(ctx context.Context, conn *redshift.Redshift, id 
 	}
 }
 
-func statusClusterAvailabilityZoneRelocation(ctx context.Context, conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+func statusClusterAvailabilityZoneRelocation(ctx context.Context, conn *redshift.Redshift, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClusterByID(ctx, conn, id)
 
@@ -41,7 +41,7 @@ func statusClusterAvailabilityZoneRelocation(ctx context.Context, conn *redshift
 	}
 }
 
-func statusCluster(ctx context.Context, conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *redshift.Redshift, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClusterByID(ctx, conn, id)
 
@@ -57,7 +57,7 @@ func statusCluster(ctx context.Context, conn *redshift.Redshift, id string) reso
 	}
 }
 
-func statusClusterAqua(ctx context.Context, conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+func statusClusterAqua(ctx context.Context, conn *redshift.Redshift, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClusterByID(ctx, conn, id)
 
@@ -73,7 +73,7 @@ func statusClusterAqua(ctx context.Context, conn *redshift.Redshift, id string) 
 	}
 }
 
-func statusScheduleAssociation(ctx context.Context, conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+func statusScheduleAssociation(ctx context.Context, conn *redshift.Redshift, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		_, output, err := FindScheduleAssociationById(ctx, conn, id)
 
@@ -89,7 +89,7 @@ func statusScheduleAssociation(ctx context.Context, conn *redshift.Redshift, id 
 	}
 }
 
-func statusEndpointAccess(ctx context.Context, conn *redshift.Redshift, name string) resource.StateRefreshFunc {
+func statusEndpointAccess(ctx context.Context, conn *redshift.Redshift, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindEndpointAccessByName(ctx, conn, name)
 
@@ -105,7 +105,7 @@ func statusEndpointAccess(ctx context.Context, conn *redshift.Redshift, name str
 	}
 }
 
-func statusClusterSnapshot(ctx context.Context, conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+func statusClusterSnapshot(ctx context.Context, conn *redshift.Redshift, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClusterSnapshotByID(ctx, conn, id)
 

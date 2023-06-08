@@ -10,7 +10,7 @@ description: |-
 
 ## Example Usage
 
-The following shows outputing all network interface ids in a region.
+The following shows outputting all network interface ids in a region.
 
 ```terraform
 data "aws_network_interfaces" "example" {}

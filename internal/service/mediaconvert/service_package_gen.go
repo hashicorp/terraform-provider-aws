@@ -28,6 +28,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceQueue,
 			TypeName: "aws_media_convert_queue",
+			Name:     "Queue",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }

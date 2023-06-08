@@ -87,7 +87,15 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"enable_tls_version_and_cipher_suite_headers": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"enable_waf_fail_open": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"enable_xff_client_port": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -156,6 +164,10 @@ func DataSourceLoadBalancer() *schema.Resource {
 			},
 			"tags": tftags.TagsSchemaComputed(),
 			"vpc_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"xff_header_processing_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -289,6 +301,15 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		case "routing.http.desync_mitigation_mode":
 			desyncMitigationMode := aws.StringValue(attr.Value)
 			d.Set("desync_mitigation_mode", desyncMitigationMode)
+		case "routing.http.x_amzn_tls_version_and_cipher_suite.enabled":
+			tlsVersionAndCipherEnabled := flex.StringToBoolValue(attr.Value)
+			d.Set("enable_tls_version_and_cipher_suite_headers", tlsVersionAndCipherEnabled)
+		case "routing.http.xff_client_port.enabled":
+			xffClientPortEnabled := flex.StringToBoolValue(attr.Value)
+			d.Set("enable_xff_client_port", xffClientPortEnabled)
+		case "routing.http.xff_header_processing.mode":
+			xffHeaderProcMode := aws.StringValue(attr.Value)
+			d.Set("xff_header_processing_mode", xffHeaderProcMode)
 		}
 	}
 

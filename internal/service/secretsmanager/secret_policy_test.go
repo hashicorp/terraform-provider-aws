@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
@@ -138,16 +139,16 @@ func testAccCheckSecretPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 
 			var output *secretsmanager.DescribeSecretOutput
 
-			err := resource.RetryContext(ctx, tfsecretsmanager.PropagationTimeout, func() *resource.RetryError {
+			err := retry.RetryContext(ctx, tfsecretsmanager.PropagationTimeout, func() *retry.RetryError {
 				var err error
 				output, err = conn.DescribeSecretWithContext(ctx, secretInput)
 
 				if err != nil {
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 
 				if output != nil && output.DeletedDate == nil {
-					return resource.RetryableError(fmt.Errorf("Secret %q still exists", rs.Primary.ID))
+					return retry.RetryableError(fmt.Errorf("Secret %q still exists", rs.Primary.ID))
 				}
 
 				return nil

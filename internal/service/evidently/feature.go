@@ -21,9 +21,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_evidently_feature")
+// @SDKResource("aws_evidently_feature", name="Feature")
+// @Tags(identifierAttribute="arn")
 func ResourceFeature() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFeatureCreate,
@@ -127,8 +129,8 @@ func ResourceFeature() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"value_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -195,15 +197,13 @@ func ResourceFeature() *schema.Resource {
 
 func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EvidentlyConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	project := d.Get("project").(string)
-
 	input := &cloudwatchevidently.CreateFeatureInput{
 		Name:       aws.String(name),
 		Project:    aws.String(project),
+		Tags:       GetTagsIn(ctx),
 		Variations: expandVariations(d.Get("variations").(*schema.Set).List()),
 	}
 
@@ -223,11 +223,6 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.EvaluationStrategy = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating CloudWatch Evidently Feature: %s", input)
 	output, err := conn.CreateFeatureWithContext(ctx, input)
 
 	if err != nil {
@@ -247,8 +242,6 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EvidentlyConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	featureName, projectNameOrARN, err := FeatureParseID(d.Id())
 
@@ -288,15 +281,7 @@ func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("status", feature.Status)
 	d.Set("value_type", feature.ValueType)
 
-	tags := KeyValueTags(ctx, feature.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, feature.Tags)
 
 	return nil
 }
@@ -335,14 +320,6 @@ func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if _, err := waitFeatureUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.Errorf("waiting for CloudWatch Evidently Feature (%s) for Project (%s) update: %s", name, project, err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating tags: %s", err)
 		}
 	}
 

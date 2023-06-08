@@ -66,7 +66,6 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		return !lastPage
 	})
-
 	if err != nil {
 		return create.DiagError(names.RDS, create.ErrActionReading, DSNameInstances, "", err)
 	}

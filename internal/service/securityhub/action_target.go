@@ -141,7 +141,7 @@ func ActionTargetCheckExists(ctx context.Context, conn *securityhub.SecurityHub,
 	input := &securityhub.DescribeActionTargetsInput{
 		ActionTargetArns: aws.StringSlice([]string{actionTargetArn}),
 	}
-	var found *securityhub.ActionTarget = nil
+	var found *securityhub.ActionTarget
 	err := conn.DescribeActionTargetsPagesWithContext(ctx, input, func(page *securityhub.DescribeActionTargetsOutput, lastPage bool) bool {
 		for _, actionTarget := range page.ActionTargets {
 			if aws.StringValue(actionTarget.ActionTargetArn) == actionTargetArn {

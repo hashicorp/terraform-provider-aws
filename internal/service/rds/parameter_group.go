@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -23,9 +23,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_db_parameter_group")
+// @SDKResource("aws_db_parameter_group", name="DB Parameter Group")
+// @Tags(identifierAttribute="arn")
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,
@@ -91,8 +93,8 @@ func ResourceParameterGroup() *schema.Resource {
 				},
 				Set: resourceParameterHash,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -102,19 +104,16 @@ func ResourceParameterGroup() *schema.Resource {
 func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &rds.CreateDBParameterGroupInput{
 		DBParameterGroupFamily: aws.String(d.Get("family").(string)),
 		DBParameterGroupName:   aws.String(name),
 		Description:            aws.String(d.Get("description").(string)),
-		Tags:                   Tags(tags.IgnoreAWS()),
+		Tags:                   GetTagsIn(ctx),
 	}
 
 	output, err := conn.CreateDBParameterGroupWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creatingDB Parameter Group (%s): %s", name, err)
 	}
@@ -130,8 +129,6 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dbParameterGroup, err := FindDBParameterGroupByName(ctx, conn, d.Id())
 
@@ -223,23 +220,6 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Parameter Group (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -279,7 +259,6 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 				}
 
 				_, err := conn.ModifyDBParameterGroupWithContext(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "modifying DB Parameter Group (%s): %s", d.Id(), err)
 				}
@@ -321,19 +300,10 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 				}
 
 				_, err := conn.ResetDBParameterGroupWithContext(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "resetting DB Parameter Group (%s): %s", d.Id(), err)
 				}
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating RDS DB Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -347,15 +317,15 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Deleting RDS DB Parameter Group: %s", d.Id())
-	err := resource.RetryContext(ctx, 3*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 3*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteDBParameterGroup(ctx, input)
 		if errs.IsA[*types.DBParameterGroupNotFoundFault](err) {
 			return nil
 		} else if errs.IsA[*types.InvalidDBParameterGroupStateFault](err) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -376,7 +346,7 @@ func FindDBParameterGroupByName(ctx context.Context, conn *rds.RDS, name string)
 	output, err := conn.DescribeDBParameterGroupsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBParameterGroupNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -398,7 +368,7 @@ func FindDBParameterGroupByName(ctx context.Context, conn *rds.RDS, name string)
 
 	// Eventual consistency check.
 	if aws.StringValue(dbParameterGroup.DBParameterGroupName) != name {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}

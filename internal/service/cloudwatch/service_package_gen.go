@@ -28,6 +28,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCompositeAlarm,
 			TypeName: "aws_cloudwatch_composite_alarm",
+			Name:     "Composite Alarm",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceDashboard,
@@ -36,10 +40,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceMetricAlarm,
 			TypeName: "aws_cloudwatch_metric_alarm",
+			Name:     "Metric Alarm",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceMetricStream,
 			TypeName: "aws_cloudwatch_metric_stream",
+			Name:     "Metric Alarm",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

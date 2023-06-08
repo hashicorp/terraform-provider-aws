@@ -14,7 +14,8 @@ import (
 	cfschema "github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -85,7 +86,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	typeName := d.Get("type_name").(string)
 	input := &cloudcontrol.CreateResourceInput{
-		ClientToken:  aws.String(resource.UniqueId()),
+		ClientToken:  aws.String(id.UniqueId()),
 		DesiredState: aws.String(d.Get("desired_state").(string)),
 		TypeName:     aws.String(typeName),
 	}
@@ -161,7 +162,7 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		typeName := d.Get("type_name").(string)
 		input := &cloudcontrol.UpdateResourceInput{
-			ClientToken:   aws.String(resource.UniqueId()),
+			ClientToken:   aws.String(id.UniqueId()),
 			Identifier:    aws.String(d.Id()),
 			PatchDocument: aws.String(patchDocument),
 			TypeName:      aws.String(typeName),
@@ -194,7 +195,7 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	typeName := d.Get("type_name").(string)
 	input := &cloudcontrol.DeleteResourceInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		Identifier:  aws.String(d.Id()),
 		TypeName:    aws.String(typeName),
 	}
@@ -327,7 +328,7 @@ func FindResource(ctx context.Context, conn *cloudcontrol.Client, resourceID, ty
 	output, err := conn.GetResource(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -336,7 +337,7 @@ func FindResource(ctx context.Context, conn *cloudcontrol.Client, resourceID, ty
 	// Some CloudFormation Resources do not correctly re-map "not found" errors, instead returning a HandlerFailureException.
 	// These should be reported and fixed upstream over time, but for now work around the issue.
 	if errs.Contains(err, "not found") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -361,7 +362,7 @@ func findProgressEventByRequestToken(ctx context.Context, conn *cloudcontrol.Cli
 	output, err := conn.GetResourceRequestStatus(ctx, input)
 
 	if errs.IsA[*types.RequestTokenNotFoundException](err) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -378,7 +379,7 @@ func findProgressEventByRequestToken(ctx context.Context, conn *cloudcontrol.Cli
 	return output.ProgressEvent, nil
 }
 
-func statusProgressEventOperation(ctx context.Context, conn *cloudcontrol.Client, requestToken string) resource.StateRefreshFunc {
+func statusProgressEventOperation(ctx context.Context, conn *cloudcontrol.Client, requestToken string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findProgressEventByRequestToken(ctx, conn, requestToken)
 
@@ -395,7 +396,7 @@ func statusProgressEventOperation(ctx context.Context, conn *cloudcontrol.Client
 }
 
 func waitProgressEventOperationStatusSuccess(ctx context.Context, conn *cloudcontrol.Client, requestToken string, timeout time.Duration) (*types.ProgressEvent, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.OperationStatusInProgress, types.OperationStatusPending),
 		Target:  enum.Slice(types.OperationStatusSuccess),
 		Refresh: statusProgressEventOperation(ctx, conn, requestToken),
