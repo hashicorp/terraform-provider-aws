@@ -386,6 +386,23 @@ func TestAccFinSpaceKxCluster_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
+			{
+				Config: testAccKxClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccKxClusterConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
 		},
 	})
 }
@@ -670,6 +687,37 @@ resource "aws_finspace_kx_cluster" "test" {
   }
 }
 `, rName, tagKey1, tagValue1))
+}
+
+func testAccKxClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccKxClusterConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_finspace_kx_cluster" "test" {
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  type                 = "HDB"
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  release_label        = "1.0"
+  capacity_configuration {
+    node_count = 2
+    node_type  = "kx.s.xlarge"
+  }
+
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccKxClusterConfig_database(rName string) string {
