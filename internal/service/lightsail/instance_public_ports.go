@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -134,7 +133,7 @@ func resourceInstancePublicPortsRead(ctx context.Context, d *schema.ResourceData
 
 	output, err := conn.GetInstancePortStates(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "NotFoundException") {
+	if !d.IsNewResource() && IsANotFoundError(err) {
 		log.Printf("[WARN] Lightsail instance public ports (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

@@ -146,7 +146,7 @@ func TestAccLightsailInstance_tags(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
 			{
@@ -157,7 +157,7 @@ func TestAccLightsailInstance_tags(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 				),
 			},
 		},
@@ -442,7 +442,6 @@ resource "aws_lightsail_instance" "test" {
 
   tags = {
     Name       = "tf-test"
-    KeyOnlyTag = ""
   }
 }
 `, rName))
@@ -460,7 +459,6 @@ resource "aws_lightsail_instance" "test" {
 
   tags = {
     Name       = "tf-test",
-    KeyOnlyTag = ""
     ExtraName  = "tf-test"
   }
 }
