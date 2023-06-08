@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -77,6 +78,8 @@ func ResourceKxDatabase() *schema.Resource {
 
 const (
 	ResNameKxDatabase = "Kx Database"
+
+	kxDatabaseIDPartCount = 2
 )
 
 func resourceKxDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -103,7 +106,16 @@ func resourceKxDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxDatabase, d.Get("name").(string), errors.New("empty output"))...)
 	}
 
-	d.SetId(aws.ToString(out.EnvironmentId) + "," + aws.ToString(out.DatabaseName))
+	idParts := []string{
+		aws.ToString(out.EnvironmentId),
+		aws.ToString(out.DatabaseName),
+	}
+	id, err := flex.FlattenResourceId(idParts, kxDatabaseIDPartCount, false)
+	if err != nil {
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxDatabase, d.Get("name").(string), err)...)
+	}
+
+	d.SetId(id)
 
 	return append(diags, resourceKxDatabaseRead(ctx, d, meta)...)
 }
@@ -112,8 +124,7 @@ func resourceKxDatabaseRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
-	out, err := findKxDatabaseByName(ctx, conn, d.Get("name").(string), d.Get("environment_id").(string))
-
+	out, err := findKxDatabaseByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FinSpace KxDatabase (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -177,11 +188,17 @@ func resourceKxDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func findKxDatabaseByName(ctx context.Context, conn *finspace.Client, name string, environmentId string) (*finspace.GetKxDatabaseOutput, error) {
-	in := &finspace.GetKxDatabaseInput{
-		DatabaseName:  aws.String(name),
-		EnvironmentId: aws.String(environmentId),
+func findKxDatabaseByID(ctx context.Context, conn *finspace.Client, id string) (*finspace.GetKxDatabaseOutput, error) {
+	parts, err := flex.ExpandResourceId(id, kxDatabaseIDPartCount, false)
+	if err != nil {
+		return nil, err
 	}
+
+	in := &finspace.GetKxDatabaseInput{
+		EnvironmentId: aws.String(parts[0]),
+		DatabaseName:  aws.String(parts[1]),
+	}
+
 	out, err := conn.GetKxDatabase(ctx, in)
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
