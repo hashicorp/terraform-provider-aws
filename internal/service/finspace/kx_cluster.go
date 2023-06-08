@@ -38,150 +38,9 @@ func ResourceKxCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status_reason": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"environment_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 32),
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 63),
-			},
-			"type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.KxClusterType](),
-			},
-			"release_label": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 16),
-			},
-			"az_mode": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.KxAzMode](),
-			},
-			"availability_zone_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
-			},
-			"initialization_script": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"execution_role": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"command_line_arguments": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				ForceNew: true,
-				ValidateDiagFunc: verify.ValidAllDiag(
-					validation.MapKeyLenBetween(1, 50),
-					validation.MapValueLenBetween(1, 50),
-				),
-			},
-			"capacity_configuration": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"node_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 32),
-						},
-						"node_count": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(1, 5),
-						},
-					},
-				},
-			},
-			"vpc_configuration": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"vpc_id": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
-						},
-						"security_group_ids": {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 1024),
-							},
-						},
-						"subnet_ids": {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 1024),
-							},
-						},
-						"ip_address_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(enum.Slice(types.IPAddressTypeIpV4), true),
-						},
-					},
-				},
 			},
 			"auto_scaling_configuration": {
 				Type:     schema.TypeList,
@@ -197,12 +56,6 @@ func ResourceKxCluster() *schema.Resource {
 							ValidateFunc: validation.StringInSlice(
 								enum.Slice(types.AutoScalingMetricCpuUtilizationPercentage), true),
 						},
-						"min_node_count": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(1, 5),
-						},
 						"max_node_count": {
 							Type:         schema.TypeInt,
 							Required:     true,
@@ -214,6 +67,12 @@ func ResourceKxCluster() *schema.Resource {
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.FloatBetween(0, 100),
+						},
+						"min_node_count": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntBetween(1, 5),
 						},
 						"scale_in_cooldown_seconds": {
 							Type:         schema.TypeFloat,
@@ -230,28 +89,16 @@ func ResourceKxCluster() *schema.Resource {
 					},
 				},
 			},
-			"savedown_storage_configuration": {
-				Type:     schema.TypeList,
+			"availability_zone_id": {
+				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice(
-								enum.Slice(types.KxSavedownStorageTypeSds01), true),
-						},
-						"size": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(4, 16000),
-						},
-					},
-				},
+			},
+			"az_mode": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.KxAzMode](),
 			},
 			"cache_storage_configurations": {
 				Type:     schema.TypeList,
@@ -259,63 +106,39 @@ func ResourceKxCluster() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(8, 10),
-						},
 						"size": {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1200, 33600),
 						},
-					},
-				},
-			},
-			"database": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"database_name": {
+						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(3, 63),
+							ValidateFunc: validation.StringLenBetween(8, 10),
 						},
-						"cache_configurations": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cache_type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"CACHE_1000",
-										}, true),
-									},
-									"db_paths": {
-										Type: schema.TypeSet,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-										Required: true,
-										ForceNew: true,
-									},
-								},
-							},
-						},
-						"changeset_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
+					},
+				},
+			},
+			"capacity_configuration": {
+				Type:     schema.TypeList,
+				Required: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"node_count": {
+							Type:         schema.TypeInt,
+							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 26),
+							ValidateFunc: validation.IntBetween(1, 5),
+						},
+						"node_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(1, 32),
 						},
 					},
 				},
@@ -348,9 +171,187 @@ func ResourceKxCluster() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchemaForceNew(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"command_line_arguments": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				ForceNew: true,
+				ValidateDiagFunc: verify.ValidAllDiag(
+					validation.MapKeyLenBetween(1, 50),
+					validation.MapValueLenBetween(1, 50),
+				),
+			},
+			"created_timestamp": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"database": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cache_configurations": {
+							Type:     schema.TypeList,
+							Required: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cache_type": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											"CACHE_1000",
+										}, true),
+									},
+									"db_paths": {
+										Type: schema.TypeSet,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+										Required: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"changeset_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(1, 26),
+						},
+						"database_name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(3, 63),
+						},
+					},
+				},
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 1000),
+			},
+			"environment_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 32),
+			},
+			"execution_role": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 1024),
+			},
+			"initialization_script": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
+			},
+			"last_modified_timestamp": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(3, 63),
+			},
+			"release_label": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 16),
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"savedown_storage_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice(
+								enum.Slice(types.KxSavedownStorageTypeSds01), true),
+						},
+						"size": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntBetween(4, 16000),
+						},
+					},
+				},
+			},
+			"status_reason": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrTags:    tftags.TagsSchemaForceNew(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"type": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.KxClusterType](),
+			},
+			"vpc_configuration": {
+				Type:     schema.TypeList,
+				Required: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ip_address_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(enum.Slice(types.IPAddressTypeIpV4), true),
+						},
+						"security_group_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							ForceNew: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 1024),
+							},
+						},
+						"subnet_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							ForceNew: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 1024),
+							},
+						},
+						"vpc_id": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(1, 1024),
+						},
+					},
+				},
+			},
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
