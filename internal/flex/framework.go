@@ -343,6 +343,25 @@ func Float64ToFrameworkLegacy(_ context.Context, v *float64) types.Float64 {
 	return types.Float64Value(aws.ToFloat64(v))
 }
 
+type FrameworkElementFlattenerFunc[T any] func(context.Context, T) map[string]attr.Value
+
+func FlattenFrameworkListNestedBlock[T any, U any](ctx context.Context, apiObjects []U, f FrameworkElementFlattenerFunc[U]) types.List {
+	attributeTypes := AttributeTypesMust[T](ctx)
+	elementType := types.ObjectType{AttrTypes: attributeTypes}
+
+	if len(apiObjects) == 0 {
+		return types.ListNull(elementType)
+	}
+
+	var elements []attr.Value
+
+	for _, apiObject := range apiObjects {
+		elements = append(elements, types.ObjectValueMust(attributeTypes, f(ctx, apiObject)))
+	}
+
+	return types.ListValueMust(elementType, elements)
+}
+
 type Set[T comparable] []T
 
 // Difference find the elements in two sets that are not similar.
