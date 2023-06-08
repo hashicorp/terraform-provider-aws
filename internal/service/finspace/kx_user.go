@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -67,6 +68,8 @@ func ResourceKxUser() *schema.Resource {
 
 const (
 	ResNameKxUser = "Kx User"
+
+	kxUserIDPartCount = 2
 )
 
 func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -89,7 +92,15 @@ func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get("name").(string), errors.New("empty output"))...)
 	}
 
-	d.SetId(aws.ToString(out.EnvironmentId) + "," + aws.ToString(out.UserName))
+	idParts := []string{
+		aws.ToString(out.EnvironmentId),
+		aws.ToString(out.UserName),
+	}
+	id, err := flex.FlattenResourceId(idParts, kxUserIDPartCount, false)
+	if err != nil {
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxUser, d.Get("name").(string), err)...)
+	}
+	d.SetId(id)
 
 	return append(diags, resourceKxUserRead(ctx, d, meta)...)
 }
@@ -98,8 +109,7 @@ func resourceKxUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
-	out, err := findKxUserByName(ctx, conn, d.Get("name").(string), d.Get("environment_id").(string))
-
+	out, err := findKxUserByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FinSpace KxUser (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -171,11 +181,16 @@ func resourceKxUserDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func findKxUserByName(ctx context.Context, conn *finspace.Client, name string, environmentId string) (*finspace.GetKxUserOutput, error) {
-	in := &finspace.GetKxUserInput{
-		UserName:      aws.String(name),
-		EnvironmentId: aws.String(environmentId),
+func findKxUserByID(ctx context.Context, conn *finspace.Client, id string) (*finspace.GetKxUserOutput, error) {
+	parts, err := flex.ExpandResourceId(id, kxUserIDPartCount, false)
+	if err != nil {
+		return nil, err
 	}
+	in := &finspace.GetKxUserInput{
+		EnvironmentId: aws.String(parts[0]),
+		UserName:      aws.String(parts[1]),
+	}
+
 	out, err := conn.GetKxUser(ctx, in)
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
