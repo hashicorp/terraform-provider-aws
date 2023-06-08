@@ -198,7 +198,12 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 	data.ARN = flex.StringToFramework(ctx, view.ViewArn)
 	data.DefaultView = types.BoolValue(defaultViewARN == data.ARN.ValueString())
 	data.Filters = r.flattenSearchFilter(ctx, view.Filters)
-	data.IncludedProperties = r.flattenIncludedProperties(ctx, view.IncludedProperties)
+	data.IncludedProperties = flex.FlattenFrameworkListNestedBlock[viewIncludedPropertyData](ctx, view.IncludedProperties, func(ctx context.Context, apiObject awstypes.IncludedProperty) map[string]attr.Value {
+		return map[string]attr.Value{
+			"name": flex.StringToFramework(ctx, apiObject.Name),
+		}
+	})
+	// data.IncludedProperties = r.flattenIncludedProperties(ctx, view.IncludedProperties)
 
 	arn, err := arn.Parse(data.ARN.ValueString())
 
@@ -343,7 +348,7 @@ func (r *resourceView) expandSearchFilter(ctx context.Context, tfList types.List
 }
 
 func (r *resourceView) flattenSearchFilter(ctx context.Context, apiObject *awstypes.SearchFilter) types.List {
-	attributeTypes, _ := framework.AttributeTypes[viewSearchFilterData](ctx)
+	attributeTypes := flex.AttributeTypesMust[viewSearchFilterData](ctx)
 	elementType := types.ObjectType{AttrTypes: attributeTypes}
 
 	// The default is
@@ -391,30 +396,6 @@ func (r *resourceView) expandIncludedProperty(ctx context.Context, data viewIncl
 	}
 
 	return apiObject
-}
-
-func (r *resourceView) flattenIncludedProperties(ctx context.Context, apiObjects []awstypes.IncludedProperty) types.List {
-	attributeTypes, _ := framework.AttributeTypes[viewIncludedPropertyData](ctx)
-	elementType := types.ObjectType{AttrTypes: attributeTypes}
-
-	if len(apiObjects) == 0 {
-		return types.ListNull(elementType)
-	}
-
-	var elements []attr.Value
-
-	for _, apiObject := range apiObjects {
-		elements = append(elements, r.flattenIncludedProperty(ctx, apiObject))
-	}
-
-	return types.ListValueMust(elementType, elements)
-}
-
-func (r *resourceView) flattenIncludedProperty(ctx context.Context, apiObject awstypes.IncludedProperty) types.Object {
-	attributeTypes, _ := framework.AttributeTypes[viewIncludedPropertyData](ctx)
-	return types.ObjectValueMust(attributeTypes, map[string]attr.Value{
-		"name": flex.StringToFramework(ctx, apiObject.Name),
-	})
 }
 
 type resourceViewData struct {

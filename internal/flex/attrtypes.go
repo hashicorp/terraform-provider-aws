@@ -8,6 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 )
 
+// TODO
+// TODO Deduplicate with 'internal/framework'.
+// TODO
+
 // AttributeTypes returns a map of attribute types for the specified type T.
 // T must be a struct and reflection is used to find exported fields of T with the `tfsdk` tag.
 func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, error) {

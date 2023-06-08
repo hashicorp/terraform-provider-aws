@@ -10,6 +10,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
+// TODO
+// TODO Deduplicate with 'internal/flex'.
+// TODO
+
 func TestAttributeTypes(t *testing.T) {
 	t.Parallel()
 

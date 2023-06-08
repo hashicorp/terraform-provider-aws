@@ -9,6 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+// TODO
+// TODO Deduplicate with 'internal/framework'.
+// TODO
+
 func TestAttributeTypes(t *testing.T) {
 	t.Parallel()
 
