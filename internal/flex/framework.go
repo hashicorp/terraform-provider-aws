@@ -365,6 +365,24 @@ func ExpandFrameworkListNestedBlock[T any, U any](ctx context.Context, tfList ty
 	return apiObjects
 }
 
+func ExpandFrameworkListNestedBlockPtr[T any, U any](ctx context.Context, tfList types.List, f FrameworkElementExpanderFunc[T, *U]) *U {
+	if tfList.IsNull() || tfList.IsUnknown() {
+		return nil
+	}
+
+	var data []T
+
+	if diags := tfList.ElementsAs(ctx, &data, false); diags.HasError() {
+		return nil
+	}
+
+	if len(data) == 0 {
+		return nil
+	}
+
+	return f(ctx, data[0])
+}
+
 type FrameworkElementFlattenerFunc[T any] func(context.Context, T) map[string]attr.Value
 
 func FlattenFrameworkListNestedBlock[T any, U any](ctx context.Context, apiObjects []U, f FrameworkElementFlattenerFunc[U]) types.List {

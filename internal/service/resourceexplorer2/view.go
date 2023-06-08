@@ -123,7 +123,7 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 
 	input := &resourceexplorer2.CreateViewInput{
 		ClientToken:        aws.String(id.UniqueId()),
-		Filters:            r.expandSearchFilter(ctx, data.Filters),
+		Filters:            flex.ExpandFrameworkListNestedBlockPtr(ctx, data.Filters, r.expandSearchFilter),
 		IncludedProperties: flex.ExpandFrameworkListNestedBlock(ctx, data.IncludedProperties, r.expandIncludedProperty),
 		Tags:               GetTagsIn(ctx),
 		ViewName:           aws.String(data.Name.ValueString()),
@@ -244,7 +244,7 @@ func (r *resourceView) Update(ctx context.Context, request resource.UpdateReques
 
 	if !new.Filters.Equal(old.Filters) || !new.IncludedProperties.Equal(old.IncludedProperties) {
 		input := &resourceexplorer2.UpdateViewInput{
-			Filters:            r.expandSearchFilter(ctx, new.Filters),
+			Filters:            flex.ExpandFrameworkListNestedBlockPtr(ctx, new.Filters, r.expandSearchFilter),
 			IncludedProperties: flex.ExpandFrameworkListNestedBlock(ctx, new.IncludedProperties, r.expandIncludedProperty),
 			ViewArn:            flex.StringFromFramework(ctx, new.ID),
 		}
@@ -320,26 +320,10 @@ func (r *resourceView) ModifyPlan(ctx context.Context, request resource.ModifyPl
 	r.SetTagsAll(ctx, request, response)
 }
 
-func (r *resourceView) expandSearchFilter(ctx context.Context, tfList types.List) *awstypes.SearchFilter {
-	if tfList.IsNull() || tfList.IsUnknown() {
-		return nil
+func (r *resourceView) expandSearchFilter(ctx context.Context, data viewSearchFilterData) *awstypes.SearchFilter {
+	return &awstypes.SearchFilter{
+		FilterString: flex.StringFromFramework(ctx, data.FilterString),
 	}
-
-	var data []viewSearchFilterData
-
-	if diags := tfList.ElementsAs(ctx, &data, false); diags.HasError() {
-		return nil
-	}
-
-	if len(data) == 0 {
-		return nil
-	}
-
-	apiObject := &awstypes.SearchFilter{
-		FilterString: flex.StringFromFramework(ctx, data[0].FilterString),
-	}
-
-	return apiObject
 }
 
 func (r *resourceView) flattenSearchFilter(ctx context.Context, apiObject *awstypes.SearchFilter) types.List {
@@ -366,11 +350,9 @@ func (r *resourceView) flattenSearchFilter(ctx context.Context, apiObject *awsty
 }
 
 func (r *resourceView) expandIncludedProperty(ctx context.Context, data viewIncludedPropertyData) awstypes.IncludedProperty {
-	apiObject := awstypes.IncludedProperty{
+	return awstypes.IncludedProperty{
 		Name: flex.StringFromFramework(ctx, data.Name),
 	}
-
-	return apiObject
 }
 
 func (r *resourceView) flattenIncludedProperty(ctx context.Context, apiObject awstypes.IncludedProperty) map[string]attr.Value {
