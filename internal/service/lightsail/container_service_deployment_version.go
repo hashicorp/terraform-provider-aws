@@ -306,14 +306,14 @@ func expandContainerServiceProtocol(tfMap map[string]interface{}) map[string]typ
 
 	for k, v := range tfMap {
 		switch v {
-			case "HTTP":
-				apiObject[k] = types.ContainerServiceProtocolHttp
-			case "HTTPS":
-				apiObject[k] = types.ContainerServiceProtocolHttps
-			case "TCP":
-				apiObject[k] = types.ContainerServiceProtocolTcp
-			case "UDP":
-				apiObject[k] = types.ContainerServiceProtocolUdp	
+		case "HTTP":
+			apiObject[k] = types.ContainerServiceProtocolHttp
+		case "HTTPS":
+			apiObject[k] = types.ContainerServiceProtocolHttps
+		case "TCP":
+			apiObject[k] = types.ContainerServiceProtocolTcp
+		case "UDP":
+			apiObject[k] = types.ContainerServiceProtocolUdp
 		}
 	}
 
