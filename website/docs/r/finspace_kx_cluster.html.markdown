@@ -84,7 +84,7 @@ The following arguments are optional:
 * `savedown_storage_configuration` - (Optional) Size and type of the temporary storage that is used to hold data during the savedown process. This parameter is required when you choose `type` as RDB. All the data written to this storage space is lost when the cluster node is restarted. Defined below.
 * `auto_scaling_configuration` - (Optional) Configuration based on which FinSpace will scale in or scale out nodes in your cluster. Defined below.
 * `code` - (Optional) Details of the custom code that you want to use inside a cluster when analyzing data. Consists of the S3 source bucket, location, object version, and the relative path from where the custom code is loaded into the cluster. Defined below.
-* `tags` - (Optional) List of key-value pairs to label the cluster.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### capacity_configuration
 
@@ -169,7 +169,7 @@ In addition to all arguments above, the following attributes are exported:
 * `created_timestamp` - Timestamp at which the cluster is created in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
 * `id` - A comma-delimited string joining environment ID and cluster name.
 * `last_modified_timestamp` - Last timestamp at which the cluster was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
-* `tags_all` - Map of tags assigned to the resource.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
