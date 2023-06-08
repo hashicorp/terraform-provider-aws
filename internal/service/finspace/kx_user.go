@@ -132,29 +132,19 @@ func resourceKxUserUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
-	update := false
+	if d.HasChange("iam_role") {
+		in := &finspace.UpdateKxUserInput{
+			EnvironmentId: aws.String(d.Get("environment_id").(string)),
+			UserName:      aws.String(d.Get("name").(string)),
+			IamRole:       aws.String(d.Get("iam_role").(string)),
+		}
 
-	in := &finspace.UpdateKxUserInput{
-		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-		UserName:      aws.String(d.Get("name").(string)),
-	}
-
-	if d.HasChanges("iam_role") {
-		in.IamRole = aws.String(d.Get("iam_role").(string))
-	}
-
-	if d.HasChanges("iam_role") {
-		update = true
-		log.Printf("[DEBUG] Updating FinSpace KxUser (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateKxUser(ctx, in)
 		if err != nil {
 			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxUser, d.Id(), err)...)
 		}
 	}
 
-	if !update {
-		return diags
-	}
 	return append(diags, resourceKxUserRead(ctx, d, meta)...)
 }
 
