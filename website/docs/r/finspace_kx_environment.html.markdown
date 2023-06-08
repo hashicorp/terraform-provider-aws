@@ -83,7 +83,6 @@ The transit_gateway_configuration block supports the following arguments:
 * `routable_cidr_space` - (Required) Routing CIDR on behalf of KX environment. It could be any “/26 range in the 100.64.0.0 CIDR space. After providing, it will be added to the customer’s transit gateway routing table so that the traffics could be routed to KX network.
 * `transit_gateway_id` - (Required) Identifier of the transit gateway created by the customer to connect outbound traffics from KX network to your internal network.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
