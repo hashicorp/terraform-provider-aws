@@ -70,6 +70,7 @@ const (
 )
 
 func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).FinSpaceClient()
 
 	in := &finspace.CreateKxUserInput{
@@ -81,19 +82,20 @@ func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	out, err := client.CreateKxUser(ctx, in)
 	if err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get("name").(string), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get("name").(string), err)...)
 	}
 
 	if out == nil {
-		return create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get("name").(string), errors.New("empty output"))
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get("name").(string), errors.New("empty output"))...)
 	}
 
 	d.SetId(aws.ToString(out.EnvironmentId) + "," + aws.ToString(out.UserName))
 
-	return resourceKxUserRead(ctx, d, meta)
+	return append(diags, resourceKxUserRead(ctx, d, meta)...)
 }
 
 func resourceKxUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
 	out, err := findKxUserByName(ctx, conn, d.Get("name").(string), d.Get("environment_id").(string))
@@ -101,11 +103,11 @@ func resourceKxUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FinSpace KxUser (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxUser, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxUser, d.Id(), err)...)
 	}
 
 	d.Set("arn", out.UserArn)
@@ -113,10 +115,11 @@ func resourceKxUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("iam_role", out.IamRole)
 	d.Set("environment_id", out.EnvironmentId)
 
-	return nil
+	return diags
 }
 
 func resourceKxUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
 	update := false
@@ -135,17 +138,18 @@ func resourceKxUserUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		log.Printf("[DEBUG] Updating FinSpace KxUser (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateKxUser(ctx, in)
 		if err != nil {
-			return create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxUser, d.Id(), err)
+			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxUser, d.Id(), err)...)
 		}
 	}
 
 	if !update {
-		return nil
+		return diags
 	}
-	return resourceKxUserRead(ctx, d, meta)
+	return append(diags, resourceKxUserRead(ctx, d, meta)...)
 }
 
 func resourceKxUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
 	log.Printf("[INFO] Deleting FinSpace KxUser %s", d.Id())
@@ -161,10 +165,10 @@ func resourceKxUserDelete(ctx context.Context, d *schema.ResourceData, meta inte
 			return nil
 		}
 
-		return create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxUser, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxUser, d.Id(), err)...)
 	}
 
-	return nil
+	return diags
 }
 
 func findKxUserByName(ctx context.Context, conn *finspace.Client, name string, environmentId string) (*finspace.GetKxUserOutput, error) {
