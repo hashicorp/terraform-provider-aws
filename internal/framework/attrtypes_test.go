@@ -21,19 +21,14 @@ func TestAttributeTypes(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	got, err := framework.AttributeTypes[struct1](ctx)
-
-	if err != nil {
-		t.Fatalf("unexpected error")
-	}
-
+	got := framework.AttributeTypesMust[struct1](ctx)
 	wanted := map[string]attr.Type{}
 
 	if diff := cmp.Diff(got, wanted); diff != "" {
 		t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 	}
 
-	_, err = framework.AttributeTypes[int](ctx)
+	_, err := framework.AttributeTypes[int](ctx)
 
 	if err == nil {
 		t.Fatalf("expected error")

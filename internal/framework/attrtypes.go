@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 // AttributeTypes returns a map of attribute types for the specified type T.
@@ -42,9 +43,5 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, error) {
 }
 
 func AttributeTypesMust[T any](ctx context.Context) map[string]attr.Type {
-	types, err := AttributeTypes[T](ctx)
-	if err != nil {
-		panic(fmt.Sprintf("AttributeTypesMust[%T] received error: %s", *new(T), err))
-	}
-	return types
+	return flex.Must(AttributeTypes[T](ctx))
 }
