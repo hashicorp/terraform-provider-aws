@@ -32,6 +32,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 				IdentifierAttribute: "arn",
 			},
 		},
+		{
+			Factory:  ResourceKxEnvironment,
+			TypeName: "aws_finspace_kx_environment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 	}
 }
 
