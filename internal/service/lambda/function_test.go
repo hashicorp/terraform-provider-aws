@@ -2089,6 +2089,8 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 			fallthrough
 		case types.RuntimeRuby25:
 			fallthrough
+		case types.RuntimeNodejs12x:
+			fallthrough
 		case types.RuntimeNodejs10x:
 			fallthrough
 		case types.RuntimeNodejs810:
@@ -2100,6 +2102,8 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 		case types.RuntimeNodejs43:
 			fallthrough
 		case types.RuntimeNodejs:
+			fallthrough
+		case types.RuntimeDotnetcore31:
 			fallthrough
 		case types.RuntimeDotnetcore20:
 			fallthrough
