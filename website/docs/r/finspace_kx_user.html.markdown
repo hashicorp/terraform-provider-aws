@@ -39,7 +39,7 @@ resource "aws_iam_role" "example" {
           Service = "ec2.amazonaws.com"
         }
       },
-    ] 
+    ]
   })
 }
 
