@@ -30,10 +30,12 @@ func ResourceKxCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKxClusterCreate,
 		ReadWithoutTimeout:   resourceKxClusterRead,
+		UpdateWithoutTimeout: resourceKxClusterUpdate,
 		DeleteWithoutTimeout: resourceKxClusterDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(2 * time.Minute), // Tags only
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 		},
 
@@ -506,6 +508,12 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return diags
+}
+
+func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	// Tags only.
+	return append(diags, resourceKxClusterRead(ctx, d, meta)...)
 }
 
 func resourceKxClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
