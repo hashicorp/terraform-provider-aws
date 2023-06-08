@@ -152,7 +152,7 @@ func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
 
 func TestAccMWAAEnvironment_log(t *testing.T) {
 	ctx := acctest.Context(t)
-	var environment mwaa.Environment
+	var environment1, environment2 mwaa.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
@@ -165,7 +165,7 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_logging(rName, "true", mwaa.LoggingLevelCritical),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment1),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.#", "1"),
@@ -202,7 +202,8 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_logging(rName, "false", mwaa.LoggingLevelInfo),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment2),
+					testAccCheckEnvironmentNotRecreated(&environment2, &environment1),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.#", "1"),
@@ -313,7 +314,7 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 
 func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var environment mwaa.Environment
+	var environment1, environment2 mwaa.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 	s3ObjectResourceName := "aws_s3_object.plugins"
@@ -327,7 +328,7 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_pluginsS3ObjectVersion(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment1),
 					resource.TestCheckResourceAttrPair(resourceName, "plugins_s3_object_version", s3ObjectResourceName, "version_id"),
 				),
 			},
@@ -339,7 +340,8 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_pluginsS3ObjectVersion(rName, "test-updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment2),
+					testAccCheckEnvironmentNotRecreated(&environment2, &environment1),
 					resource.TestCheckResourceAttrPair(resourceName, "plugins_s3_object_version", s3ObjectResourceName, "version_id"),
 				),
 			},
