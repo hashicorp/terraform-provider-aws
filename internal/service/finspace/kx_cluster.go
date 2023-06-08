@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_finspace_kx_cluster")
+// @SDKResource("aws_finspace_kx_cluster", name="Kx Cluster")
 // @Tags(identifierAttribute="arn")
 func ResourceKxCluster() *schema.Resource {
 	return &schema.Resource{
