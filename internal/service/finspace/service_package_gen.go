@@ -26,6 +26,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
+			Factory:  ResourceKxCluster,
+			TypeName: "aws_finspace_kx_cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceKxEnvironment,
 			TypeName: "aws_finspace_kx_environment",
 			Name:     "Kx Environment",
