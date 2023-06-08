@@ -22,6 +22,23 @@ const (
 	redisImage      = "redis:latest"
 )
 
+// LightSail only allows 5 Container Serivces pending per account. Serializing these tests simplifies running all
+// Container tests without risk of hitting the account limit.
+func TestAccLightsailContainerServiceDeploymentVersion_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"basic":           testAccLightsailContainerServiceDeploymentVersion_container_basic,
+		"multiple":        testAccLightsailContainerServiceDeploymentVersion_container_multiple,
+		"environment":     testAccLightsailContainerServiceDeploymentVersion_container_environment,
+		"ports":           testAccLightsailContainerServiceDeploymentVersion_container_ports,
+		"public_endpoint": testAccLightsailContainerServiceDeploymentVersion_container_publicEndpoint,
+		"enable_service":  testAccLightsailContainerServiceDeploymentVersion_Container_enableService,
+	}
+
+	acctest.RunSerialTests1Levels(t, testCases, 0)
+}
+
 func TestContainerServiceDeploymentVersionParseResourceID(t *testing.T) {
 	t.Parallel()
 
@@ -95,7 +112,7 @@ func TestContainerServiceDeploymentVersionParseResourceID(t *testing.T) {
 	}
 }
 
-func TestAccLightsailContainerServiceDeploymentVersion_Container_Basic(t *testing.T) {
+func testAccLightsailContainerServiceDeploymentVersion_container_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	containerName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -136,7 +153,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Basic(t *testin
 	})
 }
 
-func TestAccLightsailContainerServiceDeploymentVersion_Container_Multiple(t *testing.T) {
+func testAccLightsailContainerServiceDeploymentVersion_container_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	containerName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -175,7 +192,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Multiple(t *tes
 	})
 }
 
-func TestAccLightsailContainerServiceDeploymentVersion_Container_Environment(t *testing.T) {
+func testAccLightsailContainerServiceDeploymentVersion_container_environment(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	containerName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -254,7 +271,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Environment(t *
 	})
 }
 
-func TestAccLightsailContainerServiceDeploymentVersion_Container_Ports(t *testing.T) {
+func testAccLightsailContainerServiceDeploymentVersion_container_ports(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	containerName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -328,7 +345,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Ports(t *testin
 	})
 }
 
-func TestAccLightsailContainerServiceDeploymentVersion_Container_PublicEndpoint(t *testing.T) {
+func testAccLightsailContainerServiceDeploymentVersion_container_publicEndpoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	containerName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -441,7 +458,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_PublicEndpoint(
 	})
 }
 
-func TestAccLightsailContainerServiceDeploymentVersion_Container_EnableService(t *testing.T) {
+func testAccLightsailContainerServiceDeploymentVersion_Container_enableService(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	containerName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
