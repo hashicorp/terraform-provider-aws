@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -99,7 +99,7 @@ func (r *resourceSecurityPolicy) Create(ctx context.Context, req resource.Create
 	conn := r.Meta().OpenSearchServerlessClient()
 
 	in := &opensearchserverless.CreateSecurityPolicyInput{
-		ClientToken: aws.String(sdkresource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(plan.Name.ValueString()),
 		Policy:      aws.String(plan.Policy.ValueString()),
 		Type:        awstypes.SecurityPolicyType(plan.Type.ValueString()),
@@ -156,7 +156,7 @@ func (r *resourceSecurityPolicy) Update(ctx context.Context, req resource.Update
 	if !plan.Description.Equal(state.Description) ||
 		!plan.Policy.Equal(state.Policy) {
 		input := &opensearchserverless.UpdateSecurityPolicyInput{
-			ClientToken:   aws.String(sdkresource.UniqueId()),
+			ClientToken:   aws.String(id.UniqueId()),
 			Name:          flex.StringFromFramework(ctx, plan.Name),
 			PolicyVersion: flex.StringFromFramework(ctx, plan.PolicyVersion),
 			Type:          awstypes.SecurityPolicyType(plan.Type.ValueString()),
@@ -188,7 +188,7 @@ func (r *resourceSecurityPolicy) Delete(ctx context.Context, req resource.Delete
 	}
 
 	_, err := conn.DeleteSecurityPolicy(ctx, &opensearchserverless.DeleteSecurityPolicyInput{
-		ClientToken: aws.String(sdkresource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(state.Name.ValueString()),
 		Type:        awstypes.SecurityPolicyType(state.Type.ValueString()),
 	})

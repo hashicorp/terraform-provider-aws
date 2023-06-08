@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -33,12 +33,12 @@ func TestAccOpenSearchServerlessSecurityPolicy_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityPolicyDestroy,
+		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityPolicyExists(resourceName, &securitypolicy),
+					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
 					resource.TestCheckResourceAttr(resourceName, "type", "encryption"),
 				),
 			},
@@ -67,12 +67,12 @@ func TestAccOpenSearchServerlessSecurityPolicy_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityPolicyDestroy,
+		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityPolicyExists(resourceName, &securitypolicy),
+					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceSecurityPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -81,34 +81,35 @@ func TestAccOpenSearchServerlessSecurityPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSecurityPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
-	ctx := context.Background()
+func testAccCheckSecurityPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opensearchserverless_security_policy" {
-			continue
-		}
-
-		_, err := conn.GetSecurityPolicy(ctx, &opensearchserverless.GetSecurityPolicyInput{
-			Name: aws.String(rs.Primary.ID),
-			Type: types.SecurityPolicyTypeEncryption,
-		})
-		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opensearchserverless_security_policy" {
+				continue
 			}
-			return err
+
+			_, err := conn.GetSecurityPolicy(ctx, &opensearchserverless.GetSecurityPolicyInput{
+				Name: aws.String(rs.Primary.ID),
+				Type: types.SecurityPolicyType(rs.Primary.Attributes["type"]),
+			})
+			if err != nil {
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					return nil
+				}
+				return err
+			}
+
+			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingDestroyed, tfopensearchserverless.ResNameSecurityPolicy, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		return create.Error(names.OpenSearchServerless, create.ErrActionCheckingDestroyed, tfopensearchserverless.ResNameSecurityPolicy, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckSecurityPolicyExists(name string, securitypolicy *opensearchserverless.GetSecurityPolicyOutput) resource.TestCheckFunc {
+func testAccCheckSecurityPolicyExists(ctx context.Context, name string, securitypolicy *opensearchserverless.GetSecurityPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -120,10 +121,9 @@ func testAccCheckSecurityPolicyExists(name string, securitypolicy *opensearchser
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
-		ctx := context.Background()
 		resp, err := conn.GetSecurityPolicy(ctx, &opensearchserverless.GetSecurityPolicyInput{
 			Name: aws.String(rs.Primary.ID),
-			Type: types.SecurityPolicyTypeEncryption,
+			Type: types.SecurityPolicyType(rs.Primary.Attributes["type"]),
 		})
 
 		if err != nil {
