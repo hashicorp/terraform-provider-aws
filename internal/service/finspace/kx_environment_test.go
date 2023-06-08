@@ -37,12 +37,12 @@ func TestAccFinSpaceKxEnvironment_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxEnvironmentDestroy,
+		CheckDestroy:             testAccCheckKxEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxEnvironmentExists(resourceName, &kxenvironment),
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 				),
@@ -73,12 +73,12 @@ func TestAccFinSpaceKxEnvironment_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxEnvironmentDestroy,
+		CheckDestroy:             testAccCheckKxEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxEnvironmentExists(resourceName, &kxenvironment),
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -105,19 +105,19 @@ func TestAccFinSpaceKxEnvironment_updateName(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxEnvironmentDestroy,
+		CheckDestroy:             testAccCheckKxEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxEnvironmentExists(resourceName, &kxenvironment),
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
 				Config: testAccKxEnvironmentConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxEnvironmentExists(resourceName, &kxenvironment),
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
@@ -142,19 +142,19 @@ func TestAccFinSpaceKxEnvironment_description(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxEnvironmentDestroy,
+		CheckDestroy:             testAccCheckKxEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxEnvironmentConfig_description(rName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxEnvironmentExists(resourceName, &kxenvironment),
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
 					resource.TestCheckResourceAttr(resourceName, "description", "description 1"),
 				),
 			},
 			{
 				Config: testAccKxEnvironmentConfig_description(rName, "description 2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxEnvironmentExists(resourceName, &kxenvironment),
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
 					resource.TestCheckResourceAttr(resourceName, "description", "description 2"),
 				),
 			},
@@ -179,12 +179,12 @@ func TestAccFinSpaceKxEnvironment_customDNS(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxEnvironmentDestroy,
+		CheckDestroy:             testAccCheckKxEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxEnvironmentConfig_dnsConfig(rName, "example.finspace.amazon.aws.com", "10.0.0.76"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxEnvironmentExists(resourceName, &kxenvironment),
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_dns_configuration.*", map[string]string{
 						"custom_dns_server_name": "example.finspace.amazon.aws.com",
 						"custom_dns_server_ip":   "10.0.0.76",
@@ -194,7 +194,7 @@ func TestAccFinSpaceKxEnvironment_customDNS(t *testing.T) {
 			{
 				Config: testAccKxEnvironmentConfig_dnsConfig(rName, "updated.finspace.amazon.com", "10.0.0.24"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxEnvironmentExists(resourceName, &kxenvironment),
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_dns_configuration.*", map[string]string{
 						"custom_dns_server_name": "updated.finspace.amazon.com",
 						"custom_dns_server_ip":   "10.0.0.24",
@@ -222,12 +222,12 @@ func TestAccFinSpaceKxEnvironment_transitGateway(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxEnvironmentDestroy,
+		CheckDestroy:             testAccCheckKxEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxEnvironmentConfig_tgwConfig(rName, "100.64.0.0/26"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxEnvironmentExists(resourceName, &kxenvironment),
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
 						"routable_cidr_space": "100.64.0.0/26",
 					}),
@@ -254,12 +254,12 @@ func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxEnvironmentDestroy,
+		CheckDestroy:             testAccCheckKxEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxEnvironmentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxEnvironmentExists(resourceName, &kxenvironment),
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -267,7 +267,7 @@ func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
 			{
 				Config: testAccKxEnvironmentConfig_tags2(rName, "key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxEnvironmentExists(resourceName, &kxenvironment),
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -276,7 +276,7 @@ func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
 			{
 				Config: testAccKxEnvironmentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxEnvironmentExists(resourceName, &kxenvironment),
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -285,36 +285,38 @@ func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckKxEnvironmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
-	ctx := context.Background()
+func testAccCheckKxEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
+		ctx := context.Background()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_finspace_kx_environment" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_finspace_kx_environment" {
+				continue
+			}
 
-		input := &finspace.GetKxEnvironmentInput{
-			EnvironmentId: aws.String(rs.Primary.ID),
-		}
-		out, err := conn.GetKxEnvironment(ctx, input)
-		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
+			input := &finspace.GetKxEnvironmentInput{
+				EnvironmentId: aws.String(rs.Primary.ID),
+			}
+			out, err := conn.GetKxEnvironment(ctx, input)
+			if err != nil {
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					return nil
+				}
+				return err
+			}
+			if out.Status == types.EnvironmentStatusDeleted {
 				return nil
 			}
-			return err
+			return create.Error(names.FinSpace, create.ErrActionCheckingDestroyed, tffinspace.ResNameKxEnvironment, rs.Primary.ID, errors.New("not destroyed"))
 		}
-		if out.Status == types.EnvironmentStatusDeleted {
-			return nil
-		}
-		return create.Error(names.FinSpace, create.ErrActionCheckingDestroyed, tffinspace.ResNameKxEnvironment, rs.Primary.ID, errors.New("not destroyed"))
-	}
 
-	return nil
+		return nil
+	}
 }
 
-func testAccCheckKxEnvironmentExists(name string, kxenvironment *finspace.GetKxEnvironmentOutput) resource.TestCheckFunc {
+func testAccCheckKxEnvironmentExists(ctx context.Context, name string, kxenvironment *finspace.GetKxEnvironmentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
