@@ -67,7 +67,7 @@ The following arguments are optional:
 * `description` - (Optional) Description for the KX environment.
 * `transit_gateway_configuration` - (Optional) Transit gateway and network configuration that is used to connect the KX environment to an internal network. Defined below.
 * `custom_dns_configuration` - (Optional) List of DNS server name and server IP. This is used to set up Route-53 outbound resolvers. Defined below.
-* `tags` - (Optional) List of key-value pairs to label the KX environment.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### transit_gateway_configuration
 
@@ -94,7 +94,7 @@ In addition to all arguments above, the following attributes are exported:
 * `created_timestamp` - Timestamp at which the environment is created in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
 * `last_modified_timestamp` - Last timestamp at which the environment was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
 * `status` - Status of environment creation
-* `tags_all` - Map of tags assigned to the resource.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
