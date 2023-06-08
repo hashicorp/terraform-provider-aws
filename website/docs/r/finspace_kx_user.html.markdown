@@ -60,14 +60,14 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) List of key-value pairs to label the KX user, such as first name and last name. You can add up to 50 tags to a user.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) identifier of the KX user.
-* `tags_all` - Map of tags assigned to the resource.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
