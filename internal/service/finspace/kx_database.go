@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_finspace_kx_database")
+// @SDKResource("aws_finspace_kx_database", name="Kx Database")
 // @Tags(identifierAttribute="arn")
 func ResourceKxDatabase() *schema.Resource {
 	return &schema.Resource{
