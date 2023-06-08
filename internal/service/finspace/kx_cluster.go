@@ -361,6 +361,7 @@ const (
 )
 
 func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
 	in := &finspace.CreateKxClusterInput{
@@ -420,23 +421,24 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	out, err := conn.CreateKxCluster(ctx, in)
 	if err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxCluster, d.Get("name").(string), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxCluster, d.Get("name").(string), err)...)
 	}
 
 	if out == nil {
-		return create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxCluster, d.Get("name").(string), errors.New("empty output"))
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxCluster, d.Get("name").(string), errors.New("empty output"))...)
 	}
 
 	d.SetId(aws.ToString(out.EnvironmentId) + "," + aws.ToString(out.ClusterName))
 
 	if _, err := waitKxClusterCreated(ctx, conn, d.Get("name").(string), d.Get("environment_id").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxCluster, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxCluster, d.Id(), err)...)
 	}
 
-	return resourceKxClusterRead(ctx, d, meta)
+	return append(diags, resourceKxClusterRead(ctx, d, meta)...)
 }
 
 func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
 	out, err := findKxClusterByID(ctx, conn, d.Get("name").(string), d.Get("environment_id").(string))
@@ -444,11 +446,11 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FinSpace KxCluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxCluster, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxCluster, d.Id(), err)...)
 	}
 
 	d.Set("status", out.Status)
@@ -468,69 +470,68 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("arn", *env.EnvironmentArn+"/kxCluster/"+*out.ClusterName)
 
 	if err := d.Set("capacity_configuration", flattenCapacityConfiguration(out.CapacityConfiguration)); err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
 	}
 
 	if err := d.Set("vpc_configuration", flattenVPCConfiguration(out.VpcConfiguration)); err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
 	}
 
 	if err := d.Set("code", flattenCode(out.Code)); err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
 	}
 
 	if err := d.Set("auto_scaling_configuration", flattenAutoScalingConfiguration(out.AutoScalingConfiguration)); err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
 	}
 
 	if err := d.Set("savedown_storage_configuration", flattenSavedownStorageConfiguration(
 		out.SavedownStorageConfiguration)); err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
 	}
 
 	if err := d.Set("cache_storage_configurations", flattenCacheStorageConfigurations(
 		out.CacheStorageConfigurations)); err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
 	}
 
 	if d.IsNewResource() {
 		if err := d.Set("database", flattenDatabases(out.Databases)); err != nil {
-			return create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
+			return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
 		}
 	}
 
 	if err := d.Set("command_line_arguments", flattenCommandLineArguments(out.CommandLineArguments)); err != nil {
-		return create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceKxClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
 	log.Printf("[INFO] Deleting FinSpace KxCluster %s", d.Id())
-
 	_, err := conn.DeleteKxCluster(ctx, &finspace.DeleteKxClusterInput{
 		ClusterName:   aws.String(d.Get("name").(string)),
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
 	})
-
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxCluster, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxCluster, d.Id(), err)...)
 	}
 
 	_, err = waitKxClusterDeleted(ctx, conn, d.Get("name").(string), d.Get("environment_id").(string), d.Timeout(schema.TimeoutDelete))
-
 	if err != nil && !tfresource.NotFound(err) {
-		return create.DiagError(names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxCluster, d.Id(), err)
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxCluster, d.Id(), err)...)
 	}
-	return nil
+
+	return diags
 }
 
 func waitKxClusterCreated(ctx context.Context, conn *finspace.Client, clusterName string, environmentId string, timeout time.Duration) (*finspace.GetKxClusterOutput, error) {
