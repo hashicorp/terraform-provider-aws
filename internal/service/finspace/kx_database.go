@@ -32,6 +32,10 @@ func ResourceKxDatabase() *schema.Resource {
 		UpdateWithoutTimeout: resourceKxDatabaseUpdate,
 		DeleteWithoutTimeout: resourceKxDatabaseDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
