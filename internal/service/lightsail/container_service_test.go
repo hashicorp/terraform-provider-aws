@@ -18,7 +18,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccLightsailContainerService_basic(t *testing.T) {
+// LightSail only allows 5 Container Serivces pending per account. Serializing these tests simplifies running all
+// Container tests without risk of hitting the account limit.
+func TestAccLightsailContainerService_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"basic":                   testAccLightsailContainerService_basic,
+		"disappears":              testAccLightsailContainerService_disappears,
+		"name":                    testAccLightsailContainerService_name,
+		"is_disabled":             testAccLightsailContainerService_isDisabled,
+		"power":                   testAccLightsailContainerService_power,
+		"public_domain_names":     testAccLightsailContainerService_publicDomainNames,
+		"private_registry_access": testAccLightsailContainerService_privateRegistryAccess,
+		"scale":                   testAccLightsailContainerService_scale,
+		"tags":                    testAccLightsailContainerService_tags,
+	}
+
+	acctest.RunSerialTests1Levels(t, testCases, 0)
+}
+
+func testAccLightsailContainerService_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
@@ -68,7 +88,7 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 	})
 }
 
-func TestAccLightsailContainerService_disappears(t *testing.T) {
+func testAccLightsailContainerService_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
@@ -95,7 +115,7 @@ func TestAccLightsailContainerService_disappears(t *testing.T) {
 	})
 }
 
-func TestAccLightsailContainerService_Name(t *testing.T) {
+func testAccLightsailContainerService_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -129,7 +149,7 @@ func TestAccLightsailContainerService_Name(t *testing.T) {
 	})
 }
 
-func TestAccLightsailContainerService_IsDisabled(t *testing.T) {
+func testAccLightsailContainerService_isDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
@@ -162,7 +182,7 @@ func TestAccLightsailContainerService_IsDisabled(t *testing.T) {
 	})
 }
 
-func TestAccLightsailContainerService_Power(t *testing.T) {
+func testAccLightsailContainerService_power(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
@@ -195,7 +215,7 @@ func TestAccLightsailContainerService_Power(t *testing.T) {
 	})
 }
 
-func TestAccLightsailContainerService_PublicDomainNames(t *testing.T) {
+func testAccLightsailContainerService_publicDomainNames(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -217,7 +237,7 @@ func TestAccLightsailContainerService_PublicDomainNames(t *testing.T) {
 	})
 }
 
-func TestAccLightsailContainerService_PrivateRegistryAccess(t *testing.T) {
+func testAccLightsailContainerService_privateRegistryAccess(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
@@ -246,7 +266,7 @@ func TestAccLightsailContainerService_PrivateRegistryAccess(t *testing.T) {
 	})
 }
 
-func TestAccLightsailContainerService_Scale(t *testing.T) {
+func testAccLightsailContainerService_scale(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
@@ -279,7 +299,7 @@ func TestAccLightsailContainerService_Scale(t *testing.T) {
 	})
 }
 
-func TestAccLightsailContainerService_tags(t *testing.T) {
+func testAccLightsailContainerService_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
