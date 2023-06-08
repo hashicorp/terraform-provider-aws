@@ -226,57 +226,46 @@ func testAccCheckKxDatabaseExists(name string, kxdatabase *finspace.GetKxDatabas
 	}
 }
 
-func testAccKxDatabaseConfig_basic(rName string) string {
+func testAccKxDatabaseConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = %[1]q
   deletion_window_in_days = 7
 }
 
 resource "aws_finspace_kx_environment" "test" {
   name       = %[1]q
   kms_key_id = aws_kms_key.test.arn
-}
-
-resource "aws_finspace_kx_database" "test" {
-  name           = %[1]q
-  environment_id = aws_finspace_kx_environment.test.id
 }
 `, rName)
 }
 
+func testAccKxDatabaseConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKxDatabaseConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_finspace_kx_database" "test" {
+  name           = %[1]q
+  environment_id = aws_finspace_kx_environment.test.id
+}
+`, rName))
+}
+
 func testAccKxDatabaseConfig_description(rName, description string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
-resource "aws_finspace_kx_environment" "test" {
-  name       = %[1]q
-  kms_key_id = aws_kms_key.test.arn
-}
-
+	return acctest.ConfigCompose(
+		testAccKxDatabaseConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_finspace_kx_database" "test" {
   name           = %[1]q
   environment_id = aws_finspace_kx_environment.test.id
   description    = %[2]q
 }
-`, rName, description)
+`, rName, description))
 }
 
 func testAccKxDatabaseConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
-resource "aws_finspace_kx_environment" "test" {
-  name       = %[1]q
-  kms_key_id = aws_kms_key.test.arn
-}
-
+	return acctest.ConfigCompose(
+		testAccKxDatabaseConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_finspace_kx_database" "test" {
   name           = %[1]q
   environment_id = aws_finspace_kx_environment.test.id
@@ -285,21 +274,13 @@ resource "aws_finspace_kx_database" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccKxDatabaseConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
-resource "aws_finspace_kx_environment" "test" {
-  name       = %[1]q
-  kms_key_id = aws_kms_key.test.arn
-}
-
+	return acctest.ConfigCompose(
+		testAccKxDatabaseConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_finspace_kx_database" "test" {
   name           = %[1]q
   environment_id = aws_finspace_kx_environment.test.id
@@ -309,5 +290,5 @@ resource "aws_finspace_kx_database" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
