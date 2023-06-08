@@ -27,16 +27,18 @@ const (
 func TestAccLightsailContainerServiceDeploymentVersion_serial(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]func(t *testing.T){
-		"basic":           testAccLightsailContainerServiceDeploymentVersion_container_basic,
-		"multiple":        testAccLightsailContainerServiceDeploymentVersion_container_multiple,
-		"environment":     testAccLightsailContainerServiceDeploymentVersion_container_environment,
-		"ports":           testAccLightsailContainerServiceDeploymentVersion_container_ports,
-		"public_endpoint": testAccLightsailContainerServiceDeploymentVersion_container_publicEndpoint,
-		"enable_service":  testAccLightsailContainerServiceDeploymentVersion_Container_enableService,
+	testCases := map[string]map[string]func(t *testing.T){
+		"container_deployment_version": {
+			"basic":           testAccLightsailContainerServiceDeploymentVersion_container_basic,
+			"multiple":        testAccLightsailContainerServiceDeploymentVersion_container_multiple,
+			"environment":     testAccLightsailContainerServiceDeploymentVersion_container_environment,
+			"ports":           testAccLightsailContainerServiceDeploymentVersion_container_ports,
+			"public_endpoint": testAccLightsailContainerServiceDeploymentVersion_container_publicEndpoint,
+			"enable_service":  testAccLightsailContainerServiceDeploymentVersion_Container_enableService,
+		},
 	}
 
-	acctest.RunSerialTests1Levels(t, testCases, 0)
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func TestContainerServiceDeploymentVersionParseResourceID(t *testing.T) {

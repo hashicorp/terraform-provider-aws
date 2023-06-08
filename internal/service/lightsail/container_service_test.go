@@ -23,19 +23,21 @@ import (
 func TestAccLightsailContainerService_serial(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]func(t *testing.T){
-		"basic":                   testAccLightsailContainerService_basic,
-		"disappears":              testAccLightsailContainerService_disappears,
-		"name":                    testAccLightsailContainerService_name,
-		"is_disabled":             testAccLightsailContainerService_isDisabled,
-		"power":                   testAccLightsailContainerService_power,
-		"public_domain_names":     testAccLightsailContainerService_publicDomainNames,
-		"private_registry_access": testAccLightsailContainerService_privateRegistryAccess,
-		"scale":                   testAccLightsailContainerService_scale,
-		"tags":                    testAccLightsailContainerService_tags,
+	testCases := map[string]map[string]func(t *testing.T){
+		"container_service": {
+			"basic":                   testAccLightsailContainerService_basic,
+			"disappears":              testAccLightsailContainerService_disappears,
+			"name":                    testAccLightsailContainerService_name,
+			"is_disabled":             testAccLightsailContainerService_isDisabled,
+			"power":                   testAccLightsailContainerService_power,
+			"public_domain_names":     testAccLightsailContainerService_publicDomainNames,
+			"private_registry_access": testAccLightsailContainerService_privateRegistryAccess,
+			"scale":                   testAccLightsailContainerService_scale,
+			"tags":                    testAccLightsailContainerService_tags,
+		},
 	}
 
-	acctest.RunSerialTests1Levels(t, testCases, 0)
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccLightsailContainerService_basic(t *testing.T) {
