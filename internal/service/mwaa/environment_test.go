@@ -2,9 +2,11 @@ package mwaa_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mwaa"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -350,6 +352,42 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 	})
 }
 
+func TestAccMWAAEnvironment_updateAirflowVersionMinor(t *testing.T) {
+	ctx := acctest.Context(t)
+	var environment1, environment2 mwaa.Environment
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mwaa_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_airflowVersion(rName, "2.4.3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment1),
+					resource.TestCheckResourceAttr(resourceName, "airflow_version", "2.4.3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEnvironmentConfig_airflowVersion(rName, "2.5.1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment2),
+					testAccCheckEnvironmentNotRecreated(&environment2, &environment1),
+					resource.TestCheckResourceAttr(resourceName, "airflow_version", "2.5.1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckEnvironmentExists(ctx context.Context, n string, v *mwaa.Environment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -395,6 +433,16 @@ func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			return fmt.Errorf("MWAA Environment %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckEnvironmentNotRecreated(i, j *mwaa.Environment) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !i.CreatedAt.Equal(aws.TimeValue(j.CreatedAt)) {
+			return errors.New("MWAA Environment was recreated")
 		}
 
 		return nil
@@ -832,4 +880,23 @@ resource "aws_s3_object" "plugins" {
   content = %q
 }
 `, rName, content))
+}
+
+func testAccEnvironmentConfig_airflowVersion(rName, airflowVersion string) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_mwaa_environment" "test" {
+  dag_s3_path        = aws_s3_object.dags.key
+  execution_role_arn = aws_iam_role.test.arn
+  name               = %[1]q
+
+  network_configuration {
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = aws_subnet.private[*].id
+  }
+
+  source_bucket_arn = aws_s3_bucket.test.arn
+
+  airflow_version = %[2]q
+}
+`, rName, airflowVersion))
 }
