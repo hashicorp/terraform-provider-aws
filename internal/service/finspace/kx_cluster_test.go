@@ -1021,15 +1021,15 @@ data "aws_iam_policy_document" "key_policy" {
     }
 
     condition {
-      test      = "ArnLike"
-      variable  = "aws:SourceArn"
-      values    = ["${aws_finspace_kx_environment.test.arn}/*"]
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test      = "StringEquals"
-      variable  = "aws:SourceAccount"
-      values    = [data.aws_caller_identity.current.account_id]
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
     }
   }
 
@@ -1530,15 +1530,15 @@ data "aws_iam_policy_document" "key_policy" {
     }
 
     condition {
-      test      = "ArnLike"
-      variable  = "aws:SourceArn"
-      values    = ["${aws_finspace_kx_environment.test.arn}/*"]
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
     }
 
     condition {
-      test      = "StringEquals"
-      variable  = "aws:SourceAccount"
-      values    = [data.aws_caller_identity.current.account_id]
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
     }
   }
 
@@ -1765,7 +1765,7 @@ resource "aws_iam_role" "test" {
   name                = %[1]q
   managed_policy_arns = [aws_iam_policy.test.arn]
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
         Action = "sts:AssumeRole"
