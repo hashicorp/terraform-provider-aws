@@ -67,16 +67,19 @@ func ResourceNATGateway() *schema.Resource {
 			"secondary_allocation_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"secondary_private_ip_addresses": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"secondary_private_ip_address_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				ForceNew: true,
 			},
 			"subnet_id": {
 				Type:     schema.TypeString,
