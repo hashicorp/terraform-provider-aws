@@ -1,0 +1,68 @@
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: '(Required) The ID of the Project to add the item to.'
+        required: true
+        type: string
+      field:
+        description: '(Optional) The ID of the custom field to update.'
+        required: false
+        type: string
+      value:
+        description: '(Optional) The ID of the value of the custom field to update. Required if field is supplied.'
+        required: false
+        type: string
+    secrets:
+      PROJECT_TOKEN:
+        description: '(Required) A GitHub token with the repo and project scopes.'
+        required: true
+
+env:
+  ITEM_NODE_ID: ${{ github.event.issue.node_id || github.event.pull_request.node_id }}
+  GITHUB_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+
+jobs:
+  add-to-project:
+    name: 'Add Item to Project and Optionally Set Field Value'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Add Item to Project'
+        run: |
+          project_item_id="$(gh api graphql -f query='
+            mutation (
+              $project: ID!
+              $node: ID!
+            ){
+              addProjectV2ItemById(input: {projectId: $project, contentId: $node}) {
+                item {
+                  id
+                }
+              }
+            }' -f project=$INPUT_PROJECT -f node=$ITEM_NODE_ID --jq '.data.addProjectV2ItemById.item.id')"
+
+          echo 'PROJECT_ITEM_ID='$project_item_id >> $GITHUB_ENV
+
+      - name: 'Set Field Value'
+        if: inputs.field != ''
+        run: |
+          gh api graphql -f query='
+            mutation(
+              $project: ID!
+              $project_item: ID!
+              $field: ID!
+              $field_value: String!
+            ){
+              updateProjectV2ItemFieldValue(input: {
+                  projectId: $project
+                  itemId: $project_item
+                  fieldId: $field
+                  value: {
+                    singleSelectOptionId: $field_value
+                  }
+              }){
+                projectV2Item {
+                  id
+                }
+              }
+            }' -f project=$INPUT_PROJECT -f project_item=$PROJECT_ITEM_ID -f field=$INPUT_FIELD -f field_value=$INPUT_VALUE --silent
