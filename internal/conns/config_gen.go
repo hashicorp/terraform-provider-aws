@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
@@ -205,7 +206,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/lexruntimeservice"
 	"github.com/aws/aws-sdk-go/service/lexruntimev2"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
-	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/locationservice"
 	"github.com/aws/aws-sdk-go/service/lookoutequipment"
 	"github.com/aws/aws-sdk-go/service/lookoutforvision"
@@ -483,7 +483,6 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.lexruntimeConn = lexruntimeservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.LexRuntime])}))
 	client.lexruntimev2Conn = lexruntimev2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.LexRuntimeV2])}))
 	client.licensemanagerConn = licensemanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.LicenseManager])}))
-	client.lightsailConn = lightsail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Lightsail])}))
 	client.locationConn = locationservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Location])}))
 	client.logsConn = cloudwatchlogs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Logs])}))
 	client.lookoutequipmentConn = lookoutequipment.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.LookoutEquipment])}))
@@ -683,6 +682,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 	client.kendraClient = kendra.NewFromConfig(cfg, func(o *kendra.Options) {
 		if endpoint := c.Endpoints[names.Kendra]; endpoint != "" {
 			o.EndpointResolver = kendra.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.lightsailClient = lightsail.NewFromConfig(cfg, func(o *lightsail.Options) {
+		if endpoint := c.Endpoints[names.Lightsail]; endpoint != "" {
+			o.EndpointResolver = lightsail.EndpointResolverFromURL(endpoint)
 		}
 	})
 	client.medialiveClient = medialive.NewFromConfig(cfg, func(o *medialive.Options) {
