@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -274,7 +273,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	// This is to support importing a resource that is not in a ready state.
 	database, err := waitDatabaseModified(ctx, conn, aws.String(d.Id()))
 
-	if !d.IsNewResource() && errs.IsA[*types.NotFoundException](err) {
+	if !d.IsNewResource() && IsANotFoundError(err) {
 		log.Printf("[WARN] Lightsail Relational Database (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
