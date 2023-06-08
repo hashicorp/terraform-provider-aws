@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	awsv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go/aws"
@@ -63,6 +64,7 @@ type Config struct {
 	MaxRetries                     int
 	Profile                        string
 	Region                         string
+	RetryMode                      awsv2.RetryMode
 	S3UsePathStyle                 bool
 	SecretKey                      string
 	SharedConfigFiles              []string
@@ -94,6 +96,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		MaxRetries:                    c.MaxRetries,
 		Profile:                       c.Profile,
 		Region:                        c.Region,
+		RetryMode:                     c.RetryMode,
 		SecretKey:                     c.SecretKey,
 		SkipCredsValidation:           c.SkipCredsValidation,
 		SkipRequestingAccountId:       c.SkipRequestingAccountId,
