@@ -21,12 +21,15 @@ jobs:
     name: 'Modify Label(s)'
     runs-on: ubuntu-latest
     env:
-      ITEM_TYPE: 'pr'
+      ITEM_TYPE: 'issue'
     steps:
       - name: 'Determine if the Item is an Issue or Pull Request'
-        if: github.event_name == 'issues'
+        # The issue_comment trigger happens for issues and pull requests.
+        # The best way to determine if an issue_comment trigger is related to an issue or pull request is to check
+        # whether or not github.event.issue.pull_request is empty.
+        if: github.event.pull_request || github.event.issue.pull_request
         run: |
-          echo 'ITEM_TYPE=issue' >> $GITHUB_ENV
+          echo 'ITEM_TYPE=pr' >> $GITHUB_ENV
 
       - name: 'Add Label(s) to Issue or Pull Request'
         if: inputs.add != ''
