@@ -155,7 +155,7 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 	var kxcluster finspace.GetKxClusterOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
-	codePath := "code.zip"
+	codePath := "test-fixtures/code.zip"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -306,7 +306,7 @@ func TestAccFinSpaceKxCluster_initializationScript(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 	// Need to set these to the bucket/key you want to use
-	codePath := "code.zip"
+	codePath := "test-fixtures/code.zip"
 	initScriptPath := "code/helloworld.q"
 
 	resource.ParallelTest(t, resource.TestCase{
