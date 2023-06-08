@@ -24,7 +24,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
@@ -455,20 +454,6 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 		if r.Operation.Name == "CreateStream" || r.Operation.Name == "DeleteStream" {
 			if tfawserr.ErrMessageContains(r.Error, kinesis.ErrCodeLimitExceededException, "Rate exceeded for stream") {
-				r.Retryable = aws.Bool(true)
-			}
-		}
-	})
-
-	client.lightsailConn.Handlers.Retry.PushBack(func(r *request.Request) {
-		switch r.Operation.Name {
-		case "CreateContainerService", "UpdateContainerService", "CreateContainerServiceDeployment":
-			if tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please try again in a few minutes") {
-				r.Retryable = aws.Bool(true)
-			}
-		case "DeleteContainerService":
-			if tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please try again in a few minutes") ||
-				tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please wait for it to complete before trying again") {
 				r.Retryable = aws.Bool(true)
 			}
 		}
