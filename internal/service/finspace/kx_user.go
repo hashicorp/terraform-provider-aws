@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_finspace_kx_user")
+// @SDKResource("aws_finspace_kx_user", name="Kx User")
 // @Tags(identifierAttribute="arn")
 func ResourceKxUser() *schema.Resource {
 	return &schema.Resource{
