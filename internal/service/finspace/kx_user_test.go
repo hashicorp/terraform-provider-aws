@@ -37,12 +37,12 @@ func TestAccFinSpaceKxUser_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxUserDestroy,
+		CheckDestroy:             testAccCheckKxUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxUserConfig_basic(rName, userName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxUserExists(resourceName, &kxuser),
+					testAccCheckKxUserExists(ctx, resourceName, &kxuser),
 					resource.TestCheckResourceAttr(resourceName, "name", userName),
 				),
 			},
@@ -73,12 +73,12 @@ func TestAccFinSpaceKxUser_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxUserDestroy,
+		CheckDestroy:             testAccCheckKxUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxUserConfig_basic(rName, userName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxUserExists(resourceName, &kxuser),
+					testAccCheckKxUserExists(ctx, resourceName, &kxuser),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -105,18 +105,18 @@ func TestAccFinSpaceKxUser_updateRole(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxUserDestroy,
+		CheckDestroy:             testAccCheckKxUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxUserConfig_basic(rName, userName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxUserExists(resourceName, &kxuser),
+					testAccCheckKxUserExists(ctx, resourceName, &kxuser),
 				),
 			},
 			{
 				Config: testAccKxUserConfig_updateRole(rName, "updated"+rName, userName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxUserExists(resourceName, &kxuser),
+					testAccCheckKxUserExists(ctx, resourceName, &kxuser),
 				),
 			},
 		},
@@ -141,12 +141,12 @@ func TestAccFinSpaceKxUser_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxUserDestroy,
+		CheckDestroy:             testAccCheckKxUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxUserConfig_tags1(rName, userName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxUserExists(resourceName, &kxuser),
+					testAccCheckKxUserExists(ctx, resourceName, &kxuser),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -154,7 +154,7 @@ func TestAccFinSpaceKxUser_tags(t *testing.T) {
 			{
 				Config: testAccKxUserConfig_tags2(rName, userName, "key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxUserExists(resourceName, &kxuser),
+					testAccCheckKxUserExists(ctx, resourceName, &kxuser),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -163,7 +163,7 @@ func TestAccFinSpaceKxUser_tags(t *testing.T) {
 			{
 				Config: testAccKxUserConfig_tags1(rName, userName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxUserExists(resourceName, &kxuser),
+					testAccCheckKxUserExists(ctx, resourceName, &kxuser),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -172,35 +172,36 @@ func TestAccFinSpaceKxUser_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckKxUserDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
-	ctx := context.Background()
+func testAccCheckKxUserDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_finspace_kx_user" {
-			continue
-		}
-
-		input := &finspace.GetKxUserInput{
-			UserName:      aws.String(rs.Primary.Attributes["name"]),
-			EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
-		}
-		_, err := conn.GetKxUser(ctx, input)
-		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_finspace_kx_user" {
+				continue
 			}
-			return err
+
+			input := &finspace.GetKxUserInput{
+				UserName:      aws.String(rs.Primary.Attributes["name"]),
+				EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
+			}
+			_, err := conn.GetKxUser(ctx, input)
+			if err != nil {
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					return nil
+				}
+				return err
+			}
+
+			return create.Error(names.FinSpace, create.ErrActionCheckingDestroyed, tffinspace.ResNameKxUser, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		return create.Error(names.FinSpace, create.ErrActionCheckingDestroyed, tffinspace.ResNameKxUser, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckKxUserExists(name string, kxuser *finspace.GetKxUserOutput) resource.TestCheckFunc {
+func testAccCheckKxUserExists(ctx context.Context, name string, kxuser *finspace.GetKxUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -212,7 +213,6 @@ func testAccCheckKxUserExists(name string, kxuser *finspace.GetKxUserOutput) res
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
-		ctx := context.Background()
 		resp, err := conn.GetKxUser(ctx, &finspace.GetKxUserInput{
 			UserName:      aws.String(rs.Primary.Attributes["name"]),
 			EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
