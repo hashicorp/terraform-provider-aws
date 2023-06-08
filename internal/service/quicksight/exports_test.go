@@ -7,4 +7,6 @@ var (
 	ResourceIngestion           = newResourceIngestion
 	ResourceNamespace           = newResourceNamespace
 	ResourceRefreshSchedule     = newResourceRefreshSchedule
+	ResourceTemplateAlias       = newResourceTemplateAlias
+	ResourceVPCConnection       = newResourceVPCConnection
 )

@@ -8,9 +8,9 @@ import (
 	"regexp"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -526,24 +526,24 @@ resource "aws_ssmincidents_replication_set" "test" {
 `, tag1Key, tag1Val, tag2Key, tag2Val, acctest.Region())
 }
 
-func testAccReplicationSetConfigBaseKeyDefaultRegion() string {
+func testAccReplicationSetConfig_baseKeyDefaultRegion() string {
 	return `
 resource "aws_kms_key" "default" {}
 `
 }
 
-func testAccReplicationSetConfigBaseKeyAlternateRegion() string {
-	return acctest.ConfigMultipleRegionProvider(2) + `
+func testAccReplicationSetConfig_baseKeyAlternateRegion() string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), `
 resource "aws_kms_key" "alternate" {
   provider = awsalternate
 }
-`
+`)
 }
 
 func testAccReplicationSetConfig_oneRegionWithCMK() string {
 	return acctest.ConfigCompose(
-		testAccReplicationSetConfigBaseKeyDefaultRegion(),
-		testAccReplicationSetConfigBaseKeyAlternateRegion(),
+		testAccReplicationSetConfig_baseKeyDefaultRegion(),
+		testAccReplicationSetConfig_baseKeyAlternateRegion(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
   region {
@@ -556,8 +556,8 @@ resource "aws_ssmincidents_replication_set" "test" {
 
 func testAccReplicationSetConfig_twoRegionWithCMK() string {
 	return acctest.ConfigCompose(
-		testAccReplicationSetConfigBaseKeyDefaultRegion(),
-		testAccReplicationSetConfigBaseKeyAlternateRegion(),
+		testAccReplicationSetConfig_baseKeyDefaultRegion(),
+		testAccReplicationSetConfig_baseKeyAlternateRegion(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
   region {

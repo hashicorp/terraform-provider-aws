@@ -307,11 +307,19 @@ resource "aws_wafv2_web_acl" "test" {
       rule_group_reference_statement {
         arn = aws_wafv2_rule_group.example.arn
 
-        excluded_rule {
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+
           name = "rule-to-exclude-b"
         }
 
-        excluded_rule {
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+
           name = "rule-to-exclude-a"
         }
       }
@@ -544,7 +552,6 @@ You can't nest a `managed_rule_group_statement`, for example for use inside a `n
 
 The `managed_rule_group_statement` block supports the following arguments:
 
-* `excluded_rule` - (Optional, **Deprecated**) The `rules` whose actions are set to `COUNT` by the web ACL, regardless of the action that is set on the rule. See [`excluded_rule`](#excluded_rule) below for details. Use `rule_action_override` instead. (See the [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_ManagedRuleGroupStatement.html#WAF-Type-ManagedRuleGroupStatement-ExcludedRules))
 * `name` - (Required) Name of the managed rule group.
 * `rule_action_override` - (Optional) Action settings to use in the place of the rule actions that are configured inside the rule group. You specify one override for each rule whose action you want to change. See [`rule_action_override`](#rule_action_override) below for details.
 * `managed_rule_group_configs`- (Optional) Additional information that's used by a managed rule group. Only one rule attribute is allowed in each config. See [Managed Rule Group Configs](#managed_rule_group_configs) for more details
@@ -614,7 +621,7 @@ You can't nest a `rule_group_reference_statement`, for example for use inside a 
 The `rule_group_reference_statement` block supports the following arguments:
 
 * `arn` - (Required) The Amazon Resource Name (ARN) of the `aws_wafv2_rule_group` resource.
-* `excluded_rule` - (Optional) The `rules` whose actions are set to `COUNT` by the web ACL, regardless of the action that is set on the rule. See [`excluded_rule`](#excluded_rule) below for details.
+* `rule_action_override` - (Optional) Action settings to use in the place of the rule actions that are configured inside the rule group. You specify one override for each rule whose action you want to change. See [`rule_action_override`](#rule_action_override) below for details.
 
 #### `size_constraint_statement`
 
@@ -651,12 +658,6 @@ The `xss_match_statement` block supports the following arguments:
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
   At least one required.
   See [`text_transformation`](#text_transformation) below for details.
-
-#### `excluded_rule`
-
-The `excluded_rule` block supports the following arguments:
-
-* `name` - (Required) Name of the rule to exclude. If the rule group is managed by AWS, see the [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html) for a list of names in the appropriate rule group in use.
 
 #### `rule_action_override`
 

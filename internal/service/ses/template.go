@@ -153,10 +153,9 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		Template: &template,
 	}
 
-	log.Printf("[DEBUG] Update SES template: %#v", input)
 	_, err := conn.UpdateTemplateWithContext(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Updating SES template '%s' failed: %s", templateName, err.Error())
+		return sdkdiag.AppendErrorf(diags, "updating SES template (%s): %s", templateName, err)
 	}
 
 	return append(diags, resourceTemplateRead(ctx, d, meta)...)

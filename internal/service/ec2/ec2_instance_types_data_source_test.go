@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -23,7 +23,7 @@ func TestAccEC2InstanceTypesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccInstanceTypesDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", 0),
 				),
 			},
 		},
@@ -43,7 +43,7 @@ func TestAccEC2InstanceTypesDataSource_filter(t *testing.T) {
 			{
 				Config: testAccInstanceTypesDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", 0),
 				),
 			},
 		},

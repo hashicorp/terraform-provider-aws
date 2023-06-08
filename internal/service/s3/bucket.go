@@ -1377,7 +1377,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 			// Use a S3 service client that can handle multiple slashes in URIs.
 			// While aws_s3_object resources cannot create these object
 			// keys, other AWS services and applications using the S3 Bucket can.
-			conn = meta.(*conns.AWSClient).S3ConnURICleaningDisabled()
+			conn := meta.(*conns.AWSClient).S3ConnURICleaningDisabled(ctx)
 
 			// bucket may have things delete them
 			log.Printf("[DEBUG] S3 Bucket attempting to forceDestroy %s", err)
@@ -1440,7 +1440,10 @@ func BucketRegionalDomainName(bucket string, region string) (string, error) {
 	if region == "" {
 		return fmt.Sprintf("%s.s3.amazonaws.com", bucket), nil //lintignore:AWSR001
 	}
-	endpoint, err := endpoints.DefaultResolver().EndpointFor(s3.EndpointsID, region)
+	endpoint, err := endpoints.DefaultResolver().EndpointFor(s3.EndpointsID, region, func(o *endpoints.Options) {
+		// By default, EndpointFor uses the legacy endpoint for S3 in the us-east-1 region
+		o.S3UsEast1RegionalEndpoint = endpoints.RegionalS3UsEast1Endpoint
+	})
 	if err != nil {
 		return "", err
 	}

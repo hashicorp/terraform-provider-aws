@@ -79,11 +79,6 @@ func DataSourceHoursOfOperation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hours_of_operation_arn": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "use 'arn' attribute instead",
-			},
 			"hours_of_operation_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -126,11 +121,11 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 		hoursOfOperationSummary, err := dataSourceGetHoursOfOperationSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Hours of Operation Summary by name (%s): %w", name, err))
+			return diag.Errorf("finding Connect Hours of Operation Summary by name (%s): %s", name, err)
 		}
 
 		if hoursOfOperationSummary == nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Hours of Operation Summary by name (%s): not found", name))
+			return diag.Errorf("finding Connect Hours of Operation Summary by name (%s): not found", name)
 		}
 
 		input.HoursOfOperationId = hoursOfOperationSummary.Id
@@ -139,17 +134,16 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 	resp, err := conn.DescribeHoursOfOperationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Hours of Operation: %w", err))
+		return diag.Errorf("getting Connect Hours of Operation: %s", err)
 	}
 
 	if resp == nil || resp.HoursOfOperation == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Hours of Operation: empty response"))
+		return diag.Errorf("getting Connect Hours of Operation: empty response")
 	}
 
 	hoursOfOperation := resp.HoursOfOperation
 
 	d.Set("arn", hoursOfOperation.HoursOfOperationArn)
-	d.Set("hours_of_operation_arn", hoursOfOperation.HoursOfOperationArn) // Deprecated
 	d.Set("hours_of_operation_id", hoursOfOperation.HoursOfOperationId)
 	d.Set("instance_id", instanceID)
 	d.Set("description", hoursOfOperation.Description)
@@ -157,11 +151,11 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("time_zone", hoursOfOperation.TimeZone)
 
 	if err := d.Set("config", flattenConfigs(hoursOfOperation.Config)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting config: %s", err))
+		return diag.Errorf("setting config: %s", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(ctx, hoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(hoursOfOperation.HoursOfOperationId)))

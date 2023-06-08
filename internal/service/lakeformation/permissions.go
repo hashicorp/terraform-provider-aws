@@ -448,7 +448,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 				return retry.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(fmt.Errorf("error creating Lake Formation Permissions: %w", err))
+			return retry.NonRetryableError(fmt.Errorf("creating Lake Formation Permissions: %w", err))
 		}
 		return nil
 	})

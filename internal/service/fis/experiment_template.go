@@ -810,6 +810,7 @@ func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
 		"Roles",
 		"SpotInstances",
 		"Subnets",
+		"Volumes",
 	}
 
 	return validation.All(

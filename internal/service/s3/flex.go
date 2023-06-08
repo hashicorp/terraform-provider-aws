@@ -203,7 +203,7 @@ func ExpandLifecycleRuleExpiration(l []interface{}) (*s3.LifecycleExpiration, er
 	if v, ok := m["date"].(string); ok && v != "" {
 		t, err := time.Parse(time.RFC3339, v)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing S3 Bucket Lifecycle Rule Expiration date: %w", err)
+			return nil, fmt.Errorf("parsing S3 Bucket Lifecycle Rule Expiration date: %w", err)
 		}
 		result.Date = aws.Time(t)
 	}
@@ -378,7 +378,7 @@ func ExpandLifecycleRuleTransitions(l []interface{}) ([]*s3.Transition, error) {
 		if v, ok := tfMap["date"].(string); ok && v != "" {
 			t, err := time.Parse(time.RFC3339, v)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing S3 Bucket Lifecycle Rule Transition date: %w", err)
+				return nil, fmt.Errorf("parsing S3 Bucket Lifecycle Rule Transition date: %w", err)
 			}
 			transition.Date = aws.Time(t)
 		}

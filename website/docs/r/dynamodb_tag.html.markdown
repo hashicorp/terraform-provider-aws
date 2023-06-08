@@ -27,7 +27,7 @@ provider "aws" {
 }
 
 data "aws_region" "replica" {
-  provider = "aws.replica"
+  provider = aws.replica
 }
 
 data "aws_region" "current" {}
@@ -41,7 +41,7 @@ resource "aws_dynamodb_table" "example" {
 }
 
 resource "aws_dynamodb_tag" "test" {
-  provider = "aws.replica"
+  provider = aws.replica
 
   resource_arn = replace(aws_dynamodb_table.test.arn, data.aws_region.current.name, data.aws_region.replica.name)
   key          = "testkey"

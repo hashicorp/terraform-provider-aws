@@ -37,7 +37,7 @@ resource "aws_vpclattice_target_group" "example" {
     port             = 443
     protocol         = "HTTPS"
     vpc_identifier   = aws_vpc.example.id
-    protocol_version = "HPPT1"
+    protocol_version = "HTTP1"
 
     health_check {
       enabled                       = true

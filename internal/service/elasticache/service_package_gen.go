@@ -71,10 +71,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSecurityGroup,
-			TypeName: "aws_elasticache_security_group",
-		},
-		{
 			Factory:  ResourceSubnetGroup,
 			TypeName: "aws_elasticache_subnet_group",
 			Name:     "Subnet Group",

@@ -377,7 +377,7 @@ func expandEndpointConfiguration(tfMap map[string]interface{}) *globalaccelerato
 		apiObject.EndpointId = aws.String(v)
 	}
 
-	if v, ok := tfMap["weight"].(int); ok && v != 0 {
+	if v, ok := tfMap["weight"].(int); ok {
 		apiObject.Weight = aws.Int64(int64(v))
 	}
 

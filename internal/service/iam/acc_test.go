@@ -14,7 +14,7 @@ import (
 
 // RandSSHKeyPair generates a public and private SSH key pair. The public key is
 // returned in OpenSSH format, and the private key is PEM encoded.
-// Copied from github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest,
+// Copied from github.com/hashicorp/terraform-plugin-testing/helper/acctest,
 // with the addition of the key size.
 func RandSSHKeyPairSize(keySize int, comment string) (string, string, error) {
 	privateKey, privateKeyPEM, err := genPrivateKey(keySize)

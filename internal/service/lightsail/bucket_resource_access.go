@@ -70,7 +70,7 @@ func resourceBucketResourceAccessCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	idParts := []string{d.Get("bucket_name").(string), d.Get("resource_name").(string)}
-	id, err := flex.FlattenResourceId(idParts, BucketResourceAccessIdPartsCount)
+	id, err := flex.FlattenResourceId(idParts, BucketResourceAccessIdPartsCount, false)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, create.ErrActionFlatteningResourceId, ResBucketResourceAccess, d.Get("bucket_name").(string), err)
@@ -96,7 +96,7 @@ func resourceBucketResourceAccessRead(ctx context.Context, d *schema.ResourceDat
 		return create.DiagError(names.Lightsail, create.ErrActionReading, ResBucketResourceAccess, d.Id(), err)
 	}
 
-	parts, err := flex.ExpandResourceId(d.Id(), BucketResourceAccessIdPartsCount)
+	parts, err := flex.ExpandResourceId(d.Id(), BucketResourceAccessIdPartsCount, false)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceId, ResBucketResourceAccess, d.Id(), err)
@@ -110,7 +110,7 @@ func resourceBucketResourceAccessRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceBucketResourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn()
-	parts, err := flex.ExpandResourceId(d.Id(), BucketResourceAccessIdPartsCount)
+	parts, err := flex.ExpandResourceId(d.Id(), BucketResourceAccessIdPartsCount, false)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceId, ResBucketResourceAccess, d.Id(), err)
