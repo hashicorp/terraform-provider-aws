@@ -438,8 +438,8 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	idParts := []string{
-		aws.ToString(out.EnvironmentId),
-		aws.ToString(out.ClusterName),
+		aws.ToString(in.EnvironmentId),
+		aws.ToString(in.ClusterName),
 	}
 	id, err := flex.FlattenResourceId(idParts, kxClusterIDPartCount, false)
 	if err != nil {
