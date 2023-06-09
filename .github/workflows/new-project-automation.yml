@@ -6,12 +6,6 @@ on:
   pull_request_target:
     types: ["labeled", "opened"]
 
-# Helper env vars to save on some characters
-env:
-  PROJECT: ${{ vars.team_project }}
-  STATUS: ${{ vars.team_project_field_status }}
-  TODO: ${{ vars.team_project_status_to_do }}
-
 jobs:
   community_check:
     uses: ./.github/workflow/community-check.yml
@@ -24,8 +18,8 @@ jobs:
     uses: ./.github/workflow/reusable-projects-automation.yml
     secrets: inherit
     with:
-      project: ${{ env.PROJECT }}
-      field: ${{ env.STATUS }}
+      project: ${{ vars.team_project }}
+      field: ${{ vars.team_project_field_status }}
       value: ${{ vars.team_project_status_maintainer_pr }}
 
   partner_prs:
@@ -34,9 +28,9 @@ jobs:
     uses: ./.github/workflow/reusable-projects-automation.yml
     secrets: inherit
     with:
-      project: ${{ env.PROJECT }}
-      field: ${{ env.STATUS }}
-      value: ${{ env.TODO }}
+      project: ${{ vars.team_project }}
+      field: ${{ vars.team_project_field_status }}
+      value: ${{ vars.team_project_status_to_do }}
 
   roadmap:
     name: 'Add Roadmap Items'
@@ -44,9 +38,9 @@ jobs:
     uses: ./.github/workflow/reusable-projects-automation.yml
     secrets: inherit
     with:
-      project: ${{ env.PROJECT }}
-      field: ${{ env.STATUS }}
-      value: ${{ env.TODO }}
+      project: ${{ vars.team_project }}
+      field: ${{ vars.team_project_field_status }}
+      value: ${{ vars.team_project_status_to_do }}
 
   regressions:
     name: 'Add Regressions'
@@ -54,6 +48,6 @@ jobs:
     uses: ./.github/workflow/reusable-projects-automation.yml
     secrets: inherit
     with:
-      project: ${{ env.PROJECT }}
-      field: ${{ env.STATUS }}
-      value: ${{ env.TODO }}
+      project: ${{ vars.team_project }}
+      field: ${{ vars.team_project_field_status }}
+      value: ${{ vars.team_project_status_to_do }}
