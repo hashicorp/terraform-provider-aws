@@ -1597,7 +1597,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs18.x"
 }
 `, rName, streamStatus, streamViewType)
 }
