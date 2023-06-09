@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -147,7 +148,7 @@ func ResourceDistribution() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Description:  "The headers that you want your distribution to forward to your origin and base caching on.",
-										ValidateFunc: validation.StringInSlice([]string{"default", string(types.ForwardValuesAllowList), string(types.ForwardValuesAll)}, false),
+										ValidateFunc: validation.StringInSlice(enum.Slice("default", types.ForwardValuesAllowList, types.ForwardValuesAll), false),
 									},
 								},
 							},
@@ -222,7 +223,7 @@ func ResourceDistribution() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Description:  "The IP address type of the distribution.",
-				ValidateFunc: validation.StringInSlice(flattenIpAddressTypeValues(types.IpAddressType("").Values()), false),
+				ValidateFunc: validation.StringInSlice(flattenIPAddressTypeValues(types.IpAddressType("").Values()), false),
 				Default:      "dualstack",
 			},
 			"location": {
@@ -991,7 +992,7 @@ func flattenHeaderEnumValues(t []types.HeaderEnum) []string {
 	return out
 }
 
-func flattenIpAddressTypeValues(t []types.IpAddressType) []string {
+func flattenIPAddressTypeValues(t []types.IpAddressType) []string {
 	var out []string
 
 	for _, v := range t {
