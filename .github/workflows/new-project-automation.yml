@@ -14,7 +14,7 @@ jobs:
   maintainer_prs:
     name: 'Add Maintainer PRs'
     needs: community_check
-    if: github.event_type == 'pull_request_target' && !github.event.pull_request.draft && needs.community_check.outputs.maintainer == 'true'
+    if: github.event_name == 'pull_request_target' && !github.event.pull_request.draft && needs.community_check.outputs.maintainer == 'true'
     uses: ./.github/workflow/reusable-projects-automation.yml
     secrets: inherit
     with:
@@ -24,7 +24,7 @@ jobs:
 
   partner_prs:
     name: 'Add Partner PRs'
-    if: github.event_type == 'pull_request_target' && github.event.label.name == 'partner'
+    if: github.event_name == 'pull_request_target' && github.event.label.name == 'partner'
     uses: ./.github/workflow/reusable-projects-automation.yml
     secrets: inherit
     with:
