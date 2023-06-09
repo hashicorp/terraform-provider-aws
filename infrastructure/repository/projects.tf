@@ -1,5 +1,5 @@
 // This configuration file sets up Actions variables for use when automating GitHub Projects.
-// Currently, this consists only of the main team project proof of concept, but may be added at a later date.
+// Currently, this consists only of the main team project proof of concept, but more may be added at a later date.
 
 // Main Team Project
 // -----------------
