@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/stretchr/testify/assert"
 )
 
 func Test_expandSourceParameters(t *testing.T) {
@@ -544,7 +544,9 @@ func Test_expandSourceParameters(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := expandSourceParameters([]interface{}{tt.config})
 
-			assert.Equal(t, tt.expected, got)
+			if diff := cmp.Diff(got, tt.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
 		})
 	}
 }
@@ -1023,7 +1025,9 @@ func Test_flattenSourceParameters(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := flattenSourceParameters(tt.config)
 
-			assert.Equal(t, tt.expected, got)
+			if diff := cmp.Diff(got, tt.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
 		})
 	}
 }
@@ -1494,7 +1498,9 @@ func Test_expandSourceUpdateParameters(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := expandSourceUpdateParameters([]interface{}{tt.config})
 
-			assert.Equal(t, tt.expected, got)
+			if diff := cmp.Diff(got, tt.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
 		})
 	}
 }

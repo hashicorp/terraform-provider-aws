@@ -5,8 +5,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/stretchr/testify/assert"
 )
 
 func Test_expandTargetParameters(t *testing.T) {
@@ -542,7 +542,9 @@ func Test_expandTargetParameters(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := expandTargetParameters([]interface{}{tt.config})
 
-			assert.Equal(t, tt.expected, got)
+			if diff := cmp.Diff(got, tt.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
 		})
 	}
 }
@@ -1104,7 +1106,9 @@ func Test_flattenTargetParameters(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := flattenTargetParameters(tt.config)
 
-			assert.Equal(t, tt.expected, got)
+			if diff := cmp.Diff(got, tt.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
 		})
 	}
 }

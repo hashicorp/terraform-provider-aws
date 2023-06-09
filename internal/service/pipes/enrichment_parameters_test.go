@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/stretchr/testify/assert"
+	"github.com/google/go-cmp/cmp"
 )
 
 func Test_expandEnrichmentParameters(t *testing.T) {
@@ -68,7 +68,9 @@ func Test_expandEnrichmentParameters(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := expandEnrichmentParameters([]interface{}{tt.config})
 
-			assert.Equal(t, tt.expected, got)
+			if diff := cmp.Diff(got, tt.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
 		})
 	}
 }
@@ -137,7 +139,9 @@ func Test_flattenEnrichmentParameters(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := flattenEnrichmentParameters(tt.config)
 
-			assert.Equal(t, tt.expected, got)
+			if diff := cmp.Diff(got, tt.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
 		})
 	}
 }

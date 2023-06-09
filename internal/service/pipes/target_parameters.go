@@ -1693,7 +1693,7 @@ func flattenTargetBatchContainerOverrides(parameters *types.BatchContainerOverri
 	config := make(map[string]interface{})
 
 	if parameters.Command != nil {
-		config["command"] = flex.FlattenStringValueSet(parameters.Command)
+		config["command"] = flex.FlattenStringValueList(parameters.Command)
 	}
 	if parameters.InstanceType != nil {
 		config["instance_type"] = aws.ToString(parameters.InstanceType)
@@ -1891,7 +1891,7 @@ func flattenTargetECSTaskOverrideContainerOverride(parameters types.EcsContainer
 		config["name"] = aws.ToString(parameters.Name)
 	}
 	if parameters.Command != nil {
-		config["command"] = flex.FlattenStringValueSet(parameters.Command)
+		config["command"] = flex.FlattenStringValueList(parameters.Command)
 	}
 
 	var environmentValues []map[string]interface{}
