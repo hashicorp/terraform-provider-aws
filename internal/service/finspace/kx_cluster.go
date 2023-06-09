@@ -531,6 +531,7 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	arn := fmt.Sprintf("%s/kxCluster/%s", aws.ToString(env.EnvironmentArn), aws.ToString(out.ClusterName))
 	d.Set("arn", arn)
+	d.Set("environment_id", parts[0])
 
 	return diags
 }
