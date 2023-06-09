@@ -87,6 +87,10 @@ func ResourceVPCEndpoint() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(ec2.DnsRecordIpType_Values(), false),
 						},
+						"private_dns_only_for_inbound_resolver_endpoint": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -198,7 +202,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+		input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}), input.PrivateDnsEnabled)
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
@@ -368,18 +372,18 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 			VpcEndpointId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("dns_options") {
-			if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
-			}
-		}
-
 		if d.HasChange("ip_address_type") {
 			input.IpAddressType = aws.String(d.Get("ip_address_type").(string))
 		}
 
 		if d.HasChange("private_dns_enabled") {
 			input.PrivateDnsEnabled = aws.Bool(d.Get("private_dns_enabled").(bool))
+		}
+
+		if d.HasChange("dns_options") {
+			if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}), input.PrivateDnsEnabled)
+			}
 		}
 
 		input.AddRouteTableIds, input.RemoveRouteTableIds = flattenAddAndRemoveStringLists(d, "route_table_ids")
@@ -471,7 +475,7 @@ func vpcEndpointAccept(ctx context.Context, conn *ec2.EC2, vpceID, serviceName s
 	return nil
 }
 
-func expandDNSOptionsSpecification(tfMap map[string]interface{}) *ec2.DnsOptionsSpecification {
+func expandDNSOptionsSpecification(tfMap map[string]interface{}, privateDnsEnabled *bool) *ec2.DnsOptionsSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -480,6 +484,10 @@ func expandDNSOptionsSpecification(tfMap map[string]interface{}) *ec2.DnsOptions
 
 	if v, ok := tfMap["dns_record_ip_type"].(string); ok && v != "" {
 		apiObject.DnsRecordIpType = aws.String(v)
+	}
+
+	if v, ok := tfMap["private_dns_only_for_inbound_resolver_endpoint"].(bool); ok && privateDnsEnabled != nil && *privateDnsEnabled {
+		apiObject.PrivateDnsOnlyForInboundResolverEndpoint = aws.Bool(v)
 	}
 
 	return apiObject
@@ -530,6 +538,10 @@ func flattenDNSOptions(apiObject *ec2.DnsOptions) map[string]interface{} {
 
 	if v := apiObject.DnsRecordIpType; v != nil {
 		tfMap["dns_record_ip_type"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.PrivateDnsOnlyForInboundResolverEndpoint; v != nil {
+		tfMap["private_dns_only_for_inbound_resolver_endpoint"] = aws.BoolValue(v)
 	}
 
 	return tfMap

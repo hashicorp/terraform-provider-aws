@@ -103,6 +103,56 @@ func TestAccVPCEndpoint_interfaceBasic(t *testing.T) {
 	})
 }
 
+func TestAccVPCEndpoint_interfacePrivateDNS(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint ec2.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_interfacePrivateDNS(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttrWith(resourceName, "cidr_blocks.#", func(value string) error {
+						if value == "0" {
+							return fmt.Errorf("need non-zero cidr_blocks")
+						}
+						return nil
+					}),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint ec2.VpcEndpoint
@@ -690,6 +740,34 @@ resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
   service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
   vpc_endpoint_type = "Interface"
+}
+`, rName)
+}
+
+func testAccVPCEndpointConfig_interfacePrivateDNS(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id            = aws_vpc.test.id
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.s3"
+  private_dns_enabled = true
+  vpc_endpoint_type = "Interface"
+  ip_address_type = "ipv4"
+  dns_options {
+	dns_record_ip_type = "ipv4"
+    private_dns_only_for_inbound_resolver_endpoint = false
+  }
 }
 `, rName)
 }
