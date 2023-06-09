@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 // TODO
@@ -46,5 +47,5 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, error) {
 }
 
 func AttributeTypesMust[T any](ctx context.Context) map[string]attr.Type {
-	return Must(AttributeTypes[T](ctx))
+	return errs.Must(AttributeTypes[T](ctx))
 }

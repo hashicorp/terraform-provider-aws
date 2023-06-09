@@ -355,9 +355,9 @@ func (r *resourceView) expandIncludedProperty(ctx context.Context, data viewIncl
 	}
 }
 
-func (r *resourceView) flattenIncludedProperty(ctx context.Context, apiObject awstypes.IncludedProperty) map[string]attr.Value {
-	return map[string]attr.Value{
-		"name": flex.StringToFramework(ctx, apiObject.Name),
+func (r *resourceView) flattenIncludedProperty(ctx context.Context, apiObject awstypes.IncludedProperty) viewIncludedPropertyData {
+	return viewIncludedPropertyData{
+		Name: flex.StringToFramework(ctx, apiObject.Name),
 	}
 }
 

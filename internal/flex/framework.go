@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
@@ -353,9 +354,7 @@ func ExpandFrameworkListNestedBlock[T any, U any](ctx context.Context, tfList ty
 
 	var data []T
 
-	if diags := tfList.ElementsAs(ctx, &data, false); diags.HasError() {
-		return nil
-	}
+	_ = fwdiag.Must(0, tfList.ElementsAs(ctx, &data, false))
 
 	return slices.ApplyToAll(data, func(t T) U {
 		return f(ctx, t)
@@ -369,9 +368,7 @@ func ExpandFrameworkListNestedBlockPtr[T any, U any](ctx context.Context, tfList
 
 	var data []T
 
-	if diags := tfList.ElementsAs(ctx, &data, false); diags.HasError() {
-		return nil
-	}
+	_ = fwdiag.Must(0, tfList.ElementsAs(ctx, &data, false))
 
 	if len(data) == 0 {
 		return nil
@@ -380,10 +377,9 @@ func ExpandFrameworkListNestedBlockPtr[T any, U any](ctx context.Context, tfList
 	return f(ctx, data[0])
 }
 
-// TODO: type FrameworkElementFlattenerFunc[T any, U any] func(context.Context, T) U
-type FrameworkElementFlattenerFunc[T any] func(context.Context, T) map[string]attr.Value
+type FrameworkElementFlattenerFunc[T any, U any] func(context.Context, U) T
 
-func FlattenFrameworkListNestedBlock[T any, U any](ctx context.Context, apiObjects []U, f FrameworkElementFlattenerFunc[U]) types.List {
+func FlattenFrameworkListNestedBlock[T any, U any](ctx context.Context, apiObjects []U, f FrameworkElementFlattenerFunc[T, U]) types.List {
 	attributeTypes := AttributeTypesMust[T](ctx)
 	elementType := types.ObjectType{AttrTypes: attributeTypes}
 
@@ -391,11 +387,11 @@ func FlattenFrameworkListNestedBlock[T any, U any](ctx context.Context, apiObjec
 		return types.ListNull(elementType)
 	}
 
-	elements := slices.ApplyToAll(apiObjects, func(apiObject U) attr.Value {
-		return types.ObjectValueMust(attributeTypes, f(ctx, apiObject))
+	data := slices.ApplyToAll(apiObjects, func(apiObject U) T {
+		return f(ctx, apiObject)
 	})
 
-	return types.ListValueMust(elementType, elements)
+	return fwdiag.Must(types.ListValueFrom(ctx, elementType, data))
 }
 
 type Set[T comparable] []T
