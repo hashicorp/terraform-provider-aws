@@ -2172,6 +2172,10 @@ func statusGroupCapacity(ctx context.Context, conn *autoscaling.AutoScaling, elb
 
 		for _, v := range scalingActivities {
 			if statusCode := aws.StringValue(v.StatusCode); statusCode == autoscaling.ScalingActivityStatusCodeFailed && aws.Int64Value(v.Progress) == 100 {
+				if strings.Contains(aws.StringValue(v.StatusMessage), "Invalid IAM Instance Profile") {
+					// the activity will likely be retried
+					continue
+				}
 				errors = multierror.Append(errors, fmt.Errorf("Scaling activity (%s): %s: %s", aws.StringValue(v.ActivityId), statusCode, aws.StringValue(v.StatusMessage)))
 			}
 		}
