@@ -15,14 +15,10 @@ on:
         description: '(Optional) The ID of the value of the custom field to update. Required if field is supplied.'
         required: false
         type: string
-    secrets:
-      GH_TOKEN:
-        description: '(Required) A GitHub token with the repo and project scopes.'
-        required: true
 
 env:
   ITEM_NODE_ID: ${{ github.event.issue.node_id || github.event.pull_request.node_id }}
-  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  GH_TOKEN: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
 
 jobs:
   add-to-project:
