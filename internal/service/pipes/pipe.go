@@ -102,7 +102,7 @@ func ResourcePipe() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^smk://(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):[0-9]{1,5}|arn:(aws[a-zA-Z0-9-]*):([a-zA-Z0-9\-]+):([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1})?:(\d{12})?:(.+)$`), ""),
 				),
 			},
-			"source_parameters": source_parameters_schema,
+			"source_parameters": sourceParametersSchema(),
 			"target": {
 				Type:         schema.TypeString,
 				Required:     true,

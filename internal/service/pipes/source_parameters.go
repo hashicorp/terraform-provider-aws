@@ -13,538 +13,179 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-var verifySecretsManagerARN = validation.StringMatch(regexp.MustCompile(`^(^arn:aws([a-z]|\-)*:secretsmanager:([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1}):(\d{12}):secret:.+)$`), "")
+func sourceParametersSchema() *schema.Schema {
+	verifySecretsManagerARN := validation.StringMatch(regexp.MustCompile(`^(^arn:aws([a-z]|\-)*:secretsmanager:([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1}):(\d{12}):secret:.+)$`), "")
 
-var source_parameters_schema = &schema.Schema{
-	Type:     schema.TypeList,
-	Optional: true,
-	Computed: true,
-	MaxItems: 1,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"active_mq_broker": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"source_parameters.0.dynamo_db_stream",
-					"source_parameters.0.kinesis_stream",
-					"source_parameters.0.managed_streaming_kafka",
-					"source_parameters.0.rabbit_mq_broker",
-					"source_parameters.0.self_managed_kafka",
-					"source_parameters.0.sqs_queue",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"maximum_batching_window_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 300),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if new != "" && new != "0" {
-									return false
-								}
-								return old == "0"
-							},
-						},
-						"batch_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 10000),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if new != "" && new != "0" {
-									return false
-								}
-								return old == "100"
-							},
-						},
-						"queue": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 1000),
-								validation.StringMatch(regexp.MustCompile(`^[\s\S]*$`), ""),
-							),
-						},
-						"credentials": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"basic_auth": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verifySecretsManagerARN,
-									},
-								},
-							},
-						},
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"active_mq_broker": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"source_parameters.0.dynamo_db_stream",
+						"source_parameters.0.kinesis_stream",
+						"source_parameters.0.managed_streaming_kafka",
+						"source_parameters.0.rabbit_mq_broker",
+						"source_parameters.0.self_managed_kafka",
+						"source_parameters.0.sqs_queue",
 					},
-				},
-			},
-			"dynamo_db_stream": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"source_parameters.0.active_mq_broker",
-					"source_parameters.0.kinesis_stream",
-					"source_parameters.0.managed_streaming_kafka",
-					"source_parameters.0.rabbit_mq_broker",
-					"source_parameters.0.self_managed_kafka",
-					"source_parameters.0.sqs_queue",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"starting_position": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.DynamoDBStreamStartPosition](),
-						},
-						"batch_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 10000),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if new != "" && new != "0" {
-									return false
-								}
-								return old == "100"
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"batch_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 10000),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if new != "" && new != "0" {
+										return false
+									}
+									return old == "100"
+								},
 							},
-						},
-						"maximum_batching_window_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 300),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if new != "" && new != "0" {
-									return false
-								}
-								return old == "0"
-							},
-						},
-						"maximum_record_age_in_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.Any(
-								validation.IntInSlice([]int{-1}),
-								validation.IntBetween(60, 604_800),
-							),
-						},
-						"maximum_retry_attempts": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(-1, 10_000),
-						},
-						"parallelization_factor": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 10),
-							Default:      1,
-						},
-						"on_partial_batch_item_failure": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.OnPartialBatchItemFailureStreams](),
-						},
-						"dead_letter_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
+							"credentials": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"basic_auth": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verifySecretsManagerARN,
+										},
 									},
 								},
 							},
-						},
-					},
-				},
-			},
-			"kinesis_stream": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"source_parameters.0.active_mq_broker",
-					"source_parameters.0.dynamo_db_stream",
-					"source_parameters.0.managed_streaming_kafka",
-					"source_parameters.0.rabbit_mq_broker",
-					"source_parameters.0.self_managed_kafka",
-					"source_parameters.0.sqs_queue",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"starting_position": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.KinesisStreamStartPosition](),
-						},
-						"batch_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 10000),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if new != "" && new != "0" {
-									return false
-								}
-								return old == "100"
-							},
-						},
-						"maximum_batching_window_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 300),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if new != "" && new != "0" {
-									return false
-								}
-								return old == "0"
-							},
-						},
-						"maximum_record_age_in_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.Any(
-								validation.IntInSlice([]int{-1}),
-								validation.IntBetween(60, 604_800),
-							),
-						},
-						"parallelization_factor": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 10),
-							Default:      1,
-						},
-						"maximum_retry_attempts": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(-1, 10_000),
-						},
-						"on_partial_batch_item_failure": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.OnPartialBatchItemFailureStreams](),
-						},
-						"dead_letter_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
+							"maximum_batching_window_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 300),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if new != "" && new != "0" {
+										return false
+									}
+									return old == "0"
 								},
 							},
-						},
-						"starting_position_timestamp": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IsRFC3339Time,
-						},
-					},
-				},
-			},
-			"managed_streaming_kafka": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"source_parameters.0.active_mq_broker",
-					"source_parameters.0.dynamo_db_stream",
-					"source_parameters.0.kinesis_stream",
-					"source_parameters.0.rabbit_mq_broker",
-					"source_parameters.0.self_managed_kafka",
-					"source_parameters.0.sqs_queue",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"credentials": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"client_certificate_tls_auth": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verifySecretsManagerARN,
-									},
-									"sasl_scram_512_auth": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verifySecretsManagerARN,
-									},
-								},
-							},
-						},
-						"batch_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 10000),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if new != "" && new != "0" {
-									return false
-								}
-								return old == "100"
-							},
-						},
-						"maximum_batching_window_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 300),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if new != "" && new != "0" {
-									return false
-								}
-								return old == "0"
-							},
-						},
-						"topic": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 249),
-								validation.StringMatch(regexp.MustCompile(`^[^.]([a-zA-Z0-9\-_.]+)$`), ""),
-							),
-						},
-						"consumer_group_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 200),
-								validation.StringMatch(regexp.MustCompile(`^[^.]([a-zA-Z0-9\-_.]+)$`), ""),
-							),
-						},
-						"starting_position": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.MSKStartPosition](),
-						},
-					},
-				},
-			},
-			"rabbit_mq_broker": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"source_parameters.0.active_mq_broker",
-					"source_parameters.0.dynamo_db_stream",
-					"source_parameters.0.kinesis_stream",
-					"source_parameters.0.managed_streaming_kafka",
-					"source_parameters.0.self_managed_kafka",
-					"source_parameters.0.sqs_queue",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"credentials": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"basic_auth": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verifySecretsManagerARN,
-									},
-								},
-							},
-						},
-						"batch_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 10000),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if new != "" && new != "0" {
-									return false
-								}
-								return old == "100"
-							},
-						},
-						"maximum_batching_window_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 300),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if new != "" && new != "0" {
-									return false
-								}
-								return old == "0"
-							},
-						},
-						"queue": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 1000),
-								validation.StringMatch(regexp.MustCompile(`^[\s\S]*$`), ""),
-							),
-						},
-						"virtual_host": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 200),
-								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-\/*:_+=.@-]*$`), ""),
-							),
-						},
-					},
-				},
-			},
-			"self_managed_kafka": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"source_parameters.0.active_mq_broker",
-					"source_parameters.0.dynamo_db_stream",
-					"source_parameters.0.kinesis_stream",
-					"source_parameters.0.managed_streaming_kafka",
-					"source_parameters.0.rabbit_mq_broker",
-					"source_parameters.0.sqs_queue",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"credentials": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"basic_auth": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verifySecretsManagerARN,
-									},
-									"client_certificate_tls_auth": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verifySecretsManagerARN,
-									},
-									"sasl_scram_256_auth": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verifySecretsManagerARN,
-									},
-									"sasl_scram_512_auth": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verifySecretsManagerARN,
-									},
-								},
-							},
-						},
-						"batch_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 10000),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if new != "" && new != "0" {
-									return false
-								}
-								return old == "100"
-							},
-						},
-						"maximum_batching_window_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 300),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if new != "" && new != "0" {
-									return false
-								}
-								return old == "0"
-							},
-						},
-						"topic": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 249),
-								validation.StringMatch(regexp.MustCompile(`^[^.]([a-zA-Z0-9\-_.]+)$`), ""),
-							),
-						},
-						"consumer_group_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 200),
-								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-\/*:_+=.@-]*$`), ""),
-							),
-						},
-						"starting_position": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.SelfManagedKafkaStartPosition](),
-						},
-						"server_root_ca_certificate": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"servers": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 2,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							"queue": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
 								ValidateFunc: validation.All(
-									validation.StringLenBetween(1, 300),
-									validation.StringMatch(regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):[0-9]{1,5}$`), ""),
+									validation.StringLenBetween(1, 1000),
+									validation.StringMatch(regexp.MustCompile(`^[\s\S]*$`), ""),
 								),
 							},
 						},
-						"vpc": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"security_groups": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MaxItems: 5,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-											ValidateFunc: validation.All(
-												validation.StringLenBetween(1, 1024),
-												validation.StringMatch(regexp.MustCompile(`^sg-[0-9a-zA-Z]*$`), ""),
-											),
+					},
+				},
+				"dynamo_db_stream": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"source_parameters.0.active_mq_broker",
+						"source_parameters.0.kinesis_stream",
+						"source_parameters.0.managed_streaming_kafka",
+						"source_parameters.0.rabbit_mq_broker",
+						"source_parameters.0.self_managed_kafka",
+						"source_parameters.0.sqs_queue",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"batch_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 10000),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if new != "" && new != "0" {
+										return false
+									}
+									return old == "100"
+								},
+							},
+							"dead_letter_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
 										},
 									},
-									"subnets": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										MaxItems: 16,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-											ValidateFunc: validation.All(
-												validation.StringLenBetween(1, 1024),
-												validation.StringMatch(regexp.MustCompile(`^subnet-[0-9a-z]*$`), ""),
-											),
+								},
+							},
+							"maximum_batching_window_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 300),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if new != "" && new != "0" {
+										return false
+									}
+									return old == "0"
+								},
+							},
+							"maximum_record_age_in_seconds": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+								ValidateFunc: validation.Any(
+									validation.IntInSlice([]int{-1}),
+									validation.IntBetween(60, 604_800),
+								),
+							},
+							"maximum_retry_attempts": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(-1, 10_000),
+							},
+							"on_partial_batch_item_failure": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.OnPartialBatchItemFailureStreams](),
+							},
+							"parallelization_factor": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 10),
+								Default:      1,
+							},
+							"starting_position": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.DynamoDBStreamStartPosition](),
+							},
+						},
+					},
+				},
+				"filter_criteria": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filter": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 5,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"pattern": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 4096),
 										},
 									},
 								},
@@ -552,65 +193,426 @@ var source_parameters_schema = &schema.Schema{
 						},
 					},
 				},
-			},
-			"sqs_queue": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"source_parameters.0.active_mq_broker",
-					"source_parameters.0.dynamo_db_stream",
-					"source_parameters.0.kinesis_stream",
-					"source_parameters.0.managed_streaming_kafka",
-					"source_parameters.0.rabbit_mq_broker",
-					"source_parameters.0.self_managed_kafka",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"batch_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 10000),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if new != "" && new != "0" {
-									return false
-								}
-								return old == "10"
+				"kinesis_stream": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"source_parameters.0.active_mq_broker",
+						"source_parameters.0.dynamo_db_stream",
+						"source_parameters.0.managed_streaming_kafka",
+						"source_parameters.0.rabbit_mq_broker",
+						"source_parameters.0.self_managed_kafka",
+						"source_parameters.0.sqs_queue",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"batch_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 10000),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if new != "" && new != "0" {
+										return false
+									}
+									return old == "100"
+								},
 							},
-						},
-						"maximum_batching_window_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 300),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if new != "" && new != "0" {
-									return false
-								}
-								return old == "0"
+							"dead_letter_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+							"maximum_batching_window_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 300),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if new != "" && new != "0" {
+										return false
+									}
+									return old == "0"
+								},
+							},
+							"maximum_record_age_in_seconds": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+								ValidateFunc: validation.Any(
+									validation.IntInSlice([]int{-1}),
+									validation.IntBetween(60, 604_800),
+								),
+							},
+							"maximum_retry_attempts": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(-1, 10_000),
+							},
+							"on_partial_batch_item_failure": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.OnPartialBatchItemFailureStreams](),
+							},
+							"parallelization_factor": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 10),
+								Default:      1,
+							},
+							"starting_position": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.KinesisStreamStartPosition](),
+							},
+							"starting_position_timestamp": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IsRFC3339Time,
 							},
 						},
 					},
 				},
-			},
-			"filter_criteria": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"filter": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 5,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"pattern": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 4096),
+				"managed_streaming_kafka": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"source_parameters.0.active_mq_broker",
+						"source_parameters.0.dynamo_db_stream",
+						"source_parameters.0.kinesis_stream",
+						"source_parameters.0.rabbit_mq_broker",
+						"source_parameters.0.self_managed_kafka",
+						"source_parameters.0.sqs_queue",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"batch_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 10000),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if new != "" && new != "0" {
+										return false
+									}
+									return old == "100"
+								},
+							},
+							"consumer_group_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 200),
+									validation.StringMatch(regexp.MustCompile(`^[^.]([a-zA-Z0-9\-_.]+)$`), ""),
+								),
+							},
+							"credentials": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"client_certificate_tls_auth": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verifySecretsManagerARN,
+										},
+										"sasl_scram_512_auth": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verifySecretsManagerARN,
+										},
 									},
+								},
+							},
+							"maximum_batching_window_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 300),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if new != "" && new != "0" {
+										return false
+									}
+									return old == "0"
+								},
+							},
+							"starting_position": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.MSKStartPosition](),
+							},
+							"topic": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 249),
+									validation.StringMatch(regexp.MustCompile(`^[^.]([a-zA-Z0-9\-_.]+)$`), ""),
+								),
+							},
+						},
+					},
+				},
+				"rabbit_mq_broker": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"source_parameters.0.active_mq_broker",
+						"source_parameters.0.dynamo_db_stream",
+						"source_parameters.0.kinesis_stream",
+						"source_parameters.0.managed_streaming_kafka",
+						"source_parameters.0.self_managed_kafka",
+						"source_parameters.0.sqs_queue",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"batch_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 10000),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if new != "" && new != "0" {
+										return false
+									}
+									return old == "100"
+								},
+							},
+							"credentials": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"basic_auth": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verifySecretsManagerARN,
+										},
+									},
+								},
+							},
+							"maximum_batching_window_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 300),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if new != "" && new != "0" {
+										return false
+									}
+									return old == "0"
+								},
+							},
+							"queue": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 1000),
+									validation.StringMatch(regexp.MustCompile(`^[\s\S]*$`), ""),
+								),
+							},
+							"virtual_host": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 200),
+									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-\/*:_+=.@-]*$`), ""),
+								),
+							},
+						},
+					},
+				},
+				"self_managed_kafka": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"source_parameters.0.active_mq_broker",
+						"source_parameters.0.dynamo_db_stream",
+						"source_parameters.0.kinesis_stream",
+						"source_parameters.0.managed_streaming_kafka",
+						"source_parameters.0.rabbit_mq_broker",
+						"source_parameters.0.sqs_queue",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"batch_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 10000),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if new != "" && new != "0" {
+										return false
+									}
+									return old == "100"
+								},
+							},
+							"consumer_group_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 200),
+									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-\/*:_+=.@-]*$`), ""),
+								),
+							},
+							"credentials": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"basic_auth": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verifySecretsManagerARN,
+										},
+										"client_certificate_tls_auth": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verifySecretsManagerARN,
+										},
+										"sasl_scram_256_auth": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verifySecretsManagerARN,
+										},
+										"sasl_scram_512_auth": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verifySecretsManagerARN,
+										},
+									},
+								},
+							},
+							"maximum_batching_window_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 300),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if new != "" && new != "0" {
+										return false
+									}
+									return old == "0"
+								},
+							},
+							"server_root_ca_certificate": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"servers": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 2,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									ValidateFunc: validation.All(
+										validation.StringLenBetween(1, 300),
+										validation.StringMatch(regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):[0-9]{1,5}$`), ""),
+									),
+								},
+							},
+							"starting_position": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.SelfManagedKafkaStartPosition](),
+							},
+							"topic": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 249),
+									validation.StringMatch(regexp.MustCompile(`^[^.]([a-zA-Z0-9\-_.]+)$`), ""),
+								),
+							},
+							"vpc": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"security_groups": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MaxItems: 5,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+												ValidateFunc: validation.All(
+													validation.StringLenBetween(1, 1024),
+													validation.StringMatch(regexp.MustCompile(`^sg-[0-9a-zA-Z]*$`), ""),
+												),
+											},
+										},
+										"subnets": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											MaxItems: 16,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+												ValidateFunc: validation.All(
+													validation.StringLenBetween(1, 1024),
+													validation.StringMatch(regexp.MustCompile(`^subnet-[0-9a-z]*$`), ""),
+												),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"sqs_queue": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"source_parameters.0.active_mq_broker",
+						"source_parameters.0.dynamo_db_stream",
+						"source_parameters.0.kinesis_stream",
+						"source_parameters.0.managed_streaming_kafka",
+						"source_parameters.0.rabbit_mq_broker",
+						"source_parameters.0.self_managed_kafka",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"batch_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(1, 10000),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if new != "" && new != "0" {
+										return false
+									}
+									return old == "10"
+								},
+							},
+							"maximum_batching_window_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 300),
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if new != "" && new != "0" {
+										return false
+									}
+									return old == "0"
 								},
 							},
 						},
@@ -618,7 +620,7 @@ var source_parameters_schema = &schema.Schema{
 				},
 			},
 		},
-	},
+	}
 }
 
 func expandSourceParameters(config []interface{}) *types.PipeSourceParameters {
