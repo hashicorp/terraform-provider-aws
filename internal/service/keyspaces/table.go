@@ -174,8 +174,8 @@ func ResourceTable() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.StringMatch(
-											regexp.MustCompile(`^[a-zA-Z0-9_]{1,48}$`),
-											"The column name can have up to 48 characters. It can only contain alpha-numeric characters and underscores.",
+											regexp.MustCompile(`^[a-z0-9_]{1,48}$`),
+											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
 									"order_by": {
@@ -196,8 +196,8 @@ func ResourceTable() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringMatch(
-											regexp.MustCompile(`^[a-zA-Z0-9_]{1,48}$`),
-											"The column name can have up to 48 characters. It can only contain alpha-numeric characters and underscores.",
+											regexp.MustCompile(`^[a-z0-9_]{1,48}$`),
+											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
 									"type": {
@@ -222,8 +222,8 @@ func ResourceTable() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.StringMatch(
-											regexp.MustCompile(`^[a-zA-Z0-9_]{1,48}$`),
-											"The column name can have up to 48 characters. It can only contain alpha-numeric characters and underscores.",
+											regexp.MustCompile(`^[a-z0-9_]{1,48}$`),
+											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
 								},
@@ -240,8 +240,8 @@ func ResourceTable() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.StringMatch(
-											regexp.MustCompile(`^[a-zA-Z0-9_]{1,48}$`),
-											"The column name can have up to 48 characters. It can only contain alpha-numeric characters and underscores.",
+											regexp.MustCompile(`^[a-z0-9_]{1,48}$`),
+											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
 								},

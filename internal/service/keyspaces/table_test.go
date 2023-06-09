@@ -172,7 +172,7 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "11"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
-						"name": "ID",
+						"name": "id",
 						"type": "text",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
@@ -196,7 +196,7 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 						"type": "text",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
-						"name": "Pay_Scale0",
+						"name": "pay_scale0",
 						"type": "int",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
@@ -217,14 +217,14 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.partition_key.*", map[string]string{
-						"name": "ID",
+						"name": "id",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.static_column.*", map[string]string{
 						"name": "role",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.static_column.*", map[string]string{
-						"name": "Pay_Scale0",
+						"name": "pay_scale0",
 					}),
 				),
 			},
@@ -621,7 +621,7 @@ resource "aws_keyspaces_table" "test" {
 
   schema_definition {
     column {
-      name = "ID"
+      name = "id"
       type = "text"
     }
 
@@ -651,7 +651,7 @@ resource "aws_keyspaces_table" "test" {
     }
 
     column {
-      name = "Pay_Scale0"
+      name = "pay_scale0"
       type = "int"
     }
 
@@ -676,7 +676,7 @@ resource "aws_keyspaces_table" "test" {
     }
 
     partition_key {
-      name = "ID"
+      name = "id"
     }
 
     clustering_key {
@@ -694,7 +694,7 @@ resource "aws_keyspaces_table" "test" {
     }
 
     static_column {
-      name = "Pay_Scale0"
+      name = "pay_scale0"
     }
   }
 }
