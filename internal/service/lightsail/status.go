@@ -61,7 +61,7 @@ func statusOperation(ctx context.Context, conn *lightsail.Client, oid *string) r
 		}
 
 		if output.Operation == nil {
-			return nil, "Failed", fmt.Errorf("Error retrieving Operation info for operation (%s)", oidValue)
+			return nil, "Failed", fmt.Errorf("retrieving Operation info for operation (%s)", oidValue)
 		}
 
 		log.Printf("[DEBUG] Lightsail Operation (%s) is currently %q", oidValue, string(output.Operation.Status))
@@ -86,7 +86,7 @@ func statusDatabase(ctx context.Context, conn *lightsail.Client, db *string) ret
 		}
 
 		if output.RelationalDatabase == nil {
-			return nil, "Failed", fmt.Errorf("Error retrieving Database info for (%s)", dbValue)
+			return nil, "Failed", fmt.Errorf("retrieving Database info for (%s)", dbValue)
 		}
 
 		log.Printf("[DEBUG] Lightsail Database (%s) is currently %q", dbValue, *output.RelationalDatabase.State)
@@ -111,7 +111,7 @@ func statusDatabaseBackupRetention(ctx context.Context, conn *lightsail.Client, 
 		}
 
 		if output.RelationalDatabase == nil {
-			return nil, "Failed", fmt.Errorf("Error retrieving Database info for (%s)", dbValue)
+			return nil, "Failed", fmt.Errorf("retrieving Database info for (%s)", dbValue)
 		}
 
 		return output, strconv.FormatBool(aws.ToBool(output.RelationalDatabase.BackupRetentionEnabled)), nil
@@ -134,7 +134,7 @@ func statusDatabasePubliclyAccessible(ctx context.Context, conn *lightsail.Clien
 		}
 
 		if output.RelationalDatabase == nil {
-			return nil, "Failed", fmt.Errorf("Error retrieving Database info for (%s)", dbValue)
+			return nil, "Failed", fmt.Errorf("retrieving Database info for (%s)", dbValue)
 		}
 
 		return output, strconv.FormatBool(aws.ToBool(output.RelationalDatabase.PubliclyAccessible)), nil
@@ -158,7 +158,7 @@ func statusInstance(ctx context.Context, conn *lightsail.Client, iName *string) 
 		}
 
 		if out.State == nil {
-			return nil, "Failed", fmt.Errorf("Error retrieving Instance info for (%s)", iNameValue)
+			return nil, "Failed", fmt.Errorf("retrieving Instance info for (%s)", iNameValue)
 		}
 
 		log.Printf("[DEBUG] Lightsail Instance (%s) State is currently (%s)", iNameValue, *out.State.Name)

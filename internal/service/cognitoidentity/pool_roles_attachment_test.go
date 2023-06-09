@@ -146,7 +146,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleReso
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithAmbiguousRoleResolutionError(name),
-				ExpectError: regexp.MustCompile(`Error validating ambiguous role resolution`),
+				ExpectError: regexp.MustCompile(`validating ambiguous role resolution`),
 			},
 		},
 	})

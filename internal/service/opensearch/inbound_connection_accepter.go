@@ -162,7 +162,7 @@ func inboundConnectionWaitUntilActive(ctx context.Context, conn *opensearchservi
 		Timeout: timeout,
 	}
 	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
-		return fmt.Errorf("Error waiting for Inbound Connection (%s) to become available: %s", id, err)
+		return fmt.Errorf("waiting for Inbound Connection (%s) to become available: %s", id, err)
 	}
 	return nil
 }

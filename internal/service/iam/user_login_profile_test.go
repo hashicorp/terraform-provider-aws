@@ -162,7 +162,7 @@ func TestAccIAMUserLoginProfile_keybaseDoesntExist(t *testing.T) {
 			{
 				// We own this account but it doesn't have any key associated with it
 				Config:      testAccUserLoginProfileConfig_required(rName, "keybase:terraform_nope"),
-				ExpectError: regexp.MustCompile(`Error retrieving Public Key`),
+				ExpectError: regexp.MustCompile(`retrieving Public Key`),
 			},
 		},
 	})
@@ -181,7 +181,7 @@ func TestAccIAMUserLoginProfile_notAKey(t *testing.T) {
 			{
 				// We own this account but it doesn't have any key associated with it
 				Config:      testAccUserLoginProfileConfig_required(rName, "lolimnotakey"),
-				ExpectError: regexp.MustCompile(`Error encrypting Password`),
+				ExpectError: regexp.MustCompile(`encrypting Password`),
 			},
 		},
 	})

@@ -176,11 +176,11 @@ func disassociateCustomerGateway(ctx context.Context, conn *networkmanager.Netwo
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Network Manager Customer Gateway Association (%s): %w", id, err)
+		return fmt.Errorf("deleting Network Manager Customer Gateway Association (%s): %w", id, err)
 	}
 
 	if _, err := waitCustomerGatewayAssociationDeleted(ctx, conn, globalNetworkID, customerGatewayARN, timeout); err != nil {
-		return fmt.Errorf("error waiting for Network Manager Customer Gateway Association (%s) delete: %w", id, err)
+		return fmt.Errorf("waiting for Network Manager Customer Gateway Association (%s) delete: %w", id, err)
 	}
 
 	return nil

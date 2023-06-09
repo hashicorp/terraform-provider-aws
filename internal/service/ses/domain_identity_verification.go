@@ -53,7 +53,7 @@ func getIdentityVerificationAttributes(ctx context.Context, conn *ses.SES, domai
 
 	response, err := conn.GetIdentityVerificationAttributesWithContext(ctx, input)
 	if err != nil {
-		return nil, fmt.Errorf("Error getting identity verification attributes: %s", err)
+		return nil, fmt.Errorf("getting identity verification attributes: %s", err)
 	}
 
 	return response.VerificationAttributes[domainName], nil
@@ -66,7 +66,7 @@ func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.Res
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		att, err := getIdentityVerificationAttributes(ctx, conn, domainName)
 		if err != nil {
-			return retry.NonRetryableError(fmt.Errorf("Error getting identity verification attributes: %s", err))
+			return retry.NonRetryableError(fmt.Errorf("getting identity verification attributes: %s", err))
 		}
 
 		if att == nil {
