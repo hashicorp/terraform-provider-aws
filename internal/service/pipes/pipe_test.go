@@ -2537,16 +2537,14 @@ resource "aws_pipes_pipe" "test" {
 
   enrichment_parameters {
     http_parameters {
-      header {
-        key   = %[3]q
-        value = %[4]q
+      header_parameters = {
+        %[3]q = %[4]q
       }
 
-      path_parameters = ["parameter1"]
+      path_parameter_values = ["parameter1"]
 
-      query_string {
-        key   = %[5]q
-        value = %[6]q
+      query_string_parameters = {
+        %[5]q = %[6]q
       }
     }
   }

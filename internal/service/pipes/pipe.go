@@ -140,16 +140,16 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Enrichment = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("enrichment_parameters"); ok {
-		input.EnrichmentParameters = expandEnrichmentParameters(v.([]interface{}))
+	if v, ok := d.GetOk("enrichment_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.EnrichmentParameters = expandPipeEnrichmentParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("source_parameters"); ok {
-		input.SourceParameters = expandSourceParameters(v.([]interface{}))
+	if v, ok := d.GetOk("source_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.SourceParameters = expandPipeSourceParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("target_parameters"); ok {
-		input.TargetParameters = expandTargetParameters(v.([]interface{}))
+	if v, ok := d.GetOk("target_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.TargetParameters = expandPipeTargetParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	output, err := conn.CreatePipe(ctx, input)
@@ -186,19 +186,31 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("description", output.Description)
 	d.Set("desired_state", output.DesiredState)
 	d.Set("enrichment", output.Enrichment)
-	if err := d.Set("enrichment_parameters", flattenEnrichmentParameters(output.EnrichmentParameters)); err != nil {
-		return diag.Errorf("setting enrichment_parameters: %s", err)
+	if output.EnrichmentParameters != nil {
+		if err := d.Set("enrichment_parameters", []interface{}{flattenPipeEnrichmentParameters(output.EnrichmentParameters)}); err != nil {
+			return diag.Errorf("setting enrichment_parameters: %s", err)
+		}
+	} else {
+		d.Set("enrichment_parameters", nil)
 	}
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set("role_arn", output.RoleArn)
 	d.Set("source", output.Source)
-	if err := d.Set("source_parameters", flattenSourceParameters(output.SourceParameters)); err != nil {
-		return diag.Errorf("setting source_parameters: %s", err)
+	if output.SourceParameters != nil {
+		if err := d.Set("source_parameters", []interface{}{flattenPipeSourceParameters(output.SourceParameters)}); err != nil {
+			return diag.Errorf("setting source_parameters: %s", err)
+		}
+	} else {
+		d.Set("source_parameters", nil)
 	}
 	d.Set("target", output.Target)
-	if err := d.Set("target_parameters", flattenTargetParameters(output.TargetParameters)); err != nil {
-		return diag.Errorf("setting target_parameters: %s", err)
+	if output.TargetParameters != nil {
+		if err := d.Set("target_parameters", []interface{}{flattenPipeTargetParameters(output.TargetParameters)}); err != nil {
+			return diag.Errorf("setting target_parameters: %s", err)
+		}
+	} else {
+		d.Set("target_parameters", nil)
 	}
 
 	return nil
@@ -230,16 +242,16 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			}
 		}
 
-		if v, ok := d.GetOk("enrichment_parameters"); ok {
-			input.EnrichmentParameters = expandEnrichmentParameters(v.([]interface{}))
+		if v, ok := d.GetOk("enrichment_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.EnrichmentParameters = expandPipeEnrichmentParameters(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("source_parameters"); ok {
-			input.SourceParameters = expandSourceUpdateParameters(v.([]interface{}))
+		if v, ok := d.GetOk("source_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.SourceParameters = expandUpdatePipeSourceParameters(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("target_parameters"); ok {
-			input.TargetParameters = expandTargetParameters(v.([]interface{}))
+		if v, ok := d.GetOk("target_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.TargetParameters = expandPipeTargetParameters(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		output, err := conn.UpdatePipe(ctx, input)

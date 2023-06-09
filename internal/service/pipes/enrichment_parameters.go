@@ -21,48 +21,22 @@ func enrichmentParametersSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"header": {
-								Type:     schema.TypeList,
+							"header_parameters": {
+								Type:     schema.TypeMap,
 								Optional: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"key": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(0, 512),
-										},
-										"value": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(0, 512),
-										},
-									},
-								},
+								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"path_parameters": {
+							"path_parameter_values": {
 								Type:     schema.TypeList,
 								Optional: true,
 								Elem: &schema.Schema{
 									Type: schema.TypeString,
 								},
 							},
-							"query_string": {
-								Type:     schema.TypeList,
+							"query_string_parameters": {
+								Type:     schema.TypeMap,
 								Optional: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"key": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(0, 512),
-										},
-										"value": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(0, 512),
-										},
-									},
-								},
+								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 						},
 					},
@@ -77,111 +51,82 @@ func enrichmentParametersSchema() *schema.Schema {
 	}
 }
 
-func expandEnrichmentParameters(config []interface{}) *types.PipeEnrichmentParameters {
-	if len(config) == 0 {
+func expandPipeEnrichmentParameters(tfMap map[string]interface{}) *types.PipeEnrichmentParameters {
+	if tfMap == nil {
 		return nil
 	}
 
-	var parameters types.PipeEnrichmentParameters
-	for _, c := range config {
-		param := c.(map[string]interface{})
-		if val, ok := param["input_template"].(string); ok && val != "" {
-			parameters.InputTemplate = aws.String(val)
-		}
-		if val, ok := param["http_parameters"]; ok {
-			parameters.HttpParameters = expandEnrichmentHTTPParameters(val.([]interface{}))
-		}
+	apiObject := &types.PipeEnrichmentParameters{}
+
+	if v, ok := tfMap["http_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.HttpParameters = expandPipeEnrichmentHttpParameters(v[0].(map[string]interface{}))
 	}
-	return &parameters
+
+	if v, ok := tfMap["input_template"].(string); ok && v != "" {
+		apiObject.InputTemplate = aws.String(v)
+	}
+
+	return apiObject
 }
 
-func expandEnrichmentHTTPParameters(config []interface{}) *types.PipeEnrichmentHttpParameters {
-	if len(config) == 0 {
+func expandPipeEnrichmentHttpParameters(tfMap map[string]interface{}) *types.PipeEnrichmentHttpParameters {
+	if tfMap == nil {
 		return nil
 	}
 
-	var parameters types.PipeEnrichmentHttpParameters
-	for _, c := range config {
-		param := c.(map[string]interface{})
-		if val, ok := param["path_parameters"]; ok {
-			parameters.PathParameterValues = flex.ExpandStringValueList(val.([]interface{}))
-		}
+	apiObject := &types.PipeEnrichmentHttpParameters{}
 
-		if val, ok := param["header"]; ok {
-			headers := map[string]string{}
-			if values, ok := val.([]interface{}); ok {
-				for _, v := range values {
-					valueParam := v.(map[string]interface{})
-
-					if key, ok := valueParam["key"].(string); ok && key != "" {
-						if value, ok := valueParam["value"].(string); ok && value != "" {
-							headers[key] = value
-						}
-					}
-				}
-			}
-			if len(headers) > 0 {
-				parameters.HeaderParameters = headers
-			}
-		}
-
-		if val, ok := param["query_string"]; ok {
-			queryStrings := map[string]string{}
-			if values, ok := val.([]interface{}); ok {
-				for _, v := range values {
-					valueParam := v.(map[string]interface{})
-
-					if key, ok := valueParam["key"].(string); ok && key != "" {
-						if value, ok := valueParam["value"].(string); ok && value != "" {
-							queryStrings[key] = value
-						}
-					}
-				}
-			}
-			if len(queryStrings) > 0 {
-				parameters.QueryStringParameters = queryStrings
-			}
-		}
+	if v, ok := tfMap["header_parameters"].(map[string]interface{}); ok && len(v) > 0 {
+		apiObject.HeaderParameters = flex.ExpandStringValueMap(v)
 	}
-	return &parameters
+
+	if v, ok := tfMap["path_parameter_values"].([]interface{}); ok && len(v) > 0 {
+		apiObject.PathParameterValues = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := tfMap["query_string_parameters"].(map[string]interface{}); ok && len(v) > 0 {
+		apiObject.QueryStringParameters = flex.ExpandStringValueMap(v)
+	}
+
+	return apiObject
 }
 
-func flattenEnrichmentParameters(enrichmentParameters *types.PipeEnrichmentParameters) []map[string]interface{} {
-	config := make(map[string]interface{})
-
-	if enrichmentParameters.InputTemplate != nil {
-		config["input_template"] = *enrichmentParameters.InputTemplate
-	}
-
-	if enrichmentParameters.HttpParameters != nil {
-		httpParameters := make(map[string]interface{})
-
-		var headerParameters []map[string]interface{}
-		for key, value := range enrichmentParameters.HttpParameters.HeaderParameters {
-			header := make(map[string]interface{})
-			header["key"] = key
-			header["value"] = value
-			headerParameters = append(headerParameters, header)
-		}
-		httpParameters["header"] = headerParameters
-
-		var queryStringParameters []map[string]interface{}
-		for key, value := range enrichmentParameters.HttpParameters.QueryStringParameters {
-			queryString := make(map[string]interface{})
-			queryString["key"] = key
-			queryString["value"] = value
-			queryStringParameters = append(queryStringParameters, queryString)
-		}
-		httpParameters["query_string"] = queryStringParameters
-		httpParameters["path_parameters"] = flex.FlattenStringValueList(enrichmentParameters.HttpParameters.PathParameterValues)
-
-		config["http_parameters"] = []map[string]interface{}{httpParameters}
-	}
-
-	if len(config) == 0 {
+func flattenPipeEnrichmentParameters(apiObject *types.PipeEnrichmentParameters) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	result := []map[string]interface{}{config}
-	return result
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.HttpParameters; v != nil {
+		tfMap["http_parameters"] = []interface{}{flattenPipeEnrichmentHttpParameters(v)}
+	}
+
+	if v := apiObject.InputTemplate; v != nil {
+		tfMap["input_template"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenPipeEnrichmentHttpParameters(apiObject *types.PipeEnrichmentHttpParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.HeaderParameters; v != nil {
+		tfMap["header_parameters"] = v
+	}
+
+	if v := apiObject.PathParameterValues; v != nil {
+		tfMap["path_parameter_values"] = v
+	}
+
+	if v := apiObject.QueryStringParameters; v != nil {
+		tfMap["query_string_parameters"] = v
+	}
+
+	return tfMap
 }

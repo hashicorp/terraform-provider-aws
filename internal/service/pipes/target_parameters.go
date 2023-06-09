@@ -869,6 +869,30 @@ func targetParametersSchema() *schema.Schema {
 	}
 }
 
+func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PipeTargetParameters{}
+
+	// ... nested attribute handling ...
+
+	return apiObject
+}
+
+func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	// ... nested attribute handling ...
+
+	return tfMap
+}
+
 func expandTargetParameters(config []interface{}) *types.PipeTargetParameters {
 	if len(config) == 0 {
 		return nil

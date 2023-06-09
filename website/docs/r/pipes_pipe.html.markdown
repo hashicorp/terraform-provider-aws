@@ -104,28 +104,16 @@ resource "aws_pipes_pipe" "example" {
   enrichment = aws_cloudwatch_event_api_destination.example.arn
 
   enrichment_parameters {
-    http_parameters {
-      header {
-        key   = "example-header"
-        value = "example-value"
-      }
+    http_parameters = {
+      "example-header"        = "example-value"
+      "second-example-header" = "second-example-value"
+    }
 
-      header {
-        key   = "second-example-header"
-        value = "second-example-value"
-      }
+    path_parameter_values = ["example-path-param"]
 
-      path_parameters = ["example-path-param"]
-
-      query_string {
-        key   = "example-query-string"
-        value = "example-value"
-      }
-
-      query_string {
-        key   = "second-example-query-string"
-        value = "second-example-value"
-      }
+    query_string_parameters = {
+      "example-query-string"        = "example-value"
+      "second-example-query-string" = "second-example-value"
     }
   }
 }
@@ -206,19 +194,9 @@ You can find out more about EventBridge Pipes Enrichment in the [User Guide](htt
 
 #### enrichment_parameters.http_parameters Configuration Block
 
-* `header` - (Optional) The headers that need to be sent as part of request invoking the API Gateway REST API or EventBridge ApiDestination. Detailed below.
-* `path_parameters` - (Optional) The path parameter values to be used to populate API Gateway REST API or EventBridge ApiDestination path wildcards ("*").
-* `query_string` - (Optional) The query strings that need to be sent as part of request invoking the API Gateway REST API or EventBridge ApiDestination. Detailed below.
-
-##### enrichment_parameters.http_parameters.header Configuration Block
-
-* `key` - (Optional) The name of the header. Maximum length of 512 characters.
-* `value` - (Optional) The header value. Maximum length of 512 characters.
-
-##### enrichment_parameters.http_parameters.query_string Configuration Block
-
-* `key` - (Optional) The name of the query string. Maximum length of 512 characters.
-* `value` - (Optional) The header query string. Maximum length of 512 characters.
+* `header_parameters` - (Optional) Key-value mapping of the headers that need to be sent as part of request invoking the API Gateway REST API or EventBridge ApiDestination.
+* `path_parameter_values` - (Optional) The path parameter values to be used to populate API Gateway REST API or EventBridge ApiDestination path wildcards ("*").
+* `query_string_parameters` - (Optional) Key-value mapping of the query strings that need to be sent as part of request invoking the API Gateway REST API or EventBridge ApiDestination.
 
 ### source_parameters Configuration Block
 

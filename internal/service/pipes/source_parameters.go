@@ -623,6 +623,42 @@ func sourceParametersSchema() *schema.Schema {
 	}
 }
 
+func expandPipeSourceParameters(tfMap map[string]interface{}) *types.PipeSourceParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PipeSourceParameters{}
+
+	// ... nested attribute handling ...
+
+	return apiObject
+}
+
+func expandUpdatePipeSourceParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.UpdatePipeSourceParameters{}
+
+	// ... nested attribute handling ...
+
+	return apiObject
+}
+
+func flattenPipeSourceParameters(apiObject *types.PipeSourceParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	// ... nested attribute handling ...
+
+	return tfMap
+}
+
 func expandSourceParameters(config []interface{}) *types.PipeSourceParameters {
 	if len(config) == 0 {
 		return nil
