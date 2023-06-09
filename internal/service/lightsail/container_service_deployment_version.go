@@ -274,7 +274,7 @@ func expandContainerServiceDeploymentContainers(tfList []interface{}) map[string
 
 		containerName := tfMap["container_name"].(string)
 
-		container := &types.Container{
+		container := types.Container{
 			Image: aws.String(tfMap["image"].(string)),
 		}
 
@@ -290,7 +290,7 @@ func expandContainerServiceDeploymentContainers(tfList []interface{}) map[string
 			container.Ports = expandContainerServiceProtocol(v)
 		}
 
-		result[containerName] = *container
+		result[containerName] = container
 	}
 
 	return result
