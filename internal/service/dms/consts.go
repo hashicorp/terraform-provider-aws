@@ -21,6 +21,7 @@ const (
 	engineNameAuroraServerless           = "aurora-serverless"
 	engineNameAzuredb                    = "azuredb"
 	engineNameAzureSQLManagedInstance    = "azure-sql-managed-instance"
+	engineNameBabelfish                  = "babelfish"
 	engineNameDB2                        = "db2"
 	engineNameDB2zOS                     = "db2-zos"
 	engineNameTransfer                   = "dms-transfer"
@@ -51,6 +52,7 @@ func engineName_Values() []string {
 		engineNameAuroraServerless,
 		engineNameAzuredb,
 		engineNameAzureSQLManagedInstance,
+		engineNameBabelfish,
 		engineNameDB2,
 		engineNameDB2zOS,
 		engineNameTransfer,
