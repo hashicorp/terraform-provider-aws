@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 // Terraform Plugin Framework variants of standard flatteners and expanders.
@@ -356,13 +357,9 @@ func ExpandFrameworkListNestedBlock[T any, U any](ctx context.Context, tfList ty
 		return nil
 	}
 
-	var apiObjects []U
-
-	for _, v := range data {
-		apiObjects = append(apiObjects, f(ctx, v))
-	}
-
-	return apiObjects
+	return slices.ApplyToAll(data, func(t T) U {
+		return f(ctx, t)
+	})
 }
 
 func ExpandFrameworkListNestedBlockPtr[T any, U any](ctx context.Context, tfList types.List, f FrameworkElementExpanderFunc[T, *U]) *U {
@@ -383,6 +380,7 @@ func ExpandFrameworkListNestedBlockPtr[T any, U any](ctx context.Context, tfList
 	return f(ctx, data[0])
 }
 
+// TODO: type FrameworkElementFlattenerFunc[T any, U any] func(context.Context, T) U
 type FrameworkElementFlattenerFunc[T any] func(context.Context, T) map[string]attr.Value
 
 func FlattenFrameworkListNestedBlock[T any, U any](ctx context.Context, apiObjects []U, f FrameworkElementFlattenerFunc[U]) types.List {
@@ -393,11 +391,9 @@ func FlattenFrameworkListNestedBlock[T any, U any](ctx context.Context, apiObjec
 		return types.ListNull(elementType)
 	}
 
-	var elements []attr.Value
-
-	for _, apiObject := range apiObjects {
-		elements = append(elements, types.ObjectValueMust(attributeTypes, f(ctx, apiObject)))
-	}
+	elements := slices.ApplyToAll(apiObjects, func(apiObject U) attr.Value {
+		return types.ObjectValueMust(attributeTypes, f(ctx, apiObject))
+	})
 
 	return types.ListValueMust(elementType, elements)
 }
