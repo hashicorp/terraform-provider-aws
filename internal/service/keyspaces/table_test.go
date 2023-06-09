@@ -217,14 +217,14 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.partition_key.*", map[string]string{
-						"name": "id",
+						"name": "ID",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.static_column.*", map[string]string{
 						"name": "role",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.static_column.*", map[string]string{
-						"name": "pay_scale",
+						"name": "Pay_Scale0",
 					}),
 				),
 			},
@@ -676,7 +676,7 @@ resource "aws_keyspaces_table" "test" {
     }
 
     partition_key {
-      name = "id"
+      name = "ID"
     }
 
     clustering_key {
@@ -694,7 +694,7 @@ resource "aws_keyspaces_table" "test" {
     }
 
     static_column {
-      name = "pay_scale"
+      name = "Pay_Scale0"
     }
   }
 }
