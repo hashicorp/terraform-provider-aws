@@ -31,6 +31,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
@@ -268,7 +269,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
-	"github.com/aws/aws-sdk-go/service/rekognition"
 	"github.com/aws/aws-sdk-go/service/resiliencehub"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
@@ -595,7 +595,7 @@ type AWSClient struct {
 	redshiftConn                     *redshift.Redshift
 	redshiftdataConn                 *redshiftdataapiservice.RedshiftDataAPIService
 	redshiftserverlessConn           *redshiftserverless.RedshiftServerless
-	rekognitionConn                  *rekognition.Rekognition
+	rekognitionClient                *rekognition.Client
 	resiliencehubConn                *resiliencehub.ResilienceHub
 	resourceexplorer2Client          *resourceexplorer2.Client
 	resourcegroupsConn               *resourcegroups.ResourceGroups
@@ -1656,8 +1656,8 @@ func (client *AWSClient) RedshiftServerlessConn() *redshiftserverless.RedshiftSe
 	return client.redshiftserverlessConn
 }
 
-func (client *AWSClient) RekognitionConn() *rekognition.Rekognition {
-	return client.rekognitionConn
+func (client *AWSClient) RekognitionClient() *rekognition.Client {
+	return client.rekognitionClient
 }
 
 func (client *AWSClient) ResilienceHubConn() *resiliencehub.ResilienceHub {

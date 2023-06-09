@@ -30,6 +30,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
@@ -266,7 +267,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
-	"github.com/aws/aws-sdk-go/service/rekognition"
 	"github.com/aws/aws-sdk-go/service/resiliencehub"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
@@ -543,7 +543,6 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.redshiftConn = redshift.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Redshift])}))
 	client.redshiftdataConn = redshiftdataapiservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RedshiftData])}))
 	client.redshiftserverlessConn = redshiftserverless.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RedshiftServerless])}))
-	client.rekognitionConn = rekognition.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Rekognition])}))
 	client.resiliencehubConn = resiliencehub.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ResilienceHub])}))
 	client.resourcegroupsConn = resourcegroups.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ResourceGroups])}))
 	client.resourcegroupstaggingapiConn = resourcegroupstaggingapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ResourceGroupsTaggingAPI])}))
@@ -712,6 +711,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 	client.rbinClient = rbin.NewFromConfig(cfg, func(o *rbin.Options) {
 		if endpoint := c.Endpoints[names.RBin]; endpoint != "" {
 			o.EndpointResolver = rbin.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.rekognitionClient = rekognition.NewFromConfig(cfg, func(o *rekognition.Options) {
+		if endpoint := c.Endpoints[names.Rekognition]; endpoint != "" {
+			o.EndpointResolver = rekognition.EndpointResolverFromURL(endpoint)
 		}
 	})
 	client.resourceexplorer2Client = resourceexplorer2.NewFromConfig(cfg, func(o *resourceexplorer2.Options) {
