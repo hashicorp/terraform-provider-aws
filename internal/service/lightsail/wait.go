@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -38,8 +39,8 @@ const (
 // waitOperation waits for an Operation to return Succeeded or Completed
 func waitOperation(ctx context.Context, conn *lightsail.Client, oid *string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{string(types.OperationStatusStarted)},
-		Target:     []string{string(types.OperationStatusCompleted), string(types.OperationStatusSucceeded)},
+		Pending:    enum.Slice(types.OperationStatusStarted),
+		Target:     enum.Slice(types.OperationStatusCompleted, types.OperationStatusSucceeded),
 		Refresh:    statusOperation(ctx, conn, oid),
 		Timeout:    OperationTimeout,
 		Delay:      OperationDelay,
@@ -117,8 +118,8 @@ func waitDatabasePubliclyAccessibleModified(ctx context.Context, conn *lightsail
 
 func waitContainerServiceCreated(ctx context.Context, conn *lightsail.Client, serviceName string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{string(types.ContainerServiceStatePending)},
-		Target:     []string{string(types.ContainerServiceStateReady)},
+		Pending:    enum.Slice(types.ContainerServiceStatePending),
+		Target:     enum.Slice(types.ContainerServiceStateReady),
 		Refresh:    statusContainerService(ctx, conn, serviceName),
 		Timeout:    timeout,
 		Delay:      5 * time.Second,
@@ -140,8 +141,8 @@ func waitContainerServiceCreated(ctx context.Context, conn *lightsail.Client, se
 
 func waitContainerServiceDisabled(ctx context.Context, conn *lightsail.Client, serviceName string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{string(types.ContainerServiceStateUpdating)},
-		Target:     []string{string(types.ContainerServiceStateDisabled)},
+		Pending:    enum.Slice(types.ContainerServiceStateUpdating),
+		Target:     enum.Slice(types.ContainerServiceStateDisabled),
 		Refresh:    statusContainerService(ctx, conn, serviceName),
 		Timeout:    timeout,
 		Delay:      5 * time.Second,
@@ -163,8 +164,8 @@ func waitContainerServiceDisabled(ctx context.Context, conn *lightsail.Client, s
 
 func waitContainerServiceUpdated(ctx context.Context, conn *lightsail.Client, serviceName string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{string(types.ContainerServiceStateUpdating)},
-		Target:     []string{string(types.ContainerServiceStateReady), string(types.ContainerServiceStateRunning)},
+		Pending:    enum.Slice(types.ContainerServiceStateUpdating),
+		Target:     enum.Slice(types.ContainerServiceStateReady, types.ContainerServiceStateRunning),
 		Refresh:    statusContainerService(ctx, conn, serviceName),
 		Timeout:    timeout,
 		Delay:      5 * time.Second,
@@ -186,7 +187,7 @@ func waitContainerServiceUpdated(ctx context.Context, conn *lightsail.Client, se
 
 func waitContainerServiceDeleted(ctx context.Context, conn *lightsail.Client, serviceName string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{string(types.ContainerServiceStateDeleting)},
+		Pending:    enum.Slice(types.ContainerServiceStateDeleting),
 		Target:     []string{},
 		Refresh:    statusContainerService(ctx, conn, serviceName),
 		Timeout:    timeout,
@@ -209,8 +210,8 @@ func waitContainerServiceDeleted(ctx context.Context, conn *lightsail.Client, se
 
 func waitContainerServiceDeploymentVersionActive(ctx context.Context, conn *lightsail.Client, serviceName string, version int, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{string(types.ContainerServiceDeploymentStateActivating)},
-		Target:     []string{string(types.ContainerServiceDeploymentStateActive)},
+		Pending:    enum.Slice(types.ContainerServiceDeploymentStateActivating),
+		Target:     enum.Slice(types.ContainerServiceDeploymentStateActive),
 		Refresh:    statusContainerServiceDeploymentVersion(ctx, conn, serviceName, version),
 		Timeout:    timeout,
 		Delay:      5 * time.Second,
