@@ -23,7 +23,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
-	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
@@ -682,11 +681,6 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 	client.kendraClient = kendra.NewFromConfig(cfg, func(o *kendra.Options) {
 		if endpoint := c.Endpoints[names.Kendra]; endpoint != "" {
 			o.EndpointResolver = kendra.EndpointResolverFromURL(endpoint)
-		}
-	})
-	client.lightsailClient = lightsail.NewFromConfig(cfg, func(o *lightsail.Options) {
-		if endpoint := c.Endpoints[names.Lightsail]; endpoint != "" {
-			o.EndpointResolver = lightsail.EndpointResolverFromURL(endpoint)
 		}
 	})
 	client.medialiveClient = medialive.NewFromConfig(cfg, func(o *medialive.Options) {
