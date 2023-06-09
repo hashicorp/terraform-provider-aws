@@ -765,7 +765,7 @@ resource "aws_vpc_endpoint" "test" {
   vpc_endpoint_type = "Interface"
   ip_address_type = "ipv4"
   dns_options {
-	dns_record_ip_type = "ipv4"
+    dns_record_ip_type = "ipv4"
     private_dns_only_for_inbound_resolver_endpoint = false
   }
 }
