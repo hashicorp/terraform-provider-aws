@@ -7,5 +7,5 @@ resource/aws_pipes_pipe: Add `active_mq_broker`, `dynamo_db_stream`, `kinesis_st
 ```
 
 ```release-note:enhancement
-resource/aws_pipes_pipe: Add `batch_target`, `cloudwatch_logs`, `ecs_task`, `event_bridge_event_bus`, `http_parameters`, `kinesis_stream`, `lambda_function`, `redshift_data`, `sage_maker_pipeline`, `sqs_queue` and `step_function` attributes to the `target_parameters` configuration block
+resource/aws_pipes_pipe: Add `batch_target`, `cloudwatch_logs`, `ecs_task`, `event_bridge_event_bus`, `http_parameters`, `kinesis_stream`, `lambda_function`, `redshift_data`, `sagemaker_pipeline`, `sqs_queue` and `step_function` attributes to the `target_parameters` configuration block
 ```

@@ -467,9 +467,9 @@ func Test_expandTargetParameters(t *testing.T) {
 				},
 			},
 		},
-		"sage_maker_pipeline config": {
+		"sagemaker_pipeline config": {
 			config: map[string]interface{}{
-				"sage_maker_pipeline": []interface{}{
+				"sagemaker_pipeline": []interface{}{
 					map[string]interface{}{
 						"parameters": []interface{}{
 							map[string]interface{}{
@@ -1021,10 +1021,10 @@ func Test_flattenTargetParameters(t *testing.T) {
 				},
 			},
 		},
-		"sage_maker_pipeline config": {
+		"sagemaker_pipeline config": {
 			expected: []map[string]interface{}{
 				{
-					"sage_maker_pipeline": []map[string]interface{}{
+					"sagemaker_pipeline": []map[string]interface{}{
 						{
 							"parameters": []map[string]interface{}{
 								{

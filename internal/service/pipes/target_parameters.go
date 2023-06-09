@@ -31,7 +31,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
 						"target_parameters.0.step_function",
 					},
@@ -176,7 +176,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
 						"target_parameters.0.step_function",
 					},
@@ -210,7 +210,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
 						"target_parameters.0.step_function",
 					},
@@ -543,7 +543,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
 						"target_parameters.0.step_function",
 					},
@@ -601,7 +601,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
 						"target_parameters.0.step_function",
 					},
@@ -670,7 +670,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
 						"target_parameters.0.step_function",
 					},
@@ -696,7 +696,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
 						"target_parameters.0.step_function",
 					},
@@ -722,7 +722,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
-						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
 						"target_parameters.0.step_function",
 					},
@@ -764,7 +764,7 @@ func targetParametersSchema() *schema.Schema {
 						},
 					},
 				},
-				"sage_maker_pipeline": {
+				"sagemaker_pipeline": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -820,7 +820,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.step_function",
 					},
 					Elem: &schema.Resource{
@@ -851,7 +851,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
 					},
 					Elem: &schema.Resource{
@@ -917,7 +917,7 @@ func expandTargetParameters(config []interface{}) *types.PipeTargetParameters {
 			parameters.RedshiftDataParameters = expandTargetRedshiftDataParameters(val.([]interface{}))
 		}
 
-		if val, ok := param["sage_maker_pipeline"]; ok {
+		if val, ok := param["sagemaker_pipeline"]; ok {
 			parameters.SageMakerPipelineParameters = expandTargetSageMakerPipelineParameters(val.([]interface{}))
 		}
 
@@ -1622,7 +1622,7 @@ func flattenTargetParameters(targetParameters *types.PipeTargetParameters) []map
 	}
 
 	if targetParameters.SageMakerPipelineParameters != nil {
-		config["sage_maker_pipeline"] = flattenTargetSageMakerPipelineParameters(targetParameters.SageMakerPipelineParameters)
+		config["sagemaker_pipeline"] = flattenTargetSageMakerPipelineParameters(targetParameters.SageMakerPipelineParameters)
 	}
 
 	if targetParameters.SqsQueueParameters != nil {
