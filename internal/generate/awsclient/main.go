@@ -4,29 +4,22 @@
 package main
 
 import (
-	"bytes"
 	_ "embed"
-	"encoding/csv"
 	"fmt"
-	"go/format"
-	"log"
-	"os"
 	"sort"
-	"text/template"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	filename      = `awsclient_gen.go`
-	namesDataFile = "../../names/names_data.csv"
-)
-
 type ServiceDatum struct {
-	SDKVersion        string
-	GoPackage         string
-	ProviderNameUpper string
-	ClientTypeName    string
+	SDKVersion          string
+	GoV1Package         string
+	GoV2Package         string
+	GoV2PackageOverride string
+	ProviderNameUpper   string
+	ClientTypeName      string
+	ProviderPackage     string
 }
 
 type TemplateData struct {
@@ -34,26 +27,24 @@ type TemplateData struct {
 }
 
 func main() {
-	fmt.Printf("Generating internal/conns/%s\n", filename)
+	const (
+		filename      = `awsclient_gen.go`
+		namesDataFile = "../../names/names_data.csv"
+	)
+	g := common.NewGenerator()
 
-	f, err := os.Open(namesDataFile)
+	g.Infof("Generating internal/conns/%s", filename)
+
+	data, err := common.ReadAllCSVData(namesDataFile)
+
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer f.Close()
-
-	csvReader := csv.NewReader(f)
-
-	data, err := csvReader.ReadAll()
-	if err != nil {
-		log.Fatal(err)
+		g.Fatalf("error reading %s: %s", namesDataFile, err)
 	}
 
 	td := TemplateData{}
 
 	for i, l := range data {
-		if i < 1 { // no header
+		if i < 1 { // skip header
 			continue
 		}
 
@@ -65,59 +56,46 @@ func main() {
 			continue
 		}
 
-		s := ServiceDatum{
-			ProviderNameUpper: l[names.ColProviderNameUpper],
-			SDKVersion:        l[names.ColSDKVersion],
+		if l[names.ColClientSDKV1] != "" {
+			td.Services = append(td.Services, ServiceDatum{
+				ProviderNameUpper: l[names.ColProviderNameUpper],
+				SDKVersion:        "1",
+				GoV1Package:       l[names.ColGoV1Package],
+				GoV2Package:       l[names.ColGoV2Package],
+				ClientTypeName:    l[names.ColGoV1ClientTypeName],
+				ProviderPackage:   l[names.ColProviderPackageCorrect],
+			})
 		}
-
-		if l[names.ColSDKVersion] == "1" {
-			s.GoPackage = l[names.ColGoV1Package]
-			s.ClientTypeName = l[names.ColGoV1ClientTypeName]
-		} else {
-			s.GoPackage = l[names.ColGoV2Package]
-			s.ClientTypeName = "Client"
+		if l[names.ColClientSDKV2] != "" {
+			sd := ServiceDatum{
+				ProviderNameUpper: l[names.ColProviderNameUpper],
+				SDKVersion:        "2",
+				GoV1Package:       l[names.ColGoV1Package],
+				GoV2Package:       l[names.ColGoV2Package],
+				ClientTypeName:    "Client",
+				ProviderPackage:   l[names.ColProviderPackageCorrect],
+			}
+			if l[names.ColClientSDKV1] != "" {
+				// Use `sdkv2` instead of `v2` to prevent collisions with e.g., `elbv2`.
+				sd.GoV2PackageOverride = fmt.Sprintf("%s_sdkv2", l[names.ColGoV2Package])
+				sd.SDKVersion = "1,2"
+			}
+			td.Services = append(td.Services, sd)
 		}
-
-		td.Services = append(td.Services, s)
 	}
 
 	sort.SliceStable(td.Services, func(i, j int) bool {
 		return td.Services[i].ProviderNameUpper < td.Services[j].ProviderNameUpper
 	})
 
-	writeTemplate(tmpl, "awsclient", td)
-}
+	d := g.NewGoFileDestination(filename)
 
-func writeTemplate(body string, templateName string, td TemplateData) {
-	// If the file doesn't exist, create it, or append to the file
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatalf("error opening file (%s): %s", filename, err)
+	if err := d.WriteTemplate("awsclient", tmpl, td); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
-	tplate, err := template.New(templateName).Parse(body)
-	if err != nil {
-		log.Fatalf("error parsing template: %s", err)
-	}
-
-	var buffer bytes.Buffer
-	err = tplate.Execute(&buffer, td)
-	if err != nil {
-		log.Fatalf("error executing template: %s", err)
-	}
-
-	contents, err := format.Source(buffer.Bytes())
-	if err != nil {
-		log.Fatalf("error formatting generated file: %s", err)
-	}
-
-	if _, err := f.Write(contents); err != nil {
-		f.Close()
-		log.Fatalf("error writing to file (%s): %s", filename, err)
-	}
-
-	if err := f.Close(); err != nil {
-		log.Fatalf("error closing file (%s): %s", filename, err)
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 }
 

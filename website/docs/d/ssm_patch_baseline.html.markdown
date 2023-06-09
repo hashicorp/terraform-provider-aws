@@ -40,7 +40,7 @@ The following arguments are supported:
 * `owner` - (Required) Owner of the baseline. Valid values: `All`, `AWS`, `Self` (the current account).
 * `name_prefix` - (Optional) Filter results by the baseline name prefix.
 * `default_baseline` - (Optional) Filters the results against the baselines default_baseline field.
-* `operating_system` - (Optional) Specified OS for the baseline.
+* `operating_system` - (Optional) Specified OS for the baseline. Valid values: `AMAZON_LINUX`, `AMAZON_LINUX_2`, `UBUNTU`, `REDHAT_ENTERPRISE_LINUX`, `SUSE`, `CENTOS`, `ORACLE_LINUX`, `DEBIAN`, `MACOS`, `RASPBIAN` and `ROCKY_LINUX`.
 
 ## Attributes Reference
 

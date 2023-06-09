@@ -2,7 +2,6 @@ package organizations
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_organizations_delegated_services")
 func DataSourceDelegatedServices() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDelegatedServicesRead,
@@ -43,7 +43,7 @@ func DataSourceDelegatedServices() *schema.Resource {
 }
 
 func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	input := &organizations.ListDelegatedServicesForAccountInput{
 		AccountId: aws.String(d.Get("account_id").(string)),
@@ -60,11 +60,11 @@ func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData
 		return !lastPage
 	})
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error describing organizations delegated services: %w", err))
+		return diag.Errorf("describing organizations delegated services: %s", err)
 	}
 
 	if err = d.Set("delegated_services", flattenDelegatedServices(delegators)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting delegated_services: %w", err))
+		return diag.Errorf("setting delegated_services: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)

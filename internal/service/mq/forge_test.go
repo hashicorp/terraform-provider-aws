@@ -7,6 +7,8 @@ import (
 )
 
 func TestCanonicalXML(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Name        string
 		Config      string
@@ -59,7 +61,10 @@ func TestCanonicalXML(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+
 			config, err := tfmq.CanonicalXML(tc.Config)
 			if err != nil {
 				t.Fatalf("Error getting canonical xml for given config: %s", err)

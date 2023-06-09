@@ -62,6 +62,8 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the AppConfig Environment.
 * `id` - AppConfig environment ID and application ID separated by a colon (`:`).
 * `environment_id` - AppConfig environment ID.
+* `state` - State of the environment. Possible values are `READY_FOR_DEPLOYMENT`, `DEPLOYING`, `ROLLING_BACK`
+  or `ROLLED_BACK`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

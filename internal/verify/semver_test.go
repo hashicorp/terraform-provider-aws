@@ -5,6 +5,8 @@ import (
 )
 
 func TestSemVerLessThan(t *testing.T) {
+	t.Parallel()
+
 	for _, tc := range []struct {
 		s1 string
 		s2 string
@@ -24,6 +26,8 @@ func TestSemVerLessThan(t *testing.T) {
 }
 
 func TestSemVerGreaterThanOrEqual(t *testing.T) {
+	t.Parallel()
+
 	for _, tc := range []struct {
 		s1 string
 		s2 string

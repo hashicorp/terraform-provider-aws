@@ -1,6 +1,8 @@
 package lambda
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	eventSourceMappingStateCreating  = "Creating"
@@ -15,3 +17,21 @@ const (
 const (
 	propagationTimeout = 5 * time.Minute
 )
+
+const (
+	invocationActionCreate = "create"
+	invocationActionDelete = "delete"
+	invocationActionUpdate = "update"
+)
+
+const (
+	lifecycleScopeCreateOnly = "CREATE_ONLY"
+	lifecycleScopeCrud       = "CRUD"
+)
+
+func lifecycleScope_Values() []string {
+	return []string{
+		lifecycleScopeCreateOnly,
+		lifecycleScopeCrud,
+	}
+}

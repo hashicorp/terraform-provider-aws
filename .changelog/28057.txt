@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_appsync_function: Add `runtime` and `code` arguments
+```
+
+```release-note:enhancement
+resource/aws_appsync_function: Make `request_mapping_template` and `response_mapping_template` Optional
+```

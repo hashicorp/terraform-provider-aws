@@ -11,9 +11,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_connect_prompt")
 func DataSourcePrompt() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourcePromptRead,
+		ReadWithoutTimeout: dataSourcePromptRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -36,7 +37,7 @@ func DataSourcePrompt() *schema.Resource {
 }
 
 func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -44,11 +45,11 @@ func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta inte
 	promptSummary, err := dataSourceGetPromptSummaryByName(ctx, conn, instanceID, name)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Prompt Summary by name (%s): %w", name, err))
+		return diag.Errorf("finding Connect Prompt Summary by name (%s): %s", name, err)
 	}
 
 	if promptSummary == nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Prompt Summary by name (%s): not found", name))
+		return diag.Errorf("finding Connect Prompt Summary by name (%s): not found", name)
 	}
 
 	d.Set("arn", promptSummary.Arn)

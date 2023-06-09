@@ -24,10 +24,13 @@ resource "aws_apigatewayv2_stage" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
 * `api_id` - (Required) API identifier.
 * `name` - (Required) Name of the stage. Must be between 1 and 128 characters in length.
+
+The following arguments are optional:
+
 * `access_log_settings` - (Optional) Settings for logging access in this stage.
 Use the [`aws_api_gateway_account`](/docs/providers/aws/r/api_gateway_account.html) resource to configure [permissions for CloudWatch Logging](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html#set-up-access-logging-permissions).
 * `auto_deploy` - (Optional) Whether updates to an API automatically trigger a new deployment. Defaults to `false`. Applicable for HTTP APIs.
@@ -40,12 +43,12 @@ Supported only for WebSocket APIs.
 * `stage_variables` - (Optional) Map that defines the stage variables for the stage.
 * `tags` - (Optional) Map of tags to assign to the stage. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-The `access_log_settings` object supports the following:
+### access_log_settings
 
 * `destination_arn` - (Required) ARN of the CloudWatch Logs log group to receive access logs. Any trailing `:*` is trimmed from the ARN.
-* `format` - (Required) Single line [format](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html#apigateway-cloudwatch-log-formats) of the access logs of data, as specified by [selected $context variables](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-logging.html).
+* `format` - (Required) Single line [format](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html#apigateway-cloudwatch-log-formats) of the access logs of data. Refer to log settings for [HTTP](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-logging-variables.html) or [Websocket](https://docs.aws.amazon.com/apigateway/latest/developerguide/websocket-api-logging.html).
 
-The `default_route_settings` object supports the following:
+### default_route_settings
 
 * `data_trace_enabled` - (Optional) Whether data trace logging is enabled for the default route. Affects the log entries pushed to Amazon CloudWatch Logs.
 Defaults to `false`. Supported only for WebSocket APIs.
@@ -55,7 +58,7 @@ Valid values: `ERROR`, `INFO`, `OFF`. Defaults to `OFF`. Supported only for WebS
 * `throttling_burst_limit` - (Optional) Throttling burst limit for the default route.
 * `throttling_rate_limit` - (Optional) Throttling rate limit for the default route.
 
-The `route_settings` object supports the following:
+### route_settings
 
 * `route_key` - (Required) Route key.
 * `data_trace_enabled` - (Optional) Whether data trace logging is enabled for the route. Affects the log entries pushed to Amazon CloudWatch Logs.

@@ -1,15 +1,17 @@
 package cloudfront
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 )
 
 // Custom CloudFront listing functions using similar formatting as other service generated code.
 
-func ListCachePoliciesPages(conn *cloudfront.CloudFront, input *cloudfront.ListCachePoliciesInput, fn func(*cloudfront.ListCachePoliciesOutput, bool) bool) error {
+func ListCachePoliciesPages(ctx context.Context, conn *cloudfront.CloudFront, input *cloudfront.ListCachePoliciesInput, fn func(*cloudfront.ListCachePoliciesOutput, bool) bool) error {
 	for {
-		output, err := conn.ListCachePolicies(input)
+		output, err := conn.ListCachePoliciesWithContext(ctx, input)
 		if err != nil {
 			return err
 		}
@@ -24,9 +26,9 @@ func ListCachePoliciesPages(conn *cloudfront.CloudFront, input *cloudfront.ListC
 	return nil
 }
 
-func ListFieldLevelEncryptionConfigsPages(conn *cloudfront.CloudFront, input *cloudfront.ListFieldLevelEncryptionConfigsInput, fn func(*cloudfront.ListFieldLevelEncryptionConfigsOutput, bool) bool) error {
+func ListFieldLevelEncryptionConfigsPages(ctx context.Context, conn *cloudfront.CloudFront, input *cloudfront.ListFieldLevelEncryptionConfigsInput, fn func(*cloudfront.ListFieldLevelEncryptionConfigsOutput, bool) bool) error {
 	for {
-		output, err := conn.ListFieldLevelEncryptionConfigs(input)
+		output, err := conn.ListFieldLevelEncryptionConfigsWithContext(ctx, input)
 		if err != nil {
 			return err
 		}
@@ -41,9 +43,9 @@ func ListFieldLevelEncryptionConfigsPages(conn *cloudfront.CloudFront, input *cl
 	return nil
 }
 
-func ListFieldLevelEncryptionProfilesPages(conn *cloudfront.CloudFront, input *cloudfront.ListFieldLevelEncryptionProfilesInput, fn func(*cloudfront.ListFieldLevelEncryptionProfilesOutput, bool) bool) error {
+func ListFieldLevelEncryptionProfilesPages(ctx context.Context, conn *cloudfront.CloudFront, input *cloudfront.ListFieldLevelEncryptionProfilesInput, fn func(*cloudfront.ListFieldLevelEncryptionProfilesOutput, bool) bool) error {
 	for {
-		output, err := conn.ListFieldLevelEncryptionProfiles(input)
+		output, err := conn.ListFieldLevelEncryptionProfilesWithContext(ctx, input)
 		if err != nil {
 			return err
 		}
@@ -58,9 +60,9 @@ func ListFieldLevelEncryptionProfilesPages(conn *cloudfront.CloudFront, input *c
 	return nil
 }
 
-func ListFunctionsPages(conn *cloudfront.CloudFront, input *cloudfront.ListFunctionsInput, fn func(*cloudfront.ListFunctionsOutput, bool) bool) error {
+func ListFunctionsPages(ctx context.Context, conn *cloudfront.CloudFront, input *cloudfront.ListFunctionsInput, fn func(*cloudfront.ListFunctionsOutput, bool) bool) error {
 	for {
-		output, err := conn.ListFunctions(input)
+		output, err := conn.ListFunctionsWithContext(ctx, input)
 		if err != nil {
 			return err
 		}
@@ -75,9 +77,9 @@ func ListFunctionsPages(conn *cloudfront.CloudFront, input *cloudfront.ListFunct
 	return nil
 }
 
-func ListOriginRequestPoliciesPages(conn *cloudfront.CloudFront, input *cloudfront.ListOriginRequestPoliciesInput, fn func(*cloudfront.ListOriginRequestPoliciesOutput, bool) bool) error {
+func ListOriginRequestPoliciesPages(ctx context.Context, conn *cloudfront.CloudFront, input *cloudfront.ListOriginRequestPoliciesInput, fn func(*cloudfront.ListOriginRequestPoliciesOutput, bool) bool) error {
 	for {
-		output, err := conn.ListOriginRequestPolicies(input)
+		output, err := conn.ListOriginRequestPoliciesWithContext(ctx, input)
 		if err != nil {
 			return err
 		}
@@ -92,9 +94,9 @@ func ListOriginRequestPoliciesPages(conn *cloudfront.CloudFront, input *cloudfro
 	return nil
 }
 
-func ListResponseHeadersPoliciesPages(conn *cloudfront.CloudFront, input *cloudfront.ListResponseHeadersPoliciesInput, fn func(*cloudfront.ListResponseHeadersPoliciesOutput, bool) bool) error {
+func ListResponseHeadersPoliciesPages(ctx context.Context, conn *cloudfront.CloudFront, input *cloudfront.ListResponseHeadersPoliciesInput, fn func(*cloudfront.ListResponseHeadersPoliciesOutput, bool) bool) error {
 	for {
-		output, err := conn.ListResponseHeadersPolicies(input)
+		output, err := conn.ListResponseHeadersPoliciesWithContext(ctx, input)
 		if err != nil {
 			return err
 		}
@@ -109,9 +111,9 @@ func ListResponseHeadersPoliciesPages(conn *cloudfront.CloudFront, input *cloudf
 	return nil
 }
 
-func ListOriginAccessControlsPages(conn *cloudfront.CloudFront, input *cloudfront.ListOriginAccessControlsInput, fn func(*cloudfront.ListOriginAccessControlsOutput, bool) bool) error {
+func ListOriginAccessControlsPages(ctx context.Context, conn *cloudfront.CloudFront, input *cloudfront.ListOriginAccessControlsInput, fn func(*cloudfront.ListOriginAccessControlsOutput, bool) bool) error {
 	for {
-		output, err := conn.ListOriginAccessControls(input)
+		output, err := conn.ListOriginAccessControlsWithContext(ctx, input)
 		if err != nil {
 			return err
 		}

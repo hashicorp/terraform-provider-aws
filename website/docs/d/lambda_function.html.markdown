@@ -43,7 +43,7 @@ In addition to all arguments above, the following attributes are exported:
 * `file_system_config` - Connection settings for an Amazon EFS file system.
 * `handler` - Function entrypoint in your code.
 * `image_uri` - URI of the container image.
-* `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway.
+* `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway. **NOTE:** Starting with `v4.51.0` of the provider, this will *not* include the qualifier.
 * `kms_key_arn` - ARN for the KMS encryption key.
 * `last_modified` - Date this resource was last modified.
 * `layers` - List of Lambda Layer ARNs attached to your Lambda Function.

@@ -2,7 +2,6 @@ package organizations
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_organizations_delegated_administrators")
 func DataSourceDelegatedAdministrators() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDelegatedAdministratorsRead,
@@ -67,7 +67,7 @@ func DataSourceDelegatedAdministrators() *schema.Resource {
 }
 
 func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	input := &organizations.ListDelegatedAdministratorsInput{}
 
@@ -87,11 +87,11 @@ func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.Resour
 		return !lastPage
 	})
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error describing organizations delegated Administrators: %w", err))
+		return diag.Errorf("describing organizations delegated Administrators: %s", err)
 	}
 
 	if err = d.Set("delegated_administrators", flattenDelegatedAdministrators(delegators)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting delegated_administrators: %w", err))
+		return diag.Errorf("setting delegated_administrators: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)

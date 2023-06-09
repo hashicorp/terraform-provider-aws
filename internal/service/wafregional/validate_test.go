@@ -5,6 +5,8 @@ import (
 )
 
 func TestValidMetricName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"testrule",
 		"testRule",

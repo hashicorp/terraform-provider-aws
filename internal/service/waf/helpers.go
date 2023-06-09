@@ -14,20 +14,24 @@ import (
 
 func SizeConstraintSetSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"arn": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"name": {
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
-		},
-		"arn": {
-			Type:     schema.TypeString,
-			Computed: true,
 		},
 		"size_constraints": {
 			Type:     schema.TypeSet,
 			Optional: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
+					"comparison_operator": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
 					"field_to_match": {
 						Type:     schema.TypeList,
 						Required: true,
@@ -44,10 +48,6 @@ func SizeConstraintSetSchema() map[string]*schema.Schema {
 								},
 							},
 						},
-					},
-					"comparison_operator": {
-						Type:     schema.TypeString,
-						Required: true,
 					},
 					"size": {
 						Type:     schema.TypeInt,

@@ -5,6 +5,8 @@ import (
 )
 
 func TestValidSharePrincipal(t *testing.T) {
+	t.Parallel()
+
 	v := ""
 	_, errors := validSharePrincipal(v, "arn")
 	if len(errors) == 0 {

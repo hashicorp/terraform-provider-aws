@@ -4,18 +4,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
 func TestAccELBServiceAccountDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	expectedAccountID := tfelb.AccountIdPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_elb_service_account.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -31,12 +32,13 @@ func TestAccELBServiceAccountDataSource_basic(t *testing.T) {
 }
 
 func TestAccELBServiceAccountDataSource_region(t *testing.T) {
+	ctx := acctest.Context(t)
 	expectedAccountID := tfelb.AccountIdPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_elb_service_account.regional"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

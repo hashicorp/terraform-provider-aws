@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,8 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_licensemanager_license_configuration", name="License Configuration")
+// @Tags(identifierAttribute="id")
 func ResourceLicenseConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLicenseConfigurationCreate,
@@ -27,7 +30,7 @@ func ResourceLicenseConfiguration() *schema.Resource {
 		DeleteWithoutTimeout: resourceLicenseConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -71,8 +74,8 @@ func ResourceLicenseConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -80,14 +83,13 @@ func ResourceLicenseConfiguration() *schema.Resource {
 }
 
 func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).LicenseManagerConn()
 
 	name := d.Get("name").(string)
 	input := &licensemanager.CreateLicenseConfigurationInput{
 		LicenseCountingType: aws.String(d.Get("license_counting_type").(string)),
 		Name:                aws.String(name),
+		Tags:                GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -106,10 +108,6 @@ func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceD
 		input.LicenseRules = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	log.Printf("[DEBUG] Creating License Manager License Configuration: %s", input)
 	resp, err := conn.CreateLicenseConfigurationWithContext(ctx, input)
 
@@ -123,9 +121,7 @@ func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceLicenseConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).LicenseManagerConn()
 
 	output, err := FindLicenseConfigurationByARN(ctx, conn, d.Id())
 
@@ -148,22 +144,13 @@ func resourceLicenseConfigurationRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("name", output.Name)
 	d.Set("owner_account_id", output.OwnerAccountId)
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, output.Tags)
 
 	return nil
 }
 
 func resourceLicenseConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn
+	conn := meta.(*conns.AWSClient).LicenseManagerConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &licensemanager.UpdateLicenseConfigurationInput{
@@ -185,19 +172,11 @@ func resourceLicenseConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating License Manager License Configuration (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceLicenseConfigurationRead(ctx, d, meta)
 }
 
 func resourceLicenseConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn
+	conn := meta.(*conns.AWSClient).LicenseManagerConn()
 
 	log.Printf("[DEBUG] Deleting License Manager License Configuration: %s", d.Id())
 	_, err := conn.DeleteLicenseConfigurationWithContext(ctx, &licensemanager.DeleteLicenseConfigurationInput{
@@ -223,7 +202,7 @@ func FindLicenseConfigurationByARN(ctx context.Context, conn *licensemanager.Lic
 	output, err := conn.GetLicenseConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeInvalidParameterValueException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -5,6 +5,8 @@ import (
 )
 
 func TestValidPlacementConstraint(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		constType string
 		constExpr string
@@ -37,11 +39,12 @@ func TestValidPlacementConstraint(t *testing.T) {
 			t.Fatalf("Unexpected validation error for \"%s:%s\": %s",
 				tc.constType, tc.constExpr, err)
 		}
-
 	}
 }
 
 func TestValidPlacementStrategy(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		stratType  string
 		stratField string

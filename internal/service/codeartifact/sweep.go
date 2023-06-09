@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -28,15 +28,16 @@ func init() {
 }
 
 func sweepDomains(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CodeArtifactConn
+	conn := client.(*conns.AWSClient).CodeArtifactConn()
 	input := &codeartifact.ListDomainsInput{}
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListDomainsPages(input, func(page *codeartifact.ListDomainsOutput, lastPage bool) bool {
+	err = conn.ListDomainsPagesWithContext(ctx, input, func(page *codeartifact.ListDomainsOutput, lastPage bool) bool {
 		for _, domainPtr := range page.Domains {
 			if domainPtr == nil {
 				continue
@@ -49,7 +50,7 @@ func sweepDomains(region string) error {
 
 			log.Printf("[INFO] Deleting CodeArtifact Domain: %s", domain)
 
-			_, err := conn.DeleteDomain(input)
+			_, err := conn.DeleteDomainWithContext(ctx, input)
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting CodeArtifact Domain (%s): %w", domain, err)
@@ -74,15 +75,16 @@ func sweepDomains(region string) error {
 }
 
 func sweepRepositories(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).CodeArtifactConn
+	conn := client.(*conns.AWSClient).CodeArtifactConn()
 	input := &codeartifact.ListRepositoriesInput{}
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListRepositoriesPages(input, func(page *codeartifact.ListRepositoriesOutput, lastPage bool) bool {
+	err = conn.ListRepositoriesPagesWithContext(ctx, input, func(page *codeartifact.ListRepositoriesOutput, lastPage bool) bool {
 		for _, repositoryPtr := range page.Repositories {
 			if repositoryPtr == nil {
 				continue
@@ -97,7 +99,7 @@ func sweepRepositories(region string) error {
 
 			log.Printf("[INFO] Deleting CodeArtifact Repository: %s", repository)
 
-			_, err := conn.DeleteRepository(input)
+			_, err := conn.DeleteRepositoryWithContext(ctx, input)
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting CodeArtifact Repository (%s): %w", repository, err)

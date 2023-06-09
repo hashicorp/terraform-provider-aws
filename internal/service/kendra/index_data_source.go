@@ -15,9 +15,10 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_kendra_index")
 func DataSourceIndex() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceIndexRead,
+		ReadWithoutTimeout: dataSourceIndexRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -278,7 +279,7 @@ func DataSourceIndex() *schema.Resource {
 }
 
 func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)
@@ -286,11 +287,11 @@ func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, meta inter
 	resp, err := findIndexByID(ctx, conn, id)
 
 	if err != nil {
-		return diag.Errorf("error getting Kendra Index (%s): %s", id, err)
+		return diag.Errorf("getting Kendra Index (%s): %s", id, err)
 	}
 
 	if resp == nil {
-		return diag.Errorf("error getting Kendra Index (%s): empty response", id)
+		return diag.Errorf("getting Kendra Index (%s): empty response", id)
 	}
 
 	arn := arn.ARN{
@@ -338,12 +339,12 @@ func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	tags, err := ListTags(ctx, conn, arn)
 	if err != nil {
-		return diag.Errorf("error listing tags for resource (%s): %s", arn, err)
+		return diag.Errorf("listing tags for resource (%s): %s", arn, err)
 	}
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	d.SetId(id)

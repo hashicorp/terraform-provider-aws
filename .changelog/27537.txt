@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_lightsail_disk
+```
+
+```release-note:new-resource
+aws_lightsail_disk_attachment
+```

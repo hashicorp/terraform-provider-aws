@@ -277,7 +277,10 @@ Datadog, Dynatrace, Infor Nexus, Marketo, ServiceNow, Slack, Veeva, and Zendesk 
 
 * `bucket_name` (Required) - A name for the associated Amazon S3 bucket.
 * `bucket_prefix` (Optional) - The object key for the destination bucket in which Amazon AppFlow places the files.
+* `cluster_identifier` (Optional) - The unique ID that's assigned to an Amazon Redshift cluster.
+* `database_name` (Optional) - The name of an Amazon Redshift database.
 * `database_url` (Required) - The JDBC URL of the Amazon Redshift cluster.
+* `data_api_role_arn` (Optional) - ARN of the IAM role that permits AppFlow to access the database through Data API.
 * `role_arn` (Required) - ARN of the IAM role.
 
 #### Salesforce Connector Profile Properties
@@ -325,4 +328,3 @@ $ terraform import aws_appflow_connector_profile.profile arn:aws:appflow:us-west
 
 [1]: https://docs.aws.amazon.com/appflow/1.0/APIReference/Welcome.html
 [2]: https://docs.aws.amazon.com/appflow/1.0/APIReference/API_CreateConnectorProfile.html
-

@@ -3,10 +3,12 @@ package eks
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 )
 
 func TestValidClusterName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int

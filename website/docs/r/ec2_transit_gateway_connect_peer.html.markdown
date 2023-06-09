@@ -20,7 +20,7 @@ resource "aws_ec2_transit_gateway_connect" "example" {
 
 resource "aws_ec2_transit_gateway_connect_peer" "example" {
   peer_address                  = "10.1.2.3"
-  inside_cidr_blocks            = "169.254.100.0/29"
+  inside_cidr_blocks            = ["169.254.100.0/29"]
   transit_gateway_attachment_id = aws_ec2_transit_gateway_connect.example.id
 }
 ```
@@ -42,11 +42,13 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - EC2 Transit Gateway Connect Peer identifier
 * `arn` - EC2 Transit Gateway Connect Peer ARN
+* `bgp_peer_address` - The IP address assigned to customer device, which is used as BGP IP address.
+* `bgp_transit_gateway_addresses` - The IP addresses assigned to Transit Gateway, which are used as BGP IP addresses.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `10m`)
 - `delete` - (Default `10m`)

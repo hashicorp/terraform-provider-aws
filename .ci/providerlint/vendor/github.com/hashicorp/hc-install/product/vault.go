@@ -14,7 +14,6 @@ import (
 
 var (
 	vaultVersionOutputRe = regexp.MustCompile(`Vault ` + simpleVersionRe)
-	v1_17                = version.Must(version.NewVersion("1.17"))
 )
 
 var Vault = Product{
@@ -49,6 +48,6 @@ var Vault = Product{
 	BuildInstructions: &BuildInstructions{
 		GitRepoURL:    "https://github.com/hashicorp/vault.git",
 		PreCloneCheck: &build.GoIsInstalled{},
-		Build:         &build.GoBuild{Version: v1_17},
+		Build:         &build.GoBuild{},
 	},
 }

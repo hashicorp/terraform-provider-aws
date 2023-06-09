@@ -18,11 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_lightsail_container_service_deployment_version")
 func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceContainerServiceDeploymentVersionCreate,
-		ReadContext:   resourceContainerServiceDeploymentVersionRead,
-		DeleteContext: resourceContainerServiceDeploymentVersionDelete,
+		CreateWithoutTimeout: resourceContainerServiceDeploymentVersionCreate,
+		ReadWithoutTimeout:   resourceContainerServiceDeploymentVersionRead,
+		DeleteWithoutTimeout: resourceContainerServiceDeploymentVersionDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -165,7 +166,7 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 }
 
 func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 	serviceName := d.Get("service_name").(string)
 
 	input := &lightsail.CreateContainerServiceDeploymentInput{
@@ -182,11 +183,11 @@ func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *sch
 
 	output, err := conn.CreateContainerServiceDeploymentWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("error creating Lightsail Container Service (%s) Deployment Version: %s", serviceName, err)
+		return diag.Errorf("creating Lightsail Container Service (%s) Deployment Version: %s", serviceName, err)
 	}
 
 	if output == nil || output.ContainerService == nil || output.ContainerService.NextDeployment == nil {
-		return diag.Errorf("error creating Lightsail Container Service (%s) Deployment Version: empty output", serviceName)
+		return diag.Errorf("creating Lightsail Container Service (%s) Deployment Version: empty output", serviceName)
 	}
 
 	version := int(aws.Int64Value(output.ContainerService.NextDeployment.Version))
@@ -194,14 +195,14 @@ func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *sch
 	d.SetId(fmt.Sprintf("%s/%d", serviceName, version))
 
 	if err := waitContainerServiceDeploymentVersionActive(ctx, conn, serviceName, version, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
+		return diag.Errorf("waiting for Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
 	}
 
 	return resourceContainerServiceDeploymentVersionRead(ctx, d, meta)
 }
 
 func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	serviceName, version, err := ContainerServiceDeploymentVersionParseResourceID(d.Id())
 	if err != nil {
@@ -217,7 +218,7 @@ func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schem
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
+		return diag.Errorf("reading Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
 	}
 
 	d.Set("created_at", aws.TimeValue(deployment.CreatedAt).Format(time.RFC3339))
@@ -226,11 +227,11 @@ func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schem
 	d.Set("version", deployment.Version)
 
 	if err := d.Set("container", flattenContainerServiceDeploymentContainers(deployment.Containers)); err != nil {
-		return diag.Errorf("error setting container for Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
+		return diag.Errorf("setting container for Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
 	}
 
 	if err := d.Set("public_endpoint", flattenContainerServiceDeploymentPublicEndpoint(deployment.PublicEndpoint)); err != nil {
-		return diag.Errorf("error setting public_endpoint for Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
+		return diag.Errorf("setting public_endpoint for Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
 	}
 
 	return nil

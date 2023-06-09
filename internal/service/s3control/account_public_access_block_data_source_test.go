@@ -4,15 +4,17 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccS3ControlAccountPublicAccessBlockDataSource_basic(t *testing.T) {
+func testAccAccountPublicAccessBlockDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_s3_account_public_access_block.test"
 	dataSourceName := "data.aws_s3_account_public_access_block.test"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

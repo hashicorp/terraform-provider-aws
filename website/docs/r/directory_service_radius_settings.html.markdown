@@ -1,5 +1,5 @@
 ---
-subcategory: "DS (Directory Service)"
+subcategory: "Directory Service"
 layout: "aws"
 page_title: "AWS: aws_directory_service_radius_settings"
 description: |-
@@ -9,6 +9,7 @@ description: |-
 # Resource: aws_directory_service_radius_settings
 
 Manages a directory's multi-factor authentication (MFA) using a Remote Authentication Dial In User Service (RADIUS) server.
+
 ## Example Usage
 
 ```terraform
@@ -47,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_directory_service_radius_settings` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+`aws_directory_service_radius_settings` provides the following [Timeouts](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts) configuration options:
 
 - `create` - (Default `30 minutes`) Used for RADIUS settings creation
 - `update` - (Default `30 minutes`) Used for RADIUS settings update

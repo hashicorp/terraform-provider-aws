@@ -1,19 +1,22 @@
 package resourcegroupstaggingapi
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_resourcegroupstaggingapi_resources")
 func DataSourceResources() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceResourcesRead,
+		ReadWithoutTimeout: dataSourceResourcesRead,
 
 		Schema: map[string]*schema.Schema{
 			"exclude_compliant_resources": {
@@ -95,8 +98,9 @@ func DataSourceResources() *schema.Resource {
 	}
 }
 
-func dataSourceResourcesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ResourceGroupsTaggingAPIConn
+func dataSourceResourcesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ResourceGroupsTaggingAPIConn()
 
 	input := &resourcegroupstaggingapi.GetResourcesInput{}
 
@@ -122,7 +126,7 @@ func dataSourceResourcesRead(d *schema.ResourceData, meta interface{}) error {
 
 	var taggings []*resourcegroupstaggingapi.ResourceTagMapping
 
-	err := conn.GetResourcesPages(input, func(page *resourcegroupstaggingapi.GetResourcesOutput, lastPage bool) bool {
+	err := conn.GetResourcesPagesWithContext(ctx, input, func(page *resourcegroupstaggingapi.GetResourcesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -131,16 +135,16 @@ func dataSourceResourcesRead(d *schema.ResourceData, meta interface{}) error {
 		return !lastPage
 	})
 	if err != nil {
-		return fmt.Errorf("error getting Resource Groups Tags API Resources: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting Resource Groups Tags API Resources: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Partition)
 
-	if err := d.Set("resource_tag_mapping_list", flattenResourcesTagMappingList(taggings)); err != nil {
-		return fmt.Errorf("error setting resource tag mapping list: %w", err)
+	if err := d.Set("resource_tag_mapping_list", flattenResourcesTagMappingList(ctx, taggings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting resource tag mapping list: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandTagFilters(filters []interface{}) []*resourcegroupstaggingapi.TagFilter {
@@ -161,13 +165,13 @@ func expandTagFilters(filters []interface{}) []*resourcegroupstaggingapi.TagFilt
 	return result
 }
 
-func flattenResourcesTagMappingList(list []*resourcegroupstaggingapi.ResourceTagMapping) []map[string]interface{} {
+func flattenResourcesTagMappingList(ctx context.Context, list []*resourcegroupstaggingapi.ResourceTagMapping) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 
 	for _, i := range list {
 		l := map[string]interface{}{
 			"resource_arn": aws.StringValue(i.ResourceARN),
-			"tags":         KeyValueTags(i.Tags).Map(),
+			"tags":         KeyValueTags(ctx, i.Tags).Map(),
 		}
 
 		if i.ComplianceDetails != nil {

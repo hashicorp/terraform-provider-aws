@@ -1,22 +1,24 @@
 package codestarconnections
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindConnectionByARN(conn *codestarconnections.CodeStarConnections, arn string) (*codestarconnections.Connection, error) {
+func FindConnectionByARN(ctx context.Context, conn *codestarconnections.CodeStarConnections, arn string) (*codestarconnections.Connection, error) {
 	input := &codestarconnections.GetConnectionInput{
 		ConnectionArn: aws.String(arn),
 	}
 
-	output, err := conn.GetConnection(input)
+	output, err := conn.GetConnectionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -33,15 +35,15 @@ func FindConnectionByARN(conn *codestarconnections.CodeStarConnections, arn stri
 	return output.Connection, nil
 }
 
-func FindHostByARN(conn *codestarconnections.CodeStarConnections, arn string) (*codestarconnections.GetHostOutput, error) {
+func FindHostByARN(ctx context.Context, conn *codestarconnections.CodeStarConnections, arn string) (*codestarconnections.GetHostOutput, error) {
 	input := &codestarconnections.GetHostInput{
 		HostArn: aws.String(arn),
 	}
 
-	output, err := conn.GetHost(input)
+	output, err := conn.GetHostWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

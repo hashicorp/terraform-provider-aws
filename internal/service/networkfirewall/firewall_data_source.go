@@ -2,7 +2,6 @@ package networkfirewall
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 
@@ -17,9 +16,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_networkfirewall_firewall")
 func DataSourceFirewall() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceFirewallResourceRead,
+		ReadWithoutTimeout: dataSourceFirewallResourceRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:         schema.TypeString,
@@ -181,7 +181,7 @@ func DataSourceFirewall() *schema.Resource {
 }
 
 func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &networkfirewall.DescribeFirewallInput{}
@@ -195,8 +195,7 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if input.FirewallArn == nil && input.FirewallName == nil {
-
-		return diag.FromErr(fmt.Errorf("must specify either arn, name, or both"))
+		return diag.Errorf("must specify either arn, name, or both")
 	}
 
 	output, err := conn.DescribeFirewallWithContext(ctx, input)
@@ -232,7 +231,7 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("setting subnet_mappings: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(firewall.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, firewall.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 

@@ -16,8 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_timestreamwrite_table", name="Table")
+// @Tags(identifierAttribute="arn")
 func ResourceTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTableCreate,
@@ -127,10 +130,8 @@ func ResourceTable() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
-
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -138,14 +139,13 @@ func ResourceTable() *schema.Resource {
 }
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
 
 	tableName := d.Get("table_name").(string)
 	input := &timestreamwrite.CreateTableInput{
 		DatabaseName: aws.String(d.Get("database_name").(string)),
 		TableName:    aws.String(tableName),
+		Tags:         GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("retention_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
@@ -156,18 +156,14 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.MagneticStoreWriteProperties = expandMagneticStoreWriteProperties(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	output, err := conn.CreateTableWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Timestream Table (%s): %w", tableName, err))
+		return diag.Errorf("creating Timestream Table (%s): %s", tableName, err)
 	}
 
 	if output == nil || output.Table == nil {
-		return diag.FromErr(fmt.Errorf("error creating Timestream Table (%s): empty output", tableName))
+		return diag.Errorf("creating Timestream Table (%s): empty output", tableName)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.Table.TableName), aws.StringValue(output.Table.DatabaseName)))
@@ -176,9 +172,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
 
 	tableName, databaseName, err := TableParseID(d.Id())
 
@@ -200,7 +194,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if output == nil || output.Table == nil {
-		return diag.FromErr(fmt.Errorf("error reading Timestream Table (%s): empty output", d.Id()))
+		return diag.Errorf("reading Timestream Table (%s): empty output", d.Id())
 	}
 
 	table := output.Table
@@ -210,37 +204,20 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("database_name", table.DatabaseName)
 
 	if err := d.Set("retention_properties", flattenRetentionProperties(table.RetentionProperties)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting retention_properties: %w", err))
+		return diag.Errorf("setting retention_properties: %s", err)
 	}
 
 	if err := d.Set("magnetic_store_write_properties", flattenMagneticStoreWriteProperties(table.MagneticStoreWriteProperties)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting magnetic_store_write_properties: %w", err))
+		return diag.Errorf("setting magnetic_store_write_properties: %s", err)
 	}
 
 	d.Set("table_name", table.TableName)
-
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for Timestream Table (%s): %w", arn, err))
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
 
 	return nil
 }
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		tableName, databaseName, err := TableParseID(d.Id())
@@ -265,15 +242,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateTableWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Timestream Table (%s): %w", d.Id(), err))
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Timestream Table (%s) tags: %w", d.Get("arn").(string), err))
+			return diag.Errorf("updating Timestream Table (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -281,7 +250,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
 
 	tableName, databaseName, err := TableParseID(d.Id())
 
@@ -289,19 +258,18 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(err)
 	}
 
-	input := &timestreamwrite.DeleteTableInput{
+	log.Printf("[INFO] Deleting Timestream Table: %s", d.Id())
+	_, err = conn.DeleteTableWithContext(ctx, &timestreamwrite.DeleteTableInput{
 		DatabaseName: aws.String(databaseName),
 		TableName:    aws.String(tableName),
-	}
-
-	_, err = conn.DeleteTableWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, timestreamwrite.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Timestream Table (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Timestream Table (%s): %s", d.Id(), err)
 	}
 
 	return nil
