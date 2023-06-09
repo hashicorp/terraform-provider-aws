@@ -176,7 +176,7 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 						"type": "text",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
-						"name": "name",
+						"name": "n",
 						"type": "text",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
@@ -196,7 +196,7 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 						"type": "text",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
-						"name": "pay_scale",
+						"name": "pay_scale0",
 						"type": "int",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
@@ -224,7 +224,7 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 						"name": "role",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.static_column.*", map[string]string{
-						"name": "pay_scale",
+						"name": "pay_scale0",
 					}),
 				),
 			},
@@ -626,7 +626,7 @@ resource "aws_keyspaces_table" "test" {
     }
 
     column {
-      name = "name"
+      name = "n"
       type = "text"
     }
 
@@ -651,7 +651,7 @@ resource "aws_keyspaces_table" "test" {
     }
 
     column {
-      name = "pay_scale"
+      name = "pay_scale0"
       type = "int"
     }
 
@@ -694,7 +694,7 @@ resource "aws_keyspaces_table" "test" {
     }
 
     static_column {
-      name = "pay_scale"
+      name = "pay_scale0"
     }
   }
 }
