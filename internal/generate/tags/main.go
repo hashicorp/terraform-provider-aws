@@ -22,13 +22,14 @@ const (
 )
 
 var (
-	createTags         = flag.Bool("CreateTags", false, "whether to generate CreateTags")
-	getTag             = flag.Bool("GetTag", false, "whether to generate GetTag")
-	listTags           = flag.Bool("ListTags", false, "whether to generate ListTags")
-	serviceTagsMap     = flag.Bool("ServiceTagsMap", false, "whether to generate service tags for map")
-	serviceTagsSlice   = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
-	untagInNeedTagType = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
-	updateTags         = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
+	createTags               = flag.Bool("CreateTags", false, "whether to generate CreateTags")
+	getTag                   = flag.Bool("GetTag", false, "whether to generate GetTag")
+	listTags                 = flag.Bool("ListTags", false, "whether to generate ListTags")
+	serviceTagsMap           = flag.Bool("ServiceTagsMap", false, "whether to generate service tags for map")
+	serviceTagsSlice         = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
+	untagInNeedTagType       = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
+	updateTags               = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
+	updateTagsNoIgnoreSystem = flag.Bool("UpdateTagsNoIgnoreSystem", false, "whether to not ignore system tags in UpdateTags")
 
 	createTagsFunc        = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
 	getTagFunc            = flag.String("GetTagFunc", "GetTag", "getTagFunc")
@@ -61,10 +62,11 @@ var (
 	parentNotFoundErrCode = flag.String("ParentNotFoundErrCode", "", "Parent 'NotFound' Error Code")
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
 
-	sdkVersion   = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
-	kvtValues    = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
-	skipNamesImp = flag.Bool("SkipNamesImp", false, "Whether to skip importing names")
-	skipTypesImp = flag.Bool("SkipTypesImp", false, "Whether to skip importing types")
+	sdkServicePackage = flag.String("AWSSDKServicePackage", "", "AWS Go SDK package to use. Defaults to the provider service package name.")
+	sdkVersion        = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
+	kvtValues         = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
+	skipNamesImp      = flag.Bool("SkipNamesImp", false, "Whether to skip importing names")
+	skipTypesImp      = flag.Bool("SkipTypesImp", false, "Whether to skip importing types")
 )
 
 func usage() {
@@ -158,6 +160,7 @@ type TemplateData struct {
 	UntagInTagsElem         string
 	UntagOp                 string
 	UpdateTagsFunc          string
+	UpdateTagsIgnoreSystem  bool
 
 	// The following are specific to writing import paths in the `headerBody`;
 	// to include the package, set the corresponding field's value to true
@@ -167,7 +170,6 @@ type TemplateData struct {
 	InternalTypesPkg bool
 	NamesPkg         bool
 	SkipTypesImp     bool
-	StrConvPkg       bool
 	TfResourcePkg    bool
 }
 
@@ -187,8 +189,11 @@ func main() {
 	}
 
 	servicePackage := os.Getenv("GOPACKAGE")
-	awsPkg, err := names.AWSGoPackage(servicePackage, *sdkVersion)
+	if *sdkServicePackage == "" {
+		sdkServicePackage = &servicePackage
+	}
 
+	awsPkg, err := names.AWSGoPackage(*sdkServicePackage, *sdkVersion)
 	if err != nil {
 		g.Fatalf("encountered: %s", err)
 	}
@@ -198,13 +203,13 @@ func main() {
 		awsIntfPkg = fmt.Sprintf("%[1]s/%[1]siface", awsPkg)
 	}
 
-	clientTypeName, err := names.AWSGoClientTypeName(servicePackage, *sdkVersion)
+	clientTypeName, err := names.AWSGoClientTypeName(*sdkServicePackage, *sdkVersion)
 
 	if err != nil {
 		g.Fatalf("encountered: %s", err)
 	}
 
-	providerNameUpper, err := names.ProviderNameUpper(servicePackage)
+	providerNameUpper, err := names.ProviderNameUpper(*sdkServicePackage)
 
 	if err != nil {
 		g.Fatalf("encountered: %s", err)
@@ -247,7 +252,6 @@ func main() {
 		InternalTypesPkg: *listTags || *serviceTagsMap || *serviceTagsSlice,
 		NamesPkg:         *updateTags && !*skipNamesImp,
 		SkipTypesImp:     *skipTypesImp,
-		StrConvPkg:       awsPkg == "autoscaling",
 		TfResourcePkg:    *getTag,
 
 		CreateTagsFunc:          createTagsFunc,
@@ -282,6 +286,7 @@ func main() {
 		UntagInTagsElem:         *untagInTagsElem,
 		UntagOp:                 *untagOp,
 		UpdateTagsFunc:          *updateTagsFunc,
+		UpdateTagsIgnoreSystem:  !*updateTagsNoIgnoreSystem,
 	}
 
 	templateBody := newTemplateBody(*sdkVersion, *kvtValues)

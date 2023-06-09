@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_ssm_association: The `instance_id` attribute has been deprecated. All configurations using `instance_id` should be updated to use the `targets` attribute instead
+```

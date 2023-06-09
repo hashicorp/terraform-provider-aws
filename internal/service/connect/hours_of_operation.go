@@ -28,10 +28,13 @@ func ResourceHoursOfOperation() *schema.Resource {
 		ReadWithoutTimeout:   resourceHoursOfOperationRead,
 		UpdateWithoutTimeout: resourceHoursOfOperationUpdate,
 		DeleteWithoutTimeout: resourceHoursOfOperationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -98,11 +101,6 @@ func ResourceHoursOfOperation() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 250),
 			},
-			"hours_of_operation_arn": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "use 'arn' attribute instead",
-			},
 			"hours_of_operation_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -148,11 +146,11 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 	output, err := conn.CreateHoursOfOperationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Hours of Operation (%s): %w", name, err))
+		return diag.Errorf("creating Connect Hours of Operation (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Hours of Operation (%s): empty output", name))
+		return diag.Errorf("creating Connect Hours of Operation (%s): empty output", name)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.HoursOfOperationId)))
@@ -181,11 +179,11 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Hours of Operation (%s): %w", d.Id(), err))
+		return diag.Errorf("getting Connect Hours of Operation (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.HoursOfOperation == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Hours of Operation (%s): empty response", d.Id()))
+		return diag.Errorf("getting Connect Hours of Operation (%s): empty response", d.Id())
 	}
 
 	if err := d.Set("config", flattenConfigs(resp.HoursOfOperation.Config)); err != nil {
@@ -193,7 +191,6 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.Set("arn", resp.HoursOfOperation.HoursOfOperationArn)
-	d.Set("hours_of_operation_arn", resp.HoursOfOperation.HoursOfOperationArn) // Deprecated
 	d.Set("hours_of_operation_id", resp.HoursOfOperation.HoursOfOperationId)
 	d.Set("instance_id", instanceID)
 	d.Set("description", resp.HoursOfOperation.Description)
@@ -224,7 +221,7 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 			TimeZone:           aws.String(d.Get("time_zone").(string)),
 		})
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating HoursOfOperation (%s): %w", d.Id(), err))
+			return diag.Errorf("updating HoursOfOperation (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -246,7 +243,7 @@ func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData,
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting HoursOfOperation (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting HoursOfOperation (%s): %s", d.Id(), err)
 	}
 
 	return nil

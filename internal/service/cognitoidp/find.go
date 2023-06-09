@@ -73,7 +73,7 @@ func FindCognitoUserInGroup(ctx context.Context, conn *cognitoidentityprovider.C
 	})
 
 	if err != nil {
-		return false, fmt.Errorf("error reading groups for user: %w", err)
+		return false, fmt.Errorf("reading groups for user: %w", err)
 	}
 
 	return found, nil
@@ -112,7 +112,7 @@ func FindCognitoUserPoolClientByName(ctx context.Context, conn *cognitoidentityp
 		return nil, err
 	}
 
-	client, err := tfresource.AssertSingleResult(clientDescs)
+	client, err := tfresource.AssertSinglePtrResult(clientDescs)
 	if err != nil {
 		return nil, err
 	}

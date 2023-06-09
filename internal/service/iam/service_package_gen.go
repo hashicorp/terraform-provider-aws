@@ -22,6 +22,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
+			Factory:  DataSourceAccessKeys,
+			TypeName: "aws_iam_access_keys",
+		},
+		{
 			Factory:  DataSourceAccountAlias,
 			TypeName: "aws_iam_account_alias",
 		},
@@ -48,6 +52,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourcePolicyDocument,
 			TypeName: "aws_iam_policy_document",
+		},
+		{
+			Factory:  DataSourcePrincipalPolicySimulation,
+			TypeName: "aws_iam_principal_policy_simulation",
 		},
 		{
 			Factory:  DataSourceRole,

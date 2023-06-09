@@ -45,7 +45,7 @@ func WaitIAMPropagation[T any](ctx context.Context, f func() (T, error)) (T, err
 		return zero, err
 	}
 
-	return outputRaw.(T), err
+	return outputRaw.(T), nil
 }
 
 func WaitKeyDeleted(ctx context.Context, conn *kms.KMS, id string) (*kms.KeyMetadata, error) {

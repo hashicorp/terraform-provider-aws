@@ -63,8 +63,13 @@ func ResourceFirewallPolicy() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"rule_order": {
 										Type:         schema.TypeString,
-										Required:     true,
+										Optional:     true,
 										ValidateFunc: validation.StringInSlice(networkfirewall.RuleOrder_Values(), false),
+									},
+									"stream_exception_policy": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(networkfirewall.StreamExceptionPolicy_Values(), false),
 									},
 								},
 							},
@@ -220,17 +225,15 @@ func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChanges("description", "encryption_configuration", "firewall_policy") {
 		input := &networkfirewall.UpdateFirewallPolicyInput{
-			FirewallPolicy:    expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
-			FirewallPolicyArn: aws.String(d.Id()),
-			UpdateToken:       aws.String(d.Get("update_token").(string)),
+			EncryptionConfiguration: expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
+			FirewallPolicy:          expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
+			FirewallPolicyArn:       aws.String(d.Id()),
+			UpdateToken:             aws.String(d.Get("update_token").(string)),
 		}
 
 		// Only pass non-empty description values, else API request returns an InternalServiceError
 		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
-		}
-		if d.HasChange("encryption_configuration") {
-			input.EncryptionConfiguration = expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{}))
 		}
 
 		_, err := conn.UpdateFirewallPolicyWithContext(ctx, input)
@@ -337,8 +340,11 @@ func expandStatefulEngineOptions(l []interface{}) *networkfirewall.StatefulEngin
 	options := &networkfirewall.StatefulEngineOptions{}
 
 	m := l[0].(map[string]interface{})
-	if v, ok := m["rule_order"].(string); ok {
+	if v, ok := m["rule_order"].(string); ok && v != "" {
 		options.RuleOrder = aws.String(v)
+	}
+	if v, ok := m["stream_exception_policy"].(string); ok && v != "" {
+		options.StreamExceptionPolicy = aws.String(v)
 	}
 
 	return options
@@ -478,8 +484,12 @@ func flattenStatefulEngineOptions(options *networkfirewall.StatefulEngineOptions
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"rule_order": aws.StringValue(options.RuleOrder),
+	m := map[string]interface{}{}
+	if options.RuleOrder != nil {
+		m["rule_order"] = aws.StringValue(options.RuleOrder)
+	}
+	if options.StreamExceptionPolicy != nil {
+		m["stream_exception_policy"] = aws.StringValue(options.StreamExceptionPolicy)
 	}
 
 	return []interface{}{m}

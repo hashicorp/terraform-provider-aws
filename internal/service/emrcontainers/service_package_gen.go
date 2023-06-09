@@ -31,6 +31,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
+			Factory:  ResourceJobTemplate,
+			TypeName: "aws_emrcontainers_job_template",
+			Name:     "Job Template",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceVirtualCluster,
 			TypeName: "aws_emrcontainers_virtual_cluster",
 			Name:     "Virtual Cluster",

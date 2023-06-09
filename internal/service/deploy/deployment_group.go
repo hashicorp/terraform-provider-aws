@@ -60,7 +60,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 				}
 
 				if output == nil || output.DeploymentGroupInfo == nil {
-					return []*schema.ResourceData{}, fmt.Errorf("error reading CodeDeploy Application (%s): empty response", d.Id())
+					return []*schema.ResourceData{}, fmt.Errorf("reading CodeDeploy Application (%s): empty response", d.Id())
 				}
 
 				d.SetId(aws.StringValue(output.DeploymentGroupInfo.DeploymentGroupId))
@@ -580,7 +580,7 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		resp, err = conn.CreateDeploymentGroupWithContext(ctx, &input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating CodeDeploy deployment group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy deployment group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.DeploymentGroupId))

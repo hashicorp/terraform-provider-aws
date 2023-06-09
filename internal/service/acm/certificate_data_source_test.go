@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/acm"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -132,15 +132,15 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_basic(domain),
-				ExpectError: regexp.MustCompile(`multiple certificates for domain`),
+				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_status(domain, acm.CertificateStatusIssued),
-				ExpectError: regexp.MustCompile(`multiple certificates for domain`),
+				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_types(domain, acm.CertificateTypeAmazonIssued),
-				ExpectError: regexp.MustCompile(`multiple certificates for domain`),
+				ExpectError: regexp.MustCompile(`multiple ACM Certificates matching domain`),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecent(domain, true),
@@ -182,27 +182,27 @@ func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_basic(domain),
-				ExpectError: regexp.MustCompile(`no certificate for domain`),
+				ExpectError: regexp.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_status(domain, acm.CertificateStatusIssued),
-				ExpectError: regexp.MustCompile(`no certificate for domain`),
+				ExpectError: regexp.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_types(domain, acm.CertificateTypeAmazonIssued),
-				ExpectError: regexp.MustCompile(`no certificate for domain`),
+				ExpectError: regexp.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecent(domain, true),
-				ExpectError: regexp.MustCompile(`no certificate for domain`),
+				ExpectError: regexp.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, acm.CertificateStatusIssued, true),
-				ExpectError: regexp.MustCompile(`no certificate for domain`),
+				ExpectError: regexp.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, acm.CertificateTypeAmazonIssued, true),
-				ExpectError: regexp.MustCompile(`no certificate for domain`),
+				ExpectError: regexp.MustCompile(`no ACM Certificate matching domain`),
 			},
 		},
 	})
@@ -235,7 +235,7 @@ func TestAccACMCertificateDataSource_keyTypes(t *testing.T) {
 func testAccCertificateDataSourceConfig_basic(domain string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain = "%s"
+  domain = %[1]q
 }
 `, domain)
 }
@@ -243,8 +243,8 @@ data "aws_acm_certificate" "test" {
 func testAccCertificateDataSourceConfig_status(domain, status string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain   = "%s"
-  statuses = ["%s"]
+  domain   = %[1]q
+  statuses = [%[2]q]
 }
 `, domain, status)
 }
@@ -252,8 +252,8 @@ data "aws_acm_certificate" "test" {
 func testAccCertificateDataSourceConfig_types(domain, certType string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain = "%s"
-  types  = ["%s"]
+  domain = %[1]q
+  types  = [%[2]q]
 }
 `, domain, certType)
 }
@@ -261,8 +261,8 @@ data "aws_acm_certificate" "test" {
 func testAccCertificateDataSourceConfig_mostRecent(domain string, mostRecent bool) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain      = "%s"
-  most_recent = %t
+  domain      = %[1]q
+  most_recent = %[2]t
 }
 `, domain, mostRecent)
 }
@@ -270,9 +270,9 @@ data "aws_acm_certificate" "test" {
 func testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, status string, mostRecent bool) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain      = "%s"
-  statuses    = ["%s"]
-  most_recent = %t
+  domain      = %[1]q
+  statuses    = [%[2]q]
+  most_recent = %[3]t
 }
 `, domain, status, mostRecent)
 }
@@ -280,9 +280,9 @@ data "aws_acm_certificate" "test" {
 func testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, certType string, mostRecent bool) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain      = "%s"
-  types       = ["%s"]
-  most_recent = %t
+  domain      = %[1]q
+  types       = [%[2]q]
+  most_recent = %[3]t
 }
 `, domain, certType, mostRecent)
 }

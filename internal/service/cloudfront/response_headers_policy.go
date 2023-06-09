@@ -23,9 +23,11 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 		ReadWithoutTimeout:   resourceResponseHeadersPolicyRead,
 		UpdateWithoutTimeout: resourceResponseHeadersPolicyUpdate,
 		DeleteWithoutTimeout: resourceResponseHeadersPolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"comment": {
 				Type:     schema.TypeString,
@@ -107,7 +109,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 						},
 					},
 				},
-				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "security_headers_config", "server_timing_headers_config"},
+				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "remove_headers_config", "security_headers_config", "server_timing_headers_config"},
 			},
 			"custom_headers_config": {
 				Type:     schema.TypeList,
@@ -137,7 +139,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 						},
 					},
 				},
-				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "security_headers_config", "server_timing_headers_config"},
+				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "remove_headers_config", "security_headers_config", "server_timing_headers_config"},
 			},
 			"etag": {
 				Type:     schema.TypeString,
@@ -147,6 +149,28 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"remove_headers_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"items": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"header": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "remove_headers_config", "security_headers_config", "server_timing_headers_config"},
 			},
 			"security_headers_config": {
 				Type:     schema.TypeList,
@@ -272,7 +296,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 						},
 					},
 				},
-				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "security_headers_config", "server_timing_headers_config"},
+				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "remove_headers_config", "security_headers_config", "server_timing_headers_config"},
 			},
 			"server_timing_headers_config": {
 				Type:     schema.TypeList,
@@ -291,7 +315,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 						},
 					},
 				},
-				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "security_headers_config", "server_timing_headers_config"},
+				AtLeastOneOf: []string{"cors_config", "custom_headers_config", "remove_headers_config", "security_headers_config", "server_timing_headers_config"},
 			},
 		},
 	}
@@ -318,6 +342,10 @@ func resourceResponseHeadersPolicyCreate(ctx context.Context, d *schema.Resource
 		apiObject.CustomHeadersConfig = expandResponseHeadersPolicyCustomHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("remove_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.RemoveHeadersConfig = expandResponseHeadersPolicyRemoveHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("security_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		apiObject.SecurityHeadersConfig = expandResponseHeadersPolicySecurityHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -330,7 +358,6 @@ func resourceResponseHeadersPolicyCreate(ctx context.Context, d *schema.Resource
 		ResponseHeadersPolicyConfig: apiObject,
 	}
 
-	log.Printf("[DEBUG] Creating CloudFront Response Headers Policy: (%s)", input)
 	output, err := conn.CreateResponseHeadersPolicyWithContext(ctx, input)
 
 	if err != nil {
@@ -376,6 +403,13 @@ func resourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceDa
 	}
 	d.Set("etag", output.ETag)
 	d.Set("name", apiObject.Name)
+	if apiObject.RemoveHeadersConfig != nil {
+		if err := d.Set("remove_headers_config", []interface{}{flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject.RemoveHeadersConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting remove_headers_config: %s", err)
+		}
+	} else {
+		d.Set("remove_headers_config", nil)
+	}
 	if apiObject.SecurityHeadersConfig != nil {
 		if err := d.Set("security_headers_config", []interface{}{flattenResponseHeadersPolicySecurityHeadersConfig(apiObject.SecurityHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting security_headers_config: %s", err)
@@ -419,6 +453,10 @@ func resourceResponseHeadersPolicyUpdate(ctx context.Context, d *schema.Resource
 		apiObject.CustomHeadersConfig = expandResponseHeadersPolicyCustomHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("remove_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.RemoveHeadersConfig = expandResponseHeadersPolicyRemoveHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("security_headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		apiObject.SecurityHeadersConfig = expandResponseHeadersPolicySecurityHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -433,7 +471,6 @@ func resourceResponseHeadersPolicyUpdate(ctx context.Context, d *schema.Resource
 		ResponseHeadersPolicyConfig: apiObject,
 	}
 
-	log.Printf("[DEBUG] Updating CloudFront Response Headers Policy: (%s)", input)
 	_, err := conn.UpdateResponseHeadersPolicyWithContext(ctx, input)
 
 	if err != nil {
@@ -781,6 +818,114 @@ func flattenResponseHeadersPolicyCustomHeaders(apiObjects []*cloudfront.Response
 		}
 
 		if v := flattenResponseHeadersPolicyCustomHeader(apiObject); len(v) > 0 {
+			tfList = append(tfList, v)
+		}
+	}
+
+	return tfList
+}
+
+//
+// remove_headers_config:
+//
+
+func expandResponseHeadersPolicyRemoveHeadersConfig(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyRemoveHeadersConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicyRemoveHeadersConfig{}
+
+	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
+		items := expandResponseHeadersPolicyRemoveHeaders(v.List())
+		apiObject.Items = items
+		apiObject.Quantity = aws.Int64(int64(len(items)))
+	}
+
+	return apiObject
+}
+
+func expandResponseHeadersPolicyRemoveHeader(tfMap map[string]interface{}) *cloudfront.ResponseHeadersPolicyRemoveHeader {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudfront.ResponseHeadersPolicyRemoveHeader{}
+
+	if v, ok := tfMap["header"].(string); ok && v != "" {
+		apiObject.Header = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandResponseHeadersPolicyRemoveHeaders(tfList []interface{}) []*cloudfront.ResponseHeadersPolicyRemoveHeader {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*cloudfront.ResponseHeadersPolicyRemoveHeader
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandResponseHeadersPolicyRemoveHeader(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject *cloudfront.ResponseHeadersPolicyRemoveHeadersConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Items; len(v) > 0 {
+		tfMap["items"] = flattenResponseHeadersPolicyRemoveHeaders(v)
+	}
+
+	return tfMap
+}
+
+func flattenResponseHeadersPolicyRemoveHeader(apiObject *cloudfront.ResponseHeadersPolicyRemoveHeader) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Header; v != nil {
+		tfMap["header"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenResponseHeadersPolicyRemoveHeaders(apiObjects []*cloudfront.ResponseHeadersPolicyRemoveHeader) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		if v := flattenResponseHeadersPolicyRemoveHeader(apiObject); len(v) > 0 {
 			tfList = append(tfList, v)
 		}
 	}

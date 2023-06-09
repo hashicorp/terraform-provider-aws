@@ -70,7 +70,7 @@ func resourceAggregateAuthorizationPut(ctx context.Context, d *schema.ResourceDa
 
 	_, err := conn.PutAggregationAuthorizationWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating aggregate authorization: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating aggregate authorization: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", accountId, region))

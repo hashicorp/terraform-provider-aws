@@ -87,7 +87,7 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 		_, err = conn.PutBucketPolicyWithContext(ctx, params)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error putting S3 policy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "putting S3 policy: %s", err)
 	}
 
 	d.SetId(bucket)
@@ -148,7 +148,7 @@ func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error deleting S3 policy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 policy: %s", err)
 	}
 
 	return diags

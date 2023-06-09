@@ -21,18 +21,6 @@ func emptySchema() *schema.Schema {
 	}
 }
 
-func emptyDeprecatedSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{},
-		},
-		Deprecated: "Not supported by WAFv2 API",
-	}
-}
-
 func ruleLabelsSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
@@ -549,6 +537,31 @@ func captchaConfigSchema() *schema.Schema {
 	}
 }
 
+func outerCaptchaConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"immunity_time_property": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"immunity_time": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func challengeConfigSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -848,15 +861,14 @@ func managedRuleGroupStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"excluded_rule": excludedRuleSchema(),
+				"managed_rule_group_configs": managedRuleGroupConfigSchema(),
 				"name": {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
-				"rule_action_override":       ruleActionOverrideSchema(),
-				"managed_rule_group_configs": managedRuleGroupConfigSchema(),
-				"scope_down_statement":       scopeDownStatementSchema(level - 1),
+				"rule_action_override": ruleActionOverrideSchema(),
+				"scope_down_statement": scopeDownStatementSchema(level - 1),
 				"vendor_name": {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -869,23 +881,6 @@ func managedRuleGroupStatementSchema(level int) *schema.Schema {
 				},
 			},
 		},
-	}
-}
-
-func excludedRuleSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringLenBetween(1, 128),
-				},
-			},
-		},
-		Deprecated: "Use rule_action_override instead",
 	}
 }
 
@@ -1075,7 +1070,7 @@ func ruleGroupReferenceStatementSchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-				"excluded_rule": excludedRuleSchema(),
+				"rule_action_override": ruleActionOverrideSchema(),
 			},
 		},
 	}

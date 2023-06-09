@@ -58,7 +58,7 @@ data "aws_instance" "cloud9_instance" {
 
 resource "aws_eip" "cloud9_eip" {
   instance = data.aws_instance.cloud9_instance.id
-  vpc      = true
+  domain   = "vpc"
 }
 
 output "cloud9_public_ip" {

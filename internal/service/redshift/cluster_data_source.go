@@ -85,11 +85,6 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_security_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"cluster_subnet_group_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -241,13 +236,6 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("cluster_public_key", rsc.ClusterPublicKey)
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
-
-	var csg []string
-	for _, g := range rsc.ClusterSecurityGroups {
-		csg = append(csg, aws.StringValue(g.ClusterSecurityGroupName))
-	}
-	d.Set("cluster_security_groups", csg)
-
 	d.Set("cluster_subnet_group_name", rsc.ClusterSubnetGroupName)
 
 	if len(rsc.ClusterNodes) > 1 {
@@ -267,6 +255,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	if rsc.Endpoint != nil {
 		d.Set("endpoint", rsc.Endpoint.Address)
+		d.Set("port", rsc.Endpoint.Port)
 	}
 
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
@@ -281,7 +270,6 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("master_username", rsc.MasterUsername)
 	d.Set("node_type", rsc.NodeType)
 	d.Set("number_of_nodes", rsc.NumberOfNodes)
-	d.Set("port", rsc.Endpoint.Port)
 	d.Set("preferred_maintenance_window", rsc.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", rsc.PubliclyAccessible)
 	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)

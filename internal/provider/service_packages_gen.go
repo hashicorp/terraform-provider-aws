@@ -89,6 +89,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
@@ -106,6 +107,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iotanalytics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iotevents"
@@ -127,7 +129,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
@@ -190,6 +191,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmcontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmincidents"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
@@ -294,6 +296,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		emrserverless.ServicePackage,
 		events.ServicePackage,
 		evidently.ServicePackage,
+		finspace.ServicePackage,
 		firehose.ServicePackage,
 		fis.ServicePackage,
 		fms.ServicePackage,
@@ -311,6 +314,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		imagebuilder.ServicePackage,
 		inspector.ServicePackage,
 		inspector2.ServicePackage,
+		internetmonitor.ServicePackage,
 		iot.ServicePackage,
 		iotanalytics.ServicePackage,
 		iotevents.ServicePackage,
@@ -332,7 +336,6 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		lightsail.ServicePackage,
 		location.ServicePackage,
 		logs.ServicePackage,
-		macie.ServicePackage,
 		macie2.ServicePackage,
 		mediaconnect.ServicePackage,
 		mediaconvert.ServicePackage,
@@ -395,6 +398,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		sns.ServicePackage,
 		sqs.ServicePackage,
 		ssm.ServicePackage,
+		ssmcontacts.ServicePackage,
 		ssmincidents.ServicePackage,
 		ssoadmin.ServicePackage,
 		storagegateway.ServicePackage,

@@ -221,7 +221,7 @@ func updateByteMatchSetResourceWR(ctx context.Context, d *schema.ResourceData, o
 		return conn.UpdateByteMatchSetWithContext(ctx, req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error updating ByteMatchSet: %s", err)
+		return fmt.Errorf("updating ByteMatchSet: %s", err)
 	}
 
 	return nil

@@ -111,7 +111,7 @@ resource "aws_connect_instance_storage_config" "example" {
 The following arguments are supported:
 
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
-* `resource_type` - (Required) A valid resource type. Valid Values: `CHAT_TRANSCRIPTS` | `CALL_RECORDINGS` | `SCHEDULED_REPORTS` | `MEDIA_STREAMS` | `CONTACT_TRACE_RECORDS` | `AGENT_EVENTS` | `REAL_TIME_CONTACT_ANALYSIS_SEGMENTS`.
+* `resource_type` - (Required) A valid resource type. Valid Values: `AGENT_EVENTS` | `ATTACHMENTS` | `CALL_RECORDINGS` | `CHAT_TRANSCRIPTS` | `CONTACT_EVALUATIONS` | `CONTACT_TRACE_RECORDS` | `MEDIA_STREAMS` | `REAL_TIME_CONTACT_ANALYSIS_SEGMENTS` | `SCHEDULED_REPORTS`.
 * `storage_config` - (Required) Specifies the storage configuration options for the Connect Instance. [Documented below](#storage_config).
 
 ### `storage_config`

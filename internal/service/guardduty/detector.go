@@ -237,7 +237,7 @@ func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		log.Printf("[DEBUG] Update GuardDuty Detector: %s", input)
 		_, err := conn.UpdateDetectorWithContext(ctx, &input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Updating GuardDuty Detector '%s' failed: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Detector (%s): %s", d.Id(), err)
 		}
 	}
 

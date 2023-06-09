@@ -208,7 +208,7 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err := d.Set("folder_path", flex.FlattenStringList(out.FolderPath)); err != nil {
-		return diag.Errorf("error setting folder_path: %s", err)
+		return diag.Errorf("setting folder_path: %s", err)
 	}
 
 	permsResp, err := conn.DescribeFolderPermissionsWithContext(ctx, &quicksight.DescribeFolderPermissionsInput{
@@ -217,11 +217,11 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if err != nil {
-		return diag.Errorf("error describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
+		return diag.Errorf("describing QuickSight Folder (%s) Permissions: %s", d.Id(), err)
 	}
 
 	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("error setting permissions: %s", err)
+		return diag.Errorf("setting permissions: %s", err)
 	}
 	return nil
 }
@@ -271,7 +271,7 @@ func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		_, err = conn.UpdateFolderPermissionsWithContext(ctx, params)
 
 		if err != nil {
-			return diag.Errorf("error updating QuickSight Folder (%s) permissions: %s", folderId, err)
+			return diag.Errorf("updating QuickSight Folder (%s) permissions: %s", folderId, err)
 		}
 	}
 

@@ -86,7 +86,7 @@ func resourceUploadCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	out, err := conn.CreateUploadWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating DeviceFarm Upload: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DeviceFarm Upload: %s", err)
 	}
 
 	arn := aws.StringValue(out.Upload.Arn)
@@ -150,7 +150,7 @@ func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Updating DeviceFarm Upload: %s", d.Id())
 	_, err := conn.UpdateUploadWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error Updating DeviceFarm Upload: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Upload (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceUploadRead(ctx, d, meta)...)
@@ -170,7 +170,7 @@ func resourceUploadDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "Error deleting DeviceFarm Upload: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting DeviceFarm Upload: %s", err)
 	}
 
 	return diags

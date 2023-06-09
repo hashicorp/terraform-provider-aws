@@ -84,10 +84,12 @@ func UpdateTags(ctx context.Context, conn *medialive.Client, identifier string, 
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.MediaLive)
+	if len(removedTags) > 0 {
 		input := &medialive.DeleteTagsInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     removedTags.IgnoreSystem(names.MediaLive).Keys(),
+			TagKeys:     removedTags.Keys(),
 		}
 
 		_, err := conn.DeleteTags(ctx, input)
@@ -97,10 +99,12 @@ func UpdateTags(ctx context.Context, conn *medialive.Client, identifier string, 
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.MediaLive)
+	if len(updatedTags) > 0 {
 		input := &medialive.CreateTagsInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreSystem(names.MediaLive)),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.CreateTags(ctx, input)

@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -404,11 +404,9 @@ func sweepServiceSpecificCredentials(region string) error {
 func sweepPolicies(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.(*conns.AWSClient).IAMConn()
 	input := &iam.ListPoliciesInput{
 		Scope: aws.String(iam.PolicyScopeTypeLocal),
@@ -420,30 +418,18 @@ func sweepPolicies(region string) error {
 			return !lastPage
 		}
 
-		for _, policy := range page.Policies {
-			arn := aws.StringValue(policy.Arn)
-			input := &iam.DeletePolicyInput{
-				PolicyArn: policy.Arn,
-			}
+		for _, v := range page.Policies {
+			arn := aws.StringValue(v.Arn)
+			r := ResourcePolicy()
+			d := r.Data(nil)
+			d.SetId(arn)
 
-			log.Printf("[INFO] Deleting IAM Policy: %s", arn)
-			if err := policyDeleteNonDefaultVersions(ctx, arn, conn); err != nil {
-				sweeperErr := fmt.Errorf("error deleting IAM Policy (%s) non-default versions: %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-
-			_, err := conn.DeletePolicyWithContext(ctx, input)
+			err := sweep.NewSweepResource(r, d, client).Delete(ctx, sweep.ThrottlingRetryTimeout) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 
 			// Treat this sweeper as best effort for now. There are a lot of edge cases
 			// with lingering aws_iam_role resources in the HashiCorp testing accounts.
 			if tfawserr.ErrCodeEquals(err, iam.ErrCodeDeleteConflictException) {
 				log.Printf("[WARN] Ignoring IAM Policy (%s) deletion error: %s", arn, err)
-				continue
-			}
-
-			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 				continue
 			}
 

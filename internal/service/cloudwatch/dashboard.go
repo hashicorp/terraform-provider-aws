@@ -118,7 +118,7 @@ func resourceDashboardDelete(ctx context.Context, d *schema.ResourceData, meta i
 		if IsDashboardNotFoundErr(err) {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "Error deleting CloudWatch Dashboard: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Dashboard: %s", err)
 	}
 	log.Printf("[INFO] CloudWatch Dashboard %s deleted", d.Id())
 

@@ -71,7 +71,7 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.Errorf("error creating detective Graph: %s", err)
+		return diag.Errorf("creating detective Graph: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.GraphArn))
@@ -89,7 +89,7 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return nil
 	}
 	if err != nil {
-		return diag.Errorf("error reading detective Graph (%s): %s", d.Id(), err)
+		return diag.Errorf("reading detective Graph (%s): %s", d.Id(), err)
 	}
 
 	d.Set("created_time", aws.TimeValue(resp.CreatedTime).Format(time.RFC3339))
@@ -115,7 +115,7 @@ func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.Errorf("error deleting detective Graph (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting detective Graph (%s): %s", d.Id(), err)
 	}
 
 	return nil

@@ -77,6 +77,50 @@ func ResourceServiceQuota() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"usage_metric": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"metric_dimensions": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"class": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"resource": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"service": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"metric_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"metric_namespace": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"metric_statistic_recommendation": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"value": {
 				Type:     schema.TypeFloat,
 				Required: true,
@@ -159,6 +203,10 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("service_code", defaultQuota.ServiceCode)
 	d.Set("service_name", defaultQuota.ServiceName)
 	d.Set("value", defaultQuota.Value)
+
+	if err := d.Set("usage_metric", flattenUsageMetric(defaultQuota.UsageMetric)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting usage_metric for (%s/%s): %s", serviceCode, quotaCode, err)
+	}
 
 	serviceQuota, err := findServiceQuotaByID(ctx, conn, serviceCode, quotaCode)
 	if err != nil && !tfresource.NotFound(err) {

@@ -15,9 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/signer"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
@@ -2089,6 +2089,8 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 			fallthrough
 		case types.RuntimeRuby25:
 			fallthrough
+		case types.RuntimeNodejs12x:
+			fallthrough
 		case types.RuntimeNodejs10x:
 			fallthrough
 		case types.RuntimeNodejs810:
@@ -2100,6 +2102,8 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 		case types.RuntimeNodejs43:
 			fallthrough
 		case types.RuntimeNodejs:
+			fallthrough
+		case types.RuntimeDotnetcore31:
 			fallthrough
 		case types.RuntimeDotnetcore20:
 			fallthrough

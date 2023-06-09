@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	"github.com/aws/aws-sdk-go-v2/service/rbin/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -35,7 +35,7 @@ func TestAccRBinRule_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_basic(description, resourceType),
+				Config: testAccRuleConfig_basic1(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -45,8 +45,8 @@ func TestAccRBinRule_basic(t *testing.T) {
 						"retention_period_unit":  "DAYS",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resource_tags.*", map[string]string{
-						"resource_tag_key":   "some_tag",
-						"resource_tag_value": "",
+						"resource_tag_key":   "some_tag1",
+						"resource_tag_value": "some_value1",
 					}),
 				),
 			},
@@ -54,6 +54,26 @@ func TestAccRBinRule_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRuleConfig_basic2(description, resourceType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "resource_type", resourceType),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "retention_period.*", map[string]string{
+						"retention_period_value": "10",
+						"retention_period_unit":  "DAYS",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resource_tags.*", map[string]string{
+						"resource_tag_key":   "some_tag3",
+						"resource_tag_value": "some_value3",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resource_tags.*", map[string]string{
+						"resource_tag_key":   "some_tag4",
+						"resource_tag_value": "some_value4",
+					}),
+				),
 			},
 		},
 	})
@@ -76,7 +96,7 @@ func TestAccRBinRule_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_basic(description, resourceType),
+				Config: testAccRuleConfig_basic1(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &rbinrule),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrbin.ResourceRule(), resourceName),
@@ -218,15 +238,39 @@ func testAccCheckRuleExists(name string, rbinrule *rbin.GetRuleOutput) resource.
 	}
 }
 
-func testAccRuleConfig_basic(description, resourceType string) string {
+func testAccRuleConfig_basic1(description, resourceType string) string {
 	return fmt.Sprintf(`
 resource "aws_rbin_rule" "test" {
   description   = %[1]q
   resource_type = %[2]q
 
   resource_tags {
-    resource_tag_key   = "some_tag"
-    resource_tag_value = ""
+    resource_tag_key   = "some_tag1"
+    resource_tag_value = "some_value1"
+  }
+
+  retention_period {
+    retention_period_value = 10
+    retention_period_unit  = "DAYS"
+  }
+}
+`, description, resourceType)
+}
+
+func testAccRuleConfig_basic2(description, resourceType string) string {
+	return fmt.Sprintf(`
+resource "aws_rbin_rule" "test" {
+  description   = %[1]q
+  resource_type = %[2]q
+
+  resource_tags {
+    resource_tag_key   = "some_tag3"
+    resource_tag_value = "some_value3"
+  }
+
+  resource_tags {
+    resource_tag_key   = "some_tag4"
+    resource_tag_value = "some_value4"
   }
 
   retention_period {

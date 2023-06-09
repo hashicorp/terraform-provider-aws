@@ -90,6 +90,7 @@ Defines the add on configuration for the instance. The `add_on` configuration bl
 * `status` - (Required) The status of the add on. Valid Values: `Enabled`, `Disabled`.
 
 ## Availability Zones
+
 Lightsail currently supports the following Availability Zones (e.g., `us-east-1a`):
 
 - `ap-northeast-1{a,c,d}`
@@ -149,7 +150,6 @@ In addition to all arguments above, the following attributes are exported:
 * `created_at` - The timestamp when the instance was created.
 * `cpu_count` - The number of vCPUs the instance has.
 * `ram_size` - The amount of RAM in GB on the instance (e.g., 1.0).
-* `ipv6_address` - (**Deprecated**) The first IPv6 address of the Lightsail instance. Use `ipv6_addresses` attribute instead.
 * `ipv6_addresses` - List of IPv6 addresses for the Lightsail instance.
 * `private_ip_address` - The private IP address of the instance.
 * `public_ip_address` - The public IP address of the instance.

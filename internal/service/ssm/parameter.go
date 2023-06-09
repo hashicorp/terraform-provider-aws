@@ -84,8 +84,9 @@ func ResourceParameter() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 2048),
 			},
 			"overwrite": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Deprecated: "this attribute has been deprecated",
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -199,8 +200,8 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	// Tags and Overwrite set to true, we make an additional API call
 	// to Update the resource's tags if necessary
 	if len(tags) > 0 && input.Tags == nil {
-		if err := UpdateTags(ctx, conn, name, ssm.ResourceTypeForTaggingParameter, nil, KeyValueTags(ctx, tags)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SSM Parameter (%s) tags: %s", name, err)
+		if err := createTags(ctx, conn, name, ssm.ResourceTypeForTaggingParameter, tags); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting SSM Parameter (%s) tags: %s", name, err)
 		}
 	}
 
@@ -224,7 +225,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 		resp, err = conn.GetParameterWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeParameterNotFound) && d.IsNewResource() && d.Get("data_type").(string) == "aws:ec2:image" {
-			return retry.RetryableError(fmt.Errorf("error reading SSM Parameter (%s) after creation: this can indicate that the provided parameter value could not be validated by SSM", d.Id()))
+			return retry.RetryableError(fmt.Errorf("reading SSM Parameter (%s) after creation: this can indicate that the provided parameter value could not be validated by SSM", d.Id()))
 		}
 
 		if err != nil {
