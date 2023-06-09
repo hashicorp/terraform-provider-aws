@@ -65,7 +65,7 @@ func ResourcePipe() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"enrichment_parameters": enrichment_parameters_schema,
+			"enrichment_parameters": enrichmentParametersSchema(),
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
