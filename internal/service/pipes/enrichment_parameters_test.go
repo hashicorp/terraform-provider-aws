@@ -1,11 +1,11 @@
 package pipes
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/google/go-cmp/cmp"
 )
 
 func Test_expandEnrichmentParameters(t *testing.T) {
@@ -68,11 +68,8 @@ func Test_expandEnrichmentParameters(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := expandEnrichmentParameters([]interface{}{tt.config})
 
-			if !reflect.DeepEqual(got, tt.expected) {
-				t.Fatalf(
-					"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-					got,
-					tt.expected)
+			if diff := cmp.Diff(got, tt.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
 	}
@@ -142,11 +139,8 @@ func Test_flattenEnrichmentParameters(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := flattenEnrichmentParameters(tt.config)
 
-			if !reflect.DeepEqual(got, tt.expected) {
-				t.Fatalf(
-					"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-					got,
-					tt.expected)
+			if diff := cmp.Diff(got, tt.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
 	}

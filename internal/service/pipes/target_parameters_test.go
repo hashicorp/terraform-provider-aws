@@ -1,11 +1,11 @@
 package pipes
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -542,11 +542,8 @@ func Test_expandTargetParameters(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := expandTargetParameters([]interface{}{tt.config})
 
-			if !reflect.DeepEqual(got, tt.expected) {
-				t.Fatalf(
-					"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-					got,
-					tt.expected)
+			if diff := cmp.Diff(got, tt.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
 	}
@@ -1109,11 +1106,8 @@ func Test_flattenTargetParameters(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := flattenTargetParameters(tt.config)
 
-			if !reflect.DeepEqual(got, tt.expected) {
-				t.Fatalf(
-					"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-					got,
-					tt.expected)
+			if diff := cmp.Diff(got, tt.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
 	}
