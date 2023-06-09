@@ -1,4 +1,11 @@
-```release-note:enhancement
-resource/aws_elasticache_cluster: support elasticache redis version 7+
-resource/aws_elasticache_replication_group: support elasticache redis version 7+
+```release-note:bug
+resource/aws_elasticache_cluster: Correctly supports ElastiCache Redis version 7+
+```
+
+```release-note:bug
+resource/aws_elasticache_global_replication_group: Correctly supports ElastiCache Redis version 7+
+```
+
+```release-note:bug
+resource/aws_elasticache_replication_group: Correctly supports ElastiCache Redis version 7+
 ```
