@@ -1,3 +1,5 @@
+name: 'New Projects Automation'
+
 on:
   workflow_call:
     inputs:
@@ -14,13 +16,13 @@ on:
         required: false
         type: string
     secrets:
-      PROJECT_TOKEN:
+      GH_TOKEN:
         description: '(Required) A GitHub token with the repo and project scopes.'
         required: true
 
 env:
   ITEM_NODE_ID: ${{ github.event.issue.node_id || github.event.pull_request.node_id }}
-  GITHUB_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
 jobs:
   add-to-project:
@@ -39,7 +41,7 @@ jobs:
                   id
                 }
               }
-            }' -f project=$INPUT_PROJECT -f node=$ITEM_NODE_ID --jq '.data.addProjectV2ItemById.item.id')"
+            }' -f project=${{ inputs.project }} -f node=$ITEM_NODE_ID --jq '.data.addProjectV2ItemById.item.id')"
 
           echo 'PROJECT_ITEM_ID='$project_item_id >> $GITHUB_ENV
 
@@ -65,4 +67,4 @@ jobs:
                   id
                 }
               }
-            }' -f project=$INPUT_PROJECT -f project_item=$PROJECT_ITEM_ID -f field=$INPUT_FIELD -f field_value=$INPUT_VALUE --silent
+            }' -f project=${{ inputs.project }} -f project_item=$PROJECT_ITEM_ID -f field=${{ inputs.field }} -f field_value=${{ inputs.value }} --silent
