@@ -1,4 +1,10 @@
 ## 5.3.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_keyspaces_keyspace: Correct plan time validation for `name` ([#31352](https://github.com/hashicorp/terraform-provider-aws/issues/31352))
+* resource/aws_keyspaces_table: Correct plan time validation for `keyspace_name`, `table_name` and column names ([#31352](https://github.com/hashicorp/terraform-provider-aws/issues/31352))
+
 ## 5.2.0 (June  9, 2023)
 
 NOTES:
