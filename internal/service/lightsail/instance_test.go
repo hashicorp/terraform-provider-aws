@@ -441,7 +441,7 @@ resource "aws_lightsail_instance" "test" {
   bundle_id         = "nano_1_0"
 
   tags = {
-    Name       = "tf-test"
+    Name = "tf-test"
   }
 }
 `, rName))
@@ -458,8 +458,8 @@ resource "aws_lightsail_instance" "test" {
   bundle_id         = "nano_1_0"
 
   tags = {
-    Name       = "tf-test",
-    ExtraName  = "tf-test"
+    Name      = "tf-test",
+    ExtraName = "tf-test"
   }
 }
 `, rName))
