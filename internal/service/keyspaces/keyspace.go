@@ -48,12 +48,9 @@ func ResourceKeyspace() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 48),
-					validation.StringMatch(
-						regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_]{1,47}$`),
-						"The name must consist of alphanumerics and underscores.",
-					),
+				ValidateFunc: validation.StringMatch(
+					regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_]{0,47}$`),
+					"The name can have up to 48 characters. It must begin with an alpha-numeric character and can only contain alpha-numeric characters and underscores.",
 				),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
