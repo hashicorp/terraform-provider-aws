@@ -2,7 +2,6 @@ package pipes
 
 import (
 	"context"
-	"errors"
 	"log"
 	"regexp"
 	"time"
@@ -66,6 +65,7 @@ func ResourcePipe() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"enrichment_parameters": enrichment_parameters_schema,
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -102,16 +102,15 @@ func ResourcePipe() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^smk://(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):[0-9]{1,5}|arn:(aws[a-zA-Z0-9-]*):([a-zA-Z0-9\-]+):([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1})?:(\d{12})?:(.+)$`), ""),
 				),
 			},
+			"source_parameters": source_parameters_schema,
 			"target": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrTags:          tftags.TagsSchema(),
-			names.AttrTagsAll:       tftags.TagsSchemaComputed(),
-			"source_parameters":     source_parameters_schema,
-			"target_parameters":     target_parameters_schema,
-			"enrichment_parameters": enrichment_parameters_schema,
+			"target_parameters": target_parameters_schema,
+			names.AttrTags:      tftags.TagsSchema(),
+			names.AttrTagsAll:   tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -133,6 +132,14 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		Target:       aws.String(d.Get("target").(string)),
 	}
 
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("enrichment"); ok && v != "" {
+		input.Enrichment = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("enrichment_parameters"); ok {
 		input.EnrichmentParameters = expandEnrichmentParameters(v.([]interface{}))
 	}
@@ -145,21 +152,10 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.TargetParameters = expandTargetParameters(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("enrichment"); ok && v != "" {
-		input.Enrichment = aws.String(v.(string))
-	}
-
 	output, err := conn.CreatePipe(ctx, input)
+
 	if err != nil {
 		return create.DiagError(names.Pipes, create.ErrActionCreating, ResNamePipe, name, err)
-	}
-
-	if output == nil || output.Arn == nil {
-		return create.DiagError(names.Pipes, create.ErrActionCreating, ResNamePipe, name, errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(output.Name))
@@ -190,37 +186,19 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("description", output.Description)
 	d.Set("desired_state", output.DesiredState)
 	d.Set("enrichment", output.Enrichment)
+	if err := d.Set("enrichment_parameters", flattenEnrichmentParameters(output.EnrichmentParameters)); err != nil {
+		return diag.Errorf("setting enrichment_parameters: %s", err)
+	}
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set("role_arn", output.RoleArn)
 	d.Set("source", output.Source)
+	if err := d.Set("source_parameters", flattenSourceParameters(output.SourceParameters)); err != nil {
+		return diag.Errorf("setting source_parameters: %s", err)
+	}
 	d.Set("target", output.Target)
-
-	if output.SourceParameters != nil {
-		params := flattenSourceParameters(output.SourceParameters)
-		if params != nil {
-			if err := d.Set("source_parameters", params); err != nil {
-				return create.DiagError(names.Pipes, create.ErrActionSetting, ResNamePipe, d.Id(), err)
-			}
-		}
-	}
-
-	if output.EnrichmentParameters != nil {
-		params := flattenEnrichmentParameters(output.EnrichmentParameters)
-		if params != nil {
-			if err := d.Set("enrichment_parameters", params); err != nil {
-				return create.DiagError(names.Pipes, create.ErrActionSetting, ResNamePipe, d.Id(), err)
-			}
-		}
-	}
-
-	if output.TargetParameters != nil {
-		params := flattenTargetParameters(output.TargetParameters)
-		if params != nil {
-			if err := d.Set("target_parameters", params); err != nil {
-				return create.DiagError(names.Pipes, create.ErrActionSetting, ResNamePipe, d.Id(), err)
-			}
-		}
+	if err := d.Set("target_parameters", flattenTargetParameters(output.TargetParameters)); err != nil {
+		return diag.Errorf("setting target_parameters: %s", err)
 	}
 
 	return nil
@@ -235,29 +213,21 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			DesiredState: types.RequestedPipeState(d.Get("desired_state").(string)),
 			Name:         aws.String(d.Id()),
 			RoleArn:      aws.String(d.Get("role_arn").(string)),
-			Target:       aws.String(d.Get("target").(string)),
-		}
-
-		if d.HasChange("enrichment") {
 			// Reset state in case it's a deletion.
-			input.Enrichment = nil
-		}
-
-		if d.HasChange("enrichment_parameters") {
-			// Reset state in case it's a deletion.
-			input.EnrichmentParameters = nil
-		}
-
-		// Reset state in case it's a deletion.
-		input.SourceParameters = &types.UpdatePipeSourceParameters{
-			FilterCriteria: &types.FilterCriteria{
-				Filters: nil,
+			SourceParameters: &types.UpdatePipeSourceParameters{
+				FilterCriteria: &types.FilterCriteria{},
+			},
+			Target: aws.String(d.Get("target").(string)),
+			// Reset state in case it's a deletion, have to set the input to an empty string otherwise it doesn't get overwritten.
+			TargetParameters: &types.PipeTargetParameters{
+				InputTemplate: aws.String(""),
 			},
 		}
 
-		// Reset state in case it's a deletion, have to set the input to an empty string otherwise it doesn't get overwritten.
-		input.TargetParameters = &types.PipeTargetParameters{
-			InputTemplate: aws.String(""),
+		if d.HasChange("enrichment") {
+			if v, ok := d.GetOk("enrichment"); ok && v.(string) != "" {
+				input.Enrichment = aws.String(v.(string))
+			}
 		}
 
 		if v, ok := d.GetOk("enrichment_parameters"); ok {
@@ -272,13 +242,8 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.TargetParameters = expandTargetParameters(v.([]interface{}))
 		}
 
-		if v, ok := d.GetOk("enrichment"); ok && v.(string) != "" {
-			input.Enrichment = aws.String(v.(string))
-		}
-
-		log.Printf("[DEBUG] Updating EventBridge Pipes Pipe (%s): %#v", d.Id(), input)
-
 		output, err := conn.UpdatePipe(ctx, input)
+
 		if err != nil {
 			return create.DiagError(names.Pipes, create.ErrActionUpdating, ResNamePipe, d.Id(), err)
 		}
