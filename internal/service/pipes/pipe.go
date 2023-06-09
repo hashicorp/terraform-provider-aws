@@ -108,7 +108,7 @@ func ResourcePipe() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"target_parameters": target_parameters_schema,
+			"target_parameters": targetParametersSchema(),
 			names.AttrTags:      tftags.TagsSchema(),
 			names.AttrTagsAll:   tftags.TagsSchemaComputed(),
 		},

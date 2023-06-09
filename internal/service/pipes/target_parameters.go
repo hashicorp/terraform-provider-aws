@@ -12,299 +12,91 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-var target_parameters_schema = &schema.Schema{
-	Type:     schema.TypeList,
-	Optional: true,
-	MaxItems: 1,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"batch_target": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"target_parameters.0.cloudwatch_logs",
-					"target_parameters.0.ecs_task",
-					"target_parameters.0.event_bridge_event_bus",
-					"target_parameters.0.http_parameters",
-					"target_parameters.0.kinesis_stream",
-					"target_parameters.0.lambda_function",
-					"target_parameters.0.redshift_data",
-					"target_parameters.0.sage_maker_pipeline",
-					"target_parameters.0.sqs_queue",
-					"target_parameters.0.step_function",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"job_definition": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"job_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						"retry_strategy": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"attempts": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(1, 10),
-									},
-								},
-							},
-						},
-						"array_properties": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"size": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(2, 10000),
-									},
-								},
-							},
-						},
-						"parameters": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"key": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"value": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"depends_on": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 20,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"job_id": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"type": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.BatchJobDependencyType](),
-									},
-								},
-							},
-						},
-						"container_overrides": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"command": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"environment": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"name": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"value": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-											},
-										},
-									},
-									"instance_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"resource_requirements": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"type": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.BatchResourceRequirementType](),
-												},
-												"value": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
+func targetParametersSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"batch_target": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"target_parameters.0.cloudwatch_logs",
+						"target_parameters.0.ecs_task",
+						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.http_parameters",
+						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.lambda_function",
+						"target_parameters.0.redshift_data",
+						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sqs_queue",
+						"target_parameters.0.step_function",
 					},
-				},
-			},
-			"cloudwatch_logs": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"target_parameters.0.batch_target",
-					"target_parameters.0.ecs_task",
-					"target_parameters.0.event_bridge_event_bus",
-					"target_parameters.0.http_parameters",
-					"target_parameters.0.kinesis_stream",
-					"target_parameters.0.lambda_function",
-					"target_parameters.0.redshift_data",
-					"target_parameters.0.sage_maker_pipeline",
-					"target_parameters.0.sqs_queue",
-					"target_parameters.0.step_function",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"log_stream_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 256),
-						},
-						"timestamp": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 256),
-								validation.StringMatch(regexp.MustCompile(`^\$(\.[\w/_-]+(\[(\d+|\*)\])*)*$`), ""),
-							),
-						},
-					},
-				},
-			},
-			"ecs_task": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"target_parameters.0.batch_target",
-					"target_parameters.0.cloudwatch_logs",
-					"target_parameters.0.event_bridge_event_bus",
-					"target_parameters.0.http_parameters",
-					"target_parameters.0.kinesis_stream",
-					"target_parameters.0.lambda_function",
-					"target_parameters.0.redshift_data",
-					"target_parameters.0.sage_maker_pipeline",
-					"target_parameters.0.sqs_queue",
-					"target_parameters.0.step_function",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"task_definition_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"capacity_provider_strategy": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 6,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"capacity_provider": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
-									},
-									"base": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(0, 100000),
-										Default:      0,
-									},
-									"weight": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(0, 1000),
-										Default:      0,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"array_properties": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"size": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(2, 10000),
+										},
 									},
 								},
 							},
-						},
-						"enable_ecs_managed_tags": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"enable_execute_command": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"group": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						"launch_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.LaunchType](),
-						},
-						"network_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"aws_vpc_configuration": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"assign_public_ip": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.AssignPublicIp](),
-												},
-												"security_groups": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													MaxItems: 5,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-														ValidateFunc: validation.All(
-															validation.StringLenBetween(1, 1024),
-															validation.StringMatch(regexp.MustCompile(`^sg-[0-9a-zA-Z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
-														),
+							"container_overrides": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"command": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+										"environment": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"name": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"value": {
+														Type:     schema.TypeString,
+														Optional: true,
 													},
 												},
-												"subnets": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													MaxItems: 16,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-														ValidateFunc: validation.All(
-															validation.StringLenBetween(1, 1024),
-															validation.StringMatch(regexp.MustCompile(`^subnet-[0-9a-z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
-														),
+											},
+										},
+										"instance_type": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"resource_requirements": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.BatchResourceRequirementType](),
+													},
+													"value": {
+														Type:     schema.TypeString,
+														Required: true,
 													},
 												},
 											},
@@ -312,559 +104,769 @@ var target_parameters_schema = &schema.Schema{
 									},
 								},
 							},
-						},
-						"placement_constraints": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 10,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"expression": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 2000),
-									},
-									"type": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.PlacementConstraintType](),
-									},
-								},
-							},
-						},
-						"placement_strategy": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 5,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"field": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
-									},
-									"type": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.PlacementStrategyType](),
-									},
-								},
-							},
-						},
-						"platform_version": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"propagate_tags": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.PropagateTags](),
-						},
-						"reference_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
-						},
-						"task_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  1,
-						},
-						"tags": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"key": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 128),
-									},
-									"value": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
-									},
-								},
-							},
-						},
-						"overrides": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cpu": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"memory": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"execution_role_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"task_role_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"inference_accelerator_overrides": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"device_name": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"device_type": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-											},
+							"depends_on": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 20,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"job_id": {
+											Type:     schema.TypeString,
+											Optional: true,
 										},
-									},
-									"ecs_ephemeral_storage": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"size_in_gib": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntBetween(21, 200),
-												},
-											},
-										},
-									},
-									"container_overrides": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cpu": {
-													Type:     schema.TypeInt,
-													Optional: true,
-												},
-												"memory": {
-													Type:     schema.TypeInt,
-													Optional: true,
-												},
-												"memory_reservation": {
-													Type:     schema.TypeInt,
-													Optional: true,
-												},
-												"name": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"command": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
-												},
-												"environment": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"name": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"value": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
-													},
-												},
-												"environment_files": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"type": {
-																Type:             schema.TypeString,
-																Required:         true,
-																ValidateDiagFunc: enum.Validate[types.EcsEnvironmentFileType](),
-															},
-															"value": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: verify.ValidARN,
-															},
-														},
-													},
-												},
-												"resource_requirements": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"type": {
-																Type:             schema.TypeString,
-																Required:         true,
-																ValidateDiagFunc: enum.Validate[types.EcsResourceRequirementType](),
-															},
-															"value": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-														},
-													},
-												},
-											},
+										"type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.BatchJobDependencyType](),
 										},
 									},
 								},
 							},
-						},
-					},
-				},
-			},
-			"event_bridge_event_bus": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"target_parameters.0.batch_target",
-					"target_parameters.0.cloudwatch_logs",
-					"target_parameters.0.ecs_task",
-					"target_parameters.0.http_parameters",
-					"target_parameters.0.kinesis_stream",
-					"target_parameters.0.lambda_function",
-					"target_parameters.0.redshift_data",
-					"target_parameters.0.sage_maker_pipeline",
-					"target_parameters.0.sqs_queue",
-					"target_parameters.0.step_function",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"detail_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 128),
-						},
-						"endpoint_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 50),
-								validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9\-]+[\.][A-Za-z0-9\-]+$`), ""),
-							),
-						},
-						"resources": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 10,
-							Elem: &schema.Schema{
+							"job_definition": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"job_name": {
 								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 128),
+							},
+							"parameters": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"key": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"value": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+							"retry_strategy": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"attempts": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(1, 10),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"cloudwatch_logs": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"target_parameters.0.batch_target",
+						"target_parameters.0.ecs_task",
+						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.http_parameters",
+						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.lambda_function",
+						"target_parameters.0.redshift_data",
+						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sqs_queue",
+						"target_parameters.0.step_function",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"log_stream_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 256),
+							},
+							"timestamp": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 256),
+									validation.StringMatch(regexp.MustCompile(`^\$(\.[\w/_-]+(\[(\d+|\*)\])*)*$`), ""),
+								),
+							},
+						},
+					},
+				},
+				"ecs_task": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"target_parameters.0.batch_target",
+						"target_parameters.0.cloudwatch_logs",
+						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.http_parameters",
+						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.lambda_function",
+						"target_parameters.0.redshift_data",
+						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sqs_queue",
+						"target_parameters.0.step_function",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"capacity_provider_strategy": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 6,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"capacity_provider": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 255),
+										},
+										"base": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(0, 100000),
+											Default:      0,
+										},
+										"weight": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(0, 1000),
+											Default:      0,
+										},
+									},
+								},
+							},
+							"enable_ecs_managed_tags": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"enable_execute_command": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"group": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							"launch_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.LaunchType](),
+							},
+							"network_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"aws_vpc_configuration": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"assign_public_ip": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.AssignPublicIp](),
+													},
+													"security_groups": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														MaxItems: 5,
+														Elem: &schema.Schema{
+															Type: schema.TypeString,
+															ValidateFunc: validation.All(
+																validation.StringLenBetween(1, 1024),
+																validation.StringMatch(regexp.MustCompile(`^sg-[0-9a-zA-Z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
+															),
+														},
+													},
+													"subnets": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														MaxItems: 16,
+														Elem: &schema.Schema{
+															Type: schema.TypeString,
+															ValidateFunc: validation.All(
+																validation.StringLenBetween(1, 1024),
+																validation.StringMatch(regexp.MustCompile(`^subnet-[0-9a-z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
+															),
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"overrides": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"container_overrides": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"command": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Elem: &schema.Schema{
+															Type: schema.TypeString,
+														},
+													},
+													"cpu": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"environment": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"name": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																"value": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+															},
+														},
+													},
+													"environment_files": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"type": {
+																	Type:             schema.TypeString,
+																	Required:         true,
+																	ValidateDiagFunc: enum.Validate[types.EcsEnvironmentFileType](),
+																},
+																"value": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: verify.ValidARN,
+																},
+															},
+														},
+													},
+													"memory": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"memory_reservation": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"name": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"resource_requirements": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"type": {
+																	Type:             schema.TypeString,
+																	Required:         true,
+																	ValidateDiagFunc: enum.Validate[types.EcsResourceRequirementType](),
+																},
+																"value": {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"cpu": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"ecs_ephemeral_storage": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"size_in_gib": {
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntBetween(21, 200),
+													},
+												},
+											},
+										},
+										"execution_role_arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"inference_accelerator_overrides": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"device_name": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"device_type": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+												},
+											},
+										},
+										"memory": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"task_role_arn": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+							"placement_constraints": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 10,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"expression": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 2000),
+										},
+										"type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.PlacementConstraintType](),
+										},
+									},
+								},
+							},
+							"placement_strategy": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 5,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"field": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 255),
+										},
+										"type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.PlacementStrategyType](),
+										},
+									},
+								},
+							},
+							"platform_version": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"propagate_tags": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.PropagateTags](),
+							},
+							"reference_id": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 1024),
+							},
+							"tags": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"key": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										"value": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+									},
+								},
+							},
+							"task_count": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  1,
+							},
+							"task_definition_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
 								ValidateFunc: verify.ValidARN,
 							},
 						},
-						"source": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 256),
-							),
-						},
-						"time": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 256),
-								validation.StringMatch(regexp.MustCompile(`^\$(\.[\w/_-]+(\[(\d+|\*)\])*)*$`), ""),
-							),
-						},
 					},
 				},
-			},
-			"http_parameters": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"target_parameters.0.batch_target",
-					"target_parameters.0.cloudwatch_logs",
-					"target_parameters.0.ecs_task",
-					"target_parameters.0.event_bridge_event_bus",
-					"target_parameters.0.kinesis_stream",
-					"target_parameters.0.lambda_function",
-					"target_parameters.0.redshift_data",
-					"target_parameters.0.sage_maker_pipeline",
-					"target_parameters.0.sqs_queue",
-					"target_parameters.0.step_function",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"header": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"key": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(0, 512),
-									},
-									"value": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(0, 512),
-									},
-								},
-							},
-						},
-						"path_parameters": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"query_string": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"key": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(0, 512),
-									},
-									"value": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(0, 512),
-									},
-								},
-							},
-						},
+				"event_bridge_event_bus": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"target_parameters.0.batch_target",
+						"target_parameters.0.cloudwatch_logs",
+						"target_parameters.0.ecs_task",
+						"target_parameters.0.http_parameters",
+						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.lambda_function",
+						"target_parameters.0.redshift_data",
+						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sqs_queue",
+						"target_parameters.0.step_function",
 					},
-				},
-			},
-			"input_template": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 8192),
-			},
-			"kinesis_stream": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"target_parameters.0.batch_target",
-					"target_parameters.0.cloudwatch_logs",
-					"target_parameters.0.ecs_task",
-					"target_parameters.0.event_bridge_event_bus",
-					"target_parameters.0.http_parameters",
-					"target_parameters.0.lambda_function",
-					"target_parameters.0.redshift_data",
-					"target_parameters.0.sage_maker_pipeline",
-					"target_parameters.0.sqs_queue",
-					"target_parameters.0.step_function",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"partition_key": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 256),
-						},
-					},
-				},
-			},
-			"lambda_function": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"target_parameters.0.batch_target",
-					"target_parameters.0.cloudwatch_logs",
-					"target_parameters.0.ecs_task",
-					"target_parameters.0.event_bridge_event_bus",
-					"target_parameters.0.http_parameters",
-					"target_parameters.0.kinesis_stream",
-					"target_parameters.0.redshift_data",
-					"target_parameters.0.sage_maker_pipeline",
-					"target_parameters.0.sqs_queue",
-					"target_parameters.0.step_function",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"invocation_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.PipeTargetInvocationType](),
-						},
-					},
-				},
-			},
-			"redshift_data": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"target_parameters.0.batch_target",
-					"target_parameters.0.cloudwatch_logs",
-					"target_parameters.0.ecs_task",
-					"target_parameters.0.event_bridge_event_bus",
-					"target_parameters.0.http_parameters",
-					"target_parameters.0.kinesis_stream",
-					"target_parameters.0.lambda_function",
-					"target_parameters.0.sage_maker_pipeline",
-					"target_parameters.0.sqs_queue",
-					"target_parameters.0.step_function",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"database": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 64),
-						},
-						"sqls": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Schema{
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"detail_type": {
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 100000),
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 128),
 							},
-						},
-						"database_user": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						"secret_manager_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"statement_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 500),
-						},
-						"with_event": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+							"endpoint_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 50),
+									validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9\-]+[\.][A-Za-z0-9\-]+$`), ""),
+								),
+							},
+							"resources": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 10,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidARN,
+								},
+							},
+							"source": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 256),
+								),
+							},
+							"time": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 256),
+									validation.StringMatch(regexp.MustCompile(`^\$(\.[\w/_-]+(\[(\d+|\*)\])*)*$`), ""),
+								),
+							},
 						},
 					},
 				},
-			},
-			"sage_maker_pipeline": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"target_parameters.0.batch_target",
-					"target_parameters.0.cloudwatch_logs",
-					"target_parameters.0.ecs_task",
-					"target_parameters.0.event_bridge_event_bus",
-					"target_parameters.0.http_parameters",
-					"target_parameters.0.kinesis_stream",
-					"target_parameters.0.lambda_function",
-					"target_parameters.0.redshift_data",
-					"target_parameters.0.sqs_queue",
-					"target_parameters.0.step_function",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"parameters": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 200,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"name": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 256),
-											validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
-										),
+				"http_parameters": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"target_parameters.0.batch_target",
+						"target_parameters.0.cloudwatch_logs",
+						"target_parameters.0.ecs_task",
+						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.lambda_function",
+						"target_parameters.0.redshift_data",
+						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sqs_queue",
+						"target_parameters.0.step_function",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"header": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"key": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(0, 512),
+										},
+										"value": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(0, 512),
+										},
 									},
-									"value": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
+								},
+							},
+							"path_parameters": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"query_string": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"key": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(0, 512),
+										},
+										"value": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(0, 512),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"sqs_queue": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"target_parameters.0.batch_target",
-					"target_parameters.0.cloudwatch_logs",
-					"target_parameters.0.ecs_task",
-					"target_parameters.0.event_bridge_event_bus",
-					"target_parameters.0.http_parameters",
-					"target_parameters.0.kinesis_stream",
-					"target_parameters.0.lambda_function",
-					"target_parameters.0.redshift_data",
-					"target_parameters.0.sage_maker_pipeline",
-					"target_parameters.0.step_function",
+				"input_template": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 8192),
 				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"message_deduplication_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 100),
-						},
-						"message_group_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 100),
+				"kinesis_stream": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"target_parameters.0.batch_target",
+						"target_parameters.0.cloudwatch_logs",
+						"target_parameters.0.ecs_task",
+						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.http_parameters",
+						"target_parameters.0.lambda_function",
+						"target_parameters.0.redshift_data",
+						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sqs_queue",
+						"target_parameters.0.step_function",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"partition_key": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
 						},
 					},
 				},
-			},
-			"step_function": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"target_parameters.0.batch_target",
-					"target_parameters.0.cloudwatch_logs",
-					"target_parameters.0.ecs_task",
-					"target_parameters.0.event_bridge_event_bus",
-					"target_parameters.0.http_parameters",
-					"target_parameters.0.kinesis_stream",
-					"target_parameters.0.lambda_function",
-					"target_parameters.0.redshift_data",
-					"target_parameters.0.sage_maker_pipeline",
-					"target_parameters.0.sqs_queue",
+				"lambda_function": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"target_parameters.0.batch_target",
+						"target_parameters.0.cloudwatch_logs",
+						"target_parameters.0.ecs_task",
+						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.http_parameters",
+						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.redshift_data",
+						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sqs_queue",
+						"target_parameters.0.step_function",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"invocation_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.PipeTargetInvocationType](),
+							},
+						},
+					},
 				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"invocation_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.PipeTargetInvocationType](),
+				"redshift_data": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"target_parameters.0.batch_target",
+						"target_parameters.0.cloudwatch_logs",
+						"target_parameters.0.ecs_task",
+						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.http_parameters",
+						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.lambda_function",
+						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sqs_queue",
+						"target_parameters.0.step_function",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"database": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 64),
+							},
+							"database_user": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 128),
+							},
+							"secret_manager_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"statement_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 500),
+							},
+							"sqls": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(1, 100000),
+								},
+							},
+							"with_event": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+						},
+					},
+				},
+				"sage_maker_pipeline": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"target_parameters.0.batch_target",
+						"target_parameters.0.cloudwatch_logs",
+						"target_parameters.0.ecs_task",
+						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.http_parameters",
+						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.lambda_function",
+						"target_parameters.0.redshift_data",
+						"target_parameters.0.sqs_queue",
+						"target_parameters.0.step_function",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"parameters": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 200,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"name": {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 256),
+												validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
+											),
+										},
+										"value": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"sqs_queue": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"target_parameters.0.batch_target",
+						"target_parameters.0.cloudwatch_logs",
+						"target_parameters.0.ecs_task",
+						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.http_parameters",
+						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.lambda_function",
+						"target_parameters.0.redshift_data",
+						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.step_function",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"message_deduplication_id": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 100),
+							},
+							"message_group_id": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 100),
+							},
+						},
+					},
+				},
+				"step_function": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"target_parameters.0.batch_target",
+						"target_parameters.0.cloudwatch_logs",
+						"target_parameters.0.ecs_task",
+						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.http_parameters",
+						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.lambda_function",
+						"target_parameters.0.redshift_data",
+						"target_parameters.0.sage_maker_pipeline",
+						"target_parameters.0.sqs_queue",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"invocation_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.PipeTargetInvocationType](),
+							},
 						},
 					},
 				},
 			},
 		},
-	},
+	}
 }
 
 func expandTargetParameters(config []interface{}) *types.PipeTargetParameters {

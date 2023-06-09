@@ -5,3 +5,7 @@ resource/aws_pipes_pipe: Add `enrichment_parameters` argument
 ```release-note:enhancement
 resource/aws_pipes_pipe: Add `active_mq_broker`, `dynamo_db_stream`, `kinesis_stream`, `managed_streaming_kafka`, `rabbit_mq_broker`, `self_managed_kafka` and `sqs_queue` attributes to the `source_parameters` configuration block
 ```
+
+```release-note:enhancement
+resource/aws_pipes_pipe: Add `batch_target`, `cloudwatch_logs`, `ecs_task`, `event_bridge_event_bus`, `http_parameters`, `kinesis_stream`, `lambda_function`, `redshift_data`, `sage_maker_pipeline`, `sqs_queue` and `step_function` attributes to the `target_parameters` configuration block
+```
