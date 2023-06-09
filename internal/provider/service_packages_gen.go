@@ -159,6 +159,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rekognition"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
@@ -366,6 +367,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		redshift.ServicePackage,
 		redshiftdata.ServicePackage,
 		redshiftserverless.ServicePackage,
+		rekognition.ServicePackage,
 		resourceexplorer2.ServicePackage,
 		resourcegroups.ServicePackage,
 		resourcegroupstaggingapi.ServicePackage,
