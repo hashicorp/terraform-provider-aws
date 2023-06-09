@@ -373,9 +373,21 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient()
 
+	environmentId := d.Get("environment_id").(string)
+	clusterName := d.Get("name").(string)
+	idParts := []string{
+		environmentId,
+		clusterName,
+	}
+	rID, err := flex.FlattenResourceId(idParts, kxClusterIDPartCount, false)
+	if err != nil {
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxCluster, d.Get("name").(string), err)...)
+	}
+	d.SetId(rID)
+
 	in := &finspace.CreateKxClusterInput{
-		EnvironmentId:         aws.String(d.Get("environment_id").(string)),
-		ClusterName:           aws.String(d.Get("name").(string)),
+		EnvironmentId:         aws.String(environmentId),
+		ClusterName:           aws.String(clusterName),
 		ClusterType:           types.KxClusterType(d.Get("type").(string)),
 		ReleaseLabel:          aws.String(d.Get("release_label").(string)),
 		AzMode:                types.KxAzMode(d.Get("az_mode").(string)),
@@ -436,16 +448,6 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	if out == nil {
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxCluster, d.Get("name").(string), errors.New("empty output"))...)
 	}
-
-	idParts := []string{
-		aws.ToString(in.EnvironmentId),
-		aws.ToString(in.ClusterName),
-	}
-	id, err := flex.FlattenResourceId(idParts, kxClusterIDPartCount, false)
-	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxCluster, d.Get("name").(string), err)...)
-	}
-	d.SetId(id)
 
 	if _, err := waitKxClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxCluster, d.Id(), err)...)
@@ -519,7 +521,11 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// compose cluster ARN using environment ARN
-	env, err := findKxEnvironmentByID(ctx, conn, d.Get("environment_id").(string))
+	parts, err := flex.ExpandResourceId(d.Id(), kxUserIDPartCount, false)
+	if err != nil {
+		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
+	}
+	env, err := findKxEnvironmentByID(ctx, conn, parts[0])
 	if err != nil {
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
 	}
