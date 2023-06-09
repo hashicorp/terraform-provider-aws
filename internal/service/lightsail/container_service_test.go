@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
 func TestAccLightsailContainerService_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
