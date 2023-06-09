@@ -26,6 +26,8 @@ The following arguments are supported:
 
 ## Attributes Reference
 
+~> **NOTE:** The `port` field may be empty while an Aurora cluster is still in the process of being created. This can occur if the cluster was initiated with the [AWS CLI `create-db-cluster`](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html) command, but no DB instance has yet been added to it.
+
 In addition to all arguments above, the following attributes are exported:
 
 * `address` - Hostname of the RDS instance. See also `endpoint` and `port`.
@@ -38,7 +40,6 @@ In addition to all arguments above, the following attributes are exported:
 * `db_instance_class` - Contains the name of the compute and memory capacity class of the DB instance.
 * `db_name` - Contains the name of the initial database of this instance that was provided at create time, if one was specified when the DB instance was created. This same name is returned for the life of the DB instance.
 * `db_parameter_groups` - Provides the list of DB parameter groups applied to this DB instance.
-* `db_security_groups` - Provides List of DB security groups associated to this DB instance.
 * `db_subnet_group` - Name of the subnet group associated with the DB instance.
 * `db_instance_port` - Port that the DB instance listens on.
 * `enabled_cloudwatch_logs_exports` - List of log types to export to cloudwatch.
@@ -56,7 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 * `multi_az` - If the DB instance is a Multi-AZ deployment.
 * `network_type` - Network type of the DB instance.
 * `option_group_memberships` - Provides the list of option group memberships for this DB instance.
-* `port` - Database port.
+* `port` - Database endpoint port, primarily used by an Aurora DB cluster. For a conventional RDS DB instance, the `db_instance_port` is typically the preferred choice.
 * `preferred_backup_window` - Specifies the daily time range during which automated backups are created.
 * `preferred_maintenance_window` -  Specifies the weekly time range during which system maintenance can occur in UTC.
 * `publicly_accessible` - Accessibility options for the DB instance.

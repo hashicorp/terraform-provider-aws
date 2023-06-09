@@ -30,7 +30,7 @@ provider "aws" {
 }
 
 resource "aws_dynamodb_table" "example" {
-  provider         = "aws.main"
+  provider         = aws.main
   name             = "TestTable"
   hash_key         = "BrodoBaggins"
   billing_mode     = "PAY_PER_REQUEST"
@@ -48,7 +48,7 @@ resource "aws_dynamodb_table" "example" {
 }
 
 resource "aws_dynamodb_table_replica" "example" {
-  provider         = "aws.alt"
+  provider         = aws.alt
   global_table_arn = aws_dynamodb_table.example.arn
 
   tags = {

@@ -1178,7 +1178,7 @@ func expandContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefiniti
 
 	err := json.Unmarshal([]byte(rawDefinitions), &definitions)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding JSON: %s", err)
+		return nil, fmt.Errorf("decoding JSON: %s", err)
 	}
 
 	for i, c := range definitions {

@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -904,7 +904,7 @@ func testAccCheckResponsePlanExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccResponsePlanConfigBase() string {
+func testAccResponsePlanConfig_base() string {
 	return fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test_replication_set" {
   region {
@@ -914,7 +914,7 @@ resource "aws_ssmincidents_replication_set" "test_replication_set" {
 `, acctest.Region())
 }
 
-func testAccResponsePlanConfigSNSTopicBase() string {
+func testAccResponsePlanConfig_baseSNSTopic() string {
 	return `
 resource "aws_sns_topic" "topic1" {}
 resource "aws_sns_topic" "topic2" {}
@@ -924,7 +924,7 @@ resource "aws_sns_topic" "topic3" {}
 
 func testAccResponsePlanConfig_basic(name, title, impact string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -941,13 +941,13 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_none() string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 	)
 }
 
 func testAccResponsePlanConfig_oneTag(name, title, tagKey, tagVal string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -968,7 +968,7 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_twoTags(name, title, tag1Key, tag1Val, tag2Key, tag2Val string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -990,8 +990,8 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_incidentTemplateOptionalFields(name, title, dedupeString, summary, tagKey, tagVal, snsTopic1, snsTopic2 string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
-		testAccResponsePlanConfigSNSTopicBase(),
+		testAccResponsePlanConfig_base(),
+		testAccResponsePlanConfig_baseSNSTopic(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1022,7 +1022,7 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_displayName(name, displayName string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1041,8 +1041,8 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_chatChannel(name, chatChannelTopic string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
-		testAccResponsePlanConfigSNSTopicBase(),
+		testAccResponsePlanConfig_base(),
+		testAccResponsePlanConfig_baseSNSTopic(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1061,8 +1061,8 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_twoChatChannels(name, chatChannelOneTopic, chatChannelTwoTopic string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
-		testAccResponsePlanConfigSNSTopicBase(),
+		testAccResponsePlanConfig_base(),
+		testAccResponsePlanConfig_baseSNSTopic(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1081,7 +1081,7 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_emptyChatChannel(name string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1100,7 +1100,7 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_engagement(name, contactArn string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1119,7 +1119,7 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_twoEngagements(name, contactArn1, contactArn2 string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1138,7 +1138,7 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_emptyEngagements(name string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1157,9 +1157,9 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_action1(name string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
-		testAccResponsePlanConfigIAMRoleBase(name),
-		testAccResponsePlanConfigDocumentBase(name),
+		testAccResponsePlanConfig_base(),
+		testAccResponsePlanConfig_baseIAMRole(name),
+		testAccResponsePlanConfig_baseSSMDocument(name),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1192,9 +1192,9 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_action2(name string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
-		testAccResponsePlanConfigIAMRoleBase(name),
-		testAccResponsePlanConfigDocumentBase(name),
+		testAccResponsePlanConfig_base(),
+		testAccResponsePlanConfig_baseIAMRole(name),
+		testAccResponsePlanConfig_baseSSMDocument(name),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1225,7 +1225,7 @@ resource "aws_ssmincidents_response_plan" "test" {
 `, name))
 }
 
-func testAccResponsePlanConfigIAMRoleBase(name string) string {
+func testAccResponsePlanConfig_baseIAMRole(name string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role1" {
   assume_role_policy = <<EOF
@@ -1275,7 +1275,7 @@ EOF
 `, name+"-role-one", name+"-role-two")
 }
 
-func testAccResponsePlanConfigDocumentBase(name string) string {
+func testAccResponsePlanConfig_baseSSMDocument(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "document1" {
   name          = %[1]q

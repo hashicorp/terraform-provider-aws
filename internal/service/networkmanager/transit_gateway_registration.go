@@ -66,13 +66,13 @@ func resourceTransitGatewayRegistrationCreate(ctx context.Context, d *schema.Res
 	_, err := conn.RegisterTransitGatewayWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Network Manager Transit Gateway Registration (%s): %s", id, err)
+		return diag.Errorf("creating Network Manager Transit Gateway Registration (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := waitTransitGatewayRegistrationCreated(ctx, conn, globalNetworkID, transitGatewayARN, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Network Manager Transit Gateway Attachment (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for Network Manager Transit Gateway Attachment (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceTransitGatewayRegistrationRead(ctx, d, meta)
@@ -96,7 +96,7 @@ func resourceTransitGatewayRegistrationRead(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Network Manager Transit Gateway Registration (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Network Manager Transit Gateway Registration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("global_network_id", transitGatewayRegistration.GlobalNetworkId)
@@ -137,11 +137,11 @@ func deregisterTransitGateway(ctx context.Context, conn *networkmanager.NetworkM
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Network Manager Transit Gateway Registration (%s): %w", id, err)
+		return fmt.Errorf("deleting Network Manager Transit Gateway Registration (%s): %w", id, err)
 	}
 
 	if _, err := waitTransitGatewayRegistrationDeleted(ctx, conn, globalNetworkID, transitGatewayARN, timeout); err != nil {
-		return fmt.Errorf("error waiting for Network Manager Transit Gateway Registration (%s) delete: %w", id, err)
+		return fmt.Errorf("waiting for Network Manager Transit Gateway Registration (%s) delete: %w", id, err)
 	}
 
 	return nil

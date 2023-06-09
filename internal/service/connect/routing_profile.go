@@ -34,10 +34,13 @@ func ResourceRoutingProfile() *schema.Resource {
 		// Routing profiles do not support deletion today. NoOp the Delete method.
 		// Users can rename their routing profiles manually if they want.
 		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -117,39 +120,6 @@ func ResourceRoutingProfile() *schema.Resource {
 					},
 				},
 			},
-			"queue_configs_associated": {
-				Deprecated: "Use the queue_configs instead",
-				Type:       schema.TypeSet,
-				Computed:   true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"channel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"delay": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"priority": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"queue_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"queue_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"queue_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
 			"routing_profile_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -182,11 +152,11 @@ func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	output, err := conn.CreateRoutingProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Routing Profile (%s): %w", name, err))
+		return diag.Errorf("creating Connect Routing Profile (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Routing Profile (%s): empty output", name))
+		return diag.Errorf("creating Connect Routing Profile (%s): empty output", name)
 	}
 
 	// call the batched association API if the number of queues to associate with the routing profile is > CreateRoutingProfileQueuesMaxItems
@@ -225,11 +195,11 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Routing Profile (%s): %w", d.Id(), err))
+		return diag.Errorf("getting Connect Routing Profile (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.RoutingProfile == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Routing Profile (%s): empty response", d.Id()))
+		return diag.Errorf("getting Connect Routing Profile (%s): empty response", d.Id())
 	}
 
 	routingProfile := resp.RoutingProfile
@@ -250,11 +220,10 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	queueConfigs, err := getRoutingProfileQueueConfigs(ctx, conn, instanceID, routingProfileID)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %w", routingProfileID, err))
+		return diag.Errorf("finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %s", routingProfileID, err)
 	}
 
 	d.Set("queue_configs", queueConfigs)
-	d.Set("queue_configs_associated", queueConfigs)
 
 	SetTagsOut(ctx, resp.RoutingProfile.Tags)
 
@@ -287,7 +256,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		inputConcurrency.MediaConcurrencies = mediaConcurrencies
 		_, err = conn.UpdateRoutingProfileConcurrencyWithContext(ctx, inputConcurrency)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating RoutingProfile Media Concurrency (%s): %w", d.Id(), err))
+			return diag.Errorf("updating RoutingProfile Media Concurrency (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -302,7 +271,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err = conn.UpdateRoutingProfileDefaultOutboundQueueWithContext(ctx, inputDefaultOutboundQueue)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating RoutingProfile Default Outbound Queue ID (%s): %w", d.Id(), err))
+			return diag.Errorf("updating RoutingProfile Default Outbound Queue ID (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -318,7 +287,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err = conn.UpdateRoutingProfileNameWithContext(ctx, inputNameDesc)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating RoutingProfile Name (%s): %w", d.Id(), err))
+			return diag.Errorf("updating RoutingProfile Name (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -416,7 +385,7 @@ func updateQueueConfigs(ctx context.Context, conn *connect.Connect, instanceID, 
 // 	})
 
 // 	if err != nil {
-// 		return diag.FromErr(fmt.Errorf("error deleting RoutingProfile (%s): %w", d.Id(), err))
+// 		return diag.Errorf("deleting RoutingProfile (%s): %s", d.Id(), err)
 // 	}
 
 // 	return nil

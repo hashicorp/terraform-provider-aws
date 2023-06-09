@@ -2,7 +2,6 @@ package macie2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -64,7 +63,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Macie OrganizationAdminAccount: %w", err))
+		return diag.Errorf("creating Macie OrganizationAdminAccount: %s", err)
 	}
 
 	d.SetId(adminAccountID)
@@ -87,7 +86,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Macie OrganizationAdminAccount (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Macie OrganizationAdminAccount (%s): %s", d.Id(), err)
 	}
 
 	if res == nil {
@@ -118,7 +117,7 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error deleting Macie OrganizationAdminAccount (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Macie OrganizationAdminAccount (%s): %s", d.Id(), err)
 	}
 	return nil
 }

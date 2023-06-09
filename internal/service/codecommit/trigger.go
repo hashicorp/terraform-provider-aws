@@ -88,7 +88,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	resp, err := conn.PutRepositoryTriggersWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating CodeCommit Trigger: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeCommit Trigger: %s", err)
 	}
 
 	log.Printf("[INFO] Code Commit Trigger Created %s input %s", resp, input)
@@ -109,7 +109,7 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	resp, err := conn.GetRepositoryTriggersWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error reading CodeCommit Trigger: %s", err.Error())
+		return sdkdiag.AppendErrorf(diags, "reading CodeCommit Trigger: %s", err.Error())
 	}
 
 	log.Printf("[DEBUG] CodeCommit Trigger: %s", resp)

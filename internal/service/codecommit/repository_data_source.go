@@ -65,7 +65,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 			d.SetId("")
 			return sdkdiag.AppendErrorf(diags, "Resource codecommit repository not found for %s", repositoryName)
 		} else {
-			return sdkdiag.AppendErrorf(diags, "Error reading CodeCommit Repository: %s", err)
+			return sdkdiag.AppendErrorf(diags, "reading CodeCommit Repository: %s", err)
 		}
 	}
 

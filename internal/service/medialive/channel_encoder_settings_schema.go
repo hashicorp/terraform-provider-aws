@@ -3263,7 +3263,7 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	if v, ok := m["encryption_type"].(string); ok && v != "" {
 		out.EncryptionType = types.HlsEncryptionType(v)
 	}
-	if v, ok := m["hls_cdn_setting"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hls_cdn_settings"].([]interface{}); ok && len(v) > 0 {
 		out.HlsCdnSettings = expandHLSCDNSettings(v)
 	}
 	if v, ok := m["hls_id3_segment_tagging"].(string); ok && v != "" {

@@ -107,7 +107,7 @@ func resourceJobQueueCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error waiting for JobQueue state to be \"VALID\": %s", err)
+		return sdkdiag.AppendErrorf(diags, "waiting for JobQueue state to be \"VALID\": %s", err)
 	}
 
 	arn := aws.StringValue(out.JobQueueArn)

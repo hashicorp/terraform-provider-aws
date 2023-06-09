@@ -45,8 +45,6 @@ type AWSClient struct {
 	{{ .ProviderPackage }}Client *{{ .GoV2Package }}.{{ .ClientTypeName }}
 	{{- end }}
 {{- end }}
-
-    s3ConnURICleaningDisabled *s3.S3
 }
 
 {{ range .Services }}

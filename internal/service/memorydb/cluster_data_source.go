@@ -185,7 +185,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	if v := aws.StringValue(cluster.DataTiering); v != "" {
 		b, err := strconv.ParseBool(v)
 		if err != nil {
-			return diag.Errorf("error reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
+			return diag.Errorf("reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
 		}
 
 		d.Set("data_tiering", b)
@@ -201,7 +201,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	numReplicasPerShard, err := deriveClusterNumReplicasPerShard(cluster)
 	if err != nil {
-		return diag.Errorf("error reading num_replicas_per_shard for MemoryDB Cluster (%s): %s", d.Id(), err)
+		return diag.Errorf("reading num_replicas_per_shard for MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 	d.Set("num_replicas_per_shard", numReplicasPerShard)
 
@@ -233,11 +233,11 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
-		return diag.Errorf("error listing tags for MemoryDB Cluster (%s): %s", d.Id(), err)
+		return diag.Errorf("listing tags for MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil

@@ -244,7 +244,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChanges("resource_tags") {
-		in.ResourceTags = expandResourceTags(d.Get("resource_tags").([]interface{}))
+		in.ResourceTags = expandResourceTags(d.Get("resource_tags").(*schema.Set).List())
 		update = true
 	}
 

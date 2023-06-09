@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -25,7 +25,7 @@ func sweepAnalyzers(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).AccessAnalyzerClient()
 	input := &accessanalyzer.ListAnalyzersInput{}
@@ -41,7 +41,7 @@ func sweepAnalyzers(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error listing IAM Access Analyzer Analyzers (%s): %w", region, err)
+			return fmt.Errorf("listing IAM Access Analyzer Analyzers (%s): %w", region, err)
 		}
 
 		for _, v := range page.Analyzers {
@@ -56,7 +56,7 @@ func sweepAnalyzers(region string) error {
 	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error sweeping IAM Access Analyzer Analyzers (%s): %w", region, err)
+		return fmt.Errorf("sweeping IAM Access Analyzer Analyzers (%s): %w", region, err)
 	}
 
 	return nil
