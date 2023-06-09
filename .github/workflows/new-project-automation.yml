@@ -1,0 +1,59 @@
+name: 'GitHub Projects (new) Automation'
+
+on:
+  issues:
+    types: ["labeled", "milestoned", "opened"]
+  pull_request_target:
+    types: ["labeled", "opened"]
+
+# Helper env vars to save on some characters
+env:
+  PROJECT: ${{ vars.team_project }}
+  STATUS: ${{ vars.team_project_field_status }}
+  TODO: ${{ vars.team_project_status_to_do }}
+
+jobs:
+  community_check:
+    uses: ./.github/workflow/community-check.yml
+    secrets: inherit
+
+  maintainer_prs:
+    name: 'Add Maintainer PRs'
+    needs: community_check
+    if: github.event_type == 'pull_request_target' && !github.event.pull_request.draft && needs.community_check.outputs.maintainer == 'true'
+    uses: ./.github/workflow/reusable-projects-automation.yml
+    secrets: inherit
+    with:
+      project: ${{ env.PROJECT }}
+      field: ${{ env.STATUS }}
+      value: ${{ vars.team_project_status_maintainer_pr }}
+
+  partner_prs:
+    name: 'Add Partner PRs'
+    if: github.event_type == 'pull_request_target' && github.event.label.name == 'partner'
+    uses: ./.github/workflow/reusable-projects-automation.yml
+    secrets: inherit
+    with:
+      project: ${{ env.PROJECT }}
+      field: ${{ env.STATUS }}
+      value: ${{ env.TODO }}
+
+  roadmap:
+    name: 'Add Roadmap Items'
+    if: github.event.label.name == 'roadmap' || github.event.*.milestone.title == 'Roadmap'
+    uses: ./.github/workflow/reusable-projects-automation.yml
+    secrets: inherit
+    with:
+      project: ${{ env.PROJECT }}
+      field: ${{ env.STATUS }}
+      value: ${{ env.TODO }}
+
+  regressions:
+    name: 'Add Regressions'
+    if: github.event.label.name == 'regression'
+    uses: ./.github/workflow/reusable-projects-automation.yml
+    secrets: inherit
+    with:
+      project: ${{ env.PROJECT }}
+      field: ${{ env.STATUS }}
+      value: ${{ env.TODO }}
