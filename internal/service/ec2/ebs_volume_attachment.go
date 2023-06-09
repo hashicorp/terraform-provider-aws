@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -52,6 +53,11 @@ func ResourceVolumeAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"delete_on_termination": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 			"device_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -120,6 +126,29 @@ func resourceVolumeAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "waiting for EBS Volume (%s) Attachment (%s) create: %s", volumeID, instanceID, err)
 	}
 
+	if v := d.Get("delete_on_termination"); v != nil {
+		deleteValue := v.(bool)
+		ebsSpec := &ec2.EbsInstanceBlockDeviceSpecification{}
+		ebsSpec.SetDeleteOnTermination(deleteValue)
+
+		mappingSpec := &ec2.InstanceBlockDeviceMappingSpecification{}
+		mappingSpec.SetDeviceName(deviceName)
+		mappingSpec.SetEbs(ebsSpec)
+
+		input := &ec2.ModifyInstanceAttributeInput{}
+		input.SetInstanceId(instanceID)
+		input.SetBlockDeviceMappings(append([]*ec2.InstanceBlockDeviceMappingSpecification{}, mappingSpec))
+
+		_, err := conn.ModifyInstanceAttributeWithContext(ctx, input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "Cannot modify delete_on_termination to (%s) on EBS Volume (%s) for instance (%s): %s", strconv.FormatBool(deleteValue), volumeID, instanceID, err)
+		}
+
+		if _, err := WaitVolumeAttachmentDeleteOnTerminationUpdated(ctx, conn, volumeID, instanceID, deviceName, deleteValue, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EBS Volume (%s) Attachment (%s) set delete_on_termination to (%s): %s", volumeID, instanceID, strconv.FormatBool(deleteValue), err)
+		}
+	}
+
 	d.SetId(volumeAttachmentID(deviceName, volumeID, instanceID))
 
 	return append(diags, resourceVolumeAttachmentRead(ctx, d, meta)...)
@@ -132,7 +161,7 @@ func resourceVolumeAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 	instanceID := d.Get("instance_id").(string)
 	volumeID := d.Get("volume_id").(string)
 
-	_, err := FindEBSVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
+	attachment, err := FindEBSVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EBS Volume Attachment %s not found, removing from state", d.Id())
@@ -142,6 +171,10 @@ func resourceVolumeAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS Volume (%s) Attachment (%s): %s", volumeID, instanceID, err)
+	}
+
+	if err := d.Set("delete_on_termination", attachment.DeleteOnTermination); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting delete_on_termination failed for EBS Volume (%s) Attachment (%s): %s", volumeID, instanceID, err)
 	}
 
 	return diags
