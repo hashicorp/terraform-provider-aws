@@ -29,10 +29,13 @@ func ResourceQueue() *schema.Resource {
 		// Queues do not support deletion today. NoOp the Delete method.
 		// Users can rename their queues manually if they want.
 		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -96,14 +99,6 @@ func ResourceQueue() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"quick_connect_ids_associated": {
-				Deprecated: "Use the quick_connect_ids instead",
-				Type:       schema.TypeSet,
-				Computed:   true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 			"status": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -151,11 +146,11 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	output, err := conn.CreateQueueWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Queue (%s): %w", name, err))
+		return diag.Errorf("creating Connect Queue (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Queue (%s): empty output", name))
+		return diag.Errorf("creating Connect Queue (%s): empty output", name)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.QueueId)))
@@ -184,11 +179,11 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Queue (%s): %w", d.Id(), err))
+		return diag.Errorf("getting Connect Queue (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.Queue == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Queue (%s): empty response", d.Id()))
+		return diag.Errorf("getting Connect Queue (%s): empty response", d.Id())
 	}
 
 	if err := d.Set("outbound_caller_config", flattenOutboundCallerConfig(resp.Queue.OutboundCallerConfig)); err != nil {
@@ -208,11 +203,10 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	quickConnectIds, err := getQueueQuickConnectIDs(ctx, conn, instanceID, queueID)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Queue Quick Connect ID for Queue (%s): %w", queueID, err))
+		return diag.Errorf("finding Connect Queue Quick Connect ID for Queue (%s): %s", queueID, err)
 	}
 
-	d.Set("quick_connect_ids", flex.FlattenStringSet(quickConnectIds))
-	d.Set("quick_connect_ids_associated", flex.FlattenStringSet(quickConnectIds))
+	d.Set("quick_connect_ids", aws.StringValueSlice(quickConnectIds))
 
 	SetTagsOut(ctx, resp.Queue.Tags)
 
@@ -246,7 +240,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateQueueHoursOfOperationWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating Queue Hours of Operation (%s): %w", d.Id(), err))
+			return diag.Errorf("updating Queue Hours of Operation (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -260,7 +254,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateQueueMaxContactsWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating Queue Max Contacts (%s): %w", d.Id(), err))
+			return diag.Errorf("updating Queue Max Contacts (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -275,7 +269,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateQueueNameWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating Queue Name and/or Description (%s): %w", d.Id(), err))
+			return diag.Errorf("updating Queue Name and/or Description (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -289,7 +283,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateQueueOutboundCallerConfigWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating Queue Outbound Caller Config (%s): %w", d.Id(), err))
+			return diag.Errorf("updating Queue Outbound Caller Config (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -303,7 +297,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateQueueStatusWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating Queue Status (%s): %w", d.Id(), err))
+			return diag.Errorf("updating Queue Status (%s): %s", d.Id(), err)
 		}
 	}
 

@@ -269,7 +269,6 @@ information on the [AWS
 Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html)
 what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `multi_az` - (Optional) Specifies if the RDS instance is multi-AZ
-* `name` - (Optional, **Deprecated** use `db_name` instead) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
 * `nchar_character_set_name` - (Optional, Forces new resource) The national character set is used in the NCHAR, NVARCHAR2, and NCLOB data types for Oracle instances. This can't be changed. See [Oracle Character Sets
 Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html).
 * `network_type` - (Optional) The network type of the DB instance. Valid values: `IPV4`, `DUAL`.
@@ -298,9 +297,6 @@ PostgreSQL and MySQL Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest
 for more information on using Replication.
 * `restore_to_point_in_time` - (Optional, Forces new resource) A configuration block for restoring a DB instance to an arbitrary point in time. Requires the `identifier` argument to be set with the name of the new DB instance to be created. See [Restore To Point In Time](#restore-to-point-in-time) below for details.
 * `s3_import` - (Optional) Restore from a Percona Xtrabackup in S3.  See [Importing Data into an Amazon RDS MySQL DB Instance](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MySQL.Procedural.Importing.html)
-* `security_group_names` - (Optional/Deprecated) List of DB Security Groups to
-associate. Only used for [DB Instances on the _EC2-Classic_
-Platform](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_VPC.html#USER_VPC.FindDefaultVPC).
 * `skip_final_snapshot` - (Optional) Determines whether a final DB snapshot is
 created before the DB instance is deleted. If true is specified, no DBSnapshot
 is created. If false is specified, a DB snapshot is created before the DB
@@ -404,7 +400,7 @@ DB instance.
 * `engine_version_actual` - The running version of the database.
 * `hosted_zone_id` - The canonical hosted zone ID of the DB instance (to be used
 in a Route 53 Alias record).
-* `id` - The RDS instance ID.
+* `id` - RDS DBI resource ID.
 * `instance_class`- The RDS instance class.
 * `latest_restorable_time` - The latest time, in UTC [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), to which a database can be restored with point-in-time restore.
 * `listener_endpoint` - Specifies the listener connection endpoint for SQL Server Always On. See [endpoint](#endpoint) below.

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -20,7 +20,7 @@ func TestAccEC2OutpostsLocalGatewaysDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOutpostsLocalGatewaysDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", 0),
 				),
 			},
 		},

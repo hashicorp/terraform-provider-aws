@@ -41,7 +41,7 @@ func dataSourceSitesRead(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return diag.Errorf("error listing Network Manager Sites: %s", err)
+		return diag.Errorf("listing Network Manager Sites: %s", err)
 	}
 
 	var siteIDs []string

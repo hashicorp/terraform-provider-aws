@@ -9,10 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	rdsv1 "github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -253,7 +253,7 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.test.id
+  db_instance_identifier = aws_db_instance.test.identifier
   db_snapshot_identifier = %[1]q
 }
 `, rName)

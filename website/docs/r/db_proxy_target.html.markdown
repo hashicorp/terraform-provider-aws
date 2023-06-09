@@ -49,7 +49,7 @@ resource "aws_db_proxy_default_target_group" "example" {
 }
 
 resource "aws_db_proxy_target" "example" {
-  db_instance_identifier = aws_db_instance.example.id
+  db_instance_identifier = aws_db_instance.example.identifier
   db_proxy_name          = aws_db_proxy.example.name
   target_group_name      = aws_db_proxy_default_target_group.example.name
 }

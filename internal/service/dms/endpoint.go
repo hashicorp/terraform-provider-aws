@@ -567,12 +567,6 @@ func ResourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  "",
 						},
-						"ignore_headers_row": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntInSlice([]int{0, 1}),
-							Description:  "This setting has no effect, is deprecated, and will be removed in a future version",
-						},
 						"ignore_header_rows": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -1565,7 +1559,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		}
 	case engineNameS3:
 		if err := d.Set("s3_settings", flattenS3Settings(endpoint.S3Settings)); err != nil {
-			return fmt.Errorf("Error setting s3_settings for DMS: %s", err)
+			return fmt.Errorf("setting s3_settings for DMS: %s", err)
 		}
 	default:
 		d.Set("database_name", endpoint.DatabaseName)

@@ -43,6 +43,13 @@ func SpotAllocationStrategy_Values() []string {
 }
 
 const (
+	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-request-status.html#spot-instance-request-status-understand
+	spotInstanceRequestStatusCodeFulfilled          = "fulfilled"
+	spotInstanceRequestStatusCodePendingEvaluation  = "pending-evaluation"
+	spotInstanceRequestStatusCodePendingFulfillment = "pending-fulfillment"
+)
+
+const (
 	// https://docs.aws.amazon.com/vpc/latest/privatelink/vpce-interface.html#vpce-interface-lifecycle
 	vpcEndpointStateAvailable         = "available"
 	vpcEndpointStateDeleted           = "deleted"

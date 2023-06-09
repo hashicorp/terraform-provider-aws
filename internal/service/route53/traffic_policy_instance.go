@@ -81,13 +81,13 @@ func resourceTrafficPolicyInstanceCreate(ctx context.Context, d *schema.Resource
 	}, route53.ErrCodeNoSuchTrafficPolicy)
 
 	if err != nil {
-		return diag.Errorf("error creating Route53 Traffic Policy Instance (%s): %s", name, err)
+		return diag.Errorf("creating Route53 Traffic Policy Instance (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*route53.CreateTrafficPolicyInstanceOutput).TrafficPolicyInstance.Id))
 
 	if _, err = waitTrafficPolicyInstanceStateCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("error waiting for Route53 Traffic Policy Instance (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for Route53 Traffic Policy Instance (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceTrafficPolicyInstanceRead(ctx, d, meta)
@@ -105,7 +105,7 @@ func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Route53 Traffic Policy Instance (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Route53 Traffic Policy Instance (%s): %s", d.Id(), err)
 	}
 
 	d.Set("hosted_zone_id", trafficPolicyInstance.HostedZoneId)
@@ -131,11 +131,11 @@ func resourceTrafficPolicyInstanceUpdate(ctx context.Context, d *schema.Resource
 	_, err := conn.UpdateTrafficPolicyInstanceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating Route53 Traffic Policy Instance (%s): %s", d.Id(), err)
+		return diag.Errorf("updating Route53 Traffic Policy Instance (%s): %s", d.Id(), err)
 	}
 
 	if _, err = waitTrafficPolicyInstanceStateUpdated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("error waiting for Route53 Traffic Policy Instance (%s) update: %s", d.Id(), err)
+		return diag.Errorf("waiting for Route53 Traffic Policy Instance (%s) update: %s", d.Id(), err)
 	}
 
 	return resourceTrafficPolicyInstanceRead(ctx, d, meta)
@@ -154,11 +154,11 @@ func resourceTrafficPolicyInstanceDelete(ctx context.Context, d *schema.Resource
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Route53 Traffic Policy Instance (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Route53 Traffic Policy Instance (%s): %s", d.Id(), err)
 	}
 
 	if _, err = waitTrafficPolicyInstanceStateDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("error waiting for Route53 Traffic Policy Instance (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for Route53 Traffic Policy Instance (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

@@ -16,7 +16,9 @@ import (
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/glacier"
 	"github.com/aws/aws-sdk-go-v2/service/healthlake"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
@@ -39,6 +41,7 @@ import (
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
+	"github.com/aws/aws-sdk-go-v2/service/swf"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/xray"
@@ -149,7 +152,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
 	"github.com/aws/aws-sdk-go/service/emrserverless"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/aws/aws-sdk-go/service/finspace"
 	"github.com/aws/aws-sdk-go/service/finspacedata"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fms"
@@ -158,7 +160,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/frauddetector"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/gluedatabrew"
@@ -309,7 +310,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/support"
-	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/synthetics"
 	"github.com/aws/aws-sdk-go/service/textract"
 	"github.com/aws/aws-sdk-go/service/timestreamquery"
@@ -469,14 +469,14 @@ type AWSClient struct {
 	fisClient                        *fis.Client
 	fmsConn                          *fms.FMS
 	fsxConn                          *fsx.FSx
-	finspaceConn                     *finspace.Finspace
+	finspaceClient                   *finspace.Client
 	finspacedataConn                 *finspacedata.FinSpaceData
 	firehoseConn                     *firehose.Firehose
 	forecastConn                     *forecastservice.ForecastService
 	forecastqueryConn                *forecastqueryservice.ForecastQueryService
 	frauddetectorConn                *frauddetector.FraudDetector
 	gameliftConn                     *gamelift.GameLift
-	glacierConn                      *glacier.Glacier
+	glacierClient                    *glacier.Client
 	globalacceleratorConn            *globalaccelerator.GlobalAccelerator
 	glueConn                         *glue.Glue
 	grafanaConn                      *managedgrafana.ManagedGrafana
@@ -624,7 +624,7 @@ type AWSClient struct {
 	ssoadminConn                     *ssoadmin.SSOAdmin
 	ssooidcConn                      *ssooidc.SSOOIDC
 	stsConn                          *sts.STS
-	swfConn                          *swf.SWF
+	swfClient                        *swf.Client
 	sagemakerConn                    *sagemaker.SageMaker
 	sagemakera2iruntimeConn          *augmentedairuntime.AugmentedAIRuntime
 	sagemakeredgeConn                *sagemakeredgemanager.SagemakerEdgeManager
@@ -670,8 +670,6 @@ type AWSClient struct {
 	workspacesConn                   *workspaces.WorkSpaces
 	workspaceswebConn                *workspacesweb.WorkSpacesWeb
 	xrayClient                       *xray.Client
-
-	s3ConnURICleaningDisabled *s3.S3
 }
 
 func (client *AWSClient) ACMClient() *acm.Client {
@@ -1142,8 +1140,8 @@ func (client *AWSClient) FSxConn() *fsx.FSx {
 	return client.fsxConn
 }
 
-func (client *AWSClient) FinSpaceConn() *finspace.Finspace {
-	return client.finspaceConn
+func (client *AWSClient) FinSpaceClient() *finspace.Client {
+	return client.finspaceClient
 }
 
 func (client *AWSClient) FinSpaceDataConn() *finspacedata.FinSpaceData {
@@ -1170,8 +1168,8 @@ func (client *AWSClient) GameLiftConn() *gamelift.GameLift {
 	return client.gameliftConn
 }
 
-func (client *AWSClient) GlacierConn() *glacier.Glacier {
-	return client.glacierConn
+func (client *AWSClient) GlacierClient() *glacier.Client {
+	return client.glacierClient
 }
 
 func (client *AWSClient) GlobalAcceleratorConn() *globalaccelerator.GlobalAccelerator {
@@ -1782,8 +1780,8 @@ func (client *AWSClient) STSConn() *sts.STS {
 	return client.stsConn
 }
 
-func (client *AWSClient) SWFConn() *swf.SWF {
-	return client.swfConn
+func (client *AWSClient) SWFClient() *swf.Client {
+	return client.swfClient
 }
 
 func (client *AWSClient) SageMakerConn() *sagemaker.SageMaker {

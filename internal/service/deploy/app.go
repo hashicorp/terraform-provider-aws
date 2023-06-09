@@ -51,7 +51,7 @@ func ResourceApp() *schema.Resource {
 				}
 
 				if output == nil || output.Application == nil {
-					return []*schema.ResourceData{}, fmt.Errorf("error reading CodeDeploy Application (%s): empty response", applicationName)
+					return []*schema.ResourceData{}, fmt.Errorf("reading CodeDeploy Application (%s): empty response", applicationName)
 				}
 
 				d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.Application.ApplicationId), applicationName))

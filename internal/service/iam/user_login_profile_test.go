@@ -13,10 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
@@ -162,7 +162,7 @@ func TestAccIAMUserLoginProfile_keybaseDoesntExist(t *testing.T) {
 			{
 				// We own this account but it doesn't have any key associated with it
 				Config:      testAccUserLoginProfileConfig_required(rName, "keybase:terraform_nope"),
-				ExpectError: regexp.MustCompile(`Error retrieving Public Key`),
+				ExpectError: regexp.MustCompile(`retrieving Public Key`),
 			},
 		},
 	})
@@ -181,7 +181,7 @@ func TestAccIAMUserLoginProfile_notAKey(t *testing.T) {
 			{
 				// We own this account but it doesn't have any key associated with it
 				Config:      testAccUserLoginProfileConfig_required(rName, "lolimnotakey"),
-				ExpectError: regexp.MustCompile(`Error encrypting Password`),
+				ExpectError: regexp.MustCompile(`encrypting Password`),
 			},
 		},
 	})

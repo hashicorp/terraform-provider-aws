@@ -12,8 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfacm "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -51,7 +51,7 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", string(types.CertificateTypeAmazonIssued)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "validation_emails.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "validation_emails.#", 0),
 					resource.TestMatchResourceAttr(resourceName, "validation_emails.0", regexp.MustCompile(`^[^@]+@.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodEmail)),
 					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
@@ -177,7 +177,7 @@ func TestAccACMCertificate_validationOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.CertificateStatusPendingValidation)),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "validation_emails.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "validation_emails.#", 0),
 					resource.TestMatchResourceAttr(resourceName, "validation_emails.0", regexp.MustCompile(`^[^@]+@.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodEmail)),
 					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "1"),

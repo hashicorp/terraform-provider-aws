@@ -88,19 +88,23 @@ func ResourceProduct() *schema.Resource {
 						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"disable_template_validation": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 							Default:  false,
 						},
 						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"template_physical_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 							ExactlyOneOf: []string{
 								"provisioning_artifact_parameters.0.template_url",
 								"provisioning_artifact_parameters.0.template_physical_id",
@@ -109,6 +113,7 @@ func ResourceProduct() *schema.Resource {
 						"template_url": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 							ExactlyOneOf: []string{
 								"provisioning_artifact_parameters.0.template_url",
 								"provisioning_artifact_parameters.0.template_physical_id",
@@ -117,6 +122,7 @@ func ResourceProduct() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(servicecatalog.ProvisioningArtifactType_Values(), false),
 						},
 					},

@@ -130,6 +130,8 @@ func DataSourceBucketObject() *schema.Resource {
 
 			"tags": tftags.TagsSchemaComputed(),
 		},
+
+		DeprecationMessage: `use the aws_s3_object data source instead`,
 	}
 }
 

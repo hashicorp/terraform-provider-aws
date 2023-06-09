@@ -10,10 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
@@ -757,10 +757,17 @@ func TestAccRDSCluster_dbClusterInstanceClass(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_dbClusterInstanceClass(rName),
+				Config: testAccClusterConfig_dbClusterInstanceClass(rName, "db.m5d.2xlarge"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "db_cluster_instance_class", "db.r6gd.xlarge"),
+					resource.TestCheckResourceAttr(resourceName, "db_cluster_instance_class", "db.m5d.2xlarge"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_dbClusterInstanceClass(rName, "db.r6gd.4xlarge"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "db_cluster_instance_class", "db.r6gd.4xlarge"),
 				),
 			},
 		},
@@ -2996,12 +3003,12 @@ resource "aws_rds_cluster" "test" {
 `, rName)
 }
 
-func testAccClusterConfig_dbClusterInstanceClass(rName string) string {
+func testAccClusterConfig_dbClusterInstanceClass(rName, instanceClass string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
   cluster_identifier        = %[1]q
-  db_cluster_instance_class = "db.r6gd.xlarge"
+  db_cluster_instance_class = %[2]q
   engine                    = "mysql"
   storage_type              = "io1"
   allocated_storage         = 100
@@ -3010,7 +3017,7 @@ resource "aws_rds_cluster" "test" {
   master_username           = "test"
   skip_final_snapshot       = true
 }
-`, rName)
+`, rName, instanceClass)
 }
 
 func testAccClusterConfig_backtrackWindow(backtrackWindow int) string {

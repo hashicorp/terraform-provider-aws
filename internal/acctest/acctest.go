@@ -25,12 +25,13 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -41,6 +42,7 @@ import (
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/jmespath/go-jmespath"
+	"github.com/mitchellh/mapstructure"
 )
 
 const (
@@ -249,7 +251,7 @@ func PreCheck(ctx context.Context, t *testing.T) {
 		region := Region()
 		os.Setenv(envvar.DefaultRegion, region)
 
-		diags := Provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
+		diags := Provider.Configure(ctx, terraformsdk.NewResourceConfigRaw(nil))
 		if err := sdkdiag.DiagnosticsError(diags); err != nil {
 			t.Fatalf("configuring provider: %s", err)
 		}
@@ -1203,12 +1205,23 @@ provider "aws" {
 // This can only be used for single provider configuration testing as it
 // overwrites the "aws" provider configuration.
 func ConfigRegionalProvider(region string) string {
+	return ConfigNamedRegionalProvider(ProviderName, region)
+}
+
+func ConfigAlternateAccountAlternateRegionProvider() string {
+	return ConfigNamedAlternateAccountAlternateRegionProvider(ProviderNameAlternate)
+}
+
+func ConfigNamedAlternateAccountAlternateRegionProvider(providerName string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
-provider "aws" {
-  region = %[1]q
+provider %[1]q {
+  access_key = %[2]q
+  profile    = %[3]q
+  region     = %[4]q
+  secret_key = %[5]q
 }
-`, region)
+`, providerName, os.Getenv(envvar.AlternateAccessKeyId), os.Getenv(envvar.AlternateProfile), AlternateRegion(), os.Getenv(envvar.AlternateSecretAccessKey))
 }
 
 func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {
@@ -1303,7 +1316,13 @@ func CheckResourceDisappears(ctx context.Context, provo *schema.Provider, resour
 			return fmt.Errorf("resource ID missing: %s", n)
 		}
 
-		return DeleteResource(ctx, resource, resource.Data(rs.Primary), provo.Meta())
+		var state terraformsdk.InstanceState
+		err := mapstructure.Decode(rs.Primary, &state)
+		if err != nil {
+			return err
+		}
+
+		return DeleteResource(ctx, resource, resource.Data(&state), provo.Meta())
 	}
 }
 
@@ -1473,7 +1492,6 @@ func ConfigDefaultTags_Tags0() string {
 		`
 provider "aws" {
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -1493,7 +1511,6 @@ provider "aws" {
   }
 
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -1514,7 +1531,6 @@ provider "aws" {
   }
 
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -2230,23 +2246,20 @@ func CheckCallerIdentityAccountID(n string) resource.TestCheckFunc {
 	}
 }
 
-func CheckResourceAttrGreaterThanValue(n, key, value string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("not found: %s", n)
+func CheckResourceAttrGreaterThanValue(n, key string, val int) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(n, key, func(value string) error {
+		v, err := strconv.Atoi(value)
+
+		if err != nil {
+			return err
 		}
 
-		if v, ok := rs.Primary.Attributes[key]; !ok || !(v > value) {
-			if !ok {
-				return fmt.Errorf("%s: Attribute %q not found", n, key)
-			}
-
-			return fmt.Errorf("%s: Attribute %q is not greater than %q, got %q", n, key, value, v)
+		if v <= val {
+			return fmt.Errorf("%s: Attribute %q is not greater than %d, got %d", n, key, val, v)
 		}
 
 		return nil
-	}
+	})
 }
 
 func CheckResourceAttrGreaterThanOrEqualValue(n, key string, val int) resource.TestCheckFunc {
@@ -2305,7 +2318,7 @@ func TestNoMatchResourceAttr(name, key string, r *regexp.Regexp) resource.TestCh
 }
 
 // testNoMatchResourceAttr is same as testMatchResourceAttr in
-// github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
+// github.com/hashicorp/terraform-plugin-testing/helper/resource
 // except negative.
 func testNoMatchResourceAttr(is *terraform.InstanceState, name string, key string, r *regexp.Regexp) error {
 	if r.MatchString(is.Attributes[key]) {
@@ -2321,7 +2334,7 @@ func testNoMatchResourceAttr(is *terraform.InstanceState, name string, key strin
 }
 
 // checkIfIndexesIntoTypeSet is copied from
-// github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
+// github.com/hashicorp/terraform-plugin-testing/helper/resource
 func checkIfIndexesIntoTypeSet(key string, f resource.TestCheckFunc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		err := f(s)
@@ -2333,7 +2346,7 @@ func checkIfIndexesIntoTypeSet(key string, f resource.TestCheckFunc) resource.Te
 }
 
 // indexesIntoTypeSet is copied from
-// github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
+// github.com/hashicorp/terraform-plugin-testing/helper/resource
 func indexesIntoTypeSet(key string) bool {
 	for _, part := range strings.Split(key, ".") {
 		if i, err := strconv.Atoi(part); err == nil && i > 100 {
@@ -2344,14 +2357,14 @@ func indexesIntoTypeSet(key string) bool {
 }
 
 // primaryInstanceState is copied from
-// github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
+// github.com/hashicorp/terraform-plugin-testing/helper/resource
 func primaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
 	ms := s.RootModule()
 	return modulePrimaryInstanceState(ms, name)
 }
 
 // modulePrimaryInstanceState is copied from
-// github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
+// github.com/hashicorp/terraform-plugin-testing/helper/resource
 func modulePrimaryInstanceState(ms *terraform.ModuleState, name string) (*terraform.InstanceState, error) {
 	rs, ok := ms.Resources[name]
 	if !ok {

@@ -110,7 +110,7 @@ func dataSourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta i
 		FrameworkName: aws.String(name),
 	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error getting Backup Framework: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Backup Framework: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.FrameworkName))
