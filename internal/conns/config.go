@@ -4,14 +4,12 @@ import (
 	"context"
 	"log"
 	"strings"
-	"fmt"
 	"time"
 
 	awsv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
-	lightsailTypes "github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -539,9 +537,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.lightsailClient = lightsail.NewFromConfig(cfg, func(o *lightsail.Options) {
 		var lightsailRetryable retry.IsErrorRetryableFunc
 		lightsailRetryable = func(e error) awsv2.Ternary {
-			var invalidInput lightsailTypes.InvalidInputException
-			if tfawserr.ErrMessageContains(e, invalidInput.ErrorCode(), "Please try again in a few minutes") ||
-				tfawserr.ErrMessageContains(e, invalidInput.ErrorCode(), "Please wait for it to complete before trying again") {
+			if strings.Contains(e.Error(), "Please try again in a few minutes") || strings.Contains(e.Error(), "Please wait for it to complete before trying again") {
 				return awsv2.TrueTernary
 			}
 			return awsv2.UnknownTernary
