@@ -1,8 +1,25 @@
-package verify
+package types
 
 import (
+	"fmt"
 	"net"
 )
+
+// ValidateCIDRBlock validates that the specified CIDR block is valid:
+// - The CIDR block parses to an IP address and network
+// - The CIDR block is the CIDR block for the network
+func ValidateCIDRBlock(cidr string) error {
+	_, ipnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return fmt.Errorf("%q is not a valid CIDR block: %w", cidr, err)
+	}
+
+	if !CIDRBlocksEqual(cidr, ipnet.String()) {
+		return fmt.Errorf("%q is not a valid CIDR block; did you mean %q?", cidr, ipnet)
+	}
+
+	return nil
+}
 
 // CIDRBlocksEqual returns whether or not two CIDR blocks are equal:
 // - Both CIDR blocks parse to an IP address and network
