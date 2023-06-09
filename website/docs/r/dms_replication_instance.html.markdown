@@ -11,12 +11,13 @@ description: |-
 Provides a DMS (Data Migration Service) replication instance resource. DMS replication instances can be created, updated, deleted, and imported.
 
 ## Example Usage
+
 Create required roles and then create a DMS instance, setting the depends_on to the required role policy attachments.
 
 ```terraform
 # Database Migration Service requires the below IAM Roles to be created before
 # replication instances can be created. See the DMS Documentation for
-# additional information: https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.html#CHAP_Security.APIRole
+# additional information: https://docs.aws.amazon.com/dms/latest/userguide/security-iam.html#CHAP_Security.APIRole
 #  * dms-vpc-role
 #  * dms-cloudwatch-logs-role
 #  * dms-access-for-endpoint

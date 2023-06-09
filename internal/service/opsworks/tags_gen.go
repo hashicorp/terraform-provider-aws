@@ -78,18 +78,28 @@ func SetTagsOut(ctx context.Context, tags map[string]*string) {
 	}
 }
 
+// createTags creates opsworks service tags for new resources.
+func createTags(ctx context.Context, conn opsworksiface.OpsWorksAPI, identifier string, tags map[string]*string) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return UpdateTags(ctx, conn, identifier, nil, tags)
+}
+
 // UpdateTags updates opsworks service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn opsworksiface.OpsWorksAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.OpsWorks)
+	if len(removedTags) > 0 {
 		input := &opsworks.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreSystem(names.OpsWorks).Keys()),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -99,10 +109,12 @@ func UpdateTags(ctx context.Context, conn opsworksiface.OpsWorksAPI, identifier 
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.OpsWorks)
+	if len(updatedTags) > 0 {
 		input := &opsworks.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreSystem(names.OpsWorks)),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

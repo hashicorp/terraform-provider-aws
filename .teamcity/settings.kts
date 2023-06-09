@@ -1,5 +1,6 @@
 import jetbrains.buildServer.configs.kotlin.v2019_2.* // ktlint-disable no-wildcard-imports
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.golang
+import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.notifications
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildSteps.script
 import jetbrains.buildServer.configs.kotlin.v2019_2.triggers.schedule
 import java.io.File
@@ -15,15 +16,28 @@ val alternateRegion = DslContext.getParameter("alternate_region", "")
 val acmCertificateRootDomain = DslContext.getParameter("acm_certificate_root_domain", "")
 val sweeperRegions = DslContext.getParameter("sweeper_regions")
 val awsAccountID = DslContext.getParameter("aws_account.account_id")
-val awsAccessKeyID = DslContext.getParameter("aws_account.access_key_id")
-val awsSecretAccessKey = DslContext.getParameter("aws_account.secret_access_key")
-val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
 val acctestParallelism = DslContext.getParameter("acctest_parallelism", "")
 val tfAccAssumeRoleArn = DslContext.getParameter("tf_acc_assume_role_arn", "")
-val awsAlternateAccountID = DslContext.getParameter("aws_alternate_account.account_id", "")
-val awsAlternateAccessKeyID = DslContext.getParameter("aws_alternate_account.access_key_id", "")
-val awsAlternateSecretAccessKey = DslContext.getParameter("aws_alternate_account.secret_access_key", "")
+val awsAlternateAccountID = DslContext.getParameter("aws_alt_account.account_id", "")
 val tfLog = DslContext.getParameter("tf_log", "")
+
+// Legacy User credentials
+val legacyAWSAccessKeyID = DslContext.getParameter("aws_account.legacy_access_key_id", "")
+val legacyAWSSecretAccessKey = DslContext.getParameter("aws_account.legacy_secret_access_key", "")
+
+// Legacy Alternate User credentials
+val legacyAWSAlternateAccessKeyID = DslContext.getParameter("aws_alt_account.legacy_access_key_id", "")
+val legacyAWSAlternateSecretAccessKey = DslContext.getParameter("aws_alt_account.legacy_secret_access_key", "")
+
+// Assume Role credentials
+val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
+val awsAccessKeyID = if (accTestRoleARN != "") { DslContext.getParameter("aws_account.access_key_id") } else { "" }
+val awsSecretAccessKey = if (accTestRoleARN != "") { DslContext.getParameter("aws_account.secret_access_key") } else { "" }
+
+// Alternate Assume Role credentials
+val alternateAccTestRoleARN = DslContext.getParameter("aws_alt_account.role_arn", "")
+val alternateAWSAccessKeyID = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.access_key_id") } else { "" }
+val alternateAWSSecretAccessKey = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.secret_access_key") } else { "" }
 
 project {
     if (DslContext.getParameter("build_full", "true").toBoolean()) {
@@ -45,16 +59,8 @@ project {
         text("TEST_PATTERN", "TestAcc", display = ParameterDisplay.HIDDEN)
         text("SWEEPER_REGIONS", sweeperRegions, display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("env.AWS_ACCOUNT_ID", awsAccountID, display = ParameterDisplay.HIDDEN, allowEmpty = false)
-        password("env.AWS_ACCESS_KEY_ID", awsAccessKeyID, display = ParameterDisplay.HIDDEN)
-        password("env.AWS_SECRET_ACCESS_KEY", awsSecretAccessKey, display = ParameterDisplay.HIDDEN)
         text("env.AWS_DEFAULT_REGION", defaultRegion, allowEmpty = false)
         text("env.TF_LOG", tfLog)
-
-        if (awsAlternateAccountID != "" || awsAlternateAccessKeyID != "" || awsAlternateSecretAccessKey != "") {
-            text("env.AWS_ALTERNATE_ACCOUNT_ID", awsAlternateAccountID, display = ParameterDisplay.HIDDEN)
-            password("env.AWS_ALTERNATE_ACCESS_KEY_ID", awsAlternateAccessKeyID, display = ParameterDisplay.HIDDEN)
-            password("env.AWS_ALTERNATE_SECRET_ACCESS_KEY", awsAlternateSecretAccessKey, display = ParameterDisplay.HIDDEN)
-        }
 
         if (alternateRegion != "") {
             text("env.AWS_ALTERNATE_REGION", alternateRegion)
@@ -69,18 +75,39 @@ project {
             text("env.EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT", securityGroupRulesPerGroup)
         }
 
-        val branchName = DslContext.getParameter("branch_name", "")
-        if (branchName != "") {
-            text("BRANCH_NAME", branchName, display = ParameterDisplay.HIDDEN)
+        val brancRef = DslContext.getParameter("branch_name", "")
+        if (brancRef != "") {
+            text("BRANCH_NAME", brancRef, display = ParameterDisplay.HIDDEN)
         }
 
         if (tfAccAssumeRoleArn != "") {
             text("env.TF_ACC_ASSUME_ROLE_ARN", tfAccAssumeRoleArn)
         }
 
-        if (accTestRoleARN != "") {
-            text("ACCTEST_ROLE_ARN", accTestRoleARN, display = ParameterDisplay.HIDDEN)
+        // Legacy User credentials
+        if (legacyAWSAccessKeyID != "") {
+            password("env.AWS_ACCESS_KEY_ID", legacyAWSAccessKeyID, display = ParameterDisplay.HIDDEN)
         }
+        if (legacyAWSSecretAccessKey != "") {
+            password("env.AWS_SECRET_ACCESS_KEY", legacyAWSSecretAccessKey, display = ParameterDisplay.HIDDEN)
+        }
+
+        // Legacy Alternate User credentials
+        if (awsAlternateAccountID != "" || legacyAWSAlternateAccessKeyID != "" || legacyAWSAlternateSecretAccessKey != "") {
+            text("env.AWS_ALTERNATE_ACCOUNT_ID", awsAlternateAccountID, display = ParameterDisplay.HIDDEN)
+            password("env.AWS_ALTERNATE_ACCESS_KEY_ID", legacyAWSAlternateAccessKeyID, display = ParameterDisplay.HIDDEN)
+            password("env.AWS_ALTERNATE_SECRET_ACCESS_KEY", legacyAWSAlternateSecretAccessKey, display = ParameterDisplay.HIDDEN)
+        }
+
+        // Assume Role credentials
+        password("AWS_ACCESS_KEY_ID", awsAccessKeyID, display = ParameterDisplay.HIDDEN)
+        password("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey, display = ParameterDisplay.HIDDEN)
+        text("ACCTEST_ROLE_ARN", accTestRoleARN, display = ParameterDisplay.HIDDEN)
+
+        // Alternate Assume Role credentials
+        password("AWS_ALTERNATE_ACCESS_KEY_ID", alternateAWSAccessKeyID, display = ParameterDisplay.HIDDEN)
+        password("AWS_ALTERNATE_SECRET_ACCESS_KEY", alternateAWSSecretAccessKey, display = ParameterDisplay.HIDDEN)
+        text("ACCTEST_ALTERNATE_ROLE_ARN", alternateAccTestRoleARN, display = ParameterDisplay.HIDDEN)
 
         // Define this parameter even when not set to allow individual builds to set the value
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
@@ -108,6 +135,7 @@ object PullRequest : BuildType({
         executionTimeoutMin = Duration.ofHours(defaultPullRequestTimeoutHours).toMinutes().toInt()
     }
 
+    val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
     steps {
         script {
             name = "Setup GOENV"
@@ -124,11 +152,39 @@ object PullRequest : BuildType({
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} readLock")
         }
-        val alternateAccountLockId = DslContext.getParameter("aws_alternate_account.lock_id", "")
+        val alternateAccountLockId = DslContext.getParameter("aws_alt_account.lock_id", "")
         if (alternateAccountLockId != "") {
             feature {
                 type = "JetBrains.SharedResources"
                 param("locks-param", "$alternateAccountLockId readLock")
+            }
+        }
+
+        val notifierConnectionID = DslContext.getParameter("notifier.id", "")
+        val notifier: Notifier? = if (notifierConnectionID != "") {
+            Notifier(notifierConnectionID, DslContext.getParameter("notifier.destination"))
+        } else {
+            null
+        }
+
+        if (notifier != null) {
+            notifications {
+                notifierSettings = slackNotifier {
+                    connection = notifier.connectionID
+                    sendTo = notifier.destination
+                    messageFormat = verboseMessageFormat {
+                        addBranch = true
+                        addStatusText = true
+                    }
+                }
+                branchFilter = "+:*"
+
+                buildStarted = true
+                buildFailedToStart = true
+                buildFailed = true
+                buildFinishedSuccessfully = true
+                firstBuildErrorOccurs = true
+                buildProbablyHanging = false
             }
         }
     }
@@ -143,6 +199,13 @@ object FullBuild : BuildType({
         showDependenciesChanges = true
     }
 
+    val notifierConnectionID = DslContext.getParameter("notifier.id", "")
+    val notifier: Notifier? = if (notifierConnectionID != "") {
+        Notifier(notifierConnectionID, DslContext.getParameter("notifier.destination"))
+    } else {
+        null
+    }
+
     dependencies {
         snapshot(SetUp) {
             reuseBuilds = ReuseBuilds.NO
@@ -153,7 +216,7 @@ object FullBuild : BuildType({
         val testType = DslContext.getParameter("test_type", "")
         val serviceList = if (testType == "orgacct") orgacctServices else services
         serviceList.forEach { (serviceName, displayName) ->
-            snapshot(Service(serviceName, displayName).buildType()) {
+            snapshot(Service(serviceName, displayName).buildType(notifier)) {
                 reuseBuilds = ReuseBuilds.NO
                 onDependencyFailure = FailureAction.ADD_PROBLEM
                 onDependencyCancel = FailureAction.IGNORE
@@ -172,10 +235,11 @@ object FullBuild : BuildType({
         val triggerTimeRaw = DslContext.getParameter("trigger_time")
         val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
         val triggerTime = formatter.parse(triggerTimeRaw)
-        val triggerDay = if (DslContext.getParameter("trigger_day", "") != "")
+        val triggerDay = if (DslContext.getParameter("trigger_day", "") != "") {
             DslContext.getParameter("trigger_day", "")
-        else
+        } else {
             "Sun-Thu"
+        }
         triggers {
             schedule {
                 schedulingPolicy = cron {
@@ -199,11 +263,26 @@ object FullBuild : BuildType({
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
         }
-        val alternateAccountLockId = DslContext.getParameter("aws_alternate_account.lock_id", "")
+        val alternateAccountLockId = DslContext.getParameter("aws_alt_account.lock_id", "")
         if (alternateAccountLockId != "") {
             feature {
                 type = "JetBrains.SharedResources"
                 param("locks-param", "$alternateAccountLockId readLock")
+            }
+        }
+
+        if (notifier != null) {
+            notifications {
+                notifierSettings = slackNotifier {
+                    connection = notifier.connectionID
+                    sendTo = notifier.destination
+                    messageFormat = simpleMessageFormat()
+                }
+                buildStarted = true
+                buildFailedToStart = true
+                buildFailed = true
+                buildFinishedSuccessfully = true
+                firstBuildErrorOccurs = true
             }
         }
     }
@@ -242,6 +321,34 @@ object SetUp : BuildType({
         golang {
             testFormat = "json"
         }
+
+        val notifierConnectionID = DslContext.getParameter("notifier.id", "")
+        val notifier: Notifier? = if (notifierConnectionID != "") {
+            Notifier(notifierConnectionID, DslContext.getParameter("notifier.destination"))
+        } else {
+            null
+        }
+
+        if (notifier != null) {
+            notifications {
+                notifierSettings = slackNotifier {
+                    connection = notifier.connectionID
+                    sendTo = notifier.destination
+                    messageFormat = verboseMessageFormat {
+                        addBranch = true
+                        addStatusText = true
+                    }
+                }
+                buildStarted = false // With the number of tests, this would be too noisy
+                buildFailedToStart = true
+                buildFailed = true
+                buildFinishedSuccessfully = false // With the number of tests, this would be too noisy
+                firstSuccessAfterFailure = true
+                buildProbablyHanging = false
+                // Ideally we'd have this enabled, but we have too many failures and this would get very noisy
+                // firstBuildErrorOccurs = true
+            }
+        }
     }
 })
 
@@ -250,6 +357,13 @@ object Services : Project({
 
     name = "Services"
 
+    val notifierConnectionID = DslContext.getParameter("notifier.id", "")
+    val notifier: Notifier? = if (notifierConnectionID != "") {
+        Notifier(notifierConnectionID, DslContext.getParameter("notifier.destination"))
+    } else {
+        null
+    }
+
     val buildChain = sequential {
         buildType(SetUp)
 
@@ -257,7 +371,7 @@ object Services : Project({
         val serviceList = if (testType == "orgacct") orgacctServices else services
         parallel(options = { onDependencyFailure = FailureAction.IGNORE }) {
             serviceList.forEach { (serviceName, displayName) ->
-                buildType(Service(serviceName, displayName).buildType())
+                buildType(Service(serviceName, displayName).buildType(notifier))
             }
         }
 
@@ -309,7 +423,7 @@ object Sweeper : BuildType({
         }
         script {
             name = "Sweeper"
-            scriptContent = File("./scripts/sweeper_role.sh").readText()
+            scriptContent = File("./scripts/sweeper.sh").readText()
         }
     }
 
@@ -338,6 +452,32 @@ object Sweeper : BuildType({
         feature {
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
+        }
+
+        val notifierConnectionID = DslContext.getParameter("notifier.id", "")
+        val notifier: Notifier? = if (notifierConnectionID != "") {
+            Notifier(notifierConnectionID, DslContext.getParameter("notifier.destination"))
+        } else {
+            null
+        }
+
+        if (notifier != null) {
+            val branchRef = DslContext.getParameter("branch_name", "")
+            notifications {
+                notifierSettings = slackNotifier {
+                    connection = notifier.connectionID
+                    sendTo = notifier.destination
+                    messageFormat = verboseMessageFormat {
+                        addBranch = branchRef != "refs/heads/main"
+                        addStatusText = true
+                    }
+                }
+                buildStarted = true
+                buildFailedToStart = true
+                buildFailed = true
+                buildFinishedSuccessfully = true
+                firstBuildErrorOccurs = true
+            }
         }
     }
 })

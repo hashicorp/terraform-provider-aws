@@ -51,6 +51,11 @@ func ResourceProvisionedConcurrencyConfig() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -147,6 +152,11 @@ func resourceProvisionedConcurrencyConfigUpdate(ctx context.Context, d *schema.R
 
 func resourceProvisionedConcurrencyConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Lambda Provisioned Concurrency Config %q", d.Id())
+		return diags
+	}
+
 	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())

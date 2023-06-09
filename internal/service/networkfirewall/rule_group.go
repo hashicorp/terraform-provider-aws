@@ -71,17 +71,9 @@ func ResourceRuleGroup() *schema.Resource {
 									"ip_set_references": {
 										Type:     schema.TypeSet,
 										Optional: true,
+										MaxItems: 5,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"key": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 32),
-														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
-													),
-												},
 												"ip_set_reference": {
 													Type:     schema.TypeList,
 													Required: true,
@@ -94,6 +86,15 @@ func ResourceRuleGroup() *schema.Resource {
 															},
 														},
 													},
+												},
+												"key": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 32),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
+													),
 												},
 											},
 										},
@@ -533,17 +534,14 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.HasChanges("description", "encryption_configuration", "rule_group", "rules", "type") {
 		input := &networkfirewall.UpdateRuleGroupInput{
-			RuleGroupArn: aws.String(d.Id()),
-			Type:         aws.String(d.Get("type").(string)),
-			UpdateToken:  aws.String(d.Get("update_token").(string)),
+			EncryptionConfiguration: expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
+			RuleGroupArn:            aws.String(d.Id()),
+			Type:                    aws.String(d.Get("type").(string)),
+			UpdateToken:             aws.String(d.Get("update_token").(string)),
 		}
 
 		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
-		}
-
-		if d.HasChange("encryption_configuration") {
-			input.EncryptionConfiguration = expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{}))
 		}
 
 		// Network Firewall UpdateRuleGroup API method only allows one of Rules or RuleGroup

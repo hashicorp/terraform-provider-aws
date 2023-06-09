@@ -18,6 +18,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newResourceFolderMembership,
+			Name:    "Folder Membership",
+		},
+		{
 			Factory: newResourceIAMPolicyAssignment,
 			Name:    "IAM Policy Assignment",
 		},
@@ -28,6 +32,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceNamespace,
 			Name:    "Namespace",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory: newResourceRefreshSchedule,
+			Name:    "Refresh Schedule",
+		},
+		{
+			Factory: newResourceTemplateAlias,
+			Name:    "Template Alias",
+		},
+		{
+			Factory: newResourceVPCConnection,
+			Name:    "VPC Connection",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
@@ -63,6 +82,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Account Subscription",
 		},
 		{
+			Factory:  ResourceAnalysis,
+			TypeName: "aws_quicksight_analysis",
+			Name:     "Analysis",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceDashboard,
+			TypeName: "aws_quicksight_dashboard",
+			Name:     "Dashboard",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceDataSet,
 			TypeName: "aws_quicksight_data_set",
 			Name:     "Data Set",
@@ -95,6 +130,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceGroupMembership,
 			TypeName: "aws_quicksight_group_membership",
 			Name:     "Group Membership",
+		},
+		{
+			Factory:  ResourceTemplate,
+			TypeName: "aws_quicksight_template",
+			Name:     "Template",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUser,

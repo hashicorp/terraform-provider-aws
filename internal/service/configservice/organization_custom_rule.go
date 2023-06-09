@@ -71,15 +71,9 @@ func ResourceOrganizationCustomRule() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 256),
 			},
 			"maximum_execution_frequency": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					configservice.MaximumExecutionFrequencyOneHour,
-					configservice.MaximumExecutionFrequencyThreeHours,
-					configservice.MaximumExecutionFrequencySixHours,
-					configservice.MaximumExecutionFrequencyTwelveHours,
-					configservice.MaximumExecutionFrequencyTwentyFourHours,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(configservice.MaximumExecutionFrequency_Values(), false),
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -213,6 +207,10 @@ func resourceOrganizationCustomRuleRead(ctx context.Context, d *schema.ResourceD
 
 	if d.IsNewResource() && rule == nil {
 		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), errors.New("empty rule after creation"))
+	}
+
+	if rule.OrganizationCustomPolicyRuleMetadata != nil {
+		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), errors.New("expected Organization Custom Rule, found Organization Custom Policy Rule"))
 	}
 
 	if rule.OrganizationManagedRuleMetadata != nil {

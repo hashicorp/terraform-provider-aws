@@ -2,7 +2,6 @@ package appintegrations
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 
@@ -95,11 +94,11 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 	output, err := conn.CreateEventIntegrationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating AppIntegrations Event Integration (%s): %w", name, err))
+		return diag.Errorf("creating AppIntegrations Event Integration (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating AppIntegrations Event Integration (%s): empty output", name))
+		return diag.Errorf("creating AppIntegrations Event Integration (%s): empty output", name)
 	}
 
 	// Name is unique
@@ -124,11 +123,11 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting AppIntegrations Event Integration (%s): %w", d.Id(), err))
+		return diag.Errorf("getting AppIntegrations Event Integration (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil {
-		return diag.FromErr(fmt.Errorf("error getting AppIntegrations Event Integration (%s): empty response", d.Id()))
+		return diag.Errorf("getting AppIntegrations Event Integration (%s): empty response", d.Id())
 	}
 
 	d.Set("arn", resp.EventIntegrationArn)
@@ -137,7 +136,7 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("name", resp.Name)
 
 	if err := d.Set("event_filter", flattenEventFilter(resp.EventFilter)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting event_filter: %w", err))
+		return diag.Errorf("setting event_filter: %s", err)
 	}
 
 	SetTagsOut(ctx, resp.Tags)
@@ -157,7 +156,7 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 		})
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating EventIntegration (%s): %w", d.Id(), err))
+			return diag.Errorf("updating EventIntegration (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -174,7 +173,7 @@ func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData,
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting EventIntegration (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting EventIntegration (%s): %s", d.Id(), err)
 	}
 
 	return nil

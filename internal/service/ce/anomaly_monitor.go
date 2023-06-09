@@ -93,7 +93,7 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 			expression := costexplorer.Expression{}
 
 			if err := json.Unmarshal([]byte(v.(string)), &expression); err != nil {
-				return diag.Errorf("Error parsing specification: %s", err)
+				return diag.Errorf("parsing specification: %s", err)
 			}
 
 			input.AnomalyMonitor.MonitorSpecification = &expression
@@ -105,7 +105,7 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 	resp, err := conn.CreateAnomalyMonitorWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("Error creating Anomaly Monitor: %s", err)
+		return diag.Errorf("creating Anomaly Monitor: %s", err)
 	}
 
 	if resp == nil || resp.MonitorArn == nil {
@@ -135,7 +135,7 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 	if monitor.MonitorSpecification != nil {
 		specificationToJson, err := json.Marshal(monitor.MonitorSpecification)
 		if err != nil {
-			return diag.Errorf("Error parsing specification response: %s", err)
+			return diag.Errorf("parsing specification response: %s", err)
 		}
 		specificationToSet, err := structure.NormalizeJsonString(string(specificationToJson))
 

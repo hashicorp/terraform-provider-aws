@@ -90,7 +90,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading Appsync Type %q: %s", d.Id(), err)
 	}
 
-	resp, err := FindTypeByID(ctx, conn, apiID, format, name)
+	resp, err := FindTypeByThreePartKey(ctx, conn, apiID, format, name)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppSync Type (%s) not found, removing from state", d.Id())
 		d.SetId("")

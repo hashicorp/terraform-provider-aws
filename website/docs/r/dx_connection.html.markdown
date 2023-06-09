@@ -34,6 +34,7 @@ resource "aws_dx_connection" "example" {
 ```
 
 ### Configure encryption mode for MACsec-capable connections
+
 -> **NOTE:** You can only specify the `encryption_mode` argument once the connection is in an `Available` state.
 
 ```terraform

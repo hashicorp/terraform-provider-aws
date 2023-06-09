@@ -199,7 +199,7 @@ func DeploymentParseID(id string) (string, string, int, error) {
 
 	num, err := strconv.Atoi(parts[2])
 	if err != nil {
-		return "", "", 0, fmt.Errorf("error parsing AppConfig Deployment resource ID deployment_number: %w", err)
+		return "", "", 0, fmt.Errorf("parsing AppConfig Deployment resource ID deployment_number: %w", err)
 	}
 
 	return parts[0], parts[1], num, nil

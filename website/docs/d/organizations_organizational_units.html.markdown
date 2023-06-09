@@ -7,6 +7,7 @@ description: |-
 ---
 
 # Data Source: aws_organizations_organizational_units
+
 Get all direct child organizational units under a parent organizational unit. This only provides immediate children, not all children.
 
 ## Example Usage

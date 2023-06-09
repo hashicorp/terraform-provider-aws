@@ -31,7 +31,7 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 resource "aws_eip" "example" {
-  vpc = true
+  domain = "vpc"
 }
 
 resource "aws_shield_protection" "example" {

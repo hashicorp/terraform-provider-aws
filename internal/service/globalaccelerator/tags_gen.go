@@ -98,15 +98,16 @@ func SetTagsOut(ctx context.Context, tags []*globalaccelerator.Tag) {
 // UpdateTags updates globalaccelerator service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn globalacceleratoriface.GlobalAcceleratorAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.GlobalAccelerator)
+	if len(removedTags) > 0 {
 		input := &globalaccelerator.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreSystem(names.GlobalAccelerator).Keys()),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -116,10 +117,12 @@ func UpdateTags(ctx context.Context, conn globalacceleratoriface.GlobalAccelerat
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.GlobalAccelerator)
+	if len(updatedTags) > 0 {
 		input := &globalaccelerator.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreSystem(names.GlobalAccelerator)),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

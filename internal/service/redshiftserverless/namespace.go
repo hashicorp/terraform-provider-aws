@@ -3,9 +3,12 @@ package redshiftserverless
 import (
 	"context"
 	"log"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -170,7 +173,7 @@ func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("arn", arn)
 	d.Set("db_name", output.DbName)
 	d.Set("default_iam_role_arn", output.DefaultIamRoleArn)
-	d.Set("iam_roles", aws.StringValueSlice(output.IamRoles))
+	d.Set("iam_roles", flattenNamespaceIAMRoles(output.IamRoles))
 	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("log_exports", aws.StringValueSlice(output.LogExports))
 	d.Set("namespace_id", output.NamespaceId)
@@ -250,4 +253,43 @@ func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	return diags
+}
+
+var (
+	reIAMRole = regexp.MustCompile(`^\s*IamRole\((.*)\)\s*$`)
+)
+
+func flattenNamespaceIAMRoles(iamRoles []*string) []string {
+	var tfList []string
+
+	for _, iamRole := range iamRoles {
+		iamRole := aws.StringValue(iamRole)
+
+		if arn.IsARN(iamRole) {
+			tfList = append(tfList, iamRole)
+			continue
+		}
+
+		// e.g. "IamRole(applyStatus=in-sync, iamRoleArn=arn:aws:iam::123456789012:role/service-role/test)"
+		if m := reIAMRole.FindStringSubmatch(iamRole); len(m) > 0 {
+			var key string
+			s := m[1]
+			for s != "" {
+				key, s, _ = strings.Cut(s, ",")
+				key = strings.TrimSpace(key)
+				if key == "" {
+					continue
+				}
+				key, value, _ := strings.Cut(key, "=")
+				if key == "iamRoleArn" {
+					tfList = append(tfList, value)
+					break
+				}
+			}
+
+			continue
+		}
+	}
+
+	return tfList
 }

@@ -24,7 +24,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{}
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceGlobalSettings,
+			TypeName: "aws_chimesdkvoice_global_settings",
+		},
+		{
+			Factory:  ResourceVoiceProfileDomain,
+			TypeName: "aws_chimesdkvoice_voice_profile_domain",
+			Name:     "Voice Profile Domain",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

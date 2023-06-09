@@ -4,15 +4,21 @@ package conns
 import (
 	"net/http"
 
+	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
+	"github.com/aws/aws-sdk-go-v2/service/account"
+	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/glacier"
 	"github.com/aws/aws-sdk-go-v2/service/healthlake"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
@@ -35,12 +41,11 @@ import (
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
+	"github.com/aws/aws-sdk-go-v2/service/swf"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	"github.com/aws/aws-sdk-go-v2/service/xray"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/accessanalyzer"
-	"github.com/aws/aws-sdk-go/service/account"
-	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/alexaforbusiness"
 	"github.com/aws/aws-sdk-go/service/amplify"
@@ -147,7 +152,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
 	"github.com/aws/aws-sdk-go/service/emrserverless"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/aws/aws-sdk-go/service/finspace"
 	"github.com/aws/aws-sdk-go/service/finspacedata"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fms"
@@ -156,7 +160,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/frauddetector"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/gluedatabrew"
@@ -169,6 +172,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/aws/aws-sdk-go/service/internetmonitor"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iot1clickdevicesservice"
 	"github.com/aws/aws-sdk-go/service/iot1clickprojects"
@@ -306,7 +310,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/support"
-	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/synthetics"
 	"github.com/aws/aws-sdk-go/service/textract"
 	"github.com/aws/aws-sdk-go/service/timestreamquery"
@@ -325,7 +328,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/workmailmessageflow"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/workspacesweb"
-	"github.com/aws/aws-sdk-go/service/xray"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -344,6 +346,7 @@ type AWSClient struct {
 
 	httpClient *http.Client
 
+	dsClient        lazyClient[*directoryservice_sdkv2.Client]
 	ec2Client       lazyClient[*ec2_sdkv2.Client]
 	lambdaClient    lazyClient[*lambda_sdkv2.Client]
 	logsClient      lazyClient[*cloudwatchlogs_sdkv2.Client]
@@ -351,14 +354,14 @@ type AWSClient struct {
 	s3controlClient lazyClient[*s3control_sdkv2.Client]
 	ssmClient       lazyClient[*ssm_sdkv2.Client]
 
-	acmConn                          *acm.ACM
+	acmClient                        *acm.Client
 	acmpcaConn                       *acmpca.ACMPCA
 	ampConn                          *prometheusservice.PrometheusService
 	apigatewayConn                   *apigateway.APIGateway
 	apigatewaymanagementapiConn      *apigatewaymanagementapi.ApiGatewayManagementApi
 	apigatewayv2Conn                 *apigatewayv2.ApiGatewayV2
-	accessanalyzerConn               *accessanalyzer.AccessAnalyzer
-	accountConn                      *account.Account
+	accessanalyzerClient             *accessanalyzer.Client
+	accountClient                    *account.Client
 	alexaforbusinessConn             *alexaforbusiness.AlexaForBusiness
 	amplifyConn                      *amplify.Amplify
 	amplifybackendConn               *amplifybackend.AmplifyBackend
@@ -466,14 +469,14 @@ type AWSClient struct {
 	fisClient                        *fis.Client
 	fmsConn                          *fms.FMS
 	fsxConn                          *fsx.FSx
-	finspaceConn                     *finspace.Finspace
+	finspaceClient                   *finspace.Client
 	finspacedataConn                 *finspacedata.FinSpaceData
 	firehoseConn                     *firehose.Firehose
 	forecastConn                     *forecastservice.ForecastService
 	forecastqueryConn                *forecastqueryservice.ForecastQueryService
 	frauddetectorConn                *frauddetector.FraudDetector
 	gameliftConn                     *gamelift.GameLift
-	glacierConn                      *glacier.Glacier
+	glacierClient                    *glacier.Client
 	globalacceleratorConn            *globalaccelerator.GlobalAccelerator
 	glueConn                         *glue.Glue
 	grafanaConn                      *managedgrafana.ManagedGrafana
@@ -491,6 +494,7 @@ type AWSClient struct {
 	imagebuilderConn                 *imagebuilder.Imagebuilder
 	inspectorConn                    *inspector.Inspector
 	inspector2Client                 *inspector2.Client
+	internetmonitorConn              *internetmonitor.InternetMonitor
 	iotConn                          *iot.IoT
 	iot1clickdevicesConn             *iot1clickdevicesservice.IoT1ClickDevicesService
 	iot1clickprojectsConn            *iot1clickprojects.IoT1ClickProjects
@@ -620,7 +624,7 @@ type AWSClient struct {
 	ssoadminConn                     *ssoadmin.SSOAdmin
 	ssooidcConn                      *ssooidc.SSOOIDC
 	stsConn                          *sts.STS
-	swfConn                          *swf.SWF
+	swfClient                        *swf.Client
 	sagemakerConn                    *sagemaker.SageMaker
 	sagemakera2iruntimeConn          *augmentedairuntime.AugmentedAIRuntime
 	sagemakeredgeConn                *sagemakeredgemanager.SagemakerEdgeManager
@@ -665,13 +669,11 @@ type AWSClient struct {
 	workmailmessageflowConn          *workmailmessageflow.WorkMailMessageFlow
 	workspacesConn                   *workspaces.WorkSpaces
 	workspaceswebConn                *workspacesweb.WorkSpacesWeb
-	xrayConn                         *xray.XRay
-
-	s3ConnURICleaningDisabled *s3.S3
+	xrayClient                       *xray.Client
 }
 
-func (client *AWSClient) ACMConn() *acm.ACM {
-	return client.acmConn
+func (client *AWSClient) ACMClient() *acm.Client {
+	return client.acmClient
 }
 
 func (client *AWSClient) ACMPCAConn() *acmpca.ACMPCA {
@@ -694,12 +696,12 @@ func (client *AWSClient) APIGatewayV2Conn() *apigatewayv2.ApiGatewayV2 {
 	return client.apigatewayv2Conn
 }
 
-func (client *AWSClient) AccessAnalyzerConn() *accessanalyzer.AccessAnalyzer {
-	return client.accessanalyzerConn
+func (client *AWSClient) AccessAnalyzerClient() *accessanalyzer.Client {
+	return client.accessanalyzerClient
 }
 
-func (client *AWSClient) AccountConn() *account.Account {
-	return client.accountConn
+func (client *AWSClient) AccountClient() *account.Client {
+	return client.accountClient
 }
 
 func (client *AWSClient) AlexaForBusinessConn() *alexaforbusiness.AlexaForBusiness {
@@ -982,6 +984,10 @@ func (client *AWSClient) DSConn() *directoryservice.DirectoryService {
 	return client.dsConn
 }
 
+func (client *AWSClient) DSClient() *directoryservice_sdkv2.Client {
+	return client.dsClient.Client()
+}
+
 func (client *AWSClient) DataBrewConn() *gluedatabrew.GlueDataBrew {
 	return client.databrewConn
 }
@@ -1134,8 +1140,8 @@ func (client *AWSClient) FSxConn() *fsx.FSx {
 	return client.fsxConn
 }
 
-func (client *AWSClient) FinSpaceConn() *finspace.Finspace {
-	return client.finspaceConn
+func (client *AWSClient) FinSpaceClient() *finspace.Client {
+	return client.finspaceClient
 }
 
 func (client *AWSClient) FinSpaceDataConn() *finspacedata.FinSpaceData {
@@ -1162,8 +1168,8 @@ func (client *AWSClient) GameLiftConn() *gamelift.GameLift {
 	return client.gameliftConn
 }
 
-func (client *AWSClient) GlacierConn() *glacier.Glacier {
-	return client.glacierConn
+func (client *AWSClient) GlacierClient() *glacier.Client {
+	return client.glacierClient
 }
 
 func (client *AWSClient) GlobalAcceleratorConn() *globalaccelerator.GlobalAccelerator {
@@ -1232,6 +1238,10 @@ func (client *AWSClient) InspectorConn() *inspector.Inspector {
 
 func (client *AWSClient) Inspector2Client() *inspector2.Client {
 	return client.inspector2Client
+}
+
+func (client *AWSClient) InternetMonitorConn() *internetmonitor.InternetMonitor {
+	return client.internetmonitorConn
 }
 
 func (client *AWSClient) IoTConn() *iot.IoT {
@@ -1770,8 +1780,8 @@ func (client *AWSClient) STSConn() *sts.STS {
 	return client.stsConn
 }
 
-func (client *AWSClient) SWFConn() *swf.SWF {
-	return client.swfConn
+func (client *AWSClient) SWFClient() *swf.Client {
+	return client.swfClient
 }
 
 func (client *AWSClient) SageMakerConn() *sagemaker.SageMaker {
@@ -1950,6 +1960,6 @@ func (client *AWSClient) WorkSpacesWebConn() *workspacesweb.WorkSpacesWeb {
 	return client.workspaceswebConn
 }
 
-func (client *AWSClient) XRayConn() *xray.XRay {
-	return client.xrayConn
+func (client *AWSClient) XRayClient() *xray.Client {
+	return client.xrayClient
 }

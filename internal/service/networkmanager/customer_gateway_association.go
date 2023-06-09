@@ -103,13 +103,13 @@ func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.Res
 	)
 
 	if err != nil {
-		return diag.Errorf("error creating Network Manager Customer Gateway Association (%s): %s", id, err)
+		return diag.Errorf("creating Network Manager Customer Gateway Association (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := waitCustomerGatewayAssociationCreated(ctx, conn, globalNetworkID, customerGatewayARN, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Network Manager Customer Gateway Association (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for Network Manager Customer Gateway Association (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceCustomerGatewayAssociationRead(ctx, d, meta)
@@ -133,7 +133,7 @@ func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Network Manager Customer Gateway Association (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Network Manager Customer Gateway Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("customer_gateway_arn", output.CustomerGatewayArn)
@@ -176,11 +176,11 @@ func disassociateCustomerGateway(ctx context.Context, conn *networkmanager.Netwo
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Network Manager Customer Gateway Association (%s): %w", id, err)
+		return fmt.Errorf("deleting Network Manager Customer Gateway Association (%s): %w", id, err)
 	}
 
 	if _, err := waitCustomerGatewayAssociationDeleted(ctx, conn, globalNetworkID, customerGatewayARN, timeout); err != nil {
-		return fmt.Errorf("error waiting for Network Manager Customer Gateway Association (%s) delete: %w", id, err)
+		return fmt.Errorf("waiting for Network Manager Customer Gateway Association (%s) delete: %w", id, err)
 	}
 
 	return nil

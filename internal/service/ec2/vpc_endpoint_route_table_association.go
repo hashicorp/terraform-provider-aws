@@ -57,7 +57,6 @@ func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *sche
 
 	log.Printf("[DEBUG] Creating VPC Endpoint Route Table Association: %s", input)
 	_, err := conn.ModifyVpcEndpointWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating VPC Endpoint Route Table Association (%s): %s", id, err)
 	}
@@ -82,7 +81,9 @@ func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, routeTableID)
 
-	err := FindVPCEndpointRouteTableAssociationExists(ctx, conn, endpointID, routeTableID)
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, RouteTableAssociationPropagationTimeout, func() (interface{}, error) {
+		return nil, FindVPCEndpointRouteTableAssociationExists(ctx, conn, endpointID, routeTableID)
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Route Table Association (%s) not found, removing from state", id)

@@ -26,6 +26,7 @@ func ResourceProject() *schema.Resource {
 		ReadWithoutTimeout:   resourceProjectRead,
 		UpdateWithoutTimeout: resourceProjectUpdate,
 		DeleteWithoutTimeout: resourceProjectDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -35,19 +36,19 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"default_job_timeout_minutes": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-			"default_job_timeout_minutes": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -65,20 +66,16 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DefaultJobTimeoutMinutes = aws.Int64(int64(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating DeviceFarm Project: %s", name)
-	out, err := conn.CreateProjectWithContext(ctx, input)
+	output, err := conn.CreateProjectWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating DeviceFarm Project: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DeviceFarm Project (%s): %s", name, err)
 	}
 
-	arn := aws.StringValue(out.Project.Arn)
-	log.Printf("[DEBUG] Successsfully Created DeviceFarm Project: %s", arn)
-	d.SetId(arn)
+	d.SetId(aws.StringValue(output.Project.Arn))
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Project (%s) tags: %s", arn, err)
-		}
+	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Project (%s) tags: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceProjectRead(ctx, d, meta)...)
@@ -125,10 +122,10 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DefaultJobTimeoutMinutes = aws.Int64(int64(d.Get("default_job_timeout_minutes").(int)))
 		}
 
-		log.Printf("[DEBUG] Updating DeviceFarm Project: %s", d.Id())
 		_, err := conn.UpdateProjectWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error Updating DeviceFarm Project: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Project (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -139,17 +136,17 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
-	input := &devicefarm.DeleteProjectInput{
+	log.Printf("[DEBUG] Deleting DeviceFarm Project: %s", d.Id())
+	_, err := conn.DeleteProjectWithContext(ctx, &devicefarm.DeleteProjectInput{
 		Arn: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
+		return diags
 	}
 
-	log.Printf("[DEBUG] Deleting DeviceFarm Project: %s", d.Id())
-	_, err := conn.DeleteProjectWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "Error deleting DeviceFarm Project: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting DeviceFarm Project (%s): %s", d.Id(), err)
 	}
 
 	return diags

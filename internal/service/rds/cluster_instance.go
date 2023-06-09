@@ -99,9 +99,8 @@ func ResourceClusterInstance() *schema.Resource {
 			},
 			"engine": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ForceNew:     true,
-				Default:      ClusterEngineAurora,
 				ValidateFunc: validClusterEngine(),
 			},
 			"engine_version": {
@@ -413,6 +412,8 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("storage_encrypted", db.StorageEncrypted)
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
+
+	SetTagsOut(ctx, db.TagList)
 
 	return nil
 }

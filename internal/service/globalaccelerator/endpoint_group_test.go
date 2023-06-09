@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -97,7 +97,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 		CheckDestroy:             testAccCheckEndpointGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointGroupConfig_albClientIP(rName, false),
+				Config: testAccEndpointGroupConfig_albClientIP(rName, false, 20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
@@ -124,14 +124,14 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEndpointGroupConfig_albClientIP(rName, true),
+				Config: testAccEndpointGroupConfig_albClientIP(rName, true, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
 						"client_ip_preservation_enabled": "true",
-						"weight":                         "20",
+						"weight":                         "0",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", albResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
@@ -528,7 +528,7 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
 `, rName)
 }
 
-func testAccEndpointGroupConfig_albClientIP(rName string, clientIP bool) string {
+func testAccEndpointGroupConfig_albClientIP(rName string, clientIP bool, weight int) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -596,7 +596,7 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
 
   endpoint_configuration {
     endpoint_id                    = aws_lb.test.id
-    weight                         = 20
+    weight                         = %[3]d
     client_ip_preservation_enabled = %[2]t
   }
 
@@ -607,7 +607,7 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
   threshold_count               = 3
   traffic_dial_percentage       = 100
 }
-`, rName, clientIP))
+`, rName, clientIP, weight))
 }
 
 func testAccEndpointGroupConfig_instance(rName string) string {
@@ -690,7 +690,7 @@ resource "aws_globalaccelerator_listener" "test" {
 resource "aws_eip" "test" {
   provider = "awsalternate"
 
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -800,7 +800,7 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -846,7 +846,7 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q

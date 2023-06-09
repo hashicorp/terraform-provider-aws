@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -226,7 +226,7 @@ resource "aws_vpc_ipv4_cidr_block_association" "tertiary_cidr" {
 }
 
 func testAccVPCIPv4CIDRBlockAssociationConfig_ipam(rName string, netmaskLength int) string {
-	return acctest.ConfigCompose(testAccIPAMIPv4Config_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCConfig_baseIPAMIPv4(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -246,7 +246,7 @@ resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
 }
 
 func testAccVPCIPv4CIDRBlockAssociationConfig_ipamExplicit(rName, cidr string) string {
-	return acctest.ConfigCompose(testAccIPAMIPv4Config_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCConfig_baseIPAMIPv4(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 

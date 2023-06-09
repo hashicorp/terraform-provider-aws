@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_kms_key: Add `cloud_hsm_cluster_id`, `custom_key_store_id`, `key_spec`, `pending_deletion_window_in_days`, and `xks_key_configuration` attributes
+```

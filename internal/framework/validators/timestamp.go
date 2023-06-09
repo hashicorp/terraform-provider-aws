@@ -3,7 +3,7 @@ package validators
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
@@ -25,10 +25,10 @@ func (validator utcTimestampValidator) ValidateString(ctx context.Context, reque
 
 	t := timestamp.New(request.ConfigValue.ValueString())
 	if err := t.ValidateUTCFormat(); err != nil {
-		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
+		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			validator.Description(ctx),
-			err.Error(),
+			request.ConfigValue.ValueString(),
 		))
 		return
 	}
@@ -41,7 +41,7 @@ func UTCTimestamp() validator.String {
 type onceADayWindowFormatValidator struct{}
 
 func (validator onceADayWindowFormatValidator) Description(_ context.Context) string {
-	return "value must be a valid time format"
+	return `value must satisfy the format of "hh24:mi-hh24:mi"`
 }
 
 func (validator onceADayWindowFormatValidator) MarkdownDescription(ctx context.Context) string {
@@ -55,10 +55,10 @@ func (validator onceADayWindowFormatValidator) ValidateString(ctx context.Contex
 
 	t := timestamp.New(request.ConfigValue.ValueString())
 	if err := t.ValidateOnceADayWindowFormat(); err != nil {
-		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
+		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			validator.Description(ctx),
-			err.Error(),
+			request.ConfigValue.ValueString(),
 		))
 		return
 	}
@@ -71,7 +71,7 @@ func OnceADayWindowFormat() validator.String {
 type onceAWeekWindowFormatValidator struct{}
 
 func (validator onceAWeekWindowFormatValidator) Description(_ context.Context) string {
-	return "value must be a valid time format"
+	return `value must satisfy the format of "ddd:hh24:mi-ddd:hh24:mi"`
 }
 
 func (validator onceAWeekWindowFormatValidator) MarkdownDescription(ctx context.Context) string {
@@ -85,10 +85,10 @@ func (validator onceAWeekWindowFormatValidator) ValidateString(ctx context.Conte
 
 	t := timestamp.New(request.ConfigValue.ValueString())
 	if err := t.ValidateOnceAWeekWindowFormat(); err != nil {
-		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
+		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			validator.Description(ctx),
-			err.Error(),
+			request.ConfigValue.ValueString(),
 		))
 		return
 	}

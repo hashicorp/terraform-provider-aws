@@ -89,7 +89,7 @@ func resourceDelegatedAdminAccountRead(ctx context.Context, d *schema.ResourceDa
 	st, ai, err := FindDelegatedAdminAccountStatusID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Inspector V2 Delegated Admin Account (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Inspector Delegated Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -107,7 +107,7 @@ func resourceDelegatedAdminAccountRead(ctx context.Context, d *schema.ResourceDa
 func resourceDelegatedAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Inspector2Client()
 
-	log.Printf("[INFO] Deleting Inspector2 DelegatedAdminAccount %s", d.Id())
+	log.Printf("[INFO] Deleting Inspector DelegatedAdminAccount %s", d.Id())
 
 	_, err := conn.DisableDelegatedAdminAccount(ctx, &inspector2.DisableDelegatedAdminAccountInput{
 		DelegatedAdminAccountId: aws.String(d.Get("account_id").(string)),

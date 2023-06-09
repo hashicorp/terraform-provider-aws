@@ -51,14 +51,9 @@ func DataSourceAvailabilityZones() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"state": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.AvailabilityZoneStateAvailable,
-					ec2.AvailabilityZoneStateInformation,
-					ec2.AvailabilityZoneStateImpaired,
-					ec2.AvailabilityZoneStateUnavailable,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ec2.AvailabilityZoneState_Values(), false),
 			},
 			"zone_ids": {
 				Type:     schema.TypeList,
@@ -104,7 +99,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 	log.Printf("[DEBUG] Reading Availability Zones: %s", request)
 	resp, err := conn.DescribeAvailabilityZonesWithContext(ctx, request)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error fetching Availability Zones: %s", err)
+		return sdkdiag.AppendErrorf(diags, "fetching Availability Zones: %s", err)
 	}
 
 	sort.Slice(resp.AvailabilityZones, func(i, j int) bool {
@@ -144,10 +139,10 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "setting group_names: %s", err)
 	}
 	if err := d.Set("names", names); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error setting Availability Zone names: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting Availability Zone names: %s", err)
 	}
 	if err := d.Set("zone_ids", zoneIds); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error setting Availability Zone IDs: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting Availability Zone IDs: %s", err)
 	}
 
 	return diags

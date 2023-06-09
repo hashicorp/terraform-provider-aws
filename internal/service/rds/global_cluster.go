@@ -483,7 +483,7 @@ func globalClusterRefreshFunc(ctx context.Context, conn *rds.RDS, globalClusterI
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error reading RDS Global Cluster (%s): %s", globalClusterID, err)
+			return nil, "", fmt.Errorf("reading RDS Global Cluster (%s): %s", globalClusterID, err)
 		}
 
 		if globalCluster == nil {

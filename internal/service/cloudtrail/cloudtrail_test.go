@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
@@ -895,7 +895,11 @@ func testAccCheckLoadTags(ctx context.Context, trail *cloudtrail.Trail, tags *[]
 
 func testAccBaseConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -908,25 +912,31 @@ resource "aws_s3_bucket_policy" "test" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "AWSCloudTrailAclCheck"
-        Effect    = "Allow"
+        Sid    = "AWSCloudTrailAclCheck"
+        Effect = "Allow"
         Principal = {
-					Service = "cloudtrail.amazonaws.com"
-				}
-        Action    = "s3:GetBucketAcl"
-        Resource  = "arn:${data.aws_partition.current.partition}:s3:::%[1]s"
-      },
-      {
-        Sid       = "AWSCloudTrailWrite"
-        Effect    = "Allow"
-        Principal = {
-					Service = "cloudtrail.amazonaws.com"
-				}
-        Action    = "s3:PutObject"
-        Resource  = "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
+          Service = "cloudtrail.amazonaws.com"
+        }
+        Action   = "s3:GetBucketAcl"
+        Resource = "arn:${data.aws_partition.current.partition}:s3:::%[1]s"
         Condition = {
           StringEquals = {
-            "s3:x-amz-acl" = "bucket-owner-full-control"
+            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/%[1]s"
+          }
+        }
+      },
+      {
+        Sid    = "AWSCloudTrailWrite"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudtrail.amazonaws.com"
+        }
+        Action   = "s3:PutObject"
+        Resource = "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl"  = "bucket-owner-full-control"
+            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/%[1]s"
           }
         }
       }
@@ -1501,13 +1511,13 @@ resource "aws_cloudtrail" "test" {
 }
 
 func testAccCloudTrailConfig_advancedEventSelector(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test1.id
+  s3_bucket_name = aws_s3_bucket.test.id
 
   advanced_event_selector {
     name = "s3Custom"
@@ -1597,50 +1607,9 @@ resource "aws_cloudtrail" "test" {
   }
 }
 
-data "aws_partition" "current" {}
-
-resource "aws_s3_bucket" "test1" {
-  bucket        = "%[1]s-1"
-  force_destroy = true
-}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test1.id
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "AWSCloudTrailAclCheck",
-      "Effect": "Allow",
-      "Principal": {
-				"Service": "cloudtrail.amazonaws.com"
-			},
-      "Action": "s3:GetBucketAcl",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s-1"
-    },
-    {
-      "Sid": "AWSCloudTrailWrite",
-      "Effect": "Allow",
-      "Principal": {
-				"Service": "cloudtrail.amazonaws.com"
-			},
-      "Action": "s3:PutObject",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s-1/*",
-      "Condition": {
-        "StringEquals": {
-          "s3:x-amz-acl": "bucket-owner-full-control"
-        }
-      }
-    }
-  ]
-}
-POLICY
-}
-
 resource "aws_s3_bucket" "test2" {
   bucket        = "%[1]s-2"
   force_destroy = true
 }
-`, rName)
+`, rName))
 }
