@@ -97,6 +97,10 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"cluster_namespace_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"database_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -245,6 +249,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("cluster_version", rsc.ClusterVersion)
+	d.Set("cluster_namespace_arn", rsc.ClusterNamespaceArn)
 	d.Set("database_name", rsc.DBName)
 
 	if rsc.ElasticIpStatus != nil {

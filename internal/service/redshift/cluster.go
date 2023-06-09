@@ -146,6 +146,10 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Default:  "1.0",
 			},
+			"cluster_namespace_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"database_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -621,6 +625,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("cluster_type", clusterTypeSingleNode)
 	}
 	d.Set("cluster_version", rsc.ClusterVersion)
+	d.Set("cluster_namespace_arn", rsc.ClusterNamespaceArn)
 	d.Set("database_name", rsc.DBName)
 	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
 	d.Set("encrypted", rsc.Encrypted)
