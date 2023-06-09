@@ -218,7 +218,7 @@ func ResourceDataSet() *schema.Resource {
 			},
 			"physical_table_map": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				MaxItems: 32,
 				Elem:     physicalTableMapSchema(),
 			},
@@ -1644,10 +1644,6 @@ func expandDataSetUntagColumnOperation(tfList []interface{}) *quicksight.UntagCo
 }
 
 func expandDataSetPhysicalTableMap(tfSet *schema.Set) map[string]*quicksight.PhysicalTable {
-	if tfSet.Len() == 0 {
-		return nil
-	}
-
 	physicalTableMap := make(map[string]*quicksight.PhysicalTable)
 	for _, v := range tfSet.List() {
 		vMap, ok := v.(map[string]interface{})
@@ -2426,10 +2422,6 @@ func flattenJoinKeyProperties(apiObject *quicksight.JoinKeyProperties) map[strin
 }
 
 func flattenPhysicalTableMap(apiObject map[string]*quicksight.PhysicalTable, resourceSchema *schema.Resource) *schema.Set {
-	if len(apiObject) == 0 {
-		return nil
-	}
-
 	var tfList []interface{}
 	for k, v := range apiObject {
 		if v == nil {
