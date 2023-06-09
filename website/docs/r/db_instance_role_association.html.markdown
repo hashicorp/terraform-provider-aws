@@ -19,7 +19,7 @@ Manages an RDS DB Instance association with an IAM Role. Example use cases:
 
 ```terraform
 resource "aws_db_instance_role_association" "example" {
-  db_instance_identifier = aws_db_instance.example.id
+  db_instance_identifier = aws_db_instance.example.identifier
   feature_name           = "S3_INTEGRATION"
   role_arn               = aws_iam_role.example.arn
 }

@@ -18,14 +18,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_athena_data_catalog", name="Data Catalog")
+// @Tags(identifierAttribute="arn")
 func ResourceDataCatalog() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceDataCatalogCreate,
-		ReadContext:   resourceDataCatalogRead,
-		UpdateContext: resourceDataCatalogUpdate,
-		DeleteContext: resourceDataCatalogDelete,
+		CreateWithoutTimeout: resourceDataCatalogCreate,
+		ReadWithoutTimeout:   resourceDataCatalogRead,
+		UpdateWithoutTimeout: resourceDataCatalogUpdate,
+		DeleteWithoutTimeout: resourceDataCatalogDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -60,8 +63,8 @@ func ResourceDataCatalog() *schema.Resource {
 					validation.MapValueLenBetween(0, 51200),
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -72,23 +75,18 @@ func ResourceDataCatalog() *schema.Resource {
 }
 
 func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	name := d.Get("name").(string)
 	input := &athena.CreateDataCatalogInput{
 		Name:        aws.String(name),
 		Description: aws.String(d.Get("description").(string)),
+		Tags:        GetTagsIn(ctx),
 		Type:        aws.String(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
 		input.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Athena Data Catalog: %s", input)
@@ -104,9 +102,7 @@ func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	input := &athena.GetDataCatalogInput{
 		Name: aws.String(d.Id()),
@@ -155,28 +151,11 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("parameters", nil)
 	}
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return diag.Errorf("listing tags for Athena Data Catalog (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &athena.UpdateDataCatalogInput{
@@ -199,19 +178,11 @@ func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating Athena Data Catalog (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceDataCatalogRead(ctx, d, meta)
 }
 
 func resourceDataCatalogDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	log.Printf("[DEBUG] Deleting Athena Data Catalog: (%s)", d.Id())
 	_, err := conn.DeleteDataCatalogWithContext(ctx, &athena.DeleteDataCatalogInput{

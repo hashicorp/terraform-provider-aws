@@ -47,17 +47,17 @@ resource "aws_s3_bucket_logging" "example" {
 
 The following arguments are supported:
 
-* `bucket` - (Required, Forces new resource) The name of the bucket.
-* `expected_bucket_owner` - (Optional, Forces new resource) The account ID of the expected bucket owner.
-* `target_bucket` - (Required) The name of the bucket where you want Amazon S3 to store server access logs.
-* `target_prefix` - (Required) A prefix for all log object keys.
-* `target_grant` - (Optional) Set of configuration blocks with information for granting permissions [documented below](#target_grant).
+* `bucket` - (Required, Forces new resource) Name of the bucket.
+* `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
+* `target_bucket` - (Required) Name of the bucket where you want Amazon S3 to store server access logs.
+* `target_prefix` - (Required) Prefix for all log object keys.
+* `target_grant` - (Optional) Set of configuration blocks with information for granting permissions. [See below](#target_grant).
 
 ### target_grant
 
 The `target_grant` configuration block supports the following arguments:
 
-* `grantee` - (Required) A configuration block for the person being granted permissions [documented below](#grantee).
+* `grantee` - (Required) Configuration block for the person being granted permissions. [See below](#grantee).
 * `permission` - (Required) Logging permissions assigned to the grantee for the bucket. Valid values: `FULL_CONTROL`, `READ`, `WRITE`.
 
 ### grantee
@@ -65,7 +65,7 @@ The `target_grant` configuration block supports the following arguments:
 The `grantee` configuration block supports the following arguments:
 
 * `email_address` - (Optional) Email address of the grantee. See [Regions and Endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for supported AWS regions where this argument can be specified.
-* `id` - (Optional) The canonical user ID of the grantee.
+* `id` - (Optional) Canonical user ID of the grantee.
 * `type` - (Required) Type of grantee. Valid values: `CanonicalUser`, `AmazonCustomerByEmail`, `Group`.
 * `uri` - (Optional) URI of the grantee group.
 

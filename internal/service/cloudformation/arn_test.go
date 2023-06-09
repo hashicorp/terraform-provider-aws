@@ -8,6 +8,8 @@ import (
 )
 
 func TestTypeVersionARNToTypeARNAndVersionID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName          string
 		InputARN          string
@@ -18,12 +20,12 @@ func TestTypeVersionARNToTypeARNAndVersionID(t *testing.T) {
 		{
 			TestName:      "empty ARN",
 			InputARN:      "",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexp.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "unparsable ARN",
 			InputARN:      "test",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexp.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "invalid ARN service",
@@ -49,7 +51,10 @@ func TestTypeVersionARNToTypeARNAndVersionID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotTypeARN, gotVersionID, err := tfcloudformation.TypeVersionARNToTypeARNAndVersionID(testCase.InputARN)
 
 			if err == nil && testCase.ExpectedError != nil {

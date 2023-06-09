@@ -50,39 +50,39 @@ resource "aws_appmesh_virtual_service" "servicea" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name to use for the virtual service. Must be between 1 and 255 characters in length.
-* `mesh_name` - (Required) The name of the service mesh in which to create the virtual service. Must be between 1 and 255 characters in length.
-* `mesh_owner` - (Optional) The AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
-* `spec` - (Required) The virtual service specification to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `name` - (Required) Name to use for the virtual service. Must be between 1 and 255 characters in length.
+* `mesh_name` - (Required) Name of the service mesh in which to create the virtual service. Must be between 1 and 255 characters in length.
+* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
+* `spec` - (Required) Virtual service specification to apply.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `spec` object supports the following:
 
-* `provider`- (Optional) The App Mesh object that is acting as the provider for a virtual service. You can specify a single virtual node or virtual router.
+* `provider`- (Optional) App Mesh object that is acting as the provider for a virtual service. You can specify a single virtual node or virtual router.
 
 The `provider` object supports the following:
 
-* `virtual_node` - (Optional) The virtual node associated with a virtual service.
-* `virtual_router` - (Optional) The virtual router associated with a virtual service.
+* `virtual_node` - (Optional) Virtual node associated with a virtual service.
+* `virtual_router` - (Optional) Virtual router associated with a virtual service.
 
 The `virtual_node` object supports the following:
 
-* `virtual_node_name` - (Required) The name of the virtual node that is acting as a service provider. Must be between 1 and 255 characters in length.
+* `virtual_node_name` - (Required) Name of the virtual node that is acting as a service provider. Must be between 1 and 255 characters in length.
 
 The `virtual_router` object supports the following:
 
-* `virtual_router_name` - (Required) The name of the virtual router that is acting as a service provider. Must be between 1 and 255 characters in length.
+* `virtual_router_name` - (Required) Name of the virtual router that is acting as a service provider. Must be between 1 and 255 characters in length.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the virtual service.
-* `arn` - The ARN of the virtual service.
-* `created_date` - The creation date of the virtual service.
-* `last_updated_date` - The last update date of the virtual service.
-* `resource_owner` - The resource owner's AWS account ID.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `id` - ID of the virtual service.
+* `arn` - ARN of the virtual service.
+* `created_date` - Creation date of the virtual service.
+* `last_updated_date` - Last update date of the virtual service.
+* `resource_owner` - Resource owner's AWS account ID.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

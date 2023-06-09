@@ -13,7 +13,6 @@ resource "tls_self_signed_cert" "example" {
     "server_auth",
   ]
   dns_names             = [var.rest_api_domain_name]
-  key_algorithm         = tls_private_key.example.algorithm
   private_key_pem       = tls_private_key.example.private_key_pem
   validity_period_hours = 12
 

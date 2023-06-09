@@ -64,7 +64,6 @@ The following arguments are optional:
 * `session_timeout_minutes` - (Optional) Duration of a session in minutes after a user logs in. Default is 60. Maximum value is 1,440.
 * `subject_key` - (Optional) Element of the SAML assertion to use for username. Default is NameID.
 
-
 #### idp
 
 * `entity_id` - (Required) Unique Entity ID of the application in SAML Identity Provider.
@@ -76,13 +75,12 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Name of the domain the SAML options are associated with.
 
-
 ## Timeouts
 
-`aws_opensearch_domain_saml_options` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `update` - (Optional, Default: `180m`) How long to wait for updates.
-* `delete` - (Optional, Default: `90m`) How long to wait for deletion.
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 

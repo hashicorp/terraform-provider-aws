@@ -5,13 +5,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/glue"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccGlueConnectionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_glue_connection.test"
 	datasourceName := "data.aws_glue_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -19,12 +20,12 @@ func TestAccGlueConnectionDataSource_basic(t *testing.T) {
 	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionDataSourceConfig(rName, jdbcConnectionUrl),
+				Config: testAccConnectionDataSourceConfig_basic(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccConnectionCheckDataSource(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "catalog_id", resourceName, "catalog_id"),
@@ -53,7 +54,7 @@ func testAccConnectionCheckDataSource(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccConnectionDataSourceConfig(rName, jdbcConnectionUrl string) string {
+func testAccConnectionDataSourceConfig_basic(rName, jdbcConnectionUrl string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_connection" "test" {
   name = %[1]q

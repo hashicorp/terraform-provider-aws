@@ -5,23 +5,27 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/signer"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccSignerSigningJobDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_signer_signing_job.test"
 	resourceName := "aws_signer_signing_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningJobBasicDataSourceConfig(rName),
+				Config: testAccSigningJobDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "status", resourceName, "status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "job_owner", resourceName, "job_owner"),
@@ -33,7 +37,7 @@ func TestAccSignerSigningJobDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccSigningJobBasicDataSourceConfig(rName string) string {
+func testAccSigningJobDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

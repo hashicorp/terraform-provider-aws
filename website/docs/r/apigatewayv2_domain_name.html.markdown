@@ -63,7 +63,7 @@ The following arguments are supported:
 * `domain_name` - (Required) Domain name. Must be between 1 and 512 characters in length.
 * `domain_name_configuration` - (Required) Domain name configuration. See below.
 * `mutual_tls_authentication` - (Optional) Mutual TLS authentication configuration for the domain name.
-* `tags` - (Optional) Map of tags to assign to the domain name. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the domain name. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `domain_name_configuration`
 
@@ -86,14 +86,14 @@ In addition to all arguments above, the following attributes are exported:
 * `api_mapping_selection_expression` - [API mapping selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-mapping-selection-expressions) for the domain name.
 * `arn` - ARN of the domain name.
 * `id` - Domain name identifier.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_apigatewayv2_domain_name` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for creating the domain name
-- `update` - (Default `60 minutes`) Used for updating the domain name
+- `create` - (Default `10m`)
+- `update` - (Default `60m`)
 
 ## Import
 

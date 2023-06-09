@@ -1,0 +1,15 @@
+```release-note:enhancement
+data-source/aws_ami: Add `tpm_support` attribute
+```
+
+```release-note:enhancement
+resource/aws_ami: Add `tpm_support` argument
+```
+
+```release-note:enhancement
+resource/aws_ami_copy: Add `tpm_support` argument
+```
+
+```release-note:enhancement
+resource/aws_ami_from_instance: Add `tpm_support` argument
+```

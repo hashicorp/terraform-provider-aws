@@ -5,23 +5,24 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/qldb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccQLDBLedgerDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qldb_ledger.test"
 	datasourceName := "data.aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, qldb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, qldb.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, qldb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLedgerDataSourceConfig(rName),
+				Config: testAccLedgerDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "deletion_protection", resourceName, "deletion_protection"),
@@ -35,7 +36,7 @@ func TestAccQLDBLedgerDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccLedgerDataSourceConfig(rName string) string {
+func testAccLedgerDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "test" {
   name                = %[1]q

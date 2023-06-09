@@ -67,7 +67,7 @@ The following arguments are optional:
 * `network_configuration` - (Optional) The network configuration for the service. This parameter is required for task definitions that use the `awsvpc` network mode to receive their own Elastic Network Interface, and it is not supported for other network modes. [Detailed below](#network_configuration).
 * `scale` - (Optional) A floating-point percentage of the desired number of tasks to place and keep running in the task set. [Detailed below](#scale).
 * `service_registries` - (Optional) The service discovery registries for the service. The maximum number of `service_registries` blocks is `1`. [Detailed below](#service_registries).
-* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level. If you have set `copy_tags_to_backups` to true, and you specify one or more tags, no existing file system tags are copied from the file system to the backup.
+* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level. If you have set `copy_tags_to_backups` to true, and you specify one or more tags, no existing file system tags are copied from the file system to the backup.
 * `wait_until_stable` - (Optional) Whether `terraform` should wait until the task set has reached `STEADY_STATE`.
 * `wait_until_stable_timeout` - (Optional) Wait timeout for task set to reach `STEADY_STATE`. Valid time units include `ns`, `us` (or `µs`), `ms`, `s`, `m`, and `h`. Default `10m`.
 
@@ -124,7 +124,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) that identifies the task set.
 * `stability_status` - The stability status. This indicates whether the task set has reached a steady state.
 * `status` - The status of the task set.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `task_set_id` - The ID of the task set.
 
 ## Import

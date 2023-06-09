@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_replication_subnet_group: Add retry to create step, resolving `AccessDeniedFault` error
+```

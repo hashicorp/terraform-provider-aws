@@ -5,24 +5,25 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/kafka"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccKafkaConfigurationDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_msk_configuration.test"
 	resourceName := "aws_msk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationDataSourceNameConfig(rName),
+				Config: testAccConfigurationDataSourceConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
@@ -36,7 +37,7 @@ func TestAccKafkaConfigurationDataSource_name(t *testing.T) {
 	})
 }
 
-func testAccConfigurationDataSourceNameConfig(rName string) string {
+func testAccConfigurationDataSourceConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
   kafka_versions = ["2.1.0"]

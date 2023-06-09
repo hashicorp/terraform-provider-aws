@@ -12,8 +12,6 @@ Manages Cost and Usage Report Definitions.
 
 ~> *NOTE:* The AWS Cost and Usage Report service is only available in `us-east-1` currently.
 
-~> *NOTE:* If AWS Organizations is enabled, only the master account can use this resource.
-
 ## Example Usage
 
 ```terraform
@@ -34,7 +32,7 @@ resource "aws_cur_report_definition" "example_cur_report_definition" {
 The following arguments are supported:
 
 * `report_name` - (Required) Unique name for the report. Must start with a number/letter and is case sensitive. Limited to 256 characters.
-* `time_unit` - (Required) The frequency on which report data are measured and displayed.  Valid values are: `HOURLY`, `DAILY`.
+* `time_unit` - (Required) The frequency on which report data are measured and displayed.  Valid values are: `DAILY`, `HOURLY`, `MONTHLY`.
 * `format` - (Required) Format for report. Valid values are: `textORcsv`, `Parquet`. If `Parquet` is used, then Compression must also be `Parquet`.
 * `compression` - (Required) Compression format for report. Valid values are: `GZIP`, `ZIP`, `Parquet`. If `Parquet` is used, then format must also be `Parquet`.
 * `additional_schema_elements` - (Required) A list of schema elements. Valid values are: `RESOURCES`.

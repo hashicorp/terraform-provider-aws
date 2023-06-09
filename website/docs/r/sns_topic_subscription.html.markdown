@@ -205,20 +205,20 @@ provider "aws" {
 }
 
 resource "aws_sns_topic" "sns-topic" {
-  provider     = "aws.sns"
+  provider     = aws.sns
   name         = var.sns["name"]
   display_name = var.sns["display_name"]
   policy       = data.aws_iam_policy_document.sns-topic-policy.json
 }
 
 resource "aws_sqs_queue" "sqs-queue" {
-  provider = "aws.sqs"
+  provider = aws.sqs
   name     = var.sqs["name"]
   policy   = data.aws_iam_policy_document.sqs-queue-policy.json
 }
 
 resource "aws_sns_topic_subscription" "sns-topic" {
-  provider  = "aws.sns2sqs"
+  provider  = aws.sns2sqs
   topic_arn = aws_sns_topic.sns-topic.arn
   protocol  = "sqs"
   endpoint  = aws_sqs_queue.sqs-queue.arn
@@ -240,6 +240,7 @@ The following arguments are optional:
 * `delivery_policy` - (Optional) JSON String with the delivery policy (retries, backoff, etc.) that will be used in the subscription - this only applies to HTTP/S subscriptions. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/DeliveryPolicies.html) for more details.
 * `endpoint_auto_confirms` - (Optional) Whether the endpoint is capable of [auto confirming subscription](http://docs.aws.amazon.com/sns/latest/dg/SendMessageToHttp.html#SendMessageToHttp.prepare) (e.g., PagerDuty). Default is `false`.
 * `filter_policy` - (Optional) JSON String with the filter policy that will be used in the subscription to filter messages seen by the target resource. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/message-filtering.html) for more details.
+* `filter_policy_scope` - (Optional) Whether the `filter_policy` applies to `MessageAttributes` (default) or `MessageBody`.
 * `raw_message_delivery` - (Optional) Whether to enable raw message delivery (the original message is directly passed, not wrapped in JSON with the original message in the message property). Default is `false`.
 * `redrive_policy` - (Optional) JSON String with the redrive policy that will be used in the subscription. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/sns-dead-letter-queues.html#how-messages-moved-into-dead-letter-queue) for more details.
 

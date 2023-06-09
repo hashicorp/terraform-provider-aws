@@ -3,6 +3,8 @@ package sagemaker
 import (
 	"fmt"
 	"regexp"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 func validEnvironment(v interface{}, k string) (ws []string, errors []error) {
@@ -71,6 +73,25 @@ func validName(v interface{}, k string) (ws []string, errors []error) {
 	if len(value) > 63 {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 63 characters: %q", k, value))
+	}
+	if regexp.MustCompile(`^-`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot begin with a hyphen: %q", k, value))
+	}
+	return
+}
+
+func validPrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters and hyphens allowed in %q: %q",
+			k, value))
+	}
+	maxLength := 63 - id.UniqueIDSuffixLength
+	if len(value) > maxLength {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than %d characters: %q", k, maxLength, value))
 	}
 	if regexp.MustCompile(`^-`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(

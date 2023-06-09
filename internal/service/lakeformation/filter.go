@@ -31,6 +31,14 @@ func FilterPermissions(input *lakeformation.ListPermissionsInput, tableType stri
 		return FilterDatabasePermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
 	}
 
+	if input.Resource.LFTag != nil {
+		return FilterLFTagPermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
+	}
+
+	if input.Resource.LFTagPolicy != nil {
+		return FilterLFTagPolicyPermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
+	}
+
 	if tableType == TableTypeTableWithColumns {
 		return FilterTableWithColumnsPermissions(input.Principal.DataLakePrincipalIdentifier, input.Resource.Table, columnNames, excludedColumnNames, columnWildcard, allPermissions)
 	}
@@ -170,6 +178,38 @@ func FilterDatabasePermissions(principal *string, allPermissions []*lakeformatio
 		}
 
 		if perm.Resource.Database != nil {
+			cleanPermissions = append(cleanPermissions, perm)
+		}
+	}
+
+	return cleanPermissions
+}
+
+func FilterLFTagPermissions(principal *string, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
+	var cleanPermissions []*lakeformation.PrincipalResourcePermissions
+
+	for _, perm := range allPermissions {
+		if aws.StringValue(principal) != aws.StringValue(perm.Principal.DataLakePrincipalIdentifier) {
+			continue
+		}
+
+		if perm.Resource.LFTag != nil {
+			cleanPermissions = append(cleanPermissions, perm)
+		}
+	}
+
+	return cleanPermissions
+}
+
+func FilterLFTagPolicyPermissions(principal *string, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
+	var cleanPermissions []*lakeformation.PrincipalResourcePermissions
+
+	for _, perm := range allPermissions {
+		if aws.StringValue(principal) != aws.StringValue(perm.Principal.DataLakePrincipalIdentifier) {
+			continue
+		}
+
+		if perm.Resource.LFTagPolicy != nil {
 			cleanPermissions = append(cleanPermissions, perm)
 		}
 	}

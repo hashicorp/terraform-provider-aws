@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_ecs_service: Allow multiple `service` blocks within `service_connect_configuration`
+```
+
+```release-note:bug
+resource/aws_ecs_service: Require `service_connect_configuration.log_configuration.log_driver` to be provided
+```
+
+```release-note:bug
+resource/aws_ecs_service: Mark `service_connect_configuration.service.client_alias` as optional and ensure that only 1 such block can be provided
+```
