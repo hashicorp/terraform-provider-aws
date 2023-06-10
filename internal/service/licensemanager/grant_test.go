@@ -167,7 +167,7 @@ func testAccCheckGrantExists(ctx context.Context, n string) resource.TestCheckFu
 			return fmt.Errorf("No License Manager License Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
 
 		out, err := tflicensemanager.FindGrantByARN(ctx, conn, rs.Primary.ID)
 
@@ -185,7 +185,7 @@ func testAccCheckGrantExists(ctx context.Context, n string) resource.TestCheckFu
 
 func testAccCheckGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_licensemanager_grant" {
