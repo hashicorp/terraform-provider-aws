@@ -388,7 +388,7 @@ func ResourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	clusterID := d.Get("cluster_identifier").(string)
 	backupInput := &redshift.RestoreFromClusterSnapshotInput{
@@ -566,7 +566,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	rsc, err := FindClusterByID(ctx, conn, d.Id())
 
@@ -676,7 +676,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	if d.HasChangesExcept("aqua_configuration_status", "availability_zone", "iam_roles", "logging", "snapshot_copy", "tags", "tags_all") {
 		input := &redshift.ModifyClusterInput{
@@ -891,7 +891,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	input := &redshift.DeleteClusterInput{
