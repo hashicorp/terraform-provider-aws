@@ -59,7 +59,7 @@ func TestAccRDSCertificateDataSource_latestValidTill(t *testing.T) {
 }
 
 func testAccCertificatePreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeCertificatesInput{}
 
