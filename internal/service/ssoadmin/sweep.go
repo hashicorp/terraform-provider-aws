@@ -38,7 +38,7 @@ func sweepAccountAssignments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SSOAdminConn()
+	conn := client.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -143,7 +143,7 @@ func sweepPermissionSets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SSOAdminConn()
+	conn := client.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
