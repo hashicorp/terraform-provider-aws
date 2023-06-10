@@ -167,12 +167,12 @@ func FindBucketAccessKeyById(ctx context.Context, conn *lightsail.Client, id str
 		return nil, err
 	}
 
-	var entry *types.AccessKey
+	var entry types.AccessKey
 	entryExists := false
 
 	for _, n := range out.AccessKeys {
 		if parts[1] == aws.ToString(n.AccessKeyId) {
-			entry = &n
+			entry = n
 			entryExists = true
 			break
 		}
@@ -182,5 +182,5 @@ func FindBucketAccessKeyById(ctx context.Context, conn *lightsail.Client, id str
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return entry, nil
+	return &entry, nil
 }
