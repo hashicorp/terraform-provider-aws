@@ -84,7 +84,7 @@ func DataSourceServer() *schema.Resource {
 
 func dataSourceServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	serverID := d.Get("server_id").(string)
 

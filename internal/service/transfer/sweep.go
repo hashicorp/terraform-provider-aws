@@ -35,7 +35,7 @@ func sweepServers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).TransferConn()
+	conn := client.(*conns.AWSClient).TransferConn(ctx)
 	input := &transfer.ListServersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -81,7 +81,7 @@ func sweepWorkflows(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).TransferConn()
+	conn := client.(*conns.AWSClient).TransferConn(ctx)
 	input := &transfer.ListWorkflowsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
