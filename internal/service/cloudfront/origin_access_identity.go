@@ -59,7 +59,7 @@ func ResourceOriginAccessIdentity() *schema.Resource {
 
 func resourceOriginAccessIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	params := &cloudfront.CreateCloudFrontOriginAccessIdentityInput{
 		CloudFrontOriginAccessIdentityConfig: expandOriginAccessIdentityConfig(d),
 	}
@@ -74,7 +74,7 @@ func resourceOriginAccessIdentityCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	params := &cloudfront.GetCloudFrontOriginAccessIdentityInput{
 		Id: aws.String(d.Id()),
 	}
@@ -109,7 +109,7 @@ func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceOriginAccessIdentityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	params := &cloudfront.UpdateCloudFrontOriginAccessIdentityInput{
 		Id:                                   aws.String(d.Id()),
 		CloudFrontOriginAccessIdentityConfig: expandOriginAccessIdentityConfig(d),
@@ -125,7 +125,7 @@ func resourceOriginAccessIdentityUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceOriginAccessIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	params := &cloudfront.DeleteCloudFrontOriginAccessIdentityInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
