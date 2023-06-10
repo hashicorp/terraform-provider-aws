@@ -248,7 +248,7 @@ func ResourceImageRecipe() *schema.Resource {
 
 func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.CreateImageRecipeInput{
 		ClientToken: aws.String(id.UniqueId()),
@@ -312,7 +312,7 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.GetImageRecipeInput{
 		ImageRecipeArn: aws.String(d.Id()),
@@ -369,7 +369,7 @@ func resourceImageRecipeUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceImageRecipeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.DeleteImageRecipeInput{
 		ImageRecipeArn: aws.String(d.Id()),
