@@ -67,7 +67,7 @@ func ResourceStudioLifecycleConfig() *schema.Resource {
 
 func resourceStudioLifecycleConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("studio_lifecycle_config_name").(string)
 	input := &sagemaker.CreateStudioLifecycleConfigInput{
@@ -91,7 +91,7 @@ func resourceStudioLifecycleConfigCreate(ctx context.Context, d *schema.Resource
 
 func resourceStudioLifecycleConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	image, err := FindStudioLifecycleConfigByName(ctx, conn, d.Id())
 
@@ -124,7 +124,7 @@ func resourceStudioLifecycleConfigUpdate(ctx context.Context, d *schema.Resource
 
 func resourceStudioLifecycleConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.DeleteStudioLifecycleConfigInput{
 		StudioLifecycleConfigName: aws.String(d.Id()),
