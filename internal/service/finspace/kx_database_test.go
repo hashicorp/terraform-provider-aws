@@ -171,7 +171,7 @@ func TestAccFinSpaceKxDatabase_tags(t *testing.T) {
 }
 
 func testAccCheckKxDatabaseDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -209,7 +209,7 @@ func testAccCheckKxDatabaseExists(ctx context.Context, name string, kxdatabase *
 			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxDatabase, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
 		resp, err := conn.GetKxDatabase(ctx, &finspace.GetKxDatabaseInput{
 			DatabaseName:  aws.String(rs.Primary.Attributes["name"]),
 			EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
