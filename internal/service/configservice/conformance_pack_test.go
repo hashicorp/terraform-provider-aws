@@ -431,7 +431,7 @@ func testAccConformancePack_S3TemplateAndTemplateBody(t *testing.T) {
 
 func testAccCheckConformancePackDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_config_conformance_pack" {
@@ -464,7 +464,7 @@ func testAccCheckConformancePackExists(ctx context.Context, resourceName string,
 			return fmt.Errorf("Not Found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
 		pack, err := tfconfig.DescribeConformancePack(ctx, conn, rs.Primary.ID)
 

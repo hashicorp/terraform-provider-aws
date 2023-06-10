@@ -124,7 +124,7 @@ func ResourceConfigurationAggregator() *schema.Resource {
 
 func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	input := &configservice.PutConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Get("name").(string)),
@@ -152,7 +152,7 @@ func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceD
 
 func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	req := &configservice.DescribeConfigurationAggregatorsInput{
 		ConfigurationAggregatorNames: []*string{aws.String(d.Id())},
@@ -197,7 +197,7 @@ func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.Resource
 
 func resourceConfigurationAggregatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	req := &configservice.DeleteConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Id()),
