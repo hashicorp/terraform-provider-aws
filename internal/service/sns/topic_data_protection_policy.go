@@ -52,7 +52,7 @@ func ResourceTopicDataProtectionPolicy() *schema.Resource {
 
 func resourceTopicDataProtectionPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	topicArn := d.Get("arn").(string)
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -81,7 +81,7 @@ func resourceTopicDataProtectionPolicyUpsert(ctx context.Context, d *schema.Reso
 
 func resourceTopicDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	output, err := conn.GetDataProtectionPolicyWithContext(ctx, &sns.GetDataProtectionPolicyInput{
 		ResourceArn: aws.String(d.Id()),
@@ -111,7 +111,7 @@ func resourceTopicDataProtectionPolicyRead(ctx context.Context, d *schema.Resour
 
 func resourceTopicDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	_, err := conn.PutDataProtectionPolicyWithContext(ctx, &sns.PutDataProtectionPolicyInput{
 		DataProtectionPolicy: aws.String(""),
