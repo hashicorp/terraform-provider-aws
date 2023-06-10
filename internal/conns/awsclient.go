@@ -25,8 +25,8 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
 }
 
-func (client *AWSClient) S3ConnURICleaningDisabled(context.Context) *s3.S3 {
-	config := client.S3Conn().Config
+func (client *AWSClient) S3ConnURICleaningDisabled(ctx context.Context) *s3.S3 {
+	config := client.S3Conn(ctx).Config
 	config.DisableRestProtocolURICleaning = aws.Bool(true)
 
 	return s3.New(client.Session.Copy(&config))
