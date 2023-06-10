@@ -108,7 +108,7 @@ func ResourceVirtualCluster() *schema.Resource {
 }
 
 func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn()
+	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &emrcontainers.CreateVirtualClusterInput{
@@ -132,7 +132,7 @@ func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn()
+	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	vc, err := FindVirtualClusterByID(ctx, conn, d.Id())
 
@@ -167,7 +167,7 @@ func resourceVirtualClusterUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceVirtualClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn()
+	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	log.Printf("[INFO] Deleting EMR Containers Virtual Cluster: %s", d.Id())
 	_, err := conn.DeleteVirtualClusterWithContext(ctx, &emrcontainers.DeleteVirtualClusterInput{
