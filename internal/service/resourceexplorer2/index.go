@@ -80,7 +80,7 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client()
+	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	input := &resourceexplorer2.CreateIndexInput{
 		ClientToken: aws.String(id.UniqueId()),
@@ -141,7 +141,7 @@ func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, 
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client()
+	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	output, err := findIndex(ctx, conn)
 
@@ -182,7 +182,7 @@ func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateReque
 	}
 
 	if !new.Type.Equal(old.Type) {
-		conn := r.Meta().ResourceExplorer2Client()
+		conn := r.Meta().ResourceExplorer2Client(ctx)
 
 		input := &resourceexplorer2.UpdateIndexTypeInput{
 			Arn:  flex.StringFromFramework(ctx, new.ID),
@@ -217,7 +217,7 @@ func (r *resourceIndex) Delete(ctx context.Context, request resource.DeleteReque
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client()
+	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	tflog.Debug(ctx, "deleting Resource Explorer Index", map[string]interface{}{
 		"id": data.ID.ValueString(),
