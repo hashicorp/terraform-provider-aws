@@ -71,7 +71,7 @@ func ResourceConnection() *schema.Resource {
 
 func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &codestarconnections.CreateConnectionInput{
@@ -101,7 +101,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 	connection, err := FindConnectionByARN(ctx, conn, d.Id())
 
@@ -136,7 +136,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CodeStar Connections Connection: %s", d.Id())
 	_, err := conn.DeleteConnectionWithContext(ctx, &codestarconnections.DeleteConnectionInput{
