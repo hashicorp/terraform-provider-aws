@@ -43,7 +43,7 @@ func ResourceVPCEndpointRouteTableAssociation() *schema.Resource {
 
 func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
@@ -74,7 +74,7 @@ func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *sche
 
 func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
@@ -100,7 +100,7 @@ func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema
 
 func resourceVPCEndpointRouteTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	routeTableID := d.Get("route_table_id").(string)

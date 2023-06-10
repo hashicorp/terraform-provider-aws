@@ -1002,7 +1002,7 @@ func testAccCheckENIExists(ctx context.Context, n string, v *ec2.NetworkInterfac
 			return fmt.Errorf("No EC2 Network Interface ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindNetworkInterfaceByID(ctx, conn, rs.Primary.ID)
 
@@ -1018,7 +1018,7 @@ func testAccCheckENIExists(ctx context.Context, n string, v *ec2.NetworkInterfac
 
 func testAccCheckENIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_network_interface" {
@@ -1055,7 +1055,7 @@ func testAccCheckENIMakeExternalAttachment(n string, conf *ec2.NetworkInterface)
 			NetworkInterfaceId: conf.NetworkInterfaceId,
 		}
 
-		_, err := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn().AttachNetworkInterface(input)
+		_, err := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx).AttachNetworkInterface(input)
 
 		if err != nil {
 			return fmt.Errorf("error attaching ENI: %w", err)
