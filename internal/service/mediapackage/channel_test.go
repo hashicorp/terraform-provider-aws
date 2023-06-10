@@ -129,7 +129,7 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 
 func testAccCheckChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_media_package_channel" {
@@ -161,7 +161,7 @@ func testAccCheckChannelExists(ctx context.Context, name string) resource.TestCh
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn(ctx)
 
 		input := &mediapackage.DescribeChannelInput{
 			Id: aws.String(rs.Primary.ID),
@@ -174,7 +174,7 @@ func testAccCheckChannelExists(ctx context.Context, name string) resource.TestCh
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn(ctx)
 
 	input := &mediapackage.ListChannelsInput{}
 
