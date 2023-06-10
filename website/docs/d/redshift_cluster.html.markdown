@@ -67,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 * `cluster_type` - Cluster type
 * `cluster_namespace_arn` - The namespace Amazon Resource Name (ARN) of the cluster
 * `database_name` - Name of the default database in the cluster
-* `default_iam_role_arn` - ∂The ARN for the IAM role that was set as default for the cluster when the cluster was created.
+* `default_iam_role_arn` - The ARN for the IAM role that was set as default for the cluster when the cluster was created.
 * `elastic_ip` - Elastic IP of the cluster
 * `enable_logging` - Whether cluster logging is enabled
 * `encrypted` - Whether the cluster data is encrypted
