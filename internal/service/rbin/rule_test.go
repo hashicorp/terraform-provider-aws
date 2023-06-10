@@ -186,7 +186,7 @@ func TestAccRBinRule_lock_config(t *testing.T) {
 }
 
 func testAccCheckRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RBinClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RBinClient(ctx)
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -222,7 +222,7 @@ func testAccCheckRuleExists(name string, rbinrule *rbin.GetRuleOutput) resource.
 			return create.Error(names.RBin, create.ErrActionCheckingExistence, tfrbin.ResNameRule, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RBinClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RBinClient(ctx)
 		ctx := context.Background()
 		resp, err := conn.GetRule(ctx, &rbin.GetRuleInput{
 			Identifier: aws.String(rs.Primary.ID),
