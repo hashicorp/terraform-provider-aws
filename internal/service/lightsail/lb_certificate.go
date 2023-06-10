@@ -267,12 +267,12 @@ func FindLoadBalancerCertificateById(ctx context.Context, conn *lightsail.Client
 		return nil, err
 	}
 
-	var entry *types.LoadBalancerTlsCertificate
+	var entry types.LoadBalancerTlsCertificate
 	entryExists := false
 
 	for _, n := range out.TlsCertificates {
 		if cName == aws.ToString(n.Name) {
-			entry = &n
+			entry = n
 			entryExists = true
 			break
 		}
@@ -282,5 +282,5 @@ func FindLoadBalancerCertificateById(ctx context.Context, conn *lightsail.Client
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return entry, nil
+	return &entry, nil
 }
