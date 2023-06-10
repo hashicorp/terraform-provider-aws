@@ -171,12 +171,12 @@ func FindBucketResourceAccessById(ctx context.Context, conn *lightsail.Client, i
 	}
 
 	bucket := out.Buckets[0]
-	var entry *types.ResourceReceivingAccess
+	var entry types.ResourceReceivingAccess
 	entryExists := false
 
 	for _, n := range bucket.ResourcesReceivingAccess {
 		if parts[1] == aws.ToString(n.Name) {
-			entry = &n
+			entry = n
 			entryExists = true
 			break
 		}
@@ -186,5 +186,5 @@ func FindBucketResourceAccessById(ctx context.Context, conn *lightsail.Client, i
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return entry, nil
+	return &entry, nil
 }
