@@ -69,7 +69,7 @@ func TestAccRAMResourceAssociation_disappears(t *testing.T) {
 
 func testAccCheckResourceAssociationDisappears(ctx context.Context, resourceShareAssociation *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
 
 		input := &ram.DisassociateResourceShareInput{
 			ResourceArns:     []*string{resourceShareAssociation.AssociatedEntity},
@@ -87,7 +87,7 @@ func testAccCheckResourceAssociationDisappears(ctx context.Context, resourceShar
 
 func testAccCheckResourceAssociationExists(ctx context.Context, resourceName string, association *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
 
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -121,7 +121,7 @@ func testAccCheckResourceAssociationExists(ctx context.Context, resourceName str
 
 func testAccCheckResourceAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ram_resource_association" {

@@ -27,7 +27,7 @@ func sweepResourceShares(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).RAMConn()
+	conn := client.(*conns.AWSClient).RAMConn(ctx)
 	input := &ram.GetResourceSharesInput{
 		ResourceOwner: aws.String(ram.ResourceOwnerSelf),
 	}
