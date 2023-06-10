@@ -65,7 +65,7 @@ func ResourceServiceSpecificCredential() *schema.Resource {
 
 func resourceServiceSpecificCredentialCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	input := &iam.CreateServiceSpecificCredentialInput{
 		ServiceName: aws.String(d.Get("service_name").(string)),
@@ -100,7 +100,7 @@ func resourceServiceSpecificCredentialCreate(ctx context.Context, d *schema.Reso
 
 func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	serviceName, userName, credID, err := DecodeServiceSpecificCredentialId(d.Id())
 	if err != nil {
@@ -134,7 +134,7 @@ func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.Resour
 
 func resourceServiceSpecificCredentialUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	request := &iam.UpdateServiceSpecificCredentialInput{
 		ServiceSpecificCredentialId: aws.String(d.Get("service_specific_credential_id").(string)),
@@ -151,7 +151,7 @@ func resourceServiceSpecificCredentialUpdate(ctx context.Context, d *schema.Reso
 
 func resourceServiceSpecificCredentialDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	request := &iam.DeleteServiceSpecificCredentialInput{
 		ServiceSpecificCredentialId: aws.String(d.Get("service_specific_credential_id").(string)),

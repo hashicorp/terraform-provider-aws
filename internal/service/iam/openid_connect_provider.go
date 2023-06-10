@@ -73,7 +73,7 @@ func ResourceOpenIDConnectProvider() *schema.Resource {
 
 func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	input := &iam.CreateOpenIDConnectProviderInput{
 		ClientIDList:   flex.ExpandStringSet(d.Get("client_id_list").(*schema.Set)),
@@ -116,7 +116,7 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 
 func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	output, err := FindOpenIDConnectProviderByARN(ctx, conn, d.Id())
 
@@ -142,7 +142,7 @@ func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	if d.HasChange("thumbprint_list") {
 		input := &iam.UpdateOpenIDConnectProviderThumbprintInput{
@@ -177,7 +177,7 @@ func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.Resource
 
 func resourceOpenIDConnectProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	log.Printf("[INFO] Deleting IAM OIDC Provider: %s", d.Id())
 	_, err := conn.DeleteOpenIDConnectProviderWithContext(ctx, &iam.DeleteOpenIDConnectProviderInput{

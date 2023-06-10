@@ -90,7 +90,7 @@ func ResourceInstanceProfile() *schema.Resource {
 
 func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &iam.CreateInstanceProfileInput{
@@ -149,7 +149,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	instanceProfile, err := FindInstanceProfileByName(ctx, conn, d.Id())
 
@@ -197,7 +197,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	if d.HasChange("role") {
 		o, n := d.GetChange("role")
@@ -239,7 +239,7 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	if v, ok := d.GetOk("role"); ok {
 		err := instanceProfileRemoveRole(ctx, conn, d.Id(), v.(string))
