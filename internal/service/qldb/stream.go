@@ -99,7 +99,7 @@ func ResourceStream() *schema.Resource {
 }
 
 func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn()
+	conn := meta.(*conns.AWSClient).QLDBConn(ctx)
 
 	ledgerName := d.Get("ledger_name").(string)
 	name := d.Get("stream_name").(string)
@@ -141,7 +141,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn()
+	conn := meta.(*conns.AWSClient).QLDBConn(ctx)
 
 	ledgerName := d.Get("ledger_name").(string)
 	stream, err := FindStream(ctx, conn, ledgerName, d.Id())
@@ -187,7 +187,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn()
+	conn := meta.(*conns.AWSClient).QLDBConn(ctx)
 
 	ledgerName := d.Get("ledger_name").(string)
 	input := &qldb.CancelJournalKinesisStreamInput{
