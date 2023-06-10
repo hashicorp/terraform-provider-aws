@@ -92,7 +92,7 @@ func ResourceSegment() *schema.Resource {
 }
 
 func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloudwatchevidently.CreateSegmentInput{
@@ -117,7 +117,7 @@ func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	segment, err := FindSegmentByNameOrARN(ctx, conn, d.Id())
 
@@ -151,7 +151,7 @@ func resourceSegmentUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceSegmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Evidently Segment: %s", d.Id())
 	_, err := conn.DeleteSegmentWithContext(ctx, &cloudwatchevidently.DeleteSegmentInput{
