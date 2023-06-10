@@ -94,7 +94,7 @@ func ResourceMember() *schema.Resource {
 }
 
 func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	accountId := d.Get("account_id").(string)
 	input := &macie2.CreateMemberInput{
@@ -184,7 +184,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.GetMemberInput{
 		Id: aws.String(d.Id()),
@@ -240,7 +240,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	// Invitation workflow
 
@@ -323,7 +323,7 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DeleteMemberInput{
 		Id: aws.String(d.Id()),
