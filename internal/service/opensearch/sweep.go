@@ -30,7 +30,7 @@ func sweepDomains(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpenSearchConn()
+	conn := client.(*conns.AWSClient).OpenSearchConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
