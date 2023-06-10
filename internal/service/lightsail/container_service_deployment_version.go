@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -447,25 +448,25 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	var result *types.ContainerServiceDeployment
+	var result types.ContainerServiceDeployment
 
 	for _, deployment := range output.Deployments {
-		if &deployment == nil {
+		if reflect.DeepEqual(deployment, types.ContainerServiceDeployment{}) {
 			continue
 		}
 
 		if int(aws.ToInt32(deployment.Version)) == version {
-			result = &deployment
+			result = deployment
 			break
 		}
 	}
 
-	if result == nil {
+	if reflect.DeepEqual(result, types.ContainerServiceDeployment{}) {
 		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
 	}
 
-	return result, nil
+	return &result, nil
 }
