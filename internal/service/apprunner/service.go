@@ -432,7 +432,7 @@ func ResourceService() *schema.Resource {
 }
 
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	serviceName := d.Get("service_name").(string)
 	input := &apprunner.CreateServiceInput{
@@ -504,7 +504,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.DescribeServiceInput{
 		ServiceArn: aws.String(d.Id()),
@@ -577,7 +577,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	if d.HasChanges(
 		"auto_scaling_configuration_arn",
@@ -625,7 +625,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.DeleteServiceInput{
 		ServiceArn: aws.String(d.Id()),
