@@ -764,7 +764,7 @@ func testAccCheckProviderDefaultTags_Tags(ctx context.Context, t *testing.T, p *
 	}
 }
 
-func testAccCheckEndpoints(ctx context.Context, p **schema.Provider) resource.TestCheckFunc {
+func testAccCheckEndpoints(_ context.Context, p **schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -803,7 +803,7 @@ func testAccCheckEndpoints(ctx context.Context, p **schema.Provider) resource.Te
 	}
 }
 
-func testAccCheckUnusualEndpoints(ctx context.Context, p **schema.Provider, unusual unusualEndpoint) resource.TestCheckFunc {
+func testAccCheckUnusualEndpoints(_ context.Context, p **schema.Provider, unusual unusualEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
