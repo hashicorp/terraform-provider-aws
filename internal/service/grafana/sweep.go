@@ -28,7 +28,7 @@ func sweepWorkSpaces(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GrafanaConn()
+	conn := client.(*conns.AWSClient).GrafanaConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
