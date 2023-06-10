@@ -47,7 +47,7 @@ func sweepAccessPoints(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).S3ControlConn()
+	conn := client.(*conns.AWSClient).S3ControlConn(ctx)
 	accountID := client.(*conns.AWSClient).AccountID
 	input := &s3control.ListAccessPointsInput{
 		AccountId: aws.String(accountID),
@@ -105,7 +105,7 @@ func sweepMultiRegionAccessPoints(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).S3ControlConn()
+	conn := client.(*conns.AWSClient).S3ControlConn(ctx)
 	accountID := client.(*conns.AWSClient).AccountID
 	input := &s3control.ListMultiRegionAccessPointsInput{
 		AccountId: aws.String(accountID),
@@ -152,7 +152,7 @@ func sweepObjectLambdaAccessPoints(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).S3ControlConn()
+	conn := client.(*conns.AWSClient).S3ControlConn(ctx)
 	accountID := client.(*conns.AWSClient).AccountID
 	input := &s3control.ListAccessPointsForObjectLambdaInput{
 		AccountId: aws.String(accountID),
@@ -199,7 +199,7 @@ func sweepStorageLensConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).S3ControlConn()
+	conn := client.(*conns.AWSClient).S3ControlConn(ctx)
 	accountID := client.(*conns.AWSClient).AccountID
 	input := &s3control.ListStorageLensConfigurationsInput{
 		AccountId: aws.String(accountID),
