@@ -137,7 +137,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 }
 
 func dataSourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	associationId := d.Get("association_id").(string)
 	instanceId := d.Get("instance_id").(string)

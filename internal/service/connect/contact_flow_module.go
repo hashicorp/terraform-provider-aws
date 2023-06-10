@@ -86,7 +86,7 @@ func ResourceContactFlowModule() *schema.Resource {
 }
 
 func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -133,7 +133,7 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
 
@@ -173,7 +173,7 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
 
@@ -229,7 +229,7 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceContactFlowModuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
 	if err != nil {

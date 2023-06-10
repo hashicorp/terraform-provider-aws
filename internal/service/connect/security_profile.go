@@ -75,7 +75,7 @@ func ResourceSecurityProfile() *schema.Resource {
 }
 
 func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	securityProfileName := d.Get("name").(string)
@@ -110,7 +110,7 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
@@ -161,7 +161,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
@@ -192,7 +192,7 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 

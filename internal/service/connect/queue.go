@@ -112,7 +112,7 @@ func ResourceQueue() *schema.Resource {
 }
 
 func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -159,7 +159,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, queueID, err := QueueParseID(d.Id())
 
@@ -214,7 +214,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, queueID, err := QueueParseID(d.Id())
 
