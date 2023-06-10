@@ -314,7 +314,7 @@ func DataSourceCostCategory() *schema.Resource {
 }
 
 func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	costCategory, err := FindCostCategoryByARN(ctx, conn, d.Get("cost_category_arn").(string))

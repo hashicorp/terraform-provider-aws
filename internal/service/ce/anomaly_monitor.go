@@ -72,7 +72,7 @@ func ResourceAnomalyMonitor() *schema.Resource {
 }
 
 func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	input := &costexplorer.CreateAnomalyMonitorInput{
 		AnomalyMonitor: &costexplorer.AnomalyMonitor{
@@ -118,7 +118,7 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	monitor, err := FindAnomalyMonitorByARN(ctx, conn, d.Id())
 
@@ -155,7 +155,7 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 	requestUpdate := false
 
 	input := &costexplorer.UpdateAnomalyMonitorInput{
@@ -179,7 +179,7 @@ func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceAnomalyMonitorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	_, err := conn.DeleteAnomalyMonitorWithContext(ctx, &costexplorer.DeleteAnomalyMonitorInput{MonitorArn: aws.String(d.Id())})
 
