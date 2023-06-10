@@ -155,7 +155,7 @@ func ResourceLocationHDFS() *schema.Resource {
 
 func resourceLocationHDFSCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.CreateLocationHdfsInput{
 		AgentArns:          flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set)),
@@ -210,7 +210,7 @@ func resourceLocationHDFSCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceLocationHDFSRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	output, err := FindLocationHDFSByARN(ctx, conn, d.Id())
 
@@ -254,7 +254,7 @@ func resourceLocationHDFSRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &datasync.UpdateLocationHdfsInput{
@@ -320,7 +320,7 @@ func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceLocationHDFSDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
