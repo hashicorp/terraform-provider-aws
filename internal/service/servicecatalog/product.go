@@ -162,7 +162,7 @@ func ResourceProduct() *schema.Resource {
 
 func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.CreateProductInput{
 		IdempotencyToken: aws.String(id.UniqueId()),
@@ -248,7 +248,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	output, err := WaitProductReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
@@ -290,7 +290,7 @@ func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &servicecatalog.UpdateProductInput{
@@ -365,7 +365,7 @@ func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceProductDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.DeleteProductInput{
 		Id: aws.String(d.Id()),
