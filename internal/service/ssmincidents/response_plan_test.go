@@ -855,7 +855,7 @@ func testResponsePlan_action(t *testing.T) {
 //}
 
 func testAccCheckResponsePlanDestroy(s *terraform.State) error {
-	client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient()
+	client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient(ctx)
 	ctx := context.Background()
 
 	for _, resource := range s.RootModule().Resources {
@@ -891,7 +891,7 @@ func testAccCheckResponsePlanExists(name string) resource.TestCheckFunc {
 			return create.Error(names.SSMIncidents, create.ErrActionCheckingExistence, tfssmincidents.ResNameResponsePlan, name, errors.New("not set"))
 		}
 
-		client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient()
+		client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient(ctx)
 		ctx := context.Background()
 
 		_, err := tfssmincidents.FindResponsePlanByID(ctx, client, resource.Primary.ID)

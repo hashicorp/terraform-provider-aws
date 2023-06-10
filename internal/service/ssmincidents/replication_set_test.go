@@ -422,7 +422,7 @@ func testReplicationSet_disappears(t *testing.T) {
 }
 
 func testAccCheckReplicationSetDestroy(s *terraform.State) error {
-	client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient()
+	client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient(ctx)
 	context := context.Background()
 
 	for _, resource := range s.RootModule().Resources {
@@ -463,7 +463,7 @@ func testAccCheckReplicationSetExists(name string) resource.TestCheckFunc {
 			return create.Error(names.SSMIncidents, create.ErrActionCheckingExistence, tfssmincidents.ResNameReplicationSet, name, errors.New("not set"))
 		}
 
-		client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient()
+		client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient(ctx)
 		context := context.Background()
 
 		_, err := tfssmincidents.FindReplicationSetByID(context, client, resource.Primary.ID)
