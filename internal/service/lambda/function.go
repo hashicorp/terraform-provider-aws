@@ -334,6 +334,12 @@ func ResourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"source_code_size": {
 				Type:     schema.TypeInt,
