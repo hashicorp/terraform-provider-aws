@@ -140,7 +140,7 @@ func testAccCheckKeyPairExists(ctx context.Context, n string, res *lightsail.Key
 			return errors.New("No LightsailKeyPair set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn(ctx)
 
 		respKeyPair, err := conn.GetKeyPairWithContext(ctx, &lightsail.GetKeyPairInput{
 			KeyPairName: aws.String(rs.Primary.Attributes["name"]),
@@ -165,7 +165,7 @@ func testAccCheckKeyPairDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn(ctx)
 
 			respKeyPair, err := conn.GetKeyPairWithContext(ctx, &lightsail.GetKeyPairInput{
 				KeyPairName: aws.String(rs.Primary.Attributes["name"]),

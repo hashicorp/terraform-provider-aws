@@ -185,7 +185,7 @@ func testAccCheckBucketExists(ctx context.Context, resourceName string) resource
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn(ctx)
 
 		out, err := tflightsail.FindBucketById(ctx, conn, rs.Primary.ID)
 
@@ -203,7 +203,7 @@ func testAccCheckBucketExists(ctx context.Context, resourceName string) resource
 
 func testAccCheckBucketDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lightsail_bucket" {
