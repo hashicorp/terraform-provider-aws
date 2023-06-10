@@ -69,7 +69,7 @@ func ResourceTapePool() *schema.Resource {
 
 func resourceTapePoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.CreateTapePoolInput{
 		PoolName:                aws.String(d.Get("pool_name").(string)),
@@ -92,7 +92,7 @@ func resourceTapePoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceTapePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.ListTapePoolsInput{
 		PoolARNs: []*string{aws.String(d.Id())},
@@ -133,7 +133,7 @@ func resourceTapePoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceTapePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.DeleteTapePoolInput{
 		PoolARN: aws.String(d.Id()),
