@@ -57,7 +57,7 @@ func ResourceBackupPolicy() *schema.Resource {
 
 func resourceBackupPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	fsID := d.Get("file_system_id").(string)
 
@@ -72,7 +72,7 @@ func resourceBackupPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBackupPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	output, err := FindBackupPolicyByID(ctx, conn, d.Id())
 
@@ -97,7 +97,7 @@ func resourceBackupPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceBackupPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	if err := backupPolicyPut(ctx, conn, d.Id(), d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EFS Backup Policy (%s): %s", d.Id(), err)
@@ -108,7 +108,7 @@ func resourceBackupPolicyUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBackupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	err := backupPolicyPut(ctx, conn, d.Id(), map[string]interface{}{
 		"status": efs.StatusDisabled,
