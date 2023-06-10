@@ -288,7 +288,6 @@ func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
 func testAccCheckKxEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
-		ctx := context.Background()
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_finspace_kx_environment" {
