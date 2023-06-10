@@ -371,7 +371,7 @@ func FindDomainEntryById(ctx context.Context, conn *lightsail.Client, id string)
 
 	for _, n := range out.Domain.DomainEntries {
 		if entryName == aws.ToString(n.Name) && recordType == aws.ToString(n.Type) && recordTarget == aws.ToString(n.Target) {
-			entry = types.DomainEntry(n)
+			entry = n
 			entryExists = true
 			break
 		}
