@@ -166,7 +166,7 @@ func TestAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 }
 
 func testAccCheckSinkPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -203,7 +203,7 @@ func testAccCheckSinkPolicyExists(name string, sinkPolicy *oam.GetSinkPolicyOutp
 			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameSinkPolicy, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 		ctx := context.Background()
 		resp, err := conn.GetSinkPolicy(ctx, &oam.GetSinkPolicyInput{
 			SinkIdentifier: aws.String(rs.Primary.ID),

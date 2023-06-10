@@ -212,7 +212,7 @@ func TestAccObservabilityAccessManagerLink_tags(t *testing.T) {
 }
 
 func testAccCheckLinkDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -249,7 +249,7 @@ func testAccCheckLinkExists(name string, link *oam.GetLinkOutput) resource.TestC
 			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameLink, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 		ctx := context.Background()
 		resp, err := conn.GetLink(ctx, &oam.GetLinkInput{
 			Identifier: aws.String(rs.Primary.ID),
