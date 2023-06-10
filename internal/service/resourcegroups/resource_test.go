@@ -46,7 +46,7 @@ func TestAccResourceGroupsResource_basic(t *testing.T) {
 }
 
 func testAccCheckResourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn(ctx)
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -80,7 +80,7 @@ func testAccCheckResourceExists(ctx context.Context, name string, resource *reso
 			return create.Error(names.ResourceGroups, create.ErrActionCheckingExistence, tfresourcegroups.ResNameResource, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn(ctx)
 
 		resp, err := tfresourcegroups.FindResourceByARN(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes["resource_arn"])
 
