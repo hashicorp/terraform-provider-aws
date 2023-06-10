@@ -175,7 +175,7 @@ func ResourceDomain() *schema.Resource {
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn()
+	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
 
 	name := d.Get("name").(string)
 	input := cloudsearch.CreateDomainInput{
@@ -263,7 +263,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn()
+	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
 
 	domainStatus, err := FindDomainStatusByName(ctx, conn, d.Id())
 
@@ -339,7 +339,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn()
+	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
 	requiresIndexDocuments := false
 
 	if d.HasChange("scaling_parameters") {
@@ -470,7 +470,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn()
+	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudSearch Domain: %s", d.Id())
 	_, err := conn.DeleteDomainWithContext(ctx, &cloudsearch.DeleteDomainInput{
