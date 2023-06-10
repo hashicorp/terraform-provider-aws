@@ -48,6 +48,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	tenBackOff = 10
+)
+
 type Config struct {
 	AccessKey                      string
 	AllowedAccountIds              []string
@@ -535,13 +539,12 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	})
 
 	client.lightsailClient = lightsail.NewFromConfig(cfg, func(o *lightsail.Options) {
-		var lightsailRetryable retry.IsErrorRetryableFunc
-		lightsailRetryable = func(e error) awsv2.Ternary {
+		lightsailRetryable := retry.IsErrorRetryableFunc(func(e error) awsv2.Ternary {
 			if strings.Contains(e.Error(), "Please try again in a few minutes") || strings.Contains(e.Error(), "Please wait for it to complete before trying again") {
 				return awsv2.TrueTernary
 			}
 			return awsv2.UnknownTernary
-		}
+		})
 
 		if endpoint := c.Endpoints[names.Lightsail]; endpoint != "" {
 			o.EndpointResolver = lightsail.EndpointResolverFromURL(endpoint)
@@ -550,7 +553,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		o.Retryer = retry.NewStandard(func(options *retry.StandardOptions) {
 			options.Retryables = append(options.Retryables, lightsailRetryable)
 			options.MaxAttempts = 18
-			options.Backoff = retry.NewExponentialJitterBackoff(time.Second * 10)
+			options.Backoff = retry.NewExponentialJitterBackoff(time.Second * tenBackOff)
 		})
 	})
 
