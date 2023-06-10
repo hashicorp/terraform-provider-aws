@@ -121,7 +121,7 @@ func ResourceWebhook() *schema.Resource {
 
 func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	authType := d.Get("authentication").(string)
 	var authConfig map[string]interface{}
@@ -153,7 +153,7 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	arn := d.Id()
 	webhook, err := GetWebhook(ctx, conn, arn)
@@ -197,7 +197,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags", "register_with_third_party") {
 		authType := d.Get("authentication").(string)
@@ -229,7 +229,7 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 	name := d.Get("name").(string)
 
 	input := codepipeline.DeleteWebhookInput{
