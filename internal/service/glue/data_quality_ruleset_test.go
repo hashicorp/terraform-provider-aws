@@ -248,7 +248,7 @@ func testAccCheckDataQualityRulesetExists(ctx context.Context, n string) resourc
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		resp, err := tfglue.FindDataQualityRulesetByName(ctx, conn, rs.Primary.ID)
 
@@ -271,7 +271,7 @@ func testAccCheckDataQualityRulesetExists(ctx context.Context, n string) resourc
 
 func testAccCheckDataQualityRulesetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_data_quality_ruleset" {

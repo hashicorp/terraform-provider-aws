@@ -189,7 +189,7 @@ func ResourceClassifier() *schema.Resource {
 
 func resourceClassifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	name := d.Get("name").(string)
 
 	input := &glue.CreateClassifierInput{}
@@ -227,7 +227,7 @@ func resourceClassifierCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceClassifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	classifier, err := FindClassifierByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -263,7 +263,7 @@ func resourceClassifierRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceClassifierUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.UpdateClassifierInput{}
 
@@ -298,7 +298,7 @@ func resourceClassifierUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceClassifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Classifier: %s", d.Id())
 	err := DeleteClassifier(ctx, conn, d.Id())
