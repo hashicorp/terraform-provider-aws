@@ -60,7 +60,7 @@ func ResourceRevision() *schema.Resource {
 
 func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn()
+	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	input := &dataexchange.CreateRevisionInput{
 		DataSetId: aws.String(d.Get("data_set_id").(string)),
@@ -80,7 +80,7 @@ func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn()
+	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	dataSetId, revisionId, err := RevisionParseResourceID(d.Id())
 	if err != nil {
@@ -111,7 +111,7 @@ func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn()
+	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &dataexchange.UpdateRevisionInput{
@@ -135,7 +135,7 @@ func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRevisionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn()
+	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	input := &dataexchange.DeleteRevisionInput{
 		RevisionId: aws.String(d.Get("revision_id").(string)),
