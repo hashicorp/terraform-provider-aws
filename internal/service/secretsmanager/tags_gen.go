@@ -105,5 +105,5 @@ func UpdateTags(ctx context.Context, conn secretsmanageriface.SecretsManagerAPI,
 // UpdateTags updates secretsmanager service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).SecretsManagerConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).SecretsManagerConn(ctx), identifier, oldTags, newTags)
 }

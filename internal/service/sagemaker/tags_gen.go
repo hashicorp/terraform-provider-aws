@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn sagemakeriface.SageMakerAPI, identifier 
 // ListTags lists sagemaker service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).SageMakerConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).SageMakerConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -138,5 +138,5 @@ func UpdateTags(ctx context.Context, conn sagemakeriface.SageMakerAPI, identifie
 // UpdateTags updates sagemaker service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).SageMakerConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).SageMakerConn(ctx), identifier, oldTags, newTags)
 }
