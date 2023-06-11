@@ -197,7 +197,7 @@ func testAccFlowDefinition_disappears(t *testing.T) {
 
 func testAccCheckFlowDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_flow_definition" {
@@ -232,7 +232,7 @@ func testAccCheckFlowDefinitionExists(ctx context.Context, n string, flowDefinit
 			return fmt.Errorf("No SageMaker Flow Definition ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		output, err := tfsagemaker.FindFlowDefinitionByName(ctx, conn, rs.Primary.ID)
 

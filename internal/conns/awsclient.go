@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
@@ -26,8 +27,11 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
 }
 
-func (client *AWSClient) S3ConnURICleaningDisabled() *s3.S3 {
-	return client.s3ConnURICleaningDisabled
+func (client *AWSClient) S3ConnURICleaningDisabled(ctx context.Context) *s3.S3 {
+	config := client.S3Conn(ctx).Config
+	config.DisableRestProtocolURICleaning = aws.Bool(true)
+
+	return s3.New(client.Session.Copy(&config))
 }
 
 // SetHTTPClient sets the http.Client used for AWS API calls.
@@ -198,6 +202,9 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string)
 	return client, nil
 }
 
+// TODO
+// TODO Use 'errs.Must' when that's merged.
+// TODO
 // Must is a generic implementation of the Go Must idiom [1, 2]. It panics if
 // the provided error is non-nil and returns x otherwise.
 //

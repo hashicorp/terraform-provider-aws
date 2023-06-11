@@ -174,7 +174,7 @@ func ResourceExperience() *schema.Resource {
 }
 
 func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	in := &kendra.CreateExperienceInput{
 		ClientToken: aws.String(id.UniqueId()),
@@ -213,7 +213,7 @@ func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := ExperienceParseResourceID(d.Id())
 	if err != nil {
@@ -260,7 +260,7 @@ func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := ExperienceParseResourceID(d.Id())
 	if err != nil {
@@ -302,7 +302,7 @@ func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	log.Printf("[INFO] Deleting Kendra Experience %s", d.Id())
 

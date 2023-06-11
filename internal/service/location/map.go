@@ -78,7 +78,7 @@ func ResourceMap() *schema.Resource {
 
 func resourceMapCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.CreateMapInput{
 		Tags: GetTagsIn(ctx),
@@ -113,7 +113,7 @@ func resourceMapCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceMapRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DescribeMapInput{
 		MapName: aws.String(d.Id()),
@@ -154,7 +154,7 @@ func resourceMapRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceMapUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	if d.HasChange("description") {
 		input := &locationservice.UpdateMapInput{
@@ -177,7 +177,7 @@ func resourceMapUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceMapDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DeleteMapInput{
 		MapName: aws.String(d.Id()),

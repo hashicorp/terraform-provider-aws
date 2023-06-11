@@ -4,9 +4,8 @@ package glacier
 
 import (
 	"context"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	glacier_sdkv1 "github.com/aws/aws-sdk-go/service/glacier"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -30,7 +29,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceVault,
+			Factory:  resourceVault,
 			TypeName: "aws_glacier_vault",
 			Name:     "Vault",
 			Tags: &types.ServicePackageResourceTags{
@@ -38,7 +37,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVaultLock,
+			Factory:  resourceVaultLock,
 			TypeName: "aws_glacier_vault_lock",
 		},
 	}
@@ -52,9 +51,13 @@ func (p *servicePackage) SetEndpoint(endpoint string) {
 	p.endpoint = endpoint
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) (*glacier_sdkv1.Glacier, error) {
-	return glacier_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.endpoint)})), nil
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) (*glacier_sdkv2.Client, error) {
+	return glacier_sdkv2.NewFromConfig(cfg, func(o *glacier_sdkv2.Options) {
+		if p.endpoint != "" {
+			o.EndpointResolver = glacier_sdkv2.EndpointResolverFromURL(p.endpoint)
+		}
+	}), nil
 }
 
 var ServicePackage = &servicePackage{}

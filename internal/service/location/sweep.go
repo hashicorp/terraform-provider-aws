@@ -55,7 +55,7 @@ func sweepGeofenceCollections(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).LocationConn()
+	conn := client.(*conns.AWSClient).LocationConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -103,7 +103,7 @@ func sweepMaps(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).LocationConn()
+	conn := client.(*conns.AWSClient).LocationConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -151,7 +151,7 @@ func sweepPlaceIndexes(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).LocationConn()
+	conn := client.(*conns.AWSClient).LocationConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -199,7 +199,7 @@ func sweepRouteCalculators(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).LocationConn()
+	conn := client.(*conns.AWSClient).LocationConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -247,7 +247,7 @@ func sweepTrackers(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).LocationConn()
+	conn := client.(*conns.AWSClient).LocationConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -295,7 +295,7 @@ func sweepTrackerAssociations(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).LocationConn()
+	conn := client.(*conns.AWSClient).LocationConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

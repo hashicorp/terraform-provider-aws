@@ -54,7 +54,7 @@ func ListTags(ctx context.Context, conn batchiface.BatchAPI, identifier string) 
 // ListTags lists batch service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).BatchConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).BatchConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -141,5 +141,5 @@ func UpdateTags(ctx context.Context, conn batchiface.BatchAPI, identifier string
 // UpdateTags updates batch service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).BatchConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).BatchConn(ctx), identifier, oldTags, newTags)
 }

@@ -254,7 +254,7 @@ func ResourceJobTemplate() *schema.Resource {
 }
 
 func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn()
+	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &emrcontainers.CreateJobTemplateInput{
@@ -283,7 +283,7 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn()
+	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	vc, err := FindJobTemplateByID(ctx, conn, d.Id())
 
@@ -319,7 +319,7 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta i
 // }
 
 func resourceJobTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn()
+	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	log.Printf("[INFO] Deleting EMR Containers Job Template: %s", d.Id())
 	_, err := conn.DeleteJobTemplateWithContext(ctx, &emrcontainers.DeleteJobTemplateInput{

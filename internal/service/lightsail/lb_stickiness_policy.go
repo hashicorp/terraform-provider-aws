@@ -53,7 +53,7 @@ func ResourceLoadBalancerStickinessPolicy() *schema.Resource {
 }
 
 func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 	lbName := d.Get("lb_name").(string)
 	for _, v := range []string{"enabled", "cookie_duration"} {
 		in := lightsail.UpdateLoadBalancerAttributeInput{
@@ -89,7 +89,7 @@ func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.R
 }
 
 func resourceLoadBalancerStickinessPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 
 	out, err := FindLoadBalancerStickinessPolicyById(ctx, conn, d.Id())
 
@@ -121,7 +121,7 @@ func resourceLoadBalancerStickinessPolicyRead(ctx context.Context, d *schema.Res
 }
 
 func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 	lbName := d.Get("lb_name").(string)
 	if d.HasChange("enabled") {
 		in := lightsail.UpdateLoadBalancerAttributeInput{
@@ -167,7 +167,7 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 }
 
 func resourceLoadBalancerStickinessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 	lbName := d.Get("lb_name").(string)
 	in := lightsail.UpdateLoadBalancerAttributeInput{
 		LoadBalancerName: aws.String(lbName),

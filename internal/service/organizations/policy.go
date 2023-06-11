@@ -72,7 +72,7 @@ func ResourcePolicy() *schema.Resource {
 }
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &organizations.CreatePolicyInput{
@@ -106,7 +106,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Organizations Policy (%s): %w", name, err))
+		return diag.Errorf("creating Organizations Policy (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(resp.Policy.PolicySummary.Id))
@@ -115,7 +115,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	input := &organizations.DescribePolicyInput{
 		PolicyId: aws.String(d.Id()),
@@ -131,7 +131,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Organizations Policy (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Organizations Policy (%s): %s", d.Id(), err)
 	}
 
 	if resp.Policy == nil || resp.Policy.PolicySummary == nil {
@@ -164,7 +164,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	input := &organizations.UpdatePolicyInput{
 		PolicyId: aws.String(d.Id()),
@@ -185,7 +185,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Updating Organizations Policy: %s", input)
 	_, err := conn.UpdatePolicyWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating Organizations policy (%s): %w", d.Id(), err))
+		return diag.Errorf("updating Organizations policy (%s): %s", d.Id(), err)
 	}
 
 	return resourcePolicyRead(ctx, d, meta)
@@ -197,7 +197,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil
 	}
 
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	input := &organizations.DeletePolicyInput{
 		PolicyId: aws.String(d.Id()),
@@ -209,13 +209,13 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error deleting Organizations policy (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Organizations policy (%s): %s", d.Id(), err)
 	}
 	return nil
 }
 
 func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	input := &organizations.DescribePolicyInput{
 		PolicyId: aws.String(d.Id()),

@@ -136,7 +136,7 @@ func ResourceQuickConnect() *schema.Resource {
 }
 
 func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -156,11 +156,11 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.CreateQuickConnectWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Quick Connect (%s): %w", name, err))
+		return diag.Errorf("creating Connect Quick Connect (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Quick Connect (%s): empty output", name))
+		return diag.Errorf("creating Connect Quick Connect (%s): empty output", name)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.QuickConnectId)))
@@ -169,7 +169,7 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 
@@ -189,11 +189,11 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Quick Connect (%s): %w", d.Id(), err))
+		return diag.Errorf("getting Connect Quick Connect (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.QuickConnect == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Quick Connect (%s): empty response", d.Id()))
+		return diag.Errorf("getting Connect Quick Connect (%s): empty response", d.Id())
 	}
 
 	if err := d.Set("quick_connect_config", flattenQuickConnectConfig(resp.QuickConnect.QuickConnectConfig)); err != nil {
@@ -212,7 +212,7 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 
@@ -237,7 +237,7 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err = conn.UpdateQuickConnectNameWithContext(ctx, inputNameDesc)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating QuickConnect Name (%s): %w", d.Id(), err))
+			return diag.Errorf("updating QuickConnect Name (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -253,7 +253,7 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 		inputConfig.QuickConnectConfig = quickConnectConfig
 		_, err = conn.UpdateQuickConnectConfigWithContext(ctx, inputConfig)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating QuickConnect (%s): %w", d.Id(), err))
+			return diag.Errorf("updating QuickConnect (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -261,7 +261,7 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceQuickConnectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 
@@ -275,7 +275,7 @@ func resourceQuickConnectDelete(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting QuickConnect (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting QuickConnect (%s): %s", d.Id(), err)
 	}
 
 	return nil

@@ -4,9 +4,8 @@ package swf
 
 import (
 	"context"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	swf_sdkv1 "github.com/aws/aws-sdk-go/service/swf"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -30,7 +29,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDomain,
+			Factory:  resourceDomain,
 			TypeName: "aws_swf_domain",
 			Name:     "Domain",
 			Tags: &types.ServicePackageResourceTags{
@@ -48,9 +47,13 @@ func (p *servicePackage) SetEndpoint(endpoint string) {
 	p.endpoint = endpoint
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) (*swf_sdkv1.SWF, error) {
-	return swf_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.endpoint)})), nil
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) (*swf_sdkv2.Client, error) {
+	return swf_sdkv2.NewFromConfig(cfg, func(o *swf_sdkv2.Options) {
+		if p.endpoint != "" {
+			o.EndpointResolver = swf_sdkv2.EndpointResolverFromURL(p.endpoint)
+		}
+	}), nil
 }
 
 var ServicePackage = &servicePackage{}

@@ -51,7 +51,7 @@ func ResourceDomainPolicy() *schema.Resource {
 
 func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
 
@@ -78,7 +78,7 @@ func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 	domainName := d.Get("domain_name").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("access_policies").(string))
@@ -106,7 +106,7 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 
 func resourceDomainPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	_, err := conn.UpdateDomainConfigWithContext(ctx, &opensearchservice.UpdateDomainConfigInput{
 		DomainName:     aws.String(d.Get("domain_name").(string)),

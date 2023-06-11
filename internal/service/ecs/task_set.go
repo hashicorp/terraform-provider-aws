@@ -270,7 +270,7 @@ func ResourceTaskSet() *schema.Resource {
 
 func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	cluster := d.Get("cluster").(string)
 	service := d.Get("service").(string)
@@ -357,7 +357,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	taskSetId, service, cluster, err := TaskSetParseID(d.Id())
 
@@ -441,7 +441,7 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		taskSetId, service, cluster, err := TaskSetParseID(d.Id())
@@ -476,7 +476,7 @@ func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTaskSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	taskSetId, service, cluster, err := TaskSetParseID(d.Id())
 
@@ -537,7 +537,7 @@ func retryTaskSetCreate(ctx context.Context, conn *ecs.ECS, input *ecs.CreateTas
 
 	output, ok := outputRaw.(*ecs.CreateTaskSetOutput)
 	if !ok || output == nil || output.TaskSet == nil {
-		return nil, fmt.Errorf("error creating ECS TaskSet: empty output")
+		return nil, fmt.Errorf("creating ECS TaskSet: empty output")
 	}
 
 	return output, err

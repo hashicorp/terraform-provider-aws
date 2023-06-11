@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn mediapackageiface.MediaPackageAPI, ident
 // ListTags lists mediapackage service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).MediaPackageConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).MediaPackageConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -121,5 +121,5 @@ func UpdateTags(ctx context.Context, conn mediapackageiface.MediaPackageAPI, ide
 // UpdateTags updates mediapackage service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).MediaPackageConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).MediaPackageConn(ctx), identifier, oldTags, newTags)
 }

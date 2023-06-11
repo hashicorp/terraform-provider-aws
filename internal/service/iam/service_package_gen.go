@@ -58,6 +58,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_iam_policy_document",
 		},
 		{
+			Factory:  DataSourcePrincipalPolicySimulation,
+			TypeName: "aws_iam_principal_policy_simulation",
+		},
+		{
 			Factory:  DataSourceRole,
 			TypeName: "aws_iam_role",
 		},

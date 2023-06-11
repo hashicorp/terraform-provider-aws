@@ -103,7 +103,7 @@ func ResourceDataQualityRuleset() *schema.Resource {
 
 func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	name := d.Get("name").(string)
 
@@ -133,7 +133,7 @@ func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	name := d.Id()
 
@@ -173,7 +173,7 @@ func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceDataQualityRulesetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	if d.HasChanges("description", "ruleset") {
 		name := d.Id()
@@ -200,7 +200,7 @@ func resourceDataQualityRulesetUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceDataQualityRulesetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Glue Data Quality Ruleset: %s", d.Id())
 	_, err := conn.DeleteDataQualityRulesetWithContext(ctx, &glue.DeleteDataQualityRulesetInput{

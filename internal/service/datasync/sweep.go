@@ -75,7 +75,7 @@ func sweepAgents(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn()
+	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.ListAgentsInput{}
 	for {
@@ -130,7 +130,7 @@ func sweepLocationEFSs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn()
+	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -188,7 +188,7 @@ func sweepLocationFSxWindows(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn()
+	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -246,7 +246,7 @@ func sweepLocationFSxLustres(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn()
+	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -303,7 +303,7 @@ func sweepLocationNFSs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn()
+	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -361,7 +361,7 @@ func sweepLocationS3s(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn()
+	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -419,7 +419,7 @@ func sweepLocationSMBs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn()
+	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -477,7 +477,7 @@ func sweepLocationHDFSs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn()
+	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -535,7 +535,7 @@ func sweepLocationObjectStorages(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn()
+	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -593,7 +593,7 @@ func sweepTasks(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn()
+	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.ListTasksInput{}
 	for {

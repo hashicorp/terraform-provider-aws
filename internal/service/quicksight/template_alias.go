@@ -73,7 +73,7 @@ func (r *resourceTemplateAlias) Schema(ctx context.Context, req resource.SchemaR
 }
 
 func (r *resourceTemplateAlias) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var plan resourceTemplateAliasData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -116,7 +116,7 @@ func (r *resourceTemplateAlias) Create(ctx context.Context, req resource.CreateR
 }
 
 func (r *resourceTemplateAlias) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceTemplateAliasData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -159,7 +159,7 @@ func (r *resourceTemplateAlias) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *resourceTemplateAlias) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var plan, state resourceTemplateAliasData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -199,7 +199,7 @@ func (r *resourceTemplateAlias) Update(ctx context.Context, req resource.UpdateR
 }
 
 func (r *resourceTemplateAlias) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceTemplateAliasData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

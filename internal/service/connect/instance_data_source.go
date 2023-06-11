@@ -2,7 +2,6 @@ package connect
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -87,7 +86,7 @@ func DataSourceInstance() *schema.Resource {
 }
 
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	var matchedInstance *connect.Instance
 
@@ -106,11 +105,11 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		instanceSummary, err := dataSourceGetInstanceSummaryByInstanceAlias(ctx, conn, instanceAlias)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Instance Summary by instance_alias (%s): %w", instanceAlias, err))
+			return diag.Errorf("finding Connect Instance Summary by instance_alias (%s): %s", instanceAlias, err)
 		}
 
 		if instanceSummary == nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Instance Summary by instance_alias (%s): not found", instanceAlias))
+			return diag.Errorf("finding Connect Instance Summary by instance_alias (%s): not found", instanceAlias)
 		}
 
 		matchedInstance = &connect.Instance{
@@ -127,7 +126,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if matchedInstance == nil {
-		return diag.FromErr(fmt.Errorf("no Connect Instance found for query, try adjusting your search criteria"))
+		return diag.Errorf("no Connect Instance found for query, try adjusting your search criteria")
 	}
 
 	d.SetId(aws.StringValue(matchedInstance.Id))
@@ -145,7 +144,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	for att := range InstanceAttributeMapping() {
 		value, err := dataSourceInstanceReadAttribute(ctx, conn, d.Id(), att)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error reading Connect Instance (%s) attribute (%s): %w", d.Id(), att, err))
+			return diag.Errorf("reading Connect Instance (%s) attribute (%s): %s", d.Id(), att, err)
 		}
 		d.Set(InstanceAttributeMapping()[att], value)
 	}

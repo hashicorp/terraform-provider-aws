@@ -183,7 +183,7 @@ func ResourceMLTransform() *schema.Resource {
 
 func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.CreateMLTransformInput{
 		Name:              aws.String(d.Get("name").(string)),
@@ -231,7 +231,7 @@ func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceMLTransformRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.GetMLTransformInput{
 		TransformId: aws.String(d.Id()),
@@ -293,7 +293,7 @@ func resourceMLTransformRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	if d.HasChanges("description", "glue_version", "max_capacity", "max_retries", "number_of_workers",
 		"role_arn", "timeout", "worker_type", "parameters") {
@@ -343,7 +343,7 @@ func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceMLTransformDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue ML Trasform: %s", d.Id())
 

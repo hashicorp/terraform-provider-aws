@@ -303,7 +303,7 @@ func testAccCheckWorkflowExists(ctx context.Context, n string, v *transfer.Descr
 			return fmt.Errorf("No Transfer Workflow ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		output, err := tftransfer.FindWorkflowByID(ctx, conn, rs.Primary.ID)
 
@@ -319,7 +319,7 @@ func testAccCheckWorkflowExists(ctx context.Context, n string, v *transfer.Descr
 
 func testAccCheckWorkflowDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_workflow" {

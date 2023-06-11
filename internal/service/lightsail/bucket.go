@@ -71,7 +71,7 @@ func ResourceBucket() *schema.Resource {
 }
 
 func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 
 	in := lightsail.CreateBucketInput{
 		BucketName: aws.String(d.Get("name").(string)),
@@ -98,7 +98,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 
 	out, err := FindBucketById(ctx, conn, d.Id())
 
@@ -127,7 +127,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 
 	if d.HasChange("bundle_id") {
 		in := lightsail.UpdateBucketBundleInput{
@@ -151,7 +151,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 	out, err := conn.DeleteBucketWithContext(ctx, &lightsail.DeleteBucketInput{
 		BucketName: aws.String(d.Id()),
 	})

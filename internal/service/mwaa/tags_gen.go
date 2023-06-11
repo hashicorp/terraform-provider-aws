@@ -88,5 +88,5 @@ func UpdateTags(ctx context.Context, conn mwaaiface.MWAAAPI, identifier string, 
 // UpdateTags updates mwaa service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).MWAAConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).MWAAConn(ctx), identifier, oldTags, newTags)
 }

@@ -130,7 +130,7 @@ func ResourceSigningProfile() *schema.Resource {
 
 func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
+	conn := meta.(*conns.AWSClient).SignerConn(ctx)
 
 	log.Printf("[DEBUG] Creating Signer signing profile")
 
@@ -163,7 +163,7 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
+	conn := meta.(*conns.AWSClient).SignerConn(ctx)
 
 	signingProfileOutput, err := conn.GetSigningProfileWithContext(ctx, &signer.GetSigningProfileInput{
 		ProfileName: aws.String(d.Id()),
@@ -235,7 +235,7 @@ func resourceSigningProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceSigningProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
+	conn := meta.(*conns.AWSClient).SignerConn(ctx)
 
 	_, err := conn.CancelSigningProfileWithContext(ctx, &signer.CancelSigningProfileInput{
 		ProfileName: aws.String(d.Id()),

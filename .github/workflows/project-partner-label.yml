@@ -4,7 +4,7 @@ on:
     types:
       - labeled
 env:
-  DESTINATION_COLUMN_ID: 'MDEzOlByb2plY3RDb2x1bW4xMjE0MzAxNw=='
+  DESTINATION_COLUMN_ID: 'PC_lAPOAAuecM4AXZPtzgC5Sak'
   GH_TOKEN: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
 jobs:
   tag-created:

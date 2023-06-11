@@ -56,7 +56,7 @@ func sweepResourceDefaultPatchBaselines(region string) error {
 	}
 	client := c.(ssmClient)
 
-	conn := client.SSMClient()
+	conn := client.SSMClient(ctx)
 
 	var sweepables []sweep.Sweepable
 	var errs *multierror.Error
@@ -123,7 +123,7 @@ func sweepMaintenanceWindows(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).SSMConn()
+	conn := client.(*conns.AWSClient).SSMConn(ctx)
 	input := &ssm.DescribeMaintenanceWindowsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -179,7 +179,7 @@ func sweepResourcePatchBaselines(region string) error {
 	}
 	client := c.(ssmClient)
 
-	conn := client.SSMClient()
+	conn := client.SSMClient(ctx)
 
 	var sweepables []sweep.Sweepable
 	var errs *multierror.Error
@@ -223,7 +223,7 @@ func sweepResourceDataSyncs(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).SSMConn()
+	conn := client.(*conns.AWSClient).SSMConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

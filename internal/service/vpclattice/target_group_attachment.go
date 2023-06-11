@@ -68,7 +68,7 @@ func resourceTargetGroupAttachment() *schema.Resource {
 }
 
 func resourceTargetGroupAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	targetGroupID := d.Get("target_group_identifier").(string)
 	target := expandTarget(d.Get("target").([]interface{})[0].(map[string]interface{}))
@@ -96,7 +96,7 @@ func resourceTargetGroupAttachmentCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceTargetGroupAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	targetGroupID := d.Get("target_group_identifier").(string)
 	target := expandTarget(d.Get("target").([]interface{})[0].(map[string]interface{}))
@@ -124,7 +124,7 @@ func resourceTargetGroupAttachmentRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceTargetGroupAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	targetGroupID := d.Get("target_group_identifier").(string)
 	target := expandTarget(d.Get("target").([]interface{})[0].(map[string]interface{}))

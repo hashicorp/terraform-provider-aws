@@ -96,7 +96,7 @@ func testAccCheckDiskAttachmentExists(ctx context.Context, n string, disk lights
 			return errors.New("No LightsailDiskAttachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn(ctx)
 
 		out, err := tflightsail.FindDiskAttachmentById(ctx, conn, rs.Primary.ID)
 
@@ -121,7 +121,7 @@ func testAccCheckDiskAttachmentDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn(ctx)
 
 			_, err := tflightsail.FindDiskAttachmentById(ctx, conn, rs.Primary.ID)
 

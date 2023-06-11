@@ -139,7 +139,7 @@ func testAccCheckDataSetExists(ctx context.Context, n string, v *dataexchange.Ge
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn(ctx)
 		resp, err := tfdataexchange.FindDataSetById(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -156,7 +156,7 @@ func testAccCheckDataSetExists(ctx context.Context, n string, v *dataexchange.Ge
 
 func testAccCheckDataSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dataexchange_data_set" {

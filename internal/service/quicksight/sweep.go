@@ -56,7 +56,7 @@ func sweepDashboards(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn()
+	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -110,7 +110,7 @@ func sweepDataSets(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn()
+	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -164,7 +164,7 @@ func sweepDataSources(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn()
+	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -218,7 +218,7 @@ func sweepFolders(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn()
+	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
 	awsAccountId := client.(*conns.AWSClient).AccountID
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
@@ -264,7 +264,7 @@ func sweepTemplates(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn()
+	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -318,7 +318,7 @@ func sweepUsers(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn()
+	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
 	awsAccountId := client.(*conns.AWSClient).AccountID
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error

@@ -392,7 +392,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 }
 
 func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlClient()
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
@@ -424,7 +424,7 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlClient()
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
 
@@ -463,7 +463,7 @@ func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.Resourc
 }
 
 func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlClient()
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
 
@@ -501,7 +501,7 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 }
 
 func resourceStorageLensConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlClient()
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
 

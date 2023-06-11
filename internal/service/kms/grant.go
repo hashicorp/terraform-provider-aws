@@ -130,7 +130,7 @@ func ResourceGrant() *schema.Resource {
 
 func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID := d.Get("key_id").(string)
 	input := &kms.CreateGrantInput{
@@ -184,7 +184,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		timeout = 3 * time.Minute
 	)
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID, grantID, err := GrantParseResourceID(d.Id())
 
@@ -227,7 +227,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID, grantID, err := GrantParseResourceID(d.Id())
 

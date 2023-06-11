@@ -73,7 +73,7 @@ func ResourceThreatIntelSet() *schema.Resource {
 
 func resourceThreatIntelSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	detectorID := d.Get("detector_id").(string)
 	name := d.Get("name").(string)
@@ -110,7 +110,7 @@ func resourceThreatIntelSetCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceThreatIntelSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	threatIntelSetId, detectorId, err := DecodeThreatIntelSetID(d.Id())
 	if err != nil {
@@ -153,7 +153,7 @@ func resourceThreatIntelSetRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceThreatIntelSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	threatIntelSetID, detectorId, err := DecodeThreatIntelSetID(d.Id())
 	if err != nil {
@@ -186,7 +186,7 @@ func resourceThreatIntelSetUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceThreatIntelSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	threatIntelSetID, detectorId, err := DecodeThreatIntelSetID(d.Id())
 	if err != nil {

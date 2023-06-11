@@ -172,7 +172,7 @@ func ResourceOrganization() *schema.Resource {
 
 func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	createOpts := &organizations.CreateOrganizationInput{
 		FeatureSet: aws.String(d.Get("feature_set").(string)),
@@ -233,7 +233,7 @@ func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	log.Printf("[INFO] Reading Organization: %s", d.Id())
 	org, err := conn.DescribeOrganizationWithContext(ctx, &organizations.DescribeOrganizationInput{})
@@ -331,7 +331,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	if d.HasChange("aws_service_access_principals") {
 		oldRaw, newRaw := d.GetChange("aws_service_access_principals")
@@ -419,7 +419,7 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	log.Printf("[INFO] Deleting Organization: %s", d.Id())
 
@@ -503,7 +503,7 @@ func getOrganizationDefaultRootPolicyTypeRefreshFunc(ctx context.Context, conn *
 		defaultRoot, err := getOrganizationDefaultRoot(ctx, conn)
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error getting default root: %s", err)
+			return nil, "", fmt.Errorf("getting default root: %s", err)
 		}
 
 		for _, pt := range defaultRoot.PolicyTypes {

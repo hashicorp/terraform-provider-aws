@@ -30,7 +30,7 @@ func sweepPipes(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).PipesClient()
+	conn := client.(*conns.AWSClient).PipesClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

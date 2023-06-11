@@ -81,7 +81,7 @@ func ResourceActivation() *schema.Resource {
 
 func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &ssm.CreateActivationInput{
@@ -121,7 +121,7 @@ func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	activation, err := FindActivationByID(ctx, conn, d.Id())
 
@@ -150,7 +150,7 @@ func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceActivationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SSM Activation: %s", d.Id())
 	_, err := conn.DeleteActivationWithContext(ctx, &ssm.DeleteActivationInput{

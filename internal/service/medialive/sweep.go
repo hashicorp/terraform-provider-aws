@@ -47,7 +47,7 @@ func sweepChannels(region string) error {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).MediaLiveClient()
+	conn := client.(*conns.AWSClient).MediaLiveClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListChannelsInput{}
 	var errs *multierror.Error
@@ -97,7 +97,7 @@ func sweepInputs(region string) error {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).MediaLiveClient()
+	conn := client.(*conns.AWSClient).MediaLiveClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListInputsInput{}
 	var errs *multierror.Error
@@ -147,7 +147,7 @@ func sweepInputSecurityGroups(region string) error {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).MediaLiveClient()
+	conn := client.(*conns.AWSClient).MediaLiveClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListInputSecurityGroupsInput{}
 	var errs *multierror.Error
@@ -197,7 +197,7 @@ func sweepMultiplexes(region string) error {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).MediaLiveClient()
+	conn := client.(*conns.AWSClient).MediaLiveClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListMultiplexesInput{}
 	var errs *multierror.Error

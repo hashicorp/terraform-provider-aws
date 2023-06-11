@@ -87,7 +87,7 @@ func ResourceChannel() *schema.Resource {
 
 func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaPackageConn()
+	conn := meta.(*conns.AWSClient).MediaPackageConn(ctx)
 
 	input := &mediapackage.CreateChannelInput{
 		Id:          aws.String(d.Get("channel_id").(string)),
@@ -107,7 +107,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaPackageConn()
+	conn := meta.(*conns.AWSClient).MediaPackageConn(ctx)
 
 	input := &mediapackage.DescribeChannelInput{
 		Id: aws.String(d.Id()),
@@ -131,7 +131,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaPackageConn()
+	conn := meta.(*conns.AWSClient).MediaPackageConn(ctx)
 
 	input := &mediapackage.UpdateChannelInput{
 		Id:          aws.String(d.Id()),
@@ -148,7 +148,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaPackageConn()
+	conn := meta.(*conns.AWSClient).MediaPackageConn(ctx)
 
 	input := &mediapackage.DeleteChannelInput{
 		Id: aws.String(d.Id()),

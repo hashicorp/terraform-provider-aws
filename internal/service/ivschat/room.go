@@ -104,7 +104,7 @@ const (
 )
 
 func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	in := &ivschat.CreateRoomInput{
 		Tags: GetTagsIn(ctx),
@@ -149,7 +149,7 @@ func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceRoomRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	out, err := findRoomByID(ctx, conn, d.Id())
 
@@ -182,7 +182,7 @@ func resourceRoomRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	update := false
 
@@ -233,7 +233,7 @@ func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceRoomDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	log.Printf("[INFO] Deleting IVSChat Room %s", d.Id())
 

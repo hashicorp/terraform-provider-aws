@@ -465,7 +465,7 @@ func testAccCheckDataSetExists(ctx context.Context, resourceName string, dataSet
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		input := &quicksight.DescribeDataSetInput{
 			AwsAccountId: aws.String(awsAccountID),
@@ -488,7 +488,7 @@ func testAccCheckDataSetExists(ctx context.Context, resourceName string, dataSet
 
 func testAccCheckDataSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_data_set" {
 				continue

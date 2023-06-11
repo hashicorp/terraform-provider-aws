@@ -24,7 +24,7 @@ func TestAccNetworkManagerLinksDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLinksDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceAllName, "ids.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceAllName, "ids.#", 1),
 					resource.TestCheckResourceAttr(dataSourceByTagsName, "ids.#", "1"),
 				),
 			},

@@ -45,7 +45,7 @@ func sweepDirectories(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DSConn()
+	conn := client.(*conns.AWSClient).DSConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -91,7 +91,7 @@ func sweepRegions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DSConn()
+	conn := client.(*conns.AWSClient).DSConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

@@ -40,14 +40,14 @@ func DataSourcePullThroughCacheRule() *schema.Resource {
 }
 
 func dataSourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	repositoryPrefix := d.Get("ecr_repository_prefix").(string)
 
 	rule, err := FindPullThroughCacheRuleByRepositoryPrefix(ctx, conn, repositoryPrefix)
 
 	if err != nil {
-		return diag.Errorf("error reading ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
+		return diag.Errorf("reading ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
 	}
 
 	d.SetId(aws.StringValue(rule.EcrRepositoryPrefix))

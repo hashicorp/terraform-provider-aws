@@ -35,7 +35,7 @@ func sweepApplications(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := client.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	resp, err := conn.DescribeApplicationsWithContext(ctx, &elasticbeanstalk.DescribeApplicationsInput{})
 	if err != nil {
@@ -76,7 +76,7 @@ func sweepEnvironments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := client.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 	input := &elasticbeanstalk.DescribeEnvironmentsInput{
 		IncludeDeleted: aws.Bool(false),
 	}

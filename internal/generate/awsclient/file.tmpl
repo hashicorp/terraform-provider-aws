@@ -51,18 +51,16 @@ type AWSClient struct {
 	{{ .ProviderPackage }}Client *{{ .GoV2Package }}_sdkv2.Client
 	{{- end }}
 {{- end }}
-
-    s3ConnURICleaningDisabled *s3_sdkv1.S3
 }
 
 {{ range .Services }}
 	{{- if eq .SDKVersion "1" }}
-func (c *AWSClient) {{ .ProviderNameUpper }}Conn() *{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }} {
-	return Must(conn[*{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}](context.TODO(), c, names.{{ .ProviderNameUpper }}))
+func (c *AWSClient) {{ .ProviderNameUpper }}Conn(ctx context.Context) *{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }} {
+	return Must(conn[*{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}](ctx, c, names.{{ .ProviderNameUpper }}))
 }
 	{{- else if eq .SDKVersion "2" "1,2"}}
-func (c *AWSClient) {{ .ProviderNameUpper }}Client() *{{ .GoV2Package }}_sdkv2.Client {
-	return Must(client[*{{ .GoV2Package }}_sdkv2.Client](context.TODO(), c, names.{{ .ProviderNameUpper }}))
+func (c *AWSClient) {{ .ProviderNameUpper }}Client(ctx context.Context) *{{ .GoV2Package }}_sdkv2.Client {
+	return Must(client[*{{ .GoV2Package }}_sdkv2.Client](ctx, c, names.{{ .ProviderNameUpper }}))
 }
 	{{- end }}
 {{ end }}

@@ -164,7 +164,7 @@ func testAccCheckLoadBalancerCertificateDestroy(ctx context.Context) resource.Te
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn(ctx)
 
 			_, err := tflightsail.FindLoadBalancerCertificateById(ctx, conn, rs.Primary.ID)
 
@@ -194,7 +194,7 @@ func testAccCheckLoadBalancerCertificateExists(ctx context.Context, n string, ce
 			return errors.New("No Certificate ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn(ctx)
 
 		respCertificate, err := tflightsail.FindLoadBalancerCertificateById(ctx, conn, rs.Primary.ID)
 

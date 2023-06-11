@@ -682,7 +682,7 @@ func ResourceWorkflow() *schema.Resource {
 
 func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.CreateWorkflowInput{
 		Tags: GetTagsIn(ctx),
@@ -713,7 +713,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 	output, err := FindWorkflowByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -750,7 +750,7 @@ func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Transfer Workflow: %s", d.Id())
 	_, err := conn.DeleteWorkflowWithContext(ctx, &transfer.DeleteWorkflowInput{

@@ -33,7 +33,7 @@ func ListTags(ctx context.Context, conn *resourceexplorer2.Client, identifier st
 // ListTags lists resourceexplorer2 service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ResourceExplorer2Client(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ResourceExplorer2Client(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -120,5 +120,5 @@ func UpdateTags(ctx context.Context, conn *resourceexplorer2.Client, identifier 
 // UpdateTags updates resourceexplorer2 service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).ResourceExplorer2Client(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).ResourceExplorer2Client(ctx), identifier, oldTags, newTags)
 }

@@ -98,7 +98,7 @@ func DataSourceQuerySuggestionsBlockList() *schema.Resource {
 }
 
 func dataSourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	querySuggestionsBlockListID := d.Get("query_suggestions_block_list_id").(string)

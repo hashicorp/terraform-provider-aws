@@ -19,7 +19,9 @@ import (
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
 	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
+	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
 	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
 	identitystore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/identitystore"
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
@@ -42,6 +44,7 @@ import (
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
+	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
 	transcribe_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transcribe"
 	vpclattice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
@@ -152,7 +155,6 @@ import (
 	emrcontainers_sdkv1 "github.com/aws/aws-sdk-go/service/emrcontainers"
 	emrserverless_sdkv1 "github.com/aws/aws-sdk-go/service/emrserverless"
 	eventbridge_sdkv1 "github.com/aws/aws-sdk-go/service/eventbridge"
-	finspace_sdkv1 "github.com/aws/aws-sdk-go/service/finspace"
 	finspacedata_sdkv1 "github.com/aws/aws-sdk-go/service/finspacedata"
 	firehose_sdkv1 "github.com/aws/aws-sdk-go/service/firehose"
 	fms_sdkv1 "github.com/aws/aws-sdk-go/service/fms"
@@ -161,7 +163,6 @@ import (
 	frauddetector_sdkv1 "github.com/aws/aws-sdk-go/service/frauddetector"
 	fsx_sdkv1 "github.com/aws/aws-sdk-go/service/fsx"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
-	glacier_sdkv1 "github.com/aws/aws-sdk-go/service/glacier"
 	globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
 	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"
 	gluedatabrew_sdkv1 "github.com/aws/aws-sdk-go/service/gluedatabrew"
@@ -312,7 +313,6 @@ import (
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
 	sts_sdkv1 "github.com/aws/aws-sdk-go/service/sts"
 	support_sdkv1 "github.com/aws/aws-sdk-go/service/support"
-	swf_sdkv1 "github.com/aws/aws-sdk-go/service/swf"
 	synthetics_sdkv1 "github.com/aws/aws-sdk-go/service/synthetics"
 	textract_sdkv1 "github.com/aws/aws-sdk-go/service/textract"
 	timestreamquery_sdkv1 "github.com/aws/aws-sdk-go/service/timestreamquery"
@@ -477,14 +477,14 @@ type AWSClient struct {
 	fisClient                        *fis_sdkv2.Client
 	fmsConn                          *fms_sdkv1.FMS
 	fsxConn                          *fsx_sdkv1.FSx
-	finspaceConn                     *finspace_sdkv1.Finspace
+	finspaceClient                   *finspace_sdkv2.Client
 	finspacedataConn                 *finspacedata_sdkv1.FinSpaceData
 	firehoseConn                     *firehose_sdkv1.Firehose
 	forecastConn                     *forecastservice_sdkv1.ForecastService
 	forecastqueryConn                *forecastqueryservice_sdkv1.ForecastQueryService
 	frauddetectorConn                *frauddetector_sdkv1.FraudDetector
 	gameliftConn                     *gamelift_sdkv1.GameLift
-	glacierConn                      *glacier_sdkv1.Glacier
+	glacierClient                    *glacier_sdkv2.Client
 	globalacceleratorConn            *globalaccelerator_sdkv1.GlobalAccelerator
 	glueConn                         *glue_sdkv1.Glue
 	grafanaConn                      *managedgrafana_sdkv1.ManagedGrafana
@@ -632,7 +632,7 @@ type AWSClient struct {
 	ssoadminConn                     *ssoadmin_sdkv1.SSOAdmin
 	ssooidcConn                      *ssooidc_sdkv1.SSOOIDC
 	stsConn                          *sts_sdkv1.STS
-	swfConn                          *swf_sdkv1.SWF
+	swfClient                        *swf_sdkv2.Client
 	sagemakerConn                    *sagemaker_sdkv1.SageMaker
 	sagemakera2iruntimeConn          *augmentedairuntime_sdkv1.AugmentedAIRuntime
 	sagemakeredgeConn                *sagemakeredgemanager_sdkv1.SagemakerEdgeManager
@@ -678,1298 +678,1296 @@ type AWSClient struct {
 	workspacesConn                   *workspaces_sdkv1.WorkSpaces
 	workspaceswebConn                *workspacesweb_sdkv1.WorkSpacesWeb
 	xrayClient                       *xray_sdkv2.Client
-
-	s3ConnURICleaningDisabled *s3_sdkv1.S3
 }
 
-func (c *AWSClient) ACMClient() *acm_sdkv2.Client {
-	return Must(client[*acm_sdkv2.Client](context.TODO(), c, names.ACM))
+func (c *AWSClient) ACMClient(ctx context.Context) *acm_sdkv2.Client {
+	return Must(client[*acm_sdkv2.Client](ctx, c, names.ACM))
 }
 
-func (c *AWSClient) ACMPCAConn() *acmpca_sdkv1.ACMPCA {
-	return Must(conn[*acmpca_sdkv1.ACMPCA](context.TODO(), c, names.ACMPCA))
+func (c *AWSClient) ACMPCAConn(ctx context.Context) *acmpca_sdkv1.ACMPCA {
+	return Must(conn[*acmpca_sdkv1.ACMPCA](ctx, c, names.ACMPCA))
 }
 
-func (c *AWSClient) AMPConn() *prometheusservice_sdkv1.PrometheusService {
-	return Must(conn[*prometheusservice_sdkv1.PrometheusService](context.TODO(), c, names.AMP))
+func (c *AWSClient) AMPConn(ctx context.Context) *prometheusservice_sdkv1.PrometheusService {
+	return Must(conn[*prometheusservice_sdkv1.PrometheusService](ctx, c, names.AMP))
 }
 
-func (c *AWSClient) APIGatewayConn() *apigateway_sdkv1.APIGateway {
-	return Must(conn[*apigateway_sdkv1.APIGateway](context.TODO(), c, names.APIGateway))
+func (c *AWSClient) APIGatewayConn(ctx context.Context) *apigateway_sdkv1.APIGateway {
+	return Must(conn[*apigateway_sdkv1.APIGateway](ctx, c, names.APIGateway))
 }
 
-func (c *AWSClient) APIGatewayManagementAPIConn() *apigatewaymanagementapi_sdkv1.ApiGatewayManagementApi {
-	return Must(conn[*apigatewaymanagementapi_sdkv1.ApiGatewayManagementApi](context.TODO(), c, names.APIGatewayManagementAPI))
+func (c *AWSClient) APIGatewayManagementAPIConn(ctx context.Context) *apigatewaymanagementapi_sdkv1.ApiGatewayManagementApi {
+	return Must(conn[*apigatewaymanagementapi_sdkv1.ApiGatewayManagementApi](ctx, c, names.APIGatewayManagementAPI))
 }
 
-func (c *AWSClient) APIGatewayV2Conn() *apigatewayv2_sdkv1.ApiGatewayV2 {
-	return Must(conn[*apigatewayv2_sdkv1.ApiGatewayV2](context.TODO(), c, names.APIGatewayV2))
+func (c *AWSClient) APIGatewayV2Conn(ctx context.Context) *apigatewayv2_sdkv1.ApiGatewayV2 {
+	return Must(conn[*apigatewayv2_sdkv1.ApiGatewayV2](ctx, c, names.APIGatewayV2))
 }
 
-func (c *AWSClient) AccessAnalyzerClient() *accessanalyzer_sdkv2.Client {
-	return Must(client[*accessanalyzer_sdkv2.Client](context.TODO(), c, names.AccessAnalyzer))
+func (c *AWSClient) AccessAnalyzerClient(ctx context.Context) *accessanalyzer_sdkv2.Client {
+	return Must(client[*accessanalyzer_sdkv2.Client](ctx, c, names.AccessAnalyzer))
 }
 
-func (c *AWSClient) AccountClient() *account_sdkv2.Client {
-	return Must(client[*account_sdkv2.Client](context.TODO(), c, names.Account))
+func (c *AWSClient) AccountClient(ctx context.Context) *account_sdkv2.Client {
+	return Must(client[*account_sdkv2.Client](ctx, c, names.Account))
 }
 
-func (c *AWSClient) AlexaForBusinessConn() *alexaforbusiness_sdkv1.AlexaForBusiness {
-	return Must(conn[*alexaforbusiness_sdkv1.AlexaForBusiness](context.TODO(), c, names.AlexaForBusiness))
+func (c *AWSClient) AlexaForBusinessConn(ctx context.Context) *alexaforbusiness_sdkv1.AlexaForBusiness {
+	return Must(conn[*alexaforbusiness_sdkv1.AlexaForBusiness](ctx, c, names.AlexaForBusiness))
 }
 
-func (c *AWSClient) AmplifyConn() *amplify_sdkv1.Amplify {
-	return Must(conn[*amplify_sdkv1.Amplify](context.TODO(), c, names.Amplify))
+func (c *AWSClient) AmplifyConn(ctx context.Context) *amplify_sdkv1.Amplify {
+	return Must(conn[*amplify_sdkv1.Amplify](ctx, c, names.Amplify))
 }
 
-func (c *AWSClient) AmplifyBackendConn() *amplifybackend_sdkv1.AmplifyBackend {
-	return Must(conn[*amplifybackend_sdkv1.AmplifyBackend](context.TODO(), c, names.AmplifyBackend))
+func (c *AWSClient) AmplifyBackendConn(ctx context.Context) *amplifybackend_sdkv1.AmplifyBackend {
+	return Must(conn[*amplifybackend_sdkv1.AmplifyBackend](ctx, c, names.AmplifyBackend))
 }
 
-func (c *AWSClient) AmplifyUIBuilderConn() *amplifyuibuilder_sdkv1.AmplifyUIBuilder {
-	return Must(conn[*amplifyuibuilder_sdkv1.AmplifyUIBuilder](context.TODO(), c, names.AmplifyUIBuilder))
+func (c *AWSClient) AmplifyUIBuilderConn(ctx context.Context) *amplifyuibuilder_sdkv1.AmplifyUIBuilder {
+	return Must(conn[*amplifyuibuilder_sdkv1.AmplifyUIBuilder](ctx, c, names.AmplifyUIBuilder))
 }
 
-func (c *AWSClient) AppAutoScalingConn() *applicationautoscaling_sdkv1.ApplicationAutoScaling {
-	return Must(conn[*applicationautoscaling_sdkv1.ApplicationAutoScaling](context.TODO(), c, names.AppAutoScaling))
+func (c *AWSClient) AppAutoScalingConn(ctx context.Context) *applicationautoscaling_sdkv1.ApplicationAutoScaling {
+	return Must(conn[*applicationautoscaling_sdkv1.ApplicationAutoScaling](ctx, c, names.AppAutoScaling))
 }
 
-func (c *AWSClient) AppConfigConn() *appconfig_sdkv1.AppConfig {
-	return Must(conn[*appconfig_sdkv1.AppConfig](context.TODO(), c, names.AppConfig))
+func (c *AWSClient) AppConfigConn(ctx context.Context) *appconfig_sdkv1.AppConfig {
+	return Must(conn[*appconfig_sdkv1.AppConfig](ctx, c, names.AppConfig))
 }
 
-func (c *AWSClient) AppConfigDataConn() *appconfigdata_sdkv1.AppConfigData {
-	return Must(conn[*appconfigdata_sdkv1.AppConfigData](context.TODO(), c, names.AppConfigData))
+func (c *AWSClient) AppConfigDataConn(ctx context.Context) *appconfigdata_sdkv1.AppConfigData {
+	return Must(conn[*appconfigdata_sdkv1.AppConfigData](ctx, c, names.AppConfigData))
 }
 
-func (c *AWSClient) AppFlowConn() *appflow_sdkv1.Appflow {
-	return Must(conn[*appflow_sdkv1.Appflow](context.TODO(), c, names.AppFlow))
+func (c *AWSClient) AppFlowConn(ctx context.Context) *appflow_sdkv1.Appflow {
+	return Must(conn[*appflow_sdkv1.Appflow](ctx, c, names.AppFlow))
 }
 
-func (c *AWSClient) AppIntegrationsConn() *appintegrationsservice_sdkv1.AppIntegrationsService {
-	return Must(conn[*appintegrationsservice_sdkv1.AppIntegrationsService](context.TODO(), c, names.AppIntegrations))
+func (c *AWSClient) AppIntegrationsConn(ctx context.Context) *appintegrationsservice_sdkv1.AppIntegrationsService {
+	return Must(conn[*appintegrationsservice_sdkv1.AppIntegrationsService](ctx, c, names.AppIntegrations))
 }
 
-func (c *AWSClient) AppMeshConn() *appmesh_sdkv1.AppMesh {
-	return Must(conn[*appmesh_sdkv1.AppMesh](context.TODO(), c, names.AppMesh))
+func (c *AWSClient) AppMeshConn(ctx context.Context) *appmesh_sdkv1.AppMesh {
+	return Must(conn[*appmesh_sdkv1.AppMesh](ctx, c, names.AppMesh))
 }
 
-func (c *AWSClient) AppRunnerConn() *apprunner_sdkv1.AppRunner {
-	return Must(conn[*apprunner_sdkv1.AppRunner](context.TODO(), c, names.AppRunner))
+func (c *AWSClient) AppRunnerConn(ctx context.Context) *apprunner_sdkv1.AppRunner {
+	return Must(conn[*apprunner_sdkv1.AppRunner](ctx, c, names.AppRunner))
 }
 
-func (c *AWSClient) AppStreamConn() *appstream_sdkv1.AppStream {
-	return Must(conn[*appstream_sdkv1.AppStream](context.TODO(), c, names.AppStream))
+func (c *AWSClient) AppStreamConn(ctx context.Context) *appstream_sdkv1.AppStream {
+	return Must(conn[*appstream_sdkv1.AppStream](ctx, c, names.AppStream))
 }
 
-func (c *AWSClient) AppSyncConn() *appsync_sdkv1.AppSync {
-	return Must(conn[*appsync_sdkv1.AppSync](context.TODO(), c, names.AppSync))
+func (c *AWSClient) AppSyncConn(ctx context.Context) *appsync_sdkv1.AppSync {
+	return Must(conn[*appsync_sdkv1.AppSync](ctx, c, names.AppSync))
 }
 
-func (c *AWSClient) ApplicationCostProfilerConn() *applicationcostprofiler_sdkv1.ApplicationCostProfiler {
-	return Must(conn[*applicationcostprofiler_sdkv1.ApplicationCostProfiler](context.TODO(), c, names.ApplicationCostProfiler))
+func (c *AWSClient) ApplicationCostProfilerConn(ctx context.Context) *applicationcostprofiler_sdkv1.ApplicationCostProfiler {
+	return Must(conn[*applicationcostprofiler_sdkv1.ApplicationCostProfiler](ctx, c, names.ApplicationCostProfiler))
 }
 
-func (c *AWSClient) ApplicationInsightsConn() *applicationinsights_sdkv1.ApplicationInsights {
-	return Must(conn[*applicationinsights_sdkv1.ApplicationInsights](context.TODO(), c, names.ApplicationInsights))
+func (c *AWSClient) ApplicationInsightsConn(ctx context.Context) *applicationinsights_sdkv1.ApplicationInsights {
+	return Must(conn[*applicationinsights_sdkv1.ApplicationInsights](ctx, c, names.ApplicationInsights))
 }
 
-func (c *AWSClient) AthenaConn() *athena_sdkv1.Athena {
-	return Must(conn[*athena_sdkv1.Athena](context.TODO(), c, names.Athena))
+func (c *AWSClient) AthenaConn(ctx context.Context) *athena_sdkv1.Athena {
+	return Must(conn[*athena_sdkv1.Athena](ctx, c, names.Athena))
 }
 
-func (c *AWSClient) AuditManagerClient() *auditmanager_sdkv2.Client {
-	return Must(client[*auditmanager_sdkv2.Client](context.TODO(), c, names.AuditManager))
+func (c *AWSClient) AuditManagerClient(ctx context.Context) *auditmanager_sdkv2.Client {
+	return Must(client[*auditmanager_sdkv2.Client](ctx, c, names.AuditManager))
 }
 
-func (c *AWSClient) AutoScalingConn() *autoscaling_sdkv1.AutoScaling {
-	return Must(conn[*autoscaling_sdkv1.AutoScaling](context.TODO(), c, names.AutoScaling))
+func (c *AWSClient) AutoScalingConn(ctx context.Context) *autoscaling_sdkv1.AutoScaling {
+	return Must(conn[*autoscaling_sdkv1.AutoScaling](ctx, c, names.AutoScaling))
 }
 
-func (c *AWSClient) AutoScalingPlansConn() *autoscalingplans_sdkv1.AutoScalingPlans {
-	return Must(conn[*autoscalingplans_sdkv1.AutoScalingPlans](context.TODO(), c, names.AutoScalingPlans))
+func (c *AWSClient) AutoScalingPlansConn(ctx context.Context) *autoscalingplans_sdkv1.AutoScalingPlans {
+	return Must(conn[*autoscalingplans_sdkv1.AutoScalingPlans](ctx, c, names.AutoScalingPlans))
 }
 
-func (c *AWSClient) BackupConn() *backup_sdkv1.Backup {
-	return Must(conn[*backup_sdkv1.Backup](context.TODO(), c, names.Backup))
+func (c *AWSClient) BackupConn(ctx context.Context) *backup_sdkv1.Backup {
+	return Must(conn[*backup_sdkv1.Backup](ctx, c, names.Backup))
 }
 
-func (c *AWSClient) BackupGatewayConn() *backupgateway_sdkv1.BackupGateway {
-	return Must(conn[*backupgateway_sdkv1.BackupGateway](context.TODO(), c, names.BackupGateway))
+func (c *AWSClient) BackupGatewayConn(ctx context.Context) *backupgateway_sdkv1.BackupGateway {
+	return Must(conn[*backupgateway_sdkv1.BackupGateway](ctx, c, names.BackupGateway))
 }
 
-func (c *AWSClient) BatchConn() *batch_sdkv1.Batch {
-	return Must(conn[*batch_sdkv1.Batch](context.TODO(), c, names.Batch))
+func (c *AWSClient) BatchConn(ctx context.Context) *batch_sdkv1.Batch {
+	return Must(conn[*batch_sdkv1.Batch](ctx, c, names.Batch))
 }
 
-func (c *AWSClient) BillingConductorConn() *billingconductor_sdkv1.BillingConductor {
-	return Must(conn[*billingconductor_sdkv1.BillingConductor](context.TODO(), c, names.BillingConductor))
+func (c *AWSClient) BillingConductorConn(ctx context.Context) *billingconductor_sdkv1.BillingConductor {
+	return Must(conn[*billingconductor_sdkv1.BillingConductor](ctx, c, names.BillingConductor))
 }
 
-func (c *AWSClient) BraketConn() *braket_sdkv1.Braket {
-	return Must(conn[*braket_sdkv1.Braket](context.TODO(), c, names.Braket))
+func (c *AWSClient) BraketConn(ctx context.Context) *braket_sdkv1.Braket {
+	return Must(conn[*braket_sdkv1.Braket](ctx, c, names.Braket))
 }
 
-func (c *AWSClient) BudgetsConn() *budgets_sdkv1.Budgets {
-	return Must(conn[*budgets_sdkv1.Budgets](context.TODO(), c, names.Budgets))
+func (c *AWSClient) BudgetsConn(ctx context.Context) *budgets_sdkv1.Budgets {
+	return Must(conn[*budgets_sdkv1.Budgets](ctx, c, names.Budgets))
 }
 
-func (c *AWSClient) CEConn() *costexplorer_sdkv1.CostExplorer {
-	return Must(conn[*costexplorer_sdkv1.CostExplorer](context.TODO(), c, names.CE))
+func (c *AWSClient) CEConn(ctx context.Context) *costexplorer_sdkv1.CostExplorer {
+	return Must(conn[*costexplorer_sdkv1.CostExplorer](ctx, c, names.CE))
 }
 
-func (c *AWSClient) CURConn() *costandusagereportservice_sdkv1.CostandUsageReportService {
-	return Must(conn[*costandusagereportservice_sdkv1.CostandUsageReportService](context.TODO(), c, names.CUR))
+func (c *AWSClient) CURConn(ctx context.Context) *costandusagereportservice_sdkv1.CostandUsageReportService {
+	return Must(conn[*costandusagereportservice_sdkv1.CostandUsageReportService](ctx, c, names.CUR))
 }
 
-func (c *AWSClient) ChimeConn() *chime_sdkv1.Chime {
-	return Must(conn[*chime_sdkv1.Chime](context.TODO(), c, names.Chime))
+func (c *AWSClient) ChimeConn(ctx context.Context) *chime_sdkv1.Chime {
+	return Must(conn[*chime_sdkv1.Chime](ctx, c, names.Chime))
 }
 
-func (c *AWSClient) ChimeSDKIdentityConn() *chimesdkidentity_sdkv1.ChimeSDKIdentity {
-	return Must(conn[*chimesdkidentity_sdkv1.ChimeSDKIdentity](context.TODO(), c, names.ChimeSDKIdentity))
+func (c *AWSClient) ChimeSDKIdentityConn(ctx context.Context) *chimesdkidentity_sdkv1.ChimeSDKIdentity {
+	return Must(conn[*chimesdkidentity_sdkv1.ChimeSDKIdentity](ctx, c, names.ChimeSDKIdentity))
 }
 
-func (c *AWSClient) ChimeSDKMediaPipelinesConn() *chimesdkmediapipelines_sdkv1.ChimeSDKMediaPipelines {
-	return Must(conn[*chimesdkmediapipelines_sdkv1.ChimeSDKMediaPipelines](context.TODO(), c, names.ChimeSDKMediaPipelines))
+func (c *AWSClient) ChimeSDKMediaPipelinesConn(ctx context.Context) *chimesdkmediapipelines_sdkv1.ChimeSDKMediaPipelines {
+	return Must(conn[*chimesdkmediapipelines_sdkv1.ChimeSDKMediaPipelines](ctx, c, names.ChimeSDKMediaPipelines))
 }
 
-func (c *AWSClient) ChimeSDKMeetingsConn() *chimesdkmeetings_sdkv1.ChimeSDKMeetings {
-	return Must(conn[*chimesdkmeetings_sdkv1.ChimeSDKMeetings](context.TODO(), c, names.ChimeSDKMeetings))
+func (c *AWSClient) ChimeSDKMeetingsConn(ctx context.Context) *chimesdkmeetings_sdkv1.ChimeSDKMeetings {
+	return Must(conn[*chimesdkmeetings_sdkv1.ChimeSDKMeetings](ctx, c, names.ChimeSDKMeetings))
 }
 
-func (c *AWSClient) ChimeSDKMessagingConn() *chimesdkmessaging_sdkv1.ChimeSDKMessaging {
-	return Must(conn[*chimesdkmessaging_sdkv1.ChimeSDKMessaging](context.TODO(), c, names.ChimeSDKMessaging))
+func (c *AWSClient) ChimeSDKMessagingConn(ctx context.Context) *chimesdkmessaging_sdkv1.ChimeSDKMessaging {
+	return Must(conn[*chimesdkmessaging_sdkv1.ChimeSDKMessaging](ctx, c, names.ChimeSDKMessaging))
 }
 
-func (c *AWSClient) ChimeSDKVoiceConn() *chimesdkvoice_sdkv1.ChimeSDKVoice {
-	return Must(conn[*chimesdkvoice_sdkv1.ChimeSDKVoice](context.TODO(), c, names.ChimeSDKVoice))
+func (c *AWSClient) ChimeSDKVoiceConn(ctx context.Context) *chimesdkvoice_sdkv1.ChimeSDKVoice {
+	return Must(conn[*chimesdkvoice_sdkv1.ChimeSDKVoice](ctx, c, names.ChimeSDKVoice))
 }
 
-func (c *AWSClient) CleanRoomsClient() *cleanrooms_sdkv2.Client {
-	return Must(client[*cleanrooms_sdkv2.Client](context.TODO(), c, names.CleanRooms))
+func (c *AWSClient) CleanRoomsClient(ctx context.Context) *cleanrooms_sdkv2.Client {
+	return Must(client[*cleanrooms_sdkv2.Client](ctx, c, names.CleanRooms))
 }
 
-func (c *AWSClient) Cloud9Conn() *cloud9_sdkv1.Cloud9 {
-	return Must(conn[*cloud9_sdkv1.Cloud9](context.TODO(), c, names.Cloud9))
+func (c *AWSClient) Cloud9Conn(ctx context.Context) *cloud9_sdkv1.Cloud9 {
+	return Must(conn[*cloud9_sdkv1.Cloud9](ctx, c, names.Cloud9))
 }
 
-func (c *AWSClient) CloudControlClient() *cloudcontrol_sdkv2.Client {
-	return Must(client[*cloudcontrol_sdkv2.Client](context.TODO(), c, names.CloudControl))
+func (c *AWSClient) CloudControlClient(ctx context.Context) *cloudcontrol_sdkv2.Client {
+	return Must(client[*cloudcontrol_sdkv2.Client](ctx, c, names.CloudControl))
 }
 
-func (c *AWSClient) CloudDirectoryConn() *clouddirectory_sdkv1.CloudDirectory {
-	return Must(conn[*clouddirectory_sdkv1.CloudDirectory](context.TODO(), c, names.CloudDirectory))
+func (c *AWSClient) CloudDirectoryConn(ctx context.Context) *clouddirectory_sdkv1.CloudDirectory {
+	return Must(conn[*clouddirectory_sdkv1.CloudDirectory](ctx, c, names.CloudDirectory))
 }
 
-func (c *AWSClient) CloudFormationConn() *cloudformation_sdkv1.CloudFormation {
-	return Must(conn[*cloudformation_sdkv1.CloudFormation](context.TODO(), c, names.CloudFormation))
+func (c *AWSClient) CloudFormationConn(ctx context.Context) *cloudformation_sdkv1.CloudFormation {
+	return Must(conn[*cloudformation_sdkv1.CloudFormation](ctx, c, names.CloudFormation))
 }
 
-func (c *AWSClient) CloudFrontConn() *cloudfront_sdkv1.CloudFront {
-	return Must(conn[*cloudfront_sdkv1.CloudFront](context.TODO(), c, names.CloudFront))
+func (c *AWSClient) CloudFrontConn(ctx context.Context) *cloudfront_sdkv1.CloudFront {
+	return Must(conn[*cloudfront_sdkv1.CloudFront](ctx, c, names.CloudFront))
 }
 
-func (c *AWSClient) CloudHSMV2Conn() *cloudhsmv2_sdkv1.CloudHSMV2 {
-	return Must(conn[*cloudhsmv2_sdkv1.CloudHSMV2](context.TODO(), c, names.CloudHSMV2))
+func (c *AWSClient) CloudHSMV2Conn(ctx context.Context) *cloudhsmv2_sdkv1.CloudHSMV2 {
+	return Must(conn[*cloudhsmv2_sdkv1.CloudHSMV2](ctx, c, names.CloudHSMV2))
 }
 
-func (c *AWSClient) CloudSearchConn() *cloudsearch_sdkv1.CloudSearch {
-	return Must(conn[*cloudsearch_sdkv1.CloudSearch](context.TODO(), c, names.CloudSearch))
+func (c *AWSClient) CloudSearchConn(ctx context.Context) *cloudsearch_sdkv1.CloudSearch {
+	return Must(conn[*cloudsearch_sdkv1.CloudSearch](ctx, c, names.CloudSearch))
 }
 
-func (c *AWSClient) CloudSearchDomainConn() *cloudsearchdomain_sdkv1.CloudSearchDomain {
-	return Must(conn[*cloudsearchdomain_sdkv1.CloudSearchDomain](context.TODO(), c, names.CloudSearchDomain))
+func (c *AWSClient) CloudSearchDomainConn(ctx context.Context) *cloudsearchdomain_sdkv1.CloudSearchDomain {
+	return Must(conn[*cloudsearchdomain_sdkv1.CloudSearchDomain](ctx, c, names.CloudSearchDomain))
 }
 
-func (c *AWSClient) CloudTrailConn() *cloudtrail_sdkv1.CloudTrail {
-	return Must(conn[*cloudtrail_sdkv1.CloudTrail](context.TODO(), c, names.CloudTrail))
+func (c *AWSClient) CloudTrailConn(ctx context.Context) *cloudtrail_sdkv1.CloudTrail {
+	return Must(conn[*cloudtrail_sdkv1.CloudTrail](ctx, c, names.CloudTrail))
 }
 
-func (c *AWSClient) CloudWatchConn() *cloudwatch_sdkv1.CloudWatch {
-	return Must(conn[*cloudwatch_sdkv1.CloudWatch](context.TODO(), c, names.CloudWatch))
+func (c *AWSClient) CloudWatchConn(ctx context.Context) *cloudwatch_sdkv1.CloudWatch {
+	return Must(conn[*cloudwatch_sdkv1.CloudWatch](ctx, c, names.CloudWatch))
 }
 
-func (c *AWSClient) CodeArtifactConn() *codeartifact_sdkv1.CodeArtifact {
-	return Must(conn[*codeartifact_sdkv1.CodeArtifact](context.TODO(), c, names.CodeArtifact))
+func (c *AWSClient) CodeArtifactConn(ctx context.Context) *codeartifact_sdkv1.CodeArtifact {
+	return Must(conn[*codeartifact_sdkv1.CodeArtifact](ctx, c, names.CodeArtifact))
 }
 
-func (c *AWSClient) CodeBuildConn() *codebuild_sdkv1.CodeBuild {
-	return Must(conn[*codebuild_sdkv1.CodeBuild](context.TODO(), c, names.CodeBuild))
+func (c *AWSClient) CodeBuildConn(ctx context.Context) *codebuild_sdkv1.CodeBuild {
+	return Must(conn[*codebuild_sdkv1.CodeBuild](ctx, c, names.CodeBuild))
 }
 
-func (c *AWSClient) CodeCommitConn() *codecommit_sdkv1.CodeCommit {
-	return Must(conn[*codecommit_sdkv1.CodeCommit](context.TODO(), c, names.CodeCommit))
+func (c *AWSClient) CodeCommitConn(ctx context.Context) *codecommit_sdkv1.CodeCommit {
+	return Must(conn[*codecommit_sdkv1.CodeCommit](ctx, c, names.CodeCommit))
 }
 
-func (c *AWSClient) CodeGuruProfilerConn() *codeguruprofiler_sdkv1.CodeGuruProfiler {
-	return Must(conn[*codeguruprofiler_sdkv1.CodeGuruProfiler](context.TODO(), c, names.CodeGuruProfiler))
+func (c *AWSClient) CodeGuruProfilerConn(ctx context.Context) *codeguruprofiler_sdkv1.CodeGuruProfiler {
+	return Must(conn[*codeguruprofiler_sdkv1.CodeGuruProfiler](ctx, c, names.CodeGuruProfiler))
 }
 
-func (c *AWSClient) CodeGuruReviewerConn() *codegurureviewer_sdkv1.CodeGuruReviewer {
-	return Must(conn[*codegurureviewer_sdkv1.CodeGuruReviewer](context.TODO(), c, names.CodeGuruReviewer))
+func (c *AWSClient) CodeGuruReviewerConn(ctx context.Context) *codegurureviewer_sdkv1.CodeGuruReviewer {
+	return Must(conn[*codegurureviewer_sdkv1.CodeGuruReviewer](ctx, c, names.CodeGuruReviewer))
 }
 
-func (c *AWSClient) CodePipelineConn() *codepipeline_sdkv1.CodePipeline {
-	return Must(conn[*codepipeline_sdkv1.CodePipeline](context.TODO(), c, names.CodePipeline))
+func (c *AWSClient) CodePipelineConn(ctx context.Context) *codepipeline_sdkv1.CodePipeline {
+	return Must(conn[*codepipeline_sdkv1.CodePipeline](ctx, c, names.CodePipeline))
 }
 
-func (c *AWSClient) CodeStarConn() *codestar_sdkv1.CodeStar {
-	return Must(conn[*codestar_sdkv1.CodeStar](context.TODO(), c, names.CodeStar))
+func (c *AWSClient) CodeStarConn(ctx context.Context) *codestar_sdkv1.CodeStar {
+	return Must(conn[*codestar_sdkv1.CodeStar](ctx, c, names.CodeStar))
 }
 
-func (c *AWSClient) CodeStarConnectionsConn() *codestarconnections_sdkv1.CodeStarConnections {
-	return Must(conn[*codestarconnections_sdkv1.CodeStarConnections](context.TODO(), c, names.CodeStarConnections))
+func (c *AWSClient) CodeStarConnectionsConn(ctx context.Context) *codestarconnections_sdkv1.CodeStarConnections {
+	return Must(conn[*codestarconnections_sdkv1.CodeStarConnections](ctx, c, names.CodeStarConnections))
 }
 
-func (c *AWSClient) CodeStarNotificationsConn() *codestarnotifications_sdkv1.CodeStarNotifications {
-	return Must(conn[*codestarnotifications_sdkv1.CodeStarNotifications](context.TODO(), c, names.CodeStarNotifications))
+func (c *AWSClient) CodeStarNotificationsConn(ctx context.Context) *codestarnotifications_sdkv1.CodeStarNotifications {
+	return Must(conn[*codestarnotifications_sdkv1.CodeStarNotifications](ctx, c, names.CodeStarNotifications))
 }
 
-func (c *AWSClient) CognitoIDPConn() *cognitoidentityprovider_sdkv1.CognitoIdentityProvider {
-	return Must(conn[*cognitoidentityprovider_sdkv1.CognitoIdentityProvider](context.TODO(), c, names.CognitoIDP))
+func (c *AWSClient) CognitoIDPConn(ctx context.Context) *cognitoidentityprovider_sdkv1.CognitoIdentityProvider {
+	return Must(conn[*cognitoidentityprovider_sdkv1.CognitoIdentityProvider](ctx, c, names.CognitoIDP))
 }
 
-func (c *AWSClient) CognitoIdentityConn() *cognitoidentity_sdkv1.CognitoIdentity {
-	return Must(conn[*cognitoidentity_sdkv1.CognitoIdentity](context.TODO(), c, names.CognitoIdentity))
+func (c *AWSClient) CognitoIdentityConn(ctx context.Context) *cognitoidentity_sdkv1.CognitoIdentity {
+	return Must(conn[*cognitoidentity_sdkv1.CognitoIdentity](ctx, c, names.CognitoIdentity))
 }
 
-func (c *AWSClient) CognitoSyncConn() *cognitosync_sdkv1.CognitoSync {
-	return Must(conn[*cognitosync_sdkv1.CognitoSync](context.TODO(), c, names.CognitoSync))
+func (c *AWSClient) CognitoSyncConn(ctx context.Context) *cognitosync_sdkv1.CognitoSync {
+	return Must(conn[*cognitosync_sdkv1.CognitoSync](ctx, c, names.CognitoSync))
 }
 
-func (c *AWSClient) ComprehendClient() *comprehend_sdkv2.Client {
-	return Must(client[*comprehend_sdkv2.Client](context.TODO(), c, names.Comprehend))
+func (c *AWSClient) ComprehendClient(ctx context.Context) *comprehend_sdkv2.Client {
+	return Must(client[*comprehend_sdkv2.Client](ctx, c, names.Comprehend))
 }
 
-func (c *AWSClient) ComprehendMedicalConn() *comprehendmedical_sdkv1.ComprehendMedical {
-	return Must(conn[*comprehendmedical_sdkv1.ComprehendMedical](context.TODO(), c, names.ComprehendMedical))
+func (c *AWSClient) ComprehendMedicalConn(ctx context.Context) *comprehendmedical_sdkv1.ComprehendMedical {
+	return Must(conn[*comprehendmedical_sdkv1.ComprehendMedical](ctx, c, names.ComprehendMedical))
 }
 
-func (c *AWSClient) ComputeOptimizerClient() *computeoptimizer_sdkv2.Client {
-	return Must(client[*computeoptimizer_sdkv2.Client](context.TODO(), c, names.ComputeOptimizer))
+func (c *AWSClient) ComputeOptimizerClient(ctx context.Context) *computeoptimizer_sdkv2.Client {
+	return Must(client[*computeoptimizer_sdkv2.Client](ctx, c, names.ComputeOptimizer))
 }
 
-func (c *AWSClient) ConfigServiceConn() *configservice_sdkv1.ConfigService {
-	return Must(conn[*configservice_sdkv1.ConfigService](context.TODO(), c, names.ConfigService))
+func (c *AWSClient) ConfigServiceConn(ctx context.Context) *configservice_sdkv1.ConfigService {
+	return Must(conn[*configservice_sdkv1.ConfigService](ctx, c, names.ConfigService))
 }
 
-func (c *AWSClient) ConnectConn() *connect_sdkv1.Connect {
-	return Must(conn[*connect_sdkv1.Connect](context.TODO(), c, names.Connect))
+func (c *AWSClient) ConnectConn(ctx context.Context) *connect_sdkv1.Connect {
+	return Must(conn[*connect_sdkv1.Connect](ctx, c, names.Connect))
 }
 
-func (c *AWSClient) ConnectContactLensConn() *connectcontactlens_sdkv1.ConnectContactLens {
-	return Must(conn[*connectcontactlens_sdkv1.ConnectContactLens](context.TODO(), c, names.ConnectContactLens))
+func (c *AWSClient) ConnectContactLensConn(ctx context.Context) *connectcontactlens_sdkv1.ConnectContactLens {
+	return Must(conn[*connectcontactlens_sdkv1.ConnectContactLens](ctx, c, names.ConnectContactLens))
 }
 
-func (c *AWSClient) ConnectParticipantConn() *connectparticipant_sdkv1.ConnectParticipant {
-	return Must(conn[*connectparticipant_sdkv1.ConnectParticipant](context.TODO(), c, names.ConnectParticipant))
+func (c *AWSClient) ConnectParticipantConn(ctx context.Context) *connectparticipant_sdkv1.ConnectParticipant {
+	return Must(conn[*connectparticipant_sdkv1.ConnectParticipant](ctx, c, names.ConnectParticipant))
 }
 
-func (c *AWSClient) ControlTowerConn() *controltower_sdkv1.ControlTower {
-	return Must(conn[*controltower_sdkv1.ControlTower](context.TODO(), c, names.ControlTower))
+func (c *AWSClient) ControlTowerConn(ctx context.Context) *controltower_sdkv1.ControlTower {
+	return Must(conn[*controltower_sdkv1.ControlTower](ctx, c, names.ControlTower))
 }
 
-func (c *AWSClient) CustomerProfilesConn() *customerprofiles_sdkv1.CustomerProfiles {
-	return Must(conn[*customerprofiles_sdkv1.CustomerProfiles](context.TODO(), c, names.CustomerProfiles))
+func (c *AWSClient) CustomerProfilesConn(ctx context.Context) *customerprofiles_sdkv1.CustomerProfiles {
+	return Must(conn[*customerprofiles_sdkv1.CustomerProfiles](ctx, c, names.CustomerProfiles))
 }
 
-func (c *AWSClient) DAXConn() *dax_sdkv1.DAX {
-	return Must(conn[*dax_sdkv1.DAX](context.TODO(), c, names.DAX))
+func (c *AWSClient) DAXConn(ctx context.Context) *dax_sdkv1.DAX {
+	return Must(conn[*dax_sdkv1.DAX](ctx, c, names.DAX))
 }
 
-func (c *AWSClient) DLMConn() *dlm_sdkv1.DLM {
-	return Must(conn[*dlm_sdkv1.DLM](context.TODO(), c, names.DLM))
+func (c *AWSClient) DLMConn(ctx context.Context) *dlm_sdkv1.DLM {
+	return Must(conn[*dlm_sdkv1.DLM](ctx, c, names.DLM))
 }
 
-func (c *AWSClient) DMSConn() *databasemigrationservice_sdkv1.DatabaseMigrationService {
-	return Must(conn[*databasemigrationservice_sdkv1.DatabaseMigrationService](context.TODO(), c, names.DMS))
+func (c *AWSClient) DMSConn(ctx context.Context) *databasemigrationservice_sdkv1.DatabaseMigrationService {
+	return Must(conn[*databasemigrationservice_sdkv1.DatabaseMigrationService](ctx, c, names.DMS))
 }
 
-func (c *AWSClient) DRSConn() *drs_sdkv1.Drs {
-	return Must(conn[*drs_sdkv1.Drs](context.TODO(), c, names.DRS))
+func (c *AWSClient) DRSConn(ctx context.Context) *drs_sdkv1.Drs {
+	return Must(conn[*drs_sdkv1.Drs](ctx, c, names.DRS))
 }
 
-func (c *AWSClient) DSConn() *directoryservice_sdkv1.DirectoryService {
-	return Must(conn[*directoryservice_sdkv1.DirectoryService](context.TODO(), c, names.DS))
+func (c *AWSClient) DSConn(ctx context.Context) *directoryservice_sdkv1.DirectoryService {
+	return Must(conn[*directoryservice_sdkv1.DirectoryService](ctx, c, names.DS))
 }
 
-func (c *AWSClient) DSClient() *directoryservice_sdkv2.Client {
-	return Must(client[*directoryservice_sdkv2.Client](context.TODO(), c, names.DS))
+func (c *AWSClient) DSClient(ctx context.Context) *directoryservice_sdkv2.Client {
+	return Must(client[*directoryservice_sdkv2.Client](ctx, c, names.DS))
 }
 
-func (c *AWSClient) DataBrewConn() *gluedatabrew_sdkv1.GlueDataBrew {
-	return Must(conn[*gluedatabrew_sdkv1.GlueDataBrew](context.TODO(), c, names.DataBrew))
+func (c *AWSClient) DataBrewConn(ctx context.Context) *gluedatabrew_sdkv1.GlueDataBrew {
+	return Must(conn[*gluedatabrew_sdkv1.GlueDataBrew](ctx, c, names.DataBrew))
 }
 
-func (c *AWSClient) DataExchangeConn() *dataexchange_sdkv1.DataExchange {
-	return Must(conn[*dataexchange_sdkv1.DataExchange](context.TODO(), c, names.DataExchange))
+func (c *AWSClient) DataExchangeConn(ctx context.Context) *dataexchange_sdkv1.DataExchange {
+	return Must(conn[*dataexchange_sdkv1.DataExchange](ctx, c, names.DataExchange))
 }
 
-func (c *AWSClient) DataPipelineConn() *datapipeline_sdkv1.DataPipeline {
-	return Must(conn[*datapipeline_sdkv1.DataPipeline](context.TODO(), c, names.DataPipeline))
+func (c *AWSClient) DataPipelineConn(ctx context.Context) *datapipeline_sdkv1.DataPipeline {
+	return Must(conn[*datapipeline_sdkv1.DataPipeline](ctx, c, names.DataPipeline))
 }
 
-func (c *AWSClient) DataSyncConn() *datasync_sdkv1.DataSync {
-	return Must(conn[*datasync_sdkv1.DataSync](context.TODO(), c, names.DataSync))
+func (c *AWSClient) DataSyncConn(ctx context.Context) *datasync_sdkv1.DataSync {
+	return Must(conn[*datasync_sdkv1.DataSync](ctx, c, names.DataSync))
 }
 
-func (c *AWSClient) DeployConn() *codedeploy_sdkv1.CodeDeploy {
-	return Must(conn[*codedeploy_sdkv1.CodeDeploy](context.TODO(), c, names.Deploy))
+func (c *AWSClient) DeployConn(ctx context.Context) *codedeploy_sdkv1.CodeDeploy {
+	return Must(conn[*codedeploy_sdkv1.CodeDeploy](ctx, c, names.Deploy))
 }
 
-func (c *AWSClient) DetectiveConn() *detective_sdkv1.Detective {
-	return Must(conn[*detective_sdkv1.Detective](context.TODO(), c, names.Detective))
+func (c *AWSClient) DetectiveConn(ctx context.Context) *detective_sdkv1.Detective {
+	return Must(conn[*detective_sdkv1.Detective](ctx, c, names.Detective))
 }
 
-func (c *AWSClient) DevOpsGuruConn() *devopsguru_sdkv1.DevOpsGuru {
-	return Must(conn[*devopsguru_sdkv1.DevOpsGuru](context.TODO(), c, names.DevOpsGuru))
+func (c *AWSClient) DevOpsGuruConn(ctx context.Context) *devopsguru_sdkv1.DevOpsGuru {
+	return Must(conn[*devopsguru_sdkv1.DevOpsGuru](ctx, c, names.DevOpsGuru))
 }
 
-func (c *AWSClient) DeviceFarmConn() *devicefarm_sdkv1.DeviceFarm {
-	return Must(conn[*devicefarm_sdkv1.DeviceFarm](context.TODO(), c, names.DeviceFarm))
+func (c *AWSClient) DeviceFarmConn(ctx context.Context) *devicefarm_sdkv1.DeviceFarm {
+	return Must(conn[*devicefarm_sdkv1.DeviceFarm](ctx, c, names.DeviceFarm))
 }
 
-func (c *AWSClient) DirectConnectConn() *directconnect_sdkv1.DirectConnect {
-	return Must(conn[*directconnect_sdkv1.DirectConnect](context.TODO(), c, names.DirectConnect))
+func (c *AWSClient) DirectConnectConn(ctx context.Context) *directconnect_sdkv1.DirectConnect {
+	return Must(conn[*directconnect_sdkv1.DirectConnect](ctx, c, names.DirectConnect))
 }
 
-func (c *AWSClient) DiscoveryConn() *applicationdiscoveryservice_sdkv1.ApplicationDiscoveryService {
-	return Must(conn[*applicationdiscoveryservice_sdkv1.ApplicationDiscoveryService](context.TODO(), c, names.Discovery))
+func (c *AWSClient) DiscoveryConn(ctx context.Context) *applicationdiscoveryservice_sdkv1.ApplicationDiscoveryService {
+	return Must(conn[*applicationdiscoveryservice_sdkv1.ApplicationDiscoveryService](ctx, c, names.Discovery))
 }
 
-func (c *AWSClient) DocDBConn() *docdb_sdkv1.DocDB {
-	return Must(conn[*docdb_sdkv1.DocDB](context.TODO(), c, names.DocDB))
+func (c *AWSClient) DocDBConn(ctx context.Context) *docdb_sdkv1.DocDB {
+	return Must(conn[*docdb_sdkv1.DocDB](ctx, c, names.DocDB))
 }
 
-func (c *AWSClient) DocDBElasticClient() *docdbelastic_sdkv2.Client {
-	return Must(client[*docdbelastic_sdkv2.Client](context.TODO(), c, names.DocDBElastic))
+func (c *AWSClient) DocDBElasticClient(ctx context.Context) *docdbelastic_sdkv2.Client {
+	return Must(client[*docdbelastic_sdkv2.Client](ctx, c, names.DocDBElastic))
 }
 
-func (c *AWSClient) DynamoDBConn() *dynamodb_sdkv1.DynamoDB {
-	return Must(conn[*dynamodb_sdkv1.DynamoDB](context.TODO(), c, names.DynamoDB))
+func (c *AWSClient) DynamoDBConn(ctx context.Context) *dynamodb_sdkv1.DynamoDB {
+	return Must(conn[*dynamodb_sdkv1.DynamoDB](ctx, c, names.DynamoDB))
 }
 
-func (c *AWSClient) DynamoDBStreamsConn() *dynamodbstreams_sdkv1.DynamoDBStreams {
-	return Must(conn[*dynamodbstreams_sdkv1.DynamoDBStreams](context.TODO(), c, names.DynamoDBStreams))
+func (c *AWSClient) DynamoDBStreamsConn(ctx context.Context) *dynamodbstreams_sdkv1.DynamoDBStreams {
+	return Must(conn[*dynamodbstreams_sdkv1.DynamoDBStreams](ctx, c, names.DynamoDBStreams))
 }
 
-func (c *AWSClient) EBSConn() *ebs_sdkv1.EBS {
-	return Must(conn[*ebs_sdkv1.EBS](context.TODO(), c, names.EBS))
+func (c *AWSClient) EBSConn(ctx context.Context) *ebs_sdkv1.EBS {
+	return Must(conn[*ebs_sdkv1.EBS](ctx, c, names.EBS))
 }
 
-func (c *AWSClient) EC2Conn() *ec2_sdkv1.EC2 {
-	return Must(conn[*ec2_sdkv1.EC2](context.TODO(), c, names.EC2))
+func (c *AWSClient) EC2Conn(ctx context.Context) *ec2_sdkv1.EC2 {
+	return Must(conn[*ec2_sdkv1.EC2](ctx, c, names.EC2))
 }
 
-func (c *AWSClient) EC2Client() *ec2_sdkv2.Client {
-	return Must(client[*ec2_sdkv2.Client](context.TODO(), c, names.EC2))
+func (c *AWSClient) EC2Client(ctx context.Context) *ec2_sdkv2.Client {
+	return Must(client[*ec2_sdkv2.Client](ctx, c, names.EC2))
 }
 
-func (c *AWSClient) EC2InstanceConnectConn() *ec2instanceconnect_sdkv1.EC2InstanceConnect {
-	return Must(conn[*ec2instanceconnect_sdkv1.EC2InstanceConnect](context.TODO(), c, names.EC2InstanceConnect))
+func (c *AWSClient) EC2InstanceConnectConn(ctx context.Context) *ec2instanceconnect_sdkv1.EC2InstanceConnect {
+	return Must(conn[*ec2instanceconnect_sdkv1.EC2InstanceConnect](ctx, c, names.EC2InstanceConnect))
 }
 
-func (c *AWSClient) ECRConn() *ecr_sdkv1.ECR {
-	return Must(conn[*ecr_sdkv1.ECR](context.TODO(), c, names.ECR))
+func (c *AWSClient) ECRConn(ctx context.Context) *ecr_sdkv1.ECR {
+	return Must(conn[*ecr_sdkv1.ECR](ctx, c, names.ECR))
 }
 
-func (c *AWSClient) ECRPublicConn() *ecrpublic_sdkv1.ECRPublic {
-	return Must(conn[*ecrpublic_sdkv1.ECRPublic](context.TODO(), c, names.ECRPublic))
+func (c *AWSClient) ECRPublicConn(ctx context.Context) *ecrpublic_sdkv1.ECRPublic {
+	return Must(conn[*ecrpublic_sdkv1.ECRPublic](ctx, c, names.ECRPublic))
 }
 
-func (c *AWSClient) ECSConn() *ecs_sdkv1.ECS {
-	return Must(conn[*ecs_sdkv1.ECS](context.TODO(), c, names.ECS))
+func (c *AWSClient) ECSConn(ctx context.Context) *ecs_sdkv1.ECS {
+	return Must(conn[*ecs_sdkv1.ECS](ctx, c, names.ECS))
 }
 
-func (c *AWSClient) EFSConn() *efs_sdkv1.EFS {
-	return Must(conn[*efs_sdkv1.EFS](context.TODO(), c, names.EFS))
+func (c *AWSClient) EFSConn(ctx context.Context) *efs_sdkv1.EFS {
+	return Must(conn[*efs_sdkv1.EFS](ctx, c, names.EFS))
 }
 
-func (c *AWSClient) EKSConn() *eks_sdkv1.EKS {
-	return Must(conn[*eks_sdkv1.EKS](context.TODO(), c, names.EKS))
+func (c *AWSClient) EKSConn(ctx context.Context) *eks_sdkv1.EKS {
+	return Must(conn[*eks_sdkv1.EKS](ctx, c, names.EKS))
 }
 
-func (c *AWSClient) ELBConn() *elb_sdkv1.ELB {
-	return Must(conn[*elb_sdkv1.ELB](context.TODO(), c, names.ELB))
+func (c *AWSClient) ELBConn(ctx context.Context) *elb_sdkv1.ELB {
+	return Must(conn[*elb_sdkv1.ELB](ctx, c, names.ELB))
 }
 
-func (c *AWSClient) ELBV2Conn() *elbv2_sdkv1.ELBV2 {
-	return Must(conn[*elbv2_sdkv1.ELBV2](context.TODO(), c, names.ELBV2))
+func (c *AWSClient) ELBV2Conn(ctx context.Context) *elbv2_sdkv1.ELBV2 {
+	return Must(conn[*elbv2_sdkv1.ELBV2](ctx, c, names.ELBV2))
 }
 
-func (c *AWSClient) EMRConn() *emr_sdkv1.EMR {
-	return Must(conn[*emr_sdkv1.EMR](context.TODO(), c, names.EMR))
+func (c *AWSClient) EMRConn(ctx context.Context) *emr_sdkv1.EMR {
+	return Must(conn[*emr_sdkv1.EMR](ctx, c, names.EMR))
 }
 
-func (c *AWSClient) EMRContainersConn() *emrcontainers_sdkv1.EMRContainers {
-	return Must(conn[*emrcontainers_sdkv1.EMRContainers](context.TODO(), c, names.EMRContainers))
+func (c *AWSClient) EMRContainersConn(ctx context.Context) *emrcontainers_sdkv1.EMRContainers {
+	return Must(conn[*emrcontainers_sdkv1.EMRContainers](ctx, c, names.EMRContainers))
 }
 
-func (c *AWSClient) EMRServerlessConn() *emrserverless_sdkv1.EMRServerless {
-	return Must(conn[*emrserverless_sdkv1.EMRServerless](context.TODO(), c, names.EMRServerless))
+func (c *AWSClient) EMRServerlessConn(ctx context.Context) *emrserverless_sdkv1.EMRServerless {
+	return Must(conn[*emrserverless_sdkv1.EMRServerless](ctx, c, names.EMRServerless))
 }
 
-func (c *AWSClient) ElastiCacheConn() *elasticache_sdkv1.ElastiCache {
-	return Must(conn[*elasticache_sdkv1.ElastiCache](context.TODO(), c, names.ElastiCache))
+func (c *AWSClient) ElastiCacheConn(ctx context.Context) *elasticache_sdkv1.ElastiCache {
+	return Must(conn[*elasticache_sdkv1.ElastiCache](ctx, c, names.ElastiCache))
 }
 
-func (c *AWSClient) ElasticBeanstalkConn() *elasticbeanstalk_sdkv1.ElasticBeanstalk {
-	return Must(conn[*elasticbeanstalk_sdkv1.ElasticBeanstalk](context.TODO(), c, names.ElasticBeanstalk))
+func (c *AWSClient) ElasticBeanstalkConn(ctx context.Context) *elasticbeanstalk_sdkv1.ElasticBeanstalk {
+	return Must(conn[*elasticbeanstalk_sdkv1.ElasticBeanstalk](ctx, c, names.ElasticBeanstalk))
 }
 
-func (c *AWSClient) ElasticInferenceConn() *elasticinference_sdkv1.ElasticInference {
-	return Must(conn[*elasticinference_sdkv1.ElasticInference](context.TODO(), c, names.ElasticInference))
+func (c *AWSClient) ElasticInferenceConn(ctx context.Context) *elasticinference_sdkv1.ElasticInference {
+	return Must(conn[*elasticinference_sdkv1.ElasticInference](ctx, c, names.ElasticInference))
 }
 
-func (c *AWSClient) ElasticTranscoderConn() *elastictranscoder_sdkv1.ElasticTranscoder {
-	return Must(conn[*elastictranscoder_sdkv1.ElasticTranscoder](context.TODO(), c, names.ElasticTranscoder))
+func (c *AWSClient) ElasticTranscoderConn(ctx context.Context) *elastictranscoder_sdkv1.ElasticTranscoder {
+	return Must(conn[*elastictranscoder_sdkv1.ElasticTranscoder](ctx, c, names.ElasticTranscoder))
 }
 
-func (c *AWSClient) ElasticsearchConn() *elasticsearchservice_sdkv1.ElasticsearchService {
-	return Must(conn[*elasticsearchservice_sdkv1.ElasticsearchService](context.TODO(), c, names.Elasticsearch))
+func (c *AWSClient) ElasticsearchConn(ctx context.Context) *elasticsearchservice_sdkv1.ElasticsearchService {
+	return Must(conn[*elasticsearchservice_sdkv1.ElasticsearchService](ctx, c, names.Elasticsearch))
 }
 
-func (c *AWSClient) EventsConn() *eventbridge_sdkv1.EventBridge {
-	return Must(conn[*eventbridge_sdkv1.EventBridge](context.TODO(), c, names.Events))
+func (c *AWSClient) EventsConn(ctx context.Context) *eventbridge_sdkv1.EventBridge {
+	return Must(conn[*eventbridge_sdkv1.EventBridge](ctx, c, names.Events))
 }
 
-func (c *AWSClient) EvidentlyConn() *cloudwatchevidently_sdkv1.CloudWatchEvidently {
-	return Must(conn[*cloudwatchevidently_sdkv1.CloudWatchEvidently](context.TODO(), c, names.Evidently))
+func (c *AWSClient) EvidentlyConn(ctx context.Context) *cloudwatchevidently_sdkv1.CloudWatchEvidently {
+	return Must(conn[*cloudwatchevidently_sdkv1.CloudWatchEvidently](ctx, c, names.Evidently))
 }
 
-func (c *AWSClient) FISClient() *fis_sdkv2.Client {
-	return Must(client[*fis_sdkv2.Client](context.TODO(), c, names.FIS))
+func (c *AWSClient) FISClient(ctx context.Context) *fis_sdkv2.Client {
+	return Must(client[*fis_sdkv2.Client](ctx, c, names.FIS))
 }
 
-func (c *AWSClient) FMSConn() *fms_sdkv1.FMS {
-	return Must(conn[*fms_sdkv1.FMS](context.TODO(), c, names.FMS))
+func (c *AWSClient) FMSConn(ctx context.Context) *fms_sdkv1.FMS {
+	return Must(conn[*fms_sdkv1.FMS](ctx, c, names.FMS))
 }
 
-func (c *AWSClient) FSxConn() *fsx_sdkv1.FSx {
-	return Must(conn[*fsx_sdkv1.FSx](context.TODO(), c, names.FSx))
+func (c *AWSClient) FSxConn(ctx context.Context) *fsx_sdkv1.FSx {
+	return Must(conn[*fsx_sdkv1.FSx](ctx, c, names.FSx))
 }
 
-func (c *AWSClient) FinSpaceConn() *finspace_sdkv1.Finspace {
-	return Must(conn[*finspace_sdkv1.Finspace](context.TODO(), c, names.FinSpace))
+func (c *AWSClient) FinSpaceClient(ctx context.Context) *finspace_sdkv2.Client {
+	return Must(client[*finspace_sdkv2.Client](ctx, c, names.FinSpace))
 }
 
-func (c *AWSClient) FinSpaceDataConn() *finspacedata_sdkv1.FinSpaceData {
-	return Must(conn[*finspacedata_sdkv1.FinSpaceData](context.TODO(), c, names.FinSpaceData))
+func (c *AWSClient) FinSpaceDataConn(ctx context.Context) *finspacedata_sdkv1.FinSpaceData {
+	return Must(conn[*finspacedata_sdkv1.FinSpaceData](ctx, c, names.FinSpaceData))
 }
 
-func (c *AWSClient) FirehoseConn() *firehose_sdkv1.Firehose {
-	return Must(conn[*firehose_sdkv1.Firehose](context.TODO(), c, names.Firehose))
+func (c *AWSClient) FirehoseConn(ctx context.Context) *firehose_sdkv1.Firehose {
+	return Must(conn[*firehose_sdkv1.Firehose](ctx, c, names.Firehose))
 }
 
-func (c *AWSClient) ForecastConn() *forecastservice_sdkv1.ForecastService {
-	return Must(conn[*forecastservice_sdkv1.ForecastService](context.TODO(), c, names.Forecast))
+func (c *AWSClient) ForecastConn(ctx context.Context) *forecastservice_sdkv1.ForecastService {
+	return Must(conn[*forecastservice_sdkv1.ForecastService](ctx, c, names.Forecast))
 }
 
-func (c *AWSClient) ForecastQueryConn() *forecastqueryservice_sdkv1.ForecastQueryService {
-	return Must(conn[*forecastqueryservice_sdkv1.ForecastQueryService](context.TODO(), c, names.ForecastQuery))
+func (c *AWSClient) ForecastQueryConn(ctx context.Context) *forecastqueryservice_sdkv1.ForecastQueryService {
+	return Must(conn[*forecastqueryservice_sdkv1.ForecastQueryService](ctx, c, names.ForecastQuery))
 }
 
-func (c *AWSClient) FraudDetectorConn() *frauddetector_sdkv1.FraudDetector {
-	return Must(conn[*frauddetector_sdkv1.FraudDetector](context.TODO(), c, names.FraudDetector))
+func (c *AWSClient) FraudDetectorConn(ctx context.Context) *frauddetector_sdkv1.FraudDetector {
+	return Must(conn[*frauddetector_sdkv1.FraudDetector](ctx, c, names.FraudDetector))
 }
 
-func (c *AWSClient) GameLiftConn() *gamelift_sdkv1.GameLift {
-	return Must(conn[*gamelift_sdkv1.GameLift](context.TODO(), c, names.GameLift))
+func (c *AWSClient) GameLiftConn(ctx context.Context) *gamelift_sdkv1.GameLift {
+	return Must(conn[*gamelift_sdkv1.GameLift](ctx, c, names.GameLift))
 }
 
-func (c *AWSClient) GlacierConn() *glacier_sdkv1.Glacier {
-	return Must(conn[*glacier_sdkv1.Glacier](context.TODO(), c, names.Glacier))
+func (c *AWSClient) GlacierClient(ctx context.Context) *glacier_sdkv2.Client {
+	return Must(client[*glacier_sdkv2.Client](ctx, c, names.Glacier))
 }
 
-func (c *AWSClient) GlobalAcceleratorConn() *globalaccelerator_sdkv1.GlobalAccelerator {
-	return Must(conn[*globalaccelerator_sdkv1.GlobalAccelerator](context.TODO(), c, names.GlobalAccelerator))
+func (c *AWSClient) GlobalAcceleratorConn(ctx context.Context) *globalaccelerator_sdkv1.GlobalAccelerator {
+	return Must(conn[*globalaccelerator_sdkv1.GlobalAccelerator](ctx, c, names.GlobalAccelerator))
 }
 
-func (c *AWSClient) GlueConn() *glue_sdkv1.Glue {
-	return Must(conn[*glue_sdkv1.Glue](context.TODO(), c, names.Glue))
+func (c *AWSClient) GlueConn(ctx context.Context) *glue_sdkv1.Glue {
+	return Must(conn[*glue_sdkv1.Glue](ctx, c, names.Glue))
 }
 
-func (c *AWSClient) GrafanaConn() *managedgrafana_sdkv1.ManagedGrafana {
-	return Must(conn[*managedgrafana_sdkv1.ManagedGrafana](context.TODO(), c, names.Grafana))
+func (c *AWSClient) GrafanaConn(ctx context.Context) *managedgrafana_sdkv1.ManagedGrafana {
+	return Must(conn[*managedgrafana_sdkv1.ManagedGrafana](ctx, c, names.Grafana))
 }
 
-func (c *AWSClient) GreengrassConn() *greengrass_sdkv1.Greengrass {
-	return Must(conn[*greengrass_sdkv1.Greengrass](context.TODO(), c, names.Greengrass))
+func (c *AWSClient) GreengrassConn(ctx context.Context) *greengrass_sdkv1.Greengrass {
+	return Must(conn[*greengrass_sdkv1.Greengrass](ctx, c, names.Greengrass))
 }
 
-func (c *AWSClient) GreengrassV2Conn() *greengrassv2_sdkv1.GreengrassV2 {
-	return Must(conn[*greengrassv2_sdkv1.GreengrassV2](context.TODO(), c, names.GreengrassV2))
+func (c *AWSClient) GreengrassV2Conn(ctx context.Context) *greengrassv2_sdkv1.GreengrassV2 {
+	return Must(conn[*greengrassv2_sdkv1.GreengrassV2](ctx, c, names.GreengrassV2))
 }
 
-func (c *AWSClient) GroundStationConn() *groundstation_sdkv1.GroundStation {
-	return Must(conn[*groundstation_sdkv1.GroundStation](context.TODO(), c, names.GroundStation))
+func (c *AWSClient) GroundStationConn(ctx context.Context) *groundstation_sdkv1.GroundStation {
+	return Must(conn[*groundstation_sdkv1.GroundStation](ctx, c, names.GroundStation))
 }
 
-func (c *AWSClient) GuardDutyConn() *guardduty_sdkv1.GuardDuty {
-	return Must(conn[*guardduty_sdkv1.GuardDuty](context.TODO(), c, names.GuardDuty))
+func (c *AWSClient) GuardDutyConn(ctx context.Context) *guardduty_sdkv1.GuardDuty {
+	return Must(conn[*guardduty_sdkv1.GuardDuty](ctx, c, names.GuardDuty))
 }
 
-func (c *AWSClient) HealthConn() *health_sdkv1.Health {
-	return Must(conn[*health_sdkv1.Health](context.TODO(), c, names.Health))
+func (c *AWSClient) HealthConn(ctx context.Context) *health_sdkv1.Health {
+	return Must(conn[*health_sdkv1.Health](ctx, c, names.Health))
 }
 
-func (c *AWSClient) HealthLakeClient() *healthlake_sdkv2.Client {
-	return Must(client[*healthlake_sdkv2.Client](context.TODO(), c, names.HealthLake))
+func (c *AWSClient) HealthLakeClient(ctx context.Context) *healthlake_sdkv2.Client {
+	return Must(client[*healthlake_sdkv2.Client](ctx, c, names.HealthLake))
 }
 
-func (c *AWSClient) HoneycodeConn() *honeycode_sdkv1.Honeycode {
-	return Must(conn[*honeycode_sdkv1.Honeycode](context.TODO(), c, names.Honeycode))
+func (c *AWSClient) HoneycodeConn(ctx context.Context) *honeycode_sdkv1.Honeycode {
+	return Must(conn[*honeycode_sdkv1.Honeycode](ctx, c, names.Honeycode))
 }
 
-func (c *AWSClient) IAMConn() *iam_sdkv1.IAM {
-	return Must(conn[*iam_sdkv1.IAM](context.TODO(), c, names.IAM))
+func (c *AWSClient) IAMConn(ctx context.Context) *iam_sdkv1.IAM {
+	return Must(conn[*iam_sdkv1.IAM](ctx, c, names.IAM))
 }
 
-func (c *AWSClient) IVSConn() *ivs_sdkv1.IVS {
-	return Must(conn[*ivs_sdkv1.IVS](context.TODO(), c, names.IVS))
+func (c *AWSClient) IVSConn(ctx context.Context) *ivs_sdkv1.IVS {
+	return Must(conn[*ivs_sdkv1.IVS](ctx, c, names.IVS))
 }
 
-func (c *AWSClient) IVSChatClient() *ivschat_sdkv2.Client {
-	return Must(client[*ivschat_sdkv2.Client](context.TODO(), c, names.IVSChat))
+func (c *AWSClient) IVSChatClient(ctx context.Context) *ivschat_sdkv2.Client {
+	return Must(client[*ivschat_sdkv2.Client](ctx, c, names.IVSChat))
 }
 
-func (c *AWSClient) IdentityStoreClient() *identitystore_sdkv2.Client {
-	return Must(client[*identitystore_sdkv2.Client](context.TODO(), c, names.IdentityStore))
+func (c *AWSClient) IdentityStoreClient(ctx context.Context) *identitystore_sdkv2.Client {
+	return Must(client[*identitystore_sdkv2.Client](ctx, c, names.IdentityStore))
 }
 
-func (c *AWSClient) ImageBuilderConn() *imagebuilder_sdkv1.Imagebuilder {
-	return Must(conn[*imagebuilder_sdkv1.Imagebuilder](context.TODO(), c, names.ImageBuilder))
+func (c *AWSClient) ImageBuilderConn(ctx context.Context) *imagebuilder_sdkv1.Imagebuilder {
+	return Must(conn[*imagebuilder_sdkv1.Imagebuilder](ctx, c, names.ImageBuilder))
 }
 
-func (c *AWSClient) InspectorConn() *inspector_sdkv1.Inspector {
-	return Must(conn[*inspector_sdkv1.Inspector](context.TODO(), c, names.Inspector))
+func (c *AWSClient) InspectorConn(ctx context.Context) *inspector_sdkv1.Inspector {
+	return Must(conn[*inspector_sdkv1.Inspector](ctx, c, names.Inspector))
 }
 
-func (c *AWSClient) Inspector2Client() *inspector2_sdkv2.Client {
-	return Must(client[*inspector2_sdkv2.Client](context.TODO(), c, names.Inspector2))
+func (c *AWSClient) Inspector2Client(ctx context.Context) *inspector2_sdkv2.Client {
+	return Must(client[*inspector2_sdkv2.Client](ctx, c, names.Inspector2))
 }
 
-func (c *AWSClient) InternetMonitorConn() *internetmonitor_sdkv1.InternetMonitor {
-	return Must(conn[*internetmonitor_sdkv1.InternetMonitor](context.TODO(), c, names.InternetMonitor))
+func (c *AWSClient) InternetMonitorConn(ctx context.Context) *internetmonitor_sdkv1.InternetMonitor {
+	return Must(conn[*internetmonitor_sdkv1.InternetMonitor](ctx, c, names.InternetMonitor))
 }
 
-func (c *AWSClient) IoTConn() *iot_sdkv1.IoT {
-	return Must(conn[*iot_sdkv1.IoT](context.TODO(), c, names.IoT))
+func (c *AWSClient) IoTConn(ctx context.Context) *iot_sdkv1.IoT {
+	return Must(conn[*iot_sdkv1.IoT](ctx, c, names.IoT))
 }
 
-func (c *AWSClient) IoT1ClickDevicesConn() *iot1clickdevicesservice_sdkv1.IoT1ClickDevicesService {
-	return Must(conn[*iot1clickdevicesservice_sdkv1.IoT1ClickDevicesService](context.TODO(), c, names.IoT1ClickDevices))
+func (c *AWSClient) IoT1ClickDevicesConn(ctx context.Context) *iot1clickdevicesservice_sdkv1.IoT1ClickDevicesService {
+	return Must(conn[*iot1clickdevicesservice_sdkv1.IoT1ClickDevicesService](ctx, c, names.IoT1ClickDevices))
 }
 
-func (c *AWSClient) IoT1ClickProjectsConn() *iot1clickprojects_sdkv1.IoT1ClickProjects {
-	return Must(conn[*iot1clickprojects_sdkv1.IoT1ClickProjects](context.TODO(), c, names.IoT1ClickProjects))
+func (c *AWSClient) IoT1ClickProjectsConn(ctx context.Context) *iot1clickprojects_sdkv1.IoT1ClickProjects {
+	return Must(conn[*iot1clickprojects_sdkv1.IoT1ClickProjects](ctx, c, names.IoT1ClickProjects))
 }
 
-func (c *AWSClient) IoTAnalyticsConn() *iotanalytics_sdkv1.IoTAnalytics {
-	return Must(conn[*iotanalytics_sdkv1.IoTAnalytics](context.TODO(), c, names.IoTAnalytics))
+func (c *AWSClient) IoTAnalyticsConn(ctx context.Context) *iotanalytics_sdkv1.IoTAnalytics {
+	return Must(conn[*iotanalytics_sdkv1.IoTAnalytics](ctx, c, names.IoTAnalytics))
 }
 
-func (c *AWSClient) IoTDataConn() *iotdataplane_sdkv1.IoTDataPlane {
-	return Must(conn[*iotdataplane_sdkv1.IoTDataPlane](context.TODO(), c, names.IoTData))
+func (c *AWSClient) IoTDataConn(ctx context.Context) *iotdataplane_sdkv1.IoTDataPlane {
+	return Must(conn[*iotdataplane_sdkv1.IoTDataPlane](ctx, c, names.IoTData))
 }
 
-func (c *AWSClient) IoTDeviceAdvisorConn() *iotdeviceadvisor_sdkv1.IoTDeviceAdvisor {
-	return Must(conn[*iotdeviceadvisor_sdkv1.IoTDeviceAdvisor](context.TODO(), c, names.IoTDeviceAdvisor))
+func (c *AWSClient) IoTDeviceAdvisorConn(ctx context.Context) *iotdeviceadvisor_sdkv1.IoTDeviceAdvisor {
+	return Must(conn[*iotdeviceadvisor_sdkv1.IoTDeviceAdvisor](ctx, c, names.IoTDeviceAdvisor))
 }
 
-func (c *AWSClient) IoTEventsConn() *iotevents_sdkv1.IoTEvents {
-	return Must(conn[*iotevents_sdkv1.IoTEvents](context.TODO(), c, names.IoTEvents))
+func (c *AWSClient) IoTEventsConn(ctx context.Context) *iotevents_sdkv1.IoTEvents {
+	return Must(conn[*iotevents_sdkv1.IoTEvents](ctx, c, names.IoTEvents))
 }
 
-func (c *AWSClient) IoTEventsDataConn() *ioteventsdata_sdkv1.IoTEventsData {
-	return Must(conn[*ioteventsdata_sdkv1.IoTEventsData](context.TODO(), c, names.IoTEventsData))
+func (c *AWSClient) IoTEventsDataConn(ctx context.Context) *ioteventsdata_sdkv1.IoTEventsData {
+	return Must(conn[*ioteventsdata_sdkv1.IoTEventsData](ctx, c, names.IoTEventsData))
 }
 
-func (c *AWSClient) IoTFleetHubConn() *iotfleethub_sdkv1.IoTFleetHub {
-	return Must(conn[*iotfleethub_sdkv1.IoTFleetHub](context.TODO(), c, names.IoTFleetHub))
+func (c *AWSClient) IoTFleetHubConn(ctx context.Context) *iotfleethub_sdkv1.IoTFleetHub {
+	return Must(conn[*iotfleethub_sdkv1.IoTFleetHub](ctx, c, names.IoTFleetHub))
 }
 
-func (c *AWSClient) IoTJobsDataConn() *iotjobsdataplane_sdkv1.IoTJobsDataPlane {
-	return Must(conn[*iotjobsdataplane_sdkv1.IoTJobsDataPlane](context.TODO(), c, names.IoTJobsData))
+func (c *AWSClient) IoTJobsDataConn(ctx context.Context) *iotjobsdataplane_sdkv1.IoTJobsDataPlane {
+	return Must(conn[*iotjobsdataplane_sdkv1.IoTJobsDataPlane](ctx, c, names.IoTJobsData))
 }
 
-func (c *AWSClient) IoTSecureTunnelingConn() *iotsecuretunneling_sdkv1.IoTSecureTunneling {
-	return Must(conn[*iotsecuretunneling_sdkv1.IoTSecureTunneling](context.TODO(), c, names.IoTSecureTunneling))
+func (c *AWSClient) IoTSecureTunnelingConn(ctx context.Context) *iotsecuretunneling_sdkv1.IoTSecureTunneling {
+	return Must(conn[*iotsecuretunneling_sdkv1.IoTSecureTunneling](ctx, c, names.IoTSecureTunneling))
 }
 
-func (c *AWSClient) IoTSiteWiseConn() *iotsitewise_sdkv1.IoTSiteWise {
-	return Must(conn[*iotsitewise_sdkv1.IoTSiteWise](context.TODO(), c, names.IoTSiteWise))
+func (c *AWSClient) IoTSiteWiseConn(ctx context.Context) *iotsitewise_sdkv1.IoTSiteWise {
+	return Must(conn[*iotsitewise_sdkv1.IoTSiteWise](ctx, c, names.IoTSiteWise))
 }
 
-func (c *AWSClient) IoTThingsGraphConn() *iotthingsgraph_sdkv1.IoTThingsGraph {
-	return Must(conn[*iotthingsgraph_sdkv1.IoTThingsGraph](context.TODO(), c, names.IoTThingsGraph))
+func (c *AWSClient) IoTThingsGraphConn(ctx context.Context) *iotthingsgraph_sdkv1.IoTThingsGraph {
+	return Must(conn[*iotthingsgraph_sdkv1.IoTThingsGraph](ctx, c, names.IoTThingsGraph))
 }
 
-func (c *AWSClient) IoTTwinMakerConn() *iottwinmaker_sdkv1.IoTTwinMaker {
-	return Must(conn[*iottwinmaker_sdkv1.IoTTwinMaker](context.TODO(), c, names.IoTTwinMaker))
+func (c *AWSClient) IoTTwinMakerConn(ctx context.Context) *iottwinmaker_sdkv1.IoTTwinMaker {
+	return Must(conn[*iottwinmaker_sdkv1.IoTTwinMaker](ctx, c, names.IoTTwinMaker))
 }
 
-func (c *AWSClient) IoTWirelessConn() *iotwireless_sdkv1.IoTWireless {
-	return Must(conn[*iotwireless_sdkv1.IoTWireless](context.TODO(), c, names.IoTWireless))
+func (c *AWSClient) IoTWirelessConn(ctx context.Context) *iotwireless_sdkv1.IoTWireless {
+	return Must(conn[*iotwireless_sdkv1.IoTWireless](ctx, c, names.IoTWireless))
 }
 
-func (c *AWSClient) KMSConn() *kms_sdkv1.KMS {
-	return Must(conn[*kms_sdkv1.KMS](context.TODO(), c, names.KMS))
+func (c *AWSClient) KMSConn(ctx context.Context) *kms_sdkv1.KMS {
+	return Must(conn[*kms_sdkv1.KMS](ctx, c, names.KMS))
 }
 
-func (c *AWSClient) KafkaConn() *kafka_sdkv1.Kafka {
-	return Must(conn[*kafka_sdkv1.Kafka](context.TODO(), c, names.Kafka))
+func (c *AWSClient) KafkaConn(ctx context.Context) *kafka_sdkv1.Kafka {
+	return Must(conn[*kafka_sdkv1.Kafka](ctx, c, names.Kafka))
 }
 
-func (c *AWSClient) KafkaConnectConn() *kafkaconnect_sdkv1.KafkaConnect {
-	return Must(conn[*kafkaconnect_sdkv1.KafkaConnect](context.TODO(), c, names.KafkaConnect))
+func (c *AWSClient) KafkaConnectConn(ctx context.Context) *kafkaconnect_sdkv1.KafkaConnect {
+	return Must(conn[*kafkaconnect_sdkv1.KafkaConnect](ctx, c, names.KafkaConnect))
 }
 
-func (c *AWSClient) KendraClient() *kendra_sdkv2.Client {
-	return Must(client[*kendra_sdkv2.Client](context.TODO(), c, names.Kendra))
+func (c *AWSClient) KendraClient(ctx context.Context) *kendra_sdkv2.Client {
+	return Must(client[*kendra_sdkv2.Client](ctx, c, names.Kendra))
 }
 
-func (c *AWSClient) KeyspacesConn() *keyspaces_sdkv1.Keyspaces {
-	return Must(conn[*keyspaces_sdkv1.Keyspaces](context.TODO(), c, names.Keyspaces))
+func (c *AWSClient) KeyspacesConn(ctx context.Context) *keyspaces_sdkv1.Keyspaces {
+	return Must(conn[*keyspaces_sdkv1.Keyspaces](ctx, c, names.Keyspaces))
 }
 
-func (c *AWSClient) KinesisConn() *kinesis_sdkv1.Kinesis {
-	return Must(conn[*kinesis_sdkv1.Kinesis](context.TODO(), c, names.Kinesis))
+func (c *AWSClient) KinesisConn(ctx context.Context) *kinesis_sdkv1.Kinesis {
+	return Must(conn[*kinesis_sdkv1.Kinesis](ctx, c, names.Kinesis))
 }
 
-func (c *AWSClient) KinesisAnalyticsConn() *kinesisanalytics_sdkv1.KinesisAnalytics {
-	return Must(conn[*kinesisanalytics_sdkv1.KinesisAnalytics](context.TODO(), c, names.KinesisAnalytics))
+func (c *AWSClient) KinesisAnalyticsConn(ctx context.Context) *kinesisanalytics_sdkv1.KinesisAnalytics {
+	return Must(conn[*kinesisanalytics_sdkv1.KinesisAnalytics](ctx, c, names.KinesisAnalytics))
 }
 
-func (c *AWSClient) KinesisAnalyticsV2Conn() *kinesisanalyticsv2_sdkv1.KinesisAnalyticsV2 {
-	return Must(conn[*kinesisanalyticsv2_sdkv1.KinesisAnalyticsV2](context.TODO(), c, names.KinesisAnalyticsV2))
+func (c *AWSClient) KinesisAnalyticsV2Conn(ctx context.Context) *kinesisanalyticsv2_sdkv1.KinesisAnalyticsV2 {
+	return Must(conn[*kinesisanalyticsv2_sdkv1.KinesisAnalyticsV2](ctx, c, names.KinesisAnalyticsV2))
 }
 
-func (c *AWSClient) KinesisVideoConn() *kinesisvideo_sdkv1.KinesisVideo {
-	return Must(conn[*kinesisvideo_sdkv1.KinesisVideo](context.TODO(), c, names.KinesisVideo))
+func (c *AWSClient) KinesisVideoConn(ctx context.Context) *kinesisvideo_sdkv1.KinesisVideo {
+	return Must(conn[*kinesisvideo_sdkv1.KinesisVideo](ctx, c, names.KinesisVideo))
 }
 
-func (c *AWSClient) KinesisVideoArchivedMediaConn() *kinesisvideoarchivedmedia_sdkv1.KinesisVideoArchivedMedia {
-	return Must(conn[*kinesisvideoarchivedmedia_sdkv1.KinesisVideoArchivedMedia](context.TODO(), c, names.KinesisVideoArchivedMedia))
+func (c *AWSClient) KinesisVideoArchivedMediaConn(ctx context.Context) *kinesisvideoarchivedmedia_sdkv1.KinesisVideoArchivedMedia {
+	return Must(conn[*kinesisvideoarchivedmedia_sdkv1.KinesisVideoArchivedMedia](ctx, c, names.KinesisVideoArchivedMedia))
 }
 
-func (c *AWSClient) KinesisVideoMediaConn() *kinesisvideomedia_sdkv1.KinesisVideoMedia {
-	return Must(conn[*kinesisvideomedia_sdkv1.KinesisVideoMedia](context.TODO(), c, names.KinesisVideoMedia))
+func (c *AWSClient) KinesisVideoMediaConn(ctx context.Context) *kinesisvideomedia_sdkv1.KinesisVideoMedia {
+	return Must(conn[*kinesisvideomedia_sdkv1.KinesisVideoMedia](ctx, c, names.KinesisVideoMedia))
 }
 
-func (c *AWSClient) KinesisVideoSignalingConn() *kinesisvideosignalingchannels_sdkv1.KinesisVideoSignalingChannels {
-	return Must(conn[*kinesisvideosignalingchannels_sdkv1.KinesisVideoSignalingChannels](context.TODO(), c, names.KinesisVideoSignaling))
+func (c *AWSClient) KinesisVideoSignalingConn(ctx context.Context) *kinesisvideosignalingchannels_sdkv1.KinesisVideoSignalingChannels {
+	return Must(conn[*kinesisvideosignalingchannels_sdkv1.KinesisVideoSignalingChannels](ctx, c, names.KinesisVideoSignaling))
 }
 
-func (c *AWSClient) LakeFormationConn() *lakeformation_sdkv1.LakeFormation {
-	return Must(conn[*lakeformation_sdkv1.LakeFormation](context.TODO(), c, names.LakeFormation))
+func (c *AWSClient) LakeFormationConn(ctx context.Context) *lakeformation_sdkv1.LakeFormation {
+	return Must(conn[*lakeformation_sdkv1.LakeFormation](ctx, c, names.LakeFormation))
 }
 
-func (c *AWSClient) LambdaConn() *lambda_sdkv1.Lambda {
-	return Must(conn[*lambda_sdkv1.Lambda](context.TODO(), c, names.Lambda))
+func (c *AWSClient) LambdaConn(ctx context.Context) *lambda_sdkv1.Lambda {
+	return Must(conn[*lambda_sdkv1.Lambda](ctx, c, names.Lambda))
 }
 
-func (c *AWSClient) LambdaClient() *lambda_sdkv2.Client {
-	return Must(client[*lambda_sdkv2.Client](context.TODO(), c, names.Lambda))
+func (c *AWSClient) LambdaClient(ctx context.Context) *lambda_sdkv2.Client {
+	return Must(client[*lambda_sdkv2.Client](ctx, c, names.Lambda))
 }
 
-func (c *AWSClient) LexModelsConn() *lexmodelbuildingservice_sdkv1.LexModelBuildingService {
-	return Must(conn[*lexmodelbuildingservice_sdkv1.LexModelBuildingService](context.TODO(), c, names.LexModels))
+func (c *AWSClient) LexModelsConn(ctx context.Context) *lexmodelbuildingservice_sdkv1.LexModelBuildingService {
+	return Must(conn[*lexmodelbuildingservice_sdkv1.LexModelBuildingService](ctx, c, names.LexModels))
 }
 
-func (c *AWSClient) LexModelsV2Conn() *lexmodelsv2_sdkv1.LexModelsV2 {
-	return Must(conn[*lexmodelsv2_sdkv1.LexModelsV2](context.TODO(), c, names.LexModelsV2))
+func (c *AWSClient) LexModelsV2Conn(ctx context.Context) *lexmodelsv2_sdkv1.LexModelsV2 {
+	return Must(conn[*lexmodelsv2_sdkv1.LexModelsV2](ctx, c, names.LexModelsV2))
 }
 
-func (c *AWSClient) LexRuntimeConn() *lexruntimeservice_sdkv1.LexRuntimeService {
-	return Must(conn[*lexruntimeservice_sdkv1.LexRuntimeService](context.TODO(), c, names.LexRuntime))
+func (c *AWSClient) LexRuntimeConn(ctx context.Context) *lexruntimeservice_sdkv1.LexRuntimeService {
+	return Must(conn[*lexruntimeservice_sdkv1.LexRuntimeService](ctx, c, names.LexRuntime))
 }
 
-func (c *AWSClient) LexRuntimeV2Conn() *lexruntimev2_sdkv1.LexRuntimeV2 {
-	return Must(conn[*lexruntimev2_sdkv1.LexRuntimeV2](context.TODO(), c, names.LexRuntimeV2))
+func (c *AWSClient) LexRuntimeV2Conn(ctx context.Context) *lexruntimev2_sdkv1.LexRuntimeV2 {
+	return Must(conn[*lexruntimev2_sdkv1.LexRuntimeV2](ctx, c, names.LexRuntimeV2))
 }
 
-func (c *AWSClient) LicenseManagerConn() *licensemanager_sdkv1.LicenseManager {
-	return Must(conn[*licensemanager_sdkv1.LicenseManager](context.TODO(), c, names.LicenseManager))
+func (c *AWSClient) LicenseManagerConn(ctx context.Context) *licensemanager_sdkv1.LicenseManager {
+	return Must(conn[*licensemanager_sdkv1.LicenseManager](ctx, c, names.LicenseManager))
 }
 
-func (c *AWSClient) LightsailConn() *lightsail_sdkv1.Lightsail {
-	return Must(conn[*lightsail_sdkv1.Lightsail](context.TODO(), c, names.Lightsail))
+func (c *AWSClient) LightsailConn(ctx context.Context) *lightsail_sdkv1.Lightsail {
+	return Must(conn[*lightsail_sdkv1.Lightsail](ctx, c, names.Lightsail))
 }
 
-func (c *AWSClient) LocationConn() *locationservice_sdkv1.LocationService {
-	return Must(conn[*locationservice_sdkv1.LocationService](context.TODO(), c, names.Location))
+func (c *AWSClient) LocationConn(ctx context.Context) *locationservice_sdkv1.LocationService {
+	return Must(conn[*locationservice_sdkv1.LocationService](ctx, c, names.Location))
 }
 
-func (c *AWSClient) LogsConn() *cloudwatchlogs_sdkv1.CloudWatchLogs {
-	return Must(conn[*cloudwatchlogs_sdkv1.CloudWatchLogs](context.TODO(), c, names.Logs))
+func (c *AWSClient) LogsConn(ctx context.Context) *cloudwatchlogs_sdkv1.CloudWatchLogs {
+	return Must(conn[*cloudwatchlogs_sdkv1.CloudWatchLogs](ctx, c, names.Logs))
 }
 
-func (c *AWSClient) LogsClient() *cloudwatchlogs_sdkv2.Client {
-	return Must(client[*cloudwatchlogs_sdkv2.Client](context.TODO(), c, names.Logs))
+func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs_sdkv2.Client {
+	return Must(client[*cloudwatchlogs_sdkv2.Client](ctx, c, names.Logs))
 }
 
-func (c *AWSClient) LookoutEquipmentConn() *lookoutequipment_sdkv1.LookoutEquipment {
-	return Must(conn[*lookoutequipment_sdkv1.LookoutEquipment](context.TODO(), c, names.LookoutEquipment))
+func (c *AWSClient) LookoutEquipmentConn(ctx context.Context) *lookoutequipment_sdkv1.LookoutEquipment {
+	return Must(conn[*lookoutequipment_sdkv1.LookoutEquipment](ctx, c, names.LookoutEquipment))
 }
 
-func (c *AWSClient) LookoutMetricsConn() *lookoutmetrics_sdkv1.LookoutMetrics {
-	return Must(conn[*lookoutmetrics_sdkv1.LookoutMetrics](context.TODO(), c, names.LookoutMetrics))
+func (c *AWSClient) LookoutMetricsConn(ctx context.Context) *lookoutmetrics_sdkv1.LookoutMetrics {
+	return Must(conn[*lookoutmetrics_sdkv1.LookoutMetrics](ctx, c, names.LookoutMetrics))
 }
 
-func (c *AWSClient) LookoutVisionConn() *lookoutforvision_sdkv1.LookoutForVision {
-	return Must(conn[*lookoutforvision_sdkv1.LookoutForVision](context.TODO(), c, names.LookoutVision))
+func (c *AWSClient) LookoutVisionConn(ctx context.Context) *lookoutforvision_sdkv1.LookoutForVision {
+	return Must(conn[*lookoutforvision_sdkv1.LookoutForVision](ctx, c, names.LookoutVision))
 }
 
-func (c *AWSClient) MQConn() *mq_sdkv1.MQ {
-	return Must(conn[*mq_sdkv1.MQ](context.TODO(), c, names.MQ))
+func (c *AWSClient) MQConn(ctx context.Context) *mq_sdkv1.MQ {
+	return Must(conn[*mq_sdkv1.MQ](ctx, c, names.MQ))
 }
 
-func (c *AWSClient) MTurkConn() *mturk_sdkv1.MTurk {
-	return Must(conn[*mturk_sdkv1.MTurk](context.TODO(), c, names.MTurk))
+func (c *AWSClient) MTurkConn(ctx context.Context) *mturk_sdkv1.MTurk {
+	return Must(conn[*mturk_sdkv1.MTurk](ctx, c, names.MTurk))
 }
 
-func (c *AWSClient) MWAAConn() *mwaa_sdkv1.MWAA {
-	return Must(conn[*mwaa_sdkv1.MWAA](context.TODO(), c, names.MWAA))
+func (c *AWSClient) MWAAConn(ctx context.Context) *mwaa_sdkv1.MWAA {
+	return Must(conn[*mwaa_sdkv1.MWAA](ctx, c, names.MWAA))
 }
 
-func (c *AWSClient) MachineLearningConn() *machinelearning_sdkv1.MachineLearning {
-	return Must(conn[*machinelearning_sdkv1.MachineLearning](context.TODO(), c, names.MachineLearning))
+func (c *AWSClient) MachineLearningConn(ctx context.Context) *machinelearning_sdkv1.MachineLearning {
+	return Must(conn[*machinelearning_sdkv1.MachineLearning](ctx, c, names.MachineLearning))
 }
 
-func (c *AWSClient) MacieConn() *macie_sdkv1.Macie {
-	return Must(conn[*macie_sdkv1.Macie](context.TODO(), c, names.Macie))
+func (c *AWSClient) MacieConn(ctx context.Context) *macie_sdkv1.Macie {
+	return Must(conn[*macie_sdkv1.Macie](ctx, c, names.Macie))
 }
 
-func (c *AWSClient) Macie2Conn() *macie2_sdkv1.Macie2 {
-	return Must(conn[*macie2_sdkv1.Macie2](context.TODO(), c, names.Macie2))
+func (c *AWSClient) Macie2Conn(ctx context.Context) *macie2_sdkv1.Macie2 {
+	return Must(conn[*macie2_sdkv1.Macie2](ctx, c, names.Macie2))
 }
 
-func (c *AWSClient) ManagedBlockchainConn() *managedblockchain_sdkv1.ManagedBlockchain {
-	return Must(conn[*managedblockchain_sdkv1.ManagedBlockchain](context.TODO(), c, names.ManagedBlockchain))
+func (c *AWSClient) ManagedBlockchainConn(ctx context.Context) *managedblockchain_sdkv1.ManagedBlockchain {
+	return Must(conn[*managedblockchain_sdkv1.ManagedBlockchain](ctx, c, names.ManagedBlockchain))
 }
 
-func (c *AWSClient) MarketplaceCatalogConn() *marketplacecatalog_sdkv1.MarketplaceCatalog {
-	return Must(conn[*marketplacecatalog_sdkv1.MarketplaceCatalog](context.TODO(), c, names.MarketplaceCatalog))
+func (c *AWSClient) MarketplaceCatalogConn(ctx context.Context) *marketplacecatalog_sdkv1.MarketplaceCatalog {
+	return Must(conn[*marketplacecatalog_sdkv1.MarketplaceCatalog](ctx, c, names.MarketplaceCatalog))
 }
 
-func (c *AWSClient) MarketplaceCommerceAnalyticsConn() *marketplacecommerceanalytics_sdkv1.MarketplaceCommerceAnalytics {
-	return Must(conn[*marketplacecommerceanalytics_sdkv1.MarketplaceCommerceAnalytics](context.TODO(), c, names.MarketplaceCommerceAnalytics))
+func (c *AWSClient) MarketplaceCommerceAnalyticsConn(ctx context.Context) *marketplacecommerceanalytics_sdkv1.MarketplaceCommerceAnalytics {
+	return Must(conn[*marketplacecommerceanalytics_sdkv1.MarketplaceCommerceAnalytics](ctx, c, names.MarketplaceCommerceAnalytics))
 }
 
-func (c *AWSClient) MarketplaceEntitlementConn() *marketplaceentitlementservice_sdkv1.MarketplaceEntitlementService {
-	return Must(conn[*marketplaceentitlementservice_sdkv1.MarketplaceEntitlementService](context.TODO(), c, names.MarketplaceEntitlement))
+func (c *AWSClient) MarketplaceEntitlementConn(ctx context.Context) *marketplaceentitlementservice_sdkv1.MarketplaceEntitlementService {
+	return Must(conn[*marketplaceentitlementservice_sdkv1.MarketplaceEntitlementService](ctx, c, names.MarketplaceEntitlement))
 }
 
-func (c *AWSClient) MarketplaceMeteringConn() *marketplacemetering_sdkv1.MarketplaceMetering {
-	return Must(conn[*marketplacemetering_sdkv1.MarketplaceMetering](context.TODO(), c, names.MarketplaceMetering))
+func (c *AWSClient) MarketplaceMeteringConn(ctx context.Context) *marketplacemetering_sdkv1.MarketplaceMetering {
+	return Must(conn[*marketplacemetering_sdkv1.MarketplaceMetering](ctx, c, names.MarketplaceMetering))
 }
 
-func (c *AWSClient) MediaConnectConn() *mediaconnect_sdkv1.MediaConnect {
-	return Must(conn[*mediaconnect_sdkv1.MediaConnect](context.TODO(), c, names.MediaConnect))
+func (c *AWSClient) MediaConnectConn(ctx context.Context) *mediaconnect_sdkv1.MediaConnect {
+	return Must(conn[*mediaconnect_sdkv1.MediaConnect](ctx, c, names.MediaConnect))
 }
 
-func (c *AWSClient) MediaConvertConn() *mediaconvert_sdkv1.MediaConvert {
-	return Must(conn[*mediaconvert_sdkv1.MediaConvert](context.TODO(), c, names.MediaConvert))
+func (c *AWSClient) MediaConvertConn(ctx context.Context) *mediaconvert_sdkv1.MediaConvert {
+	return Must(conn[*mediaconvert_sdkv1.MediaConvert](ctx, c, names.MediaConvert))
 }
 
-func (c *AWSClient) MediaLiveClient() *medialive_sdkv2.Client {
-	return Must(client[*medialive_sdkv2.Client](context.TODO(), c, names.MediaLive))
+func (c *AWSClient) MediaLiveClient(ctx context.Context) *medialive_sdkv2.Client {
+	return Must(client[*medialive_sdkv2.Client](ctx, c, names.MediaLive))
 }
 
-func (c *AWSClient) MediaPackageConn() *mediapackage_sdkv1.MediaPackage {
-	return Must(conn[*mediapackage_sdkv1.MediaPackage](context.TODO(), c, names.MediaPackage))
+func (c *AWSClient) MediaPackageConn(ctx context.Context) *mediapackage_sdkv1.MediaPackage {
+	return Must(conn[*mediapackage_sdkv1.MediaPackage](ctx, c, names.MediaPackage))
 }
 
-func (c *AWSClient) MediaPackageVODConn() *mediapackagevod_sdkv1.MediaPackageVod {
-	return Must(conn[*mediapackagevod_sdkv1.MediaPackageVod](context.TODO(), c, names.MediaPackageVOD))
+func (c *AWSClient) MediaPackageVODConn(ctx context.Context) *mediapackagevod_sdkv1.MediaPackageVod {
+	return Must(conn[*mediapackagevod_sdkv1.MediaPackageVod](ctx, c, names.MediaPackageVOD))
 }
 
-func (c *AWSClient) MediaStoreConn() *mediastore_sdkv1.MediaStore {
-	return Must(conn[*mediastore_sdkv1.MediaStore](context.TODO(), c, names.MediaStore))
+func (c *AWSClient) MediaStoreConn(ctx context.Context) *mediastore_sdkv1.MediaStore {
+	return Must(conn[*mediastore_sdkv1.MediaStore](ctx, c, names.MediaStore))
 }
 
-func (c *AWSClient) MediaStoreDataConn() *mediastoredata_sdkv1.MediaStoreData {
-	return Must(conn[*mediastoredata_sdkv1.MediaStoreData](context.TODO(), c, names.MediaStoreData))
+func (c *AWSClient) MediaStoreDataConn(ctx context.Context) *mediastoredata_sdkv1.MediaStoreData {
+	return Must(conn[*mediastoredata_sdkv1.MediaStoreData](ctx, c, names.MediaStoreData))
 }
 
-func (c *AWSClient) MediaTailorConn() *mediatailor_sdkv1.MediaTailor {
-	return Must(conn[*mediatailor_sdkv1.MediaTailor](context.TODO(), c, names.MediaTailor))
+func (c *AWSClient) MediaTailorConn(ctx context.Context) *mediatailor_sdkv1.MediaTailor {
+	return Must(conn[*mediatailor_sdkv1.MediaTailor](ctx, c, names.MediaTailor))
 }
 
-func (c *AWSClient) MemoryDBConn() *memorydb_sdkv1.MemoryDB {
-	return Must(conn[*memorydb_sdkv1.MemoryDB](context.TODO(), c, names.MemoryDB))
+func (c *AWSClient) MemoryDBConn(ctx context.Context) *memorydb_sdkv1.MemoryDB {
+	return Must(conn[*memorydb_sdkv1.MemoryDB](ctx, c, names.MemoryDB))
 }
 
-func (c *AWSClient) MgHConn() *migrationhub_sdkv1.MigrationHub {
-	return Must(conn[*migrationhub_sdkv1.MigrationHub](context.TODO(), c, names.MgH))
+func (c *AWSClient) MgHConn(ctx context.Context) *migrationhub_sdkv1.MigrationHub {
+	return Must(conn[*migrationhub_sdkv1.MigrationHub](ctx, c, names.MgH))
 }
 
-func (c *AWSClient) MgnConn() *mgn_sdkv1.Mgn {
-	return Must(conn[*mgn_sdkv1.Mgn](context.TODO(), c, names.Mgn))
+func (c *AWSClient) MgnConn(ctx context.Context) *mgn_sdkv1.Mgn {
+	return Must(conn[*mgn_sdkv1.Mgn](ctx, c, names.Mgn))
 }
 
-func (c *AWSClient) MigrationHubConfigConn() *migrationhubconfig_sdkv1.MigrationHubConfig {
-	return Must(conn[*migrationhubconfig_sdkv1.MigrationHubConfig](context.TODO(), c, names.MigrationHubConfig))
+func (c *AWSClient) MigrationHubConfigConn(ctx context.Context) *migrationhubconfig_sdkv1.MigrationHubConfig {
+	return Must(conn[*migrationhubconfig_sdkv1.MigrationHubConfig](ctx, c, names.MigrationHubConfig))
 }
 
-func (c *AWSClient) MigrationHubRefactorSpacesConn() *migrationhubrefactorspaces_sdkv1.MigrationHubRefactorSpaces {
-	return Must(conn[*migrationhubrefactorspaces_sdkv1.MigrationHubRefactorSpaces](context.TODO(), c, names.MigrationHubRefactorSpaces))
+func (c *AWSClient) MigrationHubRefactorSpacesConn(ctx context.Context) *migrationhubrefactorspaces_sdkv1.MigrationHubRefactorSpaces {
+	return Must(conn[*migrationhubrefactorspaces_sdkv1.MigrationHubRefactorSpaces](ctx, c, names.MigrationHubRefactorSpaces))
 }
 
-func (c *AWSClient) MigrationHubStrategyConn() *migrationhubstrategyrecommendations_sdkv1.MigrationHubStrategyRecommendations {
-	return Must(conn[*migrationhubstrategyrecommendations_sdkv1.MigrationHubStrategyRecommendations](context.TODO(), c, names.MigrationHubStrategy))
+func (c *AWSClient) MigrationHubStrategyConn(ctx context.Context) *migrationhubstrategyrecommendations_sdkv1.MigrationHubStrategyRecommendations {
+	return Must(conn[*migrationhubstrategyrecommendations_sdkv1.MigrationHubStrategyRecommendations](ctx, c, names.MigrationHubStrategy))
 }
 
-func (c *AWSClient) MobileConn() *mobile_sdkv1.Mobile {
-	return Must(conn[*mobile_sdkv1.Mobile](context.TODO(), c, names.Mobile))
+func (c *AWSClient) MobileConn(ctx context.Context) *mobile_sdkv1.Mobile {
+	return Must(conn[*mobile_sdkv1.Mobile](ctx, c, names.Mobile))
 }
 
-func (c *AWSClient) NeptuneConn() *neptune_sdkv1.Neptune {
-	return Must(conn[*neptune_sdkv1.Neptune](context.TODO(), c, names.Neptune))
+func (c *AWSClient) NeptuneConn(ctx context.Context) *neptune_sdkv1.Neptune {
+	return Must(conn[*neptune_sdkv1.Neptune](ctx, c, names.Neptune))
 }
 
-func (c *AWSClient) NetworkFirewallConn() *networkfirewall_sdkv1.NetworkFirewall {
-	return Must(conn[*networkfirewall_sdkv1.NetworkFirewall](context.TODO(), c, names.NetworkFirewall))
+func (c *AWSClient) NetworkFirewallConn(ctx context.Context) *networkfirewall_sdkv1.NetworkFirewall {
+	return Must(conn[*networkfirewall_sdkv1.NetworkFirewall](ctx, c, names.NetworkFirewall))
 }
 
-func (c *AWSClient) NetworkManagerConn() *networkmanager_sdkv1.NetworkManager {
-	return Must(conn[*networkmanager_sdkv1.NetworkManager](context.TODO(), c, names.NetworkManager))
+func (c *AWSClient) NetworkManagerConn(ctx context.Context) *networkmanager_sdkv1.NetworkManager {
+	return Must(conn[*networkmanager_sdkv1.NetworkManager](ctx, c, names.NetworkManager))
 }
 
-func (c *AWSClient) NimbleConn() *nimblestudio_sdkv1.NimbleStudio {
-	return Must(conn[*nimblestudio_sdkv1.NimbleStudio](context.TODO(), c, names.Nimble))
+func (c *AWSClient) NimbleConn(ctx context.Context) *nimblestudio_sdkv1.NimbleStudio {
+	return Must(conn[*nimblestudio_sdkv1.NimbleStudio](ctx, c, names.Nimble))
 }
 
-func (c *AWSClient) ObservabilityAccessManagerClient() *oam_sdkv2.Client {
-	return Must(client[*oam_sdkv2.Client](context.TODO(), c, names.ObservabilityAccessManager))
+func (c *AWSClient) ObservabilityAccessManagerClient(ctx context.Context) *oam_sdkv2.Client {
+	return Must(client[*oam_sdkv2.Client](ctx, c, names.ObservabilityAccessManager))
 }
 
-func (c *AWSClient) OpenSearchConn() *opensearchservice_sdkv1.OpenSearchService {
-	return Must(conn[*opensearchservice_sdkv1.OpenSearchService](context.TODO(), c, names.OpenSearch))
+func (c *AWSClient) OpenSearchConn(ctx context.Context) *opensearchservice_sdkv1.OpenSearchService {
+	return Must(conn[*opensearchservice_sdkv1.OpenSearchService](ctx, c, names.OpenSearch))
 }
 
-func (c *AWSClient) OpenSearchServerlessClient() *opensearchserverless_sdkv2.Client {
-	return Must(client[*opensearchserverless_sdkv2.Client](context.TODO(), c, names.OpenSearchServerless))
+func (c *AWSClient) OpenSearchServerlessClient(ctx context.Context) *opensearchserverless_sdkv2.Client {
+	return Must(client[*opensearchserverless_sdkv2.Client](ctx, c, names.OpenSearchServerless))
 }
 
-func (c *AWSClient) OpsWorksConn() *opsworks_sdkv1.OpsWorks {
-	return Must(conn[*opsworks_sdkv1.OpsWorks](context.TODO(), c, names.OpsWorks))
+func (c *AWSClient) OpsWorksConn(ctx context.Context) *opsworks_sdkv1.OpsWorks {
+	return Must(conn[*opsworks_sdkv1.OpsWorks](ctx, c, names.OpsWorks))
 }
 
-func (c *AWSClient) OpsWorksCMConn() *opsworkscm_sdkv1.OpsWorksCM {
-	return Must(conn[*opsworkscm_sdkv1.OpsWorksCM](context.TODO(), c, names.OpsWorksCM))
+func (c *AWSClient) OpsWorksCMConn(ctx context.Context) *opsworkscm_sdkv1.OpsWorksCM {
+	return Must(conn[*opsworkscm_sdkv1.OpsWorksCM](ctx, c, names.OpsWorksCM))
 }
 
-func (c *AWSClient) OrganizationsConn() *organizations_sdkv1.Organizations {
-	return Must(conn[*organizations_sdkv1.Organizations](context.TODO(), c, names.Organizations))
+func (c *AWSClient) OrganizationsConn(ctx context.Context) *organizations_sdkv1.Organizations {
+	return Must(conn[*organizations_sdkv1.Organizations](ctx, c, names.Organizations))
 }
 
-func (c *AWSClient) OutpostsConn() *outposts_sdkv1.Outposts {
-	return Must(conn[*outposts_sdkv1.Outposts](context.TODO(), c, names.Outposts))
+func (c *AWSClient) OutpostsConn(ctx context.Context) *outposts_sdkv1.Outposts {
+	return Must(conn[*outposts_sdkv1.Outposts](ctx, c, names.Outposts))
 }
 
-func (c *AWSClient) PIConn() *pi_sdkv1.PI {
-	return Must(conn[*pi_sdkv1.PI](context.TODO(), c, names.PI))
+func (c *AWSClient) PIConn(ctx context.Context) *pi_sdkv1.PI {
+	return Must(conn[*pi_sdkv1.PI](ctx, c, names.PI))
 }
 
-func (c *AWSClient) PanoramaConn() *panorama_sdkv1.Panorama {
-	return Must(conn[*panorama_sdkv1.Panorama](context.TODO(), c, names.Panorama))
+func (c *AWSClient) PanoramaConn(ctx context.Context) *panorama_sdkv1.Panorama {
+	return Must(conn[*panorama_sdkv1.Panorama](ctx, c, names.Panorama))
 }
 
-func (c *AWSClient) PersonalizeConn() *personalize_sdkv1.Personalize {
-	return Must(conn[*personalize_sdkv1.Personalize](context.TODO(), c, names.Personalize))
+func (c *AWSClient) PersonalizeConn(ctx context.Context) *personalize_sdkv1.Personalize {
+	return Must(conn[*personalize_sdkv1.Personalize](ctx, c, names.Personalize))
 }
 
-func (c *AWSClient) PersonalizeEventsConn() *personalizeevents_sdkv1.PersonalizeEvents {
-	return Must(conn[*personalizeevents_sdkv1.PersonalizeEvents](context.TODO(), c, names.PersonalizeEvents))
+func (c *AWSClient) PersonalizeEventsConn(ctx context.Context) *personalizeevents_sdkv1.PersonalizeEvents {
+	return Must(conn[*personalizeevents_sdkv1.PersonalizeEvents](ctx, c, names.PersonalizeEvents))
 }
 
-func (c *AWSClient) PersonalizeRuntimeConn() *personalizeruntime_sdkv1.PersonalizeRuntime {
-	return Must(conn[*personalizeruntime_sdkv1.PersonalizeRuntime](context.TODO(), c, names.PersonalizeRuntime))
+func (c *AWSClient) PersonalizeRuntimeConn(ctx context.Context) *personalizeruntime_sdkv1.PersonalizeRuntime {
+	return Must(conn[*personalizeruntime_sdkv1.PersonalizeRuntime](ctx, c, names.PersonalizeRuntime))
 }
 
-func (c *AWSClient) PinpointConn() *pinpoint_sdkv1.Pinpoint {
-	return Must(conn[*pinpoint_sdkv1.Pinpoint](context.TODO(), c, names.Pinpoint))
+func (c *AWSClient) PinpointConn(ctx context.Context) *pinpoint_sdkv1.Pinpoint {
+	return Must(conn[*pinpoint_sdkv1.Pinpoint](ctx, c, names.Pinpoint))
 }
 
-func (c *AWSClient) PinpointEmailConn() *pinpointemail_sdkv1.PinpointEmail {
-	return Must(conn[*pinpointemail_sdkv1.PinpointEmail](context.TODO(), c, names.PinpointEmail))
+func (c *AWSClient) PinpointEmailConn(ctx context.Context) *pinpointemail_sdkv1.PinpointEmail {
+	return Must(conn[*pinpointemail_sdkv1.PinpointEmail](ctx, c, names.PinpointEmail))
 }
 
-func (c *AWSClient) PinpointSMSVoiceConn() *pinpointsmsvoice_sdkv1.PinpointSMSVoice {
-	return Must(conn[*pinpointsmsvoice_sdkv1.PinpointSMSVoice](context.TODO(), c, names.PinpointSMSVoice))
+func (c *AWSClient) PinpointSMSVoiceConn(ctx context.Context) *pinpointsmsvoice_sdkv1.PinpointSMSVoice {
+	return Must(conn[*pinpointsmsvoice_sdkv1.PinpointSMSVoice](ctx, c, names.PinpointSMSVoice))
 }
 
-func (c *AWSClient) PipesClient() *pipes_sdkv2.Client {
-	return Must(client[*pipes_sdkv2.Client](context.TODO(), c, names.Pipes))
+func (c *AWSClient) PipesClient(ctx context.Context) *pipes_sdkv2.Client {
+	return Must(client[*pipes_sdkv2.Client](ctx, c, names.Pipes))
 }
 
-func (c *AWSClient) PollyConn() *polly_sdkv1.Polly {
-	return Must(conn[*polly_sdkv1.Polly](context.TODO(), c, names.Polly))
+func (c *AWSClient) PollyConn(ctx context.Context) *polly_sdkv1.Polly {
+	return Must(conn[*polly_sdkv1.Polly](ctx, c, names.Polly))
 }
 
-func (c *AWSClient) PricingConn() *pricing_sdkv1.Pricing {
-	return Must(conn[*pricing_sdkv1.Pricing](context.TODO(), c, names.Pricing))
+func (c *AWSClient) PricingConn(ctx context.Context) *pricing_sdkv1.Pricing {
+	return Must(conn[*pricing_sdkv1.Pricing](ctx, c, names.Pricing))
 }
 
-func (c *AWSClient) ProtonConn() *proton_sdkv1.Proton {
-	return Must(conn[*proton_sdkv1.Proton](context.TODO(), c, names.Proton))
+func (c *AWSClient) ProtonConn(ctx context.Context) *proton_sdkv1.Proton {
+	return Must(conn[*proton_sdkv1.Proton](ctx, c, names.Proton))
 }
 
-func (c *AWSClient) QLDBConn() *qldb_sdkv1.QLDB {
-	return Must(conn[*qldb_sdkv1.QLDB](context.TODO(), c, names.QLDB))
+func (c *AWSClient) QLDBConn(ctx context.Context) *qldb_sdkv1.QLDB {
+	return Must(conn[*qldb_sdkv1.QLDB](ctx, c, names.QLDB))
 }
 
-func (c *AWSClient) QLDBSessionConn() *qldbsession_sdkv1.QLDBSession {
-	return Must(conn[*qldbsession_sdkv1.QLDBSession](context.TODO(), c, names.QLDBSession))
+func (c *AWSClient) QLDBSessionConn(ctx context.Context) *qldbsession_sdkv1.QLDBSession {
+	return Must(conn[*qldbsession_sdkv1.QLDBSession](ctx, c, names.QLDBSession))
 }
 
-func (c *AWSClient) QuickSightConn() *quicksight_sdkv1.QuickSight {
-	return Must(conn[*quicksight_sdkv1.QuickSight](context.TODO(), c, names.QuickSight))
+func (c *AWSClient) QuickSightConn(ctx context.Context) *quicksight_sdkv1.QuickSight {
+	return Must(conn[*quicksight_sdkv1.QuickSight](ctx, c, names.QuickSight))
 }
 
-func (c *AWSClient) RAMConn() *ram_sdkv1.RAM {
-	return Must(conn[*ram_sdkv1.RAM](context.TODO(), c, names.RAM))
+func (c *AWSClient) RAMConn(ctx context.Context) *ram_sdkv1.RAM {
+	return Must(conn[*ram_sdkv1.RAM](ctx, c, names.RAM))
 }
 
-func (c *AWSClient) RBinClient() *rbin_sdkv2.Client {
-	return Must(client[*rbin_sdkv2.Client](context.TODO(), c, names.RBin))
+func (c *AWSClient) RBinClient(ctx context.Context) *rbin_sdkv2.Client {
+	return Must(client[*rbin_sdkv2.Client](ctx, c, names.RBin))
 }
 
-func (c *AWSClient) RDSConn() *rds_sdkv1.RDS {
-	return Must(conn[*rds_sdkv1.RDS](context.TODO(), c, names.RDS))
+func (c *AWSClient) RDSConn(ctx context.Context) *rds_sdkv1.RDS {
+	return Must(conn[*rds_sdkv1.RDS](ctx, c, names.RDS))
 }
 
-func (c *AWSClient) RDSClient() *rds_sdkv2.Client {
-	return Must(client[*rds_sdkv2.Client](context.TODO(), c, names.RDS))
+func (c *AWSClient) RDSClient(ctx context.Context) *rds_sdkv2.Client {
+	return Must(client[*rds_sdkv2.Client](ctx, c, names.RDS))
 }
 
-func (c *AWSClient) RDSDataConn() *rdsdataservice_sdkv1.RDSDataService {
-	return Must(conn[*rdsdataservice_sdkv1.RDSDataService](context.TODO(), c, names.RDSData))
+func (c *AWSClient) RDSDataConn(ctx context.Context) *rdsdataservice_sdkv1.RDSDataService {
+	return Must(conn[*rdsdataservice_sdkv1.RDSDataService](ctx, c, names.RDSData))
 }
 
-func (c *AWSClient) RUMConn() *cloudwatchrum_sdkv1.CloudWatchRUM {
-	return Must(conn[*cloudwatchrum_sdkv1.CloudWatchRUM](context.TODO(), c, names.RUM))
+func (c *AWSClient) RUMConn(ctx context.Context) *cloudwatchrum_sdkv1.CloudWatchRUM {
+	return Must(conn[*cloudwatchrum_sdkv1.CloudWatchRUM](ctx, c, names.RUM))
 }
 
-func (c *AWSClient) RedshiftConn() *redshift_sdkv1.Redshift {
-	return Must(conn[*redshift_sdkv1.Redshift](context.TODO(), c, names.Redshift))
+func (c *AWSClient) RedshiftConn(ctx context.Context) *redshift_sdkv1.Redshift {
+	return Must(conn[*redshift_sdkv1.Redshift](ctx, c, names.Redshift))
 }
 
-func (c *AWSClient) RedshiftDataConn() *redshiftdataapiservice_sdkv1.RedshiftDataAPIService {
-	return Must(conn[*redshiftdataapiservice_sdkv1.RedshiftDataAPIService](context.TODO(), c, names.RedshiftData))
+func (c *AWSClient) RedshiftDataConn(ctx context.Context) *redshiftdataapiservice_sdkv1.RedshiftDataAPIService {
+	return Must(conn[*redshiftdataapiservice_sdkv1.RedshiftDataAPIService](ctx, c, names.RedshiftData))
 }
 
-func (c *AWSClient) RedshiftServerlessConn() *redshiftserverless_sdkv1.RedshiftServerless {
-	return Must(conn[*redshiftserverless_sdkv1.RedshiftServerless](context.TODO(), c, names.RedshiftServerless))
+func (c *AWSClient) RedshiftServerlessConn(ctx context.Context) *redshiftserverless_sdkv1.RedshiftServerless {
+	return Must(conn[*redshiftserverless_sdkv1.RedshiftServerless](ctx, c, names.RedshiftServerless))
 }
 
-func (c *AWSClient) RekognitionConn() *rekognition_sdkv1.Rekognition {
-	return Must(conn[*rekognition_sdkv1.Rekognition](context.TODO(), c, names.Rekognition))
+func (c *AWSClient) RekognitionConn(ctx context.Context) *rekognition_sdkv1.Rekognition {
+	return Must(conn[*rekognition_sdkv1.Rekognition](ctx, c, names.Rekognition))
 }
 
-func (c *AWSClient) ResilienceHubConn() *resiliencehub_sdkv1.ResilienceHub {
-	return Must(conn[*resiliencehub_sdkv1.ResilienceHub](context.TODO(), c, names.ResilienceHub))
+func (c *AWSClient) ResilienceHubConn(ctx context.Context) *resiliencehub_sdkv1.ResilienceHub {
+	return Must(conn[*resiliencehub_sdkv1.ResilienceHub](ctx, c, names.ResilienceHub))
 }
 
-func (c *AWSClient) ResourceExplorer2Client() *resourceexplorer2_sdkv2.Client {
-	return Must(client[*resourceexplorer2_sdkv2.Client](context.TODO(), c, names.ResourceExplorer2))
+func (c *AWSClient) ResourceExplorer2Client(ctx context.Context) *resourceexplorer2_sdkv2.Client {
+	return Must(client[*resourceexplorer2_sdkv2.Client](ctx, c, names.ResourceExplorer2))
 }
 
-func (c *AWSClient) ResourceGroupsConn() *resourcegroups_sdkv1.ResourceGroups {
-	return Must(conn[*resourcegroups_sdkv1.ResourceGroups](context.TODO(), c, names.ResourceGroups))
+func (c *AWSClient) ResourceGroupsConn(ctx context.Context) *resourcegroups_sdkv1.ResourceGroups {
+	return Must(conn[*resourcegroups_sdkv1.ResourceGroups](ctx, c, names.ResourceGroups))
 }
 
-func (c *AWSClient) ResourceGroupsTaggingAPIConn() *resourcegroupstaggingapi_sdkv1.ResourceGroupsTaggingAPI {
-	return Must(conn[*resourcegroupstaggingapi_sdkv1.ResourceGroupsTaggingAPI](context.TODO(), c, names.ResourceGroupsTaggingAPI))
+func (c *AWSClient) ResourceGroupsTaggingAPIConn(ctx context.Context) *resourcegroupstaggingapi_sdkv1.ResourceGroupsTaggingAPI {
+	return Must(conn[*resourcegroupstaggingapi_sdkv1.ResourceGroupsTaggingAPI](ctx, c, names.ResourceGroupsTaggingAPI))
 }
 
-func (c *AWSClient) RoboMakerConn() *robomaker_sdkv1.RoboMaker {
-	return Must(conn[*robomaker_sdkv1.RoboMaker](context.TODO(), c, names.RoboMaker))
+func (c *AWSClient) RoboMakerConn(ctx context.Context) *robomaker_sdkv1.RoboMaker {
+	return Must(conn[*robomaker_sdkv1.RoboMaker](ctx, c, names.RoboMaker))
 }
 
-func (c *AWSClient) RolesAnywhereClient() *rolesanywhere_sdkv2.Client {
-	return Must(client[*rolesanywhere_sdkv2.Client](context.TODO(), c, names.RolesAnywhere))
+func (c *AWSClient) RolesAnywhereClient(ctx context.Context) *rolesanywhere_sdkv2.Client {
+	return Must(client[*rolesanywhere_sdkv2.Client](ctx, c, names.RolesAnywhere))
 }
 
-func (c *AWSClient) Route53Conn() *route53_sdkv1.Route53 {
-	return Must(conn[*route53_sdkv1.Route53](context.TODO(), c, names.Route53))
+func (c *AWSClient) Route53Conn(ctx context.Context) *route53_sdkv1.Route53 {
+	return Must(conn[*route53_sdkv1.Route53](ctx, c, names.Route53))
 }
 
-func (c *AWSClient) Route53DomainsClient() *route53domains_sdkv2.Client {
-	return Must(client[*route53domains_sdkv2.Client](context.TODO(), c, names.Route53Domains))
+func (c *AWSClient) Route53DomainsClient(ctx context.Context) *route53domains_sdkv2.Client {
+	return Must(client[*route53domains_sdkv2.Client](ctx, c, names.Route53Domains))
 }
 
-func (c *AWSClient) Route53RecoveryClusterConn() *route53recoverycluster_sdkv1.Route53RecoveryCluster {
-	return Must(conn[*route53recoverycluster_sdkv1.Route53RecoveryCluster](context.TODO(), c, names.Route53RecoveryCluster))
+func (c *AWSClient) Route53RecoveryClusterConn(ctx context.Context) *route53recoverycluster_sdkv1.Route53RecoveryCluster {
+	return Must(conn[*route53recoverycluster_sdkv1.Route53RecoveryCluster](ctx, c, names.Route53RecoveryCluster))
 }
 
-func (c *AWSClient) Route53RecoveryControlConfigConn() *route53recoverycontrolconfig_sdkv1.Route53RecoveryControlConfig {
-	return Must(conn[*route53recoverycontrolconfig_sdkv1.Route53RecoveryControlConfig](context.TODO(), c, names.Route53RecoveryControlConfig))
+func (c *AWSClient) Route53RecoveryControlConfigConn(ctx context.Context) *route53recoverycontrolconfig_sdkv1.Route53RecoveryControlConfig {
+	return Must(conn[*route53recoverycontrolconfig_sdkv1.Route53RecoveryControlConfig](ctx, c, names.Route53RecoveryControlConfig))
 }
 
-func (c *AWSClient) Route53RecoveryReadinessConn() *route53recoveryreadiness_sdkv1.Route53RecoveryReadiness {
-	return Must(conn[*route53recoveryreadiness_sdkv1.Route53RecoveryReadiness](context.TODO(), c, names.Route53RecoveryReadiness))
+func (c *AWSClient) Route53RecoveryReadinessConn(ctx context.Context) *route53recoveryreadiness_sdkv1.Route53RecoveryReadiness {
+	return Must(conn[*route53recoveryreadiness_sdkv1.Route53RecoveryReadiness](ctx, c, names.Route53RecoveryReadiness))
 }
 
-func (c *AWSClient) Route53ResolverConn() *route53resolver_sdkv1.Route53Resolver {
-	return Must(conn[*route53resolver_sdkv1.Route53Resolver](context.TODO(), c, names.Route53Resolver))
+func (c *AWSClient) Route53ResolverConn(ctx context.Context) *route53resolver_sdkv1.Route53Resolver {
+	return Must(conn[*route53resolver_sdkv1.Route53Resolver](ctx, c, names.Route53Resolver))
 }
 
-func (c *AWSClient) S3Conn() *s3_sdkv1.S3 {
-	return Must(conn[*s3_sdkv1.S3](context.TODO(), c, names.S3))
+func (c *AWSClient) S3Conn(ctx context.Context) *s3_sdkv1.S3 {
+	return Must(conn[*s3_sdkv1.S3](ctx, c, names.S3))
 }
 
-func (c *AWSClient) S3ControlConn() *s3control_sdkv1.S3Control {
-	return Must(conn[*s3control_sdkv1.S3Control](context.TODO(), c, names.S3Control))
+func (c *AWSClient) S3ControlConn(ctx context.Context) *s3control_sdkv1.S3Control {
+	return Must(conn[*s3control_sdkv1.S3Control](ctx, c, names.S3Control))
 }
 
-func (c *AWSClient) S3ControlClient() *s3control_sdkv2.Client {
-	return Must(client[*s3control_sdkv2.Client](context.TODO(), c, names.S3Control))
+func (c *AWSClient) S3ControlClient(ctx context.Context) *s3control_sdkv2.Client {
+	return Must(client[*s3control_sdkv2.Client](ctx, c, names.S3Control))
 }
 
-func (c *AWSClient) S3OutpostsConn() *s3outposts_sdkv1.S3Outposts {
-	return Must(conn[*s3outposts_sdkv1.S3Outposts](context.TODO(), c, names.S3Outposts))
+func (c *AWSClient) S3OutpostsConn(ctx context.Context) *s3outposts_sdkv1.S3Outposts {
+	return Must(conn[*s3outposts_sdkv1.S3Outposts](ctx, c, names.S3Outposts))
 }
 
-func (c *AWSClient) SESConn() *ses_sdkv1.SES {
-	return Must(conn[*ses_sdkv1.SES](context.TODO(), c, names.SES))
+func (c *AWSClient) SESConn(ctx context.Context) *ses_sdkv1.SES {
+	return Must(conn[*ses_sdkv1.SES](ctx, c, names.SES))
 }
 
-func (c *AWSClient) SESV2Client() *sesv2_sdkv2.Client {
-	return Must(client[*sesv2_sdkv2.Client](context.TODO(), c, names.SESV2))
+func (c *AWSClient) SESV2Client(ctx context.Context) *sesv2_sdkv2.Client {
+	return Must(client[*sesv2_sdkv2.Client](ctx, c, names.SESV2))
 }
 
-func (c *AWSClient) SFNConn() *sfn_sdkv1.SFN {
-	return Must(conn[*sfn_sdkv1.SFN](context.TODO(), c, names.SFN))
+func (c *AWSClient) SFNConn(ctx context.Context) *sfn_sdkv1.SFN {
+	return Must(conn[*sfn_sdkv1.SFN](ctx, c, names.SFN))
 }
 
-func (c *AWSClient) SMSConn() *sms_sdkv1.SMS {
-	return Must(conn[*sms_sdkv1.SMS](context.TODO(), c, names.SMS))
+func (c *AWSClient) SMSConn(ctx context.Context) *sms_sdkv1.SMS {
+	return Must(conn[*sms_sdkv1.SMS](ctx, c, names.SMS))
 }
 
-func (c *AWSClient) SNSConn() *sns_sdkv1.SNS {
-	return Must(conn[*sns_sdkv1.SNS](context.TODO(), c, names.SNS))
+func (c *AWSClient) SNSConn(ctx context.Context) *sns_sdkv1.SNS {
+	return Must(conn[*sns_sdkv1.SNS](ctx, c, names.SNS))
 }
 
-func (c *AWSClient) SQSConn() *sqs_sdkv1.SQS {
-	return Must(conn[*sqs_sdkv1.SQS](context.TODO(), c, names.SQS))
+func (c *AWSClient) SQSConn(ctx context.Context) *sqs_sdkv1.SQS {
+	return Must(conn[*sqs_sdkv1.SQS](ctx, c, names.SQS))
 }
 
-func (c *AWSClient) SSMConn() *ssm_sdkv1.SSM {
-	return Must(conn[*ssm_sdkv1.SSM](context.TODO(), c, names.SSM))
+func (c *AWSClient) SSMConn(ctx context.Context) *ssm_sdkv1.SSM {
+	return Must(conn[*ssm_sdkv1.SSM](ctx, c, names.SSM))
 }
 
-func (c *AWSClient) SSMClient() *ssm_sdkv2.Client {
-	return Must(client[*ssm_sdkv2.Client](context.TODO(), c, names.SSM))
+func (c *AWSClient) SSMClient(ctx context.Context) *ssm_sdkv2.Client {
+	return Must(client[*ssm_sdkv2.Client](ctx, c, names.SSM))
 }
 
-func (c *AWSClient) SSMContactsClient() *ssmcontacts_sdkv2.Client {
-	return Must(client[*ssmcontacts_sdkv2.Client](context.TODO(), c, names.SSMContacts))
+func (c *AWSClient) SSMContactsClient(ctx context.Context) *ssmcontacts_sdkv2.Client {
+	return Must(client[*ssmcontacts_sdkv2.Client](ctx, c, names.SSMContacts))
 }
 
-func (c *AWSClient) SSMIncidentsClient() *ssmincidents_sdkv2.Client {
-	return Must(client[*ssmincidents_sdkv2.Client](context.TODO(), c, names.SSMIncidents))
+func (c *AWSClient) SSMIncidentsClient(ctx context.Context) *ssmincidents_sdkv2.Client {
+	return Must(client[*ssmincidents_sdkv2.Client](ctx, c, names.SSMIncidents))
 }
 
-func (c *AWSClient) SSOConn() *sso_sdkv1.SSO {
-	return Must(conn[*sso_sdkv1.SSO](context.TODO(), c, names.SSO))
+func (c *AWSClient) SSOConn(ctx context.Context) *sso_sdkv1.SSO {
+	return Must(conn[*sso_sdkv1.SSO](ctx, c, names.SSO))
 }
 
-func (c *AWSClient) SSOAdminConn() *ssoadmin_sdkv1.SSOAdmin {
-	return Must(conn[*ssoadmin_sdkv1.SSOAdmin](context.TODO(), c, names.SSOAdmin))
+func (c *AWSClient) SSOAdminConn(ctx context.Context) *ssoadmin_sdkv1.SSOAdmin {
+	return Must(conn[*ssoadmin_sdkv1.SSOAdmin](ctx, c, names.SSOAdmin))
 }
 
-func (c *AWSClient) SSOOIDCConn() *ssooidc_sdkv1.SSOOIDC {
-	return Must(conn[*ssooidc_sdkv1.SSOOIDC](context.TODO(), c, names.SSOOIDC))
+func (c *AWSClient) SSOOIDCConn(ctx context.Context) *ssooidc_sdkv1.SSOOIDC {
+	return Must(conn[*ssooidc_sdkv1.SSOOIDC](ctx, c, names.SSOOIDC))
 }
 
-func (c *AWSClient) STSConn() *sts_sdkv1.STS {
-	return Must(conn[*sts_sdkv1.STS](context.TODO(), c, names.STS))
+func (c *AWSClient) STSConn(ctx context.Context) *sts_sdkv1.STS {
+	return Must(conn[*sts_sdkv1.STS](ctx, c, names.STS))
 }
 
-func (c *AWSClient) SWFConn() *swf_sdkv1.SWF {
-	return Must(conn[*swf_sdkv1.SWF](context.TODO(), c, names.SWF))
+func (c *AWSClient) SWFClient(ctx context.Context) *swf_sdkv2.Client {
+	return Must(client[*swf_sdkv2.Client](ctx, c, names.SWF))
 }
 
-func (c *AWSClient) SageMakerConn() *sagemaker_sdkv1.SageMaker {
-	return Must(conn[*sagemaker_sdkv1.SageMaker](context.TODO(), c, names.SageMaker))
+func (c *AWSClient) SageMakerConn(ctx context.Context) *sagemaker_sdkv1.SageMaker {
+	return Must(conn[*sagemaker_sdkv1.SageMaker](ctx, c, names.SageMaker))
 }
 
-func (c *AWSClient) SageMakerA2IRuntimeConn() *augmentedairuntime_sdkv1.AugmentedAIRuntime {
-	return Must(conn[*augmentedairuntime_sdkv1.AugmentedAIRuntime](context.TODO(), c, names.SageMakerA2IRuntime))
+func (c *AWSClient) SageMakerA2IRuntimeConn(ctx context.Context) *augmentedairuntime_sdkv1.AugmentedAIRuntime {
+	return Must(conn[*augmentedairuntime_sdkv1.AugmentedAIRuntime](ctx, c, names.SageMakerA2IRuntime))
 }
 
-func (c *AWSClient) SageMakerEdgeConn() *sagemakeredgemanager_sdkv1.SagemakerEdgeManager {
-	return Must(conn[*sagemakeredgemanager_sdkv1.SagemakerEdgeManager](context.TODO(), c, names.SageMakerEdge))
+func (c *AWSClient) SageMakerEdgeConn(ctx context.Context) *sagemakeredgemanager_sdkv1.SagemakerEdgeManager {
+	return Must(conn[*sagemakeredgemanager_sdkv1.SagemakerEdgeManager](ctx, c, names.SageMakerEdge))
 }
 
-func (c *AWSClient) SageMakerFeatureStoreRuntimeConn() *sagemakerfeaturestoreruntime_sdkv1.SageMakerFeatureStoreRuntime {
-	return Must(conn[*sagemakerfeaturestoreruntime_sdkv1.SageMakerFeatureStoreRuntime](context.TODO(), c, names.SageMakerFeatureStoreRuntime))
+func (c *AWSClient) SageMakerFeatureStoreRuntimeConn(ctx context.Context) *sagemakerfeaturestoreruntime_sdkv1.SageMakerFeatureStoreRuntime {
+	return Must(conn[*sagemakerfeaturestoreruntime_sdkv1.SageMakerFeatureStoreRuntime](ctx, c, names.SageMakerFeatureStoreRuntime))
 }
 
-func (c *AWSClient) SageMakerRuntimeConn() *sagemakerruntime_sdkv1.SageMakerRuntime {
-	return Must(conn[*sagemakerruntime_sdkv1.SageMakerRuntime](context.TODO(), c, names.SageMakerRuntime))
+func (c *AWSClient) SageMakerRuntimeConn(ctx context.Context) *sagemakerruntime_sdkv1.SageMakerRuntime {
+	return Must(conn[*sagemakerruntime_sdkv1.SageMakerRuntime](ctx, c, names.SageMakerRuntime))
 }
 
-func (c *AWSClient) SavingsPlansConn() *savingsplans_sdkv1.SavingsPlans {
-	return Must(conn[*savingsplans_sdkv1.SavingsPlans](context.TODO(), c, names.SavingsPlans))
+func (c *AWSClient) SavingsPlansConn(ctx context.Context) *savingsplans_sdkv1.SavingsPlans {
+	return Must(conn[*savingsplans_sdkv1.SavingsPlans](ctx, c, names.SavingsPlans))
 }
 
-func (c *AWSClient) SchedulerClient() *scheduler_sdkv2.Client {
-	return Must(client[*scheduler_sdkv2.Client](context.TODO(), c, names.Scheduler))
+func (c *AWSClient) SchedulerClient(ctx context.Context) *scheduler_sdkv2.Client {
+	return Must(client[*scheduler_sdkv2.Client](ctx, c, names.Scheduler))
 }
 
-func (c *AWSClient) SchemasConn() *schemas_sdkv1.Schemas {
-	return Must(conn[*schemas_sdkv1.Schemas](context.TODO(), c, names.Schemas))
+func (c *AWSClient) SchemasConn(ctx context.Context) *schemas_sdkv1.Schemas {
+	return Must(conn[*schemas_sdkv1.Schemas](ctx, c, names.Schemas))
 }
 
-func (c *AWSClient) SecretsManagerConn() *secretsmanager_sdkv1.SecretsManager {
-	return Must(conn[*secretsmanager_sdkv1.SecretsManager](context.TODO(), c, names.SecretsManager))
+func (c *AWSClient) SecretsManagerConn(ctx context.Context) *secretsmanager_sdkv1.SecretsManager {
+	return Must(conn[*secretsmanager_sdkv1.SecretsManager](ctx, c, names.SecretsManager))
 }
 
-func (c *AWSClient) SecurityHubConn() *securityhub_sdkv1.SecurityHub {
-	return Must(conn[*securityhub_sdkv1.SecurityHub](context.TODO(), c, names.SecurityHub))
+func (c *AWSClient) SecurityHubConn(ctx context.Context) *securityhub_sdkv1.SecurityHub {
+	return Must(conn[*securityhub_sdkv1.SecurityHub](ctx, c, names.SecurityHub))
 }
 
-func (c *AWSClient) SecurityLakeClient() *securitylake_sdkv2.Client {
-	return Must(client[*securitylake_sdkv2.Client](context.TODO(), c, names.SecurityLake))
+func (c *AWSClient) SecurityLakeClient(ctx context.Context) *securitylake_sdkv2.Client {
+	return Must(client[*securitylake_sdkv2.Client](ctx, c, names.SecurityLake))
 }
 
-func (c *AWSClient) ServerlessRepoConn() *serverlessapplicationrepository_sdkv1.ServerlessApplicationRepository {
-	return Must(conn[*serverlessapplicationrepository_sdkv1.ServerlessApplicationRepository](context.TODO(), c, names.ServerlessRepo))
+func (c *AWSClient) ServerlessRepoConn(ctx context.Context) *serverlessapplicationrepository_sdkv1.ServerlessApplicationRepository {
+	return Must(conn[*serverlessapplicationrepository_sdkv1.ServerlessApplicationRepository](ctx, c, names.ServerlessRepo))
 }
 
-func (c *AWSClient) ServiceCatalogConn() *servicecatalog_sdkv1.ServiceCatalog {
-	return Must(conn[*servicecatalog_sdkv1.ServiceCatalog](context.TODO(), c, names.ServiceCatalog))
+func (c *AWSClient) ServiceCatalogConn(ctx context.Context) *servicecatalog_sdkv1.ServiceCatalog {
+	return Must(conn[*servicecatalog_sdkv1.ServiceCatalog](ctx, c, names.ServiceCatalog))
 }
 
-func (c *AWSClient) ServiceCatalogAppRegistryConn() *appregistry_sdkv1.AppRegistry {
-	return Must(conn[*appregistry_sdkv1.AppRegistry](context.TODO(), c, names.ServiceCatalogAppRegistry))
+func (c *AWSClient) ServiceCatalogAppRegistryConn(ctx context.Context) *appregistry_sdkv1.AppRegistry {
+	return Must(conn[*appregistry_sdkv1.AppRegistry](ctx, c, names.ServiceCatalogAppRegistry))
 }
 
-func (c *AWSClient) ServiceDiscoveryConn() *servicediscovery_sdkv1.ServiceDiscovery {
-	return Must(conn[*servicediscovery_sdkv1.ServiceDiscovery](context.TODO(), c, names.ServiceDiscovery))
+func (c *AWSClient) ServiceDiscoveryConn(ctx context.Context) *servicediscovery_sdkv1.ServiceDiscovery {
+	return Must(conn[*servicediscovery_sdkv1.ServiceDiscovery](ctx, c, names.ServiceDiscovery))
 }
 
-func (c *AWSClient) ServiceQuotasConn() *servicequotas_sdkv1.ServiceQuotas {
-	return Must(conn[*servicequotas_sdkv1.ServiceQuotas](context.TODO(), c, names.ServiceQuotas))
+func (c *AWSClient) ServiceQuotasConn(ctx context.Context) *servicequotas_sdkv1.ServiceQuotas {
+	return Must(conn[*servicequotas_sdkv1.ServiceQuotas](ctx, c, names.ServiceQuotas))
 }
 
-func (c *AWSClient) ShieldConn() *shield_sdkv1.Shield {
-	return Must(conn[*shield_sdkv1.Shield](context.TODO(), c, names.Shield))
+func (c *AWSClient) ShieldConn(ctx context.Context) *shield_sdkv1.Shield {
+	return Must(conn[*shield_sdkv1.Shield](ctx, c, names.Shield))
 }
 
-func (c *AWSClient) SignerConn() *signer_sdkv1.Signer {
-	return Must(conn[*signer_sdkv1.Signer](context.TODO(), c, names.Signer))
+func (c *AWSClient) SignerConn(ctx context.Context) *signer_sdkv1.Signer {
+	return Must(conn[*signer_sdkv1.Signer](ctx, c, names.Signer))
 }
 
-func (c *AWSClient) SimpleDBConn() *simpledb_sdkv1.SimpleDB {
-	return Must(conn[*simpledb_sdkv1.SimpleDB](context.TODO(), c, names.SimpleDB))
+func (c *AWSClient) SimpleDBConn(ctx context.Context) *simpledb_sdkv1.SimpleDB {
+	return Must(conn[*simpledb_sdkv1.SimpleDB](ctx, c, names.SimpleDB))
 }
 
-func (c *AWSClient) SnowDeviceManagementConn() *snowdevicemanagement_sdkv1.SnowDeviceManagement {
-	return Must(conn[*snowdevicemanagement_sdkv1.SnowDeviceManagement](context.TODO(), c, names.SnowDeviceManagement))
+func (c *AWSClient) SnowDeviceManagementConn(ctx context.Context) *snowdevicemanagement_sdkv1.SnowDeviceManagement {
+	return Must(conn[*snowdevicemanagement_sdkv1.SnowDeviceManagement](ctx, c, names.SnowDeviceManagement))
 }
 
-func (c *AWSClient) SnowballConn() *snowball_sdkv1.Snowball {
-	return Must(conn[*snowball_sdkv1.Snowball](context.TODO(), c, names.Snowball))
+func (c *AWSClient) SnowballConn(ctx context.Context) *snowball_sdkv1.Snowball {
+	return Must(conn[*snowball_sdkv1.Snowball](ctx, c, names.Snowball))
 }
 
-func (c *AWSClient) StorageGatewayConn() *storagegateway_sdkv1.StorageGateway {
-	return Must(conn[*storagegateway_sdkv1.StorageGateway](context.TODO(), c, names.StorageGateway))
+func (c *AWSClient) StorageGatewayConn(ctx context.Context) *storagegateway_sdkv1.StorageGateway {
+	return Must(conn[*storagegateway_sdkv1.StorageGateway](ctx, c, names.StorageGateway))
 }
 
-func (c *AWSClient) SupportConn() *support_sdkv1.Support {
-	return Must(conn[*support_sdkv1.Support](context.TODO(), c, names.Support))
+func (c *AWSClient) SupportConn(ctx context.Context) *support_sdkv1.Support {
+	return Must(conn[*support_sdkv1.Support](ctx, c, names.Support))
 }
 
-func (c *AWSClient) SyntheticsConn() *synthetics_sdkv1.Synthetics {
-	return Must(conn[*synthetics_sdkv1.Synthetics](context.TODO(), c, names.Synthetics))
+func (c *AWSClient) SyntheticsConn(ctx context.Context) *synthetics_sdkv1.Synthetics {
+	return Must(conn[*synthetics_sdkv1.Synthetics](ctx, c, names.Synthetics))
 }
 
-func (c *AWSClient) TextractConn() *textract_sdkv1.Textract {
-	return Must(conn[*textract_sdkv1.Textract](context.TODO(), c, names.Textract))
+func (c *AWSClient) TextractConn(ctx context.Context) *textract_sdkv1.Textract {
+	return Must(conn[*textract_sdkv1.Textract](ctx, c, names.Textract))
 }
 
-func (c *AWSClient) TimestreamQueryConn() *timestreamquery_sdkv1.TimestreamQuery {
-	return Must(conn[*timestreamquery_sdkv1.TimestreamQuery](context.TODO(), c, names.TimestreamQuery))
+func (c *AWSClient) TimestreamQueryConn(ctx context.Context) *timestreamquery_sdkv1.TimestreamQuery {
+	return Must(conn[*timestreamquery_sdkv1.TimestreamQuery](ctx, c, names.TimestreamQuery))
 }
 
-func (c *AWSClient) TimestreamWriteConn() *timestreamwrite_sdkv1.TimestreamWrite {
-	return Must(conn[*timestreamwrite_sdkv1.TimestreamWrite](context.TODO(), c, names.TimestreamWrite))
+func (c *AWSClient) TimestreamWriteConn(ctx context.Context) *timestreamwrite_sdkv1.TimestreamWrite {
+	return Must(conn[*timestreamwrite_sdkv1.TimestreamWrite](ctx, c, names.TimestreamWrite))
 }
 
-func (c *AWSClient) TranscribeClient() *transcribe_sdkv2.Client {
-	return Must(client[*transcribe_sdkv2.Client](context.TODO(), c, names.Transcribe))
+func (c *AWSClient) TranscribeClient(ctx context.Context) *transcribe_sdkv2.Client {
+	return Must(client[*transcribe_sdkv2.Client](ctx, c, names.Transcribe))
 }
 
-func (c *AWSClient) TranscribeStreamingConn() *transcribestreamingservice_sdkv1.TranscribeStreamingService {
-	return Must(conn[*transcribestreamingservice_sdkv1.TranscribeStreamingService](context.TODO(), c, names.TranscribeStreaming))
+func (c *AWSClient) TranscribeStreamingConn(ctx context.Context) *transcribestreamingservice_sdkv1.TranscribeStreamingService {
+	return Must(conn[*transcribestreamingservice_sdkv1.TranscribeStreamingService](ctx, c, names.TranscribeStreaming))
 }
 
-func (c *AWSClient) TransferConn() *transfer_sdkv1.Transfer {
-	return Must(conn[*transfer_sdkv1.Transfer](context.TODO(), c, names.Transfer))
+func (c *AWSClient) TransferConn(ctx context.Context) *transfer_sdkv1.Transfer {
+	return Must(conn[*transfer_sdkv1.Transfer](ctx, c, names.Transfer))
 }
 
-func (c *AWSClient) TranslateConn() *translate_sdkv1.Translate {
-	return Must(conn[*translate_sdkv1.Translate](context.TODO(), c, names.Translate))
+func (c *AWSClient) TranslateConn(ctx context.Context) *translate_sdkv1.Translate {
+	return Must(conn[*translate_sdkv1.Translate](ctx, c, names.Translate))
 }
 
-func (c *AWSClient) VPCLatticeClient() *vpclattice_sdkv2.Client {
-	return Must(client[*vpclattice_sdkv2.Client](context.TODO(), c, names.VPCLattice))
+func (c *AWSClient) VPCLatticeClient(ctx context.Context) *vpclattice_sdkv2.Client {
+	return Must(client[*vpclattice_sdkv2.Client](ctx, c, names.VPCLattice))
 }
 
-func (c *AWSClient) VoiceIDConn() *voiceid_sdkv1.VoiceID {
-	return Must(conn[*voiceid_sdkv1.VoiceID](context.TODO(), c, names.VoiceID))
+func (c *AWSClient) VoiceIDConn(ctx context.Context) *voiceid_sdkv1.VoiceID {
+	return Must(conn[*voiceid_sdkv1.VoiceID](ctx, c, names.VoiceID))
 }
 
-func (c *AWSClient) WAFConn() *waf_sdkv1.WAF {
-	return Must(conn[*waf_sdkv1.WAF](context.TODO(), c, names.WAF))
+func (c *AWSClient) WAFConn(ctx context.Context) *waf_sdkv1.WAF {
+	return Must(conn[*waf_sdkv1.WAF](ctx, c, names.WAF))
 }
 
-func (c *AWSClient) WAFRegionalConn() *wafregional_sdkv1.WAFRegional {
-	return Must(conn[*wafregional_sdkv1.WAFRegional](context.TODO(), c, names.WAFRegional))
+func (c *AWSClient) WAFRegionalConn(ctx context.Context) *wafregional_sdkv1.WAFRegional {
+	return Must(conn[*wafregional_sdkv1.WAFRegional](ctx, c, names.WAFRegional))
 }
 
-func (c *AWSClient) WAFV2Conn() *wafv2_sdkv1.WAFV2 {
-	return Must(conn[*wafv2_sdkv1.WAFV2](context.TODO(), c, names.WAFV2))
+func (c *AWSClient) WAFV2Conn(ctx context.Context) *wafv2_sdkv1.WAFV2 {
+	return Must(conn[*wafv2_sdkv1.WAFV2](ctx, c, names.WAFV2))
 }
 
-func (c *AWSClient) WellArchitectedConn() *wellarchitected_sdkv1.WellArchitected {
-	return Must(conn[*wellarchitected_sdkv1.WellArchitected](context.TODO(), c, names.WellArchitected))
+func (c *AWSClient) WellArchitectedConn(ctx context.Context) *wellarchitected_sdkv1.WellArchitected {
+	return Must(conn[*wellarchitected_sdkv1.WellArchitected](ctx, c, names.WellArchitected))
 }
 
-func (c *AWSClient) WisdomConn() *connectwisdomservice_sdkv1.ConnectWisdomService {
-	return Must(conn[*connectwisdomservice_sdkv1.ConnectWisdomService](context.TODO(), c, names.Wisdom))
+func (c *AWSClient) WisdomConn(ctx context.Context) *connectwisdomservice_sdkv1.ConnectWisdomService {
+	return Must(conn[*connectwisdomservice_sdkv1.ConnectWisdomService](ctx, c, names.Wisdom))
 }
 
-func (c *AWSClient) WorkDocsConn() *workdocs_sdkv1.WorkDocs {
-	return Must(conn[*workdocs_sdkv1.WorkDocs](context.TODO(), c, names.WorkDocs))
+func (c *AWSClient) WorkDocsConn(ctx context.Context) *workdocs_sdkv1.WorkDocs {
+	return Must(conn[*workdocs_sdkv1.WorkDocs](ctx, c, names.WorkDocs))
 }
 
-func (c *AWSClient) WorkLinkConn() *worklink_sdkv1.WorkLink {
-	return Must(conn[*worklink_sdkv1.WorkLink](context.TODO(), c, names.WorkLink))
+func (c *AWSClient) WorkLinkConn(ctx context.Context) *worklink_sdkv1.WorkLink {
+	return Must(conn[*worklink_sdkv1.WorkLink](ctx, c, names.WorkLink))
 }
 
-func (c *AWSClient) WorkMailConn() *workmail_sdkv1.WorkMail {
-	return Must(conn[*workmail_sdkv1.WorkMail](context.TODO(), c, names.WorkMail))
+func (c *AWSClient) WorkMailConn(ctx context.Context) *workmail_sdkv1.WorkMail {
+	return Must(conn[*workmail_sdkv1.WorkMail](ctx, c, names.WorkMail))
 }
 
-func (c *AWSClient) WorkMailMessageFlowConn() *workmailmessageflow_sdkv1.WorkMailMessageFlow {
-	return Must(conn[*workmailmessageflow_sdkv1.WorkMailMessageFlow](context.TODO(), c, names.WorkMailMessageFlow))
+func (c *AWSClient) WorkMailMessageFlowConn(ctx context.Context) *workmailmessageflow_sdkv1.WorkMailMessageFlow {
+	return Must(conn[*workmailmessageflow_sdkv1.WorkMailMessageFlow](ctx, c, names.WorkMailMessageFlow))
 }
 
-func (c *AWSClient) WorkSpacesConn() *workspaces_sdkv1.WorkSpaces {
-	return Must(conn[*workspaces_sdkv1.WorkSpaces](context.TODO(), c, names.WorkSpaces))
+func (c *AWSClient) WorkSpacesConn(ctx context.Context) *workspaces_sdkv1.WorkSpaces {
+	return Must(conn[*workspaces_sdkv1.WorkSpaces](ctx, c, names.WorkSpaces))
 }
 
-func (c *AWSClient) WorkSpacesWebConn() *workspacesweb_sdkv1.WorkSpacesWeb {
-	return Must(conn[*workspacesweb_sdkv1.WorkSpacesWeb](context.TODO(), c, names.WorkSpacesWeb))
+func (c *AWSClient) WorkSpacesWebConn(ctx context.Context) *workspacesweb_sdkv1.WorkSpacesWeb {
+	return Must(conn[*workspacesweb_sdkv1.WorkSpacesWeb](ctx, c, names.WorkSpacesWeb))
 }
 
-func (c *AWSClient) XRayClient() *xray_sdkv2.Client {
-	return Must(client[*xray_sdkv2.Client](context.TODO(), c, names.XRay))
+func (c *AWSClient) XRayClient(ctx context.Context) *xray_sdkv2.Client {
+	return Must(client[*xray_sdkv2.Client](ctx, c, names.XRay))
 }
