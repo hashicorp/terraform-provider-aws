@@ -15,7 +15,6 @@ import (
 	{{- end }}
 {{- end }}
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,7 +32,6 @@ type AWSClient struct {
 	Session                   *session_sdkv1.Session
 	TerraformVersion          string
 
-	awsConfig                 aws_sdkv2.Config
 	clients                   map[string]any
 	conns                     map[string]any
 	httpClient                *http.Client
