@@ -53,7 +53,9 @@ func (p *servicePackage) Configure(config map[string]any) {
 }
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) (*cloudwatchrum_sdkv1.CloudWatchRUM, error) {
+func (p *servicePackage) NewConn(ctx context.Context) (*cloudwatchrum_sdkv1.CloudWatchRUM, error) {
+	sess := p.config["session"].(*session_sdkv1.Session)
+
 	return cloudwatchrum_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))})), nil
 }
 

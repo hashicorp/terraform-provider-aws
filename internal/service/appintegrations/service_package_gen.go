@@ -63,7 +63,9 @@ func (p *servicePackage) Configure(config map[string]any) {
 }
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) (*appintegrationsservice_sdkv1.AppIntegrationsService, error) {
+func (p *servicePackage) NewConn(ctx context.Context) (*appintegrationsservice_sdkv1.AppIntegrationsService, error) {
+	sess := p.config["session"].(*session_sdkv1.Session)
+
 	return appintegrationsservice_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))})), nil
 }
 

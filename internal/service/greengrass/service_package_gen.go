@@ -40,7 +40,9 @@ func (p *servicePackage) Configure(config map[string]any) {
 }
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) (*greengrass_sdkv1.Greengrass, error) {
+func (p *servicePackage) NewConn(ctx context.Context) (*greengrass_sdkv1.Greengrass, error) {
+	sess := p.config["session"].(*session_sdkv1.Session)
+
 	return greengrass_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))})), nil
 }
 
