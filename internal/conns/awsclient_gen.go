@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"sync"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	accessanalyzer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	account_sdkv2 "github.com/aws/aws-sdk-go-v2/service/account"
 	acm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acm"
@@ -348,7 +347,6 @@ type AWSClient struct {
 	Session                 *session_sdkv1.Session
 	TerraformVersion        string
 
-	awsConfig  aws_sdkv2.Config
 	clients    map[string]any
 	conns      map[string]any
 	httpClient *http.Client
