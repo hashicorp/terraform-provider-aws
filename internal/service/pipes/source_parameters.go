@@ -2,14 +2,12 @@ package pipes
 
 import (
 	"regexp"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -630,7 +628,9 @@ func expandPipeSourceParameters(tfMap map[string]interface{}) *types.PipeSourceP
 
 	apiObject := &types.PipeSourceParameters{}
 
-	// ... nested attribute handling ...
+	if v, ok := tfMap["filter_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.FilterCriteria = expandFilterCriteria(v[0].(map[string]interface{}))
+	}
 
 	return apiObject
 }
@@ -647,6 +647,60 @@ func expandUpdatePipeSourceParameters(tfMap map[string]interface{}) *types.Updat
 	return apiObject
 }
 
+func expandFilterCriteria(tfMap map[string]interface{}) *types.FilterCriteria {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.FilterCriteria{}
+
+	if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Filters = expandFilters(v)
+	}
+
+	return apiObject
+}
+
+func expandFilter(tfMap map[string]interface{}) *types.Filter {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.Filter{}
+
+	if v, ok := tfMap["pattern"].(string); ok && v != "" {
+		apiObject.Pattern = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandFilters(tfList []interface{}) []types.Filter {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.Filter
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandFilter(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
 func flattenPipeSourceParameters(apiObject *types.PipeSourceParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -654,11 +708,52 @@ func flattenPipeSourceParameters(apiObject *types.PipeSourceParameters) map[stri
 
 	tfMap := map[string]interface{}{}
 
-	// ... nested attribute handling ...
+	if v := apiObject.FilterCriteria; v != nil {
+		tfMap["filter_criteria"] = []interface{}{flattenFilterCriteria(v)}
+	}
 
 	return tfMap
 }
 
+func flattenFilterCriteria(apiObject *types.FilterCriteria) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Filters; v != nil {
+		tfMap["filter"] = flattenFilters(v)
+	}
+
+	return tfMap
+}
+
+func flattenFilter(apiObject types.Filter) map[string]interface{} {
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Pattern; v != nil {
+		tfMap["pattern"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenFilters(apiObjects []types.Filter) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenFilter(apiObject))
+	}
+
+	return tfList
+}
+
+/*
 func expandSourceParameters(config []interface{}) *types.PipeSourceParameters {
 	if len(config) == 0 {
 		return nil
@@ -1541,3 +1636,4 @@ func expandSourceUpdateSqsQueueParameters(config []interface{}) *types.UpdatePip
 
 	return &parameters
 }
+*/
