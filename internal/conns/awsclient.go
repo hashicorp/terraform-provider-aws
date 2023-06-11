@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
@@ -125,23 +123,23 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string) (
 	}
 
 	v, ok := sp.(interface {
-		NewConn(context.Context, *session.Session) (T, error)
+		NewConn(context.Context) (T, error)
 	})
 	if !ok {
 		var zero T
 		return zero, fmt.Errorf("no AWS SDK v1 API client factory: %s", servicePackageName)
 	}
 
-	conn, err := v.NewConn(ctx, c.Session)
+	conn, err := v.NewConn(ctx)
 	if err != nil {
 		var zero T
 		return zero, err
 	}
 
 	if v, ok := sp.(interface {
-		CustomizeConn(context.Context, T, *session.Session) error
+		CustomizeConn(context.Context, T) (T, error)
 	}); ok {
-		err := v.CustomizeConn(ctx, conn, c.Session)
+		conn, err = v.CustomizeConn(ctx, conn)
 		if err != nil {
 			var zero T
 			return zero, err
@@ -174,23 +172,23 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string)
 	}
 
 	v, ok := sp.(interface {
-		NewClient(context.Context, aws_sdkv2.Config) (T, error)
+		NewClient(context.Context) (T, error)
 	})
 	if !ok {
 		var zero T
 		return zero, fmt.Errorf("no AWS SDK v2 API client factory: %s", servicePackageName)
 	}
 
-	client, err := v.NewClient(ctx, c.awsConfig)
+	client, err := v.NewClient(ctx)
 	if err != nil {
 		var zero T
 		return zero, err
 	}
 
 	if v, ok := sp.(interface {
-		CustomizeClient(context.Context, T, aws_sdkv2.Config) error
+		CustomizeClient(context.Context, T) (T, error)
 	}); ok {
-		err := v.CustomizeClient(ctx, client, c.awsConfig)
+		client, err = v.CustomizeClient(ctx, client)
 		if err != nil {
 			var zero T
 			return zero, err

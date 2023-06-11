@@ -206,6 +206,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 			"aws_sdkv2_config": &cfg,
 			"endpoint":         c.Endpoints[spName],
 			"partition":        partition,
+			"session":          sess,
 		}
 		switch spName {
 		case names.S3:
