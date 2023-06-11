@@ -12,7 +12,7 @@ import (
 )
 
 type servicePackage struct {
-	endpoint string
+	config map[string]any
 }
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
@@ -68,8 +68,8 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Route53RecoveryReadiness
 }
 
-func (p *servicePackage) SetEndpoint(endpoint string) {
-	p.endpoint = endpoint
+func (p *servicePackage) Configure(config map[string]any) {
+	p.config = config
 }
 
 var ServicePackage = &servicePackage{}

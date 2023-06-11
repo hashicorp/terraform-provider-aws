@@ -14,7 +14,7 @@ import (
 )
 
 type servicePackage struct {
-	endpoint string
+	config map[string]any
 }
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
@@ -243,20 +243,22 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.RDS
 }
 
-func (p *servicePackage) SetEndpoint(endpoint string) {
-	p.endpoint = endpoint
+func (p *servicePackage) Configure(config map[string]any) {
+	p.config = config
 }
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) (*rds_sdkv1.RDS, error) {
-	return rds_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.endpoint)})), nil
+	return rds_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))})), nil
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) (*rds_sdkv2.Client, error) {
+func (p *servicePackage) NewClient(ctx context.Context) (*rds_sdkv2.Client, error) {
+	cfg := *(p.config["aws_sdkv2_config"].(aws_sdkv2.Config))
+
 	return rds_sdkv2.NewFromConfig(cfg, func(o *rds_sdkv2.Options) {
-		if p.endpoint != "" {
-			o.EndpointResolver = rds_sdkv2.EndpointResolverFromURL(p.endpoint)
+		if endpoint := p.config["endpoint"].(string); endpoint != "" {
+			o.EndpointResolver = rds_sdkv2.EndpointResolverFromURL(endpoint)
 		}
 	}), nil
 }

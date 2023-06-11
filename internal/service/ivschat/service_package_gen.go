@@ -11,7 +11,7 @@ import (
 )
 
 type servicePackage struct {
-	endpoint string
+	config map[string]any
 }
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
@@ -51,15 +51,17 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.IVSChat
 }
 
-func (p *servicePackage) SetEndpoint(endpoint string) {
-	p.endpoint = endpoint
+func (p *servicePackage) Configure(config map[string]any) {
+	p.config = config
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) (*ivschat_sdkv2.Client, error) {
+func (p *servicePackage) NewClient(ctx context.Context) (*ivschat_sdkv2.Client, error) {
+	cfg := *(p.config["aws_sdkv2_config"].(aws_sdkv2.Config))
+
 	return ivschat_sdkv2.NewFromConfig(cfg, func(o *ivschat_sdkv2.Options) {
-		if p.endpoint != "" {
-			o.EndpointResolver = ivschat_sdkv2.EndpointResolverFromURL(p.endpoint)
+		if endpoint := p.config["endpoint"].(string); endpoint != "" {
+			o.EndpointResolver = ivschat_sdkv2.EndpointResolverFromURL(endpoint)
 		}
 	}), nil
 }

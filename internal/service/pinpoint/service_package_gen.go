@@ -12,7 +12,7 @@ import (
 )
 
 type servicePackage struct {
-	endpoint string
+	config map[string]any
 }
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
@@ -84,13 +84,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Pinpoint
 }
 
-func (p *servicePackage) SetEndpoint(endpoint string) {
-	p.endpoint = endpoint
+func (p *servicePackage) Configure(config map[string]any) {
+	p.config = config
 }
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) (*pinpoint_sdkv1.Pinpoint, error) {
-	return pinpoint_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.endpoint)})), nil
+	return pinpoint_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))})), nil
 }
 
 var ServicePackage = &servicePackage{}
