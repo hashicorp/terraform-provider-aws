@@ -130,14 +130,15 @@ func (p *servicePackage) SetEndpoint(endpoint string) {
 	p.endpoint = endpoint
 }
 
-{{if eq .SDKVersion "1" "1,2" }}
+{{- if not .SkipClientGenerate }}
+	{{if eq .SDKVersion "1" "1,2" }}
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, sess *session_sdkv1.Session) (*{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}, error) {
 	return {{ .GoV1Package }}_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.endpoint)})), nil
 }
-{{- end }}
+	{{- end }}
 
-{{if eq .SDKVersion "2" "1,2" }}
+	{{if eq .SDKVersion "2" "1,2" }}
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) (*{{ .GoV2Package }}_sdkv2.Client, error) {
 	return {{ .GoV2Package }}_sdkv2.NewFromConfig(cfg, func(o *{{ .GoV2Package }}_sdkv2.Options) {
@@ -146,6 +147,7 @@ func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) (*
 		}
 	}), nil
 }
+	{{- end }}
 {{- end }}
 
 var ServicePackage = &servicePackage{}
