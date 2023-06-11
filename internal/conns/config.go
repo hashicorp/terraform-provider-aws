@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	awsv2 "github.com/aws/aws-sdk-go-v2/aws"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go/aws"
@@ -64,7 +64,7 @@ type Config struct {
 	MaxRetries                     int
 	Profile                        string
 	Region                         string
-	RetryMode                      awsv2.RetryMode
+	RetryMode                      aws_sdkv2.RetryMode
 	S3UsePathStyle                 bool
 	SecretKey                      string
 	SharedConfigFiles              []string
@@ -197,13 +197,23 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.SetHTTPClient(sess.Config.HTTPClient) // Must be called while client.Session is nil.
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
-	client.awsConfig = cfg
 	client.clients = make(map[string]any, 0)
 	client.conns = make(map[string]any, 0)
 
-	// Set each service package's overridden API endpoint.
-	for _, sp := range client.ServicePackages {
-		sp.SetEndpoint(c.Endpoints[sp.ServicePackageName()])
+	// Configure service package.
+	for spName, sp := range client.ServicePackages {
+		m := map[string]any{
+			"aws_sdkv2_config": &cfg,
+			"endpoint":         c.Endpoints[spName],
+			"partition":        partition,
+		}
+		switch spName {
+		case names.S3:
+			m["s3_use_path_style"] = c.S3UsePathStyle
+		case names.STS:
+			m["sts_region"] = c.STSRegion
+		}
+		sp.Configure(ctx, m)
 	}
 
 	// API clients (generated).
