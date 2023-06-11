@@ -47,13 +47,4 @@ func (p *servicePackage) SetEndpoint(endpoint string) {
 	p.endpoint = endpoint
 }
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, cfg aws_sdkv2.Config) (*route53domains_sdkv2.Client, error) {
-	return route53domains_sdkv2.NewFromConfig(cfg, func(o *route53domains_sdkv2.Options) {
-		if p.endpoint != "" {
-			o.EndpointResolver = route53domains_sdkv2.EndpointResolverFromURL(p.endpoint)
-		}
-	}), nil
-}
-
 var ServicePackage = &servicePackage{}
