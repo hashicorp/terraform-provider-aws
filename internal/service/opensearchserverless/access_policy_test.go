@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -16,12 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfopensearchserverless "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpenSearchServerlessAccessPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var accesspolicy opensearchserverless.GetAccessPolicyOutput
+	var accesspolicy types.AccessPolicyDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_access_policy.test"
 
@@ -55,7 +55,7 @@ func TestAccOpenSearchServerlessAccessPolicy_basic(t *testing.T) {
 func TestAccOpenSearchServerlessAccessPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var accesspolicy opensearchserverless.GetAccessPolicyOutput
+	var accesspolicy types.AccessPolicyDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_access_policy.test"
 
@@ -84,22 +84,19 @@ func TestAccOpenSearchServerlessAccessPolicy_disappears(t *testing.T) {
 func testAccCheckAccessPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
-		ctx := context.Background()
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opensearchserverless_access_policy" {
 				continue
 			}
 
-			_, err := conn.GetAccessPolicy(ctx, &opensearchserverless.GetAccessPolicyInput{
-				Name: aws.String(rs.Primary.ID),
-				Type: types.AccessPolicyTypeData,
-			})
+			_, err := tfopensearchserverless.FindAccessPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
@@ -110,7 +107,7 @@ func testAccCheckAccessPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckAccessPolicyExists(ctx context.Context, name string, accesspolicy *opensearchserverless.GetAccessPolicyOutput) resource.TestCheckFunc {
+func testAccCheckAccessPolicyExists(ctx context.Context, name string, accesspolicy *types.AccessPolicyDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -122,10 +119,7 @@ func testAccCheckAccessPolicyExists(ctx context.Context, name string, accesspoli
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
-		resp, err := conn.GetAccessPolicy(ctx, &opensearchserverless.GetAccessPolicyInput{
-			Name: aws.String(rs.Primary.ID),
-			Type: types.AccessPolicyTypeData,
-		})
+		resp, err := tfopensearchserverless.FindAccessPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type"])
 
 		if err != nil {
 			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameAccessPolicy, rs.Primary.ID, err)
