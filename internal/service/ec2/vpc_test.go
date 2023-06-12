@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -1108,17 +1107,8 @@ func testAccCheckVPCDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfresource.RetryWhen(ctx, 2*time.Minute, func() (interface{}, error) {
-				return tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
-			}, func(err error) (bool, error) {
-				if err != nil && tfresource.NotFound(err) {
-					return false, err
-				} else if err != nil {
-					return false, err
-				} else { // nil error
-					return true, fmt.Errorf("resource found")
-				}
-			})
+			_, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
 				continue
 			}
