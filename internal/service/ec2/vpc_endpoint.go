@@ -367,6 +367,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChanges("dns_options", "ip_address_type", "policy", "private_dns_enabled", "security_group_ids", "route_table_ids", "subnet_ids") {
+		privateDNSEnabled := d.Get("private_dns_enabled").(bool)
 		input := &ec2.ModifyVpcEndpointInput{
 			VpcEndpointId: aws.String(d.Id()),
 		}
@@ -375,8 +376,10 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 			if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				tfMap := v.([]interface{})[0].(map[string]interface{})
 				apiObject := expandDNSOptionsSpecification(tfMap)
-				// Always send PrivateDnsOnlyForInboundResolverEndpoint on update.
-				apiObject.PrivateDnsOnlyForInboundResolverEndpoint = aws.Bool(tfMap["private_dns_only_for_inbound_resolver_endpoint"].(bool))
+				if privateDNSEnabled {
+					// Always send PrivateDnsOnlyForInboundResolverEndpoint on update.
+					apiObject.PrivateDnsOnlyForInboundResolverEndpoint = aws.Bool(tfMap["private_dns_only_for_inbound_resolver_endpoint"].(bool))
+				}
 				input.DnsOptions = apiObject
 			}
 		}
@@ -386,7 +389,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("private_dns_enabled") {
-			input.PrivateDnsEnabled = aws.Bool(d.Get("private_dns_enabled").(bool))
+			input.PrivateDnsEnabled = aws.Bool(privateDNSEnabled)
 		}
 
 		input.AddRouteTableIds, input.RemoveRouteTableIds = flattenAddAndRemoveStringLists(d, "route_table_ids")
