@@ -7,7 +7,6 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
-	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -22,20 +21,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/fms"
-	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
-	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
@@ -222,66 +214,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	c.sdkv2Conns(client, cfg)
 	c.sdkv2LazyConns(client, cfg)
 
-	// AWS SDK for Go v1 custom API clients.
-
-	// STS.
-	stsConfig := &aws.Config{
-		Endpoint: aws.String(c.Endpoints[names.STS]),
-	}
-	if c.STSRegion != "" {
-		stsConfig.Region = aws.String(c.STSRegion)
-	}
-	client.stsConn = sts.New(sess.Copy(stsConfig))
-
-	// Services that require multiple client configurations.
-	s3Config := &aws.Config{
-		Endpoint:         aws.String(c.Endpoints[names.S3]),
-		S3ForcePathStyle: aws.Bool(c.S3UsePathStyle),
-	}
-	client.s3Conn = s3.New(sess.Copy(s3Config))
-
-	// "Global" services that require customizations.
-	globalAcceleratorConfig := &aws.Config{
-		Endpoint: aws.String(c.Endpoints[names.GlobalAccelerator]),
-	}
-	route53Config := &aws.Config{
-		Endpoint: aws.String(c.Endpoints[names.Route53]),
-	}
-	route53RecoveryControlConfigConfig := &aws.Config{
-		Endpoint: aws.String(c.Endpoints[names.Route53RecoveryControlConfig]),
-	}
-	route53RecoveryReadinessConfig := &aws.Config{
-		Endpoint: aws.String(c.Endpoints[names.Route53RecoveryReadiness]),
-	}
-	shieldConfig := &aws.Config{
-		Endpoint: aws.String(c.Endpoints[names.Shield]),
-	}
-
-	// Force "global" services to correct Regions.
-	switch partition {
-	case endpoints.AwsPartitionID:
-		globalAcceleratorConfig.Region = aws.String(endpoints.UsWest2RegionID)
-		route53Config.Region = aws.String(endpoints.UsEast1RegionID)
-		route53RecoveryControlConfigConfig.Region = aws.String(endpoints.UsWest2RegionID)
-		route53RecoveryReadinessConfig.Region = aws.String(endpoints.UsWest2RegionID)
-		shieldConfig.Region = aws.String(endpoints.UsEast1RegionID)
-	case endpoints.AwsCnPartitionID:
-		// The AWS Go SDK is missing endpoint information for Route 53 in the AWS China partition.
-		// This can likely be removed in the future.
-		if aws.StringValue(route53Config.Endpoint) == "" {
-			route53Config.Endpoint = aws.String("https://api.route53.cn")
-		}
-		route53Config.Region = aws.String(endpoints.CnNorthwest1RegionID)
-	case endpoints.AwsUsGovPartitionID:
-		route53Config.Region = aws.String(endpoints.UsGovWest1RegionID)
-	}
-
-	client.globalacceleratorConn = globalaccelerator.New(sess.Copy(globalAcceleratorConfig))
-	client.route53Conn = route53.New(sess.Copy(route53Config))
-	client.route53recoverycontrolconfigConn = route53recoverycontrolconfig.New(sess.Copy(route53RecoveryControlConfigConfig))
-	client.route53recoveryreadinessConn = route53recoveryreadiness.New(sess.Copy(route53RecoveryReadinessConfig))
-	client.shieldConn = shield.New(sess.Copy(shieldConfig))
-
+	// Customize.
 	client.apigatewayConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// Many operations can return an error such as:
 		//   ConflictException: Unable to complete operation due to concurrent modification. Please try again later.
@@ -551,17 +484,6 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFTagOperationInternalErrorException, "Retry your request") {
 				r.Retryable = aws.Bool(true)
 			}
-		}
-	})
-
-	// AWS SDK for Go v2 custom API clients.
-
-	client.route53domainsClient = route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
-		if endpoint := c.Endpoints[names.Route53Domains]; endpoint != "" {
-			o.EndpointResolver = route53domains.EndpointResolverFromURL(endpoint)
-		} else if partition == endpoints.AwsPartitionID {
-			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
-			o.Region = endpoints.UsEast1RegionID
 		}
 	})
 
