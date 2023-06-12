@@ -95,6 +95,10 @@ func ResourceCluster() *schema.Resource {
 					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
 			},
+			"cluster_namespace_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_nodes": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -145,10 +149,6 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "1.0",
-			},
-			"cluster_namespace_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"database_name": {
 				Type:     schema.TypeString,
@@ -612,6 +612,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
+	d.Set("cluster_namespace_arn", rsc.ClusterNamespaceArn)
 	if err := d.Set("cluster_nodes", flattenClusterNodes(rsc.ClusterNodes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cluster_nodes: %s", err)
 	}
@@ -625,7 +626,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("cluster_type", clusterTypeSingleNode)
 	}
 	d.Set("cluster_version", rsc.ClusterVersion)
-	d.Set("cluster_namespace_arn", rsc.ClusterNamespaceArn)
 	d.Set("database_name", rsc.DBName)
 	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
 	d.Set("encrypted", rsc.Encrypted)
