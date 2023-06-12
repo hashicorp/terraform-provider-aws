@@ -120,7 +120,7 @@ func TestAccOpenSearchServerlessSecurityPolicy_disappears(t *testing.T) {
 
 func testAccCheckSecurityPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opensearchserverless_security_policy" {
@@ -155,7 +155,7 @@ func testAccCheckSecurityPolicyExists(ctx context.Context, name string, security
 			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameSecurityPolicy, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 		resp, err := tfopensearchserverless.FindSecurityPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type"])
 
 		if err != nil {
@@ -180,7 +180,7 @@ func testAccSecurityPolicyImportStateIdFunc(resourceName string) resource.Import
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 
 	input := &opensearchserverless.ListSecurityPoliciesInput{
 		Type: types.SecurityPolicyTypeEncryption,
