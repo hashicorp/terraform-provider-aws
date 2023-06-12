@@ -286,7 +286,7 @@ func testAccCheckClusterInstanceAttributes(v *docdb.DBInstance) resource.TestChe
 
 func testAccClusterInstanceDisappears(ctx context.Context, v *docdb.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 		opts := &docdb.DeleteDBInstanceInput{
 			DBInstanceIdentifier: v.DBInstanceIdentifier,
 		}
@@ -322,7 +322,7 @@ func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *docdb.D
 			return fmt.Errorf("No DB Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 		resp, err := conn.DescribeDBInstancesWithContext(ctx, &docdb.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(rs.Primary.ID),
 		})

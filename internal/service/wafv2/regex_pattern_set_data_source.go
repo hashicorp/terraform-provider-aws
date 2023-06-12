@@ -53,7 +53,7 @@ func DataSourceRegexPatternSet() *schema.Resource {
 
 func dataSourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 	name := d.Get("name").(string)
 
 	var foundRegexPatternSet *wafv2.RegexPatternSetSummary

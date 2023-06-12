@@ -540,7 +540,7 @@ func ResourceInstance() *schema.Resource {
 						"http_endpoint": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Computed:     true,
+							Default:      ec2.InstanceMetadataEndpointStateEnabled,
 							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataEndpointState_Values(), false),
 						},
 						"http_put_response_hop_limit": {
@@ -839,7 +839,7 @@ func ResourceInstance() *schema.Resource {
 				_, ok := diff.GetOk("launch_template")
 
 				if diff.Id() != "" && diff.HasChange("launch_template.0.version") && ok {
-					conn := meta.(*conns.AWSClient).EC2Conn()
+					conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 					stateVersion := diff.Get("launch_template.0.version")
 
@@ -918,7 +918,7 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instanceOpts, err := buildInstanceOpts(ctx, d, meta)
 	if err != nil {
@@ -1053,7 +1053,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instance, err := FindInstanceByID(ctx, conn, d.Id())
 
@@ -1441,7 +1441,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("volume_tags") && !d.IsNewResource() {
 		volumeIds, err := getInstanceVolumeIDs(ctx, conn, d.Id())
@@ -1988,7 +1988,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if err := disableInstanceAPITermination(ctx, conn, d.Id(), false); err != nil {
 		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
@@ -2726,7 +2726,7 @@ type instanceOpts struct {
 }
 
 func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interface{}) (*instanceOpts, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	opts := &instanceOpts{
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),

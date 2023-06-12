@@ -74,7 +74,7 @@ func TestAccServiceCatalogProductPortfolioAssociation_disappears(t *testing.T) {
 
 func testAccCheckProductPortfolioAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_product_portfolio_association" {
@@ -116,7 +116,7 @@ func testAccCheckProductPortfolioAssociationExists(ctx context.Context, resource
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		_, err = tfservicecatalog.WaitProductPortfolioAssociationReady(ctx, conn, acceptLanguage, portfolioID, productID, tfservicecatalog.ProductPortfolioAssociationReadyTimeout)
 

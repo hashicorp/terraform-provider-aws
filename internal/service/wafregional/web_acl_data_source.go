@@ -27,7 +27,7 @@ func DataSourceWebACL() *schema.Resource {
 
 func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	name := d.Get("name").(string)
 
 	acls := make([]*waf.WebACLSummary, 0)

@@ -571,7 +571,7 @@ func testAccCheckOptionGroupExists(ctx context.Context, n string, v *rds.OptionG
 			return fmt.Errorf("No DB Option Group Name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		opts := rds.DescribeOptionGroupsInput{
 			OptionGroupName: aws.String(rs.Primary.ID),
@@ -595,7 +595,7 @@ func testAccCheckOptionGroupExists(ctx context.Context, n string, v *rds.OptionG
 
 func testAccCheckOptionGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_option_group" {

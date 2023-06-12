@@ -1196,7 +1196,7 @@ var timestreamDimensionResource *schema.Resource = &schema.Resource{
 
 func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	ruleName := d.Get("name").(string)
 	input := &iot.CreateTopicRuleInput{
@@ -1222,7 +1222,7 @@ func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceTopicRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	output, err := FindTopicRuleByName(ctx, conn, d.Id())
 
@@ -1328,7 +1328,7 @@ func resourceTopicRuleRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &iot.ReplaceTopicRuleInput{
@@ -1348,7 +1348,7 @@ func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceTopicRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	log.Printf("[INFO] Deleting IoT Topic Rule: %s", d.Id())
 	_, err := conn.DeleteTopicRuleWithContext(ctx, &iot.DeleteTopicRuleInput{

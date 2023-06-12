@@ -60,7 +60,7 @@ func ResourceSourceCredential() *schema.Resource {
 
 func resourceSourceCredentialCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	authType := d.Get("auth_type").(string)
 
@@ -86,7 +86,7 @@ func resourceSourceCredentialCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceSourceCredentialRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	resp, err := FindSourceCredentialByARN(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -108,7 +108,7 @@ func resourceSourceCredentialRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceSourceCredentialDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	deleteOpts := &codebuild.DeleteSourceCredentialsInput{
 		Arn: aws.String(d.Id()),

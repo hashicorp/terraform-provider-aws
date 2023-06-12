@@ -24,7 +24,40 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{}
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceKxCluster,
+			TypeName: "aws_finspace_kx_cluster",
+			Name:     "Kx Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceKxDatabase,
+			TypeName: "aws_finspace_kx_database",
+			Name:     "Kx Database",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceKxEnvironment,
+			TypeName: "aws_finspace_kx_environment",
+			Name:     "Kx Environment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceKxUser,
+			TypeName: "aws_finspace_kx_user",
+			Name:     "Kx User",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

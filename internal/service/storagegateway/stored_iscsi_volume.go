@@ -126,7 +126,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 
 func resourceStorediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.CreateStorediSCSIVolumeInput{
 		DiskId:               aws.String(d.Get("disk_id").(string)),
@@ -168,7 +168,7 @@ func resourceStorediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceStorediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.DescribeStorediSCSIVolumesInput{
 		VolumeARNs: []*string{aws.String(d.Id())},
@@ -236,7 +236,7 @@ func resourceStorediSCSIVolumeUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceStorediSCSIVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.DeleteVolumeInput{
 		VolumeARN: aws.String(d.Id()),

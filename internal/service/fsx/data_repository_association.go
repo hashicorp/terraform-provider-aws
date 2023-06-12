@@ -156,7 +156,7 @@ func ResourceDataRepositoryAssociation() *schema.Resource {
 
 func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateDataRepositoryAssociationInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -195,7 +195,7 @@ func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.Reso
 
 func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateDataRepositoryAssociationInput{
@@ -226,7 +226,7 @@ func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.Reso
 
 func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	association, err := FindDataRepositoryAssociationByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -256,7 +256,7 @@ func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.Resour
 
 func resourceDataRepositoryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	request := &fsx.DeleteDataRepositoryAssociationInput{
 		ClientRequestToken:     aws.String(id.UniqueId()),

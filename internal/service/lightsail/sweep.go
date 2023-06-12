@@ -38,7 +38,7 @@ func sweepContainerServices(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LightsailConn()
+	conn := client.(*conns.AWSClient).LightsailConn(ctx)
 
 	input := &lightsail.GetContainerServicesInput{}
 	var sweeperErrs *multierror.Error
@@ -89,7 +89,7 @@ func sweepInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LightsailConn()
+	conn := client.(*conns.AWSClient).LightsailConn(ctx)
 
 	input := &lightsail.GetInstancesInput{}
 	var sweeperErrs *multierror.Error
@@ -138,7 +138,7 @@ func sweepStaticIPs(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LightsailConn()
+	conn := client.(*conns.AWSClient).LightsailConn(ctx)
 
 	input := &lightsail.GetStaticIpsInput{}
 

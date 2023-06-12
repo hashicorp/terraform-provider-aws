@@ -96,7 +96,7 @@ func ResourceHost() *schema.Resource {
 
 func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &codestarconnections.CreateHostInput{
@@ -124,7 +124,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 	output, err := FindHostByARN(ctx, conn, d.Id())
 
@@ -150,7 +150,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 	if d.HasChanges("provider_endpoint", "vpc_configuration") {
 		input := &codestarconnections.UpdateHostInput{
@@ -175,7 +175,7 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CodeStar Connections Host: %s", d.Id())
 	_, err := conn.DeleteHostWithContext(ctx, &codestarconnections.DeleteHostInput{

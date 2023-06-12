@@ -286,7 +286,7 @@ func ResourceBudget() *schema.Resource {
 }
 
 func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn()
+	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	budget, err := expandBudgetUnmarshal(d)
 
@@ -326,7 +326,7 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn()
+	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
@@ -448,7 +448,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn()
+	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	accountID, _, err := BudgetParseResourceID(d.Id())
 
@@ -481,7 +481,7 @@ func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn()
+	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 

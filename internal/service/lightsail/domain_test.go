@@ -75,7 +75,7 @@ func testAccCheckDomainExists(ctx context.Context, n string, domain *lightsail.D
 			return errors.New("No Lightsail Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn(ctx)
 
 		resp, err := conn.GetDomainWithContext(ctx, &lightsail.GetDomainInput{
 			DomainName: aws.String(rs.Primary.ID),
@@ -100,7 +100,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn(ctx)
 
 			resp, err := conn.GetDomainWithContext(ctx, &lightsail.GetDomainInput{
 				DomainName: aws.String(rs.Primary.ID),

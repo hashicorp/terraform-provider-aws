@@ -52,7 +52,7 @@ func ResourceActivity() *schema.Resource {
 }
 
 func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
+	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &sfn.CreateActivityInput{
@@ -72,7 +72,7 @@ func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
+	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	output, err := FindActivityByARN(ctx, conn, d.Id())
 
@@ -98,7 +98,7 @@ func resourceActivityUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceActivityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
+	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Step Functions Activity: %s", d.Id())
 	_, err := conn.DeleteActivityWithContext(ctx, &sfn.DeleteActivityInput{

@@ -832,7 +832,7 @@ func physicalTableMapSchema() *schema.Resource {
 }
 
 func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -905,7 +905,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 	if err != nil {
@@ -1009,7 +1009,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	if d.HasChangesExcept("permissions", "tags", "tags_all", "refresh_properties") {
 		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
@@ -1110,7 +1110,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	log.Printf("[INFO] Deleting QuickSight Data Set %s", d.Id())
 	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())

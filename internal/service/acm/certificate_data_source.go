@@ -70,7 +70,7 @@ func dataSourceCertificate() *schema.Resource {
 }
 
 func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMClient()
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	domain := d.Get("domain")

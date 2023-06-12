@@ -82,7 +82,7 @@ func ResourceUsageLimit() *schema.Resource {
 
 func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	clusterId := d.Get("cluster_identifier").(string)
 	input := redshift.CreateUsageLimitInput{
@@ -114,7 +114,7 @@ func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	out, err := FindUsageLimitByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -150,7 +150,7 @@ func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceUsageLimitUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &redshift.ModifyUsageLimitInput{
@@ -176,7 +176,7 @@ func resourceUsageLimitUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceUsageLimitDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	deleteInput := redshift.DeleteUsageLimitInput{
 		UsageLimitId: aws.String(d.Id()),

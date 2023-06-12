@@ -37,7 +37,7 @@ func sweepQueues(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SQSConn()
+	conn := client.(*conns.AWSClient).SQSConn(ctx)
 
 	input := &sqs.ListQueuesInput{}
 	var sweeperErrs *multierror.Error

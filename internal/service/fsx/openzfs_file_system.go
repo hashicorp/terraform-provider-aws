@@ -324,7 +324,7 @@ func validateDiskConfigurationIOPS(_ context.Context, d *schema.ResourceDiff, me
 
 func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -426,7 +426,7 @@ func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceOpenzfsFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -504,7 +504,7 @@ func resourceOpenzfsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceOpenzfsFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateFileSystemInput{
@@ -585,7 +585,7 @@ func resourceOpenzfsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceOpenzfsFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	log.Printf("[DEBUG] Deleting FSx OpenZFS File System: %s", d.Id())
 	_, err := conn.DeleteFileSystemWithContext(ctx, &fsx.DeleteFileSystemInput{

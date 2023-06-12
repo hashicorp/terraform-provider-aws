@@ -128,7 +128,7 @@ func sweepGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.(*conns.AWSClient).IAMConn(ctx)
 	input := &iam.ListGroupsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -242,7 +242,7 @@ func sweepInstanceProfile(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.(*conns.AWSClient).IAMConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -300,7 +300,7 @@ func sweepOpenIDConnectProvider(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.(*conns.AWSClient).IAMConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -340,7 +340,7 @@ func sweepServiceSpecificCredentials(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.(*conns.AWSClient).IAMConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -407,7 +407,7 @@ func sweepPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.(*conns.AWSClient).IAMConn(ctx)
 	input := &iam.ListPoliciesInput{
 		Scope: aws.String(iam.PolicyScopeTypeLocal),
 	}
@@ -466,7 +466,7 @@ func sweepRoles(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.(*conns.AWSClient).IAMConn(ctx)
 
 	roles := make([]string, 0)
 	err = conn.ListRolesPagesWithContext(ctx, &iam.ListRolesInput{}, func(page *iam.ListRolesOutput, lastPage bool) bool {
@@ -526,7 +526,7 @@ func sweepSAMLProvider(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.(*conns.AWSClient).IAMConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -566,7 +566,7 @@ func sweepServerCertificates(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.(*conns.AWSClient).IAMConn(ctx)
 
 	err = conn.ListServerCertificatesPagesWithContext(ctx, &iam.ListServerCertificatesInput{}, func(out *iam.ListServerCertificatesOutput, lastPage bool) bool {
 		for _, sc := range out.ServerCertificateMetadataList {
@@ -600,7 +600,7 @@ func sweepServiceLinkedRoles(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.(*conns.AWSClient).IAMConn(ctx)
 	var sweeperErrs *multierror.Error
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String("/aws-service-role/"),
@@ -655,7 +655,7 @@ func sweepUsers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.(*conns.AWSClient).IAMConn(ctx)
 	prefixes := []string{
 		"test-user",
 		"test_user",
@@ -893,7 +893,7 @@ func sweepVirtualMFADevice(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.(*conns.AWSClient).IAMConn(ctx)
 	var sweeperErrs *multierror.Error
 	input := &iam.ListVirtualMFADevicesInput{}
 
@@ -942,7 +942,7 @@ func sweepSigningCertificates(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.(*conns.AWSClient).IAMConn(ctx)
 
 	var sweeperErrs *multierror.Error
 

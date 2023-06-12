@@ -236,7 +236,7 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 
 func resourceOntapStorageVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateStorageVirtualMachineInput{
 		FileSystemId: aws.String(d.Get("file_system_id").(string)),
@@ -273,7 +273,7 @@ func resourceOntapStorageVirtualMachineCreate(ctx context.Context, d *schema.Res
 
 func resourceOntapStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	storageVirtualMachine, err := FindStorageVirtualMachineByID(ctx, conn, d.Id())
 
@@ -309,7 +309,7 @@ func resourceOntapStorageVirtualMachineRead(ctx context.Context, d *schema.Resou
 
 func resourceOntapStorageVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateStorageVirtualMachineInput{
@@ -341,7 +341,7 @@ func resourceOntapStorageVirtualMachineUpdate(ctx context.Context, d *schema.Res
 
 func resourceOntapStorageVirtualMachineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	log.Printf("[DEBUG] Deleting FSx ONTAP Storage Virtual Machine: %s", d.Id())
 	_, err := conn.DeleteStorageVirtualMachineWithContext(ctx, &fsx.DeleteStorageVirtualMachineInput{

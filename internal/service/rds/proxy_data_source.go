@@ -99,7 +99,7 @@ func DataSourceProxy() *schema.Resource {
 
 func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	name := d.Get("name").(string)
 	dbProxy, err := FindDBProxyByName(ctx, conn, name)

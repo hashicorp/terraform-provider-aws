@@ -56,7 +56,7 @@ func TestAccEC2InstanceTypeOfferingsDataSource_locationType(t *testing.T) {
 }
 
 func testAccPreCheckInstanceTypeOfferings(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeInstanceTypeOfferingsInput{
 		MaxResults: aws.Int64(5),

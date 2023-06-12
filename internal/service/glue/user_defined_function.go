@@ -94,7 +94,7 @@ func ResourceUserDefinedFunction() *schema.Resource {
 
 func resourceUserDefinedFunctionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	funcName := d.Get("name").(string)
@@ -117,7 +117,7 @@ func resourceUserDefinedFunctionCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceUserDefinedFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
 	if err != nil {
@@ -140,7 +140,7 @@ func resourceUserDefinedFunctionUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
 	if err != nil {
@@ -193,7 +193,7 @@ func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData
 
 func resourceUserDefinedFunctionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Glue User Defined Function (%s): %s", d.Id(), err)

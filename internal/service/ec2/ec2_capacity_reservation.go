@@ -117,7 +117,7 @@ func ResourceCapacityReservation() *schema.Resource {
 
 func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateCapacityReservationInput{
 		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
@@ -176,7 +176,7 @@ func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceCapacityReservationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	reservation, err := FindCapacityReservationByID(ctx, conn, d.Id())
 
@@ -216,7 +216,7 @@ func resourceCapacityReservationRead(ctx context.Context, d *schema.ResourceData
 
 func resourceCapacityReservationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyCapacityReservationInput{
@@ -248,7 +248,7 @@ func resourceCapacityReservationUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceCapacityReservationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Capacity Reservation: %s", d.Id())
 	_, err := conn.CancelCapacityReservationWithContext(ctx, &ec2.CancelCapacityReservationInput{

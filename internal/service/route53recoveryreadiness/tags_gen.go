@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn route53recoveryreadinessiface.Route53Rec
 // ListTags lists route53recoveryreadiness service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).Route53RecoveryReadinessConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -130,5 +130,5 @@ func UpdateTags(ctx context.Context, conn route53recoveryreadinessiface.Route53R
 // UpdateTags updates route53recoveryreadiness service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).Route53RecoveryReadinessConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx), identifier, oldTags, newTags)
 }

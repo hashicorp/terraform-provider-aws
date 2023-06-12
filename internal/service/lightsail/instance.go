@@ -167,7 +167,7 @@ func ResourceInstance() *schema.Resource {
 }
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 
 	iName := d.Get("name").(string)
 
@@ -228,7 +228,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 
 	out, err := FindInstanceById(ctx, conn, d.Id())
 
@@ -268,7 +268,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 	out, err := conn.DeleteInstanceWithContext(ctx, &lightsail.DeleteInstanceInput{
 		InstanceName:      aws.String(d.Id()),
 		ForceDeleteAddOns: aws.Bool(true),
@@ -292,7 +292,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 
 	if d.HasChange("ip_address_type") {
 		out, err := conn.SetIpAddressTypeWithContext(ctx, &lightsail.SetIpAddressTypeInput{

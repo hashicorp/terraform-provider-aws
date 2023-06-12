@@ -76,7 +76,7 @@ func ResourceDomain() *schema.Resource {
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn()
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 
 	input := &codeartifact.CreateDomainInput{
 		Domain: aws.String(d.Get("domain").(string)),
@@ -102,7 +102,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn()
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())
 	if err != nil {
@@ -145,7 +145,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn()
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 	log.Printf("[DEBUG] Deleting CodeArtifact Domain: %s", d.Id())
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())

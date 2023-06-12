@@ -132,7 +132,7 @@ func ResourceFindingsFilter() *schema.Resource {
 }
 
 func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.CreateFindingsFilterInput{
 		ClientToken: aws.String(id.UniqueId()),
@@ -183,7 +183,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.GetFindingsFilterInput{
 		Id: aws.String(d.Id()),
@@ -219,7 +219,7 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.UpdateFindingsFilterInput{
 		Id: aws.String(d.Id()),
@@ -257,7 +257,7 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceFindingsFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DeleteFindingsFilterInput{
 		Id: aws.String(d.Id()),

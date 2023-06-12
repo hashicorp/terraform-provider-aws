@@ -116,7 +116,7 @@ func ResourceReplicationTask() *schema.Resource {
 
 func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	taskId := d.Get("replication_task_id").(string)
 
@@ -170,7 +170,7 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	task, err := FindReplicationTaskByID(ctx, conn, d.Id())
 
@@ -210,7 +210,7 @@ func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all", "start_replication_task") {
 		input := &dms.ModifyReplicationTaskInput{
@@ -283,7 +283,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	if status := d.Get("status").(string); status == replicationTaskStatusRunning {
 		if err := stopReplicationTask(ctx, d.Id(), conn); err != nil {

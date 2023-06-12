@@ -83,7 +83,7 @@ func ResourcePlaceIndex() *schema.Resource {
 
 func resourcePlaceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.CreatePlaceIndexInput{
 		Tags: GetTagsIn(ctx),
@@ -122,7 +122,7 @@ func resourcePlaceIndexCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DescribePlaceIndexInput{
 		IndexName: aws.String(d.Id()),
@@ -166,7 +166,7 @@ func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePlaceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	if d.HasChanges("data_source_configuration", "description") {
 		input := &locationservice.UpdatePlaceIndexInput{
@@ -195,7 +195,7 @@ func resourcePlaceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourcePlaceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DeletePlaceIndexInput{
 		IndexName: aws.String(d.Id()),

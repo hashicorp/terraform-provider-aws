@@ -223,7 +223,7 @@ func TestAccElasticBeanstalkApplication_appVersionLifecycle(t *testing.T) {
 
 func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elastic_beanstalk_application" {
@@ -258,7 +258,7 @@ func testAccCheckApplicationExists(ctx context.Context, n string, v *elasticbean
 			return fmt.Errorf("No Elastic Beanstalk Application ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 		output, err := tfelasticbeanstalk.FindApplicationByName(ctx, conn, rs.Primary.ID)
 

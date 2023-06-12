@@ -292,7 +292,7 @@ func resourceLustreFileSystemSchemaCustomizeDiff(_ context.Context, d *schema.Re
 
 func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -428,7 +428,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		var waitAdminAction = false
@@ -493,7 +493,7 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -568,7 +568,7 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceLustreFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	request := &fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),

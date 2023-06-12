@@ -161,7 +161,7 @@ func testAccCheckScriptExists(ctx context.Context, n string, res *gamelift.Scrip
 			return fmt.Errorf("No GameLift Script ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
 
 		script, err := tfgamelift.FindScriptByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -180,7 +180,7 @@ func testAccCheckScriptExists(ctx context.Context, n string, res *gamelift.Scrip
 
 func testAccCheckScriptDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_gamelift_script" {

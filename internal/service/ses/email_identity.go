@@ -44,7 +44,7 @@ func ResourceEmailIdentity() *schema.Resource {
 
 func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	email := d.Get("email").(string)
 	email = strings.TrimSuffix(email, ".")
@@ -65,7 +65,7 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	email := d.Id()
 	d.Set("email", email)
@@ -101,7 +101,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	email := d.Get("email").(string)
 

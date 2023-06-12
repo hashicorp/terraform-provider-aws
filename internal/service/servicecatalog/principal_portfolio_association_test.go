@@ -71,7 +71,7 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing.T)
 
 func testAccCheckPrincipalPortfolioAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_principal_portfolio_association" {
@@ -113,7 +113,7 @@ func testAccCheckPrincipalPortfolioAssociationExists(ctx context.Context, resour
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		_, err = tfservicecatalog.WaitPrincipalPortfolioAssociationReady(ctx, conn, acceptLanguage, principalARN, portfolioID, tfservicecatalog.PrincipalPortfolioAssociationReadyTimeout)
 

@@ -72,7 +72,7 @@ const (
 )
 
 func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	service_id := d.Get("service_identifier").(string)
 	out, err := findServiceByID(ctx, conn, service_id)

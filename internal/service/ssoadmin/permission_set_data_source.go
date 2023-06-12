@@ -74,7 +74,7 @@ func DataSourcePermissionSet() *schema.Resource {
 
 func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceArn := d.Get("instance_arn").(string)

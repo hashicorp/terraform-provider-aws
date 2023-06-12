@@ -936,7 +936,7 @@ func testAccCheckFirewallPolicyDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 			_, err := tfnetworkfirewall.FindFirewallPolicyByARN(ctx, conn, rs.Primary.ID)
 
@@ -966,7 +966,7 @@ func testAccCheckFirewallPolicyExists(ctx context.Context, n string, v *networkf
 			return fmt.Errorf("No NetworkFirewall Firewall Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 		output, err := tfnetworkfirewall.FindFirewallPolicyByARN(ctx, conn, rs.Primary.ID)
 

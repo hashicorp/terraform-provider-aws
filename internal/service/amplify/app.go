@@ -321,7 +321,7 @@ func ResourceApp() *schema.Resource {
 
 func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	name := d.Get("name").(string)
 
@@ -408,7 +408,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	app, err := FindAppByID(ctx, conn, d.Id())
 
@@ -462,7 +462,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &amplify.UpdateAppInput{
@@ -563,7 +563,7 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Amplify App: %s", d.Id())
 	_, err := conn.DeleteAppWithContext(ctx, &amplify.DeleteAppInput{

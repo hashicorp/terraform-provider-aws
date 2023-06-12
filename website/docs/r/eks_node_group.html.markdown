@@ -127,10 +127,6 @@ resource "aws_subnet" "example" {
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = cidrsubnet(aws_vpc.example.cidr_block, 8, count.index)
   vpc_id            = aws_vpc.example.id
-
-  tags = {
-    "kubernetes.io/cluster/${aws_eks_cluster.example.name}" = "shared"
-  }
 }
 ```
 
@@ -141,7 +137,7 @@ The following arguments are required:
 * `cluster_name` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
 * `node_role_arn` – (Required) Amazon Resource Name (ARN) of the IAM Role that provides permissions for the EKS Node Group.
 * `scaling_config` - (Required) Configuration block with scaling settings. Detailed below.
-* `subnet_ids` – (Required) Identifiers of EC2 Subnets to associate with the EKS Node Group. These subnets must have the following resource tag: `kubernetes.io/cluster/CLUSTER_NAME` (where `CLUSTER_NAME` is replaced with the name of the EKS Cluster).
+* `subnet_ids` – (Required) Identifiers of EC2 Subnets to associate with the EKS Node Group.
 
 The following arguments are optional:
 

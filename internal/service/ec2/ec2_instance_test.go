@@ -4999,7 +4999,18 @@ func TestAccEC2Instance_metadataOptions(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_metadataOptions(rName),
+				Config: testAccInstanceConfig_metadataOptionsDefaults(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "optional"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "disabled"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_metadataOptionsDisabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
@@ -5320,7 +5331,7 @@ func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckInstanceDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_instance" {
@@ -5359,7 +5370,7 @@ func testAccCheckInstanceExistsWithProvider(ctx context.Context, n string, v *ec
 			return fmt.Errorf("No EC2 Instance ID is set")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).EC2Conn()
+		conn := providerF().Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindInstanceByID(ctx, conn, rs.Primary.ID)
 
@@ -5375,7 +5386,7 @@ func testAccCheckInstanceExistsWithProvider(ctx context.Context, n string, v *ec
 
 func testAccCheckStopInstance(ctx context.Context, v *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		return tfec2.StopInstance(ctx, conn, aws.StringValue(v.InstanceId), 10*time.Minute)
 	}
@@ -5383,7 +5394,7 @@ func testAccCheckStopInstance(ctx context.Context, v *ec2.Instance) resource.Tes
 
 func testAccCheckDetachVolumes(ctx context.Context, instance *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, v := range instance.BlockDeviceMappings {
 			if v.Ebs != nil && v.Ebs.VolumeId != nil {
@@ -5472,7 +5483,7 @@ func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
 
 func driftTags(ctx context.Context, instance *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 		_, err := conn.CreateTagsWithContext(ctx, &ec2.CreateTagsInput{
 			Resources: []*string{instance.InstanceId},
 			Tags: []*ec2.Tag{
@@ -5499,7 +5510,7 @@ func testAccPreCheckHasDefaultVPCDefaultSubnets(ctx context.Context, t *testing.
 
 // defaultVPC returns the ID of the default VPC for the current AWS Region, or "" if none exists.
 func defaultVPC(ctx context.Context, t *testing.T) string {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	output, err := conn.DescribeAccountAttributesWithContext(ctx, &ec2.DescribeAccountAttributesInput{
 		AttributeNames: aws.StringSlice([]string{ec2.AccountAttributeNameDefaultVpc}),
@@ -5528,7 +5539,7 @@ func hasDefaultVPC(ctx context.Context, t *testing.T) bool {
 
 // defaultSubnetCount returns the number of default subnets in the current region's default VPC.
 func defaultSubnetCount(ctx context.Context, t *testing.T) int {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
 		Filters: tfec2.BuildAttributeFilterList(
@@ -8469,7 +8480,27 @@ resource "aws_instance" "test" {
 `, rName, hibernation))
 }
 
-func testAccInstanceConfig_metadataOptions(rName string) string {
+func testAccInstanceConfig_metadataOptionsDefaults(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		testAccInstanceVPCConfig(rName, false, 0),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  metadata_options {}
+}
+`, rName))
+}
+
+func testAccInstanceConfig_metadataOptionsDisabled(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccInstanceVPCConfig(rName, false, 0),

@@ -617,7 +617,7 @@ func testAccCheckLoggingConfigurationDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
 			output, err := tfnetworkfirewall.FindLoggingConfiguration(ctx, conn, rs.Primary.ID)
 			if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 				continue
@@ -645,7 +645,7 @@ func testAccCheckLoggingConfigurationExists(ctx context.Context, n string) resou
 			return fmt.Errorf("No NetworkFirewall Logging Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
 		output, err := tfnetworkfirewall.FindLoggingConfiguration(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

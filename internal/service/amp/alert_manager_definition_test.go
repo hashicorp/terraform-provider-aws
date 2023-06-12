@@ -92,7 +92,7 @@ func testAccCheckAlertManagerDefinitionExists(ctx context.Context, n string) res
 			return fmt.Errorf("No Prometheus Alert Manager Definition ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn(ctx)
 
 		_, err := tfamp.FindAlertManagerDefinitionByID(ctx, conn, rs.Primary.ID)
 
@@ -102,7 +102,7 @@ func testAccCheckAlertManagerDefinitionExists(ctx context.Context, n string) res
 
 func testAccCheckAlertManagerDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_prometheus_alert_manager_definition" {

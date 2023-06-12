@@ -402,7 +402,7 @@ func ResourceTable() *schema.Resource {
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	tableName := d.Get(names.AttrName).(string)
 	keySchemaMap := map[string]interface{}{
@@ -613,7 +613,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	table, err := FindTableByName(ctx, conn, d.Id())
 
@@ -735,7 +735,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 	o, n := d.GetChange("billing_mode")
 	billingMode := n.(string)
 	oldBillingMode := o.(string)
@@ -1008,7 +1008,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	if replicas := d.Get("replica").(*schema.Set).List(); len(replicas) > 0 {
 		log.Printf("[DEBUG] Deleting DynamoDB Table replicas: %s", d.Id())

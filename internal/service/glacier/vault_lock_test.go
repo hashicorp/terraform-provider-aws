@@ -124,7 +124,7 @@ func testAccCheckVaultLockExists(ctx context.Context, n string, v *glacier.GetVa
 			return fmt.Errorf("No Glacier Vault Lock ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierClient(ctx)
 
 		output, err := tfglacier.FindVaultLockByName(ctx, conn, rs.Primary.ID)
 
@@ -140,7 +140,7 @@ func testAccCheckVaultLockExists(ctx context.Context, n string, v *glacier.GetVa
 
 func testAccCheckVaultLockDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glacier_vault_lock" {

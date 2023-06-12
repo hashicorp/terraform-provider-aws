@@ -145,7 +145,7 @@ func ResourceSnapshot() *schema.Resource {
 }
 
 func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &memorydb.CreateSnapshotInput{
@@ -180,7 +180,7 @@ func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	snapshot, err := FindSnapshotByName(ctx, conn, d.Id())
 
@@ -208,7 +208,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB Snapshot: (%s)", d.Id())
 	_, err := conn.DeleteSnapshotWithContext(ctx, &memorydb.DeleteSnapshotInput{

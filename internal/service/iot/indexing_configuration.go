@@ -150,7 +150,7 @@ func ResourceIndexingConfiguration() *schema.Resource {
 }
 
 func resourceIndexingConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	input := &iot.UpdateIndexingConfigurationInput{}
 
@@ -175,7 +175,7 @@ func resourceIndexingConfigurationPut(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceIndexingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	output, err := conn.GetIndexingConfigurationWithContext(ctx, &iot.GetIndexingConfigurationInput{})
 

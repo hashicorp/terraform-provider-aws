@@ -92,7 +92,7 @@ func testAccCheckRuleGroupNamespaceExists(ctx context.Context, n string) resourc
 			return fmt.Errorf("No Prometheus Rule Group namspace ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn(ctx)
 
 		_, err := tfamp.FindRuleGroupNamespaceByARN(ctx, conn, rs.Primary.ID)
 
@@ -102,7 +102,7 @@ func testAccCheckRuleGroupNamespaceExists(ctx context.Context, n string) resourc
 
 func testAccCheckRuleGroupNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_prometheus_rule_group_namespace" {

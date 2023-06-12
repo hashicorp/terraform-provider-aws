@@ -56,7 +56,7 @@ func ResourceHSMClientCertificate() *schema.Resource {
 
 func resourceHSMClientCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	certIdentifier := d.Get("hsm_client_certificate_identifier").(string)
 
@@ -77,7 +77,7 @@ func resourceHSMClientCertificateCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceHSMClientCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	out, err := FindHSMClientCertificateByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -118,7 +118,7 @@ func resourceHSMClientCertificateUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceHSMClientCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	deleteInput := redshift.DeleteHsmClientCertificateInput{
 		HsmClientCertificateIdentifier: aws.String(d.Id()),

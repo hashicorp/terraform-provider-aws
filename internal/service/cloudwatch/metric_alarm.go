@@ -313,7 +313,7 @@ func validMetricAlarm(d *schema.ResourceData) error {
 
 func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	err := validMetricAlarm(d)
 	if err != nil {
@@ -363,7 +363,7 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	alarm, err := FindMetricAlarmByName(ctx, conn, d.Id())
 
@@ -415,7 +415,7 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := expandPutMetricAlarmInput(ctx, d)
@@ -432,7 +432,7 @@ func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Metric Alarm: %s", d.Id())
 	_, err := conn.DeleteAlarmsWithContext(ctx, &cloudwatch.DeleteAlarmsInput{

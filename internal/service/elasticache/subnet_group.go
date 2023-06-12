@@ -82,7 +82,7 @@ func resourceSubnetGroupDiff(ctx context.Context, diff *schema.ResourceDiff, met
 
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &elasticache.CreateCacheSubnetGroupInput{
@@ -130,7 +130,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	group, err := FindCacheSubnetGroupByName(ctx, conn, d.Id())
 
@@ -159,7 +159,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	if d.HasChanges("subnet_ids", "description") {
 		input := &elasticache.ModifyCacheSubnetGroupInput{
@@ -180,7 +180,7 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	log.Printf("[DEBUG] Deleting ElastiCache Subnet Group: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {

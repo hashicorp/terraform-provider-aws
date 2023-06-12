@@ -79,7 +79,7 @@ func ResourceRepository() *schema.Resource {
 
 func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	input := &codecommit.CreateRepositoryInput{
 		RepositoryName:        aws.String(d.Get("repository_name").(string)),
@@ -109,7 +109,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	input := &codecommit.GetRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
@@ -142,7 +142,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	if d.HasChange("default_branch") {
 		if err := resourceUpdateDefaultBranch(ctx, conn, d); err != nil {
@@ -161,7 +161,7 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	log.Printf("[DEBUG] CodeCommit Delete Repository: %s", d.Id())
 	_, err := conn.DeleteRepositoryWithContext(ctx, &codecommit.DeleteRepositoryInput{

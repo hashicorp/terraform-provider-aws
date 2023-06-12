@@ -185,7 +185,7 @@ func ResourceJobDefinition() *schema.Resource {
 
 func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &batch.RegisterJobDefinitionInput{
@@ -243,7 +243,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	jobDefinition, err := FindJobDefinitionByARN(ctx, conn, d.Id())
 
@@ -308,7 +308,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Batch Job Definition: %s", d.Id())
 	_, err := conn.DeregisterJobDefinitionWithContext(ctx, &batch.DeregisterJobDefinitionInput{

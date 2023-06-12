@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn wafiface.WAFAPI, identifier string) (tft
 // ListTags lists waf service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).WAFConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).WAFConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -138,5 +138,5 @@ func UpdateTags(ctx context.Context, conn wafiface.WAFAPI, identifier string, ol
 // UpdateTags updates waf service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).WAFConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).WAFConn(ctx), identifier, oldTags, newTags)
 }

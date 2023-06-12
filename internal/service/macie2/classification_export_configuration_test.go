@@ -60,7 +60,7 @@ func testAccClassificationExportConfiguration_basic(t *testing.T) {
 
 func testAccCheckClassificationExportConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_macie2_classification_export_configuration" {
@@ -94,7 +94,7 @@ func testAccCheckClassificationExportConfigurationExists(ctx context.Context, re
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
 		input := macie2.GetClassificationExportConfigurationInput{}
 
 		resp, err := conn.GetClassificationExportConfigurationWithContext(ctx, &input)

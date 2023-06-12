@@ -125,7 +125,7 @@ func ResourceHoursOfOperation() *schema.Resource {
 }
 
 func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -159,7 +159,7 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
 
@@ -203,7 +203,7 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
 
@@ -229,7 +229,7 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
 
