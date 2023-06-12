@@ -3,24 +3,12 @@ package conns
 import (
 	"context"
 	"log"
-	"strings"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/aws/aws-sdk-go/service/chime"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -202,143 +190,6 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	c.sdkv1Conns(client, sess)
 	c.sdkv2Conns(client, cfg)
 	c.sdkv2LazyConns(client, cfg)
-
-	// Customize.
-	// Workaround for https://github.com/aws/aws-sdk-go/issues/1472
-	client.applicationautoscalingConn.Handlers.Retry.PushBack(func(r *request.Request) {
-		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
-			return
-		}
-		if tfawserr.ErrCodeEquals(r.Error, applicationautoscaling.ErrCodeFailedResourceAccessException) {
-			r.Retryable = aws.Bool(true)
-		}
-	})
-
-	// StartDeployment operations can return a ConflictException
-	// if ongoing deployments are in-progress, thus we handle them
-	// here for the service client.
-	client.appconfigConn.Handlers.Retry.PushBack(func(r *request.Request) {
-		if r.Operation.Name == "StartDeployment" {
-			if tfawserr.ErrCodeEquals(r.Error, appconfig.ErrCodeConflictException) {
-				r.Retryable = aws.Bool(true)
-			}
-		}
-	})
-
-	client.appsyncConn.Handlers.Retry.PushBack(func(r *request.Request) {
-		if r.Operation.Name == "CreateGraphqlApi" {
-			if tfawserr.ErrMessageContains(r.Error, appsync.ErrCodeConcurrentModificationException, "a GraphQL API creation is already in progress") {
-				r.Retryable = aws.Bool(true)
-			}
-		}
-	})
-
-	client.chimeConn.Handlers.Retry.PushBack(func(r *request.Request) {
-		// When calling CreateVoiceConnector across multiple resources,
-		// the API can randomly return a BadRequestException without explanation
-		if r.Operation.Name == "CreateVoiceConnector" {
-			if tfawserr.ErrMessageContains(r.Error, chime.ErrCodeBadRequestException, "Service received a bad request") {
-				r.Retryable = aws.Bool(true)
-			}
-		}
-	})
-
-	client.cloudhsmv2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
-		if tfawserr.ErrMessageContains(r.Error, cloudhsmv2.ErrCodeCloudHsmInternalFailureException, "request was rejected because of an AWS CloudHSM internal failure") {
-			r.Retryable = aws.Bool(true)
-		}
-	})
-
-	client.configserviceConn.Handlers.Retry.PushBack(func(r *request.Request) {
-		// When calling Config Organization Rules API actions immediately
-		// after Organization creation, the API can randomly return the
-		// OrganizationAccessDeniedException error for a few minutes, even
-		// after succeeding a few requests.
-		switch r.Operation.Name {
-		case "DeleteOrganizationConfigRule", "DescribeOrganizationConfigRules", "DescribeOrganizationConfigRuleStatuses", "PutOrganizationConfigRule":
-			if !tfawserr.ErrMessageContains(r.Error, configservice.ErrCodeOrganizationAccessDeniedException, "This action can be only made by AWS Organization's master account.") {
-				return
-			}
-
-			// We only want to retry briefly as the default max retry count would
-			// excessively retry when the error could be legitimate.
-			// We currently depend on the DefaultRetryer exponential backoff here.
-			// ~10 retries gives a fair backoff of a few seconds.
-			if r.RetryCount < 9 {
-				r.Retryable = aws.Bool(true)
-			} else {
-				r.Retryable = aws.Bool(false)
-			}
-		case "DeleteOrganizationConformancePack", "DescribeOrganizationConformancePacks", "DescribeOrganizationConformancePackStatuses", "PutOrganizationConformancePack":
-			if !tfawserr.ErrCodeEquals(r.Error, configservice.ErrCodeOrganizationAccessDeniedException) {
-				if r.Operation.Name == "DeleteOrganizationConformancePack" && tfawserr.ErrCodeEquals(err, configservice.ErrCodeResourceInUseException) {
-					r.Retryable = aws.Bool(true)
-				}
-				return
-			}
-
-			// We only want to retry briefly as the default max retry count would
-			// excessively retry when the error could be legitimate.
-			// We currently depend on the DefaultRetryer exponential backoff here.
-			// ~10 retries gives a fair backoff of a few seconds.
-			if r.RetryCount < 9 {
-				r.Retryable = aws.Bool(true)
-			} else {
-				r.Retryable = aws.Bool(false)
-			}
-		}
-	})
-
-	client.cloudformationConn.Handlers.Retry.PushBack(func(r *request.Request) {
-		if tfawserr.ErrMessageContains(r.Error, cloudformation.ErrCodeOperationInProgressException, "Another Operation on StackSet") {
-			r.Retryable = aws.Bool(true)
-		}
-	})
-
-	// See https://github.com/aws/aws-sdk-go/pull/1276
-	client.dynamodbConn.Handlers.Retry.PushBack(func(r *request.Request) {
-		if r.Operation.Name != "PutItem" && r.Operation.Name != "UpdateItem" && r.Operation.Name != "DeleteItem" {
-			return
-		}
-		if tfawserr.ErrMessageContains(r.Error, dynamodb.ErrCodeLimitExceededException, "Subscriber limit exceeded:") {
-			r.Retryable = aws.Bool(true)
-		}
-	})
-
-	client.ec2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
-		switch err := r.Error; r.Operation.Name {
-		case "AttachVpnGateway", "DetachVpnGateway":
-			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
-				r.Retryable = aws.Bool(true)
-			}
-
-		case "CreateClientVpnEndpoint":
-			if tfawserr.ErrMessageContains(err, "OperationNotPermitted", "Endpoint cannot be created while another endpoint is being created") {
-				r.Retryable = aws.Bool(true)
-			}
-
-		case "CreateClientVpnRoute", "DeleteClientVpnRoute":
-			if tfawserr.ErrMessageContains(err, "ConcurrentMutationLimitExceeded", "Cannot initiate another change for this endpoint at this time") {
-				r.Retryable = aws.Bool(true)
-			}
-
-		case "CreateVpnConnection":
-			if tfawserr.ErrMessageContains(err, "VpnConnectionLimitExceeded", "maximum number of mutating objects has been reached") {
-				r.Retryable = aws.Bool(true)
-			}
-
-		case "CreateVpnGateway":
-			if tfawserr.ErrMessageContains(err, "VpnGatewayLimitExceeded", "maximum number of mutating objects has been reached") {
-				r.Retryable = aws.Bool(true)
-			}
-
-		case "RunInstances":
-			// `InsufficientInstanceCapacity` error has status code 500 and AWS SDK try retry this error by default.
-			if tfawserr.ErrCodeEquals(err, "InsufficientInstanceCapacity") {
-				r.Retryable = aws.Bool(false)
-			}
-		}
-	})
 
 	return client, nil
 }
