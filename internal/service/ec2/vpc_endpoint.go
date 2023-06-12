@@ -373,7 +373,11 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("dns_options") {
 			if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+				tfMap := v.([]interface{})[0].(map[string]interface{})
+				apiObject := expandDNSOptionsSpecification(tfMap)
+				// Always send PrivateDnsOnlyForInboundResolverEndpoint on update.
+				apiObject.PrivateDnsOnlyForInboundResolverEndpoint = aws.Bool(tfMap["private_dns_only_for_inbound_resolver_endpoint"].(bool))
+				input.DnsOptions = apiObject
 			}
 		}
 
