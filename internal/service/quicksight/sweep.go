@@ -244,7 +244,7 @@ func sweepFolders(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing QuickSight Folder for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping QuickSight Folder for %s: %w", region, err))
 	}
 
@@ -346,7 +346,7 @@ func sweepUsers(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing QuickSight Users for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping QuickSight Users for %s: %w", region, err))
 	}
 

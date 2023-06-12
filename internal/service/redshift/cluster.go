@@ -2,7 +2,6 @@ package redshift
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -94,6 +93,10 @@ func ResourceCluster() *schema.Resource {
 					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
 					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
+			},
+			"cluster_namespace_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"cluster_nodes": {
 				Type:     schema.TypeList,
@@ -364,12 +367,6 @@ func ResourceCluster() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if diff.Get("availability_zone_relocation_enabled").(bool) && diff.Get("publicly_accessible").(bool) {
-					return errors.New("`availability_zone_relocation_enabled` cannot be true when `publicly_accessible` is true")
-				}
-				return nil
-			},
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if diff.Id() == "" {
 					return nil
 				}
@@ -608,6 +605,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
+	d.Set("cluster_namespace_arn", rsc.ClusterNamespaceArn)
 	if err := d.Set("cluster_nodes", flattenClusterNodes(rsc.ClusterNodes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cluster_nodes: %s", err)
 	}

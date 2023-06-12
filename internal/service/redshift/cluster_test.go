@@ -740,6 +740,8 @@ func TestAccRedshiftCluster_availabilityZoneRelocation(t *testing.T) {
 
 func TestAccRedshiftCluster_availabilityZoneRelocation_publiclyAccessible(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v redshift.Cluster
+	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -749,8 +751,12 @@ func TestAccRedshiftCluster_availabilityZoneRelocation_publiclyAccessible(t *tes
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterConfig_availabilityZoneRelocationPubliclyAccessible(rName),
-				ExpectError: regexp.MustCompile("`availability_zone_relocation_enabled` cannot be true when `publicly_accessible` is true"),
+				Config: testAccClusterConfig_availabilityZoneRelocationPubliclyAccessible(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+				),
 			},
 		},
 	})
