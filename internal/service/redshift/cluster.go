@@ -2,7 +2,6 @@ package redshift
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -363,12 +362,6 @@ func ResourceCluster() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if diff.Get("availability_zone_relocation_enabled").(bool) && diff.Get("publicly_accessible").(bool) {
-					return errors.New("`availability_zone_relocation_enabled` cannot be true when `publicly_accessible` is true")
-				}
-				return nil
-			},
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if diff.Id() == "" {
 					return nil
