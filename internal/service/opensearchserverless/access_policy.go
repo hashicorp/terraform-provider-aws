@@ -42,8 +42,7 @@ type resourceAccessPolicyData struct {
 }
 
 const (
-	ResNameAccessPolicy     = "Access Policy"
-	accessPolicyIDSeparator = "/"
+	ResNameAccessPolicy = "Access Policy"
 )
 
 type resourceAccessPolicy struct {

@@ -43,7 +43,6 @@ type resourceSecurityPolicyData struct {
 
 const (
 	ResNameSecurityPolicy = "Security Policy"
-	idSeparator           = "/"
 )
 
 type resourceSecurityPolicy struct {
