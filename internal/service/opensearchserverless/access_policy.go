@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -67,6 +69,9 @@ func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRe
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"policy": schema.StringAttribute{
 				Required: true,
@@ -81,6 +86,9 @@ func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRe
 				Required: true,
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.AccessPolicyType](),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 		},
@@ -158,12 +166,16 @@ func (r *resourceAccessPolicy) Update(ctx context.Context, req resource.UpdateRe
 		input := &opensearchserverless.UpdateAccessPolicyInput{
 			ClientToken:   aws.String(id.UniqueId()),
 			Name:          flex.StringFromFramework(ctx, plan.Name),
-			PolicyVersion: flex.StringFromFramework(ctx, plan.PolicyVersion),
+			PolicyVersion: flex.StringFromFramework(ctx, state.PolicyVersion),
 			Type:          awstypes.AccessPolicyType(plan.Type.ValueString()),
 		}
 
 		if !plan.Description.Equal(state.Description) {
 			input.Description = aws.String(plan.Description.ValueString())
+		}
+
+		if !plan.Policy.Equal(state.Policy) {
+			input.Policy = aws.String(plan.Policy.ValueString())
 		}
 
 		out, err := conn.UpdateAccessPolicy(ctx, input)
@@ -175,7 +187,7 @@ func (r *resourceAccessPolicy) Update(ctx context.Context, req resource.UpdateRe
 		resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.AccessPolicyDetail)...)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceAccessPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
