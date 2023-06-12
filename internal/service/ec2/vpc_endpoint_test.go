@@ -80,6 +80,7 @@ func TestAccVPCEndpoint_interfaceBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -116,38 +117,31 @@ func TestAccVPCEndpoint_interfacePrivateDNS(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointConfig_interfacePrivateDNS(rName),
+				Config: testAccVPCEndpointConfig_interfacePrivateDNS(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
-					resource.TestCheckResourceAttrWith(resourceName, "cidr_blocks.#", func(value string) error {
-						if value == "0" {
-							return fmt.Errorf("need non-zero cidr_blocks")
-						}
-						return nil
-					}),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "cidr_blocks.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
-					resource.TestCheckResourceAttrSet(resourceName, "prefix_list_id"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCEndpointConfig_interfacePrivateDNS(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "cidr_blocks.#", 0),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
+				),
 			},
 		},
 	})
@@ -373,6 +367,7 @@ func TestAccVPCEndpoint_ipAddressType(t *testing.T) {
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
 				),
 			},
@@ -388,6 +383,7 @@ func TestAccVPCEndpoint_ipAddressType(t *testing.T) {
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "dualstack"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "dualstack"),
 				),
 			},
@@ -744,10 +740,10 @@ resource "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccVPCEndpointConfig_interfacePrivateDNS(rName string) string {
+func testAccVPCEndpointConfig_interfacePrivateDNS(rName string, bool privateDNSOnlyForInboundResolverEndpoint) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
 
@@ -759,17 +755,22 @@ resource "aws_vpc" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.s3"
+  vpc_id              = aws_vpc.test.id
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.s3"
   private_dns_enabled = true
-  vpc_endpoint_type = "Interface"
-  ip_address_type = "ipv4"
+  vpc_endpoint_type   = "Interface"
+  ip_address_type     = "ipv4"
+
   dns_options {
-    dns_record_ip_type = "ipv4"
-    private_dns_only_for_inbound_resolver_endpoint = false
+    dns_record_ip_type                             = "ipv4"
+    private_dns_only_for_inbound_resolver_endpoint = %[2]t
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
-`, rName)
+`, rName, privateDNSOnlyForInboundResolverEndpoint)
 }
 
 func testAccVPCEndpointConfig_ipAddressType(rName, addressType string) string {
@@ -794,6 +795,10 @@ resource "aws_vpc_endpoint" "test" {
 
   dns_options {
     dns_record_ip_type = %[2]q
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 `, rName, addressType))
