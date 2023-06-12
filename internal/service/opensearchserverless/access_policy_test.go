@@ -33,12 +33,12 @@ func TestAccOpenSearchServerlessAccessPolicy_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPolicyDestroy,
+		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPolicyExists(resourceName, &accesspolicy),
+					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
 					resource.TestCheckResourceAttr(resourceName, "type", "data"),
 				),
 			},
@@ -67,12 +67,12 @@ func TestAccOpenSearchServerlessAccessPolicy_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPolicyDestroy,
+		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPolicyExists(resourceName, &accesspolicy),
+					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceAccessPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -81,34 +81,36 @@ func TestAccOpenSearchServerlessAccessPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAccessPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
-	ctx := context.Background()
+func testAccCheckAccessPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+		ctx := context.Background()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opensearchserverless_access_policy" {
-			continue
-		}
-
-		_, err := conn.GetAccessPolicy(ctx, &opensearchserverless.GetAccessPolicyInput{
-			Name: aws.String(rs.Primary.ID),
-			Type: types.AccessPolicyTypeData,
-		})
-		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opensearchserverless_access_policy" {
+				continue
 			}
-			return err
+
+			_, err := conn.GetAccessPolicy(ctx, &opensearchserverless.GetAccessPolicyInput{
+				Name: aws.String(rs.Primary.ID),
+				Type: types.AccessPolicyTypeData,
+			})
+			if err != nil {
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					return nil
+				}
+				return err
+			}
+
+			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingDestroyed, tfopensearchserverless.ResNameAccessPolicy, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		return create.Error(names.OpenSearchServerless, create.ErrActionCheckingDestroyed, tfopensearchserverless.ResNameAccessPolicy, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckAccessPolicyExists(name string, accesspolicy *opensearchserverless.GetAccessPolicyOutput) resource.TestCheckFunc {
+func testAccCheckAccessPolicyExists(ctx context.Context, name string, accesspolicy *opensearchserverless.GetAccessPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -119,8 +121,7 @@ func testAccCheckAccessPolicyExists(name string, accesspolicy *opensearchserverl
 			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameAccessPolicy, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 		resp, err := conn.GetAccessPolicy(ctx, &opensearchserverless.GetAccessPolicyInput{
 			Name: aws.String(rs.Primary.ID),
 			Type: types.AccessPolicyTypeData,
@@ -148,7 +149,7 @@ func testAccAccessPolicyImportStateIdFunc(resourceName string) resource.ImportSt
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 
 	input := &opensearchserverless.ListAccessPoliciesInput{
 		Type: types.AccessPolicyTypeData,

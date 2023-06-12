@@ -96,7 +96,7 @@ func (r *resourceAccessPolicy) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	conn := r.Meta().OpenSearchServerlessClient()
+	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	in := &opensearchserverless.CreateAccessPolicyInput{
 		ClientToken: aws.String(id.UniqueId()),
@@ -124,7 +124,7 @@ func (r *resourceAccessPolicy) Create(ctx context.Context, req resource.CreateRe
 }
 
 func (r *resourceAccessPolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().OpenSearchServerlessClient()
+	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	var state resourceAccessPolicyData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -132,7 +132,7 @@ func (r *resourceAccessPolicy) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	out, err := findAccessPolicyByNameAndType(ctx, conn, state.ID.ValueString(), state.Type.ValueString())
+	out, err := FindAccessPolicyByNameAndType(ctx, conn, state.ID.ValueString(), state.Type.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -144,7 +144,7 @@ func (r *resourceAccessPolicy) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *resourceAccessPolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().OpenSearchServerlessClient()
+	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	var plan, state resourceAccessPolicyData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -179,7 +179,7 @@ func (r *resourceAccessPolicy) Update(ctx context.Context, req resource.UpdateRe
 }
 
 func (r *resourceAccessPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().OpenSearchServerlessClient()
+	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	var state resourceAccessPolicyData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
