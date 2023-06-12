@@ -94,6 +94,10 @@ func ResourceCluster() *schema.Resource {
 					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
 			},
+			"cluster_namespace_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_nodes": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -601,6 +605,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
+	d.Set("cluster_namespace_arn", rsc.ClusterNamespaceArn)
 	if err := d.Set("cluster_nodes", flattenClusterNodes(rsc.ClusterNodes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cluster_nodes: %s", err)
 	}
