@@ -344,7 +344,7 @@ const (
 )
 
 func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -387,7 +387,7 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, themeId, err := ParseThemeId(d.Id())
 	if err != nil {
@@ -438,7 +438,7 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, themeId, err := ParseThemeId(d.Id())
 	if err != nil {
@@ -499,7 +499,7 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceThemeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, themeId, err := ParseThemeId(d.Id())
 	if err != nil {

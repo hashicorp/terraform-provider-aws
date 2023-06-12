@@ -163,7 +163,7 @@ func TestAccQuickSightTheme_update(t *testing.T) {
 
 func testAccCheckThemeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_theme" {
@@ -198,7 +198,7 @@ func testAccCheckThemeExists(ctx context.Context, name string, theme *quicksight
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameTheme, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		output, err := tfquicksight.FindThemeByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
