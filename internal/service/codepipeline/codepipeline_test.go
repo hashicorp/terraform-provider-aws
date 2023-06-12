@@ -621,7 +621,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, v *codepipeline.P
 			return fmt.Errorf("No CodePipeline ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn(ctx)
 
 		output, err := tfcodepipeline.FindPipelineByName(ctx, conn, rs.Primary.ID)
 
@@ -637,7 +637,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, v *codepipeline.P
 
 func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codepipeline" {
@@ -672,7 +672,7 @@ func testAccPreCheckSupported(ctx context.Context, t *testing.T, regions ...stri
 		if diags.HasError() {
 			t.Fatalf("error getting AWS client for region %s", region)
 		}
-		conn := client.CodePipelineConn()
+		conn := client.CodePipelineConn(ctx)
 
 		input := &codepipeline.ListPipelinesInput{}
 		_, err := conn.ListPipelinesWithContext(ctx, input)

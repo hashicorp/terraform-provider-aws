@@ -125,7 +125,7 @@ func ResourcePool() *schema.Resource {
 
 func resourcePoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 
 	input := &cognitoidentity.CreateIdentityPoolInput{
 		IdentityPoolName:               aws.String(d.Get("identity_pool_name").(string)),
@@ -166,7 +166,7 @@ func resourcePoolCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 
 	ip, err := conn.DescribeIdentityPoolWithContext(ctx, &cognitoidentity.DescribeIdentityPoolInput{
 		IdentityPoolId: aws.String(d.Id()),
@@ -217,7 +217,7 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 	log.Print("[DEBUG] Updating Cognito Identity Pool")
 
 	if d.HasChangesExcept("tags_all", "tags") {
@@ -243,7 +243,7 @@ func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourcePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool: %s", d.Id())
 
 	_, err := conn.DeleteIdentityPoolWithContext(ctx, &cognitoidentity.DeleteIdentityPoolInput{

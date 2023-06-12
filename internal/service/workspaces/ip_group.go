@@ -66,7 +66,7 @@ func ResourceIPGroup() *schema.Resource {
 
 func resourceIPGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn()
+	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
 
 	rules := d.Get("rules").(*schema.Set).List()
 	resp, err := conn.CreateIpGroupWithContext(ctx, &workspaces.CreateIpGroupInput{
@@ -87,7 +87,7 @@ func resourceIPGroupCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceIPGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn()
+	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
 
 	resp, err := conn.DescribeIpGroupsWithContext(ctx, &workspaces.DescribeIpGroupsInput{
 		GroupIds: []*string{aws.String(d.Id())},
@@ -121,7 +121,7 @@ func resourceIPGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceIPGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn()
+	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
 
 	if d.HasChange("rules") {
 		rules := d.Get("rules").(*schema.Set).List()
@@ -140,7 +140,7 @@ func resourceIPGroupUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceIPGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn()
+	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
 
 	var found bool
 	log.Printf("[DEBUG] Finding directories associated with WorkSpaces IP Group (%s)", d.Id())

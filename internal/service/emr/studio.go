@@ -115,7 +115,7 @@ func ResourceStudio() *schema.Resource {
 
 func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	input := &emr.CreateStudioInput{
 		AuthMode:                 aws.String(d.Get("auth_mode").(string)),
@@ -174,7 +174,7 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &emr.UpdateStudioInput{
@@ -209,7 +209,7 @@ func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	studio, err := FindStudioByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -244,7 +244,7 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceStudioDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	request := &emr.DeleteStudioInput{
 		StudioId: aws.String(d.Id()),

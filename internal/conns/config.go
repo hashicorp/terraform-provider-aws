@@ -4,8 +4,12 @@ import (
 	"context"
 	"log"
 	"strings"
+	"time"
 
+	awsv2 "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -24,7 +28,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
@@ -45,6 +48,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	tenBackOff = 10
+)
+
 type Config struct {
 	AccessKey                      string
 	AllowedAccountIds              []string
@@ -63,6 +70,7 @@ type Config struct {
 	MaxRetries                     int
 	Profile                        string
 	Region                         string
+	RetryMode                      awsv2.RetryMode
 	S3UsePathStyle                 bool
 	SecretKey                      string
 	SharedConfigFiles              []string
@@ -94,6 +102,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		MaxRetries:                    c.MaxRetries,
 		Profile:                       c.Profile,
 		Region:                        c.Region,
+		RetryMode:                     c.RetryMode,
 		SecretKey:                     c.SecretKey,
 		SkipCredsValidation:           c.SkipCredsValidation,
 		SkipRequestingAccountId:       c.SkipRequestingAccountId,
@@ -457,20 +466,6 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
-	client.lightsailConn.Handlers.Retry.PushBack(func(r *request.Request) {
-		switch r.Operation.Name {
-		case "CreateContainerService", "UpdateContainerService", "CreateContainerServiceDeployment":
-			if tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please try again in a few minutes") {
-				r.Retryable = aws.Bool(true)
-			}
-		case "DeleteContainerService":
-			if tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please try again in a few minutes") ||
-				tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please wait for it to complete before trying again") {
-				r.Retryable = aws.Bool(true)
-			}
-		}
-	})
-
 	client.organizationsConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// Retry on the following error:
 		// ConcurrentModificationException: AWS Organizations can't complete your request because it conflicts with another attempt to modify the same entity. Try again later.
@@ -541,6 +536,25 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
 			o.Region = endpoints.UsEast1RegionID
 		}
+	})
+
+	client.lightsailClient = lightsail.NewFromConfig(cfg, func(o *lightsail.Options) {
+		lightsailRetryable := retry.IsErrorRetryableFunc(func(e error) awsv2.Ternary {
+			if strings.Contains(e.Error(), "Please try again in a few minutes") || strings.Contains(e.Error(), "Please wait for it to complete before trying again") {
+				return awsv2.TrueTernary
+			}
+			return awsv2.UnknownTernary
+		})
+
+		if endpoint := c.Endpoints[names.Lightsail]; endpoint != "" {
+			o.EndpointResolver = lightsail.EndpointResolverFromURL(endpoint)
+		}
+
+		o.Retryer = retry.NewStandard(func(options *retry.StandardOptions) {
+			options.Retryables = append(options.Retryables, lightsailRetryable)
+			options.MaxAttempts = 18
+			options.Backoff = retry.NewExponentialJitterBackoff(time.Second * tenBackOff)
+		})
 	})
 
 	return client, nil

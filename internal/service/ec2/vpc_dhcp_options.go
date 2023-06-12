@@ -96,7 +96,7 @@ var (
 
 func resourceVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	dhcpConfigurations, err := optionsMap.resourceDataToDHCPConfigurations(d)
 
@@ -122,7 +122,7 @@ func resourceVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindDHCPOptionsByID(ctx, conn, d.Id())
@@ -172,7 +172,7 @@ func resourceVPCDHCPOptionsUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVPCDHCPOptionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpcs, err := FindVPCs(ctx, conn, &ec2.DescribeVpcsInput{
 		Filters: BuildAttributeFilterList(map[string]string{

@@ -83,7 +83,7 @@ func testAccCheckUserProfileExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("No OpsWorks User Profile ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
 		_, err := tfopsworks.FindUserProfileByARN(ctx, conn, rs.Primary.ID)
 
@@ -93,7 +93,7 @@ func testAccCheckUserProfileExists(ctx context.Context, n string) resource.TestC
 
 func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opsworks_user_profile" {

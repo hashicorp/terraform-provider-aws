@@ -171,7 +171,7 @@ func ResourceDevEndpoint() *schema.Resource {
 
 func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &glue.CreateDevEndpointInput{
@@ -270,7 +270,7 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	endpoint, err := FindDevEndpointByName(ctx, conn, d.Id())
 
@@ -389,7 +389,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.UpdateDevEndpointInput{
 		EndpointName: aws.String(d.Get("name").(string)),
@@ -488,7 +488,7 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceDevEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[INFO] Deleting Glue Dev Endpoint: %s", d.Id())
 	_, err := conn.DeleteDevEndpointWithContext(ctx, &glue.DeleteDevEndpointInput{

@@ -294,7 +294,7 @@ func ResourceLaunch() *schema.Resource {
 }
 
 func resourceLaunchCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	name := d.Get("name").(string)
 	project := d.Get("project").(string)
@@ -339,7 +339,7 @@ func resourceLaunchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	launchName, projectNameOrARN, err := LaunchParseID(d.Id())
 
@@ -392,7 +392,7 @@ func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceLaunchUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	if d.HasChanges("description", "groups", "metric_monitors", "randomization_salt", "scheduled_splits_config") {
 		name := d.Get("name").(string)
@@ -423,7 +423,7 @@ func resourceLaunchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceLaunchDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	name := d.Get("name").(string)
 	project := d.Get("project").(string)

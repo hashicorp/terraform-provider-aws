@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn rdsiface.RDSAPI, identifier string) (tft
 // ListTags lists rds service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).RDSConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).RDSConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -138,5 +138,5 @@ func UpdateTags(ctx context.Context, conn rdsiface.RDSAPI, identifier string, ol
 // UpdateTags updates rds service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).RDSConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).RDSConn(ctx), identifier, oldTags, newTags)
 }

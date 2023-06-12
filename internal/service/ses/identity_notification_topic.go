@@ -62,7 +62,7 @@ func ResourceIdentityNotificationTopic() *schema.Resource {
 
 func resourceNotificationTopicSet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 	notification := d.Get("notification_type").(string)
 	identity := d.Get("identity").(string)
 	includeOriginalHeaders := d.Get("include_original_headers").(bool)
@@ -101,7 +101,7 @@ func resourceNotificationTopicSet(ctx context.Context, d *schema.ResourceData, m
 
 func resourceIdentityNotificationTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	identity, notificationType, err := decodeIdentityNotificationTopicID(d.Id())
 	if err != nil {
@@ -148,7 +148,7 @@ func resourceIdentityNotificationTopicRead(ctx context.Context, d *schema.Resour
 
 func resourceIdentityNotificationTopicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	identity, notificationType, err := decodeIdentityNotificationTopicID(d.Id())
 	if err != nil {

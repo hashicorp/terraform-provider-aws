@@ -70,7 +70,7 @@ func sweepHealthChecks(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).Route53Conn()
+	conn := client.(*conns.AWSClient).Route53Conn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -122,7 +122,7 @@ func sweepKeySigningKeys(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).Route53Conn()
+	conn := client.(*conns.AWSClient).Route53Conn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -200,7 +200,7 @@ func sweepQueryLogs(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).Route53Conn()
+	conn := client.(*conns.AWSClient).Route53Conn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -245,7 +245,7 @@ func sweepTrafficPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).Route53Conn()
+	conn := client.(*conns.AWSClient).Route53Conn(ctx)
 	input := &route53.ListTrafficPoliciesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -289,7 +289,7 @@ func sweepTrafficPolicyInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).Route53Conn()
+	conn := client.(*conns.AWSClient).Route53Conn(ctx)
 	input := &route53.ListTrafficPolicyInstancesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -335,7 +335,7 @@ func sweepZones(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).Route53Conn()
+	conn := client.(*conns.AWSClient).Route53Conn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

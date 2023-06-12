@@ -164,7 +164,7 @@ func testAccResourcePolicy(ctx context.Context, n string, action string) resourc
 			return fmt.Errorf("No policy id set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		policy, err := conn.GetResourcePolicyWithContext(ctx, &glue.GetResourcePolicyInput{})
 		if err != nil {
@@ -189,7 +189,7 @@ func testAccResourcePolicy(ctx context.Context, n string, action string) resourc
 
 func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		policy, err := conn.GetResourcePolicyWithContext(ctx, &glue.GetResourcePolicyInput{})
 

@@ -29,7 +29,7 @@ func sweepInstance(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).ConnectConn()
+	conn := client.(*conns.AWSClient).ConnectConn(ctx)
 
 	var errs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)

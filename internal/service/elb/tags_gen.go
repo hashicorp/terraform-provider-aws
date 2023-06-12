@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn elbiface.ELBAPI, identifier string) (tft
 // ListTags lists elb service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ELBConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ELBConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -153,5 +153,5 @@ func UpdateTags(ctx context.Context, conn elbiface.ELBAPI, identifier string, ol
 // UpdateTags updates elb service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).ELBConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).ELBConn(ctx), identifier, oldTags, newTags)
 }

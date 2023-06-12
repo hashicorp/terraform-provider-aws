@@ -66,7 +66,7 @@ const (
 )
 
 func resourceSinkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	in := &oam.CreateSinkInput{
 		Name: aws.String(d.Get("name").(string)),
@@ -88,7 +88,7 @@ func resourceSinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceSinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	out, err := findSinkByID(ctx, conn, d.Id())
 
@@ -115,7 +115,7 @@ func resourceSinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceSinkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	log.Printf("[INFO] Deleting ObservabilityAccessManager Sink %s", d.Id())
 

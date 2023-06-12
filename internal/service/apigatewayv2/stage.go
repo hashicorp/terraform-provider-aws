@@ -194,7 +194,7 @@ func ResourceStage() *schema.Resource {
 
 func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	apiId := d.Get("api_id").(string)
 
@@ -248,7 +248,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	apiId := d.Get("api_id").(string)
 	resp, err := conn.GetStageWithContext(ctx, &apigatewayv2.GetStageInput{
@@ -328,7 +328,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	if d.HasChanges("access_log_settings", "auto_deploy", "client_certificate_id",
 		"default_route_settings", "deployment_id", "description",
@@ -416,7 +416,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 stage (%s)", d.Id())
 	_, err := conn.DeleteStageWithContext(ctx, &apigatewayv2.DeleteStageInput{
@@ -442,7 +442,7 @@ func resourceStageImport(ctx context.Context, d *schema.ResourceData, meta inter
 	apiId := parts[0]
 	stageName := parts[1]
 
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	resp, err := conn.GetStageWithContext(ctx, &apigatewayv2.GetStageInput{
 		ApiId:     aws.String(apiId),

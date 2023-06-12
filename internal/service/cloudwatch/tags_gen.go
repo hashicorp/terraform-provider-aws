@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn cloudwatchiface.CloudWatchAPI, identifie
 // ListTags lists cloudwatch service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).CloudWatchConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).CloudWatchConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -147,5 +147,5 @@ func UpdateTags(ctx context.Context, conn cloudwatchiface.CloudWatchAPI, identif
 // UpdateTags updates cloudwatch service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).CloudWatchConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).CloudWatchConn(ctx), identifier, oldTags, newTags)
 }

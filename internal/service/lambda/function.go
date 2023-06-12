@@ -423,7 +423,7 @@ const (
 
 func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient()
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	functionName := d.Get("function_name").(string)
 	packageType := types.PackageType(d.Get("package_type").(string))
@@ -571,7 +571,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient()
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	input := &lambda.GetFunctionInput{
 		FunctionName: aws.String(d.Id()),
@@ -717,7 +717,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient()
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	if d.HasChange("code_signing_config_arn") {
 		if v, ok := d.GetOk("code_signing_config_arn"); ok {
@@ -991,7 +991,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient()
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Lambda Function: %s", d.Id())
@@ -1082,7 +1082,7 @@ func findLatestFunctionVersionByName(ctx context.Context, conn *lambda.Client, n
 // If the replacement_security_group_ids attribute is set, those values will be used as
 // replacements. Otherwise, the default security group is used.
 func replaceSecurityGroups(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
-	ec2Conn := meta.(*conns.AWSClient).EC2Conn()
+	ec2Conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	var sgIDs []string
 	var vpcID string

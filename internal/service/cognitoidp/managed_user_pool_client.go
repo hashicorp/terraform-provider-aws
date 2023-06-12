@@ -342,7 +342,7 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 }
 
 func (r *resourceManagedUserPoolClient) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	conn := r.Meta().CognitoIDPConn()
+	conn := r.Meta().CognitoIDPConn(ctx)
 
 	var config resourceManagedUserPoolClientData
 	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
@@ -544,7 +544,7 @@ func (r *resourceManagedUserPoolClient) Read(ctx context.Context, request resour
 		return
 	}
 
-	conn := r.Meta().CognitoIDPConn()
+	conn := r.Meta().CognitoIDPConn(ctx)
 
 	poolClient, err := FindCognitoUserPoolClientByID(ctx, conn, state.UserPoolID.ValueString(), state.ID.ValueString())
 	if tfresource.NotFound(err) {
@@ -613,7 +613,7 @@ func (r *resourceManagedUserPoolClient) Update(ctx context.Context, request reso
 		return
 	}
 
-	conn := r.Meta().CognitoIDPConn()
+	conn := r.Meta().CognitoIDPConn(ctx)
 
 	params := plan.updateInput(ctx, &response.Diagnostics)
 	if response.Diagnostics.HasError() {

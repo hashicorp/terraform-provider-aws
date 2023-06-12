@@ -91,7 +91,7 @@ func testAccCheckFindingAggregatorExists(ctx context.Context, n string) resource
 			return fmt.Errorf("No Security Hub finding aggregator ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		_, err := conn.GetFindingAggregatorWithContext(ctx, &securityhub.GetFindingAggregatorInput{
 			FindingAggregatorArn: &rs.Primary.ID,
@@ -107,7 +107,7 @@ func testAccCheckFindingAggregatorExists(ctx context.Context, n string) resource
 
 func testAccCheckFindingAggregatorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_finding_aggregator" {

@@ -83,7 +83,7 @@ func ResourceStandardsControl() *schema.Resource {
 }
 
 func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	standardsSubscriptionARN, err := StandardsControlARNToStandardsSubscriptionARN(d.Id())
 
@@ -118,7 +118,7 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceStandardsControlPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	d.SetId(d.Get("standards_control_arn").(string))
 

@@ -102,7 +102,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	conn := r.Meta().OpenSearchServerlessClient()
+	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	in := &opensearchserverless.CreateCollectionInput{
 		ClientToken: aws.String(id.UniqueId()),
@@ -136,7 +136,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 }
 
 func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().OpenSearchServerlessClient()
+	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	var state resourceCollectionData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -160,7 +160,7 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *resourceCollection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().OpenSearchServerlessClient()
+	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	var plan, state resourceCollectionData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -194,7 +194,7 @@ func (r *resourceCollection) Update(ctx context.Context, req resource.UpdateRequ
 }
 
 func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().OpenSearchServerlessClient()
+	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	var state resourceCollectionData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

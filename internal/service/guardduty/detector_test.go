@@ -300,7 +300,7 @@ func testAccDetector_datasources_all(t *testing.T) {
 
 func testAccCheckDetectorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_guardduty_detector" {
@@ -337,7 +337,7 @@ func testAccCheckDetectorExists(ctx context.Context, name string) resource.TestC
 			return fmt.Errorf("Resource (%s) has empty ID", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
 
 		output, err := conn.GetDetectorWithContext(ctx, &guardduty.GetDetectorInput{
 			DetectorId: aws.String(rs.Primary.ID),
