@@ -110,7 +110,7 @@ func ResourceReplicaExternalKey() *schema.Resource {
 
 func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	// e.g. arn:aws:kms:us-east-2:111122223333:key/mrk-1234abcd12ab34cd56ef1234567890ab
 	primaryKeyARN, err := arn.Parse(d.Get("primary_key_arn").(string))
@@ -202,7 +202,7 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	key, err := findKey(ctx, conn, d.Id(), d.IsNewResource())
 
@@ -258,7 +258,7 @@ func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceReplicaExternalKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	if hasChange, enabled, state := d.HasChange("enabled"), d.Get("enabled").(bool), d.Get("key_state").(string); hasChange && enabled && state != kms.KeyStatePendingImport {
 		// Enable before any attributes are modified.
@@ -313,7 +313,7 @@ func resourceReplicaExternalKeyUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceReplicaExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	input := &kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),

@@ -247,7 +247,7 @@ func ResourceDocument() *schema.Resource {
 
 func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &ssm.CreateDocumentInput{
@@ -309,7 +309,7 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	doc, err := FindDocumentByName(ctx, conn, d.Id())
 
@@ -396,7 +396,7 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	if d.HasChange("permissions") {
 		var oldAccountIDs, newAccountIDs flex.Set[string]
@@ -503,7 +503,7 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDocumentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	if v, ok := d.GetOk("permissions"); ok && len(v.(map[string]interface{})) > 0 {
 		tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))

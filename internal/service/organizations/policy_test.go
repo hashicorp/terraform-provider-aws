@@ -459,7 +459,7 @@ func testAccPolicy_importManagedPolicy(t *testing.T) {
 
 func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_organizations_policy" {
@@ -497,7 +497,7 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 // skip_destroy is true and the policy should still exist after destroy completes
 func testAccCheckPolicyNoDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_organizations_policy" {
@@ -530,7 +530,7 @@ func testAccCheckPolicyExists(ctx context.Context, resourceName string, policy *
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
 		input := &organizations.DescribePolicyInput{
 			PolicyId: &rs.Primary.ID,
 		}

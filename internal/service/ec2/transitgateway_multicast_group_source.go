@@ -45,7 +45,7 @@ func ResourceTransitGatewayMulticastGroupSource() *schema.Resource {
 }
 
 func resourceTransitGatewayMulticastGroupSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	multicastDomainID := d.Get("transit_gateway_multicast_domain_id").(string)
 	groupIPAddress := d.Get("group_ip_address").(string)
@@ -70,7 +70,7 @@ func resourceTransitGatewayMulticastGroupSourceCreate(ctx context.Context, d *sc
 }
 
 func resourceTransitGatewayMulticastGroupSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	multicastDomainID, groupIPAddress, eniID, err := TransitGatewayMulticastGroupSourceParseResourceID(d.Id())
 
@@ -102,7 +102,7 @@ func resourceTransitGatewayMulticastGroupSourceRead(ctx context.Context, d *sche
 }
 
 func resourceTransitGatewayMulticastGroupSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	multicastDomainID, groupIPAddress, eniID, err := TransitGatewayMulticastGroupSourceParseResourceID(d.Id())
 

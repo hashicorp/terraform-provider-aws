@@ -117,7 +117,7 @@ func ResourceKey() *schema.Resource {
 
 func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	input := &kms.CreateKeyInput{
 		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
@@ -192,7 +192,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	key, err := findKey(ctx, conn, d.Id(), d.IsNewResource())
 
@@ -234,7 +234,7 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	if hasChange, enabled := d.HasChange("is_enabled"), d.Get("is_enabled").(bool); hasChange && enabled {
 		// Enable before any attributes are modified.
@@ -279,7 +279,7 @@ func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	input := &kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),

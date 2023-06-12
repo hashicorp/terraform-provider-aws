@@ -699,7 +699,7 @@ func TestFlattenWorkspaceCreationProperties(t *testing.T) {
 
 func testAccCheckDirectoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_workspaces_directory" {
@@ -734,7 +734,7 @@ func testAccCheckDirectoryExists(ctx context.Context, n string, v *workspaces.Wo
 			return fmt.Errorf("No WorkSpaces Directory ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn(ctx)
 
 		output, err := tfworkspaces.FindDirectoryByID(ctx, conn, rs.Primary.ID)
 
@@ -749,7 +749,7 @@ func testAccCheckDirectoryExists(ctx context.Context, n string, v *workspaces.Wo
 }
 
 func testAccPreCheckDirectory(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn(ctx)
 
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
 

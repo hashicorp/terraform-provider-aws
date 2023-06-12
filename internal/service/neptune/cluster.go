@@ -301,7 +301,7 @@ func ResourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	// Check if any of the parameters that require a cluster modification after creation are set.
 	// See https://docs.aws.amazon.com/neptune/latest/userguide/backup-restore-restore-snapshot.html#backup-restore-restore-snapshot-considerations.
@@ -486,7 +486,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	dbc, err := FindClusterByID(ctx, conn, d.Id())
 
@@ -557,7 +557,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all", "iam_roles", "global_cluster_identifier") {
 		allowMajorVersionUpgrade := d.Get("allow_major_version_upgrade").(bool)
@@ -719,7 +719,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	input := neptune.DeleteDBClusterInput{

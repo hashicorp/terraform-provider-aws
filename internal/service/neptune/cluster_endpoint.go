@@ -80,7 +80,7 @@ func ResourceClusterEndpoint() *schema.Resource {
 
 func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	input := &neptune.CreateDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Get("cluster_endpoint_identifier").(string)),
@@ -121,7 +121,7 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	resp, err := FindEndpointByID(ctx, conn, d.Id())
 
@@ -150,7 +150,7 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		req := &neptune.ModifyDBClusterEndpointInput{
@@ -185,7 +185,7 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	endpointId := d.Get("cluster_endpoint_identifier").(string)
 	input := &neptune.DeleteDBClusterEndpointInput{

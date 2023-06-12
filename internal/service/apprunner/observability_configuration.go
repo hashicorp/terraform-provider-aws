@@ -74,7 +74,7 @@ func ResourceObservabilityConfiguration() *schema.Resource {
 }
 
 func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	name := d.Get("observability_configuration_name").(string)
 	input := &apprunner.CreateObservabilityConfigurationInput{
@@ -106,7 +106,7 @@ func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.DescribeObservabilityConfigurationInput{
 		ObservabilityConfigurationArn: aws.String(d.Id()),
@@ -159,7 +159,7 @@ func resourceObservabilityConfigurationUpdate(ctx context.Context, d *schema.Res
 }
 
 func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.DeleteObservabilityConfigurationInput{
 		ObservabilityConfigurationArn: aws.String(d.Id()),

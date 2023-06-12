@@ -95,7 +95,7 @@ func ResourceParameterGroup() *schema.Resource {
 
 func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	createOpts := neptune.CreateDBParameterGroupInput{
 		DBParameterGroupName:   aws.String(d.Get("name").(string)),
@@ -119,7 +119,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	describeOpts := neptune.DescribeDBParameterGroupsInput{
 		DBParameterGroupName: aws.String(d.Id()),
@@ -175,7 +175,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -253,7 +253,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	deleteOpts := neptune.DeleteDBParameterGroupInput{
 		DBParameterGroupName: aws.String(d.Id()),

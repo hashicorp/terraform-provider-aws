@@ -52,7 +52,7 @@ func DataSourceConfiguration() *schema.Resource {
 
 func dataSourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	listConfigurationsInput := &kafka.ListConfigurationsInput{}
 

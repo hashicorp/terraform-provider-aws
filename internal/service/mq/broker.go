@@ -354,7 +354,7 @@ func ResourceBroker() *schema.Resource {
 }
 
 func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn()
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	name := d.Get("broker_name").(string)
 	engineType := d.Get("engine_type").(string)
@@ -418,7 +418,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn()
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	output, err := FindBrokerByID(ctx, conn, d.Id())
 
@@ -487,7 +487,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn()
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	requiresReboot := false
 
@@ -591,7 +591,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBrokerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn()
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	log.Printf("[INFO] Deleting MQ Broker: %s", d.Id())
 	_, err := conn.DeleteBrokerWithContext(ctx, &mq.DeleteBrokerInput{

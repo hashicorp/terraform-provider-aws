@@ -371,7 +371,7 @@ const (
 
 func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	environmentId := d.Get("environment_id").(string)
 	clusterName := d.Get("name").(string)
@@ -458,7 +458,7 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	out, err := findKxClusterByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -544,7 +544,7 @@ func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceKxClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	log.Printf("[INFO] Deleting FinSpace KxCluster %s", d.Id())
 	_, err := conn.DeleteKxCluster(ctx, &finspace.DeleteKxClusterInput{

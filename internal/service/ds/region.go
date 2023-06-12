@@ -87,7 +87,7 @@ func ResourceRegion() *schema.Resource {
 }
 
 func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryID := d.Get("directory_id").(string)
 	regionName := d.Get("region_name").(string)
@@ -113,7 +113,7 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("waiting for Directory Service Region (%s) create: %s", d.Id(), err)
 	}
 
-	regionConn, err := regionalConn(meta.(*conns.AWSClient), regionName)
+	regionConn, err := regionalConn(ctx, meta.(*conns.AWSClient), regionName)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -135,7 +135,7 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryID, regionName, err := RegionParseResourceID(d.Id())
 
@@ -166,7 +166,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("vpc_settings", nil)
 	}
 
-	regionConn, err := regionalConn(meta.(*conns.AWSClient), regionName)
+	regionConn, err := regionalConn(ctx, meta.(*conns.AWSClient), regionName)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -190,7 +190,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.FromErr(err)
 	}
 
-	conn, err := regionalConn(meta.(*conns.AWSClient), regionName)
+	conn, err := regionalConn(ctx, meta.(*conns.AWSClient), regionName)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -221,7 +221,7 @@ func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	// The Region must be removed using a client in the region.
-	conn, err := regionalConn(meta.(*conns.AWSClient), regionName)
+	conn, err := regionalConn(ctx, meta.(*conns.AWSClient), regionName)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -246,8 +246,8 @@ func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func regionalConn(client *conns.AWSClient, regionName string) (*directoryservice.DirectoryService, error) {
-	sess, err := conns.NewSessionForRegion(&client.DSConn().Config, regionName, client.TerraformVersion)
+func regionalConn(ctx context.Context, client *conns.AWSClient, regionName string) (*directoryservice.DirectoryService, error) {
+	sess, err := conns.NewSessionForRegion(&client.DSConn(ctx).Config, regionName, client.TerraformVersion)
 
 	if err != nil {
 		return nil, fmt.Errorf("creating AWS session (%s): %w", regionName, err)

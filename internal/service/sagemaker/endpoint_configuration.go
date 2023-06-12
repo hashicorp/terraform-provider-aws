@@ -498,7 +498,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 
 func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
@@ -536,7 +536,7 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 
 func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	endpointConfig, err := FindEndpointConfigByName(ctx, conn, d.Id())
 
@@ -584,7 +584,7 @@ func resourceEndpointConfigurationUpdate(ctx context.Context, d *schema.Resource
 
 func resourceEndpointConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	deleteOpts := &sagemaker.DeleteEndpointConfigInput{
 		EndpointConfigName: aws.String(d.Id()),

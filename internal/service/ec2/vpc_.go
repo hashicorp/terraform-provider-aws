@@ -172,7 +172,7 @@ func ResourceVPC() *schema.Resource {
 
 func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateVpcInput{
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
@@ -253,7 +253,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindVPCByID(ctx, conn, d.Id())
@@ -371,7 +371,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("enable_dns_hostnames") {
 		if err := modifyVPCDNSHostnames(ctx, conn, d.Id(), d.Get("enable_dns_hostnames").(bool)); err != nil {
@@ -434,7 +434,7 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DeleteVpcInput{
 		VpcId: aws.String(d.Id()),

@@ -694,7 +694,7 @@ func ResourceProject() *schema.Resource {
 
 func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	projectEnv := expandProjectEnvironment(d)
 	projectSource := expandProjectSource(d)
@@ -1286,7 +1286,7 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 
 func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	project, err := FindProjectByARN(ctx, conn, d.Id())
 
@@ -1371,7 +1371,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	if d.HasChanges("project_visibility", "resource_access_role") {
 		visInput := &codebuild.UpdateProjectVisibilityInput{
@@ -1536,7 +1536,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	_, err := conn.DeleteProjectWithContext(ctx, &codebuild.DeleteProjectInput{
 		Name: aws.String(d.Id()),

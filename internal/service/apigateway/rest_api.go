@@ -173,7 +173,7 @@ func ResourceRestAPI() *schema.Resource {
 
 func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &apigateway.CreateRestApiInput{
@@ -274,7 +274,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	api, err := FindRESTAPIByID(ctx, conn, d.Id())
 
@@ -372,7 +372,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		operations := make([]*apigateway.PatchOperation, 0)
@@ -571,7 +571,7 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceRestAPIDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway REST API: %s", d.Id())
 	_, err := conn.DeleteRestApiWithContext(ctx, &apigateway.DeleteRestApiInput{

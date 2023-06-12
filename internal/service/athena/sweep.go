@@ -28,7 +28,7 @@ func sweepDatabases(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AthenaConn()
+	conn := client.(*conns.AWSClient).AthenaConn(ctx)
 	input := &athena.ListDatabasesInput{
 		CatalogName: aws.String("AwsDataCatalog"),
 	}

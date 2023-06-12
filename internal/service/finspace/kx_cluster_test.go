@@ -409,7 +409,7 @@ func TestAccFinSpaceKxCluster_tags(t *testing.T) {
 
 func testAccCheckKxClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_finspace_kx_cluster" {
@@ -447,7 +447,7 @@ func testAccCheckKxClusterExists(ctx context.Context, name string, kxcluster *fi
 			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxCluster, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
 		resp, err := conn.GetKxCluster(ctx, &finspace.GetKxClusterInput{
 			ClusterName:   aws.String(rs.Primary.Attributes["name"]),
 			EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),

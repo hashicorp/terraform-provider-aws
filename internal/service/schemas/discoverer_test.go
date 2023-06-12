@@ -159,7 +159,7 @@ func TestAccSchemasDiscoverer_tags(t *testing.T) {
 
 func testAccCheckDiscovererDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_schemas_discoverer" {
@@ -194,7 +194,7 @@ func testAccCheckDiscovererExists(ctx context.Context, n string, v *schemas.Desc
 			return fmt.Errorf("No EventBridge Schemas Discoverer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn(ctx)
 
 		output, err := tfschemas.FindDiscovererByID(ctx, conn, rs.Primary.ID)
 

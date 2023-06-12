@@ -2,6 +2,7 @@
 package conns
 
 import (
+	"context"
 	"net/http"
 
 {{ range .Services }}
@@ -49,15 +50,15 @@ type AWSClient struct {
 
 {{ range .Services }}
 	{{- if eq .SDKVersion "1" }}
-func (client *AWSClient) {{ .ProviderNameUpper }}Conn() *{{ .GoV1Package }}.{{ .ClientTypeName }} {
+func (client *AWSClient) {{ .ProviderNameUpper }}Conn(context.Context) *{{ .GoV1Package }}.{{ .ClientTypeName }} {
 	return client.{{ .ProviderPackage }}Conn
 }
 	{{- else if eq .SDKVersion "2" }}
-func (client *AWSClient) {{ .ProviderNameUpper }}Client() *{{ .GoV2Package }}.{{ .ClientTypeName }} {
+func (client *AWSClient) {{ .ProviderNameUpper }}Client(context.Context) *{{ .GoV2Package }}.{{ .ClientTypeName }} {
 	return client.{{ .ProviderPackage }}Client
 }
 	{{- else if eq .SDKVersion "1,2" }}
-func (client *AWSClient) {{ .ProviderNameUpper }}Client() *{{ .GoV2PackageOverride }}.{{ .ClientTypeName }} {
+func (client *AWSClient) {{ .ProviderNameUpper }}Client(context.Context) *{{ .GoV2PackageOverride }}.{{ .ClientTypeName }} {
 	return client.{{ .ProviderPackage }}Client.Client()
 }
 	{{- end }}

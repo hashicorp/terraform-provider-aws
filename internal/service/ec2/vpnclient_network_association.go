@@ -57,7 +57,7 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 
 func resourceClientVPNNetworkAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	input := &ec2.AssociateClientVpnTargetNetworkInput{
@@ -84,7 +84,7 @@ func resourceClientVPNNetworkAssociationCreate(ctx context.Context, d *schema.Re
 
 func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	network, err := FindClientVPNNetworkAssociationByIDs(ctx, conn, d.Id(), endpointID)
@@ -109,7 +109,7 @@ func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.Reso
 
 func resourceClientVPNNetworkAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 

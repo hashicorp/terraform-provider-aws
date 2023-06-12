@@ -28,7 +28,7 @@ func DataSourceClusters() *schema.Resource {
 
 func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	var clusters []*string
 

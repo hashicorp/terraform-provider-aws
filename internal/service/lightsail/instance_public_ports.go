@@ -95,7 +95,7 @@ func ResourceInstancePublicPorts() *schema.Resource {
 
 func resourceInstancePublicPortsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 
 	var portInfos []*lightsail.PortInfo
 	if v, ok := d.GetOk("port_info"); ok && v.(*schema.Set).Len() > 0 {
@@ -125,7 +125,7 @@ func resourceInstancePublicPortsCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceInstancePublicPortsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 
 	input := &lightsail.GetInstancePortStatesInput{
 		InstanceName: aws.String(d.Get("instance_name").(string)),
@@ -158,7 +158,7 @@ func resourceInstancePublicPortsRead(ctx context.Context, d *schema.ResourceData
 
 func resourceInstancePublicPortsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 
 	var err *multierror.Error
 

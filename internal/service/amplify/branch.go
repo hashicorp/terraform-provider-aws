@@ -189,7 +189,7 @@ func ResourceBranch() *schema.Resource {
 
 func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	appID := d.Get("app_id").(string)
 	branchName := d.Get("branch_name").(string)
@@ -268,7 +268,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	appID, branchName, err := BranchParseResourceID(d.Id())
 
@@ -317,7 +317,7 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		appID, branchName, err := BranchParseResourceID(d.Id())
@@ -403,7 +403,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	appID, branchName, err := BranchParseResourceID(d.Id())
 

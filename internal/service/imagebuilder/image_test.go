@@ -291,7 +291,7 @@ func TestAccImageBuilderImage_outputResources_containers(t *testing.T) {
 
 func testAccCheckImageDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_imagebuilder_image_pipeline" {
@@ -328,7 +328,7 @@ func testAccCheckImageExists(ctx context.Context, resourceName string) resource.
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
 
 		input := &imagebuilder.GetImageInput{
 			ImageBuildVersionArn: aws.String(rs.Primary.ID),

@@ -32,7 +32,7 @@ func TestAccEC2PublicIPv4PoolDataSource_basic(t *testing.T) {
 }
 
 func testAccPreCheckPublicIPv4Pools(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	output, err := tfec2.FindPublicIPv4Pools(ctx, conn, &ec2.DescribePublicIpv4PoolsInput{})
 

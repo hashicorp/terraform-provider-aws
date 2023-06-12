@@ -40,7 +40,7 @@ func testAccOrganizationsAccess_basic(t *testing.T) {
 
 func testAccCheckOrganizationsAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_organizations_access" {
@@ -72,7 +72,7 @@ func testAccCheckOrganizationsAccessExists(ctx context.Context, resourceName str
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		output, err := tfservicecatalog.WaitOrganizationsAccessStable(ctx, conn, tfservicecatalog.OrganizationsAccessStableTimeout)
 

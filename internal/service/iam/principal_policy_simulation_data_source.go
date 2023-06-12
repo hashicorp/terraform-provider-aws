@@ -206,7 +206,7 @@ func DataSourcePrincipalPolicySimulation() *schema.Resource {
 
 func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	setAsAWSStringSlice := func(raw interface{}) []*string {
 		if raw.(*schema.Set).Len() == 0 {

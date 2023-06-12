@@ -34,7 +34,7 @@ func DataSourceActiveReceiptRuleSet() *schema.Resource {
 
 func dataSourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	data, err := conn.DescribeActiveReceiptRuleSetWithContext(ctx, &ses.DescribeActiveReceiptRuleSetInput{})
 

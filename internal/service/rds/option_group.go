@@ -138,7 +138,7 @@ func ResourceOptionGroup() *schema.Resource {
 
 func resourceOptionGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	var groupName string
 	if v, ok := d.GetOk("name"); ok {
@@ -174,7 +174,7 @@ func resourceOptionGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceOptionGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	params := &rds.DescribeOptionGroupsInput{
 		OptionGroupName: aws.String(d.Id()),
@@ -231,7 +231,7 @@ func optionInList(optionName string, list []*string) bool {
 
 func resourceOptionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 	if d.HasChange("option") {
 		o, n := d.GetChange("option")
 		if o == nil {
@@ -298,7 +298,7 @@ func resourceOptionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceOptionGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	deleteOpts := &rds.DeleteOptionGroupInput{
 		OptionGroupName: aws.String(d.Id()),

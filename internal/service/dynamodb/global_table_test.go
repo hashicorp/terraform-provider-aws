@@ -112,7 +112,7 @@ func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 
 func testAccCheckGlobalTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dynamodb_global_table" {
@@ -147,7 +147,7 @@ func testAccCheckGlobalTableExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("No DynamoDB Global Table ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
 		_, err := tfdynamodb.FindGlobalTableByName(ctx, conn, rs.Primary.ID)
 
@@ -172,7 +172,7 @@ func testAccPreCheckGlobalTable(ctx context.Context, t *testing.T) {
 	}
 	acctest.PreCheckRegion(t, supportedRegions...)
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
 	input := &dynamodb.ListGlobalTablesInput{}
 

@@ -76,7 +76,7 @@ func ResourceVoiceConnectorOrigination() *schema.Resource {
 }
 
 func resourceVoiceConnectorOriginationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
 
@@ -101,7 +101,7 @@ func resourceVoiceConnectorOriginationCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceVoiceConnectorOriginationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	input := &chime.GetVoiceConnectorOriginationInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -134,7 +134,7 @@ func resourceVoiceConnectorOriginationRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceVoiceConnectorOriginationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	if d.HasChanges("route", "disabled") {
 		input := &chime.PutVoiceConnectorOriginationInput{
@@ -159,7 +159,7 @@ func resourceVoiceConnectorOriginationUpdate(ctx context.Context, d *schema.Reso
 }
 
 func resourceVoiceConnectorOriginationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	input := &chime.DeleteVoiceConnectorOriginationInput{
 		VoiceConnectorId: aws.String(d.Id()),

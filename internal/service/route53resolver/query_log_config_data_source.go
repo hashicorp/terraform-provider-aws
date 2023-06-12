@@ -57,7 +57,7 @@ const (
 )
 
 func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	configID := d.Get("resolver_query_log_config_id").(string)
 

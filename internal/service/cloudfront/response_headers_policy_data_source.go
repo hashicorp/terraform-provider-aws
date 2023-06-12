@@ -294,7 +294,7 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 
 func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	var responseHeadersPolicyID string
 

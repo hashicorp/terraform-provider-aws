@@ -60,7 +60,7 @@ const (
 )
 
 func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	linkIdentifier := d.Get("link_identifier").(string)
 

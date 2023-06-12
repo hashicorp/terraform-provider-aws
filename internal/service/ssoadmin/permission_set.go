@@ -92,7 +92,7 @@ func ResourcePermissionSet() *schema.Resource {
 
 func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	instanceARN := d.Get("instance_arn").(string)
 	name := d.Get("name").(string)
@@ -127,7 +127,7 @@ func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	arn, instanceARN, err := ParseResourceID(d.Id())
 
@@ -176,7 +176,7 @@ func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	arn, instanceARN, err := ParseResourceID(d.Id())
 
@@ -230,7 +230,7 @@ func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourcePermissionSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	arn, instanceARN, err := ParseResourceID(d.Id())
 

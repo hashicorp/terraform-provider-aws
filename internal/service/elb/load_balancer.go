@@ -249,7 +249,7 @@ func ResourceLoadBalancer() *schema.Resource {
 
 func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	var elbName string
 	if v, ok := d.GetOk("name"); ok {
@@ -308,7 +308,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lb, err := FindLoadBalancerByName(ctx, conn, d.Id())
 
@@ -331,7 +331,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("arn", arn.String())
 
-	if err := flattenLoadBalancerResource(ctx, d, meta.(*conns.AWSClient).EC2Conn(), conn, lb); err != nil {
+	if err := flattenLoadBalancerResource(ctx, d, meta.(*conns.AWSClient).EC2Conn(ctx), conn, lb); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 	return diags
@@ -430,7 +430,7 @@ func flattenLoadBalancerResource(ctx context.Context, d *schema.ResourceData, ec
 
 func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	if d.HasChange("listener") {
 		o, n := d.GetChange("listener")
@@ -737,7 +737,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	log.Printf("[INFO] Deleting ELB Classic Load Balancer: %s", d.Id())
 	_, err := conn.DeleteLoadBalancerWithContext(ctx, &elb.DeleteLoadBalancerInput{
@@ -748,7 +748,7 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting ELB Classic Load Balancer (%s): %s", d.Id(), err)
 	}
 
-	err = cleanupNetworkInterfaces(ctx, meta.(*conns.AWSClient).EC2Conn(), d.Id())
+	err = cleanupNetworkInterfaces(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), d.Id())
 
 	if err != nil {
 		diags = sdkdiag.AppendWarningf(diags, "cleaning up ELB Classic Load Balancer (%s) ENIs: %s", d.Id(), err)

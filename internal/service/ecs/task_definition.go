@@ -443,7 +443,7 @@ func ValidTaskDefinitionContainerDefinitions(v interface{}, k string) (ws []stri
 
 func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	rawDefinitions := d.Get("container_definitions").(string)
 	definitions, err := expandContainerDefinitions(rawDefinitions)
@@ -556,7 +556,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	input := ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get("arn").(string)),
@@ -664,7 +664,7 @@ func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	_, err := conn.DeregisterTaskDefinitionWithContext(ctx, &ecs.DeregisterTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get("arn").(string)),

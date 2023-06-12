@@ -44,7 +44,7 @@ func sweepCertificates(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ACMClient()
+	conn := client.(*conns.AWSClient).ACMClient(ctx)
 	input := &acm.ListCertificatesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

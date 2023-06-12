@@ -88,5 +88,5 @@ func UpdateTags(ctx context.Context, conn connectiface.ConnectAPI, identifier st
 // UpdateTags updates connect service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).ConnectConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).ConnectConn(ctx), identifier, oldTags, newTags)
 }

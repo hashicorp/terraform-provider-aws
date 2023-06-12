@@ -64,7 +64,7 @@ func testAccCheckServicecatalogPortfolioStatusExistsConfig(ctx context.Context, 
 			return fmt.Errorf("No SageMaker Studio Lifecycle Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		output, err := conn.GetSagemakerServicecatalogPortfolioStatusWithContext(ctx, &sagemaker.GetSagemakerServicecatalogPortfolioStatusInput{})
 		if err != nil {

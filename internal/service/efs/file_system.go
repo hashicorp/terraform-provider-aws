@@ -148,7 +148,7 @@ func ResourceFileSystem() *schema.Resource {
 }
 
 func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	creationToken := ""
 	if v, ok := d.GetOk("creation_token"); ok {
@@ -218,7 +218,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	fs, err := FindFileSystemByID(ctx, conn, d.Id())
 
@@ -267,7 +267,7 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	if d.HasChanges("provisioned_throughput_in_mibps", "throughput_mode") {
 		throughputMode := d.Get("throughput_mode").(string)
@@ -316,7 +316,7 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting EFS file system: %s", d.Id())
 	_, err := conn.DeleteFileSystemWithContext(ctx, &efs.DeleteFileSystemInput{

@@ -326,7 +326,7 @@ func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 			resp, err := conn.GetWebACLWithContext(ctx, &waf.GetWebACLInput{
 				WebACLId: aws.String(rs.Primary.ID),
 			})
@@ -359,7 +359,7 @@ func testAccCheckWebACLExists(ctx context.Context, n string, v *waf.WebACL) reso
 			return fmt.Errorf("No WebACL ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 		resp, err := conn.GetWebACLWithContext(ctx, &waf.GetWebACLInput{
 			WebACLId: aws.String(rs.Primary.ID),
 		})

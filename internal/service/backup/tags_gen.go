@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn backupiface.BackupAPI, identifier string
 // ListTags lists backup service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).BackupConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).BackupConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -121,5 +121,5 @@ func UpdateTags(ctx context.Context, conn backupiface.BackupAPI, identifier stri
 // UpdateTags updates backup service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).BackupConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).BackupConn(ctx), identifier, oldTags, newTags)
 }

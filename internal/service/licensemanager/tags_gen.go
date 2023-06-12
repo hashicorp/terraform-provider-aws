@@ -105,5 +105,5 @@ func UpdateTags(ctx context.Context, conn licensemanageriface.LicenseManagerAPI,
 // UpdateTags updates licensemanager service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).LicenseManagerConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).LicenseManagerConn(ctx), identifier, oldTags, newTags)
 }

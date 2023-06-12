@@ -170,7 +170,7 @@ func DataSourceDirectory() *schema.Resource {
 
 func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dir, err := FindDirectoryByID(ctx, conn, d.Get("directory_id").(string))

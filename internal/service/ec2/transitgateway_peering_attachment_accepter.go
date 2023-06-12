@@ -62,7 +62,7 @@ func ResourceTransitGatewayPeeringAttachmentAccepter() *schema.Resource {
 
 func resourceTransitGatewayPeeringAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
 	input := &ec2.AcceptTransitGatewayPeeringAttachmentInput{
@@ -91,7 +91,7 @@ func resourceTransitGatewayPeeringAttachmentAccepterCreate(ctx context.Context, 
 
 func resourceTransitGatewayPeeringAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGatewayPeeringAttachment, err := FindTransitGatewayPeeringAttachmentByID(ctx, conn, d.Id())
 
@@ -133,7 +133,7 @@ func resourceTransitGatewayPeeringAttachmentAccepterUpdate(ctx context.Context, 
 
 func resourceTransitGatewayPeeringAttachmentAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Peering Attachment: %s", d.Id())
 	_, err := conn.DeleteTransitGatewayPeeringAttachmentWithContext(ctx, &ec2.DeleteTransitGatewayPeeringAttachmentInput{

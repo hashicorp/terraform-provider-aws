@@ -51,7 +51,7 @@ func DataSourceIPSet() *schema.Resource {
 
 func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 	name := d.Get("name").(string)
 
 	var foundIpSet *wafv2.IPSetSummary

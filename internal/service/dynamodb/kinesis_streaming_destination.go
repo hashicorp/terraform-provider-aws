@@ -43,7 +43,7 @@ func ResourceKinesisStreamingDestination() *schema.Resource {
 }
 
 func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	streamArn := d.Get("stream_arn").(string)
 	tableName := d.Get("table_name").(string)
@@ -73,7 +73,7 @@ func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.Re
 }
 
 func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	tableName, streamArn, err := KinesisStreamingDestinationParseID(d.Id())
 
@@ -109,7 +109,7 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 }
 
 func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	tableName, streamArn, err := KinesisStreamingDestinationParseID(d.Id())
 

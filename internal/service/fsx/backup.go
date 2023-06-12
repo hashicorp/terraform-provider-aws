@@ -76,7 +76,7 @@ func ResourceBackup() *schema.Resource {
 
 func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateBackupInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -124,7 +124,7 @@ func resourceBackupUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceBackupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	backup, err := FindBackupByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -160,7 +160,7 @@ func resourceBackupRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceBackupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	request := &fsx.DeleteBackupInput{
 		BackupId: aws.String(d.Id()),

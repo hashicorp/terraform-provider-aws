@@ -133,7 +133,7 @@ func testAccCheckTransitGatewayRouteTableAttachmentExists(ctx context.Context, n
 			return fmt.Errorf("No Network Manager Transit Gateway Route Table Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
 		output, err := tfnetworkmanager.FindTransitGatewayRouteTableAttachmentByID(ctx, conn, rs.Primary.ID)
 
@@ -149,7 +149,7 @@ func testAccCheckTransitGatewayRouteTableAttachmentExists(ctx context.Context, n
 
 func testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_transit_gateway_route_table_attachment" {

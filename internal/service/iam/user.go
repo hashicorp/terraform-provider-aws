@@ -87,7 +87,7 @@ func ResourceUser() *schema.Resource {
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	name := d.Get("name").(string)
 	path := d.Get("path").(string)
@@ -135,7 +135,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindUserByName(ctx, conn, d.Id())
@@ -168,7 +168,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	if d.HasChanges("name", "path") {
 		o, n := d.GetChange("name")
@@ -231,7 +231,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	// IAM Users must be removed from all groups before they can be deleted
 	if err := DeleteUserGroupMemberships(ctx, conn, d.Id()); err != nil {

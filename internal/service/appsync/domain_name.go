@@ -59,7 +59,7 @@ func ResourceDomainName() *schema.Resource {
 
 func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	params := &appsync.CreateDomainNameInput{
 		CertificateArn: aws.String(d.Get("certificate_arn").(string)),
@@ -79,7 +79,7 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	domainName, err := FindDomainNameByID(ctx, conn, d.Id())
 	if domainName == nil && !d.IsNewResource() {
@@ -103,7 +103,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	params := &appsync.UpdateDomainNameInput{
 		DomainName: aws.String(d.Id()),
@@ -123,7 +123,7 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	input := &appsync.DeleteDomainNameInput{
 		DomainName: aws.String(d.Id()),

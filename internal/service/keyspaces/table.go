@@ -280,7 +280,7 @@ func ResourceTable() *schema.Resource {
 }
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn()
+	conn := meta.(*conns.AWSClient).KeyspacesConn(ctx)
 
 	keyspaceName := d.Get("keyspace_name").(string)
 	tableName := d.Get("table_name").(string)
@@ -335,7 +335,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn()
+	conn := meta.(*conns.AWSClient).KeyspacesConn(ctx)
 
 	keyspaceName, tableName, err := TableParseResourceID(d.Id())
 
@@ -406,7 +406,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn()
+	conn := meta.(*conns.AWSClient).KeyspacesConn(ctx)
 
 	keyspaceName, tableName, err := TableParseResourceID(d.Id())
 
@@ -562,7 +562,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn()
+	conn := meta.(*conns.AWSClient).KeyspacesConn(ctx)
 
 	keyspaceName, tableName, err := TableParseResourceID(d.Id())
 

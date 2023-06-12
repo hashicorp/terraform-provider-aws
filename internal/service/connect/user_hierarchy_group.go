@@ -117,7 +117,7 @@ func userHierarchyPathLevelSchema() *schema.Schema {
 }
 
 func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	userHierarchyGroupName := d.Get("name").(string)
@@ -148,7 +148,7 @@ func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userHierarchyGroupID, err := UserHierarchyGroupParseID(d.Id())
 
@@ -191,7 +191,7 @@ func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceUserHierarchyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userHierarchyGroupID, err := UserHierarchyGroupParseID(d.Id())
 
@@ -214,7 +214,7 @@ func resourceUserHierarchyGroupUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceUserHierarchyGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userHierarchyGroupID, err := UserHierarchyGroupParseID(d.Id())
 

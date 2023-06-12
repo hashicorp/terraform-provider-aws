@@ -133,7 +133,7 @@ func testAccCheckPortfolioExists(ctx context.Context, n string, v *servicecatalo
 			return fmt.Errorf("No Service Catalog Portfolio ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		output, err := tfservicecatalog.FindPortfolioByID(ctx, conn, rs.Primary.ID)
 
@@ -149,7 +149,7 @@ func testAccCheckPortfolioExists(ctx context.Context, n string, v *servicecatalo
 
 func testAccCheckServiceCatlaogPortfolioDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_portfolio" {

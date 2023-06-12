@@ -320,7 +320,7 @@ func testAccExperimentTemplateExists(ctx context.Context, resourceName string, c
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FISClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FISClient(ctx)
 		out, err := conn.GetExperimentTemplate(ctx, &fis.GetExperimentTemplateInput{Id: aws.String(rs.Primary.ID)})
 
 		if err != nil {
@@ -339,7 +339,7 @@ func testAccExperimentTemplateExists(ctx context.Context, resourceName string, c
 
 func testAccCheckExperimentTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FISClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FISClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fis_experiment_template" {
 				continue

@@ -122,7 +122,7 @@ const (
 )
 
 func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	serviceId := d.Get("service_identifier").(string)
 	listenerId := d.Get("listener_identifier").(string)

@@ -365,7 +365,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 
 func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName := d.Get("function_name").(string)
 	input := &lambda.CreateEventSourceMappingInput{
@@ -491,7 +491,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	eventSourceMappingConfiguration, err := FindEventSourceMappingConfigurationByID(ctx, conn, d.Id())
 
@@ -601,7 +601,7 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	input := &lambda.UpdateEventSourceMappingInput{
 		UUID: aws.String(d.Id()),
@@ -700,7 +700,7 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceEventSourceMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	log.Printf("[INFO] Deleting Lambda Event Source Mapping: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, eventSourceMappingPropagationTimeout, func() (interface{}, error) {

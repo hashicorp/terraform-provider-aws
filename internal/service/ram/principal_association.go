@@ -53,7 +53,7 @@ func ResourcePrincipalAssociation() *schema.Resource {
 
 func resourcePrincipalAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	resourceShareArn := d.Get("resource_share_arn").(string)
 	principal := d.Get("principal").(string)
@@ -86,7 +86,7 @@ func resourcePrincipalAssociationCreate(ctx context.Context, d *schema.ResourceD
 
 func resourcePrincipalAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	resourceShareArn, principal, err := PrincipalAssociationParseID(d.Id())
 	if err != nil {
@@ -130,7 +130,7 @@ func resourcePrincipalAssociationRead(ctx context.Context, d *schema.ResourceDat
 
 func resourcePrincipalAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	resourceShareArn, principal, err := PrincipalAssociationParseID(d.Id())
 	if err != nil {

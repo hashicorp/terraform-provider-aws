@@ -93,7 +93,7 @@ func ResourceTableReplica() *schema.Resource {
 
 func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	replicaRegion := aws.StringValue(conn.Config.Region)
 
@@ -188,7 +188,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 	// * table_class_override
 	diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	replicaRegion := aws.StringValue(conn.Config.Region)
 
@@ -280,7 +280,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 	// * tags
 	diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	tableName, _, err := TableReplicaParseID(d.Id())
 	if err != nil {
@@ -346,7 +346,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	// * table_class_override
 	diags diag.Diagnostics
 
-	repConn := meta.(*conns.AWSClient).DynamoDBConn()
+	repConn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	tableName, mainRegion, err := TableReplicaParseID(d.Id())
 	if err != nil {
@@ -456,7 +456,7 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.DynamoDB, create.ErrActionDeleting, ResNameTableReplica, d.Id(), err)
 	}
 
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	replicaRegion := aws.StringValue(conn.Config.Region)
 

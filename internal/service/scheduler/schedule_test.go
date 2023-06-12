@@ -1585,7 +1585,7 @@ func TestAccSchedulerSchedule_targetSQSParameters(t *testing.T) {
 
 func testAccCheckScheduleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(t).SchedulerClient()
+		conn := acctest.ProviderMeta(t).SchedulerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_scheduler_schedule" {
@@ -1632,7 +1632,7 @@ func testAccCheckScheduleExists(ctx context.Context, t *testing.T, name string, 
 			return err
 		}
 
-		conn := acctest.ProviderMeta(t).SchedulerClient()
+		conn := acctest.ProviderMeta(t).SchedulerClient(ctx)
 
 		output, err := tfscheduler.FindScheduleByTwoPartKey(ctx, conn, groupName, scheduleName)
 

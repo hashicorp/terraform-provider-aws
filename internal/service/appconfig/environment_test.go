@@ -302,7 +302,7 @@ func TestAccAppConfigEnvironment_tags(t *testing.T) {
 
 func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appconfig_environment" {
@@ -356,7 +356,7 @@ func testAccCheckEnvironmentExists(ctx context.Context, resourceName string) res
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn(ctx)
 
 		input := &appconfig.GetEnvironmentInput{
 			ApplicationId: aws.String(appID),
