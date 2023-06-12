@@ -16,7 +16,7 @@ Be sure to give the data firehose, cloudwatch log group, and/or s3 bucket a name
 
 -> **Note:** When logging from a WAFv2 Web ACL to a CloudWatch Log Group the WAFv2 service attempts to create/update a
 generic Log Resource Policy with a name `AWSWAF-LOGS`. If there are a large number of Web ACLs, or the account frequently
-creates and destroys Web ACLs this policy will hit the max policy size and this resource type will fail to be
+creates and destroys Web ACLs, this policy will hit the max policy size and this resource type will fail to be
 created (more details can be found in [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/25296)). To avoid this
 happening, a specific resource policy can be managed. See [CloudWatch Log Group](#with-cloudwatch-log-group-and-managed-cloudwatch-log-resource-policy) example below.
 
