@@ -1,4 +1,4 @@
-## 5.2.1 (Unreleased)
+## 5.3.0 (Unreleased)
 
 NOTES:
 
