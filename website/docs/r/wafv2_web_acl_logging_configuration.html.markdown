@@ -79,7 +79,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "example" {
 }
 ```
 
-## With Cloudwatch Log group and managed CloudWatch Log Resource Policy (See Notes)
+### With CloudWatch Log Group and managed CloudWatch Log Resource Policy
 
 ```terraform
 resource "aws_cloudwatch_log_group" "example" {
