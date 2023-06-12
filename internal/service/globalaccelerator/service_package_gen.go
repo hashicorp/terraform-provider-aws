@@ -75,7 +75,7 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.GlobalAccelerator
 }
 
-func (p *servicePackage) Configure(config map[string]any) {
+func (p *servicePackage) Configure(ctx context.Context, config map[string]any) {
 	p.config = config
 }
 
