@@ -5,14 +5,16 @@ package {{ .ProviderPackage }}
 import (
 	"context"
 
-{{- if eq .SDKVersion "1" "1,2" }}
+{{if not .SkipClientGenerate }}
+	{{- if eq .SDKVersion "1" "1,2" }}
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	{{ .GoV1Package }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
-{{- end }}
-{{- if eq .SDKVersion "2" "1,2" }}
+	{{- end }}
+	{{- if eq .SDKVersion "2" "1,2" }}
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	{{ .GoV2Package }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+	{{- end }}
 {{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 {{- if ne .ProviderPackage "meta" }}
