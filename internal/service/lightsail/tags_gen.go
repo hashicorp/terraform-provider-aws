@@ -105,5 +105,5 @@ func UpdateTags(ctx context.Context, conn *lightsail.Client, identifier string, 
 // UpdateTags updates lightsail service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).LightsailClient(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).LightsailClient(ctx), identifier, oldTags, newTags)
 }

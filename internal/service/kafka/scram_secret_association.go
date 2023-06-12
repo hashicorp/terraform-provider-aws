@@ -52,7 +52,7 @@ func ResourceScramSecretAssociation() *schema.Resource {
 
 func resourceScramSecretAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	clusterArn := d.Get("cluster_arn").(string)
 	secretArnList := flex.ExpandStringSet(d.Get("secret_arn_list").(*schema.Set))
@@ -73,7 +73,7 @@ func resourceScramSecretAssociationCreate(ctx context.Context, d *schema.Resourc
 
 func resourceScramSecretAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	secretArnList, err := FindScramSecrets(ctx, conn, d.Id())
 
@@ -96,7 +96,7 @@ func resourceScramSecretAssociationRead(ctx context.Context, d *schema.ResourceD
 
 func resourceScramSecretAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	o, n := d.GetChange("secret_arn_list")
 	oldSet, newSet := o.(*schema.Set), n.(*schema.Set)
@@ -132,7 +132,7 @@ func resourceScramSecretAssociationUpdate(ctx context.Context, d *schema.Resourc
 
 func resourceScramSecretAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	secretArnList, err := FindScramSecrets(ctx, conn, d.Id())
 

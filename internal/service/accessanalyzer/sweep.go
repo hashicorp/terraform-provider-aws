@@ -27,7 +27,7 @@ func sweepAnalyzers(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AccessAnalyzerClient()
+	conn := client.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 	input := &accessanalyzer.ListAnalyzersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

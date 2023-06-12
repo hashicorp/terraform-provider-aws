@@ -334,7 +334,7 @@ func testAccCheckInstanceExists(ctx context.Context, n string) resource.TestChec
 			return errors.New("No LightsailInstance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 		out, err := tflightsail.FindInstanceById(ctx, conn, rs.Primary.ID)
 
@@ -357,7 +357,7 @@ func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 			_, err := tflightsail.FindInstanceById(ctx, conn, rs.Primary.ID)
 
@@ -377,7 +377,7 @@ func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 	input := &lightsail.GetInstancesInput{}
 

@@ -57,7 +57,7 @@ func ResourceGlobalNetwork() *schema.Resource {
 }
 
 func resourceGlobalNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	input := &networkmanager.CreateGlobalNetworkInput{
 		Tags: GetTagsIn(ctx),
@@ -84,7 +84,7 @@ func resourceGlobalNetworkCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetwork, err := FindGlobalNetworkByID(ctx, conn, d.Id())
 
@@ -107,7 +107,7 @@ func resourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &networkmanager.UpdateGlobalNetworkInput{
@@ -131,7 +131,7 @@ func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if diags := disassociateCustomerGateways(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); diags.HasError() {
 		return diags

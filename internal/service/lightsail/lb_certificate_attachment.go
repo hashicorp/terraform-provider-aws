@@ -52,7 +52,7 @@ func ResourceLoadBalancerCertificateAttachment() *schema.Resource {
 }
 
 func resourceLoadBalancerCertificateAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	certName := d.Get("certificate_name").(string)
 	req := lightsail.AttachLoadBalancerTlsCertificateInput{
 		LoadBalancerName: aws.String(d.Get("lb_name").(string)),
@@ -83,7 +83,7 @@ func resourceLoadBalancerCertificateAttachmentCreate(ctx context.Context, d *sch
 }
 
 func resourceLoadBalancerCertificateAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindLoadBalancerCertificateAttachmentById(ctx, conn, d.Id())
 

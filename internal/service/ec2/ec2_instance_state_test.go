@@ -112,7 +112,7 @@ func testAccCheckInstanceStateExists(ctx context.Context, n string) resource.Tes
 			return errors.New("No EC2InstanceState ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		out, err := tfec2.FindInstanceStateByID(ctx, conn, rs.Primary.ID)
 

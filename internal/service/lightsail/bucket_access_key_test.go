@@ -93,7 +93,7 @@ func testAccCheckBucketAccessKeyExists(ctx context.Context, resourceName string)
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 		out, err := tflightsail.FindBucketAccessKeyById(ctx, conn, rs.Primary.ID)
 
@@ -111,7 +111,7 @@ func testAccCheckBucketAccessKeyExists(ctx context.Context, resourceName string)
 
 func testAccCheckBucketAccessKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lightsail_bucket_access_key" {

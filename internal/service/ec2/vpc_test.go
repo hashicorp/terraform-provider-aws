@@ -1100,7 +1100,7 @@ func TestAccVPC_IPAMIPv6(t *testing.T) {
 
 func testAccCheckVPCDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc" {
@@ -1126,7 +1126,7 @@ func testAccCheckVPCDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckVPCUpdateTags(ctx context.Context, vpc *ec2.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		return tfec2.UpdateTags(ctx, conn, aws.StringValue(vpc.VpcId), oldTags, newTags)
 	}

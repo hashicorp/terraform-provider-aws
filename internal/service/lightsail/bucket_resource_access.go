@@ -51,7 +51,7 @@ func ResourceBucketResourceAccess() *schema.Resource {
 }
 
 func resourceBucketResourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	in := lightsail.SetResourceAccessForBucketInput{
 		BucketName:   aws.String(d.Get("bucket_name").(string)),
@@ -84,7 +84,7 @@ func resourceBucketResourceAccessCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceBucketResourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindBucketResourceAccessById(ctx, conn, d.Id())
 
@@ -111,7 +111,7 @@ func resourceBucketResourceAccessRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceBucketResourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	parts, err := flex.ExpandResourceId(d.Id(), BucketResourceAccessIdPartsCount, false)
 
 	if err != nil {

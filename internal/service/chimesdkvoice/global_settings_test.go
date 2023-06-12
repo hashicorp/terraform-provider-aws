@@ -118,7 +118,7 @@ func testAccCheckGlobalSettingsDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 			input := &chimesdkvoice.GetGlobalSettingsInput{}
 
 			const retryTimeout = 10 * time.Second

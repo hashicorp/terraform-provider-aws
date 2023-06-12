@@ -169,7 +169,7 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 }
 
 func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	serviceName := d.Get("service_name").(string)
 
 	input := lightsail.CreateContainerServiceDeploymentInput{
@@ -205,7 +205,7 @@ func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *sch
 }
 
 func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	serviceName, version, err := ContainerServiceDeploymentVersionParseResourceID(d.Id())
 	if err != nil {

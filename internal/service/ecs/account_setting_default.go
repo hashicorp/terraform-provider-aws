@@ -61,7 +61,7 @@ func resourceAccountSettingDefaultImport(ctx context.Context, d *schema.Resource
 
 func resourceAccountSettingDefaultCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	settingName := d.Get("name").(string)
 	settingValue := d.Get("value").(string)
@@ -87,7 +87,7 @@ func resourceAccountSettingDefaultCreate(ctx context.Context, d *schema.Resource
 
 func resourceAccountSettingDefaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	input := &ecs.ListAccountSettingsInput{
 		Name:              aws.String(d.Get("name").(string)),
@@ -119,7 +119,7 @@ func resourceAccountSettingDefaultRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceAccountSettingDefaultUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	settingName := d.Get("name").(string)
 	settingValue := d.Get("value").(string)
@@ -141,7 +141,7 @@ func resourceAccountSettingDefaultUpdate(ctx context.Context, d *schema.Resource
 
 func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	settingName := d.Get("name").(string)
 

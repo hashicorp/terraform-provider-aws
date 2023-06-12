@@ -76,7 +76,7 @@ func ResourceDomainEntry() *schema.Resource {
 }
 
 func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	name := d.Get("name").(string)
 	req := &lightsail.CreateDomainEntryInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
@@ -121,7 +121,7 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	entry, err := FindDomainEntryById(ctx, conn, d.Id())
 
@@ -172,7 +172,7 @@ func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	domainName, err := expandDomainNameFromId(d.Id())
 

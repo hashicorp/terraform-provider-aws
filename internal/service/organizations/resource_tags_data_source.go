@@ -29,7 +29,7 @@ func DataSourceResourceTags() *schema.Resource {
 
 func dataSourceResourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	resource_id := d.Get("resource_id").(string)
 

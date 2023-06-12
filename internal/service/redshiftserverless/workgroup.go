@@ -190,7 +190,7 @@ func ResourceWorkgroup() *schema.Resource {
 
 func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	name := d.Get("workgroup_name").(string)
 	input := redshiftserverless.CreateWorkgroupInput{
@@ -240,7 +240,7 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	out, err := FindWorkgroupByName(ctx, conn, d.Id())
 
@@ -276,7 +276,7 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	// You can't update multiple parameters in one request.
 
@@ -351,7 +351,7 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Workgroup: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 10*time.Minute,

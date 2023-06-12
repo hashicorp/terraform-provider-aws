@@ -71,8 +71,3 @@ jobs:
                 }
               ]
             }
-      - name: Apply Partner Label
-        if: github.event.action == 'opened' && needs.community_check.outputs.partner == 'true'
-        uses: ./.github/workflows/reusable-add-or-remove-labels.yml
-        with:
-          add: partner

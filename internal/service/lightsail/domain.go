@@ -35,7 +35,7 @@ func ResourceDomain() *schema.Resource {
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	_, err := conn.CreateDomain(ctx, &lightsail.CreateDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	})
@@ -51,7 +51,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	resp, err := conn.GetDomain(ctx, &lightsail.GetDomainInput{
 		DomainName: aws.String(d.Id()),
 	})
@@ -71,7 +71,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	_, err := conn.DeleteDomain(ctx, &lightsail.DeleteDomainInput{
 		DomainName: aws.String(d.Id()),
 	})

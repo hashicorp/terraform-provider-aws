@@ -176,7 +176,7 @@ func testAccCheckDomainEntryExists(ctx context.Context, n string) resource.TestC
 			return errors.New("No Lightsail Domain Entry ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 		resp, err := tflightsail.FindDomainEntryById(ctx, conn, rs.Primary.ID)
 
@@ -199,7 +199,7 @@ func testAccCheckDomainEntryDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 			_, err := tflightsail.FindDomainEntryById(ctx, conn, rs.Primary.ID)
 

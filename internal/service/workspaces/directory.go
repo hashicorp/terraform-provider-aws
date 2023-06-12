@@ -212,7 +212,7 @@ func ResourceDirectory() *schema.Resource {
 
 func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn()
+	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
 
 	directoryID := d.Get("directory_id").(string)
 	input := &workspaces.RegisterWorkspaceDirectoryInput{
@@ -302,7 +302,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn()
+	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
 
 	directory, err := FindDirectoryByID(ctx, conn, d.Id())
 
@@ -352,7 +352,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn()
+	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
 
 	if d.HasChange("self_service_permissions") {
 		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) self-service permissions", d.Id())
@@ -429,7 +429,7 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn()
+	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
 
 	log.Printf("[DEBUG] Deregistering WorkSpaces Directory: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, DirectoryDeregisterInvalidResourceStateTimeout,

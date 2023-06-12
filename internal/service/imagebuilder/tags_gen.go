@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn imagebuilderiface.ImagebuilderAPI, ident
 // ListTags lists imagebuilder service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ImageBuilderConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ImageBuilderConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -121,5 +121,5 @@ func UpdateTags(ctx context.Context, conn imagebuilderiface.ImagebuilderAPI, ide
 // UpdateTags updates imagebuilder service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).ImageBuilderConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).ImageBuilderConn(ctx), identifier, oldTags, newTags)
 }

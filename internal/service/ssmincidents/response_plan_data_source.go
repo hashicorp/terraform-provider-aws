@@ -170,7 +170,7 @@ const (
 )
 
 func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	d.SetId(d.Get("arn").(string))
 

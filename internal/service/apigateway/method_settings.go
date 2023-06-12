@@ -137,7 +137,7 @@ func flattenMethodSettings(settings *apigateway.MethodSetting) []interface{} {
 
 func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	stage, err := FindStageByTwoPartKey(ctx, conn, d.Get("rest_api_id").(string), d.Get("stage_name").(string))
 
@@ -169,7 +169,7 @@ func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	methodPath := d.Get("method_path").(string)
 	prefix := fmt.Sprintf("/%s/", methodPath)
@@ -271,7 +271,7 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceMethodSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	input := &apigateway.UpdateStageInput{
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),

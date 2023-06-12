@@ -40,7 +40,7 @@ func ResourceStaticIPAttachment() *schema.Resource {
 
 func resourceStaticIPAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	staticIpName := d.Get("static_ip_name").(string)
 	log.Printf("[INFO] Creating Lightsail Static IP Attachment: %q", staticIpName)
@@ -59,7 +59,7 @@ func resourceStaticIPAttachmentCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceStaticIPAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	staticIpName := d.Get("static_ip_name").(string)
 	log.Printf("[INFO] Reading Lightsail Static IP Attachment: %q", staticIpName)
@@ -88,7 +88,7 @@ func resourceStaticIPAttachmentRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceStaticIPAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	name := d.Get("static_ip_name").(string)
 	_, err := conn.DetachStaticIp(ctx, &lightsail.DetachStaticIpInput{

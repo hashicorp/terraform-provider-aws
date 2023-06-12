@@ -164,7 +164,7 @@ func ResourceAPI() *schema.Resource {
 
 func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	name := d.Get("name").(string)
 	input := &apigatewayv2.CreateApiInput{
@@ -228,7 +228,7 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	output, err := FindAPIByID(ctx, conn, d.Id())
 
@@ -277,7 +277,7 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	corsConfigurationDeleted := false
 	if d.HasChange("cors_configuration") {
@@ -348,7 +348,7 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceAPIDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 API: %s", d.Id())
 	_, err := conn.DeleteApiWithContext(ctx, &apigatewayv2.DeleteApiInput{
@@ -367,7 +367,7 @@ func resourceAPIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	if body, ok := d.GetOk("body"); ok {
 		inputR := &apigatewayv2.ReimportApiInput{

@@ -42,7 +42,7 @@ func DataSourceSolutionStack() *schema.Resource {
 // dataSourceSolutionStackRead performs the API lookup.
 func dataSourceSolutionStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	nameRegex := d.Get("name_regex")
 

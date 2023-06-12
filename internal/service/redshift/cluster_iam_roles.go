@@ -61,7 +61,7 @@ func ResourceClusterIAMRoles() *schema.Resource {
 
 func resourceClusterIAMRolesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	clusterID := d.Get("cluster_identifier").(string)
 	input := &redshift.ModifyClusterIamRolesInput{
@@ -94,7 +94,7 @@ func resourceClusterIAMRolesCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterIAMRolesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	rsc, err := FindClusterByID(ctx, conn, d.Id())
 
@@ -123,7 +123,7 @@ func resourceClusterIAMRolesRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceClusterIAMRolesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	o, n := d.GetChange("iam_role_arns")
 	if o == nil {
@@ -160,7 +160,7 @@ func resourceClusterIAMRolesUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterIAMRolesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	input := &redshift.ModifyClusterIamRolesInput{
 		ClusterIdentifier: aws.String(d.Id()),

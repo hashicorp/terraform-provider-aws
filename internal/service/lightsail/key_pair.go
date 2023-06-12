@@ -88,7 +88,7 @@ func ResourceKeyPair() *schema.Resource {
 
 func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	var kName string
 	if v, ok := d.GetOk("name"); ok {
@@ -170,7 +170,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	resp, err := conn.GetKeyPair(ctx, &lightsail.GetKeyPairInput{
 		KeyPairName: aws.String(d.Id()),
@@ -194,7 +194,7 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	resp, err := conn.DeleteKeyPair(ctx, &lightsail.DeleteKeyPairInput{
 		KeyPairName: aws.String(d.Id()),
 	})

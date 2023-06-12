@@ -245,12 +245,10 @@ func ownerIsSelfFilter() types.PatchOrchestratorFilter { //nolint:unused // This
 }
 
 func resourceDefaultPatchBaselineDelete(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
-	return defaultPatchBaselineRestoreOSDefault(ctx, meta.(ssmClient), types.OperatingSystem(d.Id()))
+	return defaultPatchBaselineRestoreOSDefault(ctx, meta.(ssmClient).SSMClient(), types.OperatingSystem(d.Id()))
 }
 
-func defaultPatchBaselineRestoreOSDefault(ctx context.Context, meta ssmClient, os types.OperatingSystem) (diags diag.Diagnostics) {
-	conn := meta.SSMClient()
-
+func defaultPatchBaselineRestoreOSDefault(ctx context.Context, conn *ssm.Client, os types.OperatingSystem) (diags diag.Diagnostics) {
 	baselineID, err := FindDefaultDefaultPatchBaselineIDForOS(ctx, conn, os)
 	if errors.Is(err, tfresource.ErrEmptyResult) {
 		diags = sdkdiag.AppendWarningf(diags, "no AWS-owned default Patch Baseline found for operating system %q", os)

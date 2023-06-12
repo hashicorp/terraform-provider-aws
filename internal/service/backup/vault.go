@@ -79,7 +79,7 @@ func ResourceVault() *schema.Resource {
 
 func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &backup.CreateBackupVaultInput{
@@ -104,7 +104,7 @@ func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	output, err := FindVaultByName(ctx, conn, d.Id())
 
@@ -136,7 +136,7 @@ func resourceVaultUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	if d.Get("force_destroy").(bool) {
 		input := &backup.ListRecoveryPointsByBackupVaultInput{

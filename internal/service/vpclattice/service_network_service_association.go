@@ -97,7 +97,7 @@ const (
 )
 
 func resourceServiceNetworkServiceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	in := &vpclattice.CreateServiceNetworkServiceAssociationInput{
 		ClientToken:              aws.String(id.UniqueId()),
@@ -125,7 +125,7 @@ func resourceServiceNetworkServiceAssociationCreate(ctx context.Context, d *sche
 }
 
 func resourceServiceNetworkServiceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	out, err := findServiceNetworkServiceAssociationByID(ctx, conn, d.Id())
 
@@ -162,7 +162,7 @@ func resourceServiceNetworkServiceAssociationUpdate(ctx context.Context, d *sche
 }
 
 func resourceServiceNetworkServiceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice Service Network Association %s", d.Id())
 

@@ -48,7 +48,7 @@ func ResourceInternetGatewayAttachment() *schema.Resource {
 
 func resourceInternetGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	igwID := d.Get("internet_gateway_id").(string)
 	vpcID := d.Get("vpc_id").(string)
@@ -64,7 +64,7 @@ func resourceInternetGatewayAttachmentCreate(ctx context.Context, d *schema.Reso
 
 func resourceInternetGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	igwID, vpcID, err := InternetGatewayAttachmentParseResourceID(d.Id())
 
@@ -96,7 +96,7 @@ func resourceInternetGatewayAttachmentRead(ctx context.Context, d *schema.Resour
 
 func resourceInternetGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	igwID, vpcID, err := InternetGatewayAttachmentParseResourceID(d.Id())
 	if err != nil {

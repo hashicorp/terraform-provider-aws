@@ -52,7 +52,7 @@ func (d *dataSourceFindingIds) Schema(ctx context.Context, req datasource.Schema
 }
 
 func (d *dataSourceFindingIds) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().GuardDutyConn()
+	conn := d.Meta().GuardDutyConn(ctx)
 
 	var data dataSourceFindingIdsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)

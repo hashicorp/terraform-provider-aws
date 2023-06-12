@@ -324,7 +324,7 @@ const (
 )
 
 func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	in := &lightsail.CreateDistributionInput{
 		BundleId:             aws.String(d.Get("bundle_id").(string)),
@@ -390,7 +390,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindDistributionByID(ctx, conn, d.Id())
 
@@ -444,7 +444,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	update := false
 	bundleUpdate := false
@@ -537,7 +537,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	log.Printf("[INFO] Deleting Lightsail Distribution %s", d.Id())
 

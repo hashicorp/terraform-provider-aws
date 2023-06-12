@@ -166,7 +166,7 @@ func ResourceContainerService() *schema.Resource {
 }
 
 func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	serviceName := d.Get("name").(string)
 	input := &lightsail.CreateContainerServiceInput{
@@ -216,7 +216,7 @@ func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	cs, err := FindContainerServiceByName(ctx, conn, d.Id())
 
@@ -257,7 +257,7 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceContainerServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		publicDomainNames, _ := containerServicePublicDomainNamesChanged(d)
@@ -290,7 +290,7 @@ func resourceContainerServiceUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceContainerServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailClient()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	input := &lightsail.DeleteContainerServiceInput{
 		ServiceName: aws.String(d.Id()),

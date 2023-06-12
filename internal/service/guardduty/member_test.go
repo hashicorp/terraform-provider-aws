@@ -165,7 +165,7 @@ func testAccMember_invitationMessage(t *testing.T) {
 
 func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_guardduty_member" {
@@ -218,7 +218,7 @@ func testAccCheckMemberExists(ctx context.Context, name string) resource.TestChe
 			DetectorId: aws.String(detectorID),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
 		gmo, err := conn.GetMembersWithContext(ctx, input)
 		if err != nil {
 			return err

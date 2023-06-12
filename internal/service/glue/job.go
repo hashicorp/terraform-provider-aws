@@ -176,7 +176,7 @@ func ResourceJob() *schema.Resource {
 
 func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &glue.CreateJobInput{
@@ -258,7 +258,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	job, err := FindJobByName(ctx, conn, d.Id())
 
@@ -311,7 +311,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		jobUpdate := &glue.JobUpdate{
@@ -395,7 +395,7 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceJobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Job: %s", d.Id())
 	_, err := conn.DeleteJobWithContext(ctx, &glue.DeleteJobInput{

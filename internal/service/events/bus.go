@@ -59,7 +59,7 @@ func ResourceBus() *schema.Resource {
 
 func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName := d.Get("name").(string)
 	input := &eventbridge.CreateEventBusInput{
@@ -105,7 +105,7 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	output, err := FindEventBusByName(ctx, conn, d.Id())
 
@@ -135,7 +135,7 @@ func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceBusDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Event Bus: %s", d.Id())
 	_, err := conn.DeleteEventBusWithContext(ctx, &eventbridge.DeleteEventBusInput{

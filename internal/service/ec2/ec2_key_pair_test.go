@@ -205,7 +205,7 @@ func TestAccEC2KeyPair_disappears(t *testing.T) {
 
 func testAccCheckKeyPairDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_key_pair" {
@@ -240,7 +240,7 @@ func testAccCheckKeyPairExists(ctx context.Context, n string, v *ec2.KeyPairInfo
 			return fmt.Errorf("No EC2 Key Pair ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindKeyPairByName(ctx, conn, rs.Primary.ID)
 

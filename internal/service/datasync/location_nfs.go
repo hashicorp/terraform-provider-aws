@@ -106,7 +106,7 @@ func ResourceLocationNFS() *schema.Resource {
 
 func resourceLocationNFSCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.CreateLocationNfsInput{
 		OnPremConfig:   expandOnPremConfig(d.Get("on_prem_config").([]interface{})),
@@ -132,7 +132,7 @@ func resourceLocationNFSCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.DescribeLocationNfsInput{
 		LocationArn: aws.String(d.Id()),
@@ -175,7 +175,7 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceLocationNFSUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &datasync.UpdateLocationNfsInput{
@@ -199,7 +199,7 @@ func resourceLocationNFSUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceLocationNFSDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),

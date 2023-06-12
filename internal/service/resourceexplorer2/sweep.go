@@ -27,7 +27,7 @@ func sweepIndexes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ResourceExplorer2Client()
+	conn := client.(*conns.AWSClient).ResourceExplorer2Client(ctx)
 	input := &resourceexplorer2.ListIndexesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

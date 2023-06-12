@@ -70,7 +70,7 @@ func sweepApplication(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn()
+	conn := client.(*conns.AWSClient).OpsWorksConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
@@ -122,7 +122,7 @@ func sweepInstance(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn()
+	conn := client.(*conns.AWSClient).OpsWorksConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
@@ -175,7 +175,7 @@ func sweepRDSDBInstance(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn()
+	conn := client.(*conns.AWSClient).OpsWorksConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
@@ -228,7 +228,7 @@ func sweepStacks(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn()
+	conn := client.(*conns.AWSClient).OpsWorksConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
@@ -271,7 +271,7 @@ func sweepLayers(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn()
+	conn := client.(*conns.AWSClient).OpsWorksConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
@@ -333,7 +333,7 @@ func sweepUserProfiles(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn()
+	conn := client.(*conns.AWSClient).OpsWorksConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeUserProfilesWithContext(ctx, &opsworks.DescribeUserProfilesInput{})
