@@ -205,7 +205,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/lexruntimeservice"
 	"github.com/aws/aws-sdk-go/service/lexruntimev2"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
-	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/locationservice"
 	"github.com/aws/aws-sdk-go/service/lookoutequipment"
 	"github.com/aws/aws-sdk-go/service/lookoutforvision"
@@ -482,7 +481,6 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.lexruntimeConn = lexruntimeservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.LexRuntime])}))
 	client.lexruntimev2Conn = lexruntimev2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.LexRuntimeV2])}))
 	client.licensemanagerConn = licensemanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.LicenseManager])}))
-	client.lightsailConn = lightsail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Lightsail])}))
 	client.locationConn = locationservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Location])}))
 	client.logsConn = cloudwatchlogs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Logs])}))
 	client.lookoutequipmentConn = lookoutequipment.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.LookoutEquipment])}))
