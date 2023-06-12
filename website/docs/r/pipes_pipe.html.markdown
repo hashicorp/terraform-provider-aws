@@ -203,7 +203,7 @@ You can find out more about EventBridge Pipes Enrichment in the [User Guide](htt
 You can find out more about EventBridge Pipes Sources in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes-event-source.html).
 
 * `active_mq_broker` - (Optional) The parameters for using an Active MQ broker as a source. Detailed below.
-* `dynamo_db_stream` - (Optional) The parameters for using a DynamoDB stream as a source.  Detailed below.
+* `dynamodb_stream_parameters` - (Optional) The parameters for using a DynamoDB stream as a source.  Detailed below.
 * `filter_criteria` - (Optional) The collection of event patterns used to [filter events](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes-event-filtering.html). Detailed below.
 * `kinesis_stream` - (Optional) The parameters for using a Kinesis stream as a source. Detailed below.
 * `managed_streaming_kafka` - (Optional) The parameters for using an MSK stream as a source. Detailed below.
@@ -230,7 +230,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 
 * `basic_auth` - (Required) The ARN of the Secrets Manager secret containing the basic auth credentials.
 
-#### source_parameters.dynamo_db_stream Configuration Block
+#### source_parameters.dynamodb_stream_parameters Configuration Block
 
 * `batch_size` - (Optional) The maximum number of records to include in each batch. Maximum value of 10000.
 * `dead_letter_config` - (Optional) Define the target queue to send dead-letter queue events to. Detailed below.
@@ -241,7 +241,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `parallelization_factor` - (Optional)The number of batches to process concurrently from each shard. The default value is 1. Maximum value of 10.
 * `starting_position` - (Optional) The position in a stream from which to start reading. Valid values: TRIM_HORIZON, LATEST.
 
-##### source_parameters.dynamo_db_stream.dead_letter_config Configuration Block
+##### source_parameters.dynamodb_stream_parameters.dead_letter_config Configuration Block
 
 * `arn` - (Optional) The ARN of the Amazon SQS queue specified as the target for the dead-letter queue.
 
