@@ -330,6 +330,7 @@ import (
 	workmailmessageflow_sdkv1 "github.com/aws/aws-sdk-go/service/workmailmessageflow"
 	workspaces_sdkv1 "github.com/aws/aws-sdk-go/service/workspaces"
 	workspacesweb_sdkv1 "github.com/aws/aws-sdk-go/service/workspacesweb"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -679,1293 +680,1293 @@ type AWSClient struct {
 }
 
 func (c *AWSClient) ACMClient(ctx context.Context) *acm_sdkv2.Client {
-	return Must(client[*acm_sdkv2.Client](ctx, c, names.ACM))
+	return errs.Must(client[*acm_sdkv2.Client](ctx, c, names.ACM))
 }
 
 func (c *AWSClient) ACMPCAConn(ctx context.Context) *acmpca_sdkv1.ACMPCA {
-	return Must(conn[*acmpca_sdkv1.ACMPCA](ctx, c, names.ACMPCA))
+	return errs.Must(conn[*acmpca_sdkv1.ACMPCA](ctx, c, names.ACMPCA))
 }
 
 func (c *AWSClient) AMPConn(ctx context.Context) *prometheusservice_sdkv1.PrometheusService {
-	return Must(conn[*prometheusservice_sdkv1.PrometheusService](ctx, c, names.AMP))
+	return errs.Must(conn[*prometheusservice_sdkv1.PrometheusService](ctx, c, names.AMP))
 }
 
 func (c *AWSClient) APIGatewayConn(ctx context.Context) *apigateway_sdkv1.APIGateway {
-	return Must(conn[*apigateway_sdkv1.APIGateway](ctx, c, names.APIGateway))
+	return errs.Must(conn[*apigateway_sdkv1.APIGateway](ctx, c, names.APIGateway))
 }
 
 func (c *AWSClient) APIGatewayManagementAPIConn(ctx context.Context) *apigatewaymanagementapi_sdkv1.ApiGatewayManagementApi {
-	return Must(conn[*apigatewaymanagementapi_sdkv1.ApiGatewayManagementApi](ctx, c, names.APIGatewayManagementAPI))
+	return errs.Must(conn[*apigatewaymanagementapi_sdkv1.ApiGatewayManagementApi](ctx, c, names.APIGatewayManagementAPI))
 }
 
 func (c *AWSClient) APIGatewayV2Conn(ctx context.Context) *apigatewayv2_sdkv1.ApiGatewayV2 {
-	return Must(conn[*apigatewayv2_sdkv1.ApiGatewayV2](ctx, c, names.APIGatewayV2))
+	return errs.Must(conn[*apigatewayv2_sdkv1.ApiGatewayV2](ctx, c, names.APIGatewayV2))
 }
 
 func (c *AWSClient) AccessAnalyzerClient(ctx context.Context) *accessanalyzer_sdkv2.Client {
-	return Must(client[*accessanalyzer_sdkv2.Client](ctx, c, names.AccessAnalyzer))
+	return errs.Must(client[*accessanalyzer_sdkv2.Client](ctx, c, names.AccessAnalyzer))
 }
 
 func (c *AWSClient) AccountClient(ctx context.Context) *account_sdkv2.Client {
-	return Must(client[*account_sdkv2.Client](ctx, c, names.Account))
+	return errs.Must(client[*account_sdkv2.Client](ctx, c, names.Account))
 }
 
 func (c *AWSClient) AlexaForBusinessConn(ctx context.Context) *alexaforbusiness_sdkv1.AlexaForBusiness {
-	return Must(conn[*alexaforbusiness_sdkv1.AlexaForBusiness](ctx, c, names.AlexaForBusiness))
+	return errs.Must(conn[*alexaforbusiness_sdkv1.AlexaForBusiness](ctx, c, names.AlexaForBusiness))
 }
 
 func (c *AWSClient) AmplifyConn(ctx context.Context) *amplify_sdkv1.Amplify {
-	return Must(conn[*amplify_sdkv1.Amplify](ctx, c, names.Amplify))
+	return errs.Must(conn[*amplify_sdkv1.Amplify](ctx, c, names.Amplify))
 }
 
 func (c *AWSClient) AmplifyBackendConn(ctx context.Context) *amplifybackend_sdkv1.AmplifyBackend {
-	return Must(conn[*amplifybackend_sdkv1.AmplifyBackend](ctx, c, names.AmplifyBackend))
+	return errs.Must(conn[*amplifybackend_sdkv1.AmplifyBackend](ctx, c, names.AmplifyBackend))
 }
 
 func (c *AWSClient) AmplifyUIBuilderConn(ctx context.Context) *amplifyuibuilder_sdkv1.AmplifyUIBuilder {
-	return Must(conn[*amplifyuibuilder_sdkv1.AmplifyUIBuilder](ctx, c, names.AmplifyUIBuilder))
+	return errs.Must(conn[*amplifyuibuilder_sdkv1.AmplifyUIBuilder](ctx, c, names.AmplifyUIBuilder))
 }
 
 func (c *AWSClient) AppAutoScalingConn(ctx context.Context) *applicationautoscaling_sdkv1.ApplicationAutoScaling {
-	return Must(conn[*applicationautoscaling_sdkv1.ApplicationAutoScaling](ctx, c, names.AppAutoScaling))
+	return errs.Must(conn[*applicationautoscaling_sdkv1.ApplicationAutoScaling](ctx, c, names.AppAutoScaling))
 }
 
 func (c *AWSClient) AppConfigConn(ctx context.Context) *appconfig_sdkv1.AppConfig {
-	return Must(conn[*appconfig_sdkv1.AppConfig](ctx, c, names.AppConfig))
+	return errs.Must(conn[*appconfig_sdkv1.AppConfig](ctx, c, names.AppConfig))
 }
 
 func (c *AWSClient) AppConfigDataConn(ctx context.Context) *appconfigdata_sdkv1.AppConfigData {
-	return Must(conn[*appconfigdata_sdkv1.AppConfigData](ctx, c, names.AppConfigData))
+	return errs.Must(conn[*appconfigdata_sdkv1.AppConfigData](ctx, c, names.AppConfigData))
 }
 
 func (c *AWSClient) AppFlowConn(ctx context.Context) *appflow_sdkv1.Appflow {
-	return Must(conn[*appflow_sdkv1.Appflow](ctx, c, names.AppFlow))
+	return errs.Must(conn[*appflow_sdkv1.Appflow](ctx, c, names.AppFlow))
 }
 
 func (c *AWSClient) AppIntegrationsConn(ctx context.Context) *appintegrationsservice_sdkv1.AppIntegrationsService {
-	return Must(conn[*appintegrationsservice_sdkv1.AppIntegrationsService](ctx, c, names.AppIntegrations))
+	return errs.Must(conn[*appintegrationsservice_sdkv1.AppIntegrationsService](ctx, c, names.AppIntegrations))
 }
 
 func (c *AWSClient) AppMeshConn(ctx context.Context) *appmesh_sdkv1.AppMesh {
-	return Must(conn[*appmesh_sdkv1.AppMesh](ctx, c, names.AppMesh))
+	return errs.Must(conn[*appmesh_sdkv1.AppMesh](ctx, c, names.AppMesh))
 }
 
 func (c *AWSClient) AppRunnerConn(ctx context.Context) *apprunner_sdkv1.AppRunner {
-	return Must(conn[*apprunner_sdkv1.AppRunner](ctx, c, names.AppRunner))
+	return errs.Must(conn[*apprunner_sdkv1.AppRunner](ctx, c, names.AppRunner))
 }
 
 func (c *AWSClient) AppStreamConn(ctx context.Context) *appstream_sdkv1.AppStream {
-	return Must(conn[*appstream_sdkv1.AppStream](ctx, c, names.AppStream))
+	return errs.Must(conn[*appstream_sdkv1.AppStream](ctx, c, names.AppStream))
 }
 
 func (c *AWSClient) AppSyncConn(ctx context.Context) *appsync_sdkv1.AppSync {
-	return Must(conn[*appsync_sdkv1.AppSync](ctx, c, names.AppSync))
+	return errs.Must(conn[*appsync_sdkv1.AppSync](ctx, c, names.AppSync))
 }
 
 func (c *AWSClient) ApplicationCostProfilerConn(ctx context.Context) *applicationcostprofiler_sdkv1.ApplicationCostProfiler {
-	return Must(conn[*applicationcostprofiler_sdkv1.ApplicationCostProfiler](ctx, c, names.ApplicationCostProfiler))
+	return errs.Must(conn[*applicationcostprofiler_sdkv1.ApplicationCostProfiler](ctx, c, names.ApplicationCostProfiler))
 }
 
 func (c *AWSClient) ApplicationInsightsConn(ctx context.Context) *applicationinsights_sdkv1.ApplicationInsights {
-	return Must(conn[*applicationinsights_sdkv1.ApplicationInsights](ctx, c, names.ApplicationInsights))
+	return errs.Must(conn[*applicationinsights_sdkv1.ApplicationInsights](ctx, c, names.ApplicationInsights))
 }
 
 func (c *AWSClient) AthenaConn(ctx context.Context) *athena_sdkv1.Athena {
-	return Must(conn[*athena_sdkv1.Athena](ctx, c, names.Athena))
+	return errs.Must(conn[*athena_sdkv1.Athena](ctx, c, names.Athena))
 }
 
 func (c *AWSClient) AuditManagerClient(ctx context.Context) *auditmanager_sdkv2.Client {
-	return Must(client[*auditmanager_sdkv2.Client](ctx, c, names.AuditManager))
+	return errs.Must(client[*auditmanager_sdkv2.Client](ctx, c, names.AuditManager))
 }
 
 func (c *AWSClient) AutoScalingConn(ctx context.Context) *autoscaling_sdkv1.AutoScaling {
-	return Must(conn[*autoscaling_sdkv1.AutoScaling](ctx, c, names.AutoScaling))
+	return errs.Must(conn[*autoscaling_sdkv1.AutoScaling](ctx, c, names.AutoScaling))
 }
 
 func (c *AWSClient) AutoScalingPlansConn(ctx context.Context) *autoscalingplans_sdkv1.AutoScalingPlans {
-	return Must(conn[*autoscalingplans_sdkv1.AutoScalingPlans](ctx, c, names.AutoScalingPlans))
+	return errs.Must(conn[*autoscalingplans_sdkv1.AutoScalingPlans](ctx, c, names.AutoScalingPlans))
 }
 
 func (c *AWSClient) BackupConn(ctx context.Context) *backup_sdkv1.Backup {
-	return Must(conn[*backup_sdkv1.Backup](ctx, c, names.Backup))
+	return errs.Must(conn[*backup_sdkv1.Backup](ctx, c, names.Backup))
 }
 
 func (c *AWSClient) BackupGatewayConn(ctx context.Context) *backupgateway_sdkv1.BackupGateway {
-	return Must(conn[*backupgateway_sdkv1.BackupGateway](ctx, c, names.BackupGateway))
+	return errs.Must(conn[*backupgateway_sdkv1.BackupGateway](ctx, c, names.BackupGateway))
 }
 
 func (c *AWSClient) BatchConn(ctx context.Context) *batch_sdkv1.Batch {
-	return Must(conn[*batch_sdkv1.Batch](ctx, c, names.Batch))
+	return errs.Must(conn[*batch_sdkv1.Batch](ctx, c, names.Batch))
 }
 
 func (c *AWSClient) BillingConductorConn(ctx context.Context) *billingconductor_sdkv1.BillingConductor {
-	return Must(conn[*billingconductor_sdkv1.BillingConductor](ctx, c, names.BillingConductor))
+	return errs.Must(conn[*billingconductor_sdkv1.BillingConductor](ctx, c, names.BillingConductor))
 }
 
 func (c *AWSClient) BraketConn(ctx context.Context) *braket_sdkv1.Braket {
-	return Must(conn[*braket_sdkv1.Braket](ctx, c, names.Braket))
+	return errs.Must(conn[*braket_sdkv1.Braket](ctx, c, names.Braket))
 }
 
 func (c *AWSClient) BudgetsConn(ctx context.Context) *budgets_sdkv1.Budgets {
-	return Must(conn[*budgets_sdkv1.Budgets](ctx, c, names.Budgets))
+	return errs.Must(conn[*budgets_sdkv1.Budgets](ctx, c, names.Budgets))
 }
 
 func (c *AWSClient) CEConn(ctx context.Context) *costexplorer_sdkv1.CostExplorer {
-	return Must(conn[*costexplorer_sdkv1.CostExplorer](ctx, c, names.CE))
+	return errs.Must(conn[*costexplorer_sdkv1.CostExplorer](ctx, c, names.CE))
 }
 
 func (c *AWSClient) CURConn(ctx context.Context) *costandusagereportservice_sdkv1.CostandUsageReportService {
-	return Must(conn[*costandusagereportservice_sdkv1.CostandUsageReportService](ctx, c, names.CUR))
+	return errs.Must(conn[*costandusagereportservice_sdkv1.CostandUsageReportService](ctx, c, names.CUR))
 }
 
 func (c *AWSClient) ChimeConn(ctx context.Context) *chime_sdkv1.Chime {
-	return Must(conn[*chime_sdkv1.Chime](ctx, c, names.Chime))
+	return errs.Must(conn[*chime_sdkv1.Chime](ctx, c, names.Chime))
 }
 
 func (c *AWSClient) ChimeSDKIdentityConn(ctx context.Context) *chimesdkidentity_sdkv1.ChimeSDKIdentity {
-	return Must(conn[*chimesdkidentity_sdkv1.ChimeSDKIdentity](ctx, c, names.ChimeSDKIdentity))
+	return errs.Must(conn[*chimesdkidentity_sdkv1.ChimeSDKIdentity](ctx, c, names.ChimeSDKIdentity))
 }
 
 func (c *AWSClient) ChimeSDKMediaPipelinesConn(ctx context.Context) *chimesdkmediapipelines_sdkv1.ChimeSDKMediaPipelines {
-	return Must(conn[*chimesdkmediapipelines_sdkv1.ChimeSDKMediaPipelines](ctx, c, names.ChimeSDKMediaPipelines))
+	return errs.Must(conn[*chimesdkmediapipelines_sdkv1.ChimeSDKMediaPipelines](ctx, c, names.ChimeSDKMediaPipelines))
 }
 
 func (c *AWSClient) ChimeSDKMeetingsConn(ctx context.Context) *chimesdkmeetings_sdkv1.ChimeSDKMeetings {
-	return Must(conn[*chimesdkmeetings_sdkv1.ChimeSDKMeetings](ctx, c, names.ChimeSDKMeetings))
+	return errs.Must(conn[*chimesdkmeetings_sdkv1.ChimeSDKMeetings](ctx, c, names.ChimeSDKMeetings))
 }
 
 func (c *AWSClient) ChimeSDKMessagingConn(ctx context.Context) *chimesdkmessaging_sdkv1.ChimeSDKMessaging {
-	return Must(conn[*chimesdkmessaging_sdkv1.ChimeSDKMessaging](ctx, c, names.ChimeSDKMessaging))
+	return errs.Must(conn[*chimesdkmessaging_sdkv1.ChimeSDKMessaging](ctx, c, names.ChimeSDKMessaging))
 }
 
 func (c *AWSClient) ChimeSDKVoiceConn(ctx context.Context) *chimesdkvoice_sdkv1.ChimeSDKVoice {
-	return Must(conn[*chimesdkvoice_sdkv1.ChimeSDKVoice](ctx, c, names.ChimeSDKVoice))
+	return errs.Must(conn[*chimesdkvoice_sdkv1.ChimeSDKVoice](ctx, c, names.ChimeSDKVoice))
 }
 
 func (c *AWSClient) CleanRoomsClient(ctx context.Context) *cleanrooms_sdkv2.Client {
-	return Must(client[*cleanrooms_sdkv2.Client](ctx, c, names.CleanRooms))
+	return errs.Must(client[*cleanrooms_sdkv2.Client](ctx, c, names.CleanRooms))
 }
 
 func (c *AWSClient) Cloud9Conn(ctx context.Context) *cloud9_sdkv1.Cloud9 {
-	return Must(conn[*cloud9_sdkv1.Cloud9](ctx, c, names.Cloud9))
+	return errs.Must(conn[*cloud9_sdkv1.Cloud9](ctx, c, names.Cloud9))
 }
 
 func (c *AWSClient) CloudControlClient(ctx context.Context) *cloudcontrol_sdkv2.Client {
-	return Must(client[*cloudcontrol_sdkv2.Client](ctx, c, names.CloudControl))
+	return errs.Must(client[*cloudcontrol_sdkv2.Client](ctx, c, names.CloudControl))
 }
 
 func (c *AWSClient) CloudDirectoryConn(ctx context.Context) *clouddirectory_sdkv1.CloudDirectory {
-	return Must(conn[*clouddirectory_sdkv1.CloudDirectory](ctx, c, names.CloudDirectory))
+	return errs.Must(conn[*clouddirectory_sdkv1.CloudDirectory](ctx, c, names.CloudDirectory))
 }
 
 func (c *AWSClient) CloudFormationConn(ctx context.Context) *cloudformation_sdkv1.CloudFormation {
-	return Must(conn[*cloudformation_sdkv1.CloudFormation](ctx, c, names.CloudFormation))
+	return errs.Must(conn[*cloudformation_sdkv1.CloudFormation](ctx, c, names.CloudFormation))
 }
 
 func (c *AWSClient) CloudFrontConn(ctx context.Context) *cloudfront_sdkv1.CloudFront {
-	return Must(conn[*cloudfront_sdkv1.CloudFront](ctx, c, names.CloudFront))
+	return errs.Must(conn[*cloudfront_sdkv1.CloudFront](ctx, c, names.CloudFront))
 }
 
 func (c *AWSClient) CloudHSMV2Conn(ctx context.Context) *cloudhsmv2_sdkv1.CloudHSMV2 {
-	return Must(conn[*cloudhsmv2_sdkv1.CloudHSMV2](ctx, c, names.CloudHSMV2))
+	return errs.Must(conn[*cloudhsmv2_sdkv1.CloudHSMV2](ctx, c, names.CloudHSMV2))
 }
 
 func (c *AWSClient) CloudSearchConn(ctx context.Context) *cloudsearch_sdkv1.CloudSearch {
-	return Must(conn[*cloudsearch_sdkv1.CloudSearch](ctx, c, names.CloudSearch))
+	return errs.Must(conn[*cloudsearch_sdkv1.CloudSearch](ctx, c, names.CloudSearch))
 }
 
 func (c *AWSClient) CloudSearchDomainConn(ctx context.Context) *cloudsearchdomain_sdkv1.CloudSearchDomain {
-	return Must(conn[*cloudsearchdomain_sdkv1.CloudSearchDomain](ctx, c, names.CloudSearchDomain))
+	return errs.Must(conn[*cloudsearchdomain_sdkv1.CloudSearchDomain](ctx, c, names.CloudSearchDomain))
 }
 
 func (c *AWSClient) CloudTrailConn(ctx context.Context) *cloudtrail_sdkv1.CloudTrail {
-	return Must(conn[*cloudtrail_sdkv1.CloudTrail](ctx, c, names.CloudTrail))
+	return errs.Must(conn[*cloudtrail_sdkv1.CloudTrail](ctx, c, names.CloudTrail))
 }
 
 func (c *AWSClient) CloudWatchConn(ctx context.Context) *cloudwatch_sdkv1.CloudWatch {
-	return Must(conn[*cloudwatch_sdkv1.CloudWatch](ctx, c, names.CloudWatch))
+	return errs.Must(conn[*cloudwatch_sdkv1.CloudWatch](ctx, c, names.CloudWatch))
 }
 
 func (c *AWSClient) CodeArtifactConn(ctx context.Context) *codeartifact_sdkv1.CodeArtifact {
-	return Must(conn[*codeartifact_sdkv1.CodeArtifact](ctx, c, names.CodeArtifact))
+	return errs.Must(conn[*codeartifact_sdkv1.CodeArtifact](ctx, c, names.CodeArtifact))
 }
 
 func (c *AWSClient) CodeBuildConn(ctx context.Context) *codebuild_sdkv1.CodeBuild {
-	return Must(conn[*codebuild_sdkv1.CodeBuild](ctx, c, names.CodeBuild))
+	return errs.Must(conn[*codebuild_sdkv1.CodeBuild](ctx, c, names.CodeBuild))
 }
 
 func (c *AWSClient) CodeCommitConn(ctx context.Context) *codecommit_sdkv1.CodeCommit {
-	return Must(conn[*codecommit_sdkv1.CodeCommit](ctx, c, names.CodeCommit))
+	return errs.Must(conn[*codecommit_sdkv1.CodeCommit](ctx, c, names.CodeCommit))
 }
 
 func (c *AWSClient) CodeGuruProfilerConn(ctx context.Context) *codeguruprofiler_sdkv1.CodeGuruProfiler {
-	return Must(conn[*codeguruprofiler_sdkv1.CodeGuruProfiler](ctx, c, names.CodeGuruProfiler))
+	return errs.Must(conn[*codeguruprofiler_sdkv1.CodeGuruProfiler](ctx, c, names.CodeGuruProfiler))
 }
 
 func (c *AWSClient) CodeGuruReviewerConn(ctx context.Context) *codegurureviewer_sdkv1.CodeGuruReviewer {
-	return Must(conn[*codegurureviewer_sdkv1.CodeGuruReviewer](ctx, c, names.CodeGuruReviewer))
+	return errs.Must(conn[*codegurureviewer_sdkv1.CodeGuruReviewer](ctx, c, names.CodeGuruReviewer))
 }
 
 func (c *AWSClient) CodePipelineConn(ctx context.Context) *codepipeline_sdkv1.CodePipeline {
-	return Must(conn[*codepipeline_sdkv1.CodePipeline](ctx, c, names.CodePipeline))
+	return errs.Must(conn[*codepipeline_sdkv1.CodePipeline](ctx, c, names.CodePipeline))
 }
 
 func (c *AWSClient) CodeStarConn(ctx context.Context) *codestar_sdkv1.CodeStar {
-	return Must(conn[*codestar_sdkv1.CodeStar](ctx, c, names.CodeStar))
+	return errs.Must(conn[*codestar_sdkv1.CodeStar](ctx, c, names.CodeStar))
 }
 
 func (c *AWSClient) CodeStarConnectionsConn(ctx context.Context) *codestarconnections_sdkv1.CodeStarConnections {
-	return Must(conn[*codestarconnections_sdkv1.CodeStarConnections](ctx, c, names.CodeStarConnections))
+	return errs.Must(conn[*codestarconnections_sdkv1.CodeStarConnections](ctx, c, names.CodeStarConnections))
 }
 
 func (c *AWSClient) CodeStarNotificationsConn(ctx context.Context) *codestarnotifications_sdkv1.CodeStarNotifications {
-	return Must(conn[*codestarnotifications_sdkv1.CodeStarNotifications](ctx, c, names.CodeStarNotifications))
+	return errs.Must(conn[*codestarnotifications_sdkv1.CodeStarNotifications](ctx, c, names.CodeStarNotifications))
 }
 
 func (c *AWSClient) CognitoIDPConn(ctx context.Context) *cognitoidentityprovider_sdkv1.CognitoIdentityProvider {
-	return Must(conn[*cognitoidentityprovider_sdkv1.CognitoIdentityProvider](ctx, c, names.CognitoIDP))
+	return errs.Must(conn[*cognitoidentityprovider_sdkv1.CognitoIdentityProvider](ctx, c, names.CognitoIDP))
 }
 
 func (c *AWSClient) CognitoIdentityConn(ctx context.Context) *cognitoidentity_sdkv1.CognitoIdentity {
-	return Must(conn[*cognitoidentity_sdkv1.CognitoIdentity](ctx, c, names.CognitoIdentity))
+	return errs.Must(conn[*cognitoidentity_sdkv1.CognitoIdentity](ctx, c, names.CognitoIdentity))
 }
 
 func (c *AWSClient) CognitoSyncConn(ctx context.Context) *cognitosync_sdkv1.CognitoSync {
-	return Must(conn[*cognitosync_sdkv1.CognitoSync](ctx, c, names.CognitoSync))
+	return errs.Must(conn[*cognitosync_sdkv1.CognitoSync](ctx, c, names.CognitoSync))
 }
 
 func (c *AWSClient) ComprehendClient(ctx context.Context) *comprehend_sdkv2.Client {
-	return Must(client[*comprehend_sdkv2.Client](ctx, c, names.Comprehend))
+	return errs.Must(client[*comprehend_sdkv2.Client](ctx, c, names.Comprehend))
 }
 
 func (c *AWSClient) ComprehendMedicalConn(ctx context.Context) *comprehendmedical_sdkv1.ComprehendMedical {
-	return Must(conn[*comprehendmedical_sdkv1.ComprehendMedical](ctx, c, names.ComprehendMedical))
+	return errs.Must(conn[*comprehendmedical_sdkv1.ComprehendMedical](ctx, c, names.ComprehendMedical))
 }
 
 func (c *AWSClient) ComputeOptimizerClient(ctx context.Context) *computeoptimizer_sdkv2.Client {
-	return Must(client[*computeoptimizer_sdkv2.Client](ctx, c, names.ComputeOptimizer))
+	return errs.Must(client[*computeoptimizer_sdkv2.Client](ctx, c, names.ComputeOptimizer))
 }
 
 func (c *AWSClient) ConfigServiceConn(ctx context.Context) *configservice_sdkv1.ConfigService {
-	return Must(conn[*configservice_sdkv1.ConfigService](ctx, c, names.ConfigService))
+	return errs.Must(conn[*configservice_sdkv1.ConfigService](ctx, c, names.ConfigService))
 }
 
 func (c *AWSClient) ConnectConn(ctx context.Context) *connect_sdkv1.Connect {
-	return Must(conn[*connect_sdkv1.Connect](ctx, c, names.Connect))
+	return errs.Must(conn[*connect_sdkv1.Connect](ctx, c, names.Connect))
 }
 
 func (c *AWSClient) ConnectContactLensConn(ctx context.Context) *connectcontactlens_sdkv1.ConnectContactLens {
-	return Must(conn[*connectcontactlens_sdkv1.ConnectContactLens](ctx, c, names.ConnectContactLens))
+	return errs.Must(conn[*connectcontactlens_sdkv1.ConnectContactLens](ctx, c, names.ConnectContactLens))
 }
 
 func (c *AWSClient) ConnectParticipantConn(ctx context.Context) *connectparticipant_sdkv1.ConnectParticipant {
-	return Must(conn[*connectparticipant_sdkv1.ConnectParticipant](ctx, c, names.ConnectParticipant))
+	return errs.Must(conn[*connectparticipant_sdkv1.ConnectParticipant](ctx, c, names.ConnectParticipant))
 }
 
 func (c *AWSClient) ControlTowerConn(ctx context.Context) *controltower_sdkv1.ControlTower {
-	return Must(conn[*controltower_sdkv1.ControlTower](ctx, c, names.ControlTower))
+	return errs.Must(conn[*controltower_sdkv1.ControlTower](ctx, c, names.ControlTower))
 }
 
 func (c *AWSClient) CustomerProfilesConn(ctx context.Context) *customerprofiles_sdkv1.CustomerProfiles {
-	return Must(conn[*customerprofiles_sdkv1.CustomerProfiles](ctx, c, names.CustomerProfiles))
+	return errs.Must(conn[*customerprofiles_sdkv1.CustomerProfiles](ctx, c, names.CustomerProfiles))
 }
 
 func (c *AWSClient) DAXConn(ctx context.Context) *dax_sdkv1.DAX {
-	return Must(conn[*dax_sdkv1.DAX](ctx, c, names.DAX))
+	return errs.Must(conn[*dax_sdkv1.DAX](ctx, c, names.DAX))
 }
 
 func (c *AWSClient) DLMConn(ctx context.Context) *dlm_sdkv1.DLM {
-	return Must(conn[*dlm_sdkv1.DLM](ctx, c, names.DLM))
+	return errs.Must(conn[*dlm_sdkv1.DLM](ctx, c, names.DLM))
 }
 
 func (c *AWSClient) DMSConn(ctx context.Context) *databasemigrationservice_sdkv1.DatabaseMigrationService {
-	return Must(conn[*databasemigrationservice_sdkv1.DatabaseMigrationService](ctx, c, names.DMS))
+	return errs.Must(conn[*databasemigrationservice_sdkv1.DatabaseMigrationService](ctx, c, names.DMS))
 }
 
 func (c *AWSClient) DRSConn(ctx context.Context) *drs_sdkv1.Drs {
-	return Must(conn[*drs_sdkv1.Drs](ctx, c, names.DRS))
+	return errs.Must(conn[*drs_sdkv1.Drs](ctx, c, names.DRS))
 }
 
 func (c *AWSClient) DSConn(ctx context.Context) *directoryservice_sdkv1.DirectoryService {
-	return Must(conn[*directoryservice_sdkv1.DirectoryService](ctx, c, names.DS))
+	return errs.Must(conn[*directoryservice_sdkv1.DirectoryService](ctx, c, names.DS))
 }
 
 func (c *AWSClient) DSClient(ctx context.Context) *directoryservice_sdkv2.Client {
-	return Must(client[*directoryservice_sdkv2.Client](ctx, c, names.DS))
+	return errs.Must(client[*directoryservice_sdkv2.Client](ctx, c, names.DS))
 }
 
 func (c *AWSClient) DataBrewConn(ctx context.Context) *gluedatabrew_sdkv1.GlueDataBrew {
-	return Must(conn[*gluedatabrew_sdkv1.GlueDataBrew](ctx, c, names.DataBrew))
+	return errs.Must(conn[*gluedatabrew_sdkv1.GlueDataBrew](ctx, c, names.DataBrew))
 }
 
 func (c *AWSClient) DataExchangeConn(ctx context.Context) *dataexchange_sdkv1.DataExchange {
-	return Must(conn[*dataexchange_sdkv1.DataExchange](ctx, c, names.DataExchange))
+	return errs.Must(conn[*dataexchange_sdkv1.DataExchange](ctx, c, names.DataExchange))
 }
 
 func (c *AWSClient) DataPipelineConn(ctx context.Context) *datapipeline_sdkv1.DataPipeline {
-	return Must(conn[*datapipeline_sdkv1.DataPipeline](ctx, c, names.DataPipeline))
+	return errs.Must(conn[*datapipeline_sdkv1.DataPipeline](ctx, c, names.DataPipeline))
 }
 
 func (c *AWSClient) DataSyncConn(ctx context.Context) *datasync_sdkv1.DataSync {
-	return Must(conn[*datasync_sdkv1.DataSync](ctx, c, names.DataSync))
+	return errs.Must(conn[*datasync_sdkv1.DataSync](ctx, c, names.DataSync))
 }
 
 func (c *AWSClient) DeployConn(ctx context.Context) *codedeploy_sdkv1.CodeDeploy {
-	return Must(conn[*codedeploy_sdkv1.CodeDeploy](ctx, c, names.Deploy))
+	return errs.Must(conn[*codedeploy_sdkv1.CodeDeploy](ctx, c, names.Deploy))
 }
 
 func (c *AWSClient) DetectiveConn(ctx context.Context) *detective_sdkv1.Detective {
-	return Must(conn[*detective_sdkv1.Detective](ctx, c, names.Detective))
+	return errs.Must(conn[*detective_sdkv1.Detective](ctx, c, names.Detective))
 }
 
 func (c *AWSClient) DevOpsGuruConn(ctx context.Context) *devopsguru_sdkv1.DevOpsGuru {
-	return Must(conn[*devopsguru_sdkv1.DevOpsGuru](ctx, c, names.DevOpsGuru))
+	return errs.Must(conn[*devopsguru_sdkv1.DevOpsGuru](ctx, c, names.DevOpsGuru))
 }
 
 func (c *AWSClient) DeviceFarmConn(ctx context.Context) *devicefarm_sdkv1.DeviceFarm {
-	return Must(conn[*devicefarm_sdkv1.DeviceFarm](ctx, c, names.DeviceFarm))
+	return errs.Must(conn[*devicefarm_sdkv1.DeviceFarm](ctx, c, names.DeviceFarm))
 }
 
 func (c *AWSClient) DirectConnectConn(ctx context.Context) *directconnect_sdkv1.DirectConnect {
-	return Must(conn[*directconnect_sdkv1.DirectConnect](ctx, c, names.DirectConnect))
+	return errs.Must(conn[*directconnect_sdkv1.DirectConnect](ctx, c, names.DirectConnect))
 }
 
 func (c *AWSClient) DiscoveryConn(ctx context.Context) *applicationdiscoveryservice_sdkv1.ApplicationDiscoveryService {
-	return Must(conn[*applicationdiscoveryservice_sdkv1.ApplicationDiscoveryService](ctx, c, names.Discovery))
+	return errs.Must(conn[*applicationdiscoveryservice_sdkv1.ApplicationDiscoveryService](ctx, c, names.Discovery))
 }
 
 func (c *AWSClient) DocDBConn(ctx context.Context) *docdb_sdkv1.DocDB {
-	return Must(conn[*docdb_sdkv1.DocDB](ctx, c, names.DocDB))
+	return errs.Must(conn[*docdb_sdkv1.DocDB](ctx, c, names.DocDB))
 }
 
 func (c *AWSClient) DocDBElasticClient(ctx context.Context) *docdbelastic_sdkv2.Client {
-	return Must(client[*docdbelastic_sdkv2.Client](ctx, c, names.DocDBElastic))
+	return errs.Must(client[*docdbelastic_sdkv2.Client](ctx, c, names.DocDBElastic))
 }
 
 func (c *AWSClient) DynamoDBConn(ctx context.Context) *dynamodb_sdkv1.DynamoDB {
-	return Must(conn[*dynamodb_sdkv1.DynamoDB](ctx, c, names.DynamoDB))
+	return errs.Must(conn[*dynamodb_sdkv1.DynamoDB](ctx, c, names.DynamoDB))
 }
 
 func (c *AWSClient) DynamoDBStreamsConn(ctx context.Context) *dynamodbstreams_sdkv1.DynamoDBStreams {
-	return Must(conn[*dynamodbstreams_sdkv1.DynamoDBStreams](ctx, c, names.DynamoDBStreams))
+	return errs.Must(conn[*dynamodbstreams_sdkv1.DynamoDBStreams](ctx, c, names.DynamoDBStreams))
 }
 
 func (c *AWSClient) EBSConn(ctx context.Context) *ebs_sdkv1.EBS {
-	return Must(conn[*ebs_sdkv1.EBS](ctx, c, names.EBS))
+	return errs.Must(conn[*ebs_sdkv1.EBS](ctx, c, names.EBS))
 }
 
 func (c *AWSClient) EC2Conn(ctx context.Context) *ec2_sdkv1.EC2 {
-	return Must(conn[*ec2_sdkv1.EC2](ctx, c, names.EC2))
+	return errs.Must(conn[*ec2_sdkv1.EC2](ctx, c, names.EC2))
 }
 
 func (c *AWSClient) EC2Client(ctx context.Context) *ec2_sdkv2.Client {
-	return Must(client[*ec2_sdkv2.Client](ctx, c, names.EC2))
+	return errs.Must(client[*ec2_sdkv2.Client](ctx, c, names.EC2))
 }
 
 func (c *AWSClient) EC2InstanceConnectConn(ctx context.Context) *ec2instanceconnect_sdkv1.EC2InstanceConnect {
-	return Must(conn[*ec2instanceconnect_sdkv1.EC2InstanceConnect](ctx, c, names.EC2InstanceConnect))
+	return errs.Must(conn[*ec2instanceconnect_sdkv1.EC2InstanceConnect](ctx, c, names.EC2InstanceConnect))
 }
 
 func (c *AWSClient) ECRConn(ctx context.Context) *ecr_sdkv1.ECR {
-	return Must(conn[*ecr_sdkv1.ECR](ctx, c, names.ECR))
+	return errs.Must(conn[*ecr_sdkv1.ECR](ctx, c, names.ECR))
 }
 
 func (c *AWSClient) ECRPublicConn(ctx context.Context) *ecrpublic_sdkv1.ECRPublic {
-	return Must(conn[*ecrpublic_sdkv1.ECRPublic](ctx, c, names.ECRPublic))
+	return errs.Must(conn[*ecrpublic_sdkv1.ECRPublic](ctx, c, names.ECRPublic))
 }
 
 func (c *AWSClient) ECSConn(ctx context.Context) *ecs_sdkv1.ECS {
-	return Must(conn[*ecs_sdkv1.ECS](ctx, c, names.ECS))
+	return errs.Must(conn[*ecs_sdkv1.ECS](ctx, c, names.ECS))
 }
 
 func (c *AWSClient) EFSConn(ctx context.Context) *efs_sdkv1.EFS {
-	return Must(conn[*efs_sdkv1.EFS](ctx, c, names.EFS))
+	return errs.Must(conn[*efs_sdkv1.EFS](ctx, c, names.EFS))
 }
 
 func (c *AWSClient) EKSConn(ctx context.Context) *eks_sdkv1.EKS {
-	return Must(conn[*eks_sdkv1.EKS](ctx, c, names.EKS))
+	return errs.Must(conn[*eks_sdkv1.EKS](ctx, c, names.EKS))
 }
 
 func (c *AWSClient) ELBConn(ctx context.Context) *elb_sdkv1.ELB {
-	return Must(conn[*elb_sdkv1.ELB](ctx, c, names.ELB))
+	return errs.Must(conn[*elb_sdkv1.ELB](ctx, c, names.ELB))
 }
 
 func (c *AWSClient) ELBV2Conn(ctx context.Context) *elbv2_sdkv1.ELBV2 {
-	return Must(conn[*elbv2_sdkv1.ELBV2](ctx, c, names.ELBV2))
+	return errs.Must(conn[*elbv2_sdkv1.ELBV2](ctx, c, names.ELBV2))
 }
 
 func (c *AWSClient) EMRConn(ctx context.Context) *emr_sdkv1.EMR {
-	return Must(conn[*emr_sdkv1.EMR](ctx, c, names.EMR))
+	return errs.Must(conn[*emr_sdkv1.EMR](ctx, c, names.EMR))
 }
 
 func (c *AWSClient) EMRContainersConn(ctx context.Context) *emrcontainers_sdkv1.EMRContainers {
-	return Must(conn[*emrcontainers_sdkv1.EMRContainers](ctx, c, names.EMRContainers))
+	return errs.Must(conn[*emrcontainers_sdkv1.EMRContainers](ctx, c, names.EMRContainers))
 }
 
 func (c *AWSClient) EMRServerlessConn(ctx context.Context) *emrserverless_sdkv1.EMRServerless {
-	return Must(conn[*emrserverless_sdkv1.EMRServerless](ctx, c, names.EMRServerless))
+	return errs.Must(conn[*emrserverless_sdkv1.EMRServerless](ctx, c, names.EMRServerless))
 }
 
 func (c *AWSClient) ElastiCacheConn(ctx context.Context) *elasticache_sdkv1.ElastiCache {
-	return Must(conn[*elasticache_sdkv1.ElastiCache](ctx, c, names.ElastiCache))
+	return errs.Must(conn[*elasticache_sdkv1.ElastiCache](ctx, c, names.ElastiCache))
 }
 
 func (c *AWSClient) ElasticBeanstalkConn(ctx context.Context) *elasticbeanstalk_sdkv1.ElasticBeanstalk {
-	return Must(conn[*elasticbeanstalk_sdkv1.ElasticBeanstalk](ctx, c, names.ElasticBeanstalk))
+	return errs.Must(conn[*elasticbeanstalk_sdkv1.ElasticBeanstalk](ctx, c, names.ElasticBeanstalk))
 }
 
 func (c *AWSClient) ElasticInferenceConn(ctx context.Context) *elasticinference_sdkv1.ElasticInference {
-	return Must(conn[*elasticinference_sdkv1.ElasticInference](ctx, c, names.ElasticInference))
+	return errs.Must(conn[*elasticinference_sdkv1.ElasticInference](ctx, c, names.ElasticInference))
 }
 
 func (c *AWSClient) ElasticTranscoderConn(ctx context.Context) *elastictranscoder_sdkv1.ElasticTranscoder {
-	return Must(conn[*elastictranscoder_sdkv1.ElasticTranscoder](ctx, c, names.ElasticTranscoder))
+	return errs.Must(conn[*elastictranscoder_sdkv1.ElasticTranscoder](ctx, c, names.ElasticTranscoder))
 }
 
 func (c *AWSClient) ElasticsearchConn(ctx context.Context) *elasticsearchservice_sdkv1.ElasticsearchService {
-	return Must(conn[*elasticsearchservice_sdkv1.ElasticsearchService](ctx, c, names.Elasticsearch))
+	return errs.Must(conn[*elasticsearchservice_sdkv1.ElasticsearchService](ctx, c, names.Elasticsearch))
 }
 
 func (c *AWSClient) EventsConn(ctx context.Context) *eventbridge_sdkv1.EventBridge {
-	return Must(conn[*eventbridge_sdkv1.EventBridge](ctx, c, names.Events))
+	return errs.Must(conn[*eventbridge_sdkv1.EventBridge](ctx, c, names.Events))
 }
 
 func (c *AWSClient) EvidentlyConn(ctx context.Context) *cloudwatchevidently_sdkv1.CloudWatchEvidently {
-	return Must(conn[*cloudwatchevidently_sdkv1.CloudWatchEvidently](ctx, c, names.Evidently))
+	return errs.Must(conn[*cloudwatchevidently_sdkv1.CloudWatchEvidently](ctx, c, names.Evidently))
 }
 
 func (c *AWSClient) FISClient(ctx context.Context) *fis_sdkv2.Client {
-	return Must(client[*fis_sdkv2.Client](ctx, c, names.FIS))
+	return errs.Must(client[*fis_sdkv2.Client](ctx, c, names.FIS))
 }
 
 func (c *AWSClient) FMSConn(ctx context.Context) *fms_sdkv1.FMS {
-	return Must(conn[*fms_sdkv1.FMS](ctx, c, names.FMS))
+	return errs.Must(conn[*fms_sdkv1.FMS](ctx, c, names.FMS))
 }
 
 func (c *AWSClient) FSxConn(ctx context.Context) *fsx_sdkv1.FSx {
-	return Must(conn[*fsx_sdkv1.FSx](ctx, c, names.FSx))
+	return errs.Must(conn[*fsx_sdkv1.FSx](ctx, c, names.FSx))
 }
 
 func (c *AWSClient) FinSpaceClient(ctx context.Context) *finspace_sdkv2.Client {
-	return Must(client[*finspace_sdkv2.Client](ctx, c, names.FinSpace))
+	return errs.Must(client[*finspace_sdkv2.Client](ctx, c, names.FinSpace))
 }
 
 func (c *AWSClient) FinSpaceDataConn(ctx context.Context) *finspacedata_sdkv1.FinSpaceData {
-	return Must(conn[*finspacedata_sdkv1.FinSpaceData](ctx, c, names.FinSpaceData))
+	return errs.Must(conn[*finspacedata_sdkv1.FinSpaceData](ctx, c, names.FinSpaceData))
 }
 
 func (c *AWSClient) FirehoseConn(ctx context.Context) *firehose_sdkv1.Firehose {
-	return Must(conn[*firehose_sdkv1.Firehose](ctx, c, names.Firehose))
+	return errs.Must(conn[*firehose_sdkv1.Firehose](ctx, c, names.Firehose))
 }
 
 func (c *AWSClient) ForecastConn(ctx context.Context) *forecastservice_sdkv1.ForecastService {
-	return Must(conn[*forecastservice_sdkv1.ForecastService](ctx, c, names.Forecast))
+	return errs.Must(conn[*forecastservice_sdkv1.ForecastService](ctx, c, names.Forecast))
 }
 
 func (c *AWSClient) ForecastQueryConn(ctx context.Context) *forecastqueryservice_sdkv1.ForecastQueryService {
-	return Must(conn[*forecastqueryservice_sdkv1.ForecastQueryService](ctx, c, names.ForecastQuery))
+	return errs.Must(conn[*forecastqueryservice_sdkv1.ForecastQueryService](ctx, c, names.ForecastQuery))
 }
 
 func (c *AWSClient) FraudDetectorConn(ctx context.Context) *frauddetector_sdkv1.FraudDetector {
-	return Must(conn[*frauddetector_sdkv1.FraudDetector](ctx, c, names.FraudDetector))
+	return errs.Must(conn[*frauddetector_sdkv1.FraudDetector](ctx, c, names.FraudDetector))
 }
 
 func (c *AWSClient) GameLiftConn(ctx context.Context) *gamelift_sdkv1.GameLift {
-	return Must(conn[*gamelift_sdkv1.GameLift](ctx, c, names.GameLift))
+	return errs.Must(conn[*gamelift_sdkv1.GameLift](ctx, c, names.GameLift))
 }
 
 func (c *AWSClient) GlacierClient(ctx context.Context) *glacier_sdkv2.Client {
-	return Must(client[*glacier_sdkv2.Client](ctx, c, names.Glacier))
+	return errs.Must(client[*glacier_sdkv2.Client](ctx, c, names.Glacier))
 }
 
 func (c *AWSClient) GlobalAcceleratorConn(ctx context.Context) *globalaccelerator_sdkv1.GlobalAccelerator {
-	return Must(conn[*globalaccelerator_sdkv1.GlobalAccelerator](ctx, c, names.GlobalAccelerator))
+	return errs.Must(conn[*globalaccelerator_sdkv1.GlobalAccelerator](ctx, c, names.GlobalAccelerator))
 }
 
 func (c *AWSClient) GlueConn(ctx context.Context) *glue_sdkv1.Glue {
-	return Must(conn[*glue_sdkv1.Glue](ctx, c, names.Glue))
+	return errs.Must(conn[*glue_sdkv1.Glue](ctx, c, names.Glue))
 }
 
 func (c *AWSClient) GrafanaConn(ctx context.Context) *managedgrafana_sdkv1.ManagedGrafana {
-	return Must(conn[*managedgrafana_sdkv1.ManagedGrafana](ctx, c, names.Grafana))
+	return errs.Must(conn[*managedgrafana_sdkv1.ManagedGrafana](ctx, c, names.Grafana))
 }
 
 func (c *AWSClient) GreengrassConn(ctx context.Context) *greengrass_sdkv1.Greengrass {
-	return Must(conn[*greengrass_sdkv1.Greengrass](ctx, c, names.Greengrass))
+	return errs.Must(conn[*greengrass_sdkv1.Greengrass](ctx, c, names.Greengrass))
 }
 
 func (c *AWSClient) GreengrassV2Conn(ctx context.Context) *greengrassv2_sdkv1.GreengrassV2 {
-	return Must(conn[*greengrassv2_sdkv1.GreengrassV2](ctx, c, names.GreengrassV2))
+	return errs.Must(conn[*greengrassv2_sdkv1.GreengrassV2](ctx, c, names.GreengrassV2))
 }
 
 func (c *AWSClient) GroundStationConn(ctx context.Context) *groundstation_sdkv1.GroundStation {
-	return Must(conn[*groundstation_sdkv1.GroundStation](ctx, c, names.GroundStation))
+	return errs.Must(conn[*groundstation_sdkv1.GroundStation](ctx, c, names.GroundStation))
 }
 
 func (c *AWSClient) GuardDutyConn(ctx context.Context) *guardduty_sdkv1.GuardDuty {
-	return Must(conn[*guardduty_sdkv1.GuardDuty](ctx, c, names.GuardDuty))
+	return errs.Must(conn[*guardduty_sdkv1.GuardDuty](ctx, c, names.GuardDuty))
 }
 
 func (c *AWSClient) HealthConn(ctx context.Context) *health_sdkv1.Health {
-	return Must(conn[*health_sdkv1.Health](ctx, c, names.Health))
+	return errs.Must(conn[*health_sdkv1.Health](ctx, c, names.Health))
 }
 
 func (c *AWSClient) HealthLakeClient(ctx context.Context) *healthlake_sdkv2.Client {
-	return Must(client[*healthlake_sdkv2.Client](ctx, c, names.HealthLake))
+	return errs.Must(client[*healthlake_sdkv2.Client](ctx, c, names.HealthLake))
 }
 
 func (c *AWSClient) HoneycodeConn(ctx context.Context) *honeycode_sdkv1.Honeycode {
-	return Must(conn[*honeycode_sdkv1.Honeycode](ctx, c, names.Honeycode))
+	return errs.Must(conn[*honeycode_sdkv1.Honeycode](ctx, c, names.Honeycode))
 }
 
 func (c *AWSClient) IAMConn(ctx context.Context) *iam_sdkv1.IAM {
-	return Must(conn[*iam_sdkv1.IAM](ctx, c, names.IAM))
+	return errs.Must(conn[*iam_sdkv1.IAM](ctx, c, names.IAM))
 }
 
 func (c *AWSClient) IVSConn(ctx context.Context) *ivs_sdkv1.IVS {
-	return Must(conn[*ivs_sdkv1.IVS](ctx, c, names.IVS))
+	return errs.Must(conn[*ivs_sdkv1.IVS](ctx, c, names.IVS))
 }
 
 func (c *AWSClient) IVSChatClient(ctx context.Context) *ivschat_sdkv2.Client {
-	return Must(client[*ivschat_sdkv2.Client](ctx, c, names.IVSChat))
+	return errs.Must(client[*ivschat_sdkv2.Client](ctx, c, names.IVSChat))
 }
 
 func (c *AWSClient) IdentityStoreClient(ctx context.Context) *identitystore_sdkv2.Client {
-	return Must(client[*identitystore_sdkv2.Client](ctx, c, names.IdentityStore))
+	return errs.Must(client[*identitystore_sdkv2.Client](ctx, c, names.IdentityStore))
 }
 
 func (c *AWSClient) ImageBuilderConn(ctx context.Context) *imagebuilder_sdkv1.Imagebuilder {
-	return Must(conn[*imagebuilder_sdkv1.Imagebuilder](ctx, c, names.ImageBuilder))
+	return errs.Must(conn[*imagebuilder_sdkv1.Imagebuilder](ctx, c, names.ImageBuilder))
 }
 
 func (c *AWSClient) InspectorConn(ctx context.Context) *inspector_sdkv1.Inspector {
-	return Must(conn[*inspector_sdkv1.Inspector](ctx, c, names.Inspector))
+	return errs.Must(conn[*inspector_sdkv1.Inspector](ctx, c, names.Inspector))
 }
 
 func (c *AWSClient) Inspector2Client(ctx context.Context) *inspector2_sdkv2.Client {
-	return Must(client[*inspector2_sdkv2.Client](ctx, c, names.Inspector2))
+	return errs.Must(client[*inspector2_sdkv2.Client](ctx, c, names.Inspector2))
 }
 
 func (c *AWSClient) InternetMonitorConn(ctx context.Context) *internetmonitor_sdkv1.InternetMonitor {
-	return Must(conn[*internetmonitor_sdkv1.InternetMonitor](ctx, c, names.InternetMonitor))
+	return errs.Must(conn[*internetmonitor_sdkv1.InternetMonitor](ctx, c, names.InternetMonitor))
 }
 
 func (c *AWSClient) IoTConn(ctx context.Context) *iot_sdkv1.IoT {
-	return Must(conn[*iot_sdkv1.IoT](ctx, c, names.IoT))
+	return errs.Must(conn[*iot_sdkv1.IoT](ctx, c, names.IoT))
 }
 
 func (c *AWSClient) IoT1ClickDevicesConn(ctx context.Context) *iot1clickdevicesservice_sdkv1.IoT1ClickDevicesService {
-	return Must(conn[*iot1clickdevicesservice_sdkv1.IoT1ClickDevicesService](ctx, c, names.IoT1ClickDevices))
+	return errs.Must(conn[*iot1clickdevicesservice_sdkv1.IoT1ClickDevicesService](ctx, c, names.IoT1ClickDevices))
 }
 
 func (c *AWSClient) IoT1ClickProjectsConn(ctx context.Context) *iot1clickprojects_sdkv1.IoT1ClickProjects {
-	return Must(conn[*iot1clickprojects_sdkv1.IoT1ClickProjects](ctx, c, names.IoT1ClickProjects))
+	return errs.Must(conn[*iot1clickprojects_sdkv1.IoT1ClickProjects](ctx, c, names.IoT1ClickProjects))
 }
 
 func (c *AWSClient) IoTAnalyticsConn(ctx context.Context) *iotanalytics_sdkv1.IoTAnalytics {
-	return Must(conn[*iotanalytics_sdkv1.IoTAnalytics](ctx, c, names.IoTAnalytics))
+	return errs.Must(conn[*iotanalytics_sdkv1.IoTAnalytics](ctx, c, names.IoTAnalytics))
 }
 
 func (c *AWSClient) IoTDataConn(ctx context.Context) *iotdataplane_sdkv1.IoTDataPlane {
-	return Must(conn[*iotdataplane_sdkv1.IoTDataPlane](ctx, c, names.IoTData))
+	return errs.Must(conn[*iotdataplane_sdkv1.IoTDataPlane](ctx, c, names.IoTData))
 }
 
 func (c *AWSClient) IoTDeviceAdvisorConn(ctx context.Context) *iotdeviceadvisor_sdkv1.IoTDeviceAdvisor {
-	return Must(conn[*iotdeviceadvisor_sdkv1.IoTDeviceAdvisor](ctx, c, names.IoTDeviceAdvisor))
+	return errs.Must(conn[*iotdeviceadvisor_sdkv1.IoTDeviceAdvisor](ctx, c, names.IoTDeviceAdvisor))
 }
 
 func (c *AWSClient) IoTEventsConn(ctx context.Context) *iotevents_sdkv1.IoTEvents {
-	return Must(conn[*iotevents_sdkv1.IoTEvents](ctx, c, names.IoTEvents))
+	return errs.Must(conn[*iotevents_sdkv1.IoTEvents](ctx, c, names.IoTEvents))
 }
 
 func (c *AWSClient) IoTEventsDataConn(ctx context.Context) *ioteventsdata_sdkv1.IoTEventsData {
-	return Must(conn[*ioteventsdata_sdkv1.IoTEventsData](ctx, c, names.IoTEventsData))
+	return errs.Must(conn[*ioteventsdata_sdkv1.IoTEventsData](ctx, c, names.IoTEventsData))
 }
 
 func (c *AWSClient) IoTFleetHubConn(ctx context.Context) *iotfleethub_sdkv1.IoTFleetHub {
-	return Must(conn[*iotfleethub_sdkv1.IoTFleetHub](ctx, c, names.IoTFleetHub))
+	return errs.Must(conn[*iotfleethub_sdkv1.IoTFleetHub](ctx, c, names.IoTFleetHub))
 }
 
 func (c *AWSClient) IoTJobsDataConn(ctx context.Context) *iotjobsdataplane_sdkv1.IoTJobsDataPlane {
-	return Must(conn[*iotjobsdataplane_sdkv1.IoTJobsDataPlane](ctx, c, names.IoTJobsData))
+	return errs.Must(conn[*iotjobsdataplane_sdkv1.IoTJobsDataPlane](ctx, c, names.IoTJobsData))
 }
 
 func (c *AWSClient) IoTSecureTunnelingConn(ctx context.Context) *iotsecuretunneling_sdkv1.IoTSecureTunneling {
-	return Must(conn[*iotsecuretunneling_sdkv1.IoTSecureTunneling](ctx, c, names.IoTSecureTunneling))
+	return errs.Must(conn[*iotsecuretunneling_sdkv1.IoTSecureTunneling](ctx, c, names.IoTSecureTunneling))
 }
 
 func (c *AWSClient) IoTSiteWiseConn(ctx context.Context) *iotsitewise_sdkv1.IoTSiteWise {
-	return Must(conn[*iotsitewise_sdkv1.IoTSiteWise](ctx, c, names.IoTSiteWise))
+	return errs.Must(conn[*iotsitewise_sdkv1.IoTSiteWise](ctx, c, names.IoTSiteWise))
 }
 
 func (c *AWSClient) IoTThingsGraphConn(ctx context.Context) *iotthingsgraph_sdkv1.IoTThingsGraph {
-	return Must(conn[*iotthingsgraph_sdkv1.IoTThingsGraph](ctx, c, names.IoTThingsGraph))
+	return errs.Must(conn[*iotthingsgraph_sdkv1.IoTThingsGraph](ctx, c, names.IoTThingsGraph))
 }
 
 func (c *AWSClient) IoTTwinMakerConn(ctx context.Context) *iottwinmaker_sdkv1.IoTTwinMaker {
-	return Must(conn[*iottwinmaker_sdkv1.IoTTwinMaker](ctx, c, names.IoTTwinMaker))
+	return errs.Must(conn[*iottwinmaker_sdkv1.IoTTwinMaker](ctx, c, names.IoTTwinMaker))
 }
 
 func (c *AWSClient) IoTWirelessConn(ctx context.Context) *iotwireless_sdkv1.IoTWireless {
-	return Must(conn[*iotwireless_sdkv1.IoTWireless](ctx, c, names.IoTWireless))
+	return errs.Must(conn[*iotwireless_sdkv1.IoTWireless](ctx, c, names.IoTWireless))
 }
 
 func (c *AWSClient) KMSConn(ctx context.Context) *kms_sdkv1.KMS {
-	return Must(conn[*kms_sdkv1.KMS](ctx, c, names.KMS))
+	return errs.Must(conn[*kms_sdkv1.KMS](ctx, c, names.KMS))
 }
 
 func (c *AWSClient) KafkaConn(ctx context.Context) *kafka_sdkv1.Kafka {
-	return Must(conn[*kafka_sdkv1.Kafka](ctx, c, names.Kafka))
+	return errs.Must(conn[*kafka_sdkv1.Kafka](ctx, c, names.Kafka))
 }
 
 func (c *AWSClient) KafkaConnectConn(ctx context.Context) *kafkaconnect_sdkv1.KafkaConnect {
-	return Must(conn[*kafkaconnect_sdkv1.KafkaConnect](ctx, c, names.KafkaConnect))
+	return errs.Must(conn[*kafkaconnect_sdkv1.KafkaConnect](ctx, c, names.KafkaConnect))
 }
 
 func (c *AWSClient) KendraClient(ctx context.Context) *kendra_sdkv2.Client {
-	return Must(client[*kendra_sdkv2.Client](ctx, c, names.Kendra))
+	return errs.Must(client[*kendra_sdkv2.Client](ctx, c, names.Kendra))
 }
 
 func (c *AWSClient) KeyspacesConn(ctx context.Context) *keyspaces_sdkv1.Keyspaces {
-	return Must(conn[*keyspaces_sdkv1.Keyspaces](ctx, c, names.Keyspaces))
+	return errs.Must(conn[*keyspaces_sdkv1.Keyspaces](ctx, c, names.Keyspaces))
 }
 
 func (c *AWSClient) KinesisConn(ctx context.Context) *kinesis_sdkv1.Kinesis {
-	return Must(conn[*kinesis_sdkv1.Kinesis](ctx, c, names.Kinesis))
+	return errs.Must(conn[*kinesis_sdkv1.Kinesis](ctx, c, names.Kinesis))
 }
 
 func (c *AWSClient) KinesisAnalyticsConn(ctx context.Context) *kinesisanalytics_sdkv1.KinesisAnalytics {
-	return Must(conn[*kinesisanalytics_sdkv1.KinesisAnalytics](ctx, c, names.KinesisAnalytics))
+	return errs.Must(conn[*kinesisanalytics_sdkv1.KinesisAnalytics](ctx, c, names.KinesisAnalytics))
 }
 
 func (c *AWSClient) KinesisAnalyticsV2Conn(ctx context.Context) *kinesisanalyticsv2_sdkv1.KinesisAnalyticsV2 {
-	return Must(conn[*kinesisanalyticsv2_sdkv1.KinesisAnalyticsV2](ctx, c, names.KinesisAnalyticsV2))
+	return errs.Must(conn[*kinesisanalyticsv2_sdkv1.KinesisAnalyticsV2](ctx, c, names.KinesisAnalyticsV2))
 }
 
 func (c *AWSClient) KinesisVideoConn(ctx context.Context) *kinesisvideo_sdkv1.KinesisVideo {
-	return Must(conn[*kinesisvideo_sdkv1.KinesisVideo](ctx, c, names.KinesisVideo))
+	return errs.Must(conn[*kinesisvideo_sdkv1.KinesisVideo](ctx, c, names.KinesisVideo))
 }
 
 func (c *AWSClient) KinesisVideoArchivedMediaConn(ctx context.Context) *kinesisvideoarchivedmedia_sdkv1.KinesisVideoArchivedMedia {
-	return Must(conn[*kinesisvideoarchivedmedia_sdkv1.KinesisVideoArchivedMedia](ctx, c, names.KinesisVideoArchivedMedia))
+	return errs.Must(conn[*kinesisvideoarchivedmedia_sdkv1.KinesisVideoArchivedMedia](ctx, c, names.KinesisVideoArchivedMedia))
 }
 
 func (c *AWSClient) KinesisVideoMediaConn(ctx context.Context) *kinesisvideomedia_sdkv1.KinesisVideoMedia {
-	return Must(conn[*kinesisvideomedia_sdkv1.KinesisVideoMedia](ctx, c, names.KinesisVideoMedia))
+	return errs.Must(conn[*kinesisvideomedia_sdkv1.KinesisVideoMedia](ctx, c, names.KinesisVideoMedia))
 }
 
 func (c *AWSClient) KinesisVideoSignalingConn(ctx context.Context) *kinesisvideosignalingchannels_sdkv1.KinesisVideoSignalingChannels {
-	return Must(conn[*kinesisvideosignalingchannels_sdkv1.KinesisVideoSignalingChannels](ctx, c, names.KinesisVideoSignaling))
+	return errs.Must(conn[*kinesisvideosignalingchannels_sdkv1.KinesisVideoSignalingChannels](ctx, c, names.KinesisVideoSignaling))
 }
 
 func (c *AWSClient) LakeFormationConn(ctx context.Context) *lakeformation_sdkv1.LakeFormation {
-	return Must(conn[*lakeformation_sdkv1.LakeFormation](ctx, c, names.LakeFormation))
+	return errs.Must(conn[*lakeformation_sdkv1.LakeFormation](ctx, c, names.LakeFormation))
 }
 
 func (c *AWSClient) LambdaConn(ctx context.Context) *lambda_sdkv1.Lambda {
-	return Must(conn[*lambda_sdkv1.Lambda](ctx, c, names.Lambda))
+	return errs.Must(conn[*lambda_sdkv1.Lambda](ctx, c, names.Lambda))
 }
 
 func (c *AWSClient) LambdaClient(ctx context.Context) *lambda_sdkv2.Client {
-	return Must(client[*lambda_sdkv2.Client](ctx, c, names.Lambda))
+	return errs.Must(client[*lambda_sdkv2.Client](ctx, c, names.Lambda))
 }
 
 func (c *AWSClient) LexModelsConn(ctx context.Context) *lexmodelbuildingservice_sdkv1.LexModelBuildingService {
-	return Must(conn[*lexmodelbuildingservice_sdkv1.LexModelBuildingService](ctx, c, names.LexModels))
+	return errs.Must(conn[*lexmodelbuildingservice_sdkv1.LexModelBuildingService](ctx, c, names.LexModels))
 }
 
 func (c *AWSClient) LexModelsV2Conn(ctx context.Context) *lexmodelsv2_sdkv1.LexModelsV2 {
-	return Must(conn[*lexmodelsv2_sdkv1.LexModelsV2](ctx, c, names.LexModelsV2))
+	return errs.Must(conn[*lexmodelsv2_sdkv1.LexModelsV2](ctx, c, names.LexModelsV2))
 }
 
 func (c *AWSClient) LexRuntimeConn(ctx context.Context) *lexruntimeservice_sdkv1.LexRuntimeService {
-	return Must(conn[*lexruntimeservice_sdkv1.LexRuntimeService](ctx, c, names.LexRuntime))
+	return errs.Must(conn[*lexruntimeservice_sdkv1.LexRuntimeService](ctx, c, names.LexRuntime))
 }
 
 func (c *AWSClient) LexRuntimeV2Conn(ctx context.Context) *lexruntimev2_sdkv1.LexRuntimeV2 {
-	return Must(conn[*lexruntimev2_sdkv1.LexRuntimeV2](ctx, c, names.LexRuntimeV2))
+	return errs.Must(conn[*lexruntimev2_sdkv1.LexRuntimeV2](ctx, c, names.LexRuntimeV2))
 }
 
 func (c *AWSClient) LicenseManagerConn(ctx context.Context) *licensemanager_sdkv1.LicenseManager {
-	return Must(conn[*licensemanager_sdkv1.LicenseManager](ctx, c, names.LicenseManager))
+	return errs.Must(conn[*licensemanager_sdkv1.LicenseManager](ctx, c, names.LicenseManager))
 }
 
 func (c *AWSClient) LightsailConn(ctx context.Context) *lightsail_sdkv1.Lightsail {
-	return Must(conn[*lightsail_sdkv1.Lightsail](ctx, c, names.Lightsail))
+	return errs.Must(conn[*lightsail_sdkv1.Lightsail](ctx, c, names.Lightsail))
 }
 
 func (c *AWSClient) LocationConn(ctx context.Context) *locationservice_sdkv1.LocationService {
-	return Must(conn[*locationservice_sdkv1.LocationService](ctx, c, names.Location))
+	return errs.Must(conn[*locationservice_sdkv1.LocationService](ctx, c, names.Location))
 }
 
 func (c *AWSClient) LogsConn(ctx context.Context) *cloudwatchlogs_sdkv1.CloudWatchLogs {
-	return Must(conn[*cloudwatchlogs_sdkv1.CloudWatchLogs](ctx, c, names.Logs))
+	return errs.Must(conn[*cloudwatchlogs_sdkv1.CloudWatchLogs](ctx, c, names.Logs))
 }
 
 func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs_sdkv2.Client {
-	return Must(client[*cloudwatchlogs_sdkv2.Client](ctx, c, names.Logs))
+	return errs.Must(client[*cloudwatchlogs_sdkv2.Client](ctx, c, names.Logs))
 }
 
 func (c *AWSClient) LookoutEquipmentConn(ctx context.Context) *lookoutequipment_sdkv1.LookoutEquipment {
-	return Must(conn[*lookoutequipment_sdkv1.LookoutEquipment](ctx, c, names.LookoutEquipment))
+	return errs.Must(conn[*lookoutequipment_sdkv1.LookoutEquipment](ctx, c, names.LookoutEquipment))
 }
 
 func (c *AWSClient) LookoutMetricsConn(ctx context.Context) *lookoutmetrics_sdkv1.LookoutMetrics {
-	return Must(conn[*lookoutmetrics_sdkv1.LookoutMetrics](ctx, c, names.LookoutMetrics))
+	return errs.Must(conn[*lookoutmetrics_sdkv1.LookoutMetrics](ctx, c, names.LookoutMetrics))
 }
 
 func (c *AWSClient) LookoutVisionConn(ctx context.Context) *lookoutforvision_sdkv1.LookoutForVision {
-	return Must(conn[*lookoutforvision_sdkv1.LookoutForVision](ctx, c, names.LookoutVision))
+	return errs.Must(conn[*lookoutforvision_sdkv1.LookoutForVision](ctx, c, names.LookoutVision))
 }
 
 func (c *AWSClient) MQConn(ctx context.Context) *mq_sdkv1.MQ {
-	return Must(conn[*mq_sdkv1.MQ](ctx, c, names.MQ))
+	return errs.Must(conn[*mq_sdkv1.MQ](ctx, c, names.MQ))
 }
 
 func (c *AWSClient) MTurkConn(ctx context.Context) *mturk_sdkv1.MTurk {
-	return Must(conn[*mturk_sdkv1.MTurk](ctx, c, names.MTurk))
+	return errs.Must(conn[*mturk_sdkv1.MTurk](ctx, c, names.MTurk))
 }
 
 func (c *AWSClient) MWAAConn(ctx context.Context) *mwaa_sdkv1.MWAA {
-	return Must(conn[*mwaa_sdkv1.MWAA](ctx, c, names.MWAA))
+	return errs.Must(conn[*mwaa_sdkv1.MWAA](ctx, c, names.MWAA))
 }
 
 func (c *AWSClient) MachineLearningConn(ctx context.Context) *machinelearning_sdkv1.MachineLearning {
-	return Must(conn[*machinelearning_sdkv1.MachineLearning](ctx, c, names.MachineLearning))
+	return errs.Must(conn[*machinelearning_sdkv1.MachineLearning](ctx, c, names.MachineLearning))
 }
 
 func (c *AWSClient) MacieConn(ctx context.Context) *macie_sdkv1.Macie {
-	return Must(conn[*macie_sdkv1.Macie](ctx, c, names.Macie))
+	return errs.Must(conn[*macie_sdkv1.Macie](ctx, c, names.Macie))
 }
 
 func (c *AWSClient) Macie2Conn(ctx context.Context) *macie2_sdkv1.Macie2 {
-	return Must(conn[*macie2_sdkv1.Macie2](ctx, c, names.Macie2))
+	return errs.Must(conn[*macie2_sdkv1.Macie2](ctx, c, names.Macie2))
 }
 
 func (c *AWSClient) ManagedBlockchainConn(ctx context.Context) *managedblockchain_sdkv1.ManagedBlockchain {
-	return Must(conn[*managedblockchain_sdkv1.ManagedBlockchain](ctx, c, names.ManagedBlockchain))
+	return errs.Must(conn[*managedblockchain_sdkv1.ManagedBlockchain](ctx, c, names.ManagedBlockchain))
 }
 
 func (c *AWSClient) MarketplaceCatalogConn(ctx context.Context) *marketplacecatalog_sdkv1.MarketplaceCatalog {
-	return Must(conn[*marketplacecatalog_sdkv1.MarketplaceCatalog](ctx, c, names.MarketplaceCatalog))
+	return errs.Must(conn[*marketplacecatalog_sdkv1.MarketplaceCatalog](ctx, c, names.MarketplaceCatalog))
 }
 
 func (c *AWSClient) MarketplaceCommerceAnalyticsConn(ctx context.Context) *marketplacecommerceanalytics_sdkv1.MarketplaceCommerceAnalytics {
-	return Must(conn[*marketplacecommerceanalytics_sdkv1.MarketplaceCommerceAnalytics](ctx, c, names.MarketplaceCommerceAnalytics))
+	return errs.Must(conn[*marketplacecommerceanalytics_sdkv1.MarketplaceCommerceAnalytics](ctx, c, names.MarketplaceCommerceAnalytics))
 }
 
 func (c *AWSClient) MarketplaceEntitlementConn(ctx context.Context) *marketplaceentitlementservice_sdkv1.MarketplaceEntitlementService {
-	return Must(conn[*marketplaceentitlementservice_sdkv1.MarketplaceEntitlementService](ctx, c, names.MarketplaceEntitlement))
+	return errs.Must(conn[*marketplaceentitlementservice_sdkv1.MarketplaceEntitlementService](ctx, c, names.MarketplaceEntitlement))
 }
 
 func (c *AWSClient) MarketplaceMeteringConn(ctx context.Context) *marketplacemetering_sdkv1.MarketplaceMetering {
-	return Must(conn[*marketplacemetering_sdkv1.MarketplaceMetering](ctx, c, names.MarketplaceMetering))
+	return errs.Must(conn[*marketplacemetering_sdkv1.MarketplaceMetering](ctx, c, names.MarketplaceMetering))
 }
 
 func (c *AWSClient) MediaConnectConn(ctx context.Context) *mediaconnect_sdkv1.MediaConnect {
-	return Must(conn[*mediaconnect_sdkv1.MediaConnect](ctx, c, names.MediaConnect))
+	return errs.Must(conn[*mediaconnect_sdkv1.MediaConnect](ctx, c, names.MediaConnect))
 }
 
 func (c *AWSClient) MediaConvertConn(ctx context.Context) *mediaconvert_sdkv1.MediaConvert {
-	return Must(conn[*mediaconvert_sdkv1.MediaConvert](ctx, c, names.MediaConvert))
+	return errs.Must(conn[*mediaconvert_sdkv1.MediaConvert](ctx, c, names.MediaConvert))
 }
 
 func (c *AWSClient) MediaLiveClient(ctx context.Context) *medialive_sdkv2.Client {
-	return Must(client[*medialive_sdkv2.Client](ctx, c, names.MediaLive))
+	return errs.Must(client[*medialive_sdkv2.Client](ctx, c, names.MediaLive))
 }
 
 func (c *AWSClient) MediaPackageConn(ctx context.Context) *mediapackage_sdkv1.MediaPackage {
-	return Must(conn[*mediapackage_sdkv1.MediaPackage](ctx, c, names.MediaPackage))
+	return errs.Must(conn[*mediapackage_sdkv1.MediaPackage](ctx, c, names.MediaPackage))
 }
 
 func (c *AWSClient) MediaPackageVODConn(ctx context.Context) *mediapackagevod_sdkv1.MediaPackageVod {
-	return Must(conn[*mediapackagevod_sdkv1.MediaPackageVod](ctx, c, names.MediaPackageVOD))
+	return errs.Must(conn[*mediapackagevod_sdkv1.MediaPackageVod](ctx, c, names.MediaPackageVOD))
 }
 
 func (c *AWSClient) MediaStoreConn(ctx context.Context) *mediastore_sdkv1.MediaStore {
-	return Must(conn[*mediastore_sdkv1.MediaStore](ctx, c, names.MediaStore))
+	return errs.Must(conn[*mediastore_sdkv1.MediaStore](ctx, c, names.MediaStore))
 }
 
 func (c *AWSClient) MediaStoreDataConn(ctx context.Context) *mediastoredata_sdkv1.MediaStoreData {
-	return Must(conn[*mediastoredata_sdkv1.MediaStoreData](ctx, c, names.MediaStoreData))
+	return errs.Must(conn[*mediastoredata_sdkv1.MediaStoreData](ctx, c, names.MediaStoreData))
 }
 
 func (c *AWSClient) MediaTailorConn(ctx context.Context) *mediatailor_sdkv1.MediaTailor {
-	return Must(conn[*mediatailor_sdkv1.MediaTailor](ctx, c, names.MediaTailor))
+	return errs.Must(conn[*mediatailor_sdkv1.MediaTailor](ctx, c, names.MediaTailor))
 }
 
 func (c *AWSClient) MemoryDBConn(ctx context.Context) *memorydb_sdkv1.MemoryDB {
-	return Must(conn[*memorydb_sdkv1.MemoryDB](ctx, c, names.MemoryDB))
+	return errs.Must(conn[*memorydb_sdkv1.MemoryDB](ctx, c, names.MemoryDB))
 }
 
 func (c *AWSClient) MgHConn(ctx context.Context) *migrationhub_sdkv1.MigrationHub {
-	return Must(conn[*migrationhub_sdkv1.MigrationHub](ctx, c, names.MgH))
+	return errs.Must(conn[*migrationhub_sdkv1.MigrationHub](ctx, c, names.MgH))
 }
 
 func (c *AWSClient) MgnConn(ctx context.Context) *mgn_sdkv1.Mgn {
-	return Must(conn[*mgn_sdkv1.Mgn](ctx, c, names.Mgn))
+	return errs.Must(conn[*mgn_sdkv1.Mgn](ctx, c, names.Mgn))
 }
 
 func (c *AWSClient) MigrationHubConfigConn(ctx context.Context) *migrationhubconfig_sdkv1.MigrationHubConfig {
-	return Must(conn[*migrationhubconfig_sdkv1.MigrationHubConfig](ctx, c, names.MigrationHubConfig))
+	return errs.Must(conn[*migrationhubconfig_sdkv1.MigrationHubConfig](ctx, c, names.MigrationHubConfig))
 }
 
 func (c *AWSClient) MigrationHubRefactorSpacesConn(ctx context.Context) *migrationhubrefactorspaces_sdkv1.MigrationHubRefactorSpaces {
-	return Must(conn[*migrationhubrefactorspaces_sdkv1.MigrationHubRefactorSpaces](ctx, c, names.MigrationHubRefactorSpaces))
+	return errs.Must(conn[*migrationhubrefactorspaces_sdkv1.MigrationHubRefactorSpaces](ctx, c, names.MigrationHubRefactorSpaces))
 }
 
 func (c *AWSClient) MigrationHubStrategyConn(ctx context.Context) *migrationhubstrategyrecommendations_sdkv1.MigrationHubStrategyRecommendations {
-	return Must(conn[*migrationhubstrategyrecommendations_sdkv1.MigrationHubStrategyRecommendations](ctx, c, names.MigrationHubStrategy))
+	return errs.Must(conn[*migrationhubstrategyrecommendations_sdkv1.MigrationHubStrategyRecommendations](ctx, c, names.MigrationHubStrategy))
 }
 
 func (c *AWSClient) MobileConn(ctx context.Context) *mobile_sdkv1.Mobile {
-	return Must(conn[*mobile_sdkv1.Mobile](ctx, c, names.Mobile))
+	return errs.Must(conn[*mobile_sdkv1.Mobile](ctx, c, names.Mobile))
 }
 
 func (c *AWSClient) NeptuneConn(ctx context.Context) *neptune_sdkv1.Neptune {
-	return Must(conn[*neptune_sdkv1.Neptune](ctx, c, names.Neptune))
+	return errs.Must(conn[*neptune_sdkv1.Neptune](ctx, c, names.Neptune))
 }
 
 func (c *AWSClient) NetworkFirewallConn(ctx context.Context) *networkfirewall_sdkv1.NetworkFirewall {
-	return Must(conn[*networkfirewall_sdkv1.NetworkFirewall](ctx, c, names.NetworkFirewall))
+	return errs.Must(conn[*networkfirewall_sdkv1.NetworkFirewall](ctx, c, names.NetworkFirewall))
 }
 
 func (c *AWSClient) NetworkManagerConn(ctx context.Context) *networkmanager_sdkv1.NetworkManager {
-	return Must(conn[*networkmanager_sdkv1.NetworkManager](ctx, c, names.NetworkManager))
+	return errs.Must(conn[*networkmanager_sdkv1.NetworkManager](ctx, c, names.NetworkManager))
 }
 
 func (c *AWSClient) NimbleConn(ctx context.Context) *nimblestudio_sdkv1.NimbleStudio {
-	return Must(conn[*nimblestudio_sdkv1.NimbleStudio](ctx, c, names.Nimble))
+	return errs.Must(conn[*nimblestudio_sdkv1.NimbleStudio](ctx, c, names.Nimble))
 }
 
 func (c *AWSClient) ObservabilityAccessManagerClient(ctx context.Context) *oam_sdkv2.Client {
-	return Must(client[*oam_sdkv2.Client](ctx, c, names.ObservabilityAccessManager))
+	return errs.Must(client[*oam_sdkv2.Client](ctx, c, names.ObservabilityAccessManager))
 }
 
 func (c *AWSClient) OpenSearchConn(ctx context.Context) *opensearchservice_sdkv1.OpenSearchService {
-	return Must(conn[*opensearchservice_sdkv1.OpenSearchService](ctx, c, names.OpenSearch))
+	return errs.Must(conn[*opensearchservice_sdkv1.OpenSearchService](ctx, c, names.OpenSearch))
 }
 
 func (c *AWSClient) OpenSearchServerlessClient(ctx context.Context) *opensearchserverless_sdkv2.Client {
-	return Must(client[*opensearchserverless_sdkv2.Client](ctx, c, names.OpenSearchServerless))
+	return errs.Must(client[*opensearchserverless_sdkv2.Client](ctx, c, names.OpenSearchServerless))
 }
 
 func (c *AWSClient) OpsWorksConn(ctx context.Context) *opsworks_sdkv1.OpsWorks {
-	return Must(conn[*opsworks_sdkv1.OpsWorks](ctx, c, names.OpsWorks))
+	return errs.Must(conn[*opsworks_sdkv1.OpsWorks](ctx, c, names.OpsWorks))
 }
 
 func (c *AWSClient) OpsWorksCMConn(ctx context.Context) *opsworkscm_sdkv1.OpsWorksCM {
-	return Must(conn[*opsworkscm_sdkv1.OpsWorksCM](ctx, c, names.OpsWorksCM))
+	return errs.Must(conn[*opsworkscm_sdkv1.OpsWorksCM](ctx, c, names.OpsWorksCM))
 }
 
 func (c *AWSClient) OrganizationsConn(ctx context.Context) *organizations_sdkv1.Organizations {
-	return Must(conn[*organizations_sdkv1.Organizations](ctx, c, names.Organizations))
+	return errs.Must(conn[*organizations_sdkv1.Organizations](ctx, c, names.Organizations))
 }
 
 func (c *AWSClient) OutpostsConn(ctx context.Context) *outposts_sdkv1.Outposts {
-	return Must(conn[*outposts_sdkv1.Outposts](ctx, c, names.Outposts))
+	return errs.Must(conn[*outposts_sdkv1.Outposts](ctx, c, names.Outposts))
 }
 
 func (c *AWSClient) PIConn(ctx context.Context) *pi_sdkv1.PI {
-	return Must(conn[*pi_sdkv1.PI](ctx, c, names.PI))
+	return errs.Must(conn[*pi_sdkv1.PI](ctx, c, names.PI))
 }
 
 func (c *AWSClient) PanoramaConn(ctx context.Context) *panorama_sdkv1.Panorama {
-	return Must(conn[*panorama_sdkv1.Panorama](ctx, c, names.Panorama))
+	return errs.Must(conn[*panorama_sdkv1.Panorama](ctx, c, names.Panorama))
 }
 
 func (c *AWSClient) PersonalizeConn(ctx context.Context) *personalize_sdkv1.Personalize {
-	return Must(conn[*personalize_sdkv1.Personalize](ctx, c, names.Personalize))
+	return errs.Must(conn[*personalize_sdkv1.Personalize](ctx, c, names.Personalize))
 }
 
 func (c *AWSClient) PersonalizeEventsConn(ctx context.Context) *personalizeevents_sdkv1.PersonalizeEvents {
-	return Must(conn[*personalizeevents_sdkv1.PersonalizeEvents](ctx, c, names.PersonalizeEvents))
+	return errs.Must(conn[*personalizeevents_sdkv1.PersonalizeEvents](ctx, c, names.PersonalizeEvents))
 }
 
 func (c *AWSClient) PersonalizeRuntimeConn(ctx context.Context) *personalizeruntime_sdkv1.PersonalizeRuntime {
-	return Must(conn[*personalizeruntime_sdkv1.PersonalizeRuntime](ctx, c, names.PersonalizeRuntime))
+	return errs.Must(conn[*personalizeruntime_sdkv1.PersonalizeRuntime](ctx, c, names.PersonalizeRuntime))
 }
 
 func (c *AWSClient) PinpointConn(ctx context.Context) *pinpoint_sdkv1.Pinpoint {
-	return Must(conn[*pinpoint_sdkv1.Pinpoint](ctx, c, names.Pinpoint))
+	return errs.Must(conn[*pinpoint_sdkv1.Pinpoint](ctx, c, names.Pinpoint))
 }
 
 func (c *AWSClient) PinpointEmailConn(ctx context.Context) *pinpointemail_sdkv1.PinpointEmail {
-	return Must(conn[*pinpointemail_sdkv1.PinpointEmail](ctx, c, names.PinpointEmail))
+	return errs.Must(conn[*pinpointemail_sdkv1.PinpointEmail](ctx, c, names.PinpointEmail))
 }
 
 func (c *AWSClient) PinpointSMSVoiceConn(ctx context.Context) *pinpointsmsvoice_sdkv1.PinpointSMSVoice {
-	return Must(conn[*pinpointsmsvoice_sdkv1.PinpointSMSVoice](ctx, c, names.PinpointSMSVoice))
+	return errs.Must(conn[*pinpointsmsvoice_sdkv1.PinpointSMSVoice](ctx, c, names.PinpointSMSVoice))
 }
 
 func (c *AWSClient) PipesClient(ctx context.Context) *pipes_sdkv2.Client {
-	return Must(client[*pipes_sdkv2.Client](ctx, c, names.Pipes))
+	return errs.Must(client[*pipes_sdkv2.Client](ctx, c, names.Pipes))
 }
 
 func (c *AWSClient) PollyConn(ctx context.Context) *polly_sdkv1.Polly {
-	return Must(conn[*polly_sdkv1.Polly](ctx, c, names.Polly))
+	return errs.Must(conn[*polly_sdkv1.Polly](ctx, c, names.Polly))
 }
 
 func (c *AWSClient) PricingConn(ctx context.Context) *pricing_sdkv1.Pricing {
-	return Must(conn[*pricing_sdkv1.Pricing](ctx, c, names.Pricing))
+	return errs.Must(conn[*pricing_sdkv1.Pricing](ctx, c, names.Pricing))
 }
 
 func (c *AWSClient) ProtonConn(ctx context.Context) *proton_sdkv1.Proton {
-	return Must(conn[*proton_sdkv1.Proton](ctx, c, names.Proton))
+	return errs.Must(conn[*proton_sdkv1.Proton](ctx, c, names.Proton))
 }
 
 func (c *AWSClient) QLDBConn(ctx context.Context) *qldb_sdkv1.QLDB {
-	return Must(conn[*qldb_sdkv1.QLDB](ctx, c, names.QLDB))
+	return errs.Must(conn[*qldb_sdkv1.QLDB](ctx, c, names.QLDB))
 }
 
 func (c *AWSClient) QLDBSessionConn(ctx context.Context) *qldbsession_sdkv1.QLDBSession {
-	return Must(conn[*qldbsession_sdkv1.QLDBSession](ctx, c, names.QLDBSession))
+	return errs.Must(conn[*qldbsession_sdkv1.QLDBSession](ctx, c, names.QLDBSession))
 }
 
 func (c *AWSClient) QuickSightConn(ctx context.Context) *quicksight_sdkv1.QuickSight {
-	return Must(conn[*quicksight_sdkv1.QuickSight](ctx, c, names.QuickSight))
+	return errs.Must(conn[*quicksight_sdkv1.QuickSight](ctx, c, names.QuickSight))
 }
 
 func (c *AWSClient) RAMConn(ctx context.Context) *ram_sdkv1.RAM {
-	return Must(conn[*ram_sdkv1.RAM](ctx, c, names.RAM))
+	return errs.Must(conn[*ram_sdkv1.RAM](ctx, c, names.RAM))
 }
 
 func (c *AWSClient) RBinClient(ctx context.Context) *rbin_sdkv2.Client {
-	return Must(client[*rbin_sdkv2.Client](ctx, c, names.RBin))
+	return errs.Must(client[*rbin_sdkv2.Client](ctx, c, names.RBin))
 }
 
 func (c *AWSClient) RDSConn(ctx context.Context) *rds_sdkv1.RDS {
-	return Must(conn[*rds_sdkv1.RDS](ctx, c, names.RDS))
+	return errs.Must(conn[*rds_sdkv1.RDS](ctx, c, names.RDS))
 }
 
 func (c *AWSClient) RDSClient(ctx context.Context) *rds_sdkv2.Client {
-	return Must(client[*rds_sdkv2.Client](ctx, c, names.RDS))
+	return errs.Must(client[*rds_sdkv2.Client](ctx, c, names.RDS))
 }
 
 func (c *AWSClient) RDSDataConn(ctx context.Context) *rdsdataservice_sdkv1.RDSDataService {
-	return Must(conn[*rdsdataservice_sdkv1.RDSDataService](ctx, c, names.RDSData))
+	return errs.Must(conn[*rdsdataservice_sdkv1.RDSDataService](ctx, c, names.RDSData))
 }
 
 func (c *AWSClient) RUMConn(ctx context.Context) *cloudwatchrum_sdkv1.CloudWatchRUM {
-	return Must(conn[*cloudwatchrum_sdkv1.CloudWatchRUM](ctx, c, names.RUM))
+	return errs.Must(conn[*cloudwatchrum_sdkv1.CloudWatchRUM](ctx, c, names.RUM))
 }
 
 func (c *AWSClient) RedshiftConn(ctx context.Context) *redshift_sdkv1.Redshift {
-	return Must(conn[*redshift_sdkv1.Redshift](ctx, c, names.Redshift))
+	return errs.Must(conn[*redshift_sdkv1.Redshift](ctx, c, names.Redshift))
 }
 
 func (c *AWSClient) RedshiftDataConn(ctx context.Context) *redshiftdataapiservice_sdkv1.RedshiftDataAPIService {
-	return Must(conn[*redshiftdataapiservice_sdkv1.RedshiftDataAPIService](ctx, c, names.RedshiftData))
+	return errs.Must(conn[*redshiftdataapiservice_sdkv1.RedshiftDataAPIService](ctx, c, names.RedshiftData))
 }
 
 func (c *AWSClient) RedshiftServerlessConn(ctx context.Context) *redshiftserverless_sdkv1.RedshiftServerless {
-	return Must(conn[*redshiftserverless_sdkv1.RedshiftServerless](ctx, c, names.RedshiftServerless))
+	return errs.Must(conn[*redshiftserverless_sdkv1.RedshiftServerless](ctx, c, names.RedshiftServerless))
 }
 
 func (c *AWSClient) RekognitionConn(ctx context.Context) *rekognition_sdkv1.Rekognition {
-	return Must(conn[*rekognition_sdkv1.Rekognition](ctx, c, names.Rekognition))
+	return errs.Must(conn[*rekognition_sdkv1.Rekognition](ctx, c, names.Rekognition))
 }
 
 func (c *AWSClient) ResilienceHubConn(ctx context.Context) *resiliencehub_sdkv1.ResilienceHub {
-	return Must(conn[*resiliencehub_sdkv1.ResilienceHub](ctx, c, names.ResilienceHub))
+	return errs.Must(conn[*resiliencehub_sdkv1.ResilienceHub](ctx, c, names.ResilienceHub))
 }
 
 func (c *AWSClient) ResourceExplorer2Client(ctx context.Context) *resourceexplorer2_sdkv2.Client {
-	return Must(client[*resourceexplorer2_sdkv2.Client](ctx, c, names.ResourceExplorer2))
+	return errs.Must(client[*resourceexplorer2_sdkv2.Client](ctx, c, names.ResourceExplorer2))
 }
 
 func (c *AWSClient) ResourceGroupsConn(ctx context.Context) *resourcegroups_sdkv1.ResourceGroups {
-	return Must(conn[*resourcegroups_sdkv1.ResourceGroups](ctx, c, names.ResourceGroups))
+	return errs.Must(conn[*resourcegroups_sdkv1.ResourceGroups](ctx, c, names.ResourceGroups))
 }
 
 func (c *AWSClient) ResourceGroupsTaggingAPIConn(ctx context.Context) *resourcegroupstaggingapi_sdkv1.ResourceGroupsTaggingAPI {
-	return Must(conn[*resourcegroupstaggingapi_sdkv1.ResourceGroupsTaggingAPI](ctx, c, names.ResourceGroupsTaggingAPI))
+	return errs.Must(conn[*resourcegroupstaggingapi_sdkv1.ResourceGroupsTaggingAPI](ctx, c, names.ResourceGroupsTaggingAPI))
 }
 
 func (c *AWSClient) RoboMakerConn(ctx context.Context) *robomaker_sdkv1.RoboMaker {
-	return Must(conn[*robomaker_sdkv1.RoboMaker](ctx, c, names.RoboMaker))
+	return errs.Must(conn[*robomaker_sdkv1.RoboMaker](ctx, c, names.RoboMaker))
 }
 
 func (c *AWSClient) RolesAnywhereClient(ctx context.Context) *rolesanywhere_sdkv2.Client {
-	return Must(client[*rolesanywhere_sdkv2.Client](ctx, c, names.RolesAnywhere))
+	return errs.Must(client[*rolesanywhere_sdkv2.Client](ctx, c, names.RolesAnywhere))
 }
 
 func (c *AWSClient) Route53Conn(ctx context.Context) *route53_sdkv1.Route53 {
-	return Must(conn[*route53_sdkv1.Route53](ctx, c, names.Route53))
+	return errs.Must(conn[*route53_sdkv1.Route53](ctx, c, names.Route53))
 }
 
 func (c *AWSClient) Route53DomainsClient(ctx context.Context) *route53domains_sdkv2.Client {
-	return Must(client[*route53domains_sdkv2.Client](ctx, c, names.Route53Domains))
+	return errs.Must(client[*route53domains_sdkv2.Client](ctx, c, names.Route53Domains))
 }
 
 func (c *AWSClient) Route53RecoveryClusterConn(ctx context.Context) *route53recoverycluster_sdkv1.Route53RecoveryCluster {
-	return Must(conn[*route53recoverycluster_sdkv1.Route53RecoveryCluster](ctx, c, names.Route53RecoveryCluster))
+	return errs.Must(conn[*route53recoverycluster_sdkv1.Route53RecoveryCluster](ctx, c, names.Route53RecoveryCluster))
 }
 
 func (c *AWSClient) Route53RecoveryControlConfigConn(ctx context.Context) *route53recoverycontrolconfig_sdkv1.Route53RecoveryControlConfig {
-	return Must(conn[*route53recoverycontrolconfig_sdkv1.Route53RecoveryControlConfig](ctx, c, names.Route53RecoveryControlConfig))
+	return errs.Must(conn[*route53recoverycontrolconfig_sdkv1.Route53RecoveryControlConfig](ctx, c, names.Route53RecoveryControlConfig))
 }
 
 func (c *AWSClient) Route53RecoveryReadinessConn(ctx context.Context) *route53recoveryreadiness_sdkv1.Route53RecoveryReadiness {
-	return Must(conn[*route53recoveryreadiness_sdkv1.Route53RecoveryReadiness](ctx, c, names.Route53RecoveryReadiness))
+	return errs.Must(conn[*route53recoveryreadiness_sdkv1.Route53RecoveryReadiness](ctx, c, names.Route53RecoveryReadiness))
 }
 
 func (c *AWSClient) Route53ResolverConn(ctx context.Context) *route53resolver_sdkv1.Route53Resolver {
-	return Must(conn[*route53resolver_sdkv1.Route53Resolver](ctx, c, names.Route53Resolver))
+	return errs.Must(conn[*route53resolver_sdkv1.Route53Resolver](ctx, c, names.Route53Resolver))
 }
 
 func (c *AWSClient) S3Conn(ctx context.Context) *s3_sdkv1.S3 {
-	return Must(conn[*s3_sdkv1.S3](ctx, c, names.S3))
+	return errs.Must(conn[*s3_sdkv1.S3](ctx, c, names.S3))
 }
 
 func (c *AWSClient) S3ControlConn(ctx context.Context) *s3control_sdkv1.S3Control {
-	return Must(conn[*s3control_sdkv1.S3Control](ctx, c, names.S3Control))
+	return errs.Must(conn[*s3control_sdkv1.S3Control](ctx, c, names.S3Control))
 }
 
 func (c *AWSClient) S3ControlClient(ctx context.Context) *s3control_sdkv2.Client {
-	return Must(client[*s3control_sdkv2.Client](ctx, c, names.S3Control))
+	return errs.Must(client[*s3control_sdkv2.Client](ctx, c, names.S3Control))
 }
 
 func (c *AWSClient) S3OutpostsConn(ctx context.Context) *s3outposts_sdkv1.S3Outposts {
-	return Must(conn[*s3outposts_sdkv1.S3Outposts](ctx, c, names.S3Outposts))
+	return errs.Must(conn[*s3outposts_sdkv1.S3Outposts](ctx, c, names.S3Outposts))
 }
 
 func (c *AWSClient) SESConn(ctx context.Context) *ses_sdkv1.SES {
-	return Must(conn[*ses_sdkv1.SES](ctx, c, names.SES))
+	return errs.Must(conn[*ses_sdkv1.SES](ctx, c, names.SES))
 }
 
 func (c *AWSClient) SESV2Client(ctx context.Context) *sesv2_sdkv2.Client {
-	return Must(client[*sesv2_sdkv2.Client](ctx, c, names.SESV2))
+	return errs.Must(client[*sesv2_sdkv2.Client](ctx, c, names.SESV2))
 }
 
 func (c *AWSClient) SFNConn(ctx context.Context) *sfn_sdkv1.SFN {
-	return Must(conn[*sfn_sdkv1.SFN](ctx, c, names.SFN))
+	return errs.Must(conn[*sfn_sdkv1.SFN](ctx, c, names.SFN))
 }
 
 func (c *AWSClient) SMSConn(ctx context.Context) *sms_sdkv1.SMS {
-	return Must(conn[*sms_sdkv1.SMS](ctx, c, names.SMS))
+	return errs.Must(conn[*sms_sdkv1.SMS](ctx, c, names.SMS))
 }
 
 func (c *AWSClient) SNSConn(ctx context.Context) *sns_sdkv1.SNS {
-	return Must(conn[*sns_sdkv1.SNS](ctx, c, names.SNS))
+	return errs.Must(conn[*sns_sdkv1.SNS](ctx, c, names.SNS))
 }
 
 func (c *AWSClient) SQSConn(ctx context.Context) *sqs_sdkv1.SQS {
-	return Must(conn[*sqs_sdkv1.SQS](ctx, c, names.SQS))
+	return errs.Must(conn[*sqs_sdkv1.SQS](ctx, c, names.SQS))
 }
 
 func (c *AWSClient) SSMConn(ctx context.Context) *ssm_sdkv1.SSM {
-	return Must(conn[*ssm_sdkv1.SSM](ctx, c, names.SSM))
+	return errs.Must(conn[*ssm_sdkv1.SSM](ctx, c, names.SSM))
 }
 
 func (c *AWSClient) SSMClient(ctx context.Context) *ssm_sdkv2.Client {
-	return Must(client[*ssm_sdkv2.Client](ctx, c, names.SSM))
+	return errs.Must(client[*ssm_sdkv2.Client](ctx, c, names.SSM))
 }
 
 func (c *AWSClient) SSMContactsClient(ctx context.Context) *ssmcontacts_sdkv2.Client {
-	return Must(client[*ssmcontacts_sdkv2.Client](ctx, c, names.SSMContacts))
+	return errs.Must(client[*ssmcontacts_sdkv2.Client](ctx, c, names.SSMContacts))
 }
 
 func (c *AWSClient) SSMIncidentsClient(ctx context.Context) *ssmincidents_sdkv2.Client {
-	return Must(client[*ssmincidents_sdkv2.Client](ctx, c, names.SSMIncidents))
+	return errs.Must(client[*ssmincidents_sdkv2.Client](ctx, c, names.SSMIncidents))
 }
 
 func (c *AWSClient) SSOConn(ctx context.Context) *sso_sdkv1.SSO {
-	return Must(conn[*sso_sdkv1.SSO](ctx, c, names.SSO))
+	return errs.Must(conn[*sso_sdkv1.SSO](ctx, c, names.SSO))
 }
 
 func (c *AWSClient) SSOAdminConn(ctx context.Context) *ssoadmin_sdkv1.SSOAdmin {
-	return Must(conn[*ssoadmin_sdkv1.SSOAdmin](ctx, c, names.SSOAdmin))
+	return errs.Must(conn[*ssoadmin_sdkv1.SSOAdmin](ctx, c, names.SSOAdmin))
 }
 
 func (c *AWSClient) SSOOIDCConn(ctx context.Context) *ssooidc_sdkv1.SSOOIDC {
-	return Must(conn[*ssooidc_sdkv1.SSOOIDC](ctx, c, names.SSOOIDC))
+	return errs.Must(conn[*ssooidc_sdkv1.SSOOIDC](ctx, c, names.SSOOIDC))
 }
 
 func (c *AWSClient) STSConn(ctx context.Context) *sts_sdkv1.STS {
-	return Must(conn[*sts_sdkv1.STS](ctx, c, names.STS))
+	return errs.Must(conn[*sts_sdkv1.STS](ctx, c, names.STS))
 }
 
 func (c *AWSClient) SWFClient(ctx context.Context) *swf_sdkv2.Client {
-	return Must(client[*swf_sdkv2.Client](ctx, c, names.SWF))
+	return errs.Must(client[*swf_sdkv2.Client](ctx, c, names.SWF))
 }
 
 func (c *AWSClient) SageMakerConn(ctx context.Context) *sagemaker_sdkv1.SageMaker {
-	return Must(conn[*sagemaker_sdkv1.SageMaker](ctx, c, names.SageMaker))
+	return errs.Must(conn[*sagemaker_sdkv1.SageMaker](ctx, c, names.SageMaker))
 }
 
 func (c *AWSClient) SageMakerA2IRuntimeConn(ctx context.Context) *augmentedairuntime_sdkv1.AugmentedAIRuntime {
-	return Must(conn[*augmentedairuntime_sdkv1.AugmentedAIRuntime](ctx, c, names.SageMakerA2IRuntime))
+	return errs.Must(conn[*augmentedairuntime_sdkv1.AugmentedAIRuntime](ctx, c, names.SageMakerA2IRuntime))
 }
 
 func (c *AWSClient) SageMakerEdgeConn(ctx context.Context) *sagemakeredgemanager_sdkv1.SagemakerEdgeManager {
-	return Must(conn[*sagemakeredgemanager_sdkv1.SagemakerEdgeManager](ctx, c, names.SageMakerEdge))
+	return errs.Must(conn[*sagemakeredgemanager_sdkv1.SagemakerEdgeManager](ctx, c, names.SageMakerEdge))
 }
 
 func (c *AWSClient) SageMakerFeatureStoreRuntimeConn(ctx context.Context) *sagemakerfeaturestoreruntime_sdkv1.SageMakerFeatureStoreRuntime {
-	return Must(conn[*sagemakerfeaturestoreruntime_sdkv1.SageMakerFeatureStoreRuntime](ctx, c, names.SageMakerFeatureStoreRuntime))
+	return errs.Must(conn[*sagemakerfeaturestoreruntime_sdkv1.SageMakerFeatureStoreRuntime](ctx, c, names.SageMakerFeatureStoreRuntime))
 }
 
 func (c *AWSClient) SageMakerRuntimeConn(ctx context.Context) *sagemakerruntime_sdkv1.SageMakerRuntime {
-	return Must(conn[*sagemakerruntime_sdkv1.SageMakerRuntime](ctx, c, names.SageMakerRuntime))
+	return errs.Must(conn[*sagemakerruntime_sdkv1.SageMakerRuntime](ctx, c, names.SageMakerRuntime))
 }
 
 func (c *AWSClient) SavingsPlansConn(ctx context.Context) *savingsplans_sdkv1.SavingsPlans {
-	return Must(conn[*savingsplans_sdkv1.SavingsPlans](ctx, c, names.SavingsPlans))
+	return errs.Must(conn[*savingsplans_sdkv1.SavingsPlans](ctx, c, names.SavingsPlans))
 }
 
 func (c *AWSClient) SchedulerClient(ctx context.Context) *scheduler_sdkv2.Client {
-	return Must(client[*scheduler_sdkv2.Client](ctx, c, names.Scheduler))
+	return errs.Must(client[*scheduler_sdkv2.Client](ctx, c, names.Scheduler))
 }
 
 func (c *AWSClient) SchemasConn(ctx context.Context) *schemas_sdkv1.Schemas {
-	return Must(conn[*schemas_sdkv1.Schemas](ctx, c, names.Schemas))
+	return errs.Must(conn[*schemas_sdkv1.Schemas](ctx, c, names.Schemas))
 }
 
 func (c *AWSClient) SecretsManagerConn(ctx context.Context) *secretsmanager_sdkv1.SecretsManager {
-	return Must(conn[*secretsmanager_sdkv1.SecretsManager](ctx, c, names.SecretsManager))
+	return errs.Must(conn[*secretsmanager_sdkv1.SecretsManager](ctx, c, names.SecretsManager))
 }
 
 func (c *AWSClient) SecurityHubConn(ctx context.Context) *securityhub_sdkv1.SecurityHub {
-	return Must(conn[*securityhub_sdkv1.SecurityHub](ctx, c, names.SecurityHub))
+	return errs.Must(conn[*securityhub_sdkv1.SecurityHub](ctx, c, names.SecurityHub))
 }
 
 func (c *AWSClient) SecurityLakeClient(ctx context.Context) *securitylake_sdkv2.Client {
-	return Must(client[*securitylake_sdkv2.Client](ctx, c, names.SecurityLake))
+	return errs.Must(client[*securitylake_sdkv2.Client](ctx, c, names.SecurityLake))
 }
 
 func (c *AWSClient) ServerlessRepoConn(ctx context.Context) *serverlessapplicationrepository_sdkv1.ServerlessApplicationRepository {
-	return Must(conn[*serverlessapplicationrepository_sdkv1.ServerlessApplicationRepository](ctx, c, names.ServerlessRepo))
+	return errs.Must(conn[*serverlessapplicationrepository_sdkv1.ServerlessApplicationRepository](ctx, c, names.ServerlessRepo))
 }
 
 func (c *AWSClient) ServiceCatalogConn(ctx context.Context) *servicecatalog_sdkv1.ServiceCatalog {
-	return Must(conn[*servicecatalog_sdkv1.ServiceCatalog](ctx, c, names.ServiceCatalog))
+	return errs.Must(conn[*servicecatalog_sdkv1.ServiceCatalog](ctx, c, names.ServiceCatalog))
 }
 
 func (c *AWSClient) ServiceCatalogAppRegistryConn(ctx context.Context) *appregistry_sdkv1.AppRegistry {
-	return Must(conn[*appregistry_sdkv1.AppRegistry](ctx, c, names.ServiceCatalogAppRegistry))
+	return errs.Must(conn[*appregistry_sdkv1.AppRegistry](ctx, c, names.ServiceCatalogAppRegistry))
 }
 
 func (c *AWSClient) ServiceDiscoveryConn(ctx context.Context) *servicediscovery_sdkv1.ServiceDiscovery {
-	return Must(conn[*servicediscovery_sdkv1.ServiceDiscovery](ctx, c, names.ServiceDiscovery))
+	return errs.Must(conn[*servicediscovery_sdkv1.ServiceDiscovery](ctx, c, names.ServiceDiscovery))
 }
 
 func (c *AWSClient) ServiceQuotasConn(ctx context.Context) *servicequotas_sdkv1.ServiceQuotas {
-	return Must(conn[*servicequotas_sdkv1.ServiceQuotas](ctx, c, names.ServiceQuotas))
+	return errs.Must(conn[*servicequotas_sdkv1.ServiceQuotas](ctx, c, names.ServiceQuotas))
 }
 
 func (c *AWSClient) ShieldConn(ctx context.Context) *shield_sdkv1.Shield {
-	return Must(conn[*shield_sdkv1.Shield](ctx, c, names.Shield))
+	return errs.Must(conn[*shield_sdkv1.Shield](ctx, c, names.Shield))
 }
 
 func (c *AWSClient) SignerConn(ctx context.Context) *signer_sdkv1.Signer {
-	return Must(conn[*signer_sdkv1.Signer](ctx, c, names.Signer))
+	return errs.Must(conn[*signer_sdkv1.Signer](ctx, c, names.Signer))
 }
 
 func (c *AWSClient) SimpleDBConn(ctx context.Context) *simpledb_sdkv1.SimpleDB {
-	return Must(conn[*simpledb_sdkv1.SimpleDB](ctx, c, names.SimpleDB))
+	return errs.Must(conn[*simpledb_sdkv1.SimpleDB](ctx, c, names.SimpleDB))
 }
 
 func (c *AWSClient) SnowDeviceManagementConn(ctx context.Context) *snowdevicemanagement_sdkv1.SnowDeviceManagement {
-	return Must(conn[*snowdevicemanagement_sdkv1.SnowDeviceManagement](ctx, c, names.SnowDeviceManagement))
+	return errs.Must(conn[*snowdevicemanagement_sdkv1.SnowDeviceManagement](ctx, c, names.SnowDeviceManagement))
 }
 
 func (c *AWSClient) SnowballConn(ctx context.Context) *snowball_sdkv1.Snowball {
-	return Must(conn[*snowball_sdkv1.Snowball](ctx, c, names.Snowball))
+	return errs.Must(conn[*snowball_sdkv1.Snowball](ctx, c, names.Snowball))
 }
 
 func (c *AWSClient) StorageGatewayConn(ctx context.Context) *storagegateway_sdkv1.StorageGateway {
-	return Must(conn[*storagegateway_sdkv1.StorageGateway](ctx, c, names.StorageGateway))
+	return errs.Must(conn[*storagegateway_sdkv1.StorageGateway](ctx, c, names.StorageGateway))
 }
 
 func (c *AWSClient) SupportConn(ctx context.Context) *support_sdkv1.Support {
-	return Must(conn[*support_sdkv1.Support](ctx, c, names.Support))
+	return errs.Must(conn[*support_sdkv1.Support](ctx, c, names.Support))
 }
 
 func (c *AWSClient) SyntheticsConn(ctx context.Context) *synthetics_sdkv1.Synthetics {
-	return Must(conn[*synthetics_sdkv1.Synthetics](ctx, c, names.Synthetics))
+	return errs.Must(conn[*synthetics_sdkv1.Synthetics](ctx, c, names.Synthetics))
 }
 
 func (c *AWSClient) TextractConn(ctx context.Context) *textract_sdkv1.Textract {
-	return Must(conn[*textract_sdkv1.Textract](ctx, c, names.Textract))
+	return errs.Must(conn[*textract_sdkv1.Textract](ctx, c, names.Textract))
 }
 
 func (c *AWSClient) TimestreamQueryConn(ctx context.Context) *timestreamquery_sdkv1.TimestreamQuery {
-	return Must(conn[*timestreamquery_sdkv1.TimestreamQuery](ctx, c, names.TimestreamQuery))
+	return errs.Must(conn[*timestreamquery_sdkv1.TimestreamQuery](ctx, c, names.TimestreamQuery))
 }
 
 func (c *AWSClient) TimestreamWriteConn(ctx context.Context) *timestreamwrite_sdkv1.TimestreamWrite {
-	return Must(conn[*timestreamwrite_sdkv1.TimestreamWrite](ctx, c, names.TimestreamWrite))
+	return errs.Must(conn[*timestreamwrite_sdkv1.TimestreamWrite](ctx, c, names.TimestreamWrite))
 }
 
 func (c *AWSClient) TranscribeClient(ctx context.Context) *transcribe_sdkv2.Client {
-	return Must(client[*transcribe_sdkv2.Client](ctx, c, names.Transcribe))
+	return errs.Must(client[*transcribe_sdkv2.Client](ctx, c, names.Transcribe))
 }
 
 func (c *AWSClient) TranscribeStreamingConn(ctx context.Context) *transcribestreamingservice_sdkv1.TranscribeStreamingService {
-	return Must(conn[*transcribestreamingservice_sdkv1.TranscribeStreamingService](ctx, c, names.TranscribeStreaming))
+	return errs.Must(conn[*transcribestreamingservice_sdkv1.TranscribeStreamingService](ctx, c, names.TranscribeStreaming))
 }
 
 func (c *AWSClient) TransferConn(ctx context.Context) *transfer_sdkv1.Transfer {
-	return Must(conn[*transfer_sdkv1.Transfer](ctx, c, names.Transfer))
+	return errs.Must(conn[*transfer_sdkv1.Transfer](ctx, c, names.Transfer))
 }
 
 func (c *AWSClient) TranslateConn(ctx context.Context) *translate_sdkv1.Translate {
-	return Must(conn[*translate_sdkv1.Translate](ctx, c, names.Translate))
+	return errs.Must(conn[*translate_sdkv1.Translate](ctx, c, names.Translate))
 }
 
 func (c *AWSClient) VPCLatticeClient(ctx context.Context) *vpclattice_sdkv2.Client {
-	return Must(client[*vpclattice_sdkv2.Client](ctx, c, names.VPCLattice))
+	return errs.Must(client[*vpclattice_sdkv2.Client](ctx, c, names.VPCLattice))
 }
 
 func (c *AWSClient) VoiceIDConn(ctx context.Context) *voiceid_sdkv1.VoiceID {
-	return Must(conn[*voiceid_sdkv1.VoiceID](ctx, c, names.VoiceID))
+	return errs.Must(conn[*voiceid_sdkv1.VoiceID](ctx, c, names.VoiceID))
 }
 
 func (c *AWSClient) WAFConn(ctx context.Context) *waf_sdkv1.WAF {
-	return Must(conn[*waf_sdkv1.WAF](ctx, c, names.WAF))
+	return errs.Must(conn[*waf_sdkv1.WAF](ctx, c, names.WAF))
 }
 
 func (c *AWSClient) WAFRegionalConn(ctx context.Context) *wafregional_sdkv1.WAFRegional {
-	return Must(conn[*wafregional_sdkv1.WAFRegional](ctx, c, names.WAFRegional))
+	return errs.Must(conn[*wafregional_sdkv1.WAFRegional](ctx, c, names.WAFRegional))
 }
 
 func (c *AWSClient) WAFV2Conn(ctx context.Context) *wafv2_sdkv1.WAFV2 {
-	return Must(conn[*wafv2_sdkv1.WAFV2](ctx, c, names.WAFV2))
+	return errs.Must(conn[*wafv2_sdkv1.WAFV2](ctx, c, names.WAFV2))
 }
 
 func (c *AWSClient) WellArchitectedConn(ctx context.Context) *wellarchitected_sdkv1.WellArchitected {
-	return Must(conn[*wellarchitected_sdkv1.WellArchitected](ctx, c, names.WellArchitected))
+	return errs.Must(conn[*wellarchitected_sdkv1.WellArchitected](ctx, c, names.WellArchitected))
 }
 
 func (c *AWSClient) WisdomConn(ctx context.Context) *connectwisdomservice_sdkv1.ConnectWisdomService {
-	return Must(conn[*connectwisdomservice_sdkv1.ConnectWisdomService](ctx, c, names.Wisdom))
+	return errs.Must(conn[*connectwisdomservice_sdkv1.ConnectWisdomService](ctx, c, names.Wisdom))
 }
 
 func (c *AWSClient) WorkDocsConn(ctx context.Context) *workdocs_sdkv1.WorkDocs {
-	return Must(conn[*workdocs_sdkv1.WorkDocs](ctx, c, names.WorkDocs))
+	return errs.Must(conn[*workdocs_sdkv1.WorkDocs](ctx, c, names.WorkDocs))
 }
 
 func (c *AWSClient) WorkLinkConn(ctx context.Context) *worklink_sdkv1.WorkLink {
-	return Must(conn[*worklink_sdkv1.WorkLink](ctx, c, names.WorkLink))
+	return errs.Must(conn[*worklink_sdkv1.WorkLink](ctx, c, names.WorkLink))
 }
 
 func (c *AWSClient) WorkMailConn(ctx context.Context) *workmail_sdkv1.WorkMail {
-	return Must(conn[*workmail_sdkv1.WorkMail](ctx, c, names.WorkMail))
+	return errs.Must(conn[*workmail_sdkv1.WorkMail](ctx, c, names.WorkMail))
 }
 
 func (c *AWSClient) WorkMailMessageFlowConn(ctx context.Context) *workmailmessageflow_sdkv1.WorkMailMessageFlow {
-	return Must(conn[*workmailmessageflow_sdkv1.WorkMailMessageFlow](ctx, c, names.WorkMailMessageFlow))
+	return errs.Must(conn[*workmailmessageflow_sdkv1.WorkMailMessageFlow](ctx, c, names.WorkMailMessageFlow))
 }
 
 func (c *AWSClient) WorkSpacesConn(ctx context.Context) *workspaces_sdkv1.WorkSpaces {
-	return Must(conn[*workspaces_sdkv1.WorkSpaces](ctx, c, names.WorkSpaces))
+	return errs.Must(conn[*workspaces_sdkv1.WorkSpaces](ctx, c, names.WorkSpaces))
 }
 
 func (c *AWSClient) WorkSpacesWebConn(ctx context.Context) *workspacesweb_sdkv1.WorkSpacesWeb {
-	return Must(conn[*workspacesweb_sdkv1.WorkSpacesWeb](ctx, c, names.WorkSpacesWeb))
+	return errs.Must(conn[*workspacesweb_sdkv1.WorkSpacesWeb](ctx, c, names.WorkSpacesWeb))
 }
 
 func (c *AWSClient) XRayClient(ctx context.Context) *xray_sdkv2.Client {
-	return Must(client[*xray_sdkv2.Client](ctx, c, names.XRay))
+	return errs.Must(client[*xray_sdkv2.Client](ctx, c, names.XRay))
 }

@@ -15,6 +15,7 @@ import (
 	{{- end }}
 {{- end }}
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -54,11 +55,11 @@ type AWSClient struct {
 {{ range .Services }}
 	{{- if eq .SDKVersion "1" }}
 func (c *AWSClient) {{ .ProviderNameUpper }}Conn(ctx context.Context) *{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }} {
-	return Must(conn[*{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}](ctx, c, names.{{ .ProviderNameUpper }}))
+	return errs.Must(conn[*{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}](ctx, c, names.{{ .ProviderNameUpper }}))
 }
 	{{- else if eq .SDKVersion "2" "1,2"}}
 func (c *AWSClient) {{ .ProviderNameUpper }}Client(ctx context.Context) *{{ .GoV2Package }}_sdkv2.Client {
-	return Must(client[*{{ .GoV2Package }}_sdkv2.Client](ctx, c, names.{{ .ProviderNameUpper }}))
+	return errs.Must(client[*{{ .GoV2Package }}_sdkv2.Client](ctx, c, names.{{ .ProviderNameUpper }}))
 }
 	{{- end }}
 {{ end }}
