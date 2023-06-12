@@ -682,7 +682,7 @@ func TestAccAthenaWorkGroup_tags(t *testing.T) {
 
 func testAccCheckCreateNamedQuery(ctx context.Context, workGroup *athena.WorkGroup, databaseName, queryName, query string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn(ctx)
 
 		input := &athena.CreateNamedQueryInput{
 			Name:        aws.String(queryName),
@@ -702,7 +702,7 @@ func testAccCheckCreateNamedQuery(ctx context.Context, workGroup *athena.WorkGro
 
 func testAccCheckWorkGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_athena_workgroup" {
 				continue
@@ -737,7 +737,7 @@ func testAccCheckWorkGroupExists(ctx context.Context, name string, workgroup *at
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn(ctx)
 
 		input := &athena.GetWorkGroupInput{
 			WorkGroup: aws.String(rs.Primary.ID),

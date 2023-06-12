@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn neptuneiface.NeptuneAPI, identifier stri
 // ListTags lists neptune service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).NeptuneConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).NeptuneConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -138,5 +138,5 @@ func UpdateTags(ctx context.Context, conn neptuneiface.NeptuneAPI, identifier st
 // UpdateTags updates neptune service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).NeptuneConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).NeptuneConn(ctx), identifier, oldTags, newTags)
 }

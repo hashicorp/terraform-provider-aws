@@ -64,7 +64,7 @@ func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 }
 
 func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID := d.Get("catalog_id").(string)
 	output, err := conn.GetDataCatalogEncryptionSettingsWithContext(ctx, &glue.GetDataCatalogEncryptionSettingsInput{

@@ -82,7 +82,7 @@ func ResourceCustomDomainAssociation() *schema.Resource {
 }
 
 func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	domainName := d.Get("domain_name").(string)
 	serviceArn := d.Get("service_arn").(string)
@@ -114,7 +114,7 @@ func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	domainName, serviceArn, err := CustomDomainAssociationParseID(d.Id())
 
@@ -152,7 +152,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	domainName, serviceArn, err := CustomDomainAssociationParseID(d.Id())
 

@@ -35,7 +35,7 @@ func sweepConfigurationSets(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).SESV2Client()
+	conn := client.(*conns.AWSClient).SESV2Client(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -82,7 +82,7 @@ func sweepContactLists(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).SESV2Client()
+	conn := client.(*conns.AWSClient).SESV2Client(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

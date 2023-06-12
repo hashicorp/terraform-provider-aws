@@ -28,7 +28,7 @@ func sweepDeliveryStreams(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).FirehoseConn()
+	conn := client.(*conns.AWSClient).FirehoseConn(ctx)
 	input := &firehose.ListDeliveryStreamsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

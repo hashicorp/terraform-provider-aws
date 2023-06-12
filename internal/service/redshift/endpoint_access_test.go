@@ -135,7 +135,7 @@ func TestAccRedshiftEndpointAccess_disappears_cluster(t *testing.T) {
 
 func testAccCheckEndpointAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_endpoint_access" {
@@ -170,7 +170,7 @@ func testAccCheckEndpointAccessExists(ctx context.Context, n string, v *redshift
 			return fmt.Errorf("No Redshift Endpoint Access ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		output, err := tfredshift.FindEndpointAccessByName(ctx, conn, rs.Primary.ID)
 

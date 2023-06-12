@@ -131,7 +131,7 @@ func ResourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 
 func resourceLocationFSxOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	fsxArn := d.Get("fsx_filesystem_arn").(string)
 	input := &datasync.CreateLocationFsxOpenZfsInput{
@@ -158,7 +158,7 @@ func resourceLocationFSxOpenZFSFileSystemCreate(ctx context.Context, d *schema.R
 
 func resourceLocationFSxOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	output, err := FindFSxOpenZFSLocationByARN(ctx, conn, d.Id())
 
@@ -207,7 +207,7 @@ func resourceLocationFSxOpenZFSFileSystemUpdate(ctx context.Context, d *schema.R
 
 func resourceLocationFSxOpenZFSFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),

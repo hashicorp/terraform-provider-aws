@@ -87,7 +87,7 @@ func testAccMemberFromEnv(t *testing.T) (string, string) {
 // testAccPreCheckDetectorExists verifies the current account has a single active
 // GuardDuty detector configured.
 func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
 
 	out, err := conn.ListDetectorsWithContext(ctx, &guardduty.ListDetectorsInput{})
 	if out == nil || len(out.DetectorIds) == 0 {

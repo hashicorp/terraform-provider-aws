@@ -337,7 +337,7 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 }
 
 func (r *resourceUserPoolClient) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	conn := r.Meta().CognitoIDPConn()
+	conn := r.Meta().CognitoIDPConn(ctx)
 
 	var config resourceUserPoolClientData
 	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
@@ -405,7 +405,7 @@ func (r *resourceUserPoolClient) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	conn := r.Meta().CognitoIDPConn()
+	conn := r.Meta().CognitoIDPConn(ctx)
 
 	poolClient, err := FindCognitoUserPoolClientByID(ctx, conn, state.UserPoolID.ValueString(), state.ID.ValueString())
 	if tfresource.NotFound(err) {
@@ -474,7 +474,7 @@ func (r *resourceUserPoolClient) Update(ctx context.Context, request resource.Up
 		return
 	}
 
-	conn := r.Meta().CognitoIDPConn()
+	conn := r.Meta().CognitoIDPConn(ctx)
 
 	params := plan.updateInput(ctx, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
@@ -551,7 +551,7 @@ func (r *resourceUserPoolClient) Delete(ctx context.Context, request resource.De
 		"user_pool_id": state.UserPoolID.ValueString(),
 	})
 
-	conn := r.Meta().CognitoIDPConn()
+	conn := r.Meta().CognitoIDPConn(ctx)
 
 	_, err := conn.DeleteUserPoolClientWithContext(ctx, params)
 	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {

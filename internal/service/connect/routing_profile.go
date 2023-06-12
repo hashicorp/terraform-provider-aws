@@ -131,7 +131,7 @@ func ResourceRoutingProfile() *schema.Resource {
 }
 
 func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -175,7 +175,7 @@ func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
 
@@ -231,7 +231,7 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
 
@@ -371,7 +371,7 @@ func updateQueueConfigs(ctx context.Context, conn *connect.Connect, instanceID, 
 }
 
 // func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-// 	conn := meta.(*conns.AWSClient).ConnectConn()
+// 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 // 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
 

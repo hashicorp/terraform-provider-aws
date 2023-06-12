@@ -37,7 +37,7 @@ func sweepDetectors(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).GuardDutyConn()
+	conn := client.(*conns.AWSClient).GuardDutyConn(ctx)
 	input := &guardduty.ListDetectorsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -84,7 +84,7 @@ func sweepPublishingDestinations(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).GuardDutyConn()
+	conn := client.(*conns.AWSClient).GuardDutyConn(ctx)
 	var sweeperErrs *multierror.Error
 
 	detect_input := &guardduty.ListDetectorsInput{}

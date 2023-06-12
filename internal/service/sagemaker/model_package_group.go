@@ -61,7 +61,7 @@ func ResourceModelPackageGroup() *schema.Resource {
 
 func resourceModelPackageGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("model_package_group_name").(string)
 	input := &sagemaker.CreateModelPackageGroupInput{
@@ -89,7 +89,7 @@ func resourceModelPackageGroupCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceModelPackageGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	mpg, err := FindModelPackageGroupByName(ctx, conn, d.Id())
 	if err != nil {
@@ -119,7 +119,7 @@ func resourceModelPackageGroupUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceModelPackageGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.DeleteModelPackageGroupInput{
 		ModelPackageGroupName: aws.String(d.Id()),

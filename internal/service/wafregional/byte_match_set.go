@@ -76,7 +76,7 @@ func ResourceByteMatchSet() *schema.Resource {
 
 func resourceByteMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Creating ByteMatchSet: %s", d.Get("name").(string))
@@ -102,7 +102,7 @@ func resourceByteMatchSetCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceByteMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
 	log.Printf("[INFO] Reading ByteMatchSet: %s", d.Get("name").(string))
 
@@ -160,7 +160,7 @@ func flattenByteMatchTuplesWR(in []*waf.ByteMatchTuple) []interface{} {
 
 func resourceByteMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 	log.Printf("[INFO] Updating ByteMatchSet: %s", d.Get("name").(string))
 
@@ -178,7 +178,7 @@ func resourceByteMatchSetUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceByteMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Deleting ByteMatchSet: %s", d.Get("name").(string))

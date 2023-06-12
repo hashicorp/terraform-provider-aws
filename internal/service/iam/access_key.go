@@ -32,7 +32,7 @@ func ResourceAccessKey() *schema.Resource {
 			//   ValidationError: Must specify userName when calling with non-User credentials
 			// To prevent import from requiring this extra information, use GetAccessKeyLastUsed.
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				conn := meta.(*conns.AWSClient).IAMConn()
+				conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 				input := &iam.GetAccessKeyLastUsedInput{
 					AccessKeyId: aws.String(d.Id()),
@@ -103,7 +103,7 @@ func ResourceAccessKey() *schema.Resource {
 
 func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	username := d.Get("user").(string)
 
@@ -181,7 +181,7 @@ func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	username := d.Get("user").(string)
 
@@ -224,7 +224,7 @@ func resourceAccessKeyReadResult(d *schema.ResourceData, key *iam.AccessKeyMetad
 
 func resourceAccessKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	if d.HasChange("status") {
 		if err := resourceAccessKeyStatusUpdate(ctx, conn, d); err != nil {
@@ -237,7 +237,7 @@ func resourceAccessKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	request := &iam.DeleteAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),

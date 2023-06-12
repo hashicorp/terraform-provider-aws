@@ -101,7 +101,7 @@ func DataSourceWorkspace() *schema.Resource {
 
 func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn()
+	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var workspace *workspaces.Workspace

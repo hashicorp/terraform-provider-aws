@@ -75,7 +75,7 @@ func ResourceEventIntegration() *schema.Resource {
 }
 
 func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &appintegrationsservice.CreateEventIntegrationInput{
@@ -108,7 +108,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
 
@@ -145,7 +145,7 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
 
@@ -164,7 +164,7 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
 

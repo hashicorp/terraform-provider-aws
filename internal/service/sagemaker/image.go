@@ -72,7 +72,7 @@ func ResourceImage() *schema.Resource {
 
 func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("image_name").(string)
 	input := &sagemaker.CreateImageInput{
@@ -107,7 +107,7 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	image, err := FindImageByName(ctx, conn, d.Id())
 	if err != nil {
@@ -131,7 +131,7 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 	needsUpdate := false
 
 	input := &sagemaker.UpdateImageInput{
@@ -177,7 +177,7 @@ func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.DeleteImageInput{
 		ImageName: aws.String(d.Id()),

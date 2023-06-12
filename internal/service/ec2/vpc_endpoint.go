@@ -189,7 +189,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 
 func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	serviceName := d.Get("service_name").(string)
 	input := &ec2.CreateVpcEndpointInput{
@@ -275,7 +275,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpce, err := FindVPCEndpointByID(ctx, conn, d.Id())
 
@@ -359,7 +359,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == vpcEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(ctx, conn, d.Id(), d.Get("service_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -424,7 +424,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 VPC Endpoint: %s", d.Id())
 	output, err := conn.DeleteVpcEndpointsWithContext(ctx, &ec2.DeleteVpcEndpointsInput{

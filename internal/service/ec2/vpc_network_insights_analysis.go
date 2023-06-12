@@ -1401,7 +1401,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 }
 
 func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.StartNetworkInsightsAnalysisInput{
 		NetworkInsightsPathId: aws.String(d.Get("network_insights_path_id").(string)),
@@ -1431,7 +1431,7 @@ func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	output, err := FindNetworkInsightsAnalysisByID(ctx, conn, d.Id())
 
@@ -1477,7 +1477,7 @@ func resourceNetworkInsightsAnalysisUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceNetworkInsightsAnalysisDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Network Insights Analysis: %s", d.Id())
 	_, err := conn.DeleteNetworkInsightsAnalysisWithContext(ctx, &ec2.DeleteNetworkInsightsAnalysisInput{

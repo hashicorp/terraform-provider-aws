@@ -246,7 +246,7 @@ func TestAccSESV2ConfigurationSetEventDestination_disappears(t *testing.T) {
 
 func testAccCheckConfigurationSetEventDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sesv2_configuration_set_event_destination" {
@@ -280,7 +280,7 @@ func testAccCheckConfigurationSetEventDestinationExists(ctx context.Context, nam
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameConfigurationSetEventDestination, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		_, err := tfsesv2.FindConfigurationSetEventDestinationByID(ctx, conn, rs.Primary.ID)
 

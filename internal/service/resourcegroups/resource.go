@@ -54,7 +54,7 @@ const (
 )
 
 func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn()
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn(ctx)
 
 	group := d.Get("group_arn").(string)
 	resourceArn := d.Get("resource_arn").(string)
@@ -81,7 +81,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn()
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn(ctx)
 
 	out, err := FindResourceByARN(ctx, conn, d.Get("group_arn").(string), d.Get("resource_arn").(string))
 
@@ -102,7 +102,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn()
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn(ctx)
 
 	log.Printf("[INFO] Deleting ResourceGroups Resource %s", d.Id())
 

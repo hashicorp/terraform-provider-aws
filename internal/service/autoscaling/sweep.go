@@ -33,7 +33,7 @@ func sweepGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AutoScalingConn()
+	conn := client.(*conns.AWSClient).AutoScalingConn(ctx)
 	input := &autoscaling.DescribeAutoScalingGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -78,7 +78,7 @@ func sweepLaunchConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AutoScalingConn()
+	conn := client.(*conns.AWSClient).AutoScalingConn(ctx)
 	input := &autoscaling.DescribeLaunchConfigurationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

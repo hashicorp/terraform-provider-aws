@@ -276,7 +276,7 @@ func ResourceWindowsFileSystem() *schema.Resource {
 
 func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -386,7 +386,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
 
@@ -442,7 +442,7 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChange("aliases") {
 		o, n := d.GetChange("aliases")
@@ -528,7 +528,7 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.DeleteFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),

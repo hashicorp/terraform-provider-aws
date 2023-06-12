@@ -74,7 +74,7 @@ func ResourceDelegatedAdministrator() *schema.Resource {
 }
 
 func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	accountID := d.Get("account_id").(string)
 	servicePrincipal := d.Get("service_principal").(string)
@@ -94,7 +94,7 @@ func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	accountID, servicePrincipal, err := DecodeOrganizationDelegatedAdministratorID(d.Id())
 	if err != nil {
@@ -141,7 +141,7 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	accountID, servicePrincipal, err := DecodeOrganizationDelegatedAdministratorID(d.Id())
 	if err != nil {

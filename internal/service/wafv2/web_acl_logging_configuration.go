@@ -169,7 +169,7 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 
 func resourceWebACLLoggingConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	resourceARN := d.Get("resource_arn").(string)
 	config := &wafv2.LoggingConfiguration{
@@ -206,7 +206,7 @@ func resourceWebACLLoggingConfigurationPut(ctx context.Context, d *schema.Resour
 
 func resourceWebACLLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	loggingConfig, err := FindLoggingConfigurationByARN(ctx, conn, d.Id())
 
@@ -236,7 +236,7 @@ func resourceWebACLLoggingConfigurationRead(ctx context.Context, d *schema.Resou
 
 func resourceWebACLLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	log.Printf("[INFO] Deleting WAFv2 WebACL Logging Configuration: %s", d.Id())
 	_, err := conn.DeleteLoggingConfigurationWithContext(ctx, &wafv2.DeleteLoggingConfigurationInput{

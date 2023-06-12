@@ -29,7 +29,7 @@ func sweeps(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).CloudTrailConn()
+	conn := client.(*conns.AWSClient).CloudTrailConn(ctx)
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListTrailsPagesWithContext(ctx, &cloudtrail.ListTrailsInput{}, func(page *cloudtrail.ListTrailsOutput, lastPage bool) bool {

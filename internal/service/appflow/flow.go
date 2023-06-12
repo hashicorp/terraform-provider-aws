@@ -1216,7 +1216,7 @@ func ResourceFlow() *schema.Resource {
 }
 
 func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn()
+	conn := meta.(*conns.AWSClient).AppFlowConn(ctx)
 
 	in := &appflow.CreateFlowInput{
 		FlowName:                  aws.String(d.Get(names.AttrName).(string)),
@@ -1251,7 +1251,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn()
+	conn := meta.(*conns.AWSClient).AppFlowConn(ctx)
 
 	out, err := FindFlowByARN(ctx, conn, d.Id())
 
@@ -1309,7 +1309,7 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn()
+	conn := meta.(*conns.AWSClient).AppFlowConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &appflow.UpdateFlowInput{
@@ -1336,7 +1336,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn()
+	conn := meta.(*conns.AWSClient).AppFlowConn(ctx)
 
 	out, _ := FindFlowByARN(ctx, conn, d.Id())
 

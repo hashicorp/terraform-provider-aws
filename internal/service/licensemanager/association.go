@@ -45,7 +45,7 @@ func ResourceAssociation() *schema.Resource {
 }
 
 func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	licenseConfigurationARN := d.Get("license_configuration_arn").(string)
 	resourceARN := d.Get("resource_arn").(string)
@@ -70,7 +70,7 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	resourceARN, licenseConfigurationARN, err := AssociationParseResourceID(d.Id())
 
@@ -97,7 +97,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	resourceARN, licenseConfigurationARN, err := AssociationParseResourceID(d.Id())
 

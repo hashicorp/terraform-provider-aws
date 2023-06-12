@@ -88,5 +88,5 @@ func UpdateTags(ctx context.Context, conn syntheticsiface.SyntheticsAPI, identif
 // UpdateTags updates synthetics service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).SyntheticsConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).SyntheticsConn(ctx), identifier, oldTags, newTags)
 }

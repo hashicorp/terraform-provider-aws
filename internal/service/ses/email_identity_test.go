@@ -71,7 +71,7 @@ func TestAccSESEmailIdentity_trailingPeriod(t *testing.T) {
 
 func testAccCheckEmailIdentityDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_email_identity" {
@@ -111,7 +111,7 @@ func testAccCheckEmailIdentityExists(ctx context.Context, n string) resource.Tes
 		}
 
 		email := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		params := &ses.GetIdentityVerificationAttributesInput{
 			Identities: []*string{

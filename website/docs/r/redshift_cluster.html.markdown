@@ -123,6 +123,7 @@ In addition to all arguments above, the following attributes are exported:
 * `cluster_public_key` - The public key for the cluster
 * `cluster_revision_number` - The specific revision number of the database in the cluster
 * `cluster_nodes` - The nodes in the cluster. Cluster node blocks are documented below
+* `cluster_namespace_arn` - The namespace Amazon Resource Name (ARN) of the cluster
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 Cluster nodes (for `cluster_nodes`) support the following attributes:

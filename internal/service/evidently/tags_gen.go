@@ -88,5 +88,5 @@ func UpdateTags(ctx context.Context, conn cloudwatchevidentlyiface.CloudWatchEvi
 // UpdateTags updates evidently service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).EvidentlyConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).EvidentlyConn(ctx), identifier, oldTags, newTags)
 }

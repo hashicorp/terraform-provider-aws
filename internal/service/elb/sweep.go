@@ -27,7 +27,7 @@ func sweepLoadBalancers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ELBConn()
+	conn := client.(*conns.AWSClient).ELBConn(ctx)
 	input := &elb.DescribeLoadBalancersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

@@ -691,7 +691,7 @@ func TestAccSNSTopicSubscription_Disappears_topic(t *testing.T) {
 
 func testAccCheckTopicSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sns_topic_subscription" {
@@ -730,7 +730,7 @@ func testAccCheckTopicSubscriptionExists(ctx context.Context, n string, v *map[s
 			return fmt.Errorf("No SNS Topic Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
 
 		output, err := tfsns.FindSubscriptionAttributesByARN(ctx, conn, rs.Primary.ID)
 

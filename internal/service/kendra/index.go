@@ -376,7 +376,7 @@ func ResourceIndex() *schema.Resource {
 }
 
 func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &kendra.CreateIndexInput{
@@ -462,7 +462,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	resp, err := findIndexByID(ctx, conn, d.Id())
 
@@ -523,7 +523,7 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id := d.Id()
 
@@ -585,7 +585,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id := d.Id()
 

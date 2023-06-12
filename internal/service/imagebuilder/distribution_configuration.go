@@ -291,7 +291,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 
 func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.CreateDistributionConfigurationInput{
 		ClientToken: aws.String(id.UniqueId()),
@@ -327,7 +327,7 @@ func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.Reso
 
 func resourceDistributionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.GetDistributionConfigurationInput{
 		DistributionConfigurationArn: aws.String(d.Id()),
@@ -365,7 +365,7 @@ func resourceDistributionConfigurationRead(ctx context.Context, d *schema.Resour
 
 func resourceDistributionConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	if d.HasChanges("description", "distribution") {
 		input := &imagebuilder.UpdateDistributionConfigurationInput{
@@ -393,7 +393,7 @@ func resourceDistributionConfigurationUpdate(ctx context.Context, d *schema.Reso
 
 func resourceDistributionConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.DeleteDistributionConfigurationInput{
 		DistributionConfigurationArn: aws.String(d.Id()),

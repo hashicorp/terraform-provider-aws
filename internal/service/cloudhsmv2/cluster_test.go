@@ -124,7 +124,7 @@ func testAccCluster_tags(t *testing.T) {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudhsm_v2_cluster" {
@@ -150,7 +150,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckClusterExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn(ctx)
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)

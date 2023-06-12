@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn keyspacesiface.KeyspacesAPI, identifier 
 // ListTags lists keyspaces service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).KeyspacesConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).KeyspacesConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -138,5 +138,5 @@ func UpdateTags(ctx context.Context, conn keyspacesiface.KeyspacesAPI, identifie
 // UpdateTags updates keyspaces service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).KeyspacesConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).KeyspacesConn(ctx), identifier, oldTags, newTags)
 }

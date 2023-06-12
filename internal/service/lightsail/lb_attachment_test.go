@@ -85,7 +85,7 @@ func testAccCheckLoadBalancerAttachmentExists(ctx context.Context, n string, liN
 			return errors.New("No LightsailLoadBalancerAttachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn(ctx)
 
 		out, err := tflightsail.FindLoadBalancerAttachmentById(ctx, conn, rs.Primary.ID)
 
@@ -110,7 +110,7 @@ func testAccCheckLoadBalancerAttachmentDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn(ctx)
 
 			_, err := tflightsail.FindLoadBalancerAttachmentById(ctx, conn, rs.Primary.ID)
 

@@ -157,7 +157,7 @@ func testAccCheckTapePoolExists(ctx context.Context, resourceName string, TapePo
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
 		input := &storagegateway.ListTapePoolsInput{
 			PoolARNs: []*string{aws.String(rs.Primary.ID)},
@@ -181,7 +181,7 @@ func testAccCheckTapePoolExists(ctx context.Context, resourceName string, TapePo
 
 func testAccCheckTapePoolDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_storagegateway_tape_pool" {

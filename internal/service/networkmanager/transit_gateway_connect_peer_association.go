@@ -61,7 +61,7 @@ func ResourceTransitGatewayConnectPeerAssociation() *schema.Resource {
 }
 
 func resourceTransitGatewayConnectPeerAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	connectPeerARN := d.Get("transit_gateway_connect_peer_arn").(string)
@@ -93,7 +93,7 @@ func resourceTransitGatewayConnectPeerAssociationCreate(ctx context.Context, d *
 }
 
 func resourceTransitGatewayConnectPeerAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, connectPeerARN, err := TransitGatewayConnectPeerAssociationParseResourceID(d.Id())
 
@@ -122,7 +122,7 @@ func resourceTransitGatewayConnectPeerAssociationRead(ctx context.Context, d *sc
 }
 
 func resourceTransitGatewayConnectPeerAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, connectPeerARN, err := TransitGatewayConnectPeerAssociationParseResourceID(d.Id())
 

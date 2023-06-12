@@ -196,7 +196,7 @@ func testAccAccount_disappears(t *testing.T) {
 
 func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_macie2_account" {
@@ -230,7 +230,7 @@ func testAccCheckAccountExists(ctx context.Context, resourceName string, macie2S
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
 		input := &macie2.GetMacieSessionInput{}
 
 		resp, err := conn.GetMacieSessionWithContext(ctx, input)

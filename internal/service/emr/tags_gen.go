@@ -105,5 +105,5 @@ func UpdateTags(ctx context.Context, conn emriface.EMRAPI, identifier string, ol
 // UpdateTags updates emr service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).EMRConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).EMRConn(ctx), identifier, oldTags, newTags)
 }

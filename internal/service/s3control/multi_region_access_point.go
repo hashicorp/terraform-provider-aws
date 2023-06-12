@@ -136,7 +136,7 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 }
 
 func resourceMultiRegionAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := ConnForMRAP(meta.(*conns.AWSClient))
+	conn, err := ConnForMRAP(ctx, meta.(*conns.AWSClient))
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -175,7 +175,7 @@ func resourceMultiRegionAccessPointCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceMultiRegionAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := ConnForMRAP(meta.(*conns.AWSClient))
+	conn, err := ConnForMRAP(ctx, meta.(*conns.AWSClient))
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -220,7 +220,7 @@ func resourceMultiRegionAccessPointRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceMultiRegionAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := ConnForMRAP(meta.(*conns.AWSClient))
+	conn, err := ConnForMRAP(ctx, meta.(*conns.AWSClient))
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -257,8 +257,8 @@ func resourceMultiRegionAccessPointDelete(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func ConnForMRAP(client *conns.AWSClient) (*s3control.S3Control, error) {
-	originalConn := client.S3ControlConn()
+func ConnForMRAP(ctx context.Context, client *conns.AWSClient) (*s3control.S3Control, error) {
+	originalConn := client.S3ControlConn(ctx)
 	// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
 	region := endpoints.UsWest2RegionID
 

@@ -694,7 +694,7 @@ func ResourceBucket() *schema.Resource {
 
 func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := create.Name(d.Get("bucket").(string), d.Get("bucket_prefix").(string))
 
@@ -768,7 +768,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	err := FindBucket(ctx, conn, d.Id())
 
@@ -1251,7 +1251,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -1361,7 +1361,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	log.Printf("[INFO] Deleting S3 Bucket: %s", d.Id())
 	_, err := conn.DeleteBucketWithContext(ctx, &s3.DeleteBucketInput{
@@ -1483,7 +1483,7 @@ func websiteEndpoint(ctx context.Context, client *conns.AWSClient, d *schema.Res
 	// Lookup the region for this bucket
 
 	locationResponse, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
-		return client.S3Conn().GetBucketLocation(
+		return client.S3Conn(ctx).GetBucketLocation(
 			&s3.GetBucketLocationInput{
 				Bucket: aws.String(bucket),
 			},

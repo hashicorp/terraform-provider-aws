@@ -143,7 +143,7 @@ func ResourceParameter() *schema.Resource {
 
 func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	name := d.Get("name").(string)
 
@@ -212,7 +212,7 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	input := &ssm.GetParameterInput{
 		Name:           aws.String(d.Id()),
@@ -298,7 +298,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		value := d.Get("value").(string)
@@ -351,7 +351,7 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceParameterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	_, err := conn.DeleteParameterWithContext(ctx, &ssm.DeleteParameterInput{
 		Name: aws.String(d.Get("name").(string)),

@@ -75,7 +75,7 @@ func ResourceBotAssociation() *schema.Resource {
 }
 
 func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceId := d.Get("instance_id").(string)
 
@@ -122,7 +122,7 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceId, name, region, err := BotV1AssociationParseResourceID(d.Id())
 
@@ -155,7 +155,7 @@ func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, name, region, err := BotV1AssociationParseResourceID(d.Id())
 

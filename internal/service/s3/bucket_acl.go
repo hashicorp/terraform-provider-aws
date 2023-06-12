@@ -128,7 +128,7 @@ func ResourceBucketACL() *schema.Resource {
 }
 
 func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -164,7 +164,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, acl, err := BucketACLParseResourceID(d.Id())
 	if err != nil {
@@ -206,7 +206,7 @@ func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, acl, err := BucketACLParseResourceID(d.Id())
 	if err != nil {

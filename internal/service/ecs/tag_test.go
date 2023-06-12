@@ -187,7 +187,7 @@ resource "aws_ecs_tag" "test" {
 }
 
 func testAccPreCheckBatch(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
 
 	input := &batch.DescribeComputeEnvironmentsInput{}
 

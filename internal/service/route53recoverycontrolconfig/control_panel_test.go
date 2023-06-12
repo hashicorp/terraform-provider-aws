@@ -70,7 +70,7 @@ func testAccControlPanel_disappears(t *testing.T) {
 
 func testAccCheckControlPanelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53recoverycontrolconfig_control_panel" {
@@ -116,7 +116,7 @@ func testAccCheckControlPanelExists(ctx context.Context, name string) resource.T
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 		input := &r53rcc.DescribeControlPanelInput{
 			ControlPanelArn: aws.String(rs.Primary.ID),

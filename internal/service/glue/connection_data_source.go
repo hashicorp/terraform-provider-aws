@@ -85,7 +85,7 @@ func DataSourceConnection() *schema.Resource {
 }
 
 func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)

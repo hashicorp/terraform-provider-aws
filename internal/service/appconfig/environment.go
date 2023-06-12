@@ -93,7 +93,7 @@ func ResourceEnvironment() *schema.Resource {
 
 func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	appId := d.Get("application_id").(string)
 	input := &appconfig.CreateEnvironmentInput{
@@ -128,7 +128,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	envID, appID, err := EnvironmentParseID(d.Id())
 
@@ -182,7 +182,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		envID, appID, err := EnvironmentParseID(d.Id())
@@ -220,7 +220,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	envID, appID, err := EnvironmentParseID(d.Id())
 

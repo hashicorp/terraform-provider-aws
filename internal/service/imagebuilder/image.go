@@ -179,7 +179,7 @@ func ResourceImage() *schema.Resource {
 
 func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.CreateImageInput{
 		ClientToken:                  aws.String(id.UniqueId()),
@@ -228,7 +228,7 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.GetImageInput{
 		ImageBuildVersionArn: aws.String(d.Id()),
@@ -306,7 +306,7 @@ func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.DeleteImageInput{
 		ImageBuildVersionArn: aws.String(d.Id()),

@@ -140,7 +140,7 @@ const (
 
 func resourceKxEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	in := &finspace.CreateKxEnvironmentInput{
 		Name:        aws.String(d.Get("name").(string)),
@@ -185,7 +185,7 @@ func resourceKxEnvironmentCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	out, err := findKxEnvironmentByID(ctx, conn, d.Id())
 
@@ -223,7 +223,7 @@ func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceKxEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	update := false
 
@@ -260,7 +260,7 @@ func resourceKxEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceKxEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	log.Printf("[INFO] Deleting FinSpace KxEnvironment %s", d.Id())
 
