@@ -132,6 +132,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 	state.ID = flex.StringToFramework(ctx, out.CreateCollectionDetail.Id)
 	state.Name = flex.StringToFramework(ctx, out.CreateCollectionDetail.Name)
 	state.Type = flex.StringValueToFramework(ctx, out.CreateCollectionDetail.Type)
+	
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -144,7 +145,7 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	out, err := findCollectionByID(ctx, conn, state.ID.ValueString())
+	out, err := FindCollectionByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -156,6 +157,7 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 	state.ID = flex.StringToFramework(ctx, out.Id)
 	state.Name = flex.StringToFramework(ctx, out.Name)
 	state.Type = flex.StringValueToFramework(ctx, out.Type)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
