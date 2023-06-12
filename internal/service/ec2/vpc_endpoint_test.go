@@ -740,7 +740,7 @@ resource "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccVPCEndpointConfig_interfacePrivateDNS(rName string, bool privateDNSOnlyForInboundResolverEndpoint) string {
+func testAccVPCEndpointConfig_interfacePrivateDNS(rName string, privateDNSOnlyForInboundResolverEndpoint bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
