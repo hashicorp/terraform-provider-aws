@@ -4,6 +4,7 @@ package medialive
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

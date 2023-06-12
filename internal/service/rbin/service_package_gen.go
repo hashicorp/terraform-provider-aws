@@ -4,6 +4,7 @@ package rbin
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

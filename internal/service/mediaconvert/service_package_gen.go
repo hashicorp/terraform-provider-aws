@@ -4,6 +4,7 @@ package mediaconvert
 
 import (
 	"context"
+
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"

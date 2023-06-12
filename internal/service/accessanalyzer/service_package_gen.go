@@ -4,6 +4,7 @@ package accessanalyzer
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	accessanalyzer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

@@ -4,6 +4,7 @@ package resourceexplorer2
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	resourceexplorer2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

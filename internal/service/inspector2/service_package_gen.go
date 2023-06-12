@@ -4,6 +4,7 @@ package inspector2
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

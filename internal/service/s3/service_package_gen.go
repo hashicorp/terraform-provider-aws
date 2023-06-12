@@ -4,9 +4,7 @@ package s3
 
 import (
 	"context"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	s3_sdkv1 "github.com/aws/aws-sdk-go/service/s3"
+
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )

@@ -4,6 +4,7 @@ package s3control
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"

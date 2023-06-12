@@ -4,6 +4,7 @@ package ivschat
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	ivschat_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

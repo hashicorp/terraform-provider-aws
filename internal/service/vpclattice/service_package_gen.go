@@ -4,6 +4,7 @@ package vpclattice
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	vpclattice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

@@ -4,6 +4,7 @@ package glue
 
 import (
 	"context"
+
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"

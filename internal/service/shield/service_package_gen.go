@@ -4,9 +4,7 @@ package shield
 
 import (
 	"context"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	shield_sdkv1 "github.com/aws/aws-sdk-go/service/shield"
+
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )

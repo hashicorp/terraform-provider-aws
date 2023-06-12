@@ -4,6 +4,7 @@ package transcribe
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	transcribe_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

@@ -4,6 +4,7 @@ package athena
 
 import (
 	"context"
+
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	athena_sdkv1 "github.com/aws/aws-sdk-go/service/athena"

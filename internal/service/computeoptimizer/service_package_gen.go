@@ -4,6 +4,7 @@ package computeoptimizer
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

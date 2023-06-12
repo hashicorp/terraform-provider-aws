@@ -4,6 +4,7 @@ package lakeformation
 
 import (
 	"context"
+
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	lakeformation_sdkv1 "github.com/aws/aws-sdk-go/service/lakeformation"

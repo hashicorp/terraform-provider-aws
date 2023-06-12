@@ -4,6 +4,7 @@ package ssmcontacts
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

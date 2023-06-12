@@ -4,6 +4,7 @@ package ssmincidents
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

@@ -4,8 +4,7 @@ package route53domains
 
 import (
 	"context"
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
+
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )

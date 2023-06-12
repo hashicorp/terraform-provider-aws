@@ -4,6 +4,7 @@ package swf
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

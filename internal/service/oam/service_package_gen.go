@@ -4,6 +4,7 @@ package oam
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

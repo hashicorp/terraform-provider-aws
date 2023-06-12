@@ -4,6 +4,7 @@ package pipes
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

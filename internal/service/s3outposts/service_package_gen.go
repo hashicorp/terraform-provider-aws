@@ -4,6 +4,7 @@ package s3outposts
 
 import (
 	"context"
+
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	s3outposts_sdkv1 "github.com/aws/aws-sdk-go/service/s3outposts"

@@ -4,6 +4,7 @@ package elasticbeanstalk
 
 import (
 	"context"
+
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	elasticbeanstalk_sdkv1 "github.com/aws/aws-sdk-go/service/elasticbeanstalk"

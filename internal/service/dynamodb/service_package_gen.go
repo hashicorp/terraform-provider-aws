@@ -4,6 +4,7 @@ package dynamodb
 
 import (
 	"context"
+
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"

@@ -4,6 +4,7 @@ package securitylake
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

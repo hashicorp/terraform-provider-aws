@@ -4,6 +4,7 @@ package xray
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

@@ -4,6 +4,7 @@ package cloudcontrol
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

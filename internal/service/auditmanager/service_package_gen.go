@@ -4,6 +4,7 @@ package auditmanager
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

@@ -4,9 +4,7 @@ package globalaccelerator
 
 import (
 	"context"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
+
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )

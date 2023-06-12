@@ -4,6 +4,7 @@ package ec2
 
 import (
 	"context"
+
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
