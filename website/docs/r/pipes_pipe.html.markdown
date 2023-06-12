@@ -202,7 +202,7 @@ You can find out more about EventBridge Pipes Enrichment in the [User Guide](htt
 
 You can find out more about EventBridge Pipes Sources in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes-event-source.html).
 
-* `active_mq_broker` - (Optional) The parameters for using an Active MQ broker as a source. Detailed below.
+* `activemq_broker_parameters` - (Optional) The parameters for using an Active MQ broker as a source. Detailed below.
 * `dynamodb_stream_parameters` - (Optional) The parameters for using a DynamoDB stream as a source.  Detailed below.
 * `filter_criteria` - (Optional) The collection of event patterns used to [filter events](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes-event-filtering.html). Detailed below.
 * `kinesis_stream` - (Optional) The parameters for using a Kinesis stream as a source. Detailed below.
@@ -219,14 +219,14 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 
 * `pattern` - (Required) The event pattern. At most 4096 characters.
 
-#### source_parameters.active_mq_broker Configuration Block
+#### source_parameters.activemq_broker_parameters Configuration Block
 
 * `batch_size` - (Optional) The maximum number of records to include in each batch. Maximum value of 10000.
 * `credentials` - (Required) The credentials needed to access the resource. Detailed below.
 * `maximum_batching_window_in_seconds` - (Optional) The maximum length of a time to wait for events. Maximum value of 300.
-* `queue` - (Required) The name of the destination queue to consume. Maximum length of 1000.
+* `queue_name` - (Required) The name of the destination queue to consume. Maximum length of 1000.
 
-##### source_parameters.active_mq_broker.credentials Configuration Block
+##### source_parameters.activemq_broker_parameters.credentials Configuration Block
 
 * `basic_auth` - (Required) The ARN of the Secrets Manager secret containing the basic auth credentials.
 
