@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/appsync"
@@ -214,15 +213,6 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	c.sdkv2LazyConns(client, cfg)
 
 	// Customize.
-	client.apigatewayv2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
-		// Many operations can return an error such as:
-		//   ConflictException: Unable to complete operation due to concurrent modification. Please try again later.
-		// Handle them all globally for the service client.
-		if tfawserr.ErrMessageContains(r.Error, apigatewayv2.ErrCodeConflictException, "try again later") {
-			r.Retryable = aws.Bool(true)
-		}
-	})
-
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1472
 	client.applicationautoscalingConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
