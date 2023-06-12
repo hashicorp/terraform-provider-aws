@@ -5,8 +5,8 @@ import (
 	"log"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	imds_sdkv2 "github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -22,7 +22,7 @@ type Config struct {
 	AssumeRoleWithWebIdentity      *awsbase.AssumeRoleWithWebIdentity
 	CustomCABundle                 string
 	DefaultTagsConfig              *tftags.DefaultConfig
-	EC2MetadataServiceEnableState  imds.ClientEnableState
+	EC2MetadataServiceEnableState  imds_sdkv2.ClientEnableState
 	EC2MetadataServiceEndpoint     string
 	EC2MetadataServiceEndpointMode string
 	Endpoints                      map[string]string
@@ -152,7 +152,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 
 	DNSSuffix := "amazonaws.com"
-	if p, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), c.Region); ok {
+	if p, ok := endpoints_sdkv1.PartitionForRegion(endpoints_sdkv1.DefaultPartitions(), c.Region); ok {
 		DNSSuffix = p.DNSSuffix()
 	}
 
@@ -185,11 +185,6 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 		sp.Configure(ctx, m)
 	}
-
-	// API clients (generated).
-	c.sdkv1Conns(client, sess)
-	c.sdkv2Conns(client, cfg)
-	c.sdkv2LazyConns(client, cfg)
 
 	return client, nil
 }

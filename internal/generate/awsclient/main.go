@@ -17,7 +17,6 @@ type ServiceDatum struct {
 	GoV1ClientTypeName string
 	GoV2Package        string
 	ProviderNameUpper  string
-	ProviderPackage    string
 }
 
 type TemplateData struct {
@@ -54,27 +53,25 @@ func main() {
 			continue
 		}
 
+		s := ServiceDatum{
+			ProviderNameUpper: l[names.ColProviderNameUpper],
+			GoV1Package:       l[names.ColGoV1Package],
+			GoV2Package:       l[names.ColGoV2Package],
+		}
+
 		if l[names.ColClientSDKV1] != "" {
-			td.Services = append(td.Services, ServiceDatum{
-				ProviderNameUpper:  l[names.ColProviderNameUpper],
-				SDKVersion:         "1",
-				GoV1Package:        l[names.ColGoV1Package],
-				GoV1ClientTypeName: l[names.ColGoV1ClientTypeName],
-				ProviderPackage:    l[names.ColProviderPackageCorrect],
-			})
+			s.SDKVersion = "1"
+			s.GoV1ClientTypeName = l[names.ColGoV1ClientTypeName]
 		}
 		if l[names.ColClientSDKV2] != "" {
-			sd := ServiceDatum{
-				ProviderNameUpper: l[names.ColProviderNameUpper],
-				SDKVersion:        "2",
-				GoV2Package:       l[names.ColGoV2Package],
-				ProviderPackage:   l[names.ColProviderPackageCorrect],
-			}
 			if l[names.ColClientSDKV1] != "" {
-				sd.SDKVersion = "1,2"
+				s.SDKVersion = "1,2"
+			} else {
+				s.SDKVersion = "2"
 			}
-			td.Services = append(td.Services, sd)
 		}
+
+		td.Services = append(td.Services, s)
 	}
 
 	sort.SliceStable(td.Services, func(i, j int) bool {
