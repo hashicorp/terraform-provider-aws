@@ -52,6 +52,42 @@ func TestAccOpenSearchServerlessAccessPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchServerlessAccessPolicy_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var accesspolicy types.AccessPolicyDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_access_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessPolicyConfig_update(rName, "description"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
+					resource.TestCheckResourceAttr(resourceName, "type", "data"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description"),
+				),
+			},
+			{
+				Config: testAccAccessPolicyConfig_update(rName, "description updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
+					resource.TestCheckResourceAttr(resourceName, "type", "data"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description updated"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchServerlessAccessPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -163,6 +199,7 @@ func testAccAccessPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
+
 resource "aws_opensearchserverless_access_policy" "test" {
   name = %[1]q
   type = "data"
@@ -190,4 +227,39 @@ resource "aws_opensearchserverless_access_policy" "test" {
   ])
 }
 `, rName)
+}
+
+func testAccAccessPolicyConfig_update(rName, description string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_opensearchserverless_access_policy" "test" {
+  name        = %[1]q
+  type        = "data"
+  description = %[2]q
+  policy = jsonencode([
+    {
+      "Rules" : [
+        {
+          "ResourceType" : "index",
+          "Resource" : [
+            "index/books/*"
+          ],
+          "Permission" : [
+            "aoss:CreateIndex",
+            "aoss:ReadDocument",
+            "aoss:UpdateIndex",
+            "aoss:DeleteIndex",
+            "aoss:WriteDocument"
+          ]
+        }
+      ],
+      "Principal" : [
+        "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:user/admin"
+      ]
+    }
+  ])
+}
+`, rName, description)
 }
