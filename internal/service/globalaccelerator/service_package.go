@@ -3,7 +3,6 @@ package globalaccelerator
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
@@ -17,7 +16,7 @@ func (p *servicePackage) NewConn(ctx context.Context) (*globalaccelerator_sdkv1.
 
 	// Force "global" services to correct Regions.
 	if p.config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
-		config.Region = aws.String(endpoints_sdkv1.UsWest2RegionID)
+		config.Region = aws_sdkv1.String(endpoints_sdkv1.UsWest2RegionID)
 	}
 
 	return globalaccelerator_sdkv1.New(sess.Copy(config)), nil

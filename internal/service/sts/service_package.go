@@ -3,7 +3,6 @@ package sts
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	sts_sdkv1 "github.com/aws/aws-sdk-go/service/sts"
@@ -15,7 +14,7 @@ func (p *servicePackage) NewConn(ctx context.Context) (*sts_sdkv1.STS, error) {
 	config := &aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))}
 
 	if stsRegion := p.config["sts_region"].(string); stsRegion != "" {
-		config.Region = aws.String(stsRegion)
+		config.Region = aws_sdkv1.String(stsRegion)
 	}
 
 	return sts_sdkv1.New(sess.Copy(config)), nil
