@@ -40,7 +40,7 @@ func (p *servicePackage) Configure(config map[string]any) {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context) (*healthlake_sdkv2.Client, error) {
-	cfg := *(p.config["aws_sdkv2_config"].(aws_sdkv2.Config))
+	cfg := *(p.config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return healthlake_sdkv2.NewFromConfig(cfg, func(o *healthlake_sdkv2.Options) {
 		if endpoint := p.config["endpoint"].(string); endpoint != "" {
