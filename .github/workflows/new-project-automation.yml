@@ -1,10 +1,10 @@
-name: 'GitHub Projects (new) Automation'
+name: 'Team GitHub Projects (new) Automation'
 
 on:
   issues:
     types: ["labeled", "milestoned", "opened"]
   pull_request_target:
-    types: ["labeled", "opened"]
+    types: ["labeled", "opened", "ready_for_review"]
 
 jobs:
   community_check:
@@ -12,42 +12,34 @@ jobs:
     secrets: inherit
 
   maintainer_prs:
-    name: 'Add Maintainer PRs'
+    name: 'Add Maintainer PRs that are Ready for Review'
     needs: community_check
     if: github.event_name == 'pull_request_target' && !github.event.pull_request.draft && needs.community_check.outputs.maintainer == 'true'
-    uses: ./.github/workflows/reusable-projects-automation.yml
+    uses: ./.github/workflows/reusable-team-project.yml
     secrets: inherit
     with:
-      project: ${{ vars.team_project }}
-      field: ${{ vars.team_project_field_status }}
-      value: ${{ vars.team_project_status_maintainer_pr }}
+      status: ${{ vars.team_project_status_maintainer_pr }}
 
   partner_prs:
-    name: 'Add Partner PRs'
-    if: github.event_name == 'pull_request_target' && github.event.label.name == 'partner'
-    uses: ./.github/workflows/reusable-projects-automation.yml
+    name: 'Add Partner PRs that are Ready for Review'
+    if: github.event_name == 'pull_request_target' && !github.event.pull_request.draft && contains(github.event.pull_request.labels.*.name, 'partner')
+    uses: ./.github/workflows/reusable-team-project.yml
     secrets: inherit
     with:
-      project: ${{ vars.team_project }}
-      field: ${{ vars.team_project_field_status }}
-      value: ${{ vars.team_project_status_to_do }}
+      status: ${{ vars.team_project_status_to_do }}
 
   roadmap:
     name: 'Add Roadmap Items'
     if: github.event.label.name == 'roadmap' || github.event.*.milestone.title == 'Roadmap'
-    uses: ./.github/workflows/reusable-projects-automation.yml
+    uses: ./.github/workflows/reusable-team-project.yml
     secrets: inherit
     with:
-      project: ${{ vars.team_project }}
-      field: ${{ vars.team_project_field_status }}
-      value: ${{ vars.team_project_status_to_do }}
+      status: ${{ vars.team_project_status_to_do }}
 
   regressions:
     name: 'Add Regressions'
     if: github.event.label.name == 'regression'
-    uses: ./.github/workflows/reusable-projects-automation.yml
+    uses: ./.github/workflows/reusable-team-project.yml
     secrets: inherit
     with:
-      project: ${{ vars.team_project }}
-      field: ${{ vars.team_project_field_status }}
-      value: ${{ vars.team_project_status_to_do }}
+      status: ${{ vars.team_project_status_to_do }}
