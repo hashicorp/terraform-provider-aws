@@ -72,7 +72,7 @@ const (
 )
 
 func dataSourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	arn, err := getReplicationSetARN(ctx, client)
 

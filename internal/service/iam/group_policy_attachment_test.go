@@ -83,7 +83,7 @@ func testAccCheckGroupPolicyAttachmentExists(ctx context.Context, n string, c in
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 		group := rs.Primary.Attributes["group"]
 
 		attachedPolicies, err := conn.ListAttachedGroupPoliciesWithContext(ctx, &iam.ListAttachedGroupPoliciesInput{

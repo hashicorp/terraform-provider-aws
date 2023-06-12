@@ -65,7 +65,7 @@ func ResourceGroupMembership() *schema.Resource {
 }
 
 func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 	namespace := d.Get("namespace").(string)
@@ -94,7 +94,7 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID, namespace, groupName, userName, err := GroupMembershipParseID(d.Id())
 	if err != nil {
@@ -127,7 +127,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID, namespace, groupName, userName, err := GroupMembershipParseID(d.Id())
 	if err != nil {

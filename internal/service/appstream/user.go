@@ -75,7 +75,7 @@ func ResourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	userName := d.Get("user_name").(string)
 	authType := d.Get("authentication_type").(string)
@@ -128,7 +128,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	userName, authType, err := DecodeUserID(d.Id())
 	if err != nil {
@@ -158,7 +158,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	userName, authType, err := DecodeUserID(d.Id())
 	if err != nil {
@@ -193,7 +193,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	userName, authType, err := DecodeUserID(d.Id())
 	if err != nil {

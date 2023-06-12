@@ -27,7 +27,7 @@ func sweepRepositories(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ECRPublicConn()
+	conn := client.(*conns.AWSClient).ECRPublicConn(ctx)
 	input := &ecrpublic.DescribeRepositoriesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

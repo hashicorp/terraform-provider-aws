@@ -39,7 +39,7 @@ func sweepDirectories(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WorkSpacesConn()
+	conn := client.(*conns.AWSClient).WorkSpacesConn(ctx)
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -83,7 +83,7 @@ func sweepIPGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WorkSpacesConn()
+	conn := client.(*conns.AWSClient).WorkSpacesConn(ctx)
 	input := &workspaces.DescribeIpGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -127,7 +127,7 @@ func sweepWorkspace(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).WorkSpacesConn()
+	conn := client.(*conns.AWSClient).WorkSpacesConn(ctx)
 
 	var errors error
 	input := &workspaces.DescribeWorkspacesInput{}

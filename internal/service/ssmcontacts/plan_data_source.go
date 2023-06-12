@@ -82,7 +82,7 @@ const (
 )
 
 func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SSMContactsClient()
+	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	contactId := d.Get("contact_id").(string)
 

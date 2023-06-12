@@ -89,7 +89,7 @@ func testAccCheckSpotDatafeedSubscriptionExists(ctx context.Context, n string, v
 			return fmt.Errorf("No EC2 Spot Datafeed Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindSpotDatafeedSubscription(ctx, conn)
 
@@ -105,7 +105,7 @@ func testAccCheckSpotDatafeedSubscriptionExists(ctx context.Context, n string, v
 
 func testAccCheckSpotDatafeedSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_spot_datafeed_subscription" {
@@ -130,7 +130,7 @@ func testAccCheckSpotDatafeedSubscriptionDestroy(ctx context.Context) resource.T
 }
 
 func testAccPreCheckSpotDatafeedSubscription(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	_, err := conn.DescribeSpotDatafeedSubscriptionWithContext(ctx, &ec2.DescribeSpotDatafeedSubscriptionInput{})
 

@@ -196,7 +196,7 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
 			policy, err := tfnetworkfirewall.FindResourcePolicy(ctx, conn, rs.Primary.ID)
 			if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 				continue
@@ -224,7 +224,7 @@ func testAccCheckResourcePolicyExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("No NetworkFirewall Resource Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
 		policy, err := tfnetworkfirewall.FindResourcePolicy(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

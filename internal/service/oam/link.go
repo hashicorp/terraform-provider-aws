@@ -91,7 +91,7 @@ const (
 )
 
 func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	in := &oam.CreateLinkInput{
 		LabelTemplate:  aws.String(d.Get("label_template").(string)),
@@ -115,7 +115,7 @@ func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	out, err := findLinkByID(ctx, conn, d.Id())
 
@@ -141,7 +141,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	update := false
 
@@ -166,7 +166,7 @@ func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceLinkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	log.Printf("[INFO] Deleting ObservabilityAccessManager Link %s", d.Id())
 

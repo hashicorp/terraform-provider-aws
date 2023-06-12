@@ -248,7 +248,7 @@ const (
 )
 
 func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	name := d.Get("name").(string)
 	in := &vpclattice.CreateRuleInput{
@@ -290,7 +290,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	serviceId := d.Get("service_identifier").(string)
 	listenerId := d.Get("listener_identifier").(string)
@@ -327,7 +327,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	serviceId := d.Get("service_identifier").(string)
 	listenerId := d.Get("listener_identifier").(string)
@@ -361,7 +361,7 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	serviceId := d.Get("service_identifier").(string)
 	listenerId := d.Get("listener_identifier").(string)

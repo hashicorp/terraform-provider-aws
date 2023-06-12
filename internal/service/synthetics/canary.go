@@ -269,7 +269,7 @@ func ResourceCanary() *schema.Resource {
 
 func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn()
+	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &synthetics.CreateCanaryInput{
@@ -356,7 +356,7 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn()
+	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
 
 	canary, err := FindCanaryByName(ctx, conn, d.Id())
 
@@ -421,7 +421,7 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn()
+	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all", "start_canary") {
 		input := &synthetics.UpdateCanaryInput{
@@ -527,7 +527,7 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceCanaryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn()
+	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
 
 	if status := d.Get("status").(string); status == synthetics.CanaryStateRunning {
 		if err := stopCanary(ctx, d.Id(), conn); err != nil {

@@ -172,7 +172,7 @@ func ResourceDomainName() *schema.Resource {
 
 func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	domainName := d.Get("domain_name").(string)
 	input := &apigateway.CreateDomainNameInput{
@@ -234,7 +234,7 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	domainName, err := FindDomainName(ctx, conn, d.Id())
 
@@ -285,7 +285,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		var operations []*apigateway.PatchOperation
@@ -392,7 +392,7 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Domain Name: %s", d.Id())
 	_, err := conn.DeleteDomainNameWithContext(ctx, &apigateway.DeleteDomainNameInput{

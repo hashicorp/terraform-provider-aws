@@ -179,7 +179,7 @@ const (
 )
 
 func resourceConfigurationSetEventDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.CreateConfigurationSetEventDestinationInput{
 		ConfigurationSetName: aws.String(d.Get("configuration_set_name").(string)),
@@ -204,7 +204,7 @@ func resourceConfigurationSetEventDestinationCreate(ctx context.Context, d *sche
 }
 
 func resourceConfigurationSetEventDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	configurationSetName, _, err := ParseConfigurationSetEventDestinationID(d.Id())
 	if err != nil {
@@ -234,7 +234,7 @@ func resourceConfigurationSetEventDestinationRead(ctx context.Context, d *schema
 }
 
 func resourceConfigurationSetEventDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	configurationSetName, eventDestinationName, err := ParseConfigurationSetEventDestinationID(d.Id())
 	if err != nil {
@@ -259,7 +259,7 @@ func resourceConfigurationSetEventDestinationUpdate(ctx context.Context, d *sche
 }
 
 func resourceConfigurationSetEventDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	log.Printf("[INFO] Deleting SESV2 ConfigurationSetEventDestination %s", d.Id())
 

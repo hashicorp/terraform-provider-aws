@@ -485,7 +485,7 @@ func testAccCheckTrustExists(ctx context.Context, n string, v *awstypes.Trust) r
 			return fmt.Errorf("No Directory Service Trust ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
 		output, err := tfds.FindTrustByID(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.ID)
 
@@ -501,7 +501,7 @@ func testAccCheckTrustExists(ctx context.Context, n string, v *awstypes.Trust) r
 
 func testAccCheckTrustDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_trust" {

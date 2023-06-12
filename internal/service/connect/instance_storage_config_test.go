@@ -486,7 +486,7 @@ func testAccCheckInstanceStorageConfigExists(ctx context.Context, resourceName s
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		params := &connect.DescribeInstanceStorageConfigInput{
 			AssociationId: aws.String(associationId),
@@ -512,7 +512,7 @@ func testAccCheckInstanceStorageConfigDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 			instanceId, associationId, resourceType, err := tfconnect.InstanceStorageConfigParseId(rs.Primary.ID)
 

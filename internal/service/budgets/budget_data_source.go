@@ -266,7 +266,7 @@ const (
 )
 
 func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn()
+	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	budgetName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 

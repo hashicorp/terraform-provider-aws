@@ -66,7 +66,7 @@ func ResourceQueryLogConfig() *schema.Resource {
 }
 
 func resourceQueryLogConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &route53resolver.CreateResolverQueryLogConfigInput{
@@ -92,7 +92,7 @@ func resourceQueryLogConfigCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	queryLogConfig, err := FindResolverQueryLogConfigByID(ctx, conn, d.Id())
 
@@ -122,7 +122,7 @@ func resourceQueryLogConfigUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceQueryLogConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Query Log Config: %s", d.Id())
 	_, err := conn.DeleteResolverQueryLogConfigWithContext(ctx, &route53resolver.DeleteResolverQueryLogConfigInput{

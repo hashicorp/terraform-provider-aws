@@ -119,7 +119,7 @@ func ResourceAddon() *schema.Resource {
 
 func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	addonName := d.Get("addon_name").(string)
 	clusterName := d.Get("cluster_name").(string)
@@ -191,7 +191,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 
@@ -227,7 +227,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 
@@ -292,7 +292,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 

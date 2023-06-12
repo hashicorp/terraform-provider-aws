@@ -364,7 +364,7 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 
 func testAccCheckScalingPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingPlansConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingPlansConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_autoscalingplans_scaling_plan" {
@@ -392,7 +392,7 @@ func testAccCheckScalingPlanDestroy(ctx context.Context) resource.TestCheckFunc 
 
 func testAccCheckScalingPlanExists(ctx context.Context, name string, v *autoscalingplans.ScalingPlan) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingPlansConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingPlansConn(ctx)
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

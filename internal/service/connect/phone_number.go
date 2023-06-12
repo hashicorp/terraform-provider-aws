@@ -95,7 +95,7 @@ func ResourcePhoneNumber() *schema.Resource {
 }
 
 func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	targetArn := d.Get("target_arn").(string)
 	phoneNumberType := d.Get("type").(string)
@@ -161,7 +161,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	phoneNumberId := d.Id()
 
@@ -202,7 +202,7 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	phoneNumberId := d.Id()
 
@@ -231,7 +231,7 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	phoneNumberId := d.Id()
 

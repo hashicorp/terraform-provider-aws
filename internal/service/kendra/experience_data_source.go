@@ -137,7 +137,7 @@ func DataSourceExperience() *schema.Resource {
 }
 
 func dataSourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	experienceID := d.Get("experience_id").(string)
 	indexID := d.Get("index_id").(string)

@@ -28,7 +28,7 @@ func sweepDomains(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SWFClient()
+	conn := client.(*conns.AWSClient).SWFClient(ctx)
 	input := &swf.ListDomainsInput{
 		RegistrationStatus: types.RegistrationStatusRegistered,
 	}

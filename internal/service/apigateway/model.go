@@ -39,7 +39,7 @@ func ResourceModel() *schema.Resource {
 				d.Set("name", name)
 				d.Set("rest_api_id", restApiID)
 
-				conn := meta.(*conns.AWSClient).APIGatewayConn()
+				conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 				output, err := conn.GetModelWithContext(ctx, &apigateway.GetModelInput{
 					ModelName: aws.String(name),
@@ -92,7 +92,7 @@ func ResourceModel() *schema.Resource {
 
 func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &apigateway.CreateModelInput{
@@ -122,7 +122,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	model, err := FindModelByTwoPartKey(ctx, conn, d.Get("name").(string), d.Get("rest_api_id").(string))
 
@@ -145,7 +145,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	operations := make([]*apigateway.PatchOperation, 0)
 
@@ -182,7 +182,7 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Model: %s", d.Id())
 	_, err := conn.DeleteModelWithContext(ctx, &apigateway.DeleteModelInput{

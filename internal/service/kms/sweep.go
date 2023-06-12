@@ -32,7 +32,7 @@ func sweepKeys(region string) error {
 	input := &kms.ListKeysInput{
 		Limit: aws.Int64(1000),
 	}
-	conn := client.(*conns.AWSClient).KMSConn()
+	conn := client.(*conns.AWSClient).KMSConn(ctx)
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 

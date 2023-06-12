@@ -212,7 +212,7 @@ func TestAccCodeStarNotificationsNotificationRule_eventTypeIDs(t *testing.T) {
 
 func testAccCheckNotificationRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarNotificationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarNotificationsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
@@ -252,7 +252,7 @@ func testAccCheckNotificationRuleDestroy(ctx context.Context) resource.TestCheck
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarNotificationsConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarNotificationsConn(ctx)
 
 	input := &codestarnotifications.ListTargetsInput{
 		MaxResults: aws.Int64(1),

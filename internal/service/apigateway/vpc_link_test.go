@@ -140,7 +140,7 @@ func TestAccAPIGatewayVPCLink_disappears(t *testing.T) {
 
 func testAccCheckVPCLinkDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_vpc_link" {
@@ -173,7 +173,7 @@ func testAccCheckVPCLinkExists(ctx context.Context, name string) resource.TestCh
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		input := &apigateway.GetVpcLinkInput{
 			VpcLinkId: aws.String(rs.Primary.ID),

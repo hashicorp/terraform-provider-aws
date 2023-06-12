@@ -44,7 +44,7 @@ func ResourceStaticIP() *schema.Resource {
 
 func resourceStaticIPCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Allocating Lightsail Static IP: %q", name)
@@ -62,7 +62,7 @@ func resourceStaticIPCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceStaticIPRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Reading Lightsail Static IP: %q", name)
@@ -87,7 +87,7 @@ func resourceStaticIPRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStaticIPDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Deleting Lightsail Static IP: %q", name)

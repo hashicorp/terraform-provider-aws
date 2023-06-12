@@ -53,7 +53,7 @@ func ResourceClassificationExportConfiguration() *schema.Resource {
 }
 
 func resourceClassificationExportConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	if d.IsNewResource() {
 		output, err := conn.GetClassificationExportConfigurationWithContext(ctx, &macie2.GetClassificationExportConfigurationInput{})
@@ -86,7 +86,7 @@ func resourceClassificationExportConfigurationCreate(ctx context.Context, d *sch
 }
 
 func resourceClassificationExportConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := macie2.PutClassificationExportConfigurationInput{
 		Configuration: &macie2.ClassificationExportConfiguration{},
@@ -110,7 +110,7 @@ func resourceClassificationExportConfigurationUpdate(ctx context.Context, d *sch
 }
 
 func resourceClassificationExportConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := macie2.GetClassificationExportConfigurationInput{} // api does not have a getById() like endpoint.
 	output, err := conn.GetClassificationExportConfigurationWithContext(ctx, &input)
@@ -133,7 +133,7 @@ func resourceClassificationExportConfigurationRead(ctx context.Context, d *schem
 }
 
 func resourceClassificationExportConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := macie2.PutClassificationExportConfigurationInput{
 		Configuration: &macie2.ClassificationExportConfiguration{},

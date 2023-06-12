@@ -530,7 +530,7 @@ func testAccCheckRuleExists(ctx context.Context, n string, v *eventbridge.Descri
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		output, err := tfevents.FindRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
 
@@ -557,7 +557,7 @@ func testAccCheckRuleEnabled(ctx context.Context, n string, want string) resourc
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		output, err := tfevents.FindRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
 
@@ -575,7 +575,7 @@ func testAccCheckRuleEnabled(ctx context.Context, n string, want string) resourc
 
 func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_rule" {

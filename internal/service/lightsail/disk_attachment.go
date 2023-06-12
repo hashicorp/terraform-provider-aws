@@ -47,7 +47,7 @@ func ResourceDiskAttachment() *schema.Resource {
 }
 
 func resourceDiskAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 
 	in := lightsail.AttachDiskInput{
 		DiskName:     aws.String(d.Get("disk_name").(string)),
@@ -79,7 +79,7 @@ func resourceDiskAttachmentCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceDiskAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 
 	out, err := FindDiskAttachmentById(ctx, conn, d.Id())
 
@@ -101,7 +101,7 @@ func resourceDiskAttachmentRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailConn(ctx)
 
 	id_parts := strings.SplitN(d.Id(), ",", -1)
 	dName := id_parts[0]

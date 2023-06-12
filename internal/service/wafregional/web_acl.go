@@ -177,7 +177,7 @@ func ResourceWebACL() *schema.Resource {
 
 func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	wr := NewRetryer(conn, region)
@@ -245,7 +245,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
 	params := &waf.GetWebACLInput{
 		WebACLId: aws.String(d.Id()),
@@ -315,7 +315,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChanges("default_action", "rule") {
@@ -366,7 +366,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	// First, need to delete all rules

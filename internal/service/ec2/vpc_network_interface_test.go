@@ -381,7 +381,7 @@ func TestAccVPCNetworkInterface_ignoreExternalAttachment(t *testing.T) {
 				Config: testAccVPCNetworkInterfaceConfig_externalAttachment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(ctx, resourceName, &conf),
-					testAccCheckENIMakeExternalAttachment("aws_instance.test", &conf),
+					testAccCheckENIMakeExternalAttachment(ctx, "aws_instance.test", &conf),
 				),
 			},
 			{
@@ -1002,7 +1002,7 @@ func testAccCheckENIExists(ctx context.Context, n string, v *ec2.NetworkInterfac
 			return fmt.Errorf("No EC2 Network Interface ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindNetworkInterfaceByID(ctx, conn, rs.Primary.ID)
 
@@ -1018,7 +1018,7 @@ func testAccCheckENIExists(ctx context.Context, n string, v *ec2.NetworkInterfac
 
 func testAccCheckENIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_network_interface" {
@@ -1042,7 +1042,7 @@ func testAccCheckENIDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckENIMakeExternalAttachment(n string, conf *ec2.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENIMakeExternalAttachment(ctx context.Context, n string, networkInterface *ec2.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok || rs.Primary.ID == "" {
@@ -1052,10 +1052,10 @@ func testAccCheckENIMakeExternalAttachment(n string, conf *ec2.NetworkInterface)
 		input := &ec2.AttachNetworkInterfaceInput{
 			DeviceIndex:        aws.Int64(1),
 			InstanceId:         aws.String(rs.Primary.ID),
-			NetworkInterfaceId: conf.NetworkInterfaceId,
+			NetworkInterfaceId: networkInterface.NetworkInterfaceId,
 		}
 
-		_, err := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn().AttachNetworkInterface(input)
+		_, err := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx).AttachNetworkInterfaceWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error attaching ENI: %w", err)

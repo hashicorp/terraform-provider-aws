@@ -69,7 +69,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 
 func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	input := redshift.CreateClusterSnapshotInput{
 		SnapshotIdentifier: aws.String(d.Get("snapshot_identifier").(string)),
@@ -98,7 +98,7 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	snapshot, err := FindClusterSnapshotByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -132,7 +132,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &redshift.ModifyClusterSnapshotInput{
@@ -152,7 +152,7 @@ func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster Snapshot: %s", d.Id())
 	_, err := conn.DeleteClusterSnapshotWithContext(ctx, &redshift.DeleteClusterSnapshotInput{

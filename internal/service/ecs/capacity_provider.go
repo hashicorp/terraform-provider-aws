@@ -116,7 +116,7 @@ func ResourceCapacityProvider() *schema.Resource {
 
 func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	name := d.Get("name").(string)
 	input := ecs.CreateCapacityProviderInput{
@@ -159,7 +159,7 @@ func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	output, err := FindCapacityProviderByARN(ctx, conn, d.Id())
 
@@ -188,7 +188,7 @@ func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ecs.UpdateCapacityProviderInput{
@@ -229,7 +229,7 @@ func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting ECS Capacity Provider (%s)", d.Id())
 	_, err := conn.DeleteCapacityProviderWithContext(ctx, &ecs.DeleteCapacityProviderInput{

@@ -87,5 +87,5 @@ func UpdateTags(ctx context.Context, conn *lambda.Client, identifier string, old
 // UpdateTags updates lambda service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).LambdaClient(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).LambdaClient(ctx), identifier, oldTags, newTags)
 }

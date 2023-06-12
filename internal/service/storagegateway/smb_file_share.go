@@ -207,7 +207,7 @@ func ResourceSMBFileShare() *schema.Resource {
 
 func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.CreateSMBFileShareInput{
 		AccessBasedEnumeration: aws.Bool(d.Get("access_based_enumeration").(bool)),
@@ -301,7 +301,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	fileshare, err := FindSMBFileShareByARN(ctx, conn, d.Id())
 
@@ -358,7 +358,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &storagegateway.UpdateSMBFileShareInput{
@@ -437,7 +437,7 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceSMBFileShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Storage Gateway SMB File Share: %s", d.Id())
 	_, err := conn.DeleteFileShareWithContext(ctx, &storagegateway.DeleteFileShareInput{

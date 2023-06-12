@@ -55,7 +55,7 @@ func ResourcePipeline() *schema.Resource {
 
 func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataPipelineConn()
+	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 
 	uniqueID := id.UniqueId()
 	input := datapipeline.CreatePipelineInput{
@@ -81,7 +81,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataPipelineConn()
+	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 
 	v, err := PipelineRetrieve(ctx, d.Id(), conn)
 	if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) || tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) || v == nil {
@@ -111,7 +111,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataPipelineConn()
+	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 
 	opts := datapipeline.DeletePipelineInput{
 		PipelineId: aws.String(d.Id()),

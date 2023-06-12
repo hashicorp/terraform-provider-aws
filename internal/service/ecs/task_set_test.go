@@ -393,7 +393,7 @@ func testAccCheckTaskSetExists(ctx context.Context, name string) resource.TestCh
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
 
 		taskSetId, service, cluster, err := tfecs.TaskSetParseID(rs.Primary.ID)
 
@@ -423,7 +423,7 @@ func testAccCheckTaskSetExists(ctx context.Context, name string) resource.TestCh
 
 func testAccCheckTaskSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_task_set" {

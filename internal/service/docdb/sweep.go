@@ -77,7 +77,7 @@ func sweepDBClusters(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DocDBConn()
+	conn := client.(*conns.AWSClient).DocDBConn(ctx)
 	input := &docdb.DescribeDBClustersInput{}
 
 	err = conn.DescribeDBClustersPagesWithContext(ctx, input, func(out *docdb.DescribeDBClustersOutput, lastPage bool) bool {
@@ -124,7 +124,7 @@ func sweepDBClusterSnapshots(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DocDBConn()
+	conn := client.(*conns.AWSClient).DocDBConn(ctx)
 	input := &docdb.DescribeDBClusterSnapshotsInput{}
 
 	err = conn.DescribeDBClusterSnapshotsPagesWithContext(ctx, input, func(out *docdb.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
@@ -170,7 +170,7 @@ func sweepDBClusterParameterGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DocDBConn()
+	conn := client.(*conns.AWSClient).DocDBConn(ctx)
 	input := &docdb.DescribeDBClusterParameterGroupsInput{}
 
 	err = conn.DescribeDBClusterParameterGroupsPagesWithContext(ctx, input, func(out *docdb.DescribeDBClusterParameterGroupsOutput, lastPage bool) bool {
@@ -217,7 +217,7 @@ func sweepDBInstances(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DocDBConn()
+	conn := client.(*conns.AWSClient).DocDBConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &docdb.DescribeDBInstancesInput{}
@@ -262,7 +262,7 @@ func sweepGlobalClusters(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DocDBConn()
+	conn := client.(*conns.AWSClient).DocDBConn(ctx)
 	input := &docdb.DescribeGlobalClustersInput{}
 
 	err = conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(out *docdb.DescribeGlobalClustersOutput, lastPage bool) bool {
@@ -308,7 +308,7 @@ func sweepDBSubnetGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DocDBConn()
+	conn := client.(*conns.AWSClient).DocDBConn(ctx)
 	input := &docdb.DescribeDBSubnetGroupsInput{}
 
 	err = conn.DescribeDBSubnetGroupsPagesWithContext(ctx, input, func(out *docdb.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
@@ -354,7 +354,7 @@ func sweepEventSubscriptions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DocDBConn()
+	conn := client.(*conns.AWSClient).DocDBConn(ctx)
 	input := &docdb.DescribeEventSubscriptionsInput{}
 
 	err = conn.DescribeEventSubscriptionsPagesWithContext(ctx, input, func(out *docdb.DescribeEventSubscriptionsOutput, lastPage bool) bool {

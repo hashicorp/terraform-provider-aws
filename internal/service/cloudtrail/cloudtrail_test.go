@@ -773,7 +773,7 @@ func testAccCheckExists(ctx context.Context, n string, trail *cloudtrail.Trail) 
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn(ctx)
 		params := cloudtrail.DescribeTrailsInput{
 			TrailNameList: []*string{aws.String(rs.Primary.ID)},
 		}
@@ -797,7 +797,7 @@ func testAccCheckLoggingEnabled(ctx context.Context, n string, desired bool) res
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn(ctx)
 		params := cloudtrail.GetTrailStatusInput{
 			Name: aws.String(rs.Primary.ID),
 		}
@@ -849,7 +849,7 @@ func testAccCheckLogValidationEnabled(n string, desired bool, trail *cloudtrail.
 
 func testAccCheckTrailDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudtrail" {
@@ -876,7 +876,7 @@ func testAccCheckTrailDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckLoadTags(ctx context.Context, trail *cloudtrail.Trail, tags *[]*cloudtrail.Tag) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn(ctx)
 		input := cloudtrail.ListTagsInput{
 			ResourceIdList: []*string{trail.TrailARN},
 		}

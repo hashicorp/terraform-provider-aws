@@ -99,7 +99,7 @@ func ResourceFileSystemAssociation() *schema.Resource {
 
 func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	gatewayARN := d.Get("gateway_arn").(string)
 	input := &storagegateway.AssociateFileSystemInput{
@@ -136,7 +136,7 @@ func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.Resource
 
 func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	filesystem, err := FindFileSystemAssociationByARN(ctx, conn, d.Id())
 
@@ -166,7 +166,7 @@ func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	if d.HasChangesExcept("tags_all") {
 		input := &storagegateway.UpdateFileSystemAssociationInput{
@@ -196,7 +196,7 @@ func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.Resource
 
 func resourceFileSystemAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.DisassociateFileSystemInput{
 		FileSystemAssociationARN: aws.String(d.Id()),

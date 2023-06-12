@@ -62,7 +62,7 @@ func ResourceProvisionedConcurrencyConfig() *schema.Resource {
 
 func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
 
@@ -89,7 +89,7 @@ func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.R
 
 func resourceProvisionedConcurrencyConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
 
@@ -123,7 +123,7 @@ func resourceProvisionedConcurrencyConfigRead(ctx context.Context, d *schema.Res
 
 func resourceProvisionedConcurrencyConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
 
@@ -157,7 +157,7 @@ func resourceProvisionedConcurrencyConfigDelete(ctx context.Context, d *schema.R
 		return diags
 	}
 
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
 

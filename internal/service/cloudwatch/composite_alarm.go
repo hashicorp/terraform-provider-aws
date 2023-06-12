@@ -99,7 +99,7 @@ func ResourceCompositeAlarm() *schema.Resource {
 }
 
 func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	name := d.Get("alarm_name").(string)
 	input := expandPutCompositeAlarmInput(ctx, d)
@@ -143,7 +143,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	alarm, err := FindCompositeAlarmByName(ctx, conn, d.Id())
 
@@ -170,7 +170,7 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := expandPutCompositeAlarmInput(ctx, d)
@@ -186,7 +186,7 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Composite Alarm: %s", d.Id())
 	_, err := conn.DeleteAlarmsWithContext(ctx, &cloudwatch.DeleteAlarmsInput{

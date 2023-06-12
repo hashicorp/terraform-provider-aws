@@ -115,7 +115,7 @@ func ResourceLink() *schema.Resource {
 }
 
 func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	input := &networkmanager.CreateLinkInput{
@@ -157,7 +157,7 @@ func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	link, err := FindLinkByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
@@ -192,7 +192,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		globalNetworkID := d.Get("global_network_id").(string)
@@ -224,7 +224,7 @@ func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceLinkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 

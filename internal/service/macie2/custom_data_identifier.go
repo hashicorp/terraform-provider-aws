@@ -104,7 +104,7 @@ func ResourceCustomDataIdentifier() *schema.Resource {
 }
 
 func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.CreateCustomDataIdentifierInput{
 		ClientToken: aws.String(id.UniqueId()),
@@ -157,7 +157,7 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.GetCustomDataIdentifierInput{
 		Id: aws.String(d.Id()),
@@ -202,7 +202,7 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceCustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DeleteCustomDataIdentifierInput{
 		Id: aws.String(d.Id()),

@@ -347,7 +347,7 @@ func TestAccAPIGatewayV2Authorizer_HTTPAPILambdaRequestAuthorizer_initialZeroCac
 
 func testAccCheckAuthorizerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_authorizer" {
@@ -383,7 +383,7 @@ func testAccCheckAuthorizerExists(ctx context.Context, n string, vApiId *string,
 			return fmt.Errorf("No API Gateway v2 authorizer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		resp, err := conn.GetAuthorizerWithContext(ctx, &apigatewayv2.GetAuthorizerInput{

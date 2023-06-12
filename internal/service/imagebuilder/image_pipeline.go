@@ -161,7 +161,7 @@ func ResourceImagePipeline() *schema.Resource {
 
 func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.CreateImagePipelineInput{
 		ClientToken:                  aws.String(id.UniqueId()),
@@ -222,7 +222,7 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.GetImagePipelineInput{
 		ImagePipelineArn: aws.String(d.Id()),
@@ -282,7 +282,7 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	if d.HasChanges(
 		"description",
@@ -343,7 +343,7 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceImagePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.DeleteImagePipelineInput{
 		ImagePipelineArn: aws.String(d.Id()),

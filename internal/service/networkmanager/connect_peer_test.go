@@ -163,7 +163,7 @@ func testAccCheckConnectPeerExists(ctx context.Context, n string, v *networkmana
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No Network Manager Connect Peer ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
 		output, err := tfnetworkmanager.FindConnectPeerByID(ctx, conn, rs.Primary.ID)
 
@@ -179,7 +179,7 @@ func testAccCheckConnectPeerExists(ctx context.Context, n string, v *networkmana
 
 func testAccCheckConnectPeerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_connect_peer" {

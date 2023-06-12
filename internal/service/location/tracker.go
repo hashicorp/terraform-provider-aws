@@ -73,7 +73,7 @@ func ResourceTracker() *schema.Resource {
 
 func resourceTrackerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.CreateTrackerInput{
 		Tags: GetTagsIn(ctx),
@@ -112,7 +112,7 @@ func resourceTrackerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DescribeTrackerInput{
 		TrackerName: aws.String(d.Id()),
@@ -150,7 +150,7 @@ func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTrackerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	if d.HasChanges("description", "position_filtering") {
 		input := &locationservice.UpdateTrackerInput{
@@ -177,7 +177,7 @@ func resourceTrackerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTrackerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DeleteTrackerInput{
 		TrackerName: aws.String(d.Id()),

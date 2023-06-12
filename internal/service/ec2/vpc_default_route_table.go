@@ -140,7 +140,7 @@ func ResourceDefaultRouteTable() *schema.Resource {
 
 func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	routeTableID := d.Get("default_route_table_id").(string)
 
@@ -249,7 +249,7 @@ func resourceDefaultRouteTableRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDefaultRouteTableImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	routeTable, err := FindMainRouteTableByVPCID(ctx, conn, d.Id())
 

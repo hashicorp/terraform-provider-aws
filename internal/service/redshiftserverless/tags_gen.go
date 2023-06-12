@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn redshiftserverlessiface.RedshiftServerle
 // ListTags lists redshiftserverless service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).RedshiftServerlessConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).RedshiftServerlessConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -138,5 +138,5 @@ func UpdateTags(ctx context.Context, conn redshiftserverlessiface.RedshiftServer
 // UpdateTags updates redshiftserverless service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).RedshiftServerlessConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).RedshiftServerlessConn(ctx), identifier, oldTags, newTags)
 }

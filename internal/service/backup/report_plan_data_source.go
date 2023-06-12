@@ -112,7 +112,7 @@ func DataSourceReportPlan() *schema.Resource {
 
 func dataSourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
