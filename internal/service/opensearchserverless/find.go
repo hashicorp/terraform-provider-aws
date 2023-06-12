@@ -35,3 +35,28 @@ func FindAccessPolicyByNameAndType(ctx context.Context, conn *opensearchserverle
 
 	return out.AccessPolicyDetail, nil
 }
+
+func FindSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, name, policyType string) (*types.SecurityPolicyDetail, error) {
+	in := &opensearchserverless.GetSecurityPolicyInput{
+		Name: aws.String(name),
+		Type: types.SecurityPolicyType(policyType),
+	}
+	out, err := conn.GetSecurityPolicy(ctx, in)
+	if err != nil {
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.SecurityPolicyDetail == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.SecurityPolicyDetail, nil
+}

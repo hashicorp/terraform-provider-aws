@@ -28,11 +28,11 @@ import (
 )
 
 // @FrameworkResource
-func newResourceAccessPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceAccessPolicy{}, nil
+func newResourceSecurityPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &resourceSecurityPolicy{}, nil
 }
 
-type resourceAccessPolicyData struct {
+type resourceSecurityPolicyData struct {
 	Description   types.String `tfsdk:"description"`
 	ID            types.String `tfsdk:"id"`
 	Name          types.String `tfsdk:"name"`
@@ -42,19 +42,19 @@ type resourceAccessPolicyData struct {
 }
 
 const (
-	ResNameAccessPolicy     = "Access Policy"
-	accessPolicyIDSeparator = "/"
+	ResNameSecurityPolicy = "Security Policy"
+	idSeparator           = "/"
 )
 
-type resourceAccessPolicy struct {
+type resourceSecurityPolicy struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceAccessPolicy) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_opensearchserverless_access_policy"
+func (r *resourceSecurityPolicy) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_opensearchserverless_security_policy"
 }
 
-func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"description": schema.StringAttribute{
@@ -85,7 +85,7 @@ func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRe
 			"type": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.AccessPolicyType](),
+					enum.FrameworkValidate[awstypes.SecurityPolicyType](),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -95,8 +95,8 @@ func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRe
 	}
 }
 
-func (r *resourceAccessPolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceAccessPolicyData
+func (r *resourceSecurityPolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan resourceSecurityPolicyData
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
@@ -106,41 +106,41 @@ func (r *resourceAccessPolicy) Create(ctx context.Context, req resource.CreateRe
 
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	in := &opensearchserverless.CreateAccessPolicyInput{
+	in := &opensearchserverless.CreateSecurityPolicyInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(plan.Name.ValueString()),
 		Policy:      aws.String(plan.Policy.ValueString()),
-		Type:        awstypes.AccessPolicyType(plan.Type.ValueString()),
+		Type:        awstypes.SecurityPolicyType(plan.Type.ValueString()),
 	}
 
 	if !plan.Description.IsNull() {
 		in.Description = aws.String(plan.Description.ValueString())
 	}
 
-	out, err := conn.CreateAccessPolicy(ctx, in)
+	out, err := conn.CreateSecurityPolicy(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameAccessPolicy, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameSecurityPolicy, plan.Name.String(), nil),
 			err.Error(),
 		)
 		return
 	}
 
 	state := plan
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.AccessPolicyDetail)...)
+	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.SecurityPolicyDetail)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceAccessPolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceSecurityPolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var state resourceAccessPolicyData
+	var state resourceSecurityPolicyData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := FindAccessPolicyByNameAndType(ctx, conn, state.ID.ValueString(), state.Type.ValueString())
+	out, err := FindSecurityPolicyByNameAndType(ctx, conn, state.ID.ValueString(), state.Type.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -151,10 +151,10 @@ func (r *resourceAccessPolicy) Read(ctx context.Context, req resource.ReadReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceAccessPolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceSecurityPolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var plan, state resourceAccessPolicyData
+	var plan, state resourceSecurityPolicyData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -163,46 +163,46 @@ func (r *resourceAccessPolicy) Update(ctx context.Context, req resource.UpdateRe
 
 	if !plan.Description.Equal(state.Description) ||
 		!plan.Policy.Equal(state.Policy) {
-		input := &opensearchserverless.UpdateAccessPolicyInput{
+		input := &opensearchserverless.UpdateSecurityPolicyInput{
 			ClientToken:   aws.String(id.UniqueId()),
 			Name:          flex.StringFromFramework(ctx, plan.Name),
 			PolicyVersion: flex.StringFromFramework(ctx, state.PolicyVersion),
-			Type:          awstypes.AccessPolicyType(plan.Type.ValueString()),
-		}
-
-		if !plan.Description.Equal(state.Description) {
-			input.Description = aws.String(plan.Description.ValueString())
+			Type:          awstypes.SecurityPolicyType(plan.Type.ValueString()),
 		}
 
 		if !plan.Policy.Equal(state.Policy) {
 			input.Policy = aws.String(plan.Policy.ValueString())
 		}
 
-		out, err := conn.UpdateAccessPolicy(ctx, input)
+		if !plan.Description.Equal(state.Description) {
+			input.Description = aws.String(plan.Description.ValueString())
+		}
+
+		out, err := conn.UpdateSecurityPolicy(ctx, input)
 
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("updating Security Policy (%s)", plan.Name.ValueString()), err.Error())
 			return
 		}
-		resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.AccessPolicyDetail)...)
+		resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.SecurityPolicyDetail)...)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceAccessPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceSecurityPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var state resourceAccessPolicyData
+	var state resourceSecurityPolicyData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	_, err := conn.DeleteAccessPolicy(ctx, &opensearchserverless.DeleteAccessPolicyInput{
+	_, err := conn.DeleteSecurityPolicy(ctx, &opensearchserverless.DeleteSecurityPolicyInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(state.Name.ValueString()),
-		Type:        awstypes.AccessPolicyType(state.Type.ValueString()),
+		Type:        awstypes.SecurityPolicyType(state.Type.ValueString()),
 	})
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
@@ -210,13 +210,13 @@ func (r *resourceAccessPolicy) Delete(ctx context.Context, req resource.DeleteRe
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionDeleting, ResNameAccessPolicy, state.Name.String(), nil),
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionDeleting, ResNameSecurityPolicy, state.Name.String(), nil),
 			err.Error(),
 		)
 	}
 }
 
-func (r *resourceAccessPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *resourceSecurityPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, idSeparator)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		err := fmt.Errorf("unexpected format for ID (%[1]s), expected security-policy-name%[2]ssecurity-policy-type", req.ID, idSeparator)
@@ -224,7 +224,7 @@ func (r *resourceAccessPolicy) ImportState(ctx context.Context, req resource.Imp
 		return
 	}
 
-	state := resourceAccessPolicyData{
+	state := resourceSecurityPolicyData{
 		ID:   types.StringValue(parts[0]),
 		Name: types.StringValue(parts[0]),
 		Type: types.StringValue(parts[1]),
@@ -238,7 +238,7 @@ func (r *resourceAccessPolicy) ImportState(ctx context.Context, req resource.Imp
 }
 
 // refreshFromOutput writes state data from an AWS response object
-func (rd *resourceAccessPolicyData) refreshFromOutput(ctx context.Context, out *awstypes.AccessPolicyDetail) diag.Diagnostics {
+func (rd *resourceSecurityPolicyData) refreshFromOutput(ctx context.Context, out *awstypes.SecurityPolicyDetail) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil {
