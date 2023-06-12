@@ -754,6 +754,15 @@ resource "aws_vpc" "test" {
 
 data "aws_region" "current" {}
 
+resource "aws_vpc_endpoint" "gateway" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
   service_name        = "com.amazonaws.${data.aws_region.current.name}.s3"
@@ -769,6 +778,9 @@ resource "aws_vpc_endpoint" "test" {
   tags = {
     Name = %[1]q
   }
+
+  # To set PrivateDnsOnlyForInboundResolverEndpoint to true, the VPC vpc-abcd1234 must have a Gateway endpoint for the service.
+  depends_on = [aws_vpc_endpoint.gateway]
 }
 `, rName, privateDNSOnlyForInboundResolverEndpoint)
 }
