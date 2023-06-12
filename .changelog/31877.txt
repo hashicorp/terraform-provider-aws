@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_vpc: Fix race condition when reading VPC attributes on a new resource
+resource/aws_vpc: Fix `reading EC2 VPC (vpc-abcd1234) Attribute (enableDnsSupport): couldn't find resource` errors when reading new resource
 ```
