@@ -1,0 +1,7 @@
+```release-note:new-resource
+resource/aws_rekognition_stream_processor
+```
+
+```release-note:new-resource
+resource/aws_rekognition_collection
+```
