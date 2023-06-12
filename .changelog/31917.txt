@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_dms_replication_task: cdc_start_time parameter now use RFC3339 formatted date instead of UNIX timestamp.
+```

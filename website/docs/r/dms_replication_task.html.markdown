@@ -17,7 +17,7 @@ Provides a DMS (Data Migration Service) replication task resource. DMS replicati
 ```terraform
 # Create a new replication task
 resource "aws_dms_replication_task" "test" {
-  cdc_start_time            = "2023-06-09T18:27:12Z"
+  cdc_start_time            = "1993-05-21T05:50:00Z"
   migration_type            = "full-load"
   replication_instance_arn  = aws_dms_replication_instance.test-dms-replication-instance-tf.replication_instance_arn
   replication_task_id       = "test-dms-replication-task-tf"
