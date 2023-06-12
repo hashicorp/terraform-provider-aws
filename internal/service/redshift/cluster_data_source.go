@@ -53,6 +53,10 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"cluster_namespace_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_nodes": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -94,10 +98,6 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"cluster_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_namespace_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -230,39 +230,31 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
+	d.Set("cluster_namespace_arn", rsc.ClusterNamespaceArn)
 	if err := d.Set("cluster_nodes", flattenClusterNodes(rsc.ClusterNodes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cluster_nodes: %s", err)
 	}
-
 	if len(rsc.ClusterParameterGroups) > 0 {
 		d.Set("cluster_parameter_group_name", rsc.ClusterParameterGroups[0].ParameterGroupName)
 	}
-
 	d.Set("cluster_public_key", rsc.ClusterPublicKey)
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
 	d.Set("cluster_subnet_group_name", rsc.ClusterSubnetGroupName)
-
 	if len(rsc.ClusterNodes) > 1 {
 		d.Set("cluster_type", clusterTypeMultiNode)
 	} else {
 		d.Set("cluster_type", clusterTypeSingleNode)
 	}
-
 	d.Set("cluster_version", rsc.ClusterVersion)
-	d.Set("cluster_namespace_arn", rsc.ClusterNamespaceArn)
 	d.Set("database_name", rsc.DBName)
-
 	if rsc.ElasticIpStatus != nil {
 		d.Set("elastic_ip", rsc.ElasticIpStatus.ElasticIp)
 	}
-
 	d.Set("encrypted", rsc.Encrypted)
-
 	if rsc.Endpoint != nil {
 		d.Set("endpoint", rsc.Endpoint.Address)
 		d.Set("port", rsc.Endpoint.Port)
 	}
-
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
 
 	var iamRoles []string
