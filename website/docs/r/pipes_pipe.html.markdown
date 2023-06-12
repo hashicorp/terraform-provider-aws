@@ -150,7 +150,7 @@ resource "aws_pipes_pipe" "example" {
   target   = aws_sqs_queue.target.arn
 
   source_parameters {
-    sqs_queue {
+    sqs_queue_parameters {
       batch_size                         = 1
       maximum_batching_window_in_seconds = 2
     }
@@ -209,7 +209,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `managed_streaming_kafka` - (Optional) The parameters for using an MSK stream as a source. Detailed below.
 * `rabbit_mq_broker` - (Optional) The parameters for using a Rabbit MQ broker as a source. Detailed below.
 * `self_managed_kafka` - (Optional) The parameters for using a self-managed Apache Kafka stream as a source. Detailed below.
-* `sqs_queue` - (Optional) The parameters for using a Amazon SQS stream as a source. Detailed below.
+* `sqs_queue_parameters` - (Optional) The parameters for using a Amazon SQS stream as a source. Detailed below.
 
 #### source_parameters.filter_criteria Configuration Block
 
@@ -311,7 +311,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `security_groups` - (Optional) List of security groups associated with the stream. These security groups must all be in the same VPC. You can specify as many as five security groups. If you do not specify a security group, the default security group for the VPC is used.
 * `subnets` - (Optional) List of the subnets associated with the stream. These subnets must all be in the same VPC. You can specify as many as 16 subnets.
 
-#### source_parameters.sqs_queue Configuration Block
+#### source_parameters.sqs_queue_parameters Configuration Block
 
 * `batch_size` - (Optional) The maximum number of records to include in each batch. Maximum value of 10000.
 * `maximum_batching_window_in_seconds` - (Optional) The maximum length of a time to wait for events. Maximum value of 300.

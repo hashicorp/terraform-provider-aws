@@ -31,7 +31,7 @@ func sourceParametersSchema() *schema.Schema {
 						"source_parameters.0.managed_streaming_kafka",
 						"source_parameters.0.rabbit_mq_broker",
 						"source_parameters.0.self_managed_kafka",
-						"source_parameters.0.sqs_queue",
+						"source_parameters.0.sqs_queue_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -93,7 +93,7 @@ func sourceParametersSchema() *schema.Schema {
 						"source_parameters.0.managed_streaming_kafka",
 						"source_parameters.0.rabbit_mq_broker",
 						"source_parameters.0.self_managed_kafka",
-						"source_parameters.0.sqs_queue",
+						"source_parameters.0.sqs_queue_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -201,7 +201,7 @@ func sourceParametersSchema() *schema.Schema {
 						"source_parameters.0.managed_streaming_kafka",
 						"source_parameters.0.rabbit_mq_broker",
 						"source_parameters.0.self_managed_kafka",
-						"source_parameters.0.sqs_queue",
+						"source_parameters.0.sqs_queue_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -291,7 +291,7 @@ func sourceParametersSchema() *schema.Schema {
 						"source_parameters.0.kinesis_stream",
 						"source_parameters.0.rabbit_mq_broker",
 						"source_parameters.0.self_managed_kafka",
-						"source_parameters.0.sqs_queue",
+						"source_parameters.0.sqs_queue_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -372,7 +372,7 @@ func sourceParametersSchema() *schema.Schema {
 						"source_parameters.0.kinesis_stream",
 						"source_parameters.0.managed_streaming_kafka",
 						"source_parameters.0.self_managed_kafka",
-						"source_parameters.0.sqs_queue",
+						"source_parameters.0.sqs_queue_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -443,7 +443,7 @@ func sourceParametersSchema() *schema.Schema {
 						"source_parameters.0.kinesis_stream",
 						"source_parameters.0.managed_streaming_kafka",
 						"source_parameters.0.rabbit_mq_broker",
-						"source_parameters.0.sqs_queue",
+						"source_parameters.0.sqs_queue_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -576,7 +576,7 @@ func sourceParametersSchema() *schema.Schema {
 						},
 					},
 				},
-				"sqs_queue": {
+				"sqs_queue_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
@@ -630,6 +630,10 @@ func expandPipeSourceParameters(tfMap map[string]interface{}) *types.PipeSourceP
 
 	if v, ok := tfMap["filter_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.FilterCriteria = expandFilterCriteria(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["sqs_queue_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SqsQueueParameters = expandPipeSourceSqsQueueParameters(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -701,6 +705,24 @@ func expandFilters(tfList []interface{}) []types.Filter {
 	return apiObjects
 }
 
+func expandPipeSourceSqsQueueParameters(tfMap map[string]interface{}) *types.PipeSourceSqsQueueParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PipeSourceSqsQueueParameters{}
+
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
+		apiObject.BatchSize = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok && v != 0 {
+		apiObject.MaximumBatchingWindowInSeconds = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
 func flattenPipeSourceParameters(apiObject *types.PipeSourceParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -710,6 +732,10 @@ func flattenPipeSourceParameters(apiObject *types.PipeSourceParameters) map[stri
 
 	if v := apiObject.FilterCriteria; v != nil {
 		tfMap["filter_criteria"] = []interface{}{flattenFilterCriteria(v)}
+	}
+
+	if v := apiObject.SqsQueueParameters; v != nil {
+		tfMap["sqs_queue_parameters"] = []interface{}{flattenPipeSourceSqsQueueParameters(v)}
 	}
 
 	return tfMap
@@ -751,6 +777,24 @@ func flattenFilters(apiObjects []types.Filter) []interface{} {
 	}
 
 	return tfList
+}
+
+func flattenPipeSourceSqsQueueParameters(apiObject *types.PipeSourceSqsQueueParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.BatchSize; v != nil {
+		tfMap["batch_size"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.MaximumBatchingWindowInSeconds; v != nil {
+		tfMap["maximum_batching_window_in_seconds"] = aws.ToInt32(v)
+	}
+
+	return tfMap
 }
 
 /*
