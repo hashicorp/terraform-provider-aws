@@ -15,7 +15,7 @@ If you are capturing logs for Amazon CloudFront, always create the firehose in U
 Be sure to give the data firehose, cloudwatch log group, and/or s3 bucket a name that starts with the prefix `aws-waf-logs-`.
 
 -> **Note:** When logging from a WAFv2 Web ACL to a CloudWatch Log Group the WAFv2 service attempts to create/update a
-generic Log resource policy with a name `AWSWAF-LOGS`, if there are a large number of Web ACLs or the account frequently
+generic Log Resource Policy with a name `AWSWAF-LOGS`. If there are a large number of Web ACLs, or the account frequently
 creates and destroys Web ACLs this policy will hit the max policy size and this resource type will fail to be
 created(Full details in this [issue](https://github.com/hashicorp/terraform-provider-aws/issues/25296)). To avoid this
 happening, a specific resource policy can be managed. See [CloudWatch Log Group](#with-cloudwatch-log-group-and-managed-cloudwatch-log-resource-policy) example below.
