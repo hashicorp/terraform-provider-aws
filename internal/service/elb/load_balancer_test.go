@@ -393,9 +393,15 @@ func TestAccELBLoadBalancer_Swap_subnets(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
 				),
 			},
-
 			{
 				Config: testAccLoadBalancerConfig_subnetSwap,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, "aws_elb.test", &conf),
+					resource.TestCheckResourceAttr("aws_elb.test", "subnets.#", "2"),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_subnetCompleteSwap,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, "aws_elb.test", &conf),
 					resource.TestCheckResourceAttr("aws_elb.test", "subnets.#", "2"),
@@ -1817,7 +1823,7 @@ resource "aws_subnet" "public_a_two" {
 }
 
 resource "aws_elb" "test" {
-  name = "terraform-asg-deployment-example"
+//   name = "terraform-asg-deployment-example"
 
   subnets = [
     aws_subnet.public_a_one.id,
@@ -1893,7 +1899,7 @@ resource "aws_subnet" "public_a_two" {
 }
 
 resource "aws_elb" "test" {
-  name = "terraform-asg-deployment-example"
+//   name = "terraform-asg-deployment-example"
 
   subnets = [
     aws_subnet.public_a_two.id,
@@ -1985,5 +1991,90 @@ resource "aws_elb" "test" {
   }
 
   desync_mitigation_mode = "monitor"
+}
+`
+
+const testAccLoadBalancerConfig_subnetCompleteSwap = `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "azelb" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "terraform-testacc-elb-subnet-swap"
+  }
+}
+
+resource "aws_subnet" "public_a_one" {
+  vpc_id = aws_vpc.azelb.id
+
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  tags = {
+    Name = "tf-acc-elb-subnet-swap-a-one"
+  }
+}
+
+resource "aws_subnet" "public_b_one" {
+  vpc_id = aws_vpc.azelb.id
+
+  cidr_block        = "10.1.7.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
+  tags = {
+    Name = "tf-acc-elb-subnet-swap-b-one"
+  }
+}
+
+resource "aws_subnet" "public_b_two" {
+	vpc_id = aws_vpc.azelb.id
+  
+	cidr_block        = "10.1.6.0/24"
+	availability_zone = data.aws_availability_zones.available.names[1]
+	tags = {
+	  Name = "tf-acc-elb-subnet-swap-b-two"
+	}
+  }
+
+resource "aws_subnet" "public_a_two" {
+  vpc_id = aws_vpc.azelb.id
+
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  tags = {
+    Name = "tf-acc-elb-subnet-swap-a-two"
+  }
+}
+
+resource "aws_elb" "test" {
+
+  subnets = [
+    aws_subnet.public_a_one.id,
+    aws_subnet.public_b_two.id,
+  ]
+
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  depends_on = [aws_internet_gateway.gw]
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.azelb.id
+
+  tags = {
+    Name = "main"
+  }
 }
 `
