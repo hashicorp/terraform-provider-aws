@@ -205,7 +205,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `activemq_broker_parameters` - (Optional) The parameters for using an Active MQ broker as a source. Detailed below.
 * `dynamodb_stream_parameters` - (Optional) The parameters for using a DynamoDB stream as a source.  Detailed below.
 * `filter_criteria` - (Optional) The collection of event patterns used to [filter events](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes-event-filtering.html). Detailed below.
-* `kinesis_stream` - (Optional) The parameters for using a Kinesis stream as a source. Detailed below.
+* `kinesis_stream_parameters` - (Optional) The parameters for using a Kinesis stream as a source. Detailed below.
 * `managed_streaming_kafka` - (Optional) The parameters for using an MSK stream as a source. Detailed below.
 * `rabbit_mq_broker` - (Optional) The parameters for using a Rabbit MQ broker as a source. Detailed below.
 * `self_managed_kafka` - (Optional) The parameters for using a self-managed Apache Kafka stream as a source. Detailed below.
@@ -245,7 +245,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 
 * `arn` - (Optional) The ARN of the Amazon SQS queue specified as the target for the dead-letter queue.
 
-#### source_parameters.kinesis_stream Configuration Block
+#### source_parameters.kinesis_stream_parameters Configuration Block
 
 * `batch_size` - (Optional) The maximum number of records to include in each batch. Maximum value of 10000.
 * `dead_letter_config` - (Optional) Define the target queue to send dead-letter queue events to. Detailed below.
@@ -257,7 +257,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `starting_position` - (Required) The position in a stream from which to start reading. Valid values: TRIM_HORIZON, LATEST, AT_TIMESTAMP.
 * `starting_position_timestamp` - (Optional) With StartingPosition set to AT_TIMESTAMP, the time from which to start reading, in Unix time seconds.
 
-##### source_parameters.kinesis_stream.dead_letter_config Configuration Block
+##### source_parameters.kinesis_stream_parameters.dead_letter_config Configuration Block
 
 * `arn` - (Optional) The ARN of the Amazon SQS queue specified as the target for the dead-letter queue.
 

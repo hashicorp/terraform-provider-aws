@@ -2,6 +2,7 @@ package pipes
 
 import (
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
@@ -27,7 +28,7 @@ func sourceParametersSchema() *schema.Schema {
 					MaxItems: 1,
 					ConflictsWith: []string{
 						"source_parameters.0.dynamodb_stream_parameters",
-						"source_parameters.0.kinesis_stream",
+						"source_parameters.0.kinesis_stream_parameters",
 						"source_parameters.0.managed_streaming_kafka",
 						"source_parameters.0.rabbit_mq_broker",
 						"source_parameters.0.self_managed_kafka",
@@ -89,7 +90,7 @@ func sourceParametersSchema() *schema.Schema {
 					MaxItems: 1,
 					ConflictsWith: []string{
 						"source_parameters.0.activemq_broker_parameters",
-						"source_parameters.0.kinesis_stream",
+						"source_parameters.0.kinesis_stream_parameters",
 						"source_parameters.0.managed_streaming_kafka",
 						"source_parameters.0.rabbit_mq_broker",
 						"source_parameters.0.self_managed_kafka",
@@ -191,7 +192,7 @@ func sourceParametersSchema() *schema.Schema {
 						},
 					},
 				},
-				"kinesis_stream": {
+				"kinesis_stream_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -288,7 +289,7 @@ func sourceParametersSchema() *schema.Schema {
 					ConflictsWith: []string{
 						"source_parameters.0.activemq_broker_parameters",
 						"source_parameters.0.dynamodb_stream_parameters",
-						"source_parameters.0.kinesis_stream",
+						"source_parameters.0.kinesis_stream_parameters",
 						"source_parameters.0.rabbit_mq_broker",
 						"source_parameters.0.self_managed_kafka",
 						"source_parameters.0.sqs_queue_parameters",
@@ -369,7 +370,7 @@ func sourceParametersSchema() *schema.Schema {
 					ConflictsWith: []string{
 						"source_parameters.0.activemq_broker_parameters",
 						"source_parameters.0.dynamodb_stream_parameters",
-						"source_parameters.0.kinesis_stream",
+						"source_parameters.0.kinesis_stream_parameters",
 						"source_parameters.0.managed_streaming_kafka",
 						"source_parameters.0.self_managed_kafka",
 						"source_parameters.0.sqs_queue_parameters",
@@ -440,7 +441,7 @@ func sourceParametersSchema() *schema.Schema {
 					ConflictsWith: []string{
 						"source_parameters.0.activemq_broker_parameters",
 						"source_parameters.0.dynamodb_stream_parameters",
-						"source_parameters.0.kinesis_stream",
+						"source_parameters.0.kinesis_stream_parameters",
 						"source_parameters.0.managed_streaming_kafka",
 						"source_parameters.0.rabbit_mq_broker",
 						"source_parameters.0.sqs_queue_parameters",
@@ -584,7 +585,7 @@ func sourceParametersSchema() *schema.Schema {
 					ConflictsWith: []string{
 						"source_parameters.0.activemq_broker_parameters",
 						"source_parameters.0.dynamodb_stream_parameters",
-						"source_parameters.0.kinesis_stream",
+						"source_parameters.0.kinesis_stream_parameters",
 						"source_parameters.0.managed_streaming_kafka",
 						"source_parameters.0.rabbit_mq_broker",
 						"source_parameters.0.self_managed_kafka",
@@ -636,10 +637,12 @@ func expandPipeSourceParameters(tfMap map[string]interface{}) *types.PipeSourceP
 		apiObject.DynamoDBStreamParameters = expandPipeSourceDynamoDBStreamParameters(v[0].(map[string]interface{}))
 	}
 
-	// TODO
-
 	if v, ok := tfMap["filter_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.FilterCriteria = expandFilterCriteria(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["kinesis_stream_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.KinesisStreamParameters = expandPipeSourceKinesisStreamParameters(v[0].(map[string]interface{}))
 	}
 
 	// TODO
@@ -799,15 +802,49 @@ func expandPipeSourceDynamoDBStreamParameters(tfMap map[string]interface{}) *typ
 	return apiObject
 }
 
-func expandDeadLetterConfig(tfMap map[string]interface{}) *types.DeadLetterConfig {
+func expandPipeSourceKinesisStreamParameters(tfMap map[string]interface{}) *types.PipeSourceKinesisStreamParameters {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.DeadLetterConfig{}
+	apiObject := &types.PipeSourceKinesisStreamParameters{}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
-		apiObject.Arn = aws.String(v)
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
+		apiObject.BatchSize = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["dead_letter_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DeadLetterConfig = expandDeadLetterConfig(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok && v != 0 {
+		apiObject.MaximumBatchingWindowInSeconds = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["maximum_record_age_in_seconds"].(int); ok && v != 0 {
+		apiObject.MaximumRecordAgeInSeconds = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["maximum_retry_attempts"].(int); ok && v != 0 {
+		apiObject.MaximumRetryAttempts = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["on_partial_batch_item_failure"].(string); ok && v != "" {
+		apiObject.OnPartialBatchItemFailure = types.OnPartialBatchItemFailureStreams(v)
+	}
+
+	if v, ok := tfMap["parallelization_factor"].(int); ok && v != 0 {
+		apiObject.ParallelizationFactor = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["starting_position"].(string); ok && v != "" {
+		apiObject.StartingPosition = types.KinesisStreamStartPosition(v)
+	}
+
+	if v, ok := tfMap["starting_position_timestamp"].(string); ok && v != "" {
+		v, _ := time.Parse(time.RFC3339, v)
+
+		apiObject.StartingPositionTimestamp = aws.Time(v)
 	}
 
 	return apiObject
@@ -831,6 +868,20 @@ func expandPipeSourceSqsQueueParameters(tfMap map[string]interface{}) *types.Pip
 	return apiObject
 }
 
+func expandDeadLetterConfig(tfMap map[string]interface{}) *types.DeadLetterConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.DeadLetterConfig{}
+
+	if v, ok := tfMap["arn"].(string); ok && v != "" {
+		apiObject.Arn = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func flattenPipeSourceParameters(apiObject *types.PipeSourceParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -846,10 +897,12 @@ func flattenPipeSourceParameters(apiObject *types.PipeSourceParameters) map[stri
 		tfMap["dynamodb_stream_parameters"] = []interface{}{flattenPipeSourceDynamoDBStreamParameters(v)}
 	}
 
-	// TODO
-
 	if v := apiObject.FilterCriteria; v != nil {
 		tfMap["filter_criteria"] = []interface{}{flattenFilterCriteria(v)}
+	}
+
+	if v := apiObject.KinesisStreamParameters; v != nil {
+		tfMap["kinesis_stream_parameters"] = []interface{}{flattenPipeSourceKinesisStreamParameters(v)}
 	}
 
 	// TODO
@@ -981,15 +1034,47 @@ func flattenPipeSourceDynamoDBStreamParameters(apiObject *types.PipeSourceDynamo
 	return tfMap
 }
 
-func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) map[string]interface{} {
+func flattenPipeSourceKinesisStreamParameters(apiObject *types.PipeSourceKinesisStreamParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Arn; v != nil {
-		tfMap["arn"] = aws.ToString(v)
+	if v := apiObject.BatchSize; v != nil {
+		tfMap["batch_size"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.DeadLetterConfig; v != nil {
+		tfMap["dead_letter_config"] = []interface{}{flattenDeadLetterConfig(v)}
+	}
+
+	if v := apiObject.MaximumBatchingWindowInSeconds; v != nil {
+		tfMap["maximum_batching_window_in_seconds"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.MaximumRecordAgeInSeconds; v != nil {
+		tfMap["maximum_record_age_in_seconds"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.MaximumRetryAttempts; v != nil {
+		tfMap["maximum_retry_attempts"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.OnPartialBatchItemFailure; v != "" {
+		tfMap["on_partial_batch_item_failure"] = v
+	}
+
+	if v := apiObject.ParallelizationFactor; v != nil {
+		tfMap["parallelization_factor"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.StartingPosition; v != "" {
+		tfMap["starting_position"] = v
+	}
+
+	if v := apiObject.StartingPositionTimestamp; v != nil {
+		tfMap["starting_position_timestamp"] = aws.ToTime(v).Format(time.RFC3339)
 	}
 
 	return tfMap
@@ -1008,6 +1093,20 @@ func flattenPipeSourceSqsQueueParameters(apiObject *types.PipeSourceSqsQueuePara
 
 	if v := apiObject.MaximumBatchingWindowInSeconds; v != nil {
 		tfMap["maximum_batching_window_in_seconds"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
+func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Arn; v != nil {
+		tfMap["arn"] = aws.ToString(v)
 	}
 
 	return tfMap
