@@ -321,7 +321,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 You can find out more about EventBridge Pipes Targets in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes-event-target.html).
 
 * `batch_target` - (Optional) The parameters for using an AWS Batch job as a target. Detailed below.
-* `cloudwatch_logs` - (Optional) The parameters for using an CloudWatch Logs log stream as a target. Detailed below.
+* `cloudwatch_logs_parameters` - (Optional) The parameters for using an CloudWatch Logs log stream as a target. Detailed below.
 * `ecs_task` - (Optional) The parameters for using an Amazon ECS task as a target. Detailed below.
 * `eventbridge_event_bus_parameters` - (Optional) The parameters for using an EventBridge event bus as a target. Detailed below.
 * `http_parameters` - (Optional) These are custom parameter to be used when the target is an API Gateway REST APIs or EventBridge ApiDestinations. Detailed below.
@@ -378,7 +378,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 
 * `attempts` - (Optional) The number of times to move a job to the RUNNABLE status. If the value of attempts is greater than one, the job is retried on failure the same number of attempts as the value. Maximum value of 10.
 
-#### target_parameters.cloudwatch_logs Configuration Block
+#### target_parameters.cloudwatch_logs_parameters Configuration Block
 
 * `log_stream_name` - (Optional) The name of the log stream.
 * `timestamp` - (Optional) The time the event occurred, expressed as the number of milliseconds after Jan 1, 1970 00:00:00 UTC. This is the JSON path to the field in the event e.g. $.detail.timestamp
