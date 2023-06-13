@@ -206,7 +206,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `dynamodb_stream_parameters` - (Optional) The parameters for using a DynamoDB stream as a source.  Detailed below.
 * `filter_criteria` - (Optional) The collection of event patterns used to [filter events](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes-event-filtering.html). Detailed below.
 * `kinesis_stream_parameters` - (Optional) The parameters for using a Kinesis stream as a source. Detailed below.
-* `managed_streaming_kafka` - (Optional) The parameters for using an MSK stream as a source. Detailed below.
+* `managed_streaming_kafka_parameters` - (Optional) The parameters for using an MSK stream as a source. Detailed below.
 * `rabbit_mq_broker` - (Optional) The parameters for using a Rabbit MQ broker as a source. Detailed below.
 * `self_managed_kafka` - (Optional) The parameters for using a self-managed Apache Kafka stream as a source. Detailed below.
 * `sqs_queue_parameters` - (Optional) The parameters for using a Amazon SQS stream as a source. Detailed below.
@@ -261,16 +261,16 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 
 * `arn` - (Optional) The ARN of the Amazon SQS queue specified as the target for the dead-letter queue.
 
-#### source_parameters.managed_streaming_kafka Configuration Block
+#### source_parameters.managed_streaming_kafka_parameters Configuration Block
 
 * `batch_size` - (Optional) The maximum number of records to include in each batch. Maximum value of 10000.
 * `consumer_group_id` - (Optional) The name of the destination queue to consume. Maximum value of 200.
 * `credentials` - (Optional) The credentials needed to access the resource. Detailed below.
 * `maximum_batching_window_in_seconds` - (Optional) The maximum length of a time to wait for events. Maximum value of 300.
 * `starting_position` - (Optional) The position in a stream from which to start reading. Valid values: TRIM_HORIZON, LATEST.
-* `topic` - (Required) The name of the topic that the pipe will read from. Maximum length of 249.
+* `topic_name` - (Required) The name of the topic that the pipe will read from. Maximum length of 249.
 
-##### source_parameters.managed_streaming_kafka.credentials Configuration Block
+##### source_parameters.managed_streaming_kafka_parameters.credentials Configuration Block
 
 * `client_certificate_tls_auth` - (Optional) The ARN of the Secrets Manager secret containing the credentials.
 * `sasl_scram_512_auth` - (Optional) The ARN of the Secrets Manager secret containing the credentials.

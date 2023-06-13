@@ -29,7 +29,7 @@ func sourceParametersSchema() *schema.Schema {
 					ConflictsWith: []string{
 						"source_parameters.0.dynamodb_stream_parameters",
 						"source_parameters.0.kinesis_stream_parameters",
-						"source_parameters.0.managed_streaming_kafka",
+						"source_parameters.0.managed_streaming_kafka_parameters",
 						"source_parameters.0.rabbit_mq_broker",
 						"source_parameters.0.self_managed_kafka",
 						"source_parameters.0.sqs_queue_parameters",
@@ -91,7 +91,7 @@ func sourceParametersSchema() *schema.Schema {
 					ConflictsWith: []string{
 						"source_parameters.0.activemq_broker_parameters",
 						"source_parameters.0.kinesis_stream_parameters",
-						"source_parameters.0.managed_streaming_kafka",
+						"source_parameters.0.managed_streaming_kafka_parameters",
 						"source_parameters.0.rabbit_mq_broker",
 						"source_parameters.0.self_managed_kafka",
 						"source_parameters.0.sqs_queue_parameters",
@@ -199,7 +199,7 @@ func sourceParametersSchema() *schema.Schema {
 					ConflictsWith: []string{
 						"source_parameters.0.activemq_broker_parameters",
 						"source_parameters.0.dynamodb_stream_parameters",
-						"source_parameters.0.managed_streaming_kafka",
+						"source_parameters.0.managed_streaming_kafka_parameters",
 						"source_parameters.0.rabbit_mq_broker",
 						"source_parameters.0.self_managed_kafka",
 						"source_parameters.0.sqs_queue_parameters",
@@ -282,7 +282,7 @@ func sourceParametersSchema() *schema.Schema {
 						},
 					},
 				},
-				"managed_streaming_kafka": {
+				"managed_streaming_kafka_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -351,7 +351,7 @@ func sourceParametersSchema() *schema.Schema {
 								ForceNew:         true,
 								ValidateDiagFunc: enum.Validate[types.MSKStartPosition](),
 							},
-							"topic": {
+							"topic_name": {
 								Type:     schema.TypeString,
 								Required: true,
 								ForceNew: true,
@@ -371,7 +371,7 @@ func sourceParametersSchema() *schema.Schema {
 						"source_parameters.0.activemq_broker_parameters",
 						"source_parameters.0.dynamodb_stream_parameters",
 						"source_parameters.0.kinesis_stream_parameters",
-						"source_parameters.0.managed_streaming_kafka",
+						"source_parameters.0.managed_streaming_kafka_parameters",
 						"source_parameters.0.self_managed_kafka",
 						"source_parameters.0.sqs_queue_parameters",
 					},
@@ -442,7 +442,7 @@ func sourceParametersSchema() *schema.Schema {
 						"source_parameters.0.activemq_broker_parameters",
 						"source_parameters.0.dynamodb_stream_parameters",
 						"source_parameters.0.kinesis_stream_parameters",
-						"source_parameters.0.managed_streaming_kafka",
+						"source_parameters.0.managed_streaming_kafka_parameters",
 						"source_parameters.0.rabbit_mq_broker",
 						"source_parameters.0.sqs_queue_parameters",
 					},
@@ -586,7 +586,7 @@ func sourceParametersSchema() *schema.Schema {
 						"source_parameters.0.activemq_broker_parameters",
 						"source_parameters.0.dynamodb_stream_parameters",
 						"source_parameters.0.kinesis_stream_parameters",
-						"source_parameters.0.managed_streaming_kafka",
+						"source_parameters.0.managed_streaming_kafka_parameters",
 						"source_parameters.0.rabbit_mq_broker",
 						"source_parameters.0.self_managed_kafka",
 					},
@@ -643,6 +643,10 @@ func expandPipeSourceParameters(tfMap map[string]interface{}) *types.PipeSourceP
 
 	if v, ok := tfMap["kinesis_stream_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.KinesisStreamParameters = expandPipeSourceKinesisStreamParameters(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["managed_streaming_kafka_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ManagedStreamingKafkaParameters = expandPipeSourceManagedStreamingKafkaParameters(v[0].(map[string]interface{}))
 	}
 
 	// TODO
@@ -850,6 +854,64 @@ func expandPipeSourceKinesisStreamParameters(tfMap map[string]interface{}) *type
 	return apiObject
 }
 
+func expandPipeSourceManagedStreamingKafkaParameters(tfMap map[string]interface{}) *types.PipeSourceManagedStreamingKafkaParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PipeSourceManagedStreamingKafkaParameters{}
+
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
+		apiObject.BatchSize = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["consumer_group_id"].(string); ok && v != "" {
+		apiObject.ConsumerGroupID = aws.String(v)
+	}
+
+	if v, ok := tfMap["credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Credentials = expandMSKAccessCredentials(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok && v != 0 {
+		apiObject.MaximumBatchingWindowInSeconds = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["starting_position"].(string); ok && v != "" {
+		apiObject.StartingPosition = types.MSKStartPosition(v)
+	}
+
+	if v, ok := tfMap["topic_name"].(string); ok && v != "" {
+		apiObject.TopicName = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandMSKAccessCredentials(tfMap map[string]interface{}) types.MSKAccessCredentials {
+	if tfMap == nil {
+		return nil
+	}
+
+	if v, ok := tfMap["client_certificate_tls_auth"].(string); ok && v != "" {
+		apiObject := &types.MSKAccessCredentialsMemberClientCertificateTlsAuth{
+			Value: v,
+		}
+
+		return apiObject
+	}
+
+	if v, ok := tfMap["sasl_scram_512_auth"].(string); ok && v != "" {
+		apiObject := &types.MSKAccessCredentialsMemberSaslScram512Auth{
+			Value: v,
+		}
+
+		return apiObject
+	}
+
+	return nil
+}
+
 func expandPipeSourceSqsQueueParameters(tfMap map[string]interface{}) *types.PipeSourceSqsQueueParameters {
 	if tfMap == nil {
 		return nil
@@ -903,6 +965,10 @@ func flattenPipeSourceParameters(apiObject *types.PipeSourceParameters) map[stri
 
 	if v := apiObject.KinesisStreamParameters; v != nil {
 		tfMap["kinesis_stream_parameters"] = []interface{}{flattenPipeSourceKinesisStreamParameters(v)}
+	}
+
+	if v := apiObject.ManagedStreamingKafkaParameters; v != nil {
+		tfMap["managed_streaming_kafka_parameters"] = []interface{}{flattenPipeSourceManagedStreamingKafkaParameters(v)}
 	}
 
 	// TODO
@@ -1075,6 +1141,62 @@ func flattenPipeSourceKinesisStreamParameters(apiObject *types.PipeSourceKinesis
 
 	if v := apiObject.StartingPositionTimestamp; v != nil {
 		tfMap["starting_position_timestamp"] = aws.ToTime(v).Format(time.RFC3339)
+	}
+
+	return tfMap
+}
+
+func flattenPipeSourceManagedStreamingKafkaParameters(apiObject *types.PipeSourceManagedStreamingKafkaParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.BatchSize; v != nil {
+		tfMap["batch_size"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.ConsumerGroupID; v != nil {
+		tfMap["consumer_group_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Credentials; v != nil {
+		tfMap["credentials"] = []interface{}{flattenMSKAccessCredentials(v)}
+	}
+
+	if v := apiObject.MaximumBatchingWindowInSeconds; v != nil {
+		tfMap["maximum_batching_window_in_seconds"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.StartingPosition; v != "" {
+		tfMap["starting_position"] = v
+	}
+
+	if v := apiObject.TopicName; v != nil {
+		tfMap["topic_name"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenMSKAccessCredentials(apiObject types.MSKAccessCredentials) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject, ok := apiObject.(*types.MSKAccessCredentialsMemberClientCertificateTlsAuth); ok {
+		if v := apiObject.Value; v != "" {
+			tfMap["client_certificate_tls_auth"] = v
+		}
+	}
+
+	if apiObject, ok := apiObject.(*types.MSKAccessCredentialsMemberSaslScram512Auth); ok {
+		if v := apiObject.Value; v != "" {
+			tfMap["sasl_scram_512_auth"] = v
+		}
 	}
 
 	return tfMap
