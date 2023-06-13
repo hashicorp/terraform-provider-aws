@@ -1077,18 +1077,15 @@ resource "aws_quicksight_data_set" "test" {
 
 func testAccDataSetConfigNoPhysicalTableMap(rId, rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSetConfigBase(
-			sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
-			sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
-		),
+		testAccDataSetConfigBase(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_set" "left" {
-  data_set_id = %[1]q
-  name        = %[2]q
+  data_set_id = "%[1]s-left"
+  name        = "%[2]s-left"
   import_mode = "SPICE"
 
   physical_table_map {
-    physical_table_map_id = %[1]q
+    physical_table_map_id = "%[1]s-left"
     s3_source {
       data_source_arn = aws_quicksight_data_source.test.arn
       input_columns {
@@ -1103,12 +1100,12 @@ resource "aws_quicksight_data_set" "left" {
 }
 
 resource "aws_quicksight_data_set" "right" {
-  data_set_id = %[3]q
-  name        = %[4]q
+  data_set_id = "%[1]s-right"
+  name        = "%[2]s-right"
   import_mode = "SPICE"
 
   physical_table_map {
-    physical_table_map_id = %[3]q
+    physical_table_map_id = "%[1]s-right"
     s3_source {
       data_source_arn = aws_quicksight_data_source.test.arn
       input_columns {
@@ -1123,8 +1120,8 @@ resource "aws_quicksight_data_set" "right" {
 }
 
 resource "aws_quicksight_data_set" "test" {
-  data_set_id = %[5]q
-  name        = %[6]q
+  data_set_id = %[1]q
+  name        = %[2]q
   import_mode = "SPICE"
 
   logical_table_map {
@@ -1156,13 +1153,5 @@ resource "aws_quicksight_data_set" "test" {
     }
   }
 }
-`,
-			sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
-			sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
-			sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
-			sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
-			rId,
-			rName,
-		),
-	)
+`, rId, rName))
 }
