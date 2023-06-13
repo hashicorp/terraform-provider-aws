@@ -13,16 +13,6 @@ rules:
       - focus-metavariable: $FUNCNAME
     severity: WARNING
 
-  - id: aws-go-sdk-pointer-conversion-ResourceData-SetId
-    fix: d.SetId(aws.StringValue($VALUE))
-    languages: [go]
-    message: Prefer AWS Go SDK pointer conversion aws.StringValue() function for dereferencing during d.SetId()
-    paths:
-      include:
-        - internal/
-    pattern: "d.SetId(*$VALUE)"
-    severity: WARNING
-
   - id: data-source-with-resource-read
     languages: [go]
     message: Calling a resource's Read method from within a data-source is discouraged

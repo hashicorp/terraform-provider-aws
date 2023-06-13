@@ -80,3 +80,13 @@ rules:
           - pattern: "*aws.String($VALUE)"
           - pattern: "*aws.Time($VALUE)"
     severity: WARNING
+
+  - id: pointer-conversion-ResourceData-SetId
+    fix: d.SetId(aws.StringValue($VALUE))
+    languages: [go]
+    message: Prefer AWS Go SDK pointer conversion aws.StringValue() function for dereferencing during d.SetId()
+    paths:
+      include:
+        - internal/
+    pattern: "d.SetId(*$VALUE)"
+    severity: WARNING
