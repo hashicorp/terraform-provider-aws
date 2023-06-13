@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -219,6 +220,51 @@ func TestAccLambdaProvisionedConcurrencyConfig_skipDestroy(t *testing.T) {
 	})
 }
 
+func TestAccLambdaProvisionedConcurrencyConfig_idMigration530(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	lambdaFunctionResourceName := "aws_lambda_function.test"
+	resourceName := "aws_lambda_provisioned_concurrency_config.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaEndpointID),
+		CheckDestroy: testAccCheckProvisionedConcurrencyConfigDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// At v5.3.0 the resource's schema is v0 and id is colon-delimited
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.3.0",
+					},
+				},
+				Config: testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedConcurrencyConfigExists_v0Schema(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaFunctionResourceName, "version"),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s:1", rName)),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaFunctionResourceName, "version"),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s,1", rName)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckProvisionedConcurrencyConfigDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
@@ -228,15 +274,15 @@ func testAccCheckProvisionedConcurrencyConfigDestroy(ctx context.Context) resour
 				continue
 			}
 
-			functionName, qualifier, err := tflambda.ProvisionedConcurrencyConfigParseID(rs.Primary.ID)
-
+			// functionName, qualifier, err := tflambda.ProvisionedConcurrencyConfigParseID(rs.Primary.ID)
+			parts, err := flex.ExpandResourceId(rs.Primary.ID, tflambda.ProvisionedConcurrencyIDPartCount, false)
 			if err != nil {
 				return err
 			}
 
 			input := &lambda.GetProvisionedConcurrencyConfigInput{
-				FunctionName: aws.String(functionName),
-				Qualifier:    aws.String(qualifier),
+				FunctionName: aws.String(parts[0]),
+				Qualifier:    aws.String(parts[1]),
 			}
 
 			output, err := conn.GetProvisionedConcurrencyConfig(ctx, input)
@@ -274,20 +320,64 @@ func testAccCheckProvisionedConcurrencyDisappearsConfig(ctx context.Context, res
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
-		functionName, qualifier, err := tflambda.ProvisionedConcurrencyConfigParseID(rs.Primary.ID)
-
+		parts, err := flex.ExpandResourceId(rs.Primary.ID, tflambda.ProvisionedConcurrencyIDPartCount, false)
 		if err != nil {
 			return err
 		}
 
 		input := &lambda.DeleteProvisionedConcurrencyConfigInput{
-			FunctionName: aws.String(functionName),
-			Qualifier:    aws.String(qualifier),
+			FunctionName: aws.String(parts[0]),
+			Qualifier:    aws.String(parts[1]),
 		}
 
 		_, err = conn.DeleteProvisionedConcurrencyConfig(ctx, input)
 
 		return err
+	}
+}
+
+// testAccCheckProvisionedConcurrencyConfigExists_v0Schema is a variant of the check
+// exists functions for v0 schemas.
+func testAccCheckProvisionedConcurrencyConfigExists_v0Schema(ctx context.Context, resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Resource not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("Resource (%s) ID not set", resourceName)
+		}
+
+		// flex.ExpandResourceId will fail for unmigrated (v0) schemas. For checking existence
+		// in the migration test, read the required attributes directly instead.
+		functionName, ok := rs.Primary.Attributes["function_name"]
+		if !ok {
+			return fmt.Errorf("Resource (%s) function_name attribute not set", resourceName)
+		}
+		qualifier, ok := rs.Primary.Attributes["qualifier"]
+		if !ok {
+			return fmt.Errorf("Resource (%s) qualifier attribute not set", resourceName)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
+
+		input := &lambda.GetProvisionedConcurrencyConfigInput{
+			FunctionName: aws.String(functionName),
+			Qualifier:    aws.String(qualifier),
+		}
+
+		output, err := conn.GetProvisionedConcurrencyConfig(ctx, input)
+
+		if err != nil {
+			return err
+		}
+
+		if got, want := output.Status, types.ProvisionedConcurrencyStatusEnumReady; got != want {
+			return fmt.Errorf("Lambda Provisioned Concurrency Config (%s) expected status (%s), got: %s", rs.Primary.ID, want, got)
+		}
+
+		return nil
 	}
 }
 
@@ -304,15 +394,14 @@ func testAccCheckProvisionedConcurrencyConfigExists(ctx context.Context, resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
-		functionName, qualifier, err := tflambda.ProvisionedConcurrencyConfigParseID(rs.Primary.ID)
-
+		parts, err := flex.ExpandResourceId(rs.Primary.ID, tflambda.ProvisionedConcurrencyIDPartCount, false)
 		if err != nil {
 			return err
 		}
 
 		input := &lambda.GetProvisionedConcurrencyConfigInput{
-			FunctionName: aws.String(functionName),
-			Qualifier:    aws.String(qualifier),
+			FunctionName: aws.String(parts[0]),
+			Qualifier:    aws.String(parts[1]),
 		}
 
 		output, err := conn.GetProvisionedConcurrencyConfig(ctx, input)
