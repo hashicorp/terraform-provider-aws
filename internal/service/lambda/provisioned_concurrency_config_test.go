@@ -143,6 +143,50 @@ func TestAccLambdaProvisionedConcurrencyConfig_provisionedConcurrentExecutions(t
 	})
 }
 
+func TestAccLambdaProvisionedConcurrencyConfig_FunctionName_arn(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_provisioned_concurrency_config.test"
+	lambdaFunctionResourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisionedConcurrencyConfigDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProvisionedConcurrencyConfigConfig_FunctionName_arn(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
+			},
+			{
+				Config: testAccProvisionedConcurrencyConfigConfig_FunctionName_arn(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "2"),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaProvisionedConcurrencyConfig_Qualifier_aliasName(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -274,7 +318,6 @@ func testAccCheckProvisionedConcurrencyConfigDestroy(ctx context.Context) resour
 				continue
 			}
 
-			// functionName, qualifier, err := tflambda.ProvisionedConcurrencyConfigParseID(rs.Primary.ID)
 			parts, err := flex.ExpandResourceId(rs.Primary.ID, tflambda.ProvisionedConcurrencyIDPartCount, false)
 			if err != nil {
 				return err
@@ -497,6 +540,19 @@ func testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName string
 		fmt.Sprintf(`
 resource "aws_lambda_provisioned_concurrency_config" "test" {
   function_name                     = aws_lambda_function.test.function_name
+  provisioned_concurrent_executions = %[1]d
+  qualifier                         = aws_lambda_function.test.version
+}
+`, provisionedConcurrentExecutions),
+	)
+}
+
+func testAccProvisionedConcurrencyConfigConfig_FunctionName_arn(rName string, provisionedConcurrentExecutions int) string {
+	return acctest.ConfigCompose(
+		testAccProvisionedConcurrencyConfigConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_provisioned_concurrency_config" "test" {
+  function_name                     = aws_lambda_function.test.arn
   provisioned_concurrent_executions = %[1]d
   qualifier                         = aws_lambda_function.test.version
 }
