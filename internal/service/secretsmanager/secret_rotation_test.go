@@ -407,7 +407,7 @@ resource "aws_secretsmanager_secret_rotation" "test" {
 
 func testSecretValueIsCurrent(ctx context.Context, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
 		// Write secret value to clear in-rotation state, otherwise updating the secret rotation
 		// will fail with "A previous rotation isn't complete. That rotation will be reattempted."
 		put_secret_input := &secretsmanager.PutSecretValueInput{
