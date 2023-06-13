@@ -40,12 +40,60 @@ func TestAccOpenSearchServerlessCollection_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName, &collection),
 					resource.TestCheckResourceAttrSet(resourceName, "type"),
+					resource.TestCheckResourceAttrSet(resourceName, "collection_endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "dashboard_endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchServerlessCollection_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var collection types.CollectionDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_collection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheckCollection(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCollectionConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollectionExists(ctx, resourceName, &collection),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccCollectionConfig_tags2(rName, "key1", "value1", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollectionExists(ctx, resourceName, &collection),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccCollectionConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollectionExists(ctx, resourceName, &collection),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -225,5 +273,40 @@ resource "aws_opensearchserverless_collection" "test" {
   depends_on = [aws_opensearchserverless_security_policy.test]
 }
 `, rName, description),
+	)
+}
+
+func testAccCollectionConfig_tags1(rName, key1, value1 string) string {
+	return acctest.ConfigCompose(
+		testAccCollectionBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_opensearchserverless_collection" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+
+  depends_on = [aws_opensearchserverless_security_policy.test]
+}
+`, rName, key1, value1),
+	)
+}
+
+func testAccCollectionConfig_tags2(rName, key1, value1, key2, value2 string) string {
+	return acctest.ConfigCompose(
+		testAccCollectionBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_opensearchserverless_collection" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+
+  depends_on = [aws_opensearchserverless_security_policy.test]
+}
+`, rName, key1, value1, key2, value2),
 	)
 }
