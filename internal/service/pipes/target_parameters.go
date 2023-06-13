@@ -19,7 +19,7 @@ func targetParametersSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"batch_target": {
+				"batch_job_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -84,7 +84,7 @@ func targetParametersSchema() *schema.Schema {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"resource_requirements": {
+										"resource_requirement": {
 											Type:     schema.TypeList,
 											Optional: true,
 											Elem: &schema.Resource{
@@ -132,20 +132,9 @@ func targetParametersSchema() *schema.Schema {
 								ValidateFunc: validation.StringLenBetween(1, 128),
 							},
 							"parameters": {
-								Type:     schema.TypeList,
+								Type:     schema.TypeMap,
 								Optional: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"key": {
-											Type:     schema.TypeString,
-											Optional: true,
-										},
-										"value": {
-											Type:     schema.TypeString,
-											Optional: true,
-										},
-									},
-								},
+								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"retry_strategy": {
 								Type:     schema.TypeList,
@@ -169,7 +158,7 @@ func targetParametersSchema() *schema.Schema {
 					Optional: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
-						"target_parameters.0.batch_target",
+						"target_parameters.0.batch_job_parameters",
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.eventbridge_event_bus_parameters",
 						"target_parameters.0.http_parameters",
@@ -203,7 +192,7 @@ func targetParametersSchema() *schema.Schema {
 					Optional: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
-						"target_parameters.0.batch_target",
+						"target_parameters.0.batch_job_parameters",
 						"target_parameters.0.cloudwatch_logs_parameters",
 						"target_parameters.0.eventbridge_event_bus_parameters",
 						"target_parameters.0.http_parameters",
@@ -536,7 +525,7 @@ func targetParametersSchema() *schema.Schema {
 					Optional: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
-						"target_parameters.0.batch_target",
+						"target_parameters.0.batch_job_parameters",
 						"target_parameters.0.cloudwatch_logs_parameters",
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.http_parameters",
@@ -594,7 +583,7 @@ func targetParametersSchema() *schema.Schema {
 					Optional: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
-						"target_parameters.0.batch_target",
+						"target_parameters.0.batch_job_parameters",
 						"target_parameters.0.cloudwatch_logs_parameters",
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.eventbridge_event_bus_parameters",
@@ -637,7 +626,7 @@ func targetParametersSchema() *schema.Schema {
 					Optional: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
-						"target_parameters.0.batch_target",
+						"target_parameters.0.batch_job_parameters",
 						"target_parameters.0.cloudwatch_logs_parameters",
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.eventbridge_event_bus_parameters",
@@ -663,7 +652,7 @@ func targetParametersSchema() *schema.Schema {
 					Optional: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
-						"target_parameters.0.batch_target",
+						"target_parameters.0.batch_job_parameters",
 						"target_parameters.0.cloudwatch_logs_parameters",
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.eventbridge_event_bus_parameters",
@@ -689,7 +678,7 @@ func targetParametersSchema() *schema.Schema {
 					Optional: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
-						"target_parameters.0.batch_target",
+						"target_parameters.0.batch_job_parameters",
 						"target_parameters.0.cloudwatch_logs_parameters",
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.eventbridge_event_bus_parameters",
@@ -743,7 +732,7 @@ func targetParametersSchema() *schema.Schema {
 					Optional: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
-						"target_parameters.0.batch_target",
+						"target_parameters.0.batch_job_parameters",
 						"target_parameters.0.cloudwatch_logs_parameters",
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.eventbridge_event_bus_parameters",
@@ -786,7 +775,7 @@ func targetParametersSchema() *schema.Schema {
 					Optional: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
-						"target_parameters.0.batch_target",
+						"target_parameters.0.batch_job_parameters",
 						"target_parameters.0.cloudwatch_logs_parameters",
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.eventbridge_event_bus_parameters",
@@ -817,7 +806,7 @@ func targetParametersSchema() *schema.Schema {
 					Optional: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
-						"target_parameters.0.batch_target",
+						"target_parameters.0.batch_job_parameters",
 						"target_parameters.0.cloudwatch_logs_parameters",
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.eventbridge_event_bus_parameters",
@@ -850,7 +839,9 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 
 	apiObject := &types.PipeTargetParameters{}
 
-	// TODO
+	if v, ok := tfMap["batch_job_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.BatchJobParameters = expandPipeTargetBatchJobParameters(v[0].(map[string]interface{}))
+	}
 
 	if v, ok := tfMap["cloudwatch_logs_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CloudWatchLogsParameters = expandPipeTargetCloudWatchLogsParameters(v[0].(map[string]interface{}))
@@ -892,6 +883,230 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 
 	if v, ok := tfMap["step_function_state_machine_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.StepFunctionStateMachineParameters = expandPipeTargetStateMachineParameters(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandPipeTargetBatchJobParameters(tfMap map[string]interface{}) *types.PipeTargetBatchJobParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PipeTargetBatchJobParameters{}
+
+	if v, ok := tfMap["array_properties"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ArrayProperties = expandBatchArrayProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["container_overrides"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ContainerOverrides = expandBatchContainerOverrides(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["depends_on"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DependsOn = expandBatchJobDependencies(v)
+	}
+
+	if v, ok := tfMap["job_definition"].(string); ok && v != "" {
+		apiObject.JobDefinition = aws.String(v)
+	}
+
+	if v, ok := tfMap["job_name"].(string); ok && v != "" {
+		apiObject.JobName = aws.String(v)
+	}
+
+	if v, ok := tfMap["parameters"].(map[string]interface{}); ok && len(v) > 0 {
+		apiObject.Parameters = flex.ExpandStringValueMap(v)
+	}
+
+	if v, ok := tfMap["retry_strategy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.RetryStrategy = expandBatchRetryStrategy(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandBatchArrayProperties(tfMap map[string]interface{}) *types.BatchArrayProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.BatchArrayProperties{}
+
+	if v, ok := tfMap["size"].(int); ok && v != 0 {
+		apiObject.Size = int32(v)
+	}
+
+	return apiObject
+}
+
+func expandBatchContainerOverrides(tfMap map[string]interface{}) *types.BatchContainerOverrides {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.BatchContainerOverrides{}
+
+	if v, ok := tfMap["command"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Command = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := tfMap["environment"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Environment = expandBatchEnvironmentVariables(v)
+	}
+
+	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
+		apiObject.InstanceType = aws.String(v)
+	}
+
+	if v, ok := tfMap["resource_requirement"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ResourceRequirements = expandBatchResourceRequirements(v)
+	}
+
+	return apiObject
+}
+
+func expandBatchEnvironmentVariable(tfMap map[string]interface{}) *types.BatchEnvironmentVariable {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.BatchEnvironmentVariable{}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap["value"].(string); ok && v != "" {
+		apiObject.Value = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandBatchEnvironmentVariables(tfList []interface{}) []types.BatchEnvironmentVariable {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.BatchEnvironmentVariable
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandBatchEnvironmentVariable(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandBatchResourceRequirement(tfMap map[string]interface{}) *types.BatchResourceRequirement {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.BatchResourceRequirement{}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = types.BatchResourceRequirementType(v)
+	}
+
+	if v, ok := tfMap["value"].(string); ok && v != "" {
+		apiObject.Value = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandBatchResourceRequirements(tfList []interface{}) []types.BatchResourceRequirement {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.BatchResourceRequirement
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandBatchResourceRequirement(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandBatchJobDependency(tfMap map[string]interface{}) *types.BatchJobDependency {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.BatchJobDependency{}
+
+	if v, ok := tfMap["job_id"].(string); ok && v != "" {
+		apiObject.JobId = aws.String(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = types.BatchJobDependencyType(v)
+	}
+
+	return apiObject
+}
+
+func expandBatchJobDependencies(tfList []interface{}) []types.BatchJobDependency {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.BatchJobDependency
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandBatchJobDependency(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandBatchRetryStrategy(tfMap map[string]interface{}) *types.BatchRetryStrategy {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.BatchRetryStrategy{}
+
+	if v, ok := tfMap["attempts"].(int); ok && v != 0 {
+		apiObject.Attempts = int32(v)
 	}
 
 	return apiObject
@@ -1126,7 +1341,9 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 
 	tfMap := map[string]interface{}{}
 
-	// TODO
+	if v := apiObject.BatchJobParameters; v != nil {
+		tfMap["batch_job_parameters"] = []interface{}{flattenPipeTargetBatchJobParameters(v)}
+	}
 
 	if v := apiObject.CloudWatchLogsParameters; v != nil {
 		tfMap["cloudwatch_logs_parameters"] = []interface{}{flattenPipeTargetCloudWatchLogsParameters(v)}
@@ -1168,6 +1385,182 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 
 	if v := apiObject.StepFunctionStateMachineParameters; v != nil {
 		tfMap["step_function_state_machine_parameters"] = []interface{}{flattenPipeTargetStateMachineParameters(v)}
+	}
+
+	return tfMap
+}
+
+func flattenPipeTargetBatchJobParameters(apiObject *types.PipeTargetBatchJobParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ArrayProperties; v != nil {
+		tfMap["array_properties"] = []interface{}{flattenBatchArrayProperties(v)}
+	}
+
+	if v := apiObject.ContainerOverrides; v != nil {
+		tfMap["container_overrides"] = []interface{}{flattenBatchContainerOverrides(v)}
+	}
+
+	if v := apiObject.DependsOn; v != nil {
+		tfMap["depends_on"] = flattenBatchJobDependencies(v)
+	}
+
+	if v := apiObject.JobDefinition; v != nil {
+		tfMap["job_definition"] = aws.ToString(v)
+	}
+
+	if v := apiObject.JobName; v != nil {
+		tfMap["job_name"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Parameters; v != nil {
+		tfMap["parameters"] = v
+	}
+
+	if v := apiObject.RetryStrategy; v != nil {
+		tfMap["retry_strategy"] = []interface{}{flattenBatchRetryStrategy(v)}
+	}
+
+	return tfMap
+}
+
+func flattenBatchArrayProperties(apiObject *types.BatchArrayProperties) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Size; v != 0 {
+		tfMap["size"] = int(v)
+	}
+
+	return tfMap
+}
+
+func flattenBatchContainerOverrides(apiObject *types.BatchContainerOverrides) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Command; v != nil {
+		tfMap["command"] = v
+	}
+
+	if v := apiObject.Environment; v != nil {
+		tfMap["environment"] = flattenBatchEnvironmentVariables(v)
+	}
+
+	if v := apiObject.InstanceType; v != nil {
+		tfMap["instance_type"] = aws.ToString(v)
+	}
+
+	if v := apiObject.ResourceRequirements; v != nil {
+		tfMap["resource_requirement"] = flattenBatchResourceRequirements(v)
+	}
+
+	return tfMap
+}
+
+func flattenBatchEnvironmentVariable(apiObject types.BatchEnvironmentVariable) map[string]interface{} {
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = v
+	}
+
+	if v := apiObject.Value; v != nil {
+		tfMap["value"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenBatchEnvironmentVariables(apiObjects []types.BatchEnvironmentVariable) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenBatchEnvironmentVariable(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenBatchResourceRequirement(apiObject types.BatchResourceRequirement) map[string]interface{} {
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Type; v != "" {
+		tfMap["type"] = v
+	}
+
+	if v := apiObject.Value; v != nil {
+		tfMap["value"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenBatchResourceRequirements(apiObjects []types.BatchResourceRequirement) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenBatchResourceRequirement(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenBatchJobDependency(apiObject types.BatchJobDependency) map[string]interface{} {
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.JobId; v != nil {
+		tfMap["job_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Type; v != "" {
+		tfMap["type"] = v
+	}
+
+	return tfMap
+}
+
+func flattenBatchJobDependencies(apiObjects []types.BatchJobDependency) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenBatchJobDependency(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenBatchRetryStrategy(apiObject *types.BatchRetryStrategy) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Attempts; v != 0 {
+		tfMap["attempts"] = int(v)
 	}
 
 	return tfMap
@@ -1377,6 +1770,7 @@ func flattenPipeTargetStateMachineParameters(apiObject *types.PipeTargetStateMac
 	return tfMap
 }
 
+/*
 func expandTargetParameters(config []interface{}) *types.PipeTargetParameters {
 	if len(config) == 0 {
 		return nil
@@ -2569,3 +2963,4 @@ func flattenTargetStepFunctionStateMachineParameters(parameters *types.PipeTarge
 	result := []map[string]interface{}{config}
 	return result
 }
+*/

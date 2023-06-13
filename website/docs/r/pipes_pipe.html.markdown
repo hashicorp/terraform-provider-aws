@@ -320,7 +320,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 
 You can find out more about EventBridge Pipes Targets in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes-event-target.html).
 
-* `batch_target` - (Optional) The parameters for using an AWS Batch job as a target. Detailed below.
+* `batch_job_parameters` - (Optional) The parameters for using an AWS Batch job as a target. Detailed below.
 * `cloudwatch_logs_parameters` - (Optional) The parameters for using an CloudWatch Logs log stream as a target. Detailed below.
 * `ecs_task` - (Optional) The parameters for using an Amazon ECS task as a target. Detailed below.
 * `eventbridge_event_bus_parameters` - (Optional) The parameters for using an EventBridge event bus as a target. Detailed below.
@@ -333,7 +333,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `sqs_queue_parameters` - (Optional) The parameters for using a Amazon SQS stream as a target. Detailed below.
 * `step_function_state_machine_parameters` - (Optional) The parameters for using a Step Functions state machine as a target. Detailed below.
 
-#### target_parameters.batch_target Configuration Block
+#### target_parameters.batch_job_parameters Configuration Block
 
 * `array_properties` - (Optional) The array properties for the submitted job, such as the size of the array. The array size can be between 2 and 10,000. If you specify array properties for a job, it becomes an array job. This parameter is used only if the target is an AWS Batch job. Detailed below.
 * `container_overrides` - (Optional) The overrides that are sent to a container. Detailed below.
@@ -343,38 +343,33 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `parameters` - (Optional) Additional parameters passed to the job that replace parameter substitution placeholders that are set in the job definition. Parameters are specified as a key and value pair mapping. Parameters included here override any corresponding parameter defaults from the job definition. Detailed below.
 * `retry_strategy` - (Optional) The retry strategy to use for failed jobs. When a retry strategy is specified here, it overrides the retry strategy defined in the job definition. Detailed below.
 
-##### target_parameters.batch_target.array_properties Configuration Block
+##### target_parameters.batch_job_parameters.array_properties Configuration Block
 
 * `size` - (Optional) The size of the array, if this is an array batch job. Minimum value of 2. Maximum value of 10,000.
 
-##### target_parameters.batch_target.container_overrides Configuration Block
+##### target_parameters.batch_job_parameters.container_overrides Configuration Block
 
 * `command` - (Optional) List of commands to send to the container that overrides the default command from the Docker image or the task definition.
 * `environment` - (Optional) The environment variables to send to the container. You can add new environment variables, which are added to the container at launch, or you can override the existing environment variables from the Docker image or the task definition. Environment variables cannot start with " AWS Batch ". This naming convention is reserved for variables that AWS Batch sets. Detailed below.
 * `instance_type` - (Optional) The instance type to use for a multi-node parallel job. This parameter isn't applicable to single-node container jobs or jobs that run on Fargate resources, and shouldn't be provided.
-* `resource_requirements` - (Optional) The type and amount of resources to assign to a container. This overrides the settings in the job definition. The supported resources include GPU, MEMORY, and VCPU. Detailed below.
+* `resource_requirement` - (Optional) The type and amount of resources to assign to a container. This overrides the settings in the job definition. The supported resources include GPU, MEMORY, and VCPU. Detailed below.
 
-###### target_parameters.batch_target.container_overrides.environment Configuration Block
+###### target_parameters.batch_job_parameters.container_overrides.environment Configuration Block
 
 * `name` - (Optional) The name of the key-value pair. For environment variables, this is the name of the environment variable.
 * `value` - (Optional) The value of the key-value pair. For environment variables, this is the value of the environment variable.
 
-###### target_parameters.batch_target.container_overrides.resource_requirements Configuration Block
+###### target_parameters.batch_job_parameters.container_overrides.resource_requirements Configuration Block
 
 * `type` - (Optional) The type of resource to assign to a container. The supported resources include GPU, MEMORY, and VCPU.
 * `value` - (Optional) The quantity of the specified resource to reserve for the container. [The values vary based on the type specified](https://docs.aws.amazon.com/eventbridge/latest/pipes-reference/API_BatchResourceRequirement.html).
 
-##### target_parameters.batch_target.depends_on Configuration Block
+##### target_parameters.batch_job_parameters.depends_on Configuration Block
 
 * `job_id` - (Optional) The job ID of the AWS Batch job that's associated with this dependency.
 * `type` - (Optional) The type of the job dependency. Valid Values: N_TO_N, SEQUENTIAL.
 
-##### target_parameters.batch_target.parameters Configuration Block
-
-* `key` - (Optional) The name of the parameter.
-* `value` - (Optional) The value of the parameter.
-
-##### target_parameters.batch_target.retry_strategy Configuration Block
+##### target_parameters.batch_job_parameters.retry_strategy Configuration Block
 
 * `attempts` - (Optional) The number of times to move a job to the RUNNABLE status. If the value of attempts is greater than one, the job is retried on failure the same number of attempts as the value. Maximum value of 10.
 
