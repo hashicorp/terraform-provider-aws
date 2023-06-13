@@ -1,5 +1,9 @@
 ## 5.4.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_glue_data_quality_ruleset: Add `catalog_id` argument to `target_table` block ([#31926](https://github.com/hashicorp/terraform-provider-aws/issues/31926))
+
 BUG FIXES:
 
 * resource/aws_quicksight_data_set: Allow physical table map to be optional ([#31863](https://github.com/hashicorp/terraform-provider-aws/issues/31863))
