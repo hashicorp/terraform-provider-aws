@@ -41,7 +41,7 @@ func ResourceDefaultPatchBaseline() *schema.Resource {
 				id := d.Id()
 
 				if isPatchBaselineID(id) || isPatchBaselineARN(id) {
-					conn := meta.(*conns.AWSClient).SSMConn(ctx)
+					conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 					patchbaseline, err := findPatchBaselineByID(ctx, conn, id)
 					if err != nil {
@@ -166,7 +166,7 @@ const (
 )
 
 func resourceDefaultPatchBaselineCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SSMConn(ctx)
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	baselineID := d.Get("baseline_id").(string)
 
@@ -196,7 +196,7 @@ func resourceDefaultPatchBaselineCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceDefaultPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SSMConn(ctx)
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	out, err := FindDefaultPatchBaseline(ctx, conn, types.OperatingSystem(d.Id()))
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -242,7 +242,7 @@ func ownerIsSelfFilter() types.PatchOrchestratorFilter { //nolint:unused // This
 }
 
 func resourceDefaultPatchBaselineDelete(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
-	return defaultPatchBaselineRestoreOSDefault(ctx, meta.(*conns.AWSClient).SSMConn(ctx), types.OperatingSystem(d.Id()))
+	return defaultPatchBaselineRestoreOSDefault(ctx, meta.(*conns.AWSClient).SSMClient(ctx), types.OperatingSystem(d.Id()))
 }
 
 func defaultPatchBaselineRestoreOSDefault(ctx context.Context, conn *ssm.Client, os types.OperatingSystem) (diags diag.Diagnostics) {
