@@ -132,7 +132,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 	state.ID = flex.StringToFramework(ctx, out.CreateCollectionDetail.Id)
 	state.Name = flex.StringToFramework(ctx, out.CreateCollectionDetail.Name)
 	state.Type = flex.StringValueToFramework(ctx, out.CreateCollectionDetail.Type)
-	
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
