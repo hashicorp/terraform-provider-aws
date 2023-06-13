@@ -28,7 +28,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
-						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
@@ -173,7 +173,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
-						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
@@ -207,7 +207,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.cloudwatch_logs",
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
-						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
@@ -540,7 +540,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.cloudwatch_logs",
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.http_parameters",
-						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
@@ -598,7 +598,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.cloudwatch_logs",
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.event_bridge_event_bus",
-						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
@@ -658,7 +658,7 @@ func targetParametersSchema() *schema.Schema {
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(0, 8192),
 				},
-				"kinesis_stream": {
+				"kinesis_stream_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -694,7 +694,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
-						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
@@ -720,7 +720,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
-						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
@@ -774,7 +774,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
-						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sqs_queue_parameters",
@@ -817,7 +817,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
-						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
@@ -848,7 +848,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
-						"target_parameters.0.kinesis_stream",
+						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
@@ -878,6 +878,10 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 
 	// TODO
 
+	if v, ok := tfMap["kinesis_stream_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.KinesisStreamParameters = expandPipeTargetKinesisStreamParameters(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["lambda_function_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.LambdaFunctionParameters = expandPipeTargetLambdaFunctionParameters(v[0].(map[string]interface{}))
 	}
@@ -896,6 +900,20 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 
 	if v, ok := tfMap["step_function_state_machine_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.StepFunctionStateMachineParameters = expandPipeTargetStateMachineParameters(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandPipeTargetKinesisStreamParameters(tfMap map[string]interface{}) *types.PipeTargetKinesisStreamParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PipeTargetKinesisStreamParameters{}
+
+	if v, ok := tfMap["partition_key"].(string); ok && v != "" {
+		apiObject.PartitionKey = aws.String(v)
 	}
 
 	return apiObject
@@ -1048,6 +1066,10 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 
 	// TODO
 
+	if v := apiObject.KinesisStreamParameters; v != nil {
+		tfMap["kinesis_stream_parameters"] = []interface{}{flattenPipeTargetKinesisStreamParameters(v)}
+	}
+
 	if v := apiObject.LambdaFunctionParameters; v != nil {
 		tfMap["lambda_function_parameters"] = []interface{}{flattenPipeTargetLambdaFunctionParameters(v)}
 	}
@@ -1066,6 +1088,20 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 
 	if v := apiObject.StepFunctionStateMachineParameters; v != nil {
 		tfMap["step_function_state_machine_parameters"] = []interface{}{flattenPipeTargetStateMachineParameters(v)}
+	}
+
+	return tfMap
+}
+
+func flattenPipeTargetKinesisStreamParameters(apiObject *types.PipeTargetKinesisStreamParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.PartitionKey; v != nil {
+		tfMap["partition_key"] = aws.ToString(v)
 	}
 
 	return tfMap
