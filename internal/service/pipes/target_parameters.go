@@ -29,7 +29,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
-						"target_parameters.0.lambda_function",
+						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
@@ -174,7 +174,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
-						"target_parameters.0.lambda_function",
+						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
@@ -208,7 +208,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
-						"target_parameters.0.lambda_function",
+						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
@@ -541,7 +541,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
-						"target_parameters.0.lambda_function",
+						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
@@ -599,7 +599,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.kinesis_stream",
-						"target_parameters.0.lambda_function",
+						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
@@ -668,7 +668,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.ecs_task",
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
-						"target_parameters.0.lambda_function",
+						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
@@ -684,7 +684,7 @@ func targetParametersSchema() *schema.Schema {
 						},
 					},
 				},
-				"lambda_function": {
+				"lambda_function_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -721,7 +721,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
-						"target_parameters.0.lambda_function",
+						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
@@ -775,7 +775,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
-						"target_parameters.0.lambda_function",
+						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
@@ -818,7 +818,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
-						"target_parameters.0.lambda_function",
+						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
@@ -849,7 +849,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
-						"target_parameters.0.lambda_function",
+						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
@@ -878,6 +878,10 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 
 	// TODO
 
+	if v, ok := tfMap["lambda_function_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.LambdaFunctionParameters = expandPipeTargetLambdaFunctionParameters(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["redshift_data_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.RedshiftDataParameters = expandPipeTargetRedshiftDataParameters(v[0].(map[string]interface{}))
 	}
@@ -897,6 +901,20 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 	return apiObject
 }
 
+func expandPipeTargetLambdaFunctionParameters(tfMap map[string]interface{}) *types.PipeTargetLambdaFunctionParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PipeTargetLambdaFunctionParameters{}
+
+	if v, ok := tfMap["invocation_type"].(string); ok && v != "" {
+		apiObject.InvocationType = types.PipeTargetInvocationType(v)
+	}
+
+	return apiObject
+}
+
 func expandPipeTargetRedshiftDataParameters(tfMap map[string]interface{}) *types.PipeTargetRedshiftDataParameters {
 	if tfMap == nil {
 		return nil
@@ -904,15 +922,15 @@ func expandPipeTargetRedshiftDataParameters(tfMap map[string]interface{}) *types
 
 	apiObject := &types.PipeTargetRedshiftDataParameters{}
 
-	if v, ok := tfMap["database"].(string); ok {
+	if v, ok := tfMap["database"].(string); ok && v != "" {
 		apiObject.Database = aws.String(v)
 	}
 
-	if v, ok := tfMap["db_user"].(string); ok {
+	if v, ok := tfMap["db_user"].(string); ok && v != "" {
 		apiObject.DbUser = aws.String(v)
 	}
 
-	if v, ok := tfMap["secret_manager_arn"].(string); ok {
+	if v, ok := tfMap["secret_manager_arn"].(string); ok && v != "" {
 		apiObject.SecretManagerArn = aws.String(v)
 	}
 
@@ -920,7 +938,7 @@ func expandPipeTargetRedshiftDataParameters(tfMap map[string]interface{}) *types
 		apiObject.Sqls = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["statement_name"].(string); ok {
+	if v, ok := tfMap["statement_name"].(string); ok && v != "" {
 		apiObject.StatementName = aws.String(v)
 	}
 
@@ -996,11 +1014,11 @@ func expandPipeTargetSqsQueueParameters(tfMap map[string]interface{}) *types.Pip
 
 	apiObject := &types.PipeTargetSqsQueueParameters{}
 
-	if v, ok := tfMap["message_deduplication_id"].(string); ok {
+	if v, ok := tfMap["message_deduplication_id"].(string); ok && v != "" {
 		apiObject.MessageDeduplicationId = aws.String(v)
 	}
 
-	if v, ok := tfMap["message_group_id"].(string); ok {
+	if v, ok := tfMap["message_group_id"].(string); ok && v != "" {
 		apiObject.MessageGroupId = aws.String(v)
 	}
 
@@ -1030,6 +1048,10 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 
 	// TODO
 
+	if v := apiObject.LambdaFunctionParameters; v != nil {
+		tfMap["lambda_function_parameters"] = []interface{}{flattenPipeTargetLambdaFunctionParameters(v)}
+	}
+
 	if v := apiObject.RedshiftDataParameters; v != nil {
 		tfMap["redshift_data_parameters"] = []interface{}{flattenPipeTargetRedshiftDataParameters(v)}
 	}
@@ -1044,6 +1066,20 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 
 	if v := apiObject.StepFunctionStateMachineParameters; v != nil {
 		tfMap["step_function_state_machine_parameters"] = []interface{}{flattenPipeTargetStateMachineParameters(v)}
+	}
+
+	return tfMap
+}
+
+func flattenPipeTargetLambdaFunctionParameters(apiObject *types.PipeTargetLambdaFunctionParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.InvocationType; v != "" {
+		tfMap["invocation_type"] = v
 	}
 
 	return tfMap

@@ -327,7 +327,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `http_parameters` - (Optional) These are custom parameter to be used when the target is an API Gateway REST APIs or EventBridge ApiDestinations. Detailed below.
 * `input_template` - (Optional) Valid JSON text passed to the target. In this case, nothing from the event itself is passed to the target. Maximum length of 8192 characters.
 * `kinesis_stream` - (Optional) The parameters for using a Kinesis stream as a source. Detailed below.
-* `lambda_function` - (Optional) The parameters for using a Lambda function as a target. Detailed below.
+* `lambda_function_parameters` - (Optional) The parameters for using a Lambda function as a target. Detailed below.
 * `redshift_data_parameters` - (Optional) These are custom parameters to be used when the target is a Amazon Redshift cluster to invoke the Amazon Redshift Data API BatchExecuteStatement. Detailed below.
 * `sagemaker_pipeline_parameters` - (Optional) The parameters for using a SageMaker pipeline as a target. Detailed below.
 * `sqs_queue_parameters` - (Optional) The parameters for using a Amazon SQS stream as a target. Detailed below.
@@ -505,7 +505,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 
 * `partition_key` - (Required) Determines which shard in the stream the data record is assigned to. Partition keys are Unicode strings with a maximum length limit of 256 characters for each key. Amazon Kinesis Data Streams uses the partition key as input to a hash function that maps the partition key and associated data to a specific shard. Specifically, an MD5 hash function is used to map partition keys to 128-bit integer values and to map associated data records to shards. As a result of this hashing mechanism, all data records with the same partition key map to the same shard within the stream.
 
-#### target_parameters.lambda_function Configuration Block
+#### target_parameters.lambda_function_parameters Configuration Block
 
 * `invocation_type` - (Optional) Specify whether to invoke the function synchronously or asynchronously. Valid Values: REQUEST_RESPONSE, FIRE_AND_FORGET.
 
