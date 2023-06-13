@@ -672,7 +672,37 @@ func expandUpdatePipeSourceParameters(tfMap map[string]interface{}) *types.Updat
 
 	apiObject := &types.UpdatePipeSourceParameters{}
 
-	// TODO
+	if v, ok := tfMap["activemq_broker_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ActiveMQBrokerParameters = expandUpdatePipeSourceActiveMQBrokerParameters(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["dynamodb_stream_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DynamoDBStreamParameters = expandUpdatePipeSourceDynamoDBStreamParameters(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["filter_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.FilterCriteria = expandFilterCriteria(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["kinesis_stream_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.KinesisStreamParameters = expandUpdatePipeSourceKinesisStreamParameters(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["managed_streaming_kafka_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ManagedStreamingKafkaParameters = expandUpdatePipeSourceManagedStreamingKafkaParameters(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["rabbitmq_broker_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.RabbitMQBrokerParameters = expandUpdatePipeSourceRabbitMQBrokerParameters(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["self_managed_kafka_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SelfManagedKafkaParameters = expandUpdatePipeSourceSelfManagedKafkaParameters(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["sqs_queue_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SqsQueueParameters = expandUpdatePipeSourceSqsQueueParameters(v[0].(map[string]interface{}))
+	}
 
 	return apiObject
 }
@@ -757,6 +787,28 @@ func expandPipeSourceActiveMQBrokerParameters(tfMap map[string]interface{}) *typ
 	return apiObject
 }
 
+func expandUpdatePipeSourceActiveMQBrokerParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceActiveMQBrokerParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.UpdatePipeSourceActiveMQBrokerParameters{}
+
+	if v, ok := tfMap["batch_size"].(int); ok {
+		apiObject.BatchSize = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Credentials = expandMQBrokerAccessCredentials(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok {
+		apiObject.MaximumBatchingWindowInSeconds = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
 func expandMQBrokerAccessCredentials(tfMap map[string]interface{}) types.MQBrokerAccessCredentials {
 	if tfMap == nil {
 		return nil
@@ -815,6 +867,60 @@ func expandPipeSourceDynamoDBStreamParameters(tfMap map[string]interface{}) *typ
 	return apiObject
 }
 
+func expandUpdatePipeSourceDynamoDBStreamParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceDynamoDBStreamParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.UpdatePipeSourceDynamoDBStreamParameters{}
+
+	if v, ok := tfMap["batch_size"].(int); ok {
+		apiObject.BatchSize = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["dead_letter_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DeadLetterConfig = expandDeadLetterConfig(v[0].(map[string]interface{}))
+	} else {
+		apiObject.DeadLetterConfig = &types.DeadLetterConfig{}
+	}
+
+	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok {
+		apiObject.MaximumBatchingWindowInSeconds = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["maximum_record_age_in_seconds"].(int); ok {
+		apiObject.MaximumRecordAgeInSeconds = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["maximum_retry_attempts"].(int); ok {
+		apiObject.MaximumRetryAttempts = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["on_partial_batch_item_failure"].(string); ok {
+		apiObject.OnPartialBatchItemFailure = types.OnPartialBatchItemFailureStreams(v)
+	}
+
+	if v, ok := tfMap["parallelization_factor"].(int); ok {
+		apiObject.ParallelizationFactor = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func expandDeadLetterConfig(tfMap map[string]interface{}) *types.DeadLetterConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.DeadLetterConfig{}
+
+	if v, ok := tfMap["arn"].(string); ok && v != "" {
+		apiObject.Arn = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandPipeSourceKinesisStreamParameters(tfMap map[string]interface{}) *types.PipeSourceKinesisStreamParameters {
 	if tfMap == nil {
 		return nil
@@ -863,6 +969,46 @@ func expandPipeSourceKinesisStreamParameters(tfMap map[string]interface{}) *type
 	return apiObject
 }
 
+func expandUpdatePipeSourceKinesisStreamParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceKinesisStreamParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.UpdatePipeSourceKinesisStreamParameters{}
+
+	if v, ok := tfMap["batch_size"].(int); ok {
+		apiObject.BatchSize = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["dead_letter_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DeadLetterConfig = expandDeadLetterConfig(v[0].(map[string]interface{}))
+	} else {
+		apiObject.DeadLetterConfig = &types.DeadLetterConfig{}
+	}
+
+	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok {
+		apiObject.MaximumBatchingWindowInSeconds = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["maximum_record_age_in_seconds"].(int); ok {
+		apiObject.MaximumRecordAgeInSeconds = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["maximum_retry_attempts"].(int); ok {
+		apiObject.MaximumRetryAttempts = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["on_partial_batch_item_failure"].(string); ok {
+		apiObject.OnPartialBatchItemFailure = types.OnPartialBatchItemFailureStreams(v)
+	}
+
+	if v, ok := tfMap["parallelization_factor"].(int); ok {
+		apiObject.ParallelizationFactor = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
 func expandPipeSourceManagedStreamingKafkaParameters(tfMap map[string]interface{}) *types.PipeSourceManagedStreamingKafkaParameters {
 	if tfMap == nil {
 		return nil
@@ -892,6 +1038,28 @@ func expandPipeSourceManagedStreamingKafkaParameters(tfMap map[string]interface{
 
 	if v, ok := tfMap["topic_name"].(string); ok && v != "" {
 		apiObject.TopicName = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandUpdatePipeSourceManagedStreamingKafkaParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceManagedStreamingKafkaParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.UpdatePipeSourceManagedStreamingKafkaParameters{}
+
+	if v, ok := tfMap["batch_size"].(int); ok {
+		apiObject.BatchSize = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Credentials = expandMSKAccessCredentials(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok {
+		apiObject.MaximumBatchingWindowInSeconds = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -951,6 +1119,28 @@ func expandPipeSourceRabbitMQBrokerParameters(tfMap map[string]interface{}) *typ
 	return apiObject
 }
 
+func expandUpdatePipeSourceRabbitMQBrokerParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceRabbitMQBrokerParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.UpdatePipeSourceRabbitMQBrokerParameters{}
+
+	if v, ok := tfMap["batch_size"].(int); ok {
+		apiObject.BatchSize = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Credentials = expandMQBrokerAccessCredentials(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok {
+		apiObject.MaximumBatchingWindowInSeconds = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
 func expandPipeSourceSelfManagedKafkaParameters(tfMap map[string]interface{}) *types.PipeSourceSelfManagedKafkaParameters {
 	if tfMap == nil {
 		return nil
@@ -992,6 +1182,38 @@ func expandPipeSourceSelfManagedKafkaParameters(tfMap map[string]interface{}) *t
 
 	if v, ok := tfMap["vpc"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Vpc = expandSelfManagedKafkaAccessConfigurationVpc(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandUpdatePipeSourceSelfManagedKafkaParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceSelfManagedKafkaParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.UpdatePipeSourceSelfManagedKafkaParameters{}
+
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
+		apiObject.BatchSize = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Credentials = expandSelfManagedKafkaAccessConfigurationCredentials(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok {
+		apiObject.MaximumBatchingWindowInSeconds = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["server_root_ca_certificate"].(string); ok {
+		apiObject.ServerRootCaCertificate = aws.String(v)
+	}
+
+	if v, ok := tfMap["vpc"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Vpc = expandSelfManagedKafkaAccessConfigurationVpc(v[0].(map[string]interface{}))
+	} else {
+		apiObject.Vpc = &types.SelfManagedKafkaAccessConfigurationVpc{}
 	}
 
 	return apiObject
@@ -1073,15 +1295,19 @@ func expandPipeSourceSqsQueueParameters(tfMap map[string]interface{}) *types.Pip
 	return apiObject
 }
 
-func expandDeadLetterConfig(tfMap map[string]interface{}) *types.DeadLetterConfig {
+func expandUpdatePipeSourceSqsQueueParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceSqsQueueParameters {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.DeadLetterConfig{}
+	apiObject := &types.UpdatePipeSourceSqsQueueParameters{}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
-		apiObject.Arn = aws.String(v)
+	if v, ok := tfMap["batch_size"].(int); ok {
+		apiObject.BatchSize = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok {
+		apiObject.MaximumBatchingWindowInSeconds = aws.Int32(int32(v))
 	}
 
 	return apiObject
