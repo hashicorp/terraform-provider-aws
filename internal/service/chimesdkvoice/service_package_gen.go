@@ -30,6 +30,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_chimesdkvoice_global_settings",
 		},
 		{
+			Factory:  ResourceSipMediaApplication,
+			TypeName: "aws_chimesdkvoice_sip_media_application",
+			Name:     "Sip Media Application",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceVoiceProfileDomain,
 			TypeName: "aws_chimesdkvoice_voice_profile_domain",
 			Name:     "Voice Profile Domain",
