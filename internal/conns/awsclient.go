@@ -208,15 +208,7 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string)
 		return zero, err
 	}
 
-	if v, ok := sp.(interface {
-		CustomizeClient(context.Context, T) (T, error)
-	}); ok {
-		client, err = v.CustomizeClient(ctx, client)
-		if err != nil {
-			var zero T
-			return zero, err
-		}
-	}
+	// All customization for AWS SDK for Go v2 API clients must be done during construction.
 
 	c.clients[servicePackageName] = client
 
