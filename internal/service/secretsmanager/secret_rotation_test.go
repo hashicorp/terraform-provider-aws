@@ -433,7 +433,7 @@ func testSecretValueIsCurrent(ctx context.Context, rName string) resource.TestCh
 					return fmt.Errorf("Secret version is not in AWSCURRENT stage: %s", *stage[0])
 				}
 			}
+			return nil
 		}
-		return nil
 	}
 }
