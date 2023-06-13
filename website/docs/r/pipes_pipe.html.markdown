@@ -208,7 +208,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `kinesis_stream_parameters` - (Optional) The parameters for using a Kinesis stream as a source. Detailed below.
 * `managed_streaming_kafka_parameters` - (Optional) The parameters for using an MSK stream as a source. Detailed below.
 * `rabbitmq_broker_parameters` - (Optional) The parameters for using a Rabbit MQ broker as a source. Detailed below.
-* `self_managed_kafka` - (Optional) The parameters for using a self-managed Apache Kafka stream as a source. Detailed below.
+* `self_managed_kafka_parameters` - (Optional) The parameters for using a self-managed Apache Kafka stream as a source. Detailed below.
 * `sqs_queue_parameters` - (Optional) The parameters for using a Amazon SQS stream as a source. Detailed below.
 
 #### source_parameters.filter_criteria Configuration Block
@@ -287,26 +287,26 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 
 * `basic_auth` - (Required) The ARN of the Secrets Manager secret containing the credentials.
 
-#### source_parameters.self_managed_kafka Configuration Block
+#### source_parameters.self_managed_kafka_parameters Configuration Block
 
-* `servers` - (Optional) An array of server URLs. Maximum number of 2 items, each of maximum length 300.
+* `additional_bootstrap_servers` - (Optional) An array of server URLs. Maximum number of 2 items, each of maximum length 300.
 * `batch_size` - (Optional) The maximum number of records to include in each batch. Maximum value of 10000.
 * `consumer_group_id` - (Optional) The name of the destination queue to consume. Maximum value of 200.
 * `credentials` - (Optional) The credentials needed to access the resource. Detailed below.
 * `maximum_batching_window_in_seconds` - (Optional) The maximum length of a time to wait for events. Maximum value of 300.
 * `server_root_ca_certificate` - (Optional) The ARN of the Secrets Manager secret used for certification.
 * `starting_position` - (Optional) The position in a stream from which to start reading. Valid values: TRIM_HORIZON, LATEST.
-* `topic` - (Required) The name of the topic that the pipe will read from. Maximum length of 249.
+* `topic_name` - (Required) The name of the topic that the pipe will read from. Maximum length of 249.
 * `vpc` - (Optional) This structure specifies the VPC subnets and security groups for the stream, and whether a public IP address is to be used. Detailed below.
 
-##### source_parameters.self_managed_kafka.credentials Configuration Block
+##### source_parameters.self_managed_kafka_parameters.credentials Configuration Block
 
 * `basic_auth` - (Optional) The ARN of the Secrets Manager secret containing the credentials.
 * `client_certificate_tls_auth` - (Optional) The ARN of the Secrets Manager secret containing the credentials.
 * `sasl_scram_256_auth` - (Optional) The ARN of the Secrets Manager secret containing the credentials.
 * `sasl_scram_512_auth` - (Optional) The ARN of the Secrets Manager secret containing the credentials.
 
-##### source_parameters.self_managed_kafka.vpc Configuration Block
+##### source_parameters.self_managed_kafka_parameters.vpc Configuration Block
 
 * `security_groups` - (Optional) List of security groups associated with the stream. These security groups must all be in the same VPC. You can specify as many as five security groups. If you do not specify a security group, the default security group for the VPC is used.
 * `subnets` - (Optional) List of the subnets associated with the stream. These subnets must all be in the same VPC. You can specify as many as 16 subnets.
