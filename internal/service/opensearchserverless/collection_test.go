@@ -184,7 +184,7 @@ func testAccPreCheckCollection(ctx context.Context, t *testing.T) {
 func testAccCollectionBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearchserverless_security_policy" "test" {
-  name = "test-security-policy"
+  name = %[1]q
   type = "encryption"
   policy = jsonencode({
     "Rules" = [
