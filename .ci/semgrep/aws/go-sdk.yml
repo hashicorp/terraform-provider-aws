@@ -1,0 +1,27 @@
+rules:
+  - id: multiple-service-imports
+    languages: [go]
+    message: Resources should not implement multiple AWS Go SDK service functionality
+    paths:
+      include:
+        - internal/
+      exclude:
+        - "internal/service/**/*_test.go"
+        - "internal/service/**/sweep.go"
+        - "internal/acctest/acctest.go"
+        - "internal/conns/**/*.go"
+    patterns:
+      - pattern: |
+          import ("$X")
+          import ("$Y")
+      - metavariable-regex:
+          metavariable: "$X"
+          regex: '^github.com/aws/aws-sdk-go(-v2)?/service/[^/]+$'
+      - metavariable-regex:
+          metavariable: "$Y"
+          regex: '^github.com/aws/aws-sdk-go/service(-v2)?/[^/]+$'
+      # wafregional uses a number of resources from waf
+      - pattern-not: |
+          import ("github.com/aws/aws-sdk-go/service/waf")
+          import ("github.com/aws/aws-sdk-go/service/wafregional")
+    severity: WARNING
