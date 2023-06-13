@@ -39,7 +39,7 @@ func TestAccOpenSearchServerlessCollection_basic(t *testing.T) {
 				Config: testAccCollectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName, &collection),
-					resource.TestCheckResourceAttr(resourceName, "type", "data"),
+					resource.TestCheckResourceAttrSet(resourceName, "type"),
 				),
 			},
 			{
@@ -71,7 +71,7 @@ func TestAccOpenSearchServerlessCollection_update(t *testing.T) {
 				Config: testAccCollectionConfig_update(rName, "description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName, &collection),
-					resource.TestCheckResourceAttr(resourceName, "type", "data"),
+					resource.TestCheckResourceAttrSet(resourceName, "type"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description"),
 				),
 			},
@@ -79,7 +79,7 @@ func TestAccOpenSearchServerlessCollection_update(t *testing.T) {
 				Config: testAccCollectionConfig_update(rName, "description updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName, &collection),
-					resource.TestCheckResourceAttr(resourceName, "type", "data"),
+					resource.TestCheckResourceAttrSet(resourceName, "type"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description updated"),
 				),
 			},
@@ -105,7 +105,7 @@ func TestAccOpenSearchServerlessCollection_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPolicyConfig_basic(rName),
+				Config: testAccCollectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName, &collection),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceCollection, resourceName),

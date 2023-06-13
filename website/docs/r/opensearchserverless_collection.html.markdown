@@ -63,7 +63,7 @@ In addition to all arguments above, the following attributes are exported:
 
 - `create` - (Default `20m`)
 - `delete` - (Default `20m`)
-- 
+
 ## Import
 
 OpenSearchServerless Collection can be imported using the `id`, e.g.,
