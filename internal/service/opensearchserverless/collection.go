@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource(name="Collection")
 // @Tags(identifierAttribute="arn")
 func newResourceCollection(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceCollection{}, nil
