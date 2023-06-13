@@ -31,7 +31,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sagemaker_pipeline",
+						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
@@ -176,7 +176,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sagemaker_pipeline",
+						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
@@ -210,7 +210,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sagemaker_pipeline",
+						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
@@ -543,7 +543,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sagemaker_pipeline",
+						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
@@ -601,7 +601,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sagemaker_pipeline",
+						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
@@ -670,7 +670,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sagemaker_pipeline",
+						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
@@ -696,7 +696,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sagemaker_pipeline",
+						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
@@ -722,7 +722,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
-						"target_parameters.0.sagemaker_pipeline",
+						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
@@ -764,7 +764,7 @@ func targetParametersSchema() *schema.Schema {
 						},
 					},
 				},
-				"sagemaker_pipeline": {
+				"sagemaker_pipeline_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -782,7 +782,7 @@ func targetParametersSchema() *schema.Schema {
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"parameters": {
+							"pipeline_parameter": {
 								Type:     schema.TypeList,
 								Optional: true,
 								MaxItems: 200,
@@ -820,7 +820,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sagemaker_pipeline",
+						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
@@ -851,7 +851,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sagemaker_pipeline",
+						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 					},
 					Elem: &schema.Resource{
@@ -878,6 +878,10 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 
 	// TODO
 
+	if v, ok := tfMap["sagemaker_pipeline_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SageMakerPipelineParameters = expandPipeTargetSageMakerPipelineParameters(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["sqs_queue_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.SqsQueueParameters = expandPipeTargetSqsQueueParameters(v[0].(map[string]interface{}))
 	}
@@ -887,6 +891,64 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 	}
 
 	return apiObject
+}
+
+func expandPipeTargetSageMakerPipelineParameters(tfMap map[string]interface{}) *types.PipeTargetSageMakerPipelineParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PipeTargetSageMakerPipelineParameters{}
+
+	if v, ok := tfMap["pipeline_parameter"].([]interface{}); ok && len(v) > 0 {
+		apiObject.PipelineParameterList = expandSageMakerPipelineParameters(v)
+	}
+
+	return apiObject
+}
+
+func expandSageMakerPipelineParameter(tfMap map[string]interface{}) *types.SageMakerPipelineParameter {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.SageMakerPipelineParameter{}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap["value"].(string); ok && v != "" {
+		apiObject.Value = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandSageMakerPipelineParameters(tfList []interface{}) []types.SageMakerPipelineParameter {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.SageMakerPipelineParameter
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandSageMakerPipelineParameter(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
 }
 
 func expandPipeTargetSqsQueueParameters(tfMap map[string]interface{}) *types.PipeTargetSqsQueueParameters {
@@ -930,6 +992,10 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 
 	// TODO
 
+	if v := apiObject.SageMakerPipelineParameters; v != nil {
+		tfMap["sagemaker_pipeline_parameters"] = []interface{}{flattenPipeTargetSageMakerPipelineParameters(v)}
+	}
+
 	if v := apiObject.SqsQueueParameters; v != nil {
 		tfMap["sqs_queue_parameters"] = []interface{}{flattenPipeTargetSqsQueueParameters(v)}
 	}
@@ -939,6 +1005,48 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 	}
 
 	return tfMap
+}
+
+func flattenPipeTargetSageMakerPipelineParameters(apiObject *types.PipeTargetSageMakerPipelineParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.PipelineParameterList; v != nil {
+		tfMap["pipeline_parameter"] = flattenSageMakerPipelineParameters(v)
+	}
+
+	return tfMap
+}
+
+func flattenSageMakerPipelineParameter(apiObject types.SageMakerPipelineParameter) map[string]interface{} {
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Value; v != nil {
+		tfMap["value"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenSageMakerPipelineParameters(apiObjects []types.SageMakerPipelineParameter) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenSageMakerPipelineParameter(apiObject))
+	}
+
+	return tfList
 }
 
 func flattenPipeTargetSqsQueueParameters(apiObject *types.PipeTargetSqsQueueParameters) map[string]interface{} {
