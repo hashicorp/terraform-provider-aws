@@ -25,10 +25,13 @@ func (p *servicePackage) NewClient(ctx context.Context) (*lightsail_sdkv2.Client
 			}
 			return aws_sdkv2.UnknownTernary
 		})
+		const (
+			backoff = 10 * time.Second
+		)
 		o.Retryer = retry_sdkv2.NewStandard(func(o *retry_sdkv2.StandardOptions) {
 			o.Retryables = append(o.Retryables, retryable)
 			o.MaxAttempts = 18
-			o.Backoff = retry_sdkv2.NewExponentialJitterBackoff(10 * time.Second)
+			o.Backoff = retry_sdkv2.NewExponentialJitterBackoff(backoff)
 		})
 	}), nil
 }
