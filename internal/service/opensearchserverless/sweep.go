@@ -21,6 +21,10 @@ func init() {
 		Name: "aws_opensearchserverless_access_policy",
 		F:    sweepAccessPolicies,
 	})
+	resource.AddTestSweepers("aws_opensearchserverless_collection", &resource.Sweeper{
+		Name: "aws_opensearchserverless_collection",
+		F:    sweepCollections,
+	})
 	resource.AddTestSweepers("aws_opensearchserverless_security_policy", &resource.Sweeper{
 		Name: "aws_opensearchserverless_security_policy",
 		F:    sweepSecurityPolicies,
@@ -71,6 +75,50 @@ func sweepAccessPolicies(region string) error {
 	}
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Access Policies sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepCollections(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+	var errs *multierror.Error
+	input := &opensearchserverless.ListCollectionsInput{}
+
+	pages := opensearchserverless.NewListCollectionsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping OpenSearch Serverless Collections sweep for %s: %s", region, err)
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("error retrieving OpenSearch Serverless Collections: %w", err)
+		}
+
+		for _, collection := range page.CollectionSummaries {
+			id := aws.ToString(collection.Id)
+
+			log.Printf("[INFO] Deleting OpenSearch Serverless Collection: %s", id)
+			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceCollection, id, client))
+		}
+	}
+
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping OpenSearch Serverless Collections for %s: %w", region, err))
+	}
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping OpenSearch Serverless Collections sweep for %s: %s", region, errs)
 		return nil
 	}
 
