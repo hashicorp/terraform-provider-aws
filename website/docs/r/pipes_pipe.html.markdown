@@ -323,7 +323,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `batch_target` - (Optional) The parameters for using an AWS Batch job as a target. Detailed below.
 * `cloudwatch_logs` - (Optional) The parameters for using an CloudWatch Logs log stream as a target. Detailed below.
 * `ecs_task` - (Optional) The parameters for using an Amazon ECS task as a target. Detailed below.
-* `event_bridge_event_bus` - (Optional) The parameters for using an EventBridge event bus as a target. Detailed below.
+* `eventbridge_event_bus_parameters` - (Optional) The parameters for using an EventBridge event bus as a target. Detailed below.
 * `http_parameters` - (Optional) These are custom parameter to be used when the target is an API Gateway REST APIs or EventBridge ApiDestinations. Detailed below.
 * `input_template` - (Optional) Valid JSON text passed to the target. In this case, nothing from the event itself is passed to the target. Maximum length of 8192 characters.
 * `kinesis_stream_parameters` - (Optional) The parameters for using a Kinesis stream as a source. Detailed below.
@@ -477,7 +477,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `key` - (Optional) A string you can use to assign a value. The combination of tag keys and values can help you organize and categorize your resources. Maximum length of 128.
 * `value` - (Optional) The value for the specified tag key. Maximum length of 256.
 
-#### target_parameters.event_bridge_event_bus Configuration Block
+#### target_parameters.eventbridge_event_bus_parameters Configuration Block
 
 * `detail_type` - (Optional) A free-form string, with a maximum of 128 characters, used to decide what fields to expect in the event detail.
 * `endpoint_id` - (Optional) The URL subdomain of the endpoint. For example, if the URL for Endpoint is https://abcde.veo.endpoints.event.amazonaws.com, then the EndpointId is abcde.veo.

@@ -26,7 +26,7 @@ func targetParametersSchema() *schema.Schema {
 					ConflictsWith: []string{
 						"target_parameters.0.cloudwatch_logs",
 						"target_parameters.0.ecs_task",
-						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.eventbridge_event_bus_parameters",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
@@ -171,7 +171,7 @@ func targetParametersSchema() *schema.Schema {
 					ConflictsWith: []string{
 						"target_parameters.0.batch_target",
 						"target_parameters.0.ecs_task",
-						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.eventbridge_event_bus_parameters",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
@@ -205,7 +205,7 @@ func targetParametersSchema() *schema.Schema {
 					ConflictsWith: []string{
 						"target_parameters.0.batch_target",
 						"target_parameters.0.cloudwatch_logs",
-						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.eventbridge_event_bus_parameters",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
@@ -531,7 +531,7 @@ func targetParametersSchema() *schema.Schema {
 						},
 					},
 				},
-				"event_bridge_event_bus": {
+				"eventbridge_event_bus_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -597,7 +597,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.batch_target",
 						"target_parameters.0.cloudwatch_logs",
 						"target_parameters.0.ecs_task",
-						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.eventbridge_event_bus_parameters",
 						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
@@ -640,7 +640,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.batch_target",
 						"target_parameters.0.cloudwatch_logs",
 						"target_parameters.0.ecs_task",
-						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.eventbridge_event_bus_parameters",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.lambda_function_parameters",
 						"target_parameters.0.redshift_data_parameters",
@@ -666,7 +666,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.batch_target",
 						"target_parameters.0.cloudwatch_logs",
 						"target_parameters.0.ecs_task",
-						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.eventbridge_event_bus_parameters",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.redshift_data_parameters",
@@ -692,7 +692,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.batch_target",
 						"target_parameters.0.cloudwatch_logs",
 						"target_parameters.0.ecs_task",
-						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.eventbridge_event_bus_parameters",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
@@ -746,7 +746,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.batch_target",
 						"target_parameters.0.cloudwatch_logs",
 						"target_parameters.0.ecs_task",
-						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.eventbridge_event_bus_parameters",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
@@ -789,7 +789,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.batch_target",
 						"target_parameters.0.cloudwatch_logs",
 						"target_parameters.0.ecs_task",
-						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.eventbridge_event_bus_parameters",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
@@ -820,7 +820,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.batch_target",
 						"target_parameters.0.cloudwatch_logs",
 						"target_parameters.0.ecs_task",
-						"target_parameters.0.event_bridge_event_bus",
+						"target_parameters.0.eventbridge_event_bus_parameters",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream_parameters",
 						"target_parameters.0.lambda_function_parameters",
@@ -852,6 +852,10 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 
 	// TODO
 
+	if v, ok := tfMap["eventbridge_event_bus_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EventBridgeEventBusParameters = expandPipeTargetEventBridgeEventBusParameters(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["http_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.HttpParameters = expandPipeTargetHttpParameters(v[0].(map[string]interface{}))
 	}
@@ -882,6 +886,36 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 
 	if v, ok := tfMap["step_function_state_machine_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.StepFunctionStateMachineParameters = expandPipeTargetStateMachineParameters(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandPipeTargetEventBridgeEventBusParameters(tfMap map[string]interface{}) *types.PipeTargetEventBridgeEventBusParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PipeTargetEventBridgeEventBusParameters{}
+
+	if v, ok := tfMap["detail_type"].(string); ok && v != "" {
+		apiObject.DetailType = aws.String(v)
+	}
+
+	if v, ok := tfMap["endpoint_id"].(string); ok && v != "" {
+		apiObject.EndpointId = aws.String(v)
+	}
+
+	if v, ok := tfMap["resources"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Resources = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := tfMap["source"].(string); ok && v != "" {
+		apiObject.Source = aws.String(v)
+	}
+
+	if v, ok := tfMap["time"].(string); ok && v != "" {
+		apiObject.Time = aws.String(v)
 	}
 
 	return apiObject
@@ -1070,6 +1104,10 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 
 	// TODO
 
+	if v := apiObject.EventBridgeEventBusParameters; v != nil {
+		tfMap["eventbridge_event_bus_parameters"] = []interface{}{flattenPipeTargetEventBridgeEventBusParameters(v)}
+	}
+
 	if v := apiObject.HttpParameters; v != nil {
 		tfMap["http_parameters"] = []interface{}{flattenPipeTargetHttpParameters(v)}
 	}
@@ -1100,6 +1138,36 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 
 	if v := apiObject.StepFunctionStateMachineParameters; v != nil {
 		tfMap["step_function_state_machine_parameters"] = []interface{}{flattenPipeTargetStateMachineParameters(v)}
+	}
+
+	return tfMap
+}
+
+func flattenPipeTargetEventBridgeEventBusParameters(apiObject *types.PipeTargetEventBridgeEventBusParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DetailType; v != nil {
+		tfMap["detail_type"] = aws.ToString(v)
+	}
+
+	if v := apiObject.EndpointId; v != nil {
+		tfMap["endpoint_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Resources; v != nil {
+		tfMap["resources"] = v
+	}
+
+	if v := apiObject.Source; v != nil {
+		tfMap["source"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Time; v != nil {
+		tfMap["time"] = aws.ToString(v)
 	}
 
 	return tfMap
