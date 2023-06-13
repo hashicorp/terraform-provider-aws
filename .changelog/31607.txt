@@ -3,7 +3,7 @@ resource/aws_pipes_pipe: Add `enrichment_parameters` argument
 ```
 
 ```release-note:enhancement
-resource/aws_pipes_pipe: Add `active_mq_broker`, `dynamo_db_stream`, `kinesis_stream`, `managed_streaming_kafka`, `rabbit_mq_broker`, `self_managed_kafka` and `sqs_queue` attributes to the `source_parameters` configuration block
+resource/aws_pipes_pipe: Add `activemq_broker_parameters`, `dynamodb_stream_parameters`, `kinesis_stream_parameters`, `managed_streaming_kafka_parameters`, `rabbitmq_broker_parameters`, `self_managed_kafka_parameters` and `sqs_queue_parameters` attributes to the `source_parameters` configuration block
 ```
 
 ```release-note:enhancement
