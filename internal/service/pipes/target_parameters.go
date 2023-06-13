@@ -33,7 +33,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
-						"target_parameters.0.step_function",
+						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -178,7 +178,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
-						"target_parameters.0.step_function",
+						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -212,7 +212,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
-						"target_parameters.0.step_function",
+						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -545,7 +545,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
-						"target_parameters.0.step_function",
+						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -603,7 +603,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
-						"target_parameters.0.step_function",
+						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -672,7 +672,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
-						"target_parameters.0.step_function",
+						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -698,7 +698,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
-						"target_parameters.0.step_function",
+						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -724,7 +724,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.sagemaker_pipeline",
 						"target_parameters.0.sqs_queue",
-						"target_parameters.0.step_function",
+						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -778,7 +778,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sqs_queue",
-						"target_parameters.0.step_function",
+						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -821,7 +821,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sagemaker_pipeline",
-						"target_parameters.0.step_function",
+						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -838,7 +838,7 @@ func targetParametersSchema() *schema.Schema {
 						},
 					},
 				},
-				"step_function": {
+				"step_function_state_machine_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -876,7 +876,23 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 
 	apiObject := &types.PipeTargetParameters{}
 
-	// ... nested attribute handling ...
+	if v, ok := tfMap["step_function_state_machine_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.StepFunctionStateMachineParameters = expandPipeTargetStateMachineParameters(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandPipeTargetStateMachineParameters(tfMap map[string]interface{}) *types.PipeTargetStateMachineParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PipeTargetStateMachineParameters{}
+
+	if v, ok := tfMap["invocation_type"].(string); ok && v != "" {
+		apiObject.InvocationType = types.PipeTargetInvocationType(v)
+	}
 
 	return apiObject
 }
@@ -888,7 +904,23 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 
 	tfMap := map[string]interface{}{}
 
-	// ... nested attribute handling ...
+	if v := apiObject.StepFunctionStateMachineParameters; v != nil {
+		tfMap["step_function_state_machine_parameters"] = []interface{}{flattenPipeTargetStateMachineParameters(v)}
+	}
+
+	return tfMap
+}
+
+func flattenPipeTargetStateMachineParameters(apiObject *types.PipeTargetStateMachineParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.InvocationType; v != "" {
+		tfMap["invocation_type"] = v
+	}
 
 	return tfMap
 }
