@@ -1,4 +1,14 @@
 ## 5.4.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_glue_data_quality_ruleset: Add `catalog_id` argument to `target_table` block ([#31926](https://github.com/hashicorp/terraform-provider-aws/issues/31926))
+
+BUG FIXES:
+
+* resource/aws_quicksight_data_set: Allow physical table map to be optional ([#31863](https://github.com/hashicorp/terraform-provider-aws/issues/31863))
+* resource/aws_ssm_default_patch_baseline: Fix `*conns.AWSClient is not ssm.ssmClient: missing method SSMClient` panic ([#31928](https://github.com/hashicorp/terraform-provider-aws/issues/31928))
+
 ## 5.3.0 (June 13, 2023)
 
 NOTES:
