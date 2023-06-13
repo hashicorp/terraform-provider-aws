@@ -29,12 +29,12 @@ func (p *servicePackage) CustomizeConn(ctx context.Context, conn *ec2_sdkv1.EC2)
 			}
 
 		case "CreateVpnConnection":
-			if tfawserr.ErrMessageContains(err, errCodeVpnConnectionLimitExceeded, "maximum number of mutating objects has been reached") {
+			if tfawserr.ErrMessageContains(err, errCodeVPNConnectionLimitExceeded, "maximum number of mutating objects has been reached") {
 				r.Retryable = aws_sdkv1.Bool(true)
 			}
 
 		case "CreateVpnGateway":
-			if tfawserr.ErrMessageContains(err, errCodeVpnGatewayLimitExceeded, "maximum number of mutating objects has been reached") {
+			if tfawserr.ErrMessageContains(err, errCodeVPNGatewayLimitExceeded, "maximum number of mutating objects has been reached") {
 				r.Retryable = aws_sdkv1.Bool(true)
 			}
 

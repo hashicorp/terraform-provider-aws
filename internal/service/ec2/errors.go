@@ -111,8 +111,8 @@ const (
 	errCodeSnapshotCreationPerVolumeRateExceeded             = "SnapshotCreationPerVolumeRateExceeded"
 	errCodeUnsupportedOperation                              = "UnsupportedOperation"
 	errCodeVolumeInUse                                       = "VolumeInUse"
-	errCodeVpnConnectionLimitExceeded                        = "VpnConnectionLimitExceeded"
-	errCodeVpnGatewayLimitExceeded                           = "VpnGatewayLimitExceeded"
+	errCodeVPNConnectionLimitExceeded                        = "VpnConnectionLimitExceeded"
+	errCodeVPNGatewayLimitExceeded                           = "VpnGatewayLimitExceeded"
 )
 
 func CancelSpotFleetRequestError(apiObject *ec2.CancelSpotFleetRequestsErrorItem) error {
