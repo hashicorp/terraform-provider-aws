@@ -207,7 +207,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `filter_criteria` - (Optional) The collection of event patterns used to [filter events](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes-event-filtering.html). Detailed below.
 * `kinesis_stream_parameters` - (Optional) The parameters for using a Kinesis stream as a source. Detailed below.
 * `managed_streaming_kafka_parameters` - (Optional) The parameters for using an MSK stream as a source. Detailed below.
-* `rabbit_mq_broker` - (Optional) The parameters for using a Rabbit MQ broker as a source. Detailed below.
+* `rabbitmq_broker_parameters` - (Optional) The parameters for using a Rabbit MQ broker as a source. Detailed below.
 * `self_managed_kafka` - (Optional) The parameters for using a self-managed Apache Kafka stream as a source. Detailed below.
 * `sqs_queue_parameters` - (Optional) The parameters for using a Amazon SQS stream as a source. Detailed below.
 
@@ -275,15 +275,15 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `client_certificate_tls_auth` - (Optional) The ARN of the Secrets Manager secret containing the credentials.
 * `sasl_scram_512_auth` - (Optional) The ARN of the Secrets Manager secret containing the credentials.
 
-#### source_parameters.rabbit_mq_broker Configuration Block
+#### source_parameters.rabbitmq_broker_parameters Configuration Block
 
 * `batch_size` - (Optional) The maximum number of records to include in each batch. Maximum value of 10000.
 * `credentials` - (Required) The credentials needed to access the resource. Detailed below.
 * `maximum_batching_window_in_seconds` - (Optional) The maximum length of a time to wait for events. Maximum value of 300.
-* `queue` - (Required) The name of the destination queue to consume. Maximum length of 1000.
+* `queue_name` - (Required) The name of the destination queue to consume. Maximum length of 1000.
 * `virtual_host` - (Optional) The name of the virtual host associated with the source broker. Maximum length of 200.
 
-##### source_parameters.rabbit_mq_broker.credentials Configuration Block
+##### source_parameters.rabbitmq_broker_parameters.credentials Configuration Block
 
 * `basic_auth` - (Required) The ARN of the Secrets Manager secret containing the credentials.
 

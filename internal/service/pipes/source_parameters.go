@@ -30,7 +30,7 @@ func sourceParametersSchema() *schema.Schema {
 						"source_parameters.0.dynamodb_stream_parameters",
 						"source_parameters.0.kinesis_stream_parameters",
 						"source_parameters.0.managed_streaming_kafka_parameters",
-						"source_parameters.0.rabbit_mq_broker",
+						"source_parameters.0.rabbitmq_broker_parameters",
 						"source_parameters.0.self_managed_kafka",
 						"source_parameters.0.sqs_queue_parameters",
 					},
@@ -92,7 +92,7 @@ func sourceParametersSchema() *schema.Schema {
 						"source_parameters.0.activemq_broker_parameters",
 						"source_parameters.0.kinesis_stream_parameters",
 						"source_parameters.0.managed_streaming_kafka_parameters",
-						"source_parameters.0.rabbit_mq_broker",
+						"source_parameters.0.rabbitmq_broker_parameters",
 						"source_parameters.0.self_managed_kafka",
 						"source_parameters.0.sqs_queue_parameters",
 					},
@@ -200,7 +200,7 @@ func sourceParametersSchema() *schema.Schema {
 						"source_parameters.0.activemq_broker_parameters",
 						"source_parameters.0.dynamodb_stream_parameters",
 						"source_parameters.0.managed_streaming_kafka_parameters",
-						"source_parameters.0.rabbit_mq_broker",
+						"source_parameters.0.rabbitmq_broker_parameters",
 						"source_parameters.0.self_managed_kafka",
 						"source_parameters.0.sqs_queue_parameters",
 					},
@@ -290,7 +290,7 @@ func sourceParametersSchema() *schema.Schema {
 						"source_parameters.0.activemq_broker_parameters",
 						"source_parameters.0.dynamodb_stream_parameters",
 						"source_parameters.0.kinesis_stream_parameters",
-						"source_parameters.0.rabbit_mq_broker",
+						"source_parameters.0.rabbitmq_broker_parameters",
 						"source_parameters.0.self_managed_kafka",
 						"source_parameters.0.sqs_queue_parameters",
 					},
@@ -363,7 +363,7 @@ func sourceParametersSchema() *schema.Schema {
 						},
 					},
 				},
-				"rabbit_mq_broker": {
+				"rabbitmq_broker_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -413,7 +413,7 @@ func sourceParametersSchema() *schema.Schema {
 									return old == "0"
 								},
 							},
-							"queue": {
+							"queue_name": {
 								Type:     schema.TypeString,
 								Required: true,
 								ForceNew: true,
@@ -443,7 +443,7 @@ func sourceParametersSchema() *schema.Schema {
 						"source_parameters.0.dynamodb_stream_parameters",
 						"source_parameters.0.kinesis_stream_parameters",
 						"source_parameters.0.managed_streaming_kafka_parameters",
-						"source_parameters.0.rabbit_mq_broker",
+						"source_parameters.0.rabbitmq_broker_parameters",
 						"source_parameters.0.sqs_queue_parameters",
 					},
 					Elem: &schema.Resource{
@@ -587,7 +587,7 @@ func sourceParametersSchema() *schema.Schema {
 						"source_parameters.0.dynamodb_stream_parameters",
 						"source_parameters.0.kinesis_stream_parameters",
 						"source_parameters.0.managed_streaming_kafka_parameters",
-						"source_parameters.0.rabbit_mq_broker",
+						"source_parameters.0.rabbitmq_broker_parameters",
 						"source_parameters.0.self_managed_kafka",
 					},
 					Elem: &schema.Resource{
@@ -647,6 +647,10 @@ func expandPipeSourceParameters(tfMap map[string]interface{}) *types.PipeSourceP
 
 	if v, ok := tfMap["managed_streaming_kafka_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ManagedStreamingKafkaParameters = expandPipeSourceManagedStreamingKafkaParameters(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["rabbitmq_broker_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.RabbitMQBrokerParameters = expandPipeSourceRabbitMQBrokerParameters(v[0].(map[string]interface{}))
 	}
 
 	// TODO
@@ -736,7 +740,7 @@ func expandPipeSourceActiveMQBrokerParameters(tfMap map[string]interface{}) *typ
 	}
 
 	if v, ok := tfMap["credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Credentials = expandMQBrokerAccessCredentialsMemberBasicAuth(v[0].(map[string]interface{}))
+		apiObject.Credentials = expandMQBrokerAccessCredentials(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok && v != 0 {
@@ -750,18 +754,20 @@ func expandPipeSourceActiveMQBrokerParameters(tfMap map[string]interface{}) *typ
 	return apiObject
 }
 
-func expandMQBrokerAccessCredentialsMemberBasicAuth(tfMap map[string]interface{}) types.MQBrokerAccessCredentials {
+func expandMQBrokerAccessCredentials(tfMap map[string]interface{}) types.MQBrokerAccessCredentials {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.MQBrokerAccessCredentialsMemberBasicAuth{}
-
 	if v, ok := tfMap["basic_auth"].(string); ok && v != "" {
-		apiObject.Value = v
+		apiObject := &types.MQBrokerAccessCredentialsMemberBasicAuth{
+			Value: v,
+		}
+
+		return apiObject
 	}
 
-	return apiObject
+	return nil
 }
 
 func expandPipeSourceDynamoDBStreamParameters(tfMap map[string]interface{}) *types.PipeSourceDynamoDBStreamParameters {
@@ -912,6 +918,36 @@ func expandMSKAccessCredentials(tfMap map[string]interface{}) types.MSKAccessCre
 	return nil
 }
 
+func expandPipeSourceRabbitMQBrokerParameters(tfMap map[string]interface{}) *types.PipeSourceRabbitMQBrokerParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PipeSourceRabbitMQBrokerParameters{}
+
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
+		apiObject.BatchSize = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Credentials = expandMQBrokerAccessCredentials(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok && v != 0 {
+		apiObject.MaximumBatchingWindowInSeconds = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["queue_name"].(string); ok && v != "" {
+		apiObject.QueueName = aws.String(v)
+	}
+
+	if v, ok := tfMap["virtual_host"].(string); ok && v != "" {
+		apiObject.VirtualHost = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandPipeSourceSqsQueueParameters(tfMap map[string]interface{}) *types.PipeSourceSqsQueueParameters {
 	if tfMap == nil {
 		return nil
@@ -969,6 +1005,10 @@ func flattenPipeSourceParameters(apiObject *types.PipeSourceParameters) map[stri
 
 	if v := apiObject.ManagedStreamingKafkaParameters; v != nil {
 		tfMap["managed_streaming_kafka_parameters"] = []interface{}{flattenPipeSourceManagedStreamingKafkaParameters(v)}
+	}
+
+	if v := apiObject.RabbitMQBrokerParameters; v != nil {
+		tfMap["rabbitmq_broker_parameters"] = []interface{}{flattenPipeSourceRabbitMQBrokerParameters(v)}
 	}
 
 	// TODO
@@ -1030,7 +1070,7 @@ func flattenPipeSourceActiveMQBrokerParameters(apiObject *types.PipeSourceActive
 	}
 
 	if v := apiObject.Credentials; v != nil {
-		tfMap["credentials"] = []interface{}{flattenMQBrokerAccessCredentialsMemberBasicAuth(v.(*types.MQBrokerAccessCredentialsMemberBasicAuth))}
+		tfMap["credentials"] = []interface{}{flattenMQBrokerAccessCredentials(v)}
 	}
 
 	if v := apiObject.MaximumBatchingWindowInSeconds; v != nil {
@@ -1044,15 +1084,17 @@ func flattenPipeSourceActiveMQBrokerParameters(apiObject *types.PipeSourceActive
 	return tfMap
 }
 
-func flattenMQBrokerAccessCredentialsMemberBasicAuth(apiObject *types.MQBrokerAccessCredentialsMemberBasicAuth) map[string]interface{} {
+func flattenMQBrokerAccessCredentials(apiObject types.MQBrokerAccessCredentials) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Value; v != "" {
-		tfMap["basic_auth"] = v
+	if apiObject, ok := apiObject.(*types.MQBrokerAccessCredentialsMemberBasicAuth); ok {
+		if v := apiObject.Value; v != "" {
+			tfMap["basic_auth"] = v
+		}
 	}
 
 	return tfMap
@@ -1197,6 +1239,36 @@ func flattenMSKAccessCredentials(apiObject types.MSKAccessCredentials) map[strin
 		if v := apiObject.Value; v != "" {
 			tfMap["sasl_scram_512_auth"] = v
 		}
+	}
+
+	return tfMap
+}
+
+func flattenPipeSourceRabbitMQBrokerParameters(apiObject *types.PipeSourceRabbitMQBrokerParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.BatchSize; v != nil {
+		tfMap["batch_size"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.Credentials; v != nil {
+		tfMap["credentials"] = []interface{}{flattenMQBrokerAccessCredentials(v)}
+	}
+
+	if v := apiObject.MaximumBatchingWindowInSeconds; v != nil {
+		tfMap["maximum_batching_window_in_seconds"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.QueueName; v != nil {
+		tfMap["queue_name"] = aws.ToString(v)
+	}
+
+	if v := apiObject.VirtualHost; v != nil {
+		tfMap["virtual_host"] = aws.ToString(v)
 	}
 
 	return tfMap
