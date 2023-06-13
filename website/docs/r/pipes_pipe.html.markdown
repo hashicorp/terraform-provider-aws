@@ -328,7 +328,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `input_template` - (Optional) Valid JSON text passed to the target. In this case, nothing from the event itself is passed to the target. Maximum length of 8192 characters.
 * `kinesis_stream` - (Optional) The parameters for using a Kinesis stream as a source. Detailed below.
 * `lambda_function` - (Optional) The parameters for using a Lambda function as a target. Detailed below.
-* `redshift_data` - (Optional) These are custom parameters to be used when the target is a Amazon Redshift cluster to invoke the Amazon Redshift Data API BatchExecuteStatement. Detailed below.
+* `redshift_data_parameters` - (Optional) These are custom parameters to be used when the target is a Amazon Redshift cluster to invoke the Amazon Redshift Data API BatchExecuteStatement. Detailed below.
 * `sagemaker_pipeline_parameters` - (Optional) The parameters for using a SageMaker pipeline as a target. Detailed below.
 * `sqs_queue_parameters` - (Optional) The parameters for using a Amazon SQS stream as a target. Detailed below.
 * `step_function_state_machine_parameters` - (Optional) The parameters for using a Step Functions state machine as a target. Detailed below.
@@ -509,10 +509,10 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 
 * `invocation_type` - (Optional) Specify whether to invoke the function synchronously or asynchronously. Valid Values: REQUEST_RESPONSE, FIRE_AND_FORGET.
 
-#### target_parameters.redshift_data Configuration Block
+#### target_parameters.redshift_data_parameters Configuration Block
 
 * `database` - (Required) The name of the database. Required when authenticating using temporary credentials.
-* `database_user` - (Optional) The database user name. Required when authenticating using temporary credentials.
+* `db_user` - (Optional) The database user name. Required when authenticating using temporary credentials.
 * `secret_manager_arn` - (Optional) The name or ARN of the secret that enables access to the database. Required when authenticating using Secrets Manager.
 * `sqls` - (Optional) List of SQL statements text to run, each of maximum length of 100,000.
 * `statement_name` - (Optional) The name of the SQL statement. You can name the SQL statement when you create it to identify the query.

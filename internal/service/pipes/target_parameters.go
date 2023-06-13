@@ -30,7 +30,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
-						"target_parameters.0.redshift_data",
+						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
@@ -175,7 +175,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
-						"target_parameters.0.redshift_data",
+						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
@@ -209,7 +209,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
-						"target_parameters.0.redshift_data",
+						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
@@ -542,7 +542,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
-						"target_parameters.0.redshift_data",
+						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
@@ -600,7 +600,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
-						"target_parameters.0.redshift_data",
+						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
@@ -669,7 +669,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.lambda_function",
-						"target_parameters.0.redshift_data",
+						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
@@ -695,7 +695,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.event_bridge_event_bus",
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
-						"target_parameters.0.redshift_data",
+						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
@@ -710,7 +710,7 @@ func targetParametersSchema() *schema.Schema {
 						},
 					},
 				},
-				"redshift_data": {
+				"redshift_data_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -733,7 +733,7 @@ func targetParametersSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 64),
 							},
-							"database_user": {
+							"db_user": {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(1, 128),
@@ -743,11 +743,6 @@ func targetParametersSchema() *schema.Schema {
 								Optional:     true,
 								ValidateFunc: verify.ValidARN,
 							},
-							"statement_name": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringLenBetween(1, 500),
-							},
 							"sqls": {
 								Type:     schema.TypeSet,
 								Required: true,
@@ -755,6 +750,11 @@ func targetParametersSchema() *schema.Schema {
 									Type:         schema.TypeString,
 									ValidateFunc: validation.StringLenBetween(1, 100000),
 								},
+							},
+							"statement_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 500),
 							},
 							"with_event": {
 								Type:     schema.TypeBool,
@@ -776,7 +776,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
-						"target_parameters.0.redshift_data",
+						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
@@ -819,7 +819,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
-						"target_parameters.0.redshift_data",
+						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
@@ -850,7 +850,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.http_parameters",
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
-						"target_parameters.0.redshift_data",
+						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 					},
@@ -878,6 +878,10 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 
 	// TODO
 
+	if v, ok := tfMap["redshift_data_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.RedshiftDataParameters = expandPipeTargetRedshiftDataParameters(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["sagemaker_pipeline_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.SageMakerPipelineParameters = expandPipeTargetSageMakerPipelineParameters(v[0].(map[string]interface{}))
 	}
@@ -888,6 +892,40 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 
 	if v, ok := tfMap["step_function_state_machine_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.StepFunctionStateMachineParameters = expandPipeTargetStateMachineParameters(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandPipeTargetRedshiftDataParameters(tfMap map[string]interface{}) *types.PipeTargetRedshiftDataParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PipeTargetRedshiftDataParameters{}
+
+	if v, ok := tfMap["database"].(string); ok {
+		apiObject.Database = aws.String(v)
+	}
+
+	if v, ok := tfMap["db_user"].(string); ok {
+		apiObject.DbUser = aws.String(v)
+	}
+
+	if v, ok := tfMap["secret_manager_arn"].(string); ok {
+		apiObject.SecretManagerArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["sqls"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Sqls = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := tfMap["statement_name"].(string); ok {
+		apiObject.StatementName = aws.String(v)
+	}
+
+	if v, ok := tfMap["with_event"].(bool); ok {
+		apiObject.WithEvent = v
 	}
 
 	return apiObject
@@ -992,6 +1030,10 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 
 	// TODO
 
+	if v := apiObject.RedshiftDataParameters; v != nil {
+		tfMap["redshift_data_parameters"] = []interface{}{flattenPipeTargetRedshiftDataParameters(v)}
+	}
+
 	if v := apiObject.SageMakerPipelineParameters; v != nil {
 		tfMap["sagemaker_pipeline_parameters"] = []interface{}{flattenPipeTargetSageMakerPipelineParameters(v)}
 	}
@@ -1002,6 +1044,38 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 
 	if v := apiObject.StepFunctionStateMachineParameters; v != nil {
 		tfMap["step_function_state_machine_parameters"] = []interface{}{flattenPipeTargetStateMachineParameters(v)}
+	}
+
+	return tfMap
+}
+
+func flattenPipeTargetRedshiftDataParameters(apiObject *types.PipeTargetRedshiftDataParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"with_event": apiObject.WithEvent,
+	}
+
+	if v := apiObject.Database; v != nil {
+		tfMap["database"] = aws.ToString(v)
+	}
+
+	if v := apiObject.DbUser; v != nil {
+		tfMap["db_user"] = aws.ToString(v)
+	}
+
+	if v := apiObject.SecretManagerArn; v != nil {
+		tfMap["secret_manager_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Sqls; v != nil {
+		tfMap["sqls"] = v
+	}
+
+	if v := apiObject.StatementName; v != nil {
+		tfMap["statement_name"] = aws.ToString(v)
 	}
 
 	return tfMap
