@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -28,10 +29,6 @@ const (
 	patchBaselineIDRegexPattern = `pb-[0-9a-f]{17}`
 )
 
-type ssmClient interface {
-	SSMClient() *ssm.Client
-}
-
 // @SDKResource("aws_ssm_default_patch_baseline")
 func ResourceDefaultPatchBaseline() *schema.Resource {
 	return &schema.Resource{
@@ -44,7 +41,7 @@ func ResourceDefaultPatchBaseline() *schema.Resource {
 				id := d.Id()
 
 				if isPatchBaselineID(id) || isPatchBaselineARN(id) {
-					conn := meta.(ssmClient).SSMClient()
+					conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 					patchbaseline, err := findPatchBaselineByID(ctx, conn, id)
 					if err != nil {
@@ -169,7 +166,7 @@ const (
 )
 
 func resourceDefaultPatchBaselineCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(ssmClient).SSMClient()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	baselineID := d.Get("baseline_id").(string)
 
@@ -199,7 +196,7 @@ func resourceDefaultPatchBaselineCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceDefaultPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(ssmClient).SSMClient()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	out, err := FindDefaultPatchBaseline(ctx, conn, types.OperatingSystem(d.Id()))
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -245,7 +242,7 @@ func ownerIsSelfFilter() types.PatchOrchestratorFilter { //nolint:unused // This
 }
 
 func resourceDefaultPatchBaselineDelete(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
-	return defaultPatchBaselineRestoreOSDefault(ctx, meta.(ssmClient).SSMClient(), types.OperatingSystem(d.Id()))
+	return defaultPatchBaselineRestoreOSDefault(ctx, meta.(*conns.AWSClient).SSMConn(ctx), types.OperatingSystem(d.Id()))
 }
 
 func defaultPatchBaselineRestoreOSDefault(ctx context.Context, conn *ssm.Client, os types.OperatingSystem) (diags diag.Diagnostics) {
