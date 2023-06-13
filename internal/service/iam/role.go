@@ -223,7 +223,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("inline_policy"); ok && v.(*schema.Set).Len() > 0 {
 		policies := expandRoleInlinePolicies(roleName, v.(*schema.Set).List())
-		if err := addRoleInlinePolicies(ctx, policies, meta); err != nil {
+		if err := putRoleInlinePolicies(ctx, policies, meta); err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating IAM Role (%s): %s", name, err)
 		}
 	}
@@ -434,7 +434,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		remove := os.Difference(ns).List()
 		add := ns.Difference(os).List()
 
-		var policyNames []*string
+		var policyNamesToPotentiallyDelete []*string
 		for _, policy := range remove {
 			tfMap, ok := policy.(map[string]interface{})
 
@@ -443,15 +443,45 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			}
 
 			if v, ok := tfMap["name"].(string); ok && v != "" {
-				policyNames = append(policyNames, aws.String(tfMap["name"].(string)))
+				policyNamesToPotentiallyDelete = append(
+					policyNamesToPotentiallyDelete,
+					aws.String(tfMap["name"].(string)))
 			}
 		}
-		if err := deleteRoleInlinePolicies(ctx, conn, roleName, policyNames); err != nil {
+
+		// Get names of all policies we are adding
+		addPolicyNames := make(map[string]int)
+		for _, tfMapRaw := range add {
+			tfMap, ok := tfMapRaw.(map[string]interface{})
+
+			if !ok {
+				continue
+			}
+
+			if v, ok := tfMap["name"].(string); ok && v != "" {
+				addPolicyNames[v] = 0
+			}
+		}
+
+		// Any policy that is going to be updated should not then be deleted,
+		// only do updates
+		var policyNamesToDelete []*string
+		for _, policyName := range policyNamesToPotentiallyDelete {
+			_, ok := addPolicyNames[*policyName]
+
+			if !ok {
+				policyNamesToDelete = append(policyNamesToDelete, policyName)
+			}
+		}
+
+		// Always want to update then delete so users don't lose permissions if
+		// doing a permission migration
+		policies := expandRoleInlinePolicies(roleName, add)
+		if err := putRoleInlinePolicies(ctx, policies, meta); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
 		}
 
-		policies := expandRoleInlinePolicies(roleName, add)
-		if err := addRoleInlinePolicies(ctx, policies, meta); err != nil {
+		if err := deleteRoleInlinePolicies(ctx, conn, roleName, policyNamesToDelete); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
 		}
 	}
@@ -817,7 +847,7 @@ func expandRoleInlinePolicies(roleName string, tfList []interface{}) []*iam.PutR
 	return apiObjects
 }
 
-func addRoleInlinePolicies(ctx context.Context, policies []*iam.PutRolePolicyInput, meta interface{}) error {
+func putRoleInlinePolicies(ctx context.Context, policies []*iam.PutRolePolicyInput, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	var errs *multierror.Error
