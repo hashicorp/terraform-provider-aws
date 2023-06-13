@@ -32,7 +32,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sagemaker_pipeline",
-						"target_parameters.0.sqs_queue",
+						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
@@ -177,7 +177,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sagemaker_pipeline",
-						"target_parameters.0.sqs_queue",
+						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
@@ -211,7 +211,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sagemaker_pipeline",
-						"target_parameters.0.sqs_queue",
+						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
@@ -544,7 +544,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sagemaker_pipeline",
-						"target_parameters.0.sqs_queue",
+						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
@@ -602,7 +602,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sagemaker_pipeline",
-						"target_parameters.0.sqs_queue",
+						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
@@ -671,7 +671,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sagemaker_pipeline",
-						"target_parameters.0.sqs_queue",
+						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
@@ -697,7 +697,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sagemaker_pipeline",
-						"target_parameters.0.sqs_queue",
+						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
@@ -723,7 +723,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.sagemaker_pipeline",
-						"target_parameters.0.sqs_queue",
+						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
@@ -777,7 +777,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.kinesis_stream",
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
-						"target_parameters.0.sqs_queue",
+						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
 					},
 					Elem: &schema.Resource{
@@ -807,7 +807,7 @@ func targetParametersSchema() *schema.Schema {
 						},
 					},
 				},
-				"sqs_queue": {
+				"sqs_queue_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -852,7 +852,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.lambda_function",
 						"target_parameters.0.redshift_data",
 						"target_parameters.0.sagemaker_pipeline",
-						"target_parameters.0.sqs_queue",
+						"target_parameters.0.sqs_queue_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -876,8 +876,32 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 
 	apiObject := &types.PipeTargetParameters{}
 
+	// TODO
+
+	if v, ok := tfMap["sqs_queue_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SqsQueueParameters = expandPipeTargetSqsQueueParameters(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["step_function_state_machine_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.StepFunctionStateMachineParameters = expandPipeTargetStateMachineParameters(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandPipeTargetSqsQueueParameters(tfMap map[string]interface{}) *types.PipeTargetSqsQueueParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PipeTargetSqsQueueParameters{}
+
+	if v, ok := tfMap["message_deduplication_id"].(string); ok {
+		apiObject.MessageDeduplicationId = aws.String(v)
+	}
+
+	if v, ok := tfMap["message_group_id"].(string); ok {
+		apiObject.MessageGroupId = aws.String(v)
 	}
 
 	return apiObject
@@ -904,8 +928,32 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 
 	tfMap := map[string]interface{}{}
 
+	// TODO
+
+	if v := apiObject.SqsQueueParameters; v != nil {
+		tfMap["sqs_queue_parameters"] = []interface{}{flattenPipeTargetSqsQueueParameters(v)}
+	}
+
 	if v := apiObject.StepFunctionStateMachineParameters; v != nil {
 		tfMap["step_function_state_machine_parameters"] = []interface{}{flattenPipeTargetStateMachineParameters(v)}
+	}
+
+	return tfMap
+}
+
+func flattenPipeTargetSqsQueueParameters(apiObject *types.PipeTargetSqsQueueParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.MessageDeduplicationId; v != nil {
+		tfMap["message_deduplication_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.MessageGroupId; v != nil {
+		tfMap["message_group_id"] = aws.ToString(v)
 	}
 
 	return tfMap

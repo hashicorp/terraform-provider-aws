@@ -330,7 +330,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `lambda_function` - (Optional) The parameters for using a Lambda function as a target. Detailed below.
 * `redshift_data` - (Optional) These are custom parameters to be used when the target is a Amazon Redshift cluster to invoke the Amazon Redshift Data API BatchExecuteStatement. Detailed below.
 * `sagemaker_pipeline` - (Optional) The parameters for using a SageMaker pipeline as a target. Detailed below.
-* `sqs_queue` - (Optional) The parameters for using a Amazon SQS stream as a target. Detailed below.
+* `sqs_queue_parameters` - (Optional) The parameters for using a Amazon SQS stream as a target. Detailed below.
 * `step_function_state_machine_parameters` - (Optional) The parameters for using a Step Functions state machine as a target. Detailed below.
 
 #### target_parameters.batch_target Configuration Block
@@ -527,7 +527,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `name` - (Optional) Name of parameter to start execution of a SageMaker Model Building Pipeline. Maximum length of 256.
 * `value` - (Optional) Value of parameter to start execution of a SageMaker Model Building Pipeline. Maximum length of 1024.
 
-#### target_parameters.sqs_queue Configuration Block
+#### target_parameters.sqs_queue_parameters Configuration Block
 
 * `message_deduplication_id` - (Optional) This parameter applies only to FIFO (first-in-first-out) queues. The token used for deduplication of sent messages.
 * `message_group_id` - (Optional) The FIFO message group ID to use as the target.
