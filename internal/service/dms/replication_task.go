@@ -44,7 +44,7 @@ func ResourceReplicationTask() *schema.Resource {
 			"cdc_start_time": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ValidateFunc:  validation.IsRFC3339Time,
+				ValidateFunc:  verify.ValidStringDateOrPositiveInt,
 				ConflictsWith: []string{"cdc_start_position"},
 			},
 			"migration_type": {
