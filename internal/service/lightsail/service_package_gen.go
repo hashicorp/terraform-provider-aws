@@ -5,9 +5,6 @@ package lightsail
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	lightsail_sdkv1 "github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -163,13 +160,6 @@ func (p *servicePackage) ServicePackageName() string {
 
 func (p *servicePackage) Configure(ctx context.Context, config map[string]any) {
 	p.config = config
-}
-
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context) (*lightsail_sdkv1.Lightsail, error) {
-	sess := p.config["session"].(*session_sdkv1.Session)
-
-	return lightsail_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))})), nil
 }
 
 var ServicePackage = &servicePackage{}

@@ -25,6 +25,7 @@ import (
 	ivschat_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ivschat"
 	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
+	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
@@ -206,7 +207,6 @@ import (
 	lexruntimeservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexruntimeservice"
 	lexruntimev2_sdkv1 "github.com/aws/aws-sdk-go/service/lexruntimev2"
 	licensemanager_sdkv1 "github.com/aws/aws-sdk-go/service/licensemanager"
-	lightsail_sdkv1 "github.com/aws/aws-sdk-go/service/lightsail"
 	locationservice_sdkv1 "github.com/aws/aws-sdk-go/service/locationservice"
 	lookoutequipment_sdkv1 "github.com/aws/aws-sdk-go/service/lookoutequipment"
 	lookoutforvision_sdkv1 "github.com/aws/aws-sdk-go/service/lookoutforvision"
@@ -1043,8 +1043,8 @@ func (c *AWSClient) LicenseManagerConn(ctx context.Context) *licensemanager_sdkv
 	return errs.Must(conn[*licensemanager_sdkv1.LicenseManager](ctx, c, names.LicenseManager))
 }
 
-func (c *AWSClient) LightsailConn(ctx context.Context) *lightsail_sdkv1.Lightsail {
-	return errs.Must(conn[*lightsail_sdkv1.Lightsail](ctx, c, names.Lightsail))
+func (c *AWSClient) LightsailClient(ctx context.Context) *lightsail_sdkv2.Client {
+	return errs.Must(client[*lightsail_sdkv2.Client](ctx, c, names.Lightsail))
 }
 
 func (c *AWSClient) LocationConn(ctx context.Context) *locationservice_sdkv1.LocationService {

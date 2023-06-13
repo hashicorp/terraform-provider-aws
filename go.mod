@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
-	github.com/aws/aws-sdk-go v1.44.278
+	github.com/aws/aws-sdk-go v1.44.280
 	github.com/aws/aws-sdk-go-v2 v1.18.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.19.12
@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.4
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.12
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.11
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.1
@@ -28,6 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.5
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.40.2
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.35.0
+	github.com/aws/aws-sdk-go-v2/service/lightsail v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/oam v1.1.11
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.4
@@ -61,7 +62,7 @@ require (
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/hcl/v2 v2.16.2
-	github.com/hashicorp/terraform-plugin-framework v1.2.0
+	github.com/hashicorp/terraform-plugin-framework v1.3.0
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.3.1
 	github.com/hashicorp/terraform-plugin-framework-validators v0.10.0
 	github.com/hashicorp/terraform-plugin-go v0.15.0

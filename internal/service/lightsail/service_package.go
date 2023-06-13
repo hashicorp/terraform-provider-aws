@@ -2,28 +2,33 @@ package lightsail
 
 import (
 	"context"
+	"strings"
+	"time"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	request_sdkv1 "github.com/aws/aws-sdk-go/aws/request"
-	lightsail_sdkv1 "github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	retry_sdkv2 "github.com/aws/aws-sdk-go-v2/aws/retry"
+	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
 )
 
-// CustomizeConn customizes a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) CustomizeConn(ctx context.Context, conn *lightsail_sdkv1.Lightsail) (*lightsail_sdkv1.Lightsail, error) {
-	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
-		switch r.Operation.Name {
-		case "CreateContainerService", "UpdateContainerService", "CreateContainerServiceDeployment":
-			if tfawserr.ErrMessageContains(r.Error, lightsail_sdkv1.ErrCodeInvalidInputException, "Please try again in a few minutes") {
-				r.Retryable = aws_sdkv1.Bool(true)
-			}
-		case "DeleteContainerService":
-			if tfawserr.ErrMessageContains(r.Error, lightsail_sdkv1.ErrCodeInvalidInputException, "Please try again in a few minutes") ||
-				tfawserr.ErrMessageContains(r.Error, lightsail_sdkv1.ErrCodeInvalidInputException, "Please wait for it to complete before trying again") {
-				r.Retryable = aws_sdkv1.Bool(true)
-			}
-		}
-	})
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context) (*lightsail_sdkv2.Client, error) {
+	cfg := *(p.config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	return conn, nil
+	return lightsail_sdkv2.NewFromConfig(cfg, func(o *lightsail_sdkv2.Options) {
+		if endpoint := p.config["endpoint"].(string); endpoint != "" {
+			o.EndpointResolver = lightsail_sdkv2.EndpointResolverFromURL(endpoint)
+		}
+
+		retryable := retry_sdkv2.IsErrorRetryableFunc(func(e error) aws_sdkv2.Ternary {
+			if strings.Contains(e.Error(), "Please try again in a few minutes") || strings.Contains(e.Error(), "Please wait for it to complete before trying again") {
+				return aws_sdkv2.TrueTernary
+			}
+			return aws_sdkv2.UnknownTernary
+		})
+		o.Retryer = retry_sdkv2.NewStandard(func(o *retry_sdkv2.StandardOptions) {
+			o.Retryables = append(o.Retryables, retryable)
+			o.MaxAttempts = 18
+			o.Backoff = retry_sdkv2.NewExponentialJitterBackoff(10 * time.Second)
+		})
+	}), nil
 }
