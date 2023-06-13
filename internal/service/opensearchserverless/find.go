@@ -36,6 +36,30 @@ func FindAccessPolicyByNameAndType(ctx context.Context, conn *opensearchserverle
 	return out.AccessPolicyDetail, nil
 }
 
+func FindCollectionByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.CollectionDetail, error) {
+	in := &opensearchserverless.BatchGetCollectionInput{
+		Ids: []string{id},
+	}
+	out, err := conn.BatchGetCollection(ctx, in)
+	if err != nil {
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.CollectionDetails == nil || len(out.CollectionDetails) == 0 {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return &out.CollectionDetails[0], nil
+}
+
 func FindSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, name, policyType string) (*types.SecurityPolicyDetail, error) {
 	in := &opensearchserverless.GetSecurityPolicyInput{
 		Name: aws.String(name),

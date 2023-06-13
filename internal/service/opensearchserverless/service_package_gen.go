@@ -21,6 +21,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceAccessPolicy,
 		},
 		{
+			Factory: newResourceCollection,
+			Name:    "Collection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory: newResourceSecurityPolicy,
 		},
 	}
