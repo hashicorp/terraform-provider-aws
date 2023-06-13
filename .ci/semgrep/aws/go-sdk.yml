@@ -64,3 +64,19 @@ rules:
           - pattern: "*$LHS >= $RHS"
           - pattern: "*$LHS <= $RHS"
     severity: WARNING
+
+  - id: pointer-conversion-immediate-dereference
+    fix: $VALUE
+    languages: [go]
+    message: Using AWS Go SDK pointer conversion, e.g. aws.String(), with immediate dereferencing is extraneous
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+          - pattern: "*aws.Bool($VALUE)"
+          - pattern: "*aws.Float64($VALUE)"
+          - pattern: "*aws.Int64($VALUE)"
+          - pattern: "*aws.String($VALUE)"
+          - pattern: "*aws.Time($VALUE)"
+    severity: WARNING

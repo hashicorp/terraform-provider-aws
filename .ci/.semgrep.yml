@@ -23,22 +23,6 @@ rules:
     pattern: "d.SetId(*$VALUE)"
     severity: WARNING
 
-  - id: aws-go-sdk-pointer-conversion-immediate-dereference
-    fix: $VALUE
-    languages: [go]
-    message: Using AWS Go SDK pointer conversion, e.g. aws.String(), with immediate dereferencing is extraneous
-    paths:
-      include:
-        - internal/
-    patterns:
-      - pattern-either:
-          - pattern: "*aws.Bool($VALUE)"
-          - pattern: "*aws.Float64($VALUE)"
-          - pattern: "*aws.Int64($VALUE)"
-          - pattern: "*aws.String($VALUE)"
-          - pattern: "*aws.Time($VALUE)"
-    severity: WARNING
-
   - id: data-source-with-resource-read
     languages: [go]
     message: Calling a resource's Read method from within a data-source is discouraged
