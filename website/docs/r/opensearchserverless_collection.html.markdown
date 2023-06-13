@@ -15,8 +15,26 @@ Terraform resource for managing an AWS OpenSearch Serverless Collection.
 ### Basic Usage
 
 ```terraform
+resource "aws_opensearchserverless_security_policy" "example" {
+  name = "example"
+  type = "encryption"
+  policy = jsonencode({
+    "Rules" = [
+      {
+        "Resource" = [
+          "collection/example"
+        ],
+        "ResourceType" = "collection"
+      }
+    ],
+    "AWSOwnedKey" = true
+  })
+}
+
 resource "aws_opensearchserverless_collection" "example" {
   name = "example"
+
+  depends_on = [ aws_opensearchserverless_security_policy.example ]
 }
 ```
 
@@ -39,6 +57,13 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) of the collection.
 * `id` - Unique identifier for the collection.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `20m`)
+- `delete` - (Default `20m`)
+- 
 ## Import
 
 OpenSearchServerless Collection can be imported using the `id`, e.g.,
