@@ -487,19 +487,9 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 
 #### target_parameters.http_parameters Configuration Block
 
-* `header` - (Optional) The headers that need to be sent as part of request invoking the API Gateway REST API or EventBridge ApiDestination. Detailed below.
-* `path_parameters` - (Optional) The path parameter values to be used to populate API Gateway REST API or EventBridge ApiDestination path wildcards ("*").
-* `query_string` - (Optional) The query strings that need to be sent as part of request invoking the API Gateway REST API or EventBridge ApiDestination. Detailed below.
-
-##### target_parameters.http_parameters.header Configuration Block
-
-* `key` - (Optional) The name of the header. Maximum length of 512 characters.
-* `value` - (Optional) The header value. Maximum length of 512 characters.
-
-##### target_parameters.http_parameters.query_string Configuration Block
-
-* `key` - (Optional) The name of the query string. Maximum length of 512 characters.
-* `value` - (Optional) The header query string. Maximum length of 512 characters.
+* `header_parameters` - (Optional) Key-value mapping of the headers that need to be sent as part of request invoking the API Gateway REST API or EventBridge ApiDestination. Detailed below.
+* `path_parameter_values` - (Optional) The path parameter values to be used to populate API Gateway REST API or EventBridge ApiDestination path wildcards ("*").
+* `query_string_parameters` - (Optional) Key-value mapping of the query strings that need to be sent as part of request invoking the API Gateway REST API or EventBridge ApiDestination. Detailed below.
 
 #### target_parameters.kinesis_stream_parameters Configuration Block
 

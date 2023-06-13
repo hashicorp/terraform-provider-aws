@@ -607,48 +607,22 @@ func targetParametersSchema() *schema.Schema {
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"header": {
-								Type:     schema.TypeList,
+							"header_parameters": {
+								Type:     schema.TypeMap,
 								Optional: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"key": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(0, 512),
-										},
-										"value": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(0, 512),
-										},
-									},
-								},
+								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"path_parameters": {
+							"path_parameter_values": {
 								Type:     schema.TypeList,
 								Optional: true,
 								Elem: &schema.Schema{
 									Type: schema.TypeString,
 								},
 							},
-							"query_string": {
-								Type:     schema.TypeList,
+							"query_string_parameters": {
+								Type:     schema.TypeMap,
 								Optional: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"key": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(0, 512),
-										},
-										"value": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(0, 512),
-										},
-									},
-								},
+								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 						},
 					},
@@ -878,6 +852,14 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 
 	// TODO
 
+	if v, ok := tfMap["http_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.HttpParameters = expandPipeTargetHttpParameters(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["input_template"].(string); ok && v != "" {
+		apiObject.InputTemplate = aws.String(v)
+	}
+
 	if v, ok := tfMap["kinesis_stream_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.KinesisStreamParameters = expandPipeTargetKinesisStreamParameters(v[0].(map[string]interface{}))
 	}
@@ -900,6 +882,28 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 
 	if v, ok := tfMap["step_function_state_machine_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.StepFunctionStateMachineParameters = expandPipeTargetStateMachineParameters(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandPipeTargetHttpParameters(tfMap map[string]interface{}) *types.PipeTargetHttpParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PipeTargetHttpParameters{}
+
+	if v, ok := tfMap["header_parameters"].(map[string]interface{}); ok && len(v) > 0 {
+		apiObject.HeaderParameters = flex.ExpandStringValueMap(v)
+	}
+
+	if v, ok := tfMap["path_parameter_values"].([]interface{}); ok && len(v) > 0 {
+		apiObject.PathParameterValues = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := tfMap["query_string_parameters"].(map[string]interface{}); ok && len(v) > 0 {
+		apiObject.QueryStringParameters = flex.ExpandStringValueMap(v)
 	}
 
 	return apiObject
@@ -1066,6 +1070,14 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 
 	// TODO
 
+	if v := apiObject.HttpParameters; v != nil {
+		tfMap["http_parameters"] = []interface{}{flattenPipeTargetHttpParameters(v)}
+	}
+
+	if v := apiObject.InputTemplate; v != nil {
+		tfMap["input_template"] = aws.ToString(v)
+	}
+
 	if v := apiObject.KinesisStreamParameters; v != nil {
 		tfMap["kinesis_stream_parameters"] = []interface{}{flattenPipeTargetKinesisStreamParameters(v)}
 	}
@@ -1088,6 +1100,28 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 
 	if v := apiObject.StepFunctionStateMachineParameters; v != nil {
 		tfMap["step_function_state_machine_parameters"] = []interface{}{flattenPipeTargetStateMachineParameters(v)}
+	}
+
+	return tfMap
+}
+
+func flattenPipeTargetHttpParameters(apiObject *types.PipeTargetHttpParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.HeaderParameters; v != nil {
+		tfMap["header_parameters"] = v
+	}
+
+	if v := apiObject.PathParameterValues; v != nil {
+		tfMap["path_parameter_values"] = v
+	}
+
+	if v := apiObject.QueryStringParameters; v != nil {
+		tfMap["query_string_parameters"] = v
 	}
 
 	return tfMap
