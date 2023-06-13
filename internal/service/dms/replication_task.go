@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -134,9 +135,19 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("cdc_start_time"); ok {
-		// Parse the RFC3339 date string into a time.Time object
-		dateTime, _ := time.Parse(time.RFC3339, v.(string))
-		request.CdcStartTime = aws.Time(dateTime)
+		// Check if input is RFC3339 date string or UNIX timestamp.
+		dateTime, err := time.Parse(time.RFC3339, v.(string))
+
+		if err != nil {
+			// Not a valid RF3339 date, checking if this is a UNIX timestamp.
+			seconds, err := strconv.ParseInt(v.(string), 10, 64)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "DMS create replication task. Invalid Unix timestamp given for cdc_start_time parameter: %s", err)
+			}
+			request.CdcStartTime = aws.Time(time.Unix(seconds, 0))
+		} else {
+			request.CdcStartTime = aws.Time(dateTime)
+		}
 	}
 
 	if v, ok := d.GetOk("replication_task_settings"); ok {

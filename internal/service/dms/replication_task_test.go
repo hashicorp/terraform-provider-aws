@@ -12,6 +12,7 @@ import (
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -180,7 +181,7 @@ func TestAccDMSReplicationTask_cdcStartPosition(t *testing.T) {
 	})
 }
 
-func TestAccDMSReplicationTask_cdcStartTime(t *testing.T) {
+func TestAccDMSReplicationTask_cdcStartTime_rfc3339_date(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
@@ -197,6 +198,39 @@ func TestAccDMSReplicationTask_cdcStartTime(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_cdcStartTime(rName, rfc3339Time),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationTaskExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cdc_start_position", awsDmsExpectedOutput),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerifyIgnore: []string{"start_replication_task"},
+			},
+		},
+	})
+}
+
+func TestAccDMSReplicationTask_cdcStartTime_unix_timestamp(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dms_replication_task.test"
+
+	currentTime := time.Now().UTC()
+	rfc3339Time := currentTime.Format(time.RFC3339)
+	awsDmsExpectedOutput := strings.TrimRight(rfc3339Time, "Z") // AWS API drop "Z" part.
+	dateTime, _ := time.Parse(time.RFC3339, rfc3339Time)
+	unixDateTime := strconv.Itoa(int(dateTime.Unix()))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationTaskConfig_cdcStartTime(rName, unixDateTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cdc_start_position", awsDmsExpectedOutput),
