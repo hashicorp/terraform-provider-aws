@@ -34,7 +34,7 @@ resource "aws_opensearchserverless_security_policy" "example" {
 resource "aws_opensearchserverless_collection" "example" {
   name = "example"
 
-  depends_on = [ aws_opensearchserverless_security_policy.example ]
+  depends_on = [aws_opensearchserverless_security_policy.example]
 }
 ```
 

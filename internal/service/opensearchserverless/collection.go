@@ -3,7 +3,6 @@ package opensearchserverless
 import (
 	"context"
 	"errors"
-	"fmt"
 	"regexp"
 	"time"
 
@@ -42,14 +41,17 @@ func newResourceCollection(_ context.Context) (resource.ResourceWithConfigure, e
 }
 
 type resourceCollectionData struct {
-	ARN         types.String   `tfsdk:"arn"`
-	Description types.String   `tfsdk:"description"`
-	ID          types.String   `tfsdk:"id"`
-	Name        types.String   `tfsdk:"name"`
-	Tags        types.Map      `tfsdk:"tags"`
-	TagsAll     types.Map      `tfsdk:"tags_all"`
-	Timeouts    timeouts.Value `tfsdk:"timeouts"`
-	Type        types.String   `tfsdk:"type"`
+	ARN                types.String   `tfsdk:"arn"`
+	CollectionEndpoint types.String   `tfsdk:"collection_endpoint"`
+	DashboardEndpoint  types.String   `tfsdk:"dashboard_endpoint"`
+	Description        types.String   `tfsdk:"description"`
+	ID                 types.String   `tfsdk:"id"`
+	KmsKeyARN          types.String   `tfsdk:"kms_key_arn"`
+	Name               types.String   `tfsdk:"name"`
+	Tags               types.Map      `tfsdk:"tags"`
+	TagsAll            types.Map      `tfsdk:"tags_all"`
+	Timeouts           timeouts.Value `tfsdk:"timeouts"`
+	Type               types.String   `tfsdk:"type"`
 }
 
 const (
@@ -69,6 +71,18 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
+			"collection_endpoint": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"dashboard_endpoint": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"description": schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
@@ -76,6 +90,12 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 			},
 			"id": framework.IDAttribute(),
+			"kms_key_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -159,7 +179,10 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	state.ARN = flex.StringToFramework(ctx, waitOut.Arn)
+	state.CollectionEndpoint = flex.StringToFramework(ctx, waitOut.CollectionEndpoint)
+	state.DashboardEndpoint = flex.StringToFramework(ctx, waitOut.DashboardEndpoint)
 	state.Description = flex.StringToFramework(ctx, waitOut.Description)
+	state.KmsKeyARN = flex.StringToFramework(ctx, waitOut.KmsKeyArn)
 	state.Name = flex.StringToFramework(ctx, waitOut.Name)
 	state.Type = flex.StringValueToFramework(ctx, waitOut.Type)
 
@@ -183,8 +206,11 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	state.ARN = flex.StringToFramework(ctx, out.Arn)
+	state.CollectionEndpoint = flex.StringToFramework(ctx, out.CollectionEndpoint)
+	state.DashboardEndpoint = flex.StringToFramework(ctx, out.DashboardEndpoint)
 	state.Description = flex.StringToFramework(ctx, out.Description)
 	state.ID = flex.StringToFramework(ctx, out.Id)
+	state.KmsKeyARN = flex.StringToFramework(ctx, out.KmsKeyArn)
 	state.Name = flex.StringToFramework(ctx, out.Name)
 	state.Type = flex.StringValueToFramework(ctx, out.Type)
 
@@ -211,18 +237,21 @@ func (r *resourceCollection) Update(ctx context.Context, req resource.UpdateRequ
 		out, err := conn.UpdateCollection(ctx, input)
 
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("updating Collection (%s)", plan.Name.ValueString()), err.Error())
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionUpdating, ResNameCollection, state.ID.ValueString(), err),
+				err.Error(),
+			)
 			return
 		}
 
-		state.ARN = flex.StringToFramework(ctx, out.UpdateCollectionDetail.Arn)
-		state.Description = flex.StringToFramework(ctx, out.UpdateCollectionDetail.Description)
-		state.ID = flex.StringToFramework(ctx, out.UpdateCollectionDetail.Id)
-		state.Name = flex.StringToFramework(ctx, out.UpdateCollectionDetail.Name)
-		state.Type = flex.StringValueToFramework(ctx, out.UpdateCollectionDetail.Type)
+		plan.ARN = flex.StringToFramework(ctx, out.UpdateCollectionDetail.Arn)
+		plan.Description = flex.StringToFramework(ctx, out.UpdateCollectionDetail.Description)
+		plan.ID = flex.StringToFramework(ctx, out.UpdateCollectionDetail.Id)
+		plan.Name = flex.StringToFramework(ctx, out.UpdateCollectionDetail.Name)
+		plan.Type = flex.StringValueToFramework(ctx, out.UpdateCollectionDetail.Type)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
