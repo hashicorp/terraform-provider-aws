@@ -17,6 +17,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -44,7 +45,18 @@ func ResourceLoadBalancer() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			customdiff.ForceNewIfChange("subnets", func(_ context.Context, o, n, meta interface{}) bool {
+				// Force new if removing all current subnets
+				os := o.(*schema.Set)
+				ns := n.(*schema.Set)
+
+				removed := os.Difference(ns)
+
+				return removed.Equal(os)
+			}),
+			verify.SetTagsDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"access_logs": {
