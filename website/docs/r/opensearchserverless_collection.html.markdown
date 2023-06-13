@@ -55,6 +55,9 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the collection.
+* `collection_endpoint` - Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.
+* `dashboard_endpont` - Collection-specific endpoint used to access OpenSearch Dashboards.
+* `kms_key_arn` - The ARN of the Amazon Web Services KMS key used to encrypt the collection.
 * `id` - Unique identifier for the collection.
 
 ## Timeouts
