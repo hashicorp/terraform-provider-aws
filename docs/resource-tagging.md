@@ -28,7 +28,7 @@ can be found in the [`generate` package documentation](https://github.com/hashic
 The generator will create several types of tagging-related code.
 All services that support tagging will generate the function `KeyValueTags`, which converts from service-specific structs returned by the AWS SDK into a common format used by the provider,
 and the function `Tags`, which converts from the common format back to the service-specific structs.
-In addition, many services have separate functions to list or update tags, so the corresponding `ListTags` and `UpdateTags` can be generated.
+In addition, many services have separate functions to list or update tags, so the corresponding `listTags` and `updateTags` can be generated.
 Optionally, to retrieve a specific tag, you can generate the `GetTag` function.
 
 If the service directory does not contain a `generate.go` file, create one.
@@ -239,11 +239,11 @@ In the resource `Read` operation, use the `SetTagsOut` function to signal to the
 SetTagsOut(ctx, cluster.Tags)
 ```
 
-If the service API does not return the tags directly from reading the resource and requires use of the generated `ListTags` function, do nothing and the transparent tagging mechanism will make the `ListTags` call and save any tags into Terraform state.
+If the service API does not return the tags directly from reading the resource and requires use of the generated `listTags` function, do nothing and the transparent tagging mechanism will make the `listTags` call and save any tags into Terraform state.
 
 #### Resource Update Operation
 
-In the resource `Update` operation, only non-`tags` updates need be done as the transparent tagging mechanism makes the `UpdateTags` call.
+In the resource `Update` operation, only non-`tags` updates need be done as the transparent tagging mechanism makes the `updateTags` call.
 
 ```go
 if d.HasChangesExcept("tags", "tags_all") {
@@ -312,7 +312,7 @@ tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]in
 /* ... creation steps ... */
 
 if len(tags) > 0 {
-  if err := UpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
+  if err := updateTags(ctx, conn, d.Id(), nil, tags); err != nil {
     return fmt.Errorf("adding DeviceFarm Device Pool (%s) tags: %w", d.Id(), err)
   }
 }
@@ -356,7 +356,7 @@ if err := d.Set("tags_all", tags.Map()); err != nil {
 ```
 
 If the service API does not return the tags directly from reading the resource and requires a separate API call,
-use the generated `ListTags` function, e.g., with Athena Workgroups:
+use the generated `listTags` function, e.g., with Athena Workgroups:
 
 ```go
 // Typically declared near conn := /* ... */
@@ -365,7 +365,7 @@ ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 /* ... other d.Set(...) logic ... */
 
-tags, err := ListTags(ctx, conn, arn.String())
+tags, err := listTags(ctx, conn, arn.String())
 
 if err != nil {
   return fmt.Errorf("listing tags for resource (%s): %w", arn, err)
@@ -389,7 +389,7 @@ In the resource `Update` operation, implement the logic to handle tagging update
 ```go
 if d.HasChange("tags_all") {
   o, n := d.GetChange("tags_all")
-  if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+  if err := updateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
     return fmt.Errorf("updating tags: %w", err)
   }
 }
