@@ -1218,12 +1218,12 @@ func updateReplicaTags(ctx context.Context, conn *dynamodb.DynamoDB, rn string, 
 				return fmt.Errorf("per region ARN for replica (%s): %w", region, err)
 			}
 
-			oldTags, err := ListTags(ctx, conn, repARN)
+			oldTags, err := listTags(ctx, conn, repARN)
 			if err != nil {
 				return fmt.Errorf("listing tags (%s): %w", repARN, err)
 			}
 
-			if err := UpdateTags(ctx, conn, repARN, oldTags, newTags); err != nil {
+			if err := updateTags(ctx, conn, repARN, oldTags, newTags); err != nil {
 				return fmt.Errorf("updating tags: %w", err)
 			}
 		}
