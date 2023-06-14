@@ -350,7 +350,7 @@ func findKey(ctx context.Context, conn *kms.KMS, keyID string, isNewResource boo
 			}
 		}
 
-		tags, err := ListTags(ctx, conn, keyID)
+		tags, err := listTags(ctx, conn, keyID)
 
 		if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
 			return nil, &retry.NotFoundError{LastError: err}
