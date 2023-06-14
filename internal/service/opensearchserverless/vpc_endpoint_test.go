@@ -83,7 +83,7 @@ func TestAccOpenSearchServerlessVPCEndpoint_securityGroups(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCEndpointConfig_securityGroups(rName, "*"),
+				Config: testAccVPCEndpointConfig_multiple_securityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint2),
 					testAccCheckVPCEndpointNotRecreated(&vpcendpoint1, &vpcendpoint2),
@@ -91,10 +91,10 @@ func TestAccOpenSearchServerlessVPCEndpoint_securityGroups(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCEndpointConfig_securityGroups(rName, "0"),
+				Config: testAccVPCEndpointConfig_single_securityGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint3),
-					testAccCheckVPCEndpointNotRecreated(&vpcendpoint2, &vpcendpoint3),
+					testAccCheckVPCEndpointNotRecreated(&vpcendpoint1, &vpcendpoint3),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 				),
 			},
@@ -295,7 +295,7 @@ func testAccVPCEndpointConfig_securityGroupBase(rName string, sgCount int) strin
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   count = %[2]d
-  name   = "%[1]s-[count.index]"
+  name   = "%[1]s-${count.index}"
   vpc_id = aws_vpc.test.id
 
   tags = {
@@ -330,7 +330,7 @@ resource "aws_opensearchserverless_vpc_endpoint" "test" {
 `, rName))
 }
 
-func testAccVPCEndpointConfig_securityGroups(rName, index string) string {
+func testAccVPCEndpointConfig_multiple_securityGroups(rName string) string {
 	return acctest.ConfigCompose(
 		testAccVPCEndpointConfig_networkingBase(rName, 2),
 		testAccVPCEndpointConfig_securityGroupBase(rName, 2),
@@ -340,7 +340,22 @@ resource "aws_opensearchserverless_vpc_endpoint" "test" {
   subnet_ids = aws_subnet.test[*].id
   vpc_id     = aws_vpc.test.id
 
-  security_group_ids = aws_security_group.test[%[2]s].id
+  security_group_ids = aws_security_group.test[*].id
 }
-`, rName, index))
+`, rName))
+}
+
+func testAccVPCEndpointConfig_single_securityGroup(rName string) string {
+	return acctest.ConfigCompose(
+		testAccVPCEndpointConfig_networkingBase(rName, 2),
+		testAccVPCEndpointConfig_securityGroupBase(rName, 2),
+		fmt.Sprintf(`
+resource "aws_opensearchserverless_vpc_endpoint" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+  vpc_id     = aws_vpc.test.id
+
+  security_group_ids = [aws_security_group.test[0].id]
+}
+`, rName))
 }
