@@ -56,6 +56,52 @@ func TestAccOpenSearchServerlessVPCEndpoint_basic(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchServerlessVPCEndpoint_securityGroups(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	ctx := acctest.Context(t)
+	var vpcendpoint1, vpcendpoint2, vpcendpoint3 types.VpcEndpointDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_vpc_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheckVPCEndpoint(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint1),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+				),
+			},
+			{
+				Config: testAccVPCEndpointConfig_securityGroups(rName, "*"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint2),
+					testAccCheckVPCEndpointNotRecreated(&vpcendpoint1, &vpcendpoint2),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
+				),
+			},
+			{
+				Config: testAccVPCEndpointConfig_securityGroups(rName, "0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint3),
+					testAccCheckVPCEndpointNotRecreated(&vpcendpoint2, &vpcendpoint3),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchServerlessVPCEndpoint_update(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -244,6 +290,22 @@ resource "aws_subnet" "test" {
 	)
 }
 
+func testAccVPCEndpointConfig_securityGroupBase(rName string, sgCount int) string {
+	return acctest.ConfigCompose(
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  count = %[2]d
+  name   = "%[1]s-[count.index]"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, sgCount),
+	)
+}
+
 func testAccVPCEndpointConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccVPCEndpointConfig_networkingBase(rName, 2),
@@ -266,4 +328,19 @@ resource "aws_opensearchserverless_vpc_endpoint" "test" {
   vpc_id     = aws_vpc.test.id
 }
 `, rName))
+}
+
+func testAccVPCEndpointConfig_securityGroups(rName, index string) string {
+	return acctest.ConfigCompose(
+		testAccVPCEndpointConfig_networkingBase(rName, 2),
+		testAccVPCEndpointConfig_securityGroupBase(rName, 2),
+		fmt.Sprintf(`
+resource "aws_opensearchserverless_vpc_endpoint" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+  vpc_id     = aws_vpc.test.id
+
+  security_group_ids = aws_security_group.test[%[2]s].id
+}
+`, rName, index))
 }

@@ -216,19 +216,6 @@ func (r *resourceVpcEndpoint) Update(ctx context.Context, req resource.UpdateReq
 
 		update = true
 	}
-	//newSGs := flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIds)
-	//if len(newSGs) > 0 && !plan.SecurityGroupIds.Equal(state.SecurityGroupIds) {
-	//	oldSGs := flex.ExpandFrameworkStringValueSet(ctx, state.SecurityGroupIds)
-	//	if add := newSGs.Difference(oldSGs); len(add) > 0 {
-	//		input.AddSecurityGroupIds = add
-	//	}
-	//
-	//	if del := oldSGs.Difference(newSGs); len(del) > 0 {
-	//		input.RemoveSecurityGroupIds = del
-	//	}
-	//
-	//	update = true
-	//}
 
 	if !plan.SubnetIds.Equal(state.SubnetIds) {
 		old := flex.ExpandFrameworkStringValueSet(ctx, state.SubnetIds)
