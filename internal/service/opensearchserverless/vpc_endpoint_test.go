@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfopensearchserverless "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,7 +25,7 @@ func TestAccOpenSearchServerlessVPCEndpoint_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	ctx := acctest.Context(t)
-	var vpcendpoint opensearchserverless.BatchGetVpcEndpointOutput
+	var vpcendpoint types.VpcEndpointDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_vpc_endpoint.test"
 
@@ -60,7 +61,7 @@ func TestAccOpenSearchServerlessVPCEndpoint_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	ctx := acctest.Context(t)
-	var vpcendpoint1, vpcendpoint2, vpcendpoint3 opensearchserverless.BatchGetVpcEndpointOutput
+	var vpcendpoint1, vpcendpoint2, vpcendpoint3 types.VpcEndpointDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_vpc_endpoint.test"
 
@@ -114,7 +115,7 @@ func TestAccOpenSearchServerlessVPCEndpoint_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	ctx := acctest.Context(t)
-	var vpcendpoint opensearchserverless.BatchGetVpcEndpointOutput
+	var vpcendpoint types.VpcEndpointDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_vpc_endpoint.test"
 
@@ -143,21 +144,19 @@ func TestAccOpenSearchServerlessVPCEndpoint_disappears(t *testing.T) {
 func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
-		ctx := context.Background()
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opensearchserverless_vpc_endpointa" {
 				continue
 			}
 
-			_, err := conn.BatchGetVpcEndpoint(ctx, &opensearchserverless.BatchGetVpcEndpointInput{
-				Ids: []string{rs.Primary.ID},
-			})
+			_, err := tfopensearchserverless.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
@@ -168,7 +167,7 @@ func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckVPCEndpointExists(ctx context.Context, name string, vpcendpoint *opensearchserverless.BatchGetVpcEndpointOutput) resource.TestCheckFunc {
+func testAccCheckVPCEndpointExists(ctx context.Context, name string, vpcendpoint *types.VpcEndpointDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -180,10 +179,7 @@ func testAccCheckVPCEndpointExists(ctx context.Context, name string, vpcendpoint
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
-		ctx := context.Background()
-		resp, err := conn.BatchGetVpcEndpoint(ctx, &opensearchserverless.BatchGetVpcEndpointInput{
-			Ids: []string{rs.Primary.ID},
-		})
+		resp, err := tfopensearchserverless.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameVPCEndpoint, rs.Primary.ID, err)
@@ -210,9 +206,9 @@ func testAccPreCheckVPCEndpoint(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckVPCEndpointNotRecreated(before, after *opensearchserverless.BatchGetVpcEndpointOutput) resource.TestCheckFunc {
+func testAccCheckVPCEndpointNotRecreated(before, after *types.VpcEndpointDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.VpcEndpointDetails[0].Id), aws.ToString(after.VpcEndpointDetails[0].Id); before != after {
+		if before, after := aws.ToString(before.Id), aws.ToString(after.Id); before != after {
 			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingNotRecreated, tfopensearchserverless.ResNameVPCEndpoint, before, errors.New("recreated"))
 		}
 
