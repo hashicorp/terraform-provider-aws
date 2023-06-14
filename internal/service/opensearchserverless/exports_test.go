@@ -5,4 +5,5 @@ var (
 	ResourceCollection     = newResourceCollection
 	ResourceAccessPolicy   = newResourceAccessPolicy
 	ResourceSecurityPolicy = newResourceSecurityPolicy
+	ResourceVPCEndpoint    = newResourceVPCEndpoint
 )

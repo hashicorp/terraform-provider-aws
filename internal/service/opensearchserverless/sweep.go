@@ -29,6 +29,10 @@ func init() {
 		Name: "aws_opensearchserverless_security_policy",
 		F:    sweepSecurityPolicies,
 	})
+	resource.AddTestSweepers("aws_opensearchserverless_vpc_endpoint", &resource.Sweeper{
+		Name: "aws_opensearchserverless_vpc_endpoint",
+		F:    sweepVPCEndpoints,
+	})
 }
 
 func sweepAccessPolicies(region string) error {
@@ -196,6 +200,50 @@ func sweepSecurityPolicies(region string) error {
 	}
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Security Policies sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepVPCEndpoints(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+	var errs *multierror.Error
+	input := &opensearchserverless.ListVpcEndpointsInput{}
+
+	pages := opensearchserverless.NewListVpcEndpointsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping OpenSearch Serverless VPC Endpoints sweep for %s: %s", region, err)
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("error retrieving OpenSearch Serverless VPC Endpoints: %w", err)
+		}
+
+		for _, endpoint := range page.VpcEndpointSummaries {
+			id := aws.ToString(endpoint.Id)
+
+			log.Printf("[INFO] Deleting OpenSearch Serverless VPC Endpoint: %s", id)
+			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceVPCEndpoint, id, client))
+		}
+	}
+
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping OpenSearch Serverless VPC Endpoints for %s: %w", region, err))
+	}
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping OpenSearch Serverless VPC Endpoint sweep for %s: %s", region, errs)
 		return nil
 	}
 
