@@ -292,7 +292,7 @@ func testAccCheckSipMediaApplicationExists(ctx context.Context, name string, vc 
 			return fmt.Errorf("no Chime voice connector ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 		input := &chimesdkvoice.GetSipMediaApplicationInput{
 			SipMediaApplicationId: aws.String(rs.Primary.ID),
 		}
@@ -313,7 +313,7 @@ func testAccCheckSipMediaApplicationDestroy(ctx context.Context) resource.TestCh
 			if rs.Type != "aws_chimesdkvoice_chime_sip_media_application" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 			input := &chimesdkvoice.GetSipMediaApplicationInput{
 				SipMediaApplicationId: aws.String(rs.Primary.ID),
 			}

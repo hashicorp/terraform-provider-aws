@@ -68,7 +68,7 @@ func ResourceSipMediaApplication() *schema.Resource {
 
 func resourceSipMediaApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	createInput := &chimesdkvoice.CreateSipMediaApplicationInput{
 		AwsRegion: aws.String(d.Get("aws_region").(string)),
@@ -88,7 +88,7 @@ func resourceSipMediaApplicationCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceSipMediaApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	getInput := &chimesdkvoice.GetSipMediaApplicationInput{
 		SipMediaApplicationId: aws.String(d.Id()),
@@ -115,7 +115,7 @@ func resourceSipMediaApplicationRead(ctx context.Context, d *schema.ResourceData
 
 func resourceSipMediaApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	if d.HasChanges("name", "endpoints") {
 		updateInput := &chimesdkvoice.UpdateSipMediaApplicationInput{
@@ -134,7 +134,7 @@ func resourceSipMediaApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceSipMediaApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	input := &chimesdkvoice.DeleteSipMediaApplicationInput{
 		SipMediaApplicationId: aws.String(d.Id()),
