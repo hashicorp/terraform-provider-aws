@@ -60,7 +60,7 @@ func dataSourceVaultRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", resp.BackupVaultName)
 	d.Set("recovery_points", resp.NumberOfRecoveryPoints)
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(resp.BackupVaultArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(resp.BackupVaultArn))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Vault (%s): %s", name, err)
 	}
