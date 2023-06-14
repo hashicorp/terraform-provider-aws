@@ -598,7 +598,7 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 		}
 
 		arn := aws.StringValue(layer.Arn)
-		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
+		if err := updateTags(ctx, conn, arn, nil, tags); err != nil {
 			return diag.Errorf("adding OpsWorks Layer (%s) tags: %s", arn, err)
 		}
 	}
