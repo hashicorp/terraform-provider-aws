@@ -3,12 +3,12 @@ subcategory: "Chime SDK Voice"
 layout: "aws"
 page_title: "AWS: aws_chimesdkvoice_sip_media_application"
 description: |-
-  A SIP media application is a managed object that passes values from a SIP rule to a target AWS Lambda function.
+  A ChimeSDKVoice SIP Media Application is a managed object that passes values from a SIP rule to a target AWS Lambda function.
 ---
 
 # Resource: aws_chimesdkvoice_sip_media_application
 
-A SIP media application is a managed object that passes values from a SIP rule to a target AWS Lambda function.
+A ChimeSDKVoice SIP Media Application is a managed object that passes values from a SIP rule to a target AWS Lambda function.
 
 ## Example Usage
 
@@ -28,11 +28,9 @@ resource "aws_chimesdkvoice_sip_media_application" "example" {
 
 The following arguments are required:
 
+* `aws_region` - (Required) The AWS Region in which the AWS Chime SDK Voice Sip Media Application is created.
+* `endpoints` - (Required)  List of endpoints (Lambda Amazon Resource Names) specified for the SIP media application. Currently, only one endpoint is supported. See [ `endpoints`](#endpoints).
 * `name` - (Required) The name of the AWS Chime SDK Voice Sip Media Application.
-
-* `aws-region` - (Required) The AWS Region in which the AWS Chime SDK Voice Sip Media Application is created.
-
-* `endpoints` - (Required)  List of endpoints (Lambda Amazon Resource Names) specified for the SIP media application. Currently, only one endpoint is supported.
 
 The following arguments are optional:
 
@@ -42,22 +40,20 @@ The following arguments are optional:
 
 The endpoint assigned to the SIP media application.
 
-* `LambdaArn` - (Required) Valid Amazon Resource Name (ARN) of the Lambda function, version, or alias. The function must be created in the same AWS Region as the SIP media application.
+* `lambda_arn` - (Required) Valid Amazon Resource Name (ARN) of the Lambda function, version, or alias. The function must be created in the same AWS Region as the SIP media application.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The SIP media application ID.
-
 * `arn` -  ARN (Amazon Resource Name) of the AWS Chime SDK Voice Sip Media Application
-
+* `id` - The SIP media application ID.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-Configuration Recorder can be imported using the name, e.g.,
+A ChimeSDKVoice SIP Media Application can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_chimesdkvoice_sip_media_application.example example-sip-media-application
+$ terraform import aws_chimesdkvoice_sip_media_application.example abcdef123456
 ```
