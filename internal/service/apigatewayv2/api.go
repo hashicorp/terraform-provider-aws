@@ -412,7 +412,7 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 			}
 		}
 
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), d.Get("tags_all"), KeyValueTags(ctx, GetTagsIn(ctx))); err != nil {
+		if err := updateTags(ctx, conn, d.Get("arn").(string), d.Get("tags_all"), KeyValueTags(ctx, GetTagsIn(ctx))); err != nil {
 			return fmt.Errorf("updating API Gateway v2 API (%s) tags: %w", d.Id(), err)
 		}
 
