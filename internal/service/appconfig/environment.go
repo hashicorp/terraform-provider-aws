@@ -194,15 +194,7 @@ func (r *resourceEnvironment) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	appID := state.ApplicationID.ValueString()
-	envID := state.EnvironmentID.ValueString()
-
-	input := &appconfig.GetEnvironmentInput{
-		ApplicationId: aws.String(appID),
-		EnvironmentId: aws.String(envID),
-	}
-
-	output, err := conn.GetEnvironmentWithContext(ctx, input)
+	output, err := conn.GetEnvironmentWithContext(ctx, state.getEnvironmentInput())
 	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
@@ -210,7 +202,7 @@ func (r *resourceEnvironment) Read(ctx context.Context, request resource.ReadReq
 	}
 	if err != nil {
 		response.Diagnostics.AddError(
-			fmt.Sprintf("reading AppConfig Environment (%s) for Application (%s)", envID, appID),
+			fmt.Sprintf("reading AppConfig Environment (%s) for Application (%s)", state.EnvironmentID.ValueString(), state.ApplicationID.ValueString()),
 			err.Error(),
 		)
 	}
@@ -241,13 +233,8 @@ func (r *resourceEnvironment) Update(ctx context.Context, request resource.Updat
 	if !plan.Description.Equal(state.Description) ||
 		!plan.Name.Equal(state.Name) ||
 		!plan.Monitors.Equal(state.Monitors) {
-		appID := state.ApplicationID.ValueString()
-		envID := state.EnvironmentID.ValueString()
 
-		updateInput := &appconfig.UpdateEnvironmentInput{
-			EnvironmentId: aws.String(envID),
-			ApplicationId: aws.String(appID),
-		}
+		updateInput := plan.updateEnvironmentInput()
 
 		if !plan.Description.Equal(state.Description) {
 			updateInput.Description = aws.String(plan.Description.ValueString())
@@ -269,7 +256,7 @@ func (r *resourceEnvironment) Update(ctx context.Context, request resource.Updat
 		output, err := conn.UpdateEnvironmentWithContext(ctx, updateInput)
 		if err != nil {
 			response.Diagnostics.AddError(
-				fmt.Sprintf("updating AppConfig Environment (%s) for Application (%s)", envID, appID),
+				fmt.Sprintf("updating AppConfig Environment (%s) for Application (%s)", state.EnvironmentID.ValueString(), state.ApplicationID.ValueString()),
 				err.Error(),
 			)
 		}
@@ -292,26 +279,18 @@ func (r *resourceEnvironment) Delete(ctx context.Context, request resource.Delet
 		return
 	}
 
-	appID := state.ApplicationID.ValueString()
-	envID := state.EnvironmentID.ValueString()
-
-	input := &appconfig.DeleteEnvironmentInput{
-		ApplicationId: aws.String(appID),
-		EnvironmentId: aws.String(envID),
-	}
-
 	tflog.Debug(ctx, "Deleting AppConfig Environment", map[string]any{
-		"application_id": appID,
-		"environment_id": envID,
+		"application_id": state.ApplicationID.ValueString(),
+		"environment_id": state.EnvironmentID.ValueString(),
 	})
 
-	_, err := conn.DeleteEnvironmentWithContext(ctx, input)
+	_, err := conn.DeleteEnvironmentWithContext(ctx, state.deleteEnvironmentInput())
 	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		return
 	}
 	if err != nil {
 		response.Diagnostics.AddError(
-			fmt.Sprintf("deleting AppConfig Environment (%s) for Application (%s)", envID, appID),
+			fmt.Sprintf("deleting AppConfig Environment (%s) for Application (%s)", state.EnvironmentID.ValueString(), state.ApplicationID.ValueString()),
 			err.Error(),
 		)
 	}
@@ -409,6 +388,24 @@ func (d *resourceEnvironmentData) refreshFromUpdateOutput(ctx context.Context, m
 	d.State = flex.StringToFramework(ctx, out.State)
 
 	return diags
+}
+
+func (d *resourceEnvironmentData) getEnvironmentInput() *appconfig.GetEnvironmentInput {
+	return (&appconfig.GetEnvironmentInput{}).
+		SetApplicationId(d.ApplicationID.ValueString()).
+		SetEnvironmentId(d.EnvironmentID.ValueString())
+}
+
+func (d *resourceEnvironmentData) updateEnvironmentInput() *appconfig.UpdateEnvironmentInput {
+	return (&appconfig.UpdateEnvironmentInput{}).
+		SetApplicationId(d.ApplicationID.ValueString()).
+		SetEnvironmentId(d.EnvironmentID.ValueString())
+}
+
+func (d *resourceEnvironmentData) deleteEnvironmentInput() *appconfig.DeleteEnvironmentInput {
+	return (&appconfig.DeleteEnvironmentInput{}).
+		SetApplicationId(d.ApplicationID.ValueString()).
+		SetEnvironmentId(d.EnvironmentID.ValueString())
 }
 
 func environmentARN(meta *conns.AWSClient, appID, envID string) arn.ARN {
