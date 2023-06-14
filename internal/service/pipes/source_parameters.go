@@ -26,6 +26,7 @@ func sourceParametersSchema() *schema.Schema {
 				"activemq_broker_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
+					Computed: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
 						"source_parameters.0.dynamodb_stream_parameters",
@@ -40,13 +41,8 @@ func sourceParametersSchema() *schema.Schema {
 							"batch_size": {
 								Type:         schema.TypeInt,
 								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.IntBetween(1, 10000),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "100"
-								},
 							},
 							"credentials": {
 								Type:     schema.TypeList,
@@ -65,13 +61,8 @@ func sourceParametersSchema() *schema.Schema {
 							"maximum_batching_window_in_seconds": {
 								Type:         schema.TypeInt,
 								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.IntBetween(0, 300),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "0"
-								},
 							},
 							"queue_name": {
 								Type:     schema.TypeString,
@@ -88,6 +79,7 @@ func sourceParametersSchema() *schema.Schema {
 				"dynamodb_stream_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
+					Computed: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
 						"source_parameters.0.activemq_broker_parameters",
@@ -102,13 +94,8 @@ func sourceParametersSchema() *schema.Schema {
 							"batch_size": {
 								Type:         schema.TypeInt,
 								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.IntBetween(1, 10000),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "100"
-								},
 							},
 							"dead_letter_config": {
 								Type:     schema.TypeList,
@@ -127,13 +114,8 @@ func sourceParametersSchema() *schema.Schema {
 							"maximum_batching_window_in_seconds": {
 								Type:         schema.TypeInt,
 								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.IntBetween(0, 300),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "0"
-								},
 							},
 							"maximum_record_age_in_seconds": {
 								Type:     schema.TypeInt,
@@ -157,13 +139,8 @@ func sourceParametersSchema() *schema.Schema {
 							"parallelization_factor": {
 								Type:         schema.TypeInt,
 								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.IntBetween(1, 10),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "1"
-								},
 							},
 							"starting_position": {
 								Type:             schema.TypeString,
@@ -201,6 +178,7 @@ func sourceParametersSchema() *schema.Schema {
 				"kinesis_stream_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
+					Computed: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
 						"source_parameters.0.activemq_broker_parameters",
@@ -215,13 +193,8 @@ func sourceParametersSchema() *schema.Schema {
 							"batch_size": {
 								Type:         schema.TypeInt,
 								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.IntBetween(1, 10000),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "100"
-								},
 							},
 							"dead_letter_config": {
 								Type:     schema.TypeList,
@@ -240,13 +213,8 @@ func sourceParametersSchema() *schema.Schema {
 							"maximum_batching_window_in_seconds": {
 								Type:         schema.TypeInt,
 								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.IntBetween(0, 300),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "0"
-								},
 							},
 							"maximum_record_age_in_seconds": {
 								Type:     schema.TypeInt,
@@ -270,13 +238,8 @@ func sourceParametersSchema() *schema.Schema {
 							"parallelization_factor": {
 								Type:         schema.TypeInt,
 								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.IntBetween(1, 10),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "0"
-								},
 							},
 							"starting_position": {
 								Type:             schema.TypeString,
@@ -296,6 +259,7 @@ func sourceParametersSchema() *schema.Schema {
 				"managed_streaming_kafka_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
+					Computed: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
 						"source_parameters.0.activemq_broker_parameters",
@@ -310,13 +274,8 @@ func sourceParametersSchema() *schema.Schema {
 							"batch_size": {
 								Type:         schema.TypeInt,
 								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.IntBetween(1, 10000),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "100"
-								},
 							},
 							"consumer_group_id": {
 								Type:     schema.TypeString,
@@ -348,13 +307,8 @@ func sourceParametersSchema() *schema.Schema {
 							"maximum_batching_window_in_seconds": {
 								Type:         schema.TypeInt,
 								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.IntBetween(0, 300),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "0"
-								},
 							},
 							"starting_position": {
 								Type:             schema.TypeString,
@@ -377,6 +331,7 @@ func sourceParametersSchema() *schema.Schema {
 				"rabbitmq_broker_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
+					Computed: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
 						"source_parameters.0.activemq_broker_parameters",
@@ -391,13 +346,8 @@ func sourceParametersSchema() *schema.Schema {
 							"batch_size": {
 								Type:         schema.TypeInt,
 								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.IntBetween(1, 10000),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "100"
-								},
 							},
 							"credentials": {
 								Type:     schema.TypeList,
@@ -416,13 +366,8 @@ func sourceParametersSchema() *schema.Schema {
 							"maximum_batching_window_in_seconds": {
 								Type:         schema.TypeInt,
 								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.IntBetween(0, 300),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "0"
-								},
 							},
 							"queue_name": {
 								Type:     schema.TypeString,
@@ -448,6 +393,7 @@ func sourceParametersSchema() *schema.Schema {
 				"self_managed_kafka_parameters": {
 					Type:     schema.TypeList,
 					Optional: true,
+					Computed: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
 						"source_parameters.0.activemq_broker_parameters",
@@ -475,13 +421,8 @@ func sourceParametersSchema() *schema.Schema {
 							"batch_size": {
 								Type:         schema.TypeInt,
 								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.IntBetween(1, 10000),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "100"
-								},
 							},
 							"consumer_group_id": {
 								Type:     schema.TypeString,
@@ -524,13 +465,8 @@ func sourceParametersSchema() *schema.Schema {
 							"maximum_batching_window_in_seconds": {
 								Type:         schema.TypeInt,
 								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.IntBetween(0, 300),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "0"
-								},
 							},
 							"server_root_ca_certificate": {
 								Type:         schema.TypeString,
@@ -606,24 +542,14 @@ func sourceParametersSchema() *schema.Schema {
 							"batch_size": {
 								Type:         schema.TypeInt,
 								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.IntBetween(1, 10000),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "10"
-								},
 							},
 							"maximum_batching_window_in_seconds": {
 								Type:         schema.TypeInt,
 								Optional:     true,
+								Computed:     true,
 								ValidateFunc: validation.IntBetween(0, 300),
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "0"
-								},
 							},
 						},
 					},
