@@ -216,6 +216,7 @@ func targetParametersSchema() *schema.Schema {
 											Type:         schema.TypeInt,
 											Optional:     true,
 											ValidateFunc: validation.IntBetween(0, 100000),
+											Default:      0,
 										},
 										"capacity_provider": {
 											Type:         schema.TypeString,
@@ -226,6 +227,7 @@ func targetParametersSchema() *schema.Schema {
 											Type:         schema.TypeInt,
 											Optional:     true,
 											ValidateFunc: validation.IntBetween(0, 1000),
+											Default:      0,
 										},
 									},
 								},
@@ -233,10 +235,12 @@ func targetParametersSchema() *schema.Schema {
 							"enable_ecs_managed_tags": {
 								Type:     schema.TypeBool,
 								Optional: true,
+								Default:  false,
 							},
 							"enable_execute_command": {
 								Type:     schema.TypeBool,
 								Optional: true,
+								Default:  false,
 							},
 							"group": {
 								Type:         schema.TypeString,
@@ -490,7 +494,7 @@ func targetParametersSchema() *schema.Schema {
 							"task_count": {
 								Type:     schema.TypeInt,
 								Optional: true,
-								Computed: true,
+								Default:  1,
 							},
 							"task_definition_arn": {
 								Type:         schema.TypeString,
@@ -702,6 +706,7 @@ func targetParametersSchema() *schema.Schema {
 							"with_event": {
 								Type:     schema.TypeBool,
 								Optional: true,
+								Default:  false,
 							},
 						},
 					},
