@@ -10,7 +10,10 @@ permissions:
 
 jobs:
   cdktfDocs:
-    runs-on: ubuntu-latest
+    runs-on:
+      - custom
+      - linux
+      - custom-linux-medium
     container:
       image: docker.mirror.hashicorp.services/hashicorp/jsii-terraform
     env:
@@ -33,13 +36,13 @@ jobs:
         with:
           node-version: "18.x"
       - name: Install cdktf-registry-docs
-        run: npm install -g cdktf-registry-docs@1.11.0
+        run: npm install -g cdktf-registry-docs@1.12.0
       - name: Run conversion
         run: |
           cdktf-registry-docs convert \
             --files='*/ec2_*.html.markdown' \
             --languages='typescript,python' \
-            --parallel-conversions-per-document=1 \
+            --parallel-file-conversions=1 \
             --provider-from-registry="hashicorp/aws" \
             .
         env:
