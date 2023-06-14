@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists cloudwatch service tags.
+// listTags lists cloudwatch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn cloudwatchiface.CloudWatchAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn cloudwatchiface.CloudWatchAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &cloudwatch.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn cloudwatchiface.CloudWatchAPI, identifie
 // ListTags lists cloudwatch service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).CloudWatchConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).CloudWatchConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -101,13 +101,13 @@ func createTags(ctx context.Context, conn cloudwatchiface.CloudWatchAPI, identif
 		return nil
 	}
 
-	return UpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
-// UpdateTags updates cloudwatch service tags.
+// updateTags updates cloudwatch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn cloudwatchiface.CloudWatchAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn cloudwatchiface.CloudWatchAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -147,5 +147,5 @@ func UpdateTags(ctx context.Context, conn cloudwatchiface.CloudWatchAPI, identif
 // UpdateTags updates cloudwatch service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).CloudWatchConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).CloudWatchConn(ctx), identifier, oldTags, newTags)
 }

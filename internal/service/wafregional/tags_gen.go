@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists wafregional service tags.
+// listTags lists wafregional service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn wafregionaliface.WAFRegionalAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn wafregionaliface.WAFRegionalAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &waf.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn wafregionaliface.WAFRegionalAPI, identif
 // ListTags lists wafregional service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).WAFRegionalConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).WAFRegionalConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -95,10 +95,10 @@ func SetTagsOut(ctx context.Context, tags []*waf.Tag) {
 	}
 }
 
-// UpdateTags updates wafregional service tags.
+// updateTags updates wafregional service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn wafregionaliface.WAFRegionalAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn wafregionaliface.WAFRegionalAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -138,5 +138,5 @@ func UpdateTags(ctx context.Context, conn wafregionaliface.WAFRegionalAPI, ident
 // UpdateTags updates wafregional service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).WAFRegionalConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).WAFRegionalConn(ctx), identifier, oldTags, newTags)
 }

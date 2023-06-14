@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists xray service tags.
+// listTags lists xray service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn *xray.Client, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *xray.Client, identifier string) (tftags.KeyValueTags, error) {
 	input := &xray.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn *xray.Client, identifier string) (tftags
 // ListTags lists xray service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).XRayClient(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).XRayClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -95,10 +95,10 @@ func SetTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	}
 }
 
-// UpdateTags updates xray service tags.
+// updateTags updates xray service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn *xray.Client, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *xray.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -138,5 +138,5 @@ func UpdateTags(ctx context.Context, conn *xray.Client, identifier string, oldTa
 // UpdateTags updates xray service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).XRayClient(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).XRayClient(ctx), identifier, oldTags, newTags)
 }

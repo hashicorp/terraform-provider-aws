@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists ssm service tags.
+// listTags lists ssm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceType string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceType string) (tftags.KeyValueTags, error) {
 	input := &ssm.ListTagsForResourceInput{
 		ResourceId:   aws.String(identifier),
 		ResourceType: aws.String(resourceType),
@@ -35,7 +35,7 @@ func ListTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceTyp
 // ListTags lists ssm service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).SSMConn(ctx), identifier, resourceType)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).SSMConn(ctx), identifier, resourceType)
 
 	if err != nil {
 		return err
@@ -102,13 +102,13 @@ func createTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceT
 		return nil
 	}
 
-	return UpdateTags(ctx, conn, identifier, resourceType, nil, KeyValueTags(ctx, tags))
+	return updateTags(ctx, conn, identifier, resourceType, nil, KeyValueTags(ctx, tags))
 }
 
-// UpdateTags updates ssm service tags.
+// updateTags updates ssm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceType string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceType string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -150,5 +150,5 @@ func UpdateTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceT
 // UpdateTags updates ssm service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).SSMConn(ctx), identifier, resourceType, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).SSMConn(ctx), identifier, resourceType, oldTags, newTags)
 }

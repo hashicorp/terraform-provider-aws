@@ -18,7 +18,7 @@ import (
 
 // GetTag fetches an individual autoscaling service tag for a resource.
 // Returns whether the key value and any errors. A NotFoundError is used to signal that no value was found.
-// This function will optimise the handling over ListTags, if possible.
+// This function will optimise the handling over listTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func GetTag(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier, resourceType, key string) (*tftags.TagData, error) {
@@ -50,10 +50,10 @@ func GetTag(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifie
 	return listTags.KeyTagData(key), nil
 }
 
-// ListTags lists autoscaling service tags.
+// listTags lists autoscaling service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier, resourceType string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier, resourceType string) (tftags.KeyValueTags, error) {
 	input := &autoscaling.DescribeTagsInput{
 		Filters: []*autoscaling.Filter{
 			{
@@ -75,7 +75,7 @@ func ListTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identif
 // ListTags lists autoscaling service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).AutoScalingConn(ctx), identifier, resourceType)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).AutoScalingConn(ctx), identifier, resourceType)
 
 	if err != nil {
 		return err
@@ -238,10 +238,10 @@ func SetTagsOut(ctx context.Context, tags any, identifier, resourceType string) 
 	}
 }
 
-// UpdateTags updates autoscaling service tags.
+// updateTags updates autoscaling service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier, resourceType string, oldTagsSet, newTagsSet any) error {
+func updateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier, resourceType string, oldTagsSet, newTagsSet any) error {
 	oldTags := KeyValueTags(ctx, oldTagsSet, identifier, resourceType)
 	newTags := KeyValueTags(ctx, newTagsSet, identifier, resourceType)
 
@@ -279,5 +279,5 @@ func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, ident
 // UpdateTags updates autoscaling service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).AutoScalingConn(ctx), identifier, resourceType, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).AutoScalingConn(ctx), identifier, resourceType, oldTags, newTags)
 }

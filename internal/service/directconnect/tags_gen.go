@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists directconnect service tags.
+// listTags lists directconnect service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn directconnectiface.DirectConnectAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn directconnectiface.DirectConnectAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &directconnect.DescribeTagsInput{
 		ResourceArns: aws.StringSlice([]string{identifier}),
 	}
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn directconnectiface.DirectConnectAPI, ide
 // ListTags lists directconnect service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).DirectConnectConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).DirectConnectConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -101,13 +101,13 @@ func createTags(ctx context.Context, conn directconnectiface.DirectConnectAPI, i
 		return nil
 	}
 
-	return UpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
-// UpdateTags updates directconnect service tags.
+// updateTags updates directconnect service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn directconnectiface.DirectConnectAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn directconnectiface.DirectConnectAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -147,5 +147,5 @@ func UpdateTags(ctx context.Context, conn directconnectiface.DirectConnectAPI, i
 // UpdateTags updates directconnect service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).DirectConnectConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).DirectConnectConn(ctx), identifier, oldTags, newTags)
 }

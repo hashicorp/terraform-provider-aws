@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists dataexchange service tags.
+// listTags lists dataexchange service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn dataexchangeiface.DataExchangeAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn dataexchangeiface.DataExchangeAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &dataexchange.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn dataexchangeiface.DataExchangeAPI, ident
 // ListTags lists dataexchange service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).DataExchangeConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).DataExchangeConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -78,10 +78,10 @@ func SetTagsOut(ctx context.Context, tags map[string]*string) {
 	}
 }
 
-// UpdateTags updates dataexchange service tags.
+// updateTags updates dataexchange service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn dataexchangeiface.DataExchangeAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn dataexchangeiface.DataExchangeAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -121,5 +121,5 @@ func UpdateTags(ctx context.Context, conn dataexchangeiface.DataExchangeAPI, ide
 // UpdateTags updates dataexchange service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).DataExchangeConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).DataExchangeConn(ctx), identifier, oldTags, newTags)
 }

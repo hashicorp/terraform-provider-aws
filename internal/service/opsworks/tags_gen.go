@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists opsworks service tags.
+// listTags lists opsworks service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn opsworksiface.OpsWorksAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn opsworksiface.OpsWorksAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &opsworks.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn opsworksiface.OpsWorksAPI, identifier st
 // ListTags lists opsworks service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).OpsWorksConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).OpsWorksConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -84,13 +84,13 @@ func createTags(ctx context.Context, conn opsworksiface.OpsWorksAPI, identifier 
 		return nil
 	}
 
-	return UpdateTags(ctx, conn, identifier, nil, tags)
+	return updateTags(ctx, conn, identifier, nil, tags)
 }
 
-// UpdateTags updates opsworks service tags.
+// updateTags updates opsworks service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn opsworksiface.OpsWorksAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn opsworksiface.OpsWorksAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -130,5 +130,5 @@ func UpdateTags(ctx context.Context, conn opsworksiface.OpsWorksAPI, identifier 
 // UpdateTags updates opsworks service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).OpsWorksConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).OpsWorksConn(ctx), identifier, oldTags, newTags)
 }

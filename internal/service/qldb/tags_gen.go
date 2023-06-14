@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists qldb service tags.
+// listTags lists qldb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn qldbiface.QLDBAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn qldbiface.QLDBAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &qldb.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn qldbiface.QLDBAPI, identifier string) (t
 // ListTags lists qldb service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).QLDBConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).QLDBConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -78,10 +78,10 @@ func SetTagsOut(ctx context.Context, tags map[string]*string) {
 	}
 }
 
-// UpdateTags updates qldb service tags.
+// updateTags updates qldb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn qldbiface.QLDBAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn qldbiface.QLDBAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -121,5 +121,5 @@ func UpdateTags(ctx context.Context, conn qldbiface.QLDBAPI, identifier string, 
 // UpdateTags updates qldb service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).QLDBConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).QLDBConn(ctx), identifier, oldTags, newTags)
 }

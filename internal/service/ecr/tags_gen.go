@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists ecr service tags.
+// listTags lists ecr service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn ecriface.ECRAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn ecriface.ECRAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &ecr.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn ecriface.ECRAPI, identifier string) (tft
 // ListTags lists ecr service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ECRConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).ECRConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -101,13 +101,13 @@ func createTags(ctx context.Context, conn ecriface.ECRAPI, identifier string, ta
 		return nil
 	}
 
-	return UpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
-// UpdateTags updates ecr service tags.
+// updateTags updates ecr service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn ecriface.ECRAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn ecriface.ECRAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -147,5 +147,5 @@ func UpdateTags(ctx context.Context, conn ecriface.ECRAPI, identifier string, ol
 // UpdateTags updates ecr service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).ECRConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).ECRConn(ctx), identifier, oldTags, newTags)
 }

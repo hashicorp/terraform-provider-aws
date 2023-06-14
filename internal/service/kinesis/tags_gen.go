@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists kinesis service tags.
+// listTags lists kinesis service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &kinesis.ListTagsForStreamInput{
 		StreamName: aws.String(identifier),
 	}
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier stri
 // ListTags lists kinesis service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).KinesisConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).KinesisConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -101,13 +101,13 @@ func createTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier st
 		return nil
 	}
 
-	return UpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
-// UpdateTags updates kinesis service tags.
+// updateTags updates kinesis service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -151,5 +151,5 @@ func UpdateTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier st
 // UpdateTags updates kinesis service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).KinesisConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).KinesisConn(ctx), identifier, oldTags, newTags)
 }

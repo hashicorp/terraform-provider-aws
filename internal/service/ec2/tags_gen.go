@@ -17,7 +17,7 @@ import (
 
 // GetTag fetches an individual ec2 service tag for a resource.
 // Returns whether the key value and any errors. A NotFoundError is used to signal that no value was found.
-// This function will optimise the handling over ListTags, if possible.
+// This function will optimise the handling over listTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func GetTag(ctx context.Context, conn ec2iface.EC2API, identifier, key string) (*string, error) {
@@ -49,10 +49,10 @@ func GetTag(ctx context.Context, conn ec2iface.EC2API, identifier, key string) (
 	return listTags.KeyValue(key), nil
 }
 
-// ListTags lists ec2 service tags.
+// listTags lists ec2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn ec2iface.EC2API, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn ec2iface.EC2API, identifier string) (tftags.KeyValueTags, error) {
 	input := &ec2.DescribeTagsInput{
 		Filters: []*ec2.Filter{
 			{
@@ -74,7 +74,7 @@ func ListTags(ctx context.Context, conn ec2iface.EC2API, identifier string) (tft
 // ListTags lists ec2 service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -152,10 +152,10 @@ func SetTagsOut(ctx context.Context, tags any) {
 	}
 }
 
-// UpdateTags updates ec2 service tags.
+// updateTags updates ec2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -195,5 +195,5 @@ func UpdateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ol
 // UpdateTags updates ec2 service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), identifier, oldTags, newTags)
 }

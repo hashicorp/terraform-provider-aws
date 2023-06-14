@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists resourceexplorer2 service tags.
+// listTags lists resourceexplorer2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn *resourceexplorer2.Client, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *resourceexplorer2.Client, identifier string) (tftags.KeyValueTags, error) {
 	input := &resourceexplorer2.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -33,7 +33,7 @@ func ListTags(ctx context.Context, conn *resourceexplorer2.Client, identifier st
 // ListTags lists resourceexplorer2 service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ResourceExplorer2Client(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).ResourceExplorer2Client(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -77,10 +77,10 @@ func SetTagsOut(ctx context.Context, tags map[string]string) {
 	}
 }
 
-// UpdateTags updates resourceexplorer2 service tags.
+// updateTags updates resourceexplorer2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn *resourceexplorer2.Client, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *resourceexplorer2.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -120,5 +120,5 @@ func UpdateTags(ctx context.Context, conn *resourceexplorer2.Client, identifier 
 // UpdateTags updates resourceexplorer2 service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).ResourceExplorer2Client(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).ResourceExplorer2Client(ctx), identifier, oldTags, newTags)
 }

@@ -45,10 +45,10 @@ func SetTagsOut(ctx context.Context, tags map[string]*string) {
 	}
 }
 
-// UpdateTags updates synthetics service tags.
+// updateTags updates synthetics service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn syntheticsiface.SyntheticsAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn syntheticsiface.SyntheticsAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -88,5 +88,5 @@ func UpdateTags(ctx context.Context, conn syntheticsiface.SyntheticsAPI, identif
 // UpdateTags updates synthetics service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).SyntheticsConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).SyntheticsConn(ctx), identifier, oldTags, newTags)
 }

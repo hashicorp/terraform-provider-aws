@@ -62,10 +62,10 @@ func SetTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	}
 }
 
-// UpdateTags updates lightsail service tags.
+// updateTags updates lightsail service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn *lightsail.Client, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *lightsail.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -105,5 +105,5 @@ func UpdateTags(ctx context.Context, conn *lightsail.Client, identifier string, 
 // UpdateTags updates lightsail service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).LightsailClient(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).LightsailClient(ctx), identifier, oldTags, newTags)
 }

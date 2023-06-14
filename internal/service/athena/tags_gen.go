@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists athena service tags.
+// listTags lists athena service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn athenaiface.AthenaAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn athenaiface.AthenaAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &athena.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn athenaiface.AthenaAPI, identifier string
 // ListTags lists athena service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).AthenaConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).AthenaConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -95,10 +95,10 @@ func SetTagsOut(ctx context.Context, tags []*athena.Tag) {
 	}
 }
 
-// UpdateTags updates athena service tags.
+// updateTags updates athena service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn athenaiface.AthenaAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn athenaiface.AthenaAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -138,5 +138,5 @@ func UpdateTags(ctx context.Context, conn athenaiface.AthenaAPI, identifier stri
 // UpdateTags updates athena service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).AthenaConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).AthenaConn(ctx), identifier, oldTags, newTags)
 }

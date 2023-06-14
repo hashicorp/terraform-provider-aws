@@ -62,10 +62,10 @@ func SetTagsOut(ctx context.Context, tags []*datapipeline.Tag) {
 	}
 }
 
-// UpdateTags updates datapipeline service tags.
+// updateTags updates datapipeline service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn datapipelineiface.DataPipelineAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn datapipelineiface.DataPipelineAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -105,5 +105,5 @@ func UpdateTags(ctx context.Context, conn datapipelineiface.DataPipelineAPI, ide
 // UpdateTags updates datapipeline service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).DataPipelineConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).DataPipelineConn(ctx), identifier, oldTags, newTags)
 }

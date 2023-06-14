@@ -12,10 +12,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-// ListTags lists inspector service tags.
+// listTags lists inspector service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn inspectoriface.InspectorAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn inspectoriface.InspectorAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &inspector.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -32,7 +32,7 @@ func ListTags(ctx context.Context, conn inspectoriface.InspectorAPI, identifier 
 // ListTags lists inspector service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).InspectorConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).InspectorConn(ctx), identifier)
 
 	if err != nil {
 		return err

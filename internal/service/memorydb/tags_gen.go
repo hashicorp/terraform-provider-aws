@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists memorydb service tags.
+// listTags lists memorydb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn memorydbiface.MemoryDBAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn memorydbiface.MemoryDBAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &memorydb.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn memorydbiface.MemoryDBAPI, identifier st
 // ListTags lists memorydb service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).MemoryDBConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).MemoryDBConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -95,10 +95,10 @@ func SetTagsOut(ctx context.Context, tags []*memorydb.Tag) {
 	}
 }
 
-// UpdateTags updates memorydb service tags.
+// updateTags updates memorydb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn memorydbiface.MemoryDBAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn memorydbiface.MemoryDBAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -138,5 +138,5 @@ func UpdateTags(ctx context.Context, conn memorydbiface.MemoryDBAPI, identifier 
 // UpdateTags updates memorydb service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).MemoryDBConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).MemoryDBConn(ctx), identifier, oldTags, newTags)
 }
