@@ -6,23 +6,22 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/chime"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfchimesdkvoice "github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
-
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/service/chime"
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfchimesdkvoice "github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
 )
 
 func TestAccChimeSdkVoiceSipMediaApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var chimeSipMediaApplication *chimesdkvoice.SipMediaApplication
 
-	chimeSipMediaApplicationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_sip_media_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -35,12 +34,12 @@ func TestAccChimeSdkVoiceSipMediaApplication_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckSipMediaApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSipMediaApplicationConfig_basic(chimeSipMediaApplicationName),
+				Config: testAccSipMediaApplicationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, chimeSipMediaApplication),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "aws_region", endpoints.UsEast1RegionID),
-					resource.TestCheckResourceAttr(resourceName, "name", chimeSipMediaApplicationName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.lambda_arn"),
 				),
 			},
@@ -57,7 +56,7 @@ func TestAccChimeSdkVoiceSipMediaApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var chimeSipMediaApplication *chimesdkvoice.SipMediaApplication
 
-	chimeSipMediaApplicationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_sip_media_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -70,7 +69,7 @@ func TestAccChimeSdkVoiceSipMediaApplication_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckSipMediaApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSipMediaApplicationConfig_basic(chimeSipMediaApplicationName),
+				Config: testAccSipMediaApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, chimeSipMediaApplication),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkvoice.ResourceSipMediaApplication(), resourceName),
@@ -85,9 +84,8 @@ func TestAccChimeSdkVoiceSipMediaApplication_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var chimeSipMediaApplication *chimesdkvoice.SipMediaApplication
 
-	chimeSipMediaApplicationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	chimeSipMediaApplicationNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_sip_media_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -100,22 +98,22 @@ func TestAccChimeSdkVoiceSipMediaApplication_update(t *testing.T) {
 		CheckDestroy:             testAccCheckSipMediaApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSipMediaApplicationConfig_basic(chimeSipMediaApplicationName),
+				Config: testAccSipMediaApplicationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, chimeSipMediaApplication),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "aws_region", endpoints.UsEast1RegionID),
-					resource.TestCheckResourceAttr(resourceName, "name", chimeSipMediaApplicationName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.lambda_arn"),
 				),
 			},
 			{
-				Config: testAccSipMediaApplicationConfig_basic(chimeSipMediaApplicationNameUpdated),
+				Config: testAccSipMediaApplicationConfig_basic(rNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, chimeSipMediaApplication),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "aws_region", endpoints.UsEast1RegionID),
-					resource.TestCheckResourceAttr(resourceName, "name", chimeSipMediaApplicationNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.lambda_arn"),
 				),
 			},
@@ -132,7 +130,7 @@ func TestAccChimeSdkVoiceSipMediaApplication_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var sipMediaApplication *chimesdkvoice.SipMediaApplication
 
-	sipMediaApplicationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_sip_media_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -145,13 +143,10 @@ func TestAccChimeSdkVoiceSipMediaApplication_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSipMediaApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSipMediaApplicationConfig_tags1(sipMediaApplicationName, "key1", "value1"),
+				Config: testAccSipMediaApplicationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, sipMediaApplication),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "aws_region", endpoints.UsEast1RegionID),
-					resource.TestCheckResourceAttr(resourceName, "name", sipMediaApplicationName),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.lambda_arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -162,15 +157,22 @@ func TestAccChimeSdkVoiceSipMediaApplication_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSipMediaApplicationConfig_tags1(sipMediaApplicationName, "key1", "value1updated"),
+				Config: testAccSipMediaApplicationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, sipMediaApplication),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "aws_region", endpoints.UsEast1RegionID),
-					resource.TestCheckResourceAttr(resourceName, "name", sipMediaApplicationName),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.lambda_arn"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccSipMediaApplicationConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSipMediaApplicationExists(ctx, resourceName, sipMediaApplication),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
