@@ -1823,7 +1823,6 @@ resource "aws_subnet" "public_a_two" {
 }
 
 resource "aws_elb" "test" {
-//   name = "terraform-asg-deployment-example"
 
   subnets = [
     aws_subnet.public_a_one.id,
@@ -1899,7 +1898,6 @@ resource "aws_subnet" "public_a_two" {
 }
 
 resource "aws_elb" "test" {
-//   name = "terraform-asg-deployment-example"
 
   subnets = [
     aws_subnet.public_a_two.id,
@@ -2034,14 +2032,14 @@ resource "aws_subnet" "public_b_one" {
 }
 
 resource "aws_subnet" "public_b_two" {
-	vpc_id = aws_vpc.azelb.id
-  
-	cidr_block        = "10.1.6.0/24"
-	availability_zone = data.aws_availability_zones.available.names[1]
-	tags = {
-	  Name = "tf-acc-elb-subnet-swap-b-two"
-	}
+  vpc_id = aws_vpc.azelb.id
+
+  cidr_block        = "10.1.6.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
+  tags = {
+    Name = "tf-acc-elb-subnet-swap-b-two"
   }
+}
 
 resource "aws_subnet" "public_a_two" {
   vpc_id = aws_vpc.azelb.id
