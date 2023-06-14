@@ -294,7 +294,7 @@ func testAccVPCEndpointConfig_securityGroupBase(rName string, sgCount int) strin
 	return acctest.ConfigCompose(
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  count = %[2]d
+  count  = %[2]d
   name   = "%[1]s-${count.index}"
   vpc_id = aws_vpc.test.id
 
