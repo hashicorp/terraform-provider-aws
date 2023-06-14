@@ -49,7 +49,7 @@ func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, me
 
 		for _, loadBalancer := range results {
 			arn := aws.StringValue(loadBalancer.LoadBalancerArn)
-			tags, err := ListTags(ctx, conn, arn)
+			tags, err := listTags(ctx, conn, arn)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
 				continue
