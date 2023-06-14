@@ -82,7 +82,8 @@ func (r *resourceEnvironment) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			"id": schema.StringAttribute{
-				Computed: true,
+				Computed:           true,
+				DeprecationMessage: "This attribute is unused and will be removed in a future version of the provider",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
