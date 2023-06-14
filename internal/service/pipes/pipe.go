@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"reflect"
 	"regexp"
 	"time"
 
@@ -188,8 +189,8 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("description", output.Description)
 	d.Set("desired_state", output.DesiredState)
 	d.Set("enrichment", output.Enrichment)
-	if output.EnrichmentParameters != nil {
-		if err := d.Set("enrichment_parameters", []interface{}{flattenPipeEnrichmentParameters(output.EnrichmentParameters)}); err != nil {
+	if v := output.EnrichmentParameters; v != nil && !reflect.ValueOf(*v).IsZero() {
+		if err := d.Set("enrichment_parameters", []interface{}{flattenPipeEnrichmentParameters(v)}); err != nil {
 			return diag.Errorf("setting enrichment_parameters: %s", err)
 		}
 	} else {
@@ -199,16 +200,16 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set("role_arn", output.RoleArn)
 	d.Set("source", output.Source)
-	if output.SourceParameters != nil {
-		if err := d.Set("source_parameters", []interface{}{flattenPipeSourceParameters(output.SourceParameters)}); err != nil {
+	if v := output.SourceParameters; v != nil && !reflect.ValueOf(*v).IsZero() {
+		if err := d.Set("source_parameters", []interface{}{flattenPipeSourceParameters(v)}); err != nil {
 			return diag.Errorf("setting source_parameters: %s", err)
 		}
 	} else {
 		d.Set("source_parameters", nil)
 	}
 	d.Set("target", output.Target)
-	if output.TargetParameters != nil {
-		if err := d.Set("target_parameters", []interface{}{flattenPipeTargetParameters(output.TargetParameters)}); err != nil {
+	if v := output.TargetParameters; v != nil && !reflect.ValueOf(*v).IsZero() {
+		if err := d.Set("target_parameters", []interface{}{flattenPipeTargetParameters(v)}); err != nil {
 			return diag.Errorf("setting target_parameters: %s", err)
 		}
 	} else {
