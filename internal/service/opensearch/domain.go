@@ -1378,7 +1378,7 @@ func EBSVolumeTypePermitsIopsInput(volumeType string) bool {
 	return false
 }
 
-// EBSVolumeTypePermitsIopsInput returns true if the volume type supports the Throughput input
+// EBSVolumeTypePermitsThroughputInput returns true if the volume type supports the Throughput input
 //
 // This check prevents a ValidationException when updating EBS volume types from a value
 // that supports Throughput (ex. gp3) to one that doesn't (ex. gp2).
