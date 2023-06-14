@@ -62,7 +62,7 @@ The following arguments are required:
 * `az_mode` - (Required) The number of availability zones you want to assign per cluster. This can be one of the following:
     * SINGLE - Assigns one availability zone per cluster.
     * MULTI - Assigns all the availability zones per cluster.
-* `capacity_configuration` - (Required) Structure for the metadata of a cluster. Includes information like the CPUs needed, memory of instances, number of instances, and the port used while establishing a connection. See [capacity_configuration](#capacity_configuration).
+* `capacity_configuration` - (Required) Structure for the metadata of a cluster. Includes information like the CPUs needed, memory of instances, and number of instances. See [capacity_configuration](#capacity_configuration).
 * `environment_id` - (Required) Unique identifier for the KX environment.
 * `name` - (Required) Unique name for the cluster that you want to create.
 * `release_label` - (Required) Version of FinSpace Managed kdb to run.
