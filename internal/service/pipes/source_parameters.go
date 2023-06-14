@@ -158,7 +158,12 @@ func sourceParametersSchema() *schema.Schema {
 								Type:         schema.TypeInt,
 								Optional:     true,
 								ValidateFunc: validation.IntBetween(1, 10),
-								Default:      1,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if new != "" && new != "0" {
+										return false
+									}
+									return old == "1"
+								},
 							},
 							"starting_position": {
 								Type:             schema.TypeString,
@@ -266,7 +271,12 @@ func sourceParametersSchema() *schema.Schema {
 								Type:         schema.TypeInt,
 								Optional:     true,
 								ValidateFunc: validation.IntBetween(1, 10),
-								Default:      1,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if new != "" && new != "0" {
+										return false
+									}
+									return old == "0"
+								},
 							},
 							"starting_position": {
 								Type:             schema.TypeString,
