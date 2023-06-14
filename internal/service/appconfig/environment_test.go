@@ -35,6 +35,7 @@ func TestAccAppConfigEnvironment_basic(t *testing.T) {
 					testAccCheckEnvironmentExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}/environment/[a-z0-9]{4,7}`)),
 					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "monitor.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
@@ -65,7 +66,7 @@ func TestAccAppConfigEnvironment_disappears(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappconfig.ResourceEnvironment(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappconfig.ResourceEnvironmentFW, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -148,6 +149,7 @@ func TestAccAppConfigEnvironment_updateDescription(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
 		},
@@ -309,11 +311,8 @@ func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			envID, appID, err := tfappconfig.EnvironmentParseID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
+			appID := rs.Primary.Attributes["application_id"]
+			envID := rs.Primary.Attributes["environment_id"]
 
 			input := &appconfig.GetEnvironmentInput{
 				ApplicationId: aws.String(appID),
@@ -327,7 +326,7 @@ func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			if err != nil {
-				return fmt.Errorf("error reading AppConfig Environment (%s) for Application (%s): %w", envID, appID, err)
+				return fmt.Errorf("reading AppConfig Environment (%s) for Application (%s): %w", envID, appID, err)
 			}
 
 			if output != nil {
@@ -350,11 +349,8 @@ func testAccCheckEnvironmentExists(ctx context.Context, resourceName string) res
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		envID, appID, err := tfappconfig.EnvironmentParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
+		appID := rs.Primary.Attributes["application_id"]
+		envID := rs.Primary.Attributes["environment_id"]
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn(ctx)
 
@@ -366,7 +362,7 @@ func testAccCheckEnvironmentExists(ctx context.Context, resourceName string) res
 		output, err := conn.GetEnvironmentWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error reading AppConfig Environment (%s) for Application (%s): %w", envID, appID, err)
+			return fmt.Errorf("reading AppConfig Environment (%s) for Application (%s): %w", envID, appID, err)
 		}
 
 		if output == nil {
