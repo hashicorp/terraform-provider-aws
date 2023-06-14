@@ -135,7 +135,7 @@ func ResourcePrivateVirtualInterface() *schema.Resource {
 
 func resourcePrivateVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vgwIdRaw, vgwOk := d.GetOk("vpn_gateway_id")
 	dxgwIdRaw, dxgwOk := d.GetOk("dx_gateway_id")
@@ -188,7 +188,7 @@ func resourcePrivateVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 
 func resourcePrivateVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
@@ -235,7 +235,7 @@ func resourcePrivateVirtualInterfaceUpdate(ctx context.Context, d *schema.Resour
 		return diags
 	}
 
-	if err := privateVirtualInterfaceWaitUntilAvailable(ctx, meta.(*conns.AWSClient).DirectConnectConn(), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := privateVirtualInterfaceWaitUntilAvailable(ctx, meta.(*conns.AWSClient).DirectConnectConn(ctx), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -247,7 +247,7 @@ func resourcePrivateVirtualInterfaceDelete(ctx context.Context, d *schema.Resour
 }
 
 func resourcePrivateVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {

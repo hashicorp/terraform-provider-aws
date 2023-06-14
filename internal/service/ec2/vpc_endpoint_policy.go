@@ -57,7 +57,7 @@ func ResourceVPCEndpointPolicy() *schema.Resource {
 
 func resourceVPCEndpointPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	req := &ec2.ModifyVpcEndpointInput{
@@ -92,7 +92,7 @@ func resourceVPCEndpointPolicyPut(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVPCEndpointPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpce, err := FindVPCEndpointByID(ctx, conn, d.Id())
 
@@ -126,7 +126,7 @@ func resourceVPCEndpointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceVPCEndpointPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	req := &ec2.ModifyVpcEndpointInput{
 		VpcEndpointId: aws.String(d.Id()),

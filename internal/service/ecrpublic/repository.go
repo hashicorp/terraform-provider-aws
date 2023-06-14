@@ -123,7 +123,7 @@ func ResourceRepository() *schema.Resource {
 
 func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRPublicConn()
+	conn := meta.(*conns.AWSClient).ECRPublicConn(ctx)
 
 	input := ecrpublic.CreateRepositoryInput{
 		RepositoryName: aws.String(d.Get("repository_name").(string)),
@@ -154,7 +154,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRPublicConn()
+	conn := meta.(*conns.AWSClient).ECRPublicConn(ctx)
 
 	log.Printf("[DEBUG] Reading ECR Public repository %s", d.Id())
 	var out *ecrpublic.DescribeRepositoriesOutput
@@ -235,7 +235,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRPublicConn()
+	conn := meta.(*conns.AWSClient).ECRPublicConn(ctx)
 
 	deleteInput := &ecrpublic.DeleteRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
@@ -290,7 +290,7 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRPublicConn()
+	conn := meta.(*conns.AWSClient).ECRPublicConn(ctx)
 
 	if d.HasChange("catalog_data") {
 		if err := resourceRepositoryUpdateCatalogData(ctx, conn, d); err != nil {

@@ -32,7 +32,7 @@ func sweepVirtualClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).EMRContainersConn()
+	conn := client.(*conns.AWSClient).EMRContainersConn(ctx)
 	input := &emrcontainers.ListVirtualClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -80,7 +80,7 @@ func sweepJobTemplates(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).EMRContainersConn()
+	conn := client.(*conns.AWSClient).EMRContainersConn(ctx)
 	input := &emrcontainers.ListJobTemplatesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

@@ -229,7 +229,7 @@ func TestAccSWFDomain_description(t *testing.T) {
 
 func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SWFClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SWFClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_swf_domain" {
@@ -259,7 +259,7 @@ func testAccCheckDomainExists(ctx context.Context, n string) resource.TestCheckF
 			return fmt.Errorf("No SWF Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SWFClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SWFClient(ctx)
 
 		_, err := tfswf.FindDomainByName(ctx, conn, rs.Primary.ID)
 

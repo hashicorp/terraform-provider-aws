@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn iotanalyticsiface.IoTAnalyticsAPI, ident
 // ListTags lists iotanalytics service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).IoTAnalyticsConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).IoTAnalyticsConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -138,5 +138,5 @@ func UpdateTags(ctx context.Context, conn iotanalyticsiface.IoTAnalyticsAPI, ide
 // UpdateTags updates iotanalytics service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).IoTAnalyticsConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).IoTAnalyticsConn(ctx), identifier, oldTags, newTags)
 }

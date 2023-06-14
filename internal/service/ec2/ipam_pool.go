@@ -141,7 +141,7 @@ func ResourceIPAMPool() *schema.Resource {
 
 func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	addressFamily := d.Get("address_family").(string)
 	input := &ec2.CreateIpamPoolInput{
@@ -216,7 +216,7 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	pool, err := FindIPAMPoolByID(ctx, conn, d.Id())
 
@@ -253,7 +253,7 @@ func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyIpamPoolInput{
@@ -310,7 +310,7 @@ func resourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceIPAMPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting IPAM Pool: %s", d.Id())
 	_, err := conn.DeleteIpamPoolWithContext(ctx, &ec2.DeleteIpamPoolInput{

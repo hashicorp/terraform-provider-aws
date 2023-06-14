@@ -137,7 +137,7 @@ func TestAccElastiCacheUserGroupAssociation_multiple(t *testing.T) {
 
 func testAccCheckUserGroupAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elasticache_user_group_association" {
@@ -184,7 +184,7 @@ func testAccCheckUserGroupAssociationExists(ctx context.Context, n string) resou
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
 		err = tfelasticache.FindUserGroupAssociation(ctx, conn, userGroupID, userID)
 

@@ -38,7 +38,7 @@ func DataSourceConnector() *schema.Resource {
 }
 
 func dataSourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn()
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	name := d.Get("name")
 	var output []*kafkaconnect.ConnectorSummary

@@ -60,7 +60,7 @@ func ResourceSecurityConfiguration() *schema.Resource {
 
 func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	var emrSCName string
 	if v, ok := d.GetOk("name"); ok {
@@ -88,7 +88,7 @@ func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.Resource
 
 func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	resp, err := conn.DescribeSecurityConfigurationWithContext(ctx, &emr.DescribeSecurityConfigurationInput{
 		Name: aws.String(d.Id()),
@@ -111,7 +111,7 @@ func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	_, err := conn.DeleteSecurityConfigurationWithContext(ctx, &emr.DeleteSecurityConfigurationInput{
 		Name: aws.String(d.Id()),

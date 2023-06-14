@@ -42,7 +42,7 @@ func sweepDiscoverers(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SchemasConn()
+	conn := client.(*conns.AWSClient).SchemasConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -85,7 +85,7 @@ func sweepRegistries(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SchemasConn()
+	conn := client.(*conns.AWSClient).SchemasConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -133,7 +133,7 @@ func sweepSchemas(region string) error { // nosemgrep:ci.schemas-in-func-name
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SchemasConn()
+	conn := client.(*conns.AWSClient).SchemasConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error

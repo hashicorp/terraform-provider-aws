@@ -111,7 +111,7 @@ func ResourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn(ctx)
 
 	input := &cloudhsmv2.CreateClusterInput{
 		HsmType:   aws.String(d.Get("hsm_type").(string)),
@@ -145,7 +145,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn(ctx)
 
 	cluster, err := FindClusterByID(ctx, conn, d.Id())
 
@@ -189,7 +189,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn(ctx)
 
 	log.Printf("[INFO] Deleting CloudHSMv2 Cluster: %s", d.Id())
 	_, err := conn.DeleteClusterWithContext(ctx, &cloudhsmv2.DeleteClusterInput{

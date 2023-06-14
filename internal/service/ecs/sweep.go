@@ -53,7 +53,7 @@ func sweepCapacityProviders(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ECSConn()
+	conn := client.(*conns.AWSClient).ECSConn(ctx)
 	input := &ecs.DescribeCapacityProvidersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -104,7 +104,7 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ECSConn()
+	conn := client.(*conns.AWSClient).ECSConn(ctx)
 	input := &ecs.ListClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -148,7 +148,7 @@ func sweepServices(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ECSConn()
+	conn := client.(*conns.AWSClient).ECSConn(ctx)
 	input := &ecs.ListClustersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -217,7 +217,7 @@ func sweepTaskDefinitions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ECSConn()
+	conn := client.(*conns.AWSClient).ECSConn(ctx)
 	input := &ecs.ListTaskDefinitionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

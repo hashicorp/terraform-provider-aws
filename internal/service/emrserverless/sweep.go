@@ -27,7 +27,7 @@ func sweepApplications(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).EMRServerlessConn()
+	conn := client.(*conns.AWSClient).EMRServerlessConn(ctx)
 	input := &emrserverless.ListApplicationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

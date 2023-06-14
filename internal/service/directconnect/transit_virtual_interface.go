@@ -128,7 +128,7 @@ func ResourceTransitVirtualInterface() *schema.Resource {
 
 func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	req := &directconnect.CreateTransitVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
@@ -170,7 +170,7 @@ func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 
 func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
@@ -216,7 +216,7 @@ func resourceTransitVirtualInterfaceUpdate(ctx context.Context, d *schema.Resour
 		return diags
 	}
 
-	if err := transitVirtualInterfaceWaitUntilAvailable(ctx, meta.(*conns.AWSClient).DirectConnectConn(), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := transitVirtualInterfaceWaitUntilAvailable(ctx, meta.(*conns.AWSClient).DirectConnectConn(ctx), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -228,7 +228,7 @@ func resourceTransitVirtualInterfaceDelete(ctx context.Context, d *schema.Resour
 }
 
 func resourceTransitVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {

@@ -112,7 +112,7 @@ func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 
 func resourceLocationFSxWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	fsxArn := d.Get("fsx_filesystem_arn").(string)
 	input := &datasync.CreateLocationFsxWindowsInput{
@@ -143,7 +143,7 @@ func resourceLocationFSxWindowsFileSystemCreate(ctx context.Context, d *schema.R
 
 func resourceLocationFSxWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.DescribeLocationFsxWindowsInput{
 		LocationArn: aws.String(d.Id()),
@@ -195,7 +195,7 @@ func resourceLocationFSxWindowsFileSystemUpdate(ctx context.Context, d *schema.R
 
 func resourceLocationFSxWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),

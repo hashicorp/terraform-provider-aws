@@ -249,7 +249,7 @@ func GetAccountClient(ctx context.Context, awsClient *conns.AWSClient) (*mediaco
 		Mode: aws.String(mediaconvert.DescribeEndpointsModeDefault),
 	}
 
-	output, err := awsClient.MediaConvertConn().DescribeEndpointsWithContext(ctx, input)
+	output, err := awsClient.MediaConvertConn(ctx).DescribeEndpointsWithContext(ctx, input)
 
 	if err != nil {
 		return nil, fmt.Errorf("describing MediaConvert Endpoints: %w", err)
@@ -261,7 +261,7 @@ func GetAccountClient(ctx context.Context, awsClient *conns.AWSClient) (*mediaco
 
 	endpointURL := aws.StringValue(output.Endpoints[0].Url)
 
-	sess, err := session.NewSession(&awsClient.MediaConvertConn().Config)
+	sess, err := session.NewSession(&awsClient.MediaConvertConn(ctx).Config)
 
 	if err != nil {
 		return nil, fmt.Errorf("creating AWS MediaConvert session: %w", err)

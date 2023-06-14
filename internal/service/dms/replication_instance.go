@@ -143,7 +143,7 @@ func ResourceReplicationInstance() *schema.Resource {
 
 func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	request := &dms.CreateReplicationInstanceInput{
 		AutoMinorVersionUpgrade:       aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
@@ -209,7 +209,7 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	response, err := conn.DescribeReplicationInstancesWithContext(ctx, &dms.DescribeReplicationInstancesInput{
 		Filters: []*dms.Filter{
@@ -274,7 +274,7 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 
 func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	request := &dms.ModifyReplicationInstanceInput{
 		ApplyImmediately:       aws.Bool(d.Get("apply_immediately").(bool)),
@@ -358,7 +358,7 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	request := &dms.DeleteReplicationInstanceInput{
 		ReplicationInstanceArn: aws.String(d.Get("replication_instance_arn").(string)),

@@ -218,7 +218,7 @@ func ResourceDataSet() *schema.Resource {
 			},
 			"physical_table_map": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				MaxItems: 32,
 				Elem:     physicalTableMapSchema(),
 			},
@@ -832,7 +832,7 @@ func physicalTableMapSchema() *schema.Resource {
 }
 
 func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -905,7 +905,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 	if err != nil {
@@ -1009,7 +1009,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	if d.HasChangesExcept("permissions", "tags", "tags_all", "refresh_properties") {
 		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
@@ -1110,7 +1110,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	log.Printf("[INFO] Deleting QuickSight Data Set %s", d.Id())
 	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
@@ -1644,10 +1644,6 @@ func expandDataSetUntagColumnOperation(tfList []interface{}) *quicksight.UntagCo
 }
 
 func expandDataSetPhysicalTableMap(tfSet *schema.Set) map[string]*quicksight.PhysicalTable {
-	if tfSet.Len() == 0 {
-		return nil
-	}
-
 	physicalTableMap := make(map[string]*quicksight.PhysicalTable)
 	for _, v := range tfSet.List() {
 		vMap, ok := v.(map[string]interface{})
@@ -2426,10 +2422,6 @@ func flattenJoinKeyProperties(apiObject *quicksight.JoinKeyProperties) map[strin
 }
 
 func flattenPhysicalTableMap(apiObject map[string]*quicksight.PhysicalTable, resourceSchema *schema.Resource) *schema.Set {
-	if len(apiObject) == 0 {
-		return nil
-	}
-
 	var tfList []interface{}
 	for k, v := range apiObject {
 		if v == nil {

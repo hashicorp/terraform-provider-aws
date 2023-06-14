@@ -55,8 +55,8 @@ func sweepComputeEnvironments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).BatchConn()
-	iamconn := client.(*conns.AWSClient).IAMConn()
+	conn := client.(*conns.AWSClient).BatchConn(ctx)
+	iamconn := client.(*conns.AWSClient).IAMConn(ctx)
 
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -176,7 +176,7 @@ func sweepJobDefinitions(region string) error {
 	input := &batch.DescribeJobDefinitionsInput{
 		Status: aws.String("ACTIVE"),
 	}
-	conn := client.(*conns.AWSClient).BatchConn()
+	conn := client.(*conns.AWSClient).BatchConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeJobDefinitionsPagesWithContext(ctx, input, func(page *batch.DescribeJobDefinitionsOutput, lastPage bool) bool {
@@ -220,7 +220,7 @@ func sweepJobQueues(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &batch.DescribeJobQueuesInput{}
-	conn := client.(*conns.AWSClient).BatchConn()
+	conn := client.(*conns.AWSClient).BatchConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeJobQueuesPagesWithContext(ctx, input, func(page *batch.DescribeJobQueuesOutput, lastPage bool) bool {
@@ -265,7 +265,7 @@ func sweepSchedulingPolicies(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &batch.ListSchedulingPoliciesInput{}
-	conn := client.(*conns.AWSClient).BatchConn()
+	conn := client.(*conns.AWSClient).BatchConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListSchedulingPoliciesPagesWithContext(ctx, input, func(page *batch.ListSchedulingPoliciesOutput, lastPage bool) bool {

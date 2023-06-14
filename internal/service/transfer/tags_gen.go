@@ -54,7 +54,7 @@ func ListTags(ctx context.Context, conn transferiface.TransferAPI, identifier st
 // ListTags lists transfer service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).TransferConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).TransferConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -158,5 +158,5 @@ func UpdateTags(ctx context.Context, conn transferiface.TransferAPI, identifier 
 // UpdateTags updates transfer service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).TransferConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).TransferConn(ctx), identifier, oldTags, newTags)
 }

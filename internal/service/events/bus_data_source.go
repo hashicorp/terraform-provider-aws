@@ -31,7 +31,7 @@ func DataSourceBus() *schema.Resource {
 
 func dataSourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	name := d.Get("name").(string)
 

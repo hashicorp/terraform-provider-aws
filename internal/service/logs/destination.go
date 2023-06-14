@@ -69,7 +69,7 @@ const (
 )
 
 func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloudwatchlogs.PutDestinationInput{
@@ -99,7 +99,7 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	destination, err := FindDestinationByName(ctx, conn, d.Id())
 
@@ -122,7 +122,7 @@ func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudwatchlogs.PutDestinationInput{
@@ -144,7 +144,7 @@ func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Destination: %s", d.Id())
 	_, err := conn.DeleteDestinationWithContext(ctx, &cloudwatchlogs.DeleteDestinationInput{

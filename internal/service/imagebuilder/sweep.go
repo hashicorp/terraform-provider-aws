@@ -58,7 +58,7 @@ func sweepComponents(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ImageBuilderConn()
+	conn := client.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -135,7 +135,7 @@ func sweepDistributionConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ImageBuilderConn()
+	conn := client.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -184,7 +184,7 @@ func sweepImagePipelines(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ImageBuilderConn()
+	conn := client.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -233,7 +233,7 @@ func sweepImageRecipes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ImageBuilderConn()
+	conn := client.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -284,7 +284,7 @@ func sweepContainerRecipes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ImageBuilderConn()
+	conn := client.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -337,7 +337,7 @@ func sweepImages(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ImageBuilderConn()
+	conn := client.(*conns.AWSClient).ImageBuilderConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -416,7 +416,7 @@ func sweepInfrastructureConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ImageBuilderConn()
+	conn := client.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error

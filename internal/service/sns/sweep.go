@@ -58,7 +58,7 @@ func sweepPlatformApplications(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &sns.ListPlatformApplicationsInput{}
-	conn := client.(*conns.AWSClient).SNSConn()
+	conn := client.(*conns.AWSClient).SNSConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListPlatformApplicationsPagesWithContext(ctx, input, func(page *sns.ListPlatformApplicationsOutput, lastPage bool) bool {
@@ -102,7 +102,7 @@ func sweepTopics(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &sns.ListTopicsInput{}
-	conn := client.(*conns.AWSClient).SNSConn()
+	conn := client.(*conns.AWSClient).SNSConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListTopicsPagesWithContext(ctx, input, func(page *sns.ListTopicsOutput, lastPage bool) bool {
@@ -146,7 +146,7 @@ func sweepTopicSubscriptions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &sns.ListSubscriptionsInput{}
-	conn := client.(*conns.AWSClient).SNSConn()
+	conn := client.(*conns.AWSClient).SNSConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListSubscriptionsPagesWithContext(ctx, input, func(page *sns.ListSubscriptionsOutput, lastPage bool) bool {

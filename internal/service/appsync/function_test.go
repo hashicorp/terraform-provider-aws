@@ -226,7 +226,7 @@ func testAccFunction_disappears(t *testing.T) {
 
 func testAccCheckFunctionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_function" {
 				continue
@@ -261,7 +261,7 @@ func testAccCheckFunctionExists(ctx context.Context, name string, config *appsyn
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 
 		apiID, functionID, err := tfappsync.DecodeFunctionID(rs.Primary.ID)
 		if err != nil {

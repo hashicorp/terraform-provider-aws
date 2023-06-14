@@ -30,7 +30,7 @@ func sweepAppMonitors(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).RUMConn()
+	conn := client.(*conns.AWSClient).RUMConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

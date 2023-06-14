@@ -201,7 +201,7 @@ func testAccCheckVoiceConnectorStreamingExists(ctx context.Context, name string)
 			return fmt.Errorf("no Chime Voice Connector streaming configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 		input := &chimesdkvoice.GetVoiceConnectorStreamingConfigurationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
@@ -225,7 +225,7 @@ func testAccCheckVoiceConnectorStreamingDestroy(ctx context.Context) resource.Te
 			if rs.Type != "aws_chime_voice_connector_termination" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 			input := &chimesdkvoice.GetVoiceConnectorStreamingConfigurationInput{
 				VoiceConnectorId: aws.String(rs.Primary.ID),
 			}

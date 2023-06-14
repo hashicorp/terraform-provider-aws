@@ -468,7 +468,7 @@ func ResourceCluster() *schema.Resource {
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	name := d.Get("cluster_name").(string)
 	input := &kafka.CreateClusterInput{
@@ -528,7 +528,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	cluster, err := FindClusterByARN(ctx, conn, d.Id())
 
@@ -627,7 +627,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	if d.HasChange("broker_node_group_info.0.instance_type") {
 		input := &kafka.UpdateBrokerTypeInput{
@@ -893,7 +893,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MSK Cluster: %s", d.Id())
 	_, err := conn.DeleteClusterWithContext(ctx, &kafka.DeleteClusterInput{
@@ -1685,7 +1685,7 @@ func flattenNodeExporter(apiObject *kafka.NodeExporter) map[string]interface{} {
 }
 
 func refreshClusterVersion(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	cluster, err := FindClusterByARN(ctx, conn, d.Id())
 

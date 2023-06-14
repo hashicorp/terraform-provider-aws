@@ -54,7 +54,7 @@ func ListTags(ctx context.Context, conn route53resolveriface.Route53ResolverAPI,
 // ListTags lists route53resolver service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).Route53ResolverConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).Route53ResolverConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -158,5 +158,5 @@ func UpdateTags(ctx context.Context, conn route53resolveriface.Route53ResolverAP
 // UpdateTags updates route53resolver service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).Route53ResolverConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).Route53ResolverConn(ctx), identifier, oldTags, newTags)
 }

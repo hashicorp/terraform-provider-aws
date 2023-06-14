@@ -61,7 +61,7 @@ func ResourceConfigurationTemplate() *schema.Resource {
 
 func resourceConfigurationTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &elasticbeanstalk.CreateConfigurationTemplateInput{
@@ -95,7 +95,7 @@ func resourceConfigurationTemplateCreate(ctx context.Context, d *schema.Resource
 
 func resourceConfigurationTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	settings, err := FindConfigurationSettingsByTwoPartKey(ctx, conn, d.Get("application").(string), d.Id())
 
@@ -119,7 +119,7 @@ func resourceConfigurationTemplateRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	if d.HasChange("description") {
 		input := &elasticbeanstalk.UpdateConfigurationTemplateInput{
@@ -194,7 +194,7 @@ func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.Resource
 
 func resourceConfigurationTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	log.Printf("[INFO] Deleting Elastic Beanstalk Configuration Template: %s", d.Id())
 	_, err := conn.DeleteConfigurationTemplateWithContext(ctx, &elasticbeanstalk.DeleteConfigurationTemplateInput{

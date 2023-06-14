@@ -163,7 +163,7 @@ func testAccCheckAuthorizerExists(ctx context.Context, n string, v *iot.Authoriz
 			return fmt.Errorf("No IoT Authorizer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
 		output, err := tfiot.FindAuthorizerByName(ctx, conn, rs.Primary.ID)
 
@@ -179,7 +179,7 @@ func testAccCheckAuthorizerExists(ctx context.Context, n string, v *iot.Authoriz
 
 func testAccCheckAuthorizerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_authorizer" {

@@ -151,7 +151,7 @@ func ResourceDefaultVPC() *schema.Resource {
 
 func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeVpcsInput{
 		Filters: BuildAttributeFilterList(

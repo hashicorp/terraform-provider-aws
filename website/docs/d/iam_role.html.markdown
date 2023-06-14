@@ -41,4 +41,4 @@ data "aws_iam_role" "example" {
 ### role_last_used
 
 * `region` - The name of the AWS Region in which the role was last used.
-* `last_used_time` - The date and time, in RFC 3339 format, that the role was last used.
+* `last_used_date` - The date and time, in RFC 3339 format, that the role was last used.

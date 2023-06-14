@@ -95,7 +95,7 @@ func testAccCheckStandardsControlExists(ctx context.Context, n string, control *
 			return fmt.Errorf("No Security Hub Standards Control ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		standardsSubscriptionARN, err := tfsecurityhub.StandardsControlARNToStandardsSubscriptionARN(rs.Primary.ID)
 

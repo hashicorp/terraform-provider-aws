@@ -80,7 +80,7 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 }
 
 func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateTransitGatewayMulticastDomainInput{
 		Options: &ec2.CreateTransitGatewayMulticastDomainRequestOptions{
@@ -109,7 +109,7 @@ func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.
 }
 
 func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	multicastDomain, err := FindTransitGatewayMulticastDomainByID(ctx, conn, d.Id())
 
@@ -141,7 +141,7 @@ func resourceTransitGatewayMulticastDomainUpdate(ctx context.Context, d *schema.
 }
 
 func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	groups, err := FindTransitGatewayMulticastGroups(ctx, conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),

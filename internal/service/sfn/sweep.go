@@ -32,7 +32,7 @@ func sweepActivities(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SFNConn()
+	conn := client.(*conns.AWSClient).SFNConn(ctx)
 	input := &sfn.ListActivitiesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -76,7 +76,7 @@ func sweepStateMachines(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SFNConn()
+	conn := client.(*conns.AWSClient).SFNConn(ctx)
 	input := &sfn.ListStateMachinesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

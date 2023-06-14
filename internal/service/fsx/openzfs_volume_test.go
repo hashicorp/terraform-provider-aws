@@ -482,7 +482,7 @@ func testAccCheckOpenzfsVolumeExists(ctx context.Context, resourceName string, v
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		volume1, err := tffsx.FindVolumeByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -501,7 +501,7 @@ func testAccCheckOpenzfsVolumeExists(ctx context.Context, resourceName string, v
 
 func testAccCheckOpenzfsVolumeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_openzfs_volume" {

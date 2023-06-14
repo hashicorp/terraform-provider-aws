@@ -98,7 +98,7 @@ func TestAccCloudFrontFieldLevelEncryptionProfile_disappears(t *testing.T) {
 
 func testAccCheckFieldLevelEncryptionProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_field_level_encryption_profile" {
@@ -133,7 +133,7 @@ func testAccCheckFieldLevelEncryptionProfileExists(ctx context.Context, r string
 			return fmt.Errorf("No CloudFront Field-level Encryption Profile ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		output, err := tfcloudfront.FindFieldLevelEncryptionProfileByID(ctx, conn, rs.Primary.ID)
 

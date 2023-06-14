@@ -178,7 +178,7 @@ func ResourceConnectPeer() *schema.Resource {
 }
 
 func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	connectAttachmentID := d.Get("connect_attachment_id").(string)
 	insideCIDRBlocks := flex.ExpandStringList(d.Get("inside_cidr_blocks").([]interface{}))
@@ -238,7 +238,7 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	connectPeer, err := FindConnectPeerByID(ctx, conn, d.Id())
 
@@ -287,7 +287,7 @@ func resourceConnectPeerUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Connect Peer: %s", d.Id())
 	_, err := conn.DeleteConnectPeerWithContext(ctx, &networkmanager.DeleteConnectPeerInput{
@@ -439,7 +439,7 @@ func waitConnectPeerDeleted(ctx context.Context, conn *networkmanager.NetworkMan
 	return nil, err
 }
 
-// validationExceptionMessageContains returns true if the error matches all these conditions:
+// validationExceptionMessage_Contains returns true if the error matches all these conditions:
 //   - err is of type networkmanager.ValidationException
 //   - ValidationException.Reason equals reason
 //   - ValidationException.Message_ contains message
