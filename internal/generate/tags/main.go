@@ -22,8 +22,8 @@ const (
 )
 
 const (
-	defaultListTagsFunc   = "ListTags"
-	defaultUpdateTagsFunc = "UpdateTags"
+	defaultListTagsFunc   = "listTags"
+	defaultUpdateTagsFunc = "updateTags"
 )
 
 var (
