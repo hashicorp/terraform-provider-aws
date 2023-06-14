@@ -87,7 +87,7 @@ func TestAccOpenSearchServerlessVPCEndpoint_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint2),
 					testAccCheckVPCEndpointNotRecreated(&vpcendpoint1, &vpcendpoint2),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 				),
 			},
@@ -220,12 +220,10 @@ func testAccCheckVPCEndpointNotRecreated(before, after *opensearchserverless.Bat
 	}
 }
 
-func testAccVPCEndpointConfig_networkingBase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
+func testAccVPCEndpointConfig_networkingBase(rName string, subnetCount int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
@@ -236,20 +234,24 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  count             = length(data.aws_availability_zones.available.names)
+  count = %[2]d
+
+  vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName, subnetCount),
+	)
 }
 
 func testAccVPCEndpointConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccVPCEndpointConfig_networkingBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccVPCEndpointConfig_networkingBase(rName, 2),
+		fmt.Sprintf(`
 resource "aws_opensearchserverless_vpc_endpoint" "test" {
   name       = %[1]q
   subnet_ids = [aws_subnet.test[0].id]
@@ -259,7 +261,9 @@ resource "aws_opensearchserverless_vpc_endpoint" "test" {
 }
 
 func testAccVPCEndpointConfig_multiple_subnets(rName string) string {
-	return acctest.ConfigCompose(testAccVPCEndpointConfig_networkingBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccVPCEndpointConfig_networkingBase(rName, 2),
+		fmt.Sprintf(`
 resource "aws_opensearchserverless_vpc_endpoint" "test" {
   name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
