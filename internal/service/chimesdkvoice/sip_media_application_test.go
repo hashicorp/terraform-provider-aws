@@ -18,21 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccChimeSdkVoiceSipMediaApplication_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]map[string]func(t *testing.T){
-		"VoiceProfileDomain": {
-			"basic":      TestAccChimeSdkVoiceSipMediaApplication_basic,
-			"disappears": TestAccChimeSdkVoiceSipMediaApplication_disappears,
-			"update":     TestAccChimeSdkVoiceSipMediaApplication_update,
-			"tags":       TestAccChimeSdkVoiceSipMediaApplication_tags,
-		},
-	}
-
-	acctest.RunSerialTests2Levels(t, testCases, 0)
-}
-
 func TestAccChimeSdkVoiceSipMediaApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var chimeSipMediaApplication *chimesdkvoice.SipMediaApplication
@@ -50,7 +35,7 @@ func TestAccChimeSdkVoiceSipMediaApplication_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckSipMediaApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSipMediaapplicationConfig(chimeSipMediaApplicationName),
+				Config: testAccSipMediaApplicationConfig_basic(chimeSipMediaApplicationName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, chimeSipMediaApplication),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -85,7 +70,7 @@ func TestAccChimeSdkVoiceSipMediaApplication_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckSipMediaApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSipMediaapplicationConfig(chimeSipMediaApplicationName),
+				Config: testAccSipMediaApplicationConfig_basic(chimeSipMediaApplicationName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, chimeSipMediaApplication),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkvoice.ResourceSipMediaApplication(), resourceName),
@@ -115,7 +100,7 @@ func TestAccChimeSdkVoiceSipMediaApplication_update(t *testing.T) {
 		CheckDestroy:             testAccCheckSipMediaApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSipMediaapplicationConfig(chimeSipMediaApplicationName),
+				Config: testAccSipMediaApplicationConfig_basic(chimeSipMediaApplicationName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, chimeSipMediaApplication),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -125,7 +110,7 @@ func TestAccChimeSdkVoiceSipMediaApplication_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSipMediaapplicationConfig(chimeSipMediaApplicationNameUpdated),
+				Config: testAccSipMediaApplicationConfig_basic(chimeSipMediaApplicationNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, chimeSipMediaApplication),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -160,7 +145,7 @@ func TestAccChimeSdkVoiceSipMediaApplication_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSipMediaApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSipMediaapplicationConfig_tags(sipMediaApplicationName, "key1", "value1"),
+				Config: testAccSipMediaApplicationConfig_tags1(sipMediaApplicationName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, sipMediaApplication),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -177,7 +162,7 @@ func TestAccChimeSdkVoiceSipMediaApplication_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSipMediaapplicationConfig_tags(sipMediaApplicationName, "key1", "value1updated"),
+				Config: testAccSipMediaApplicationConfig_tags1(sipMediaApplicationName, "key1", "value1updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, sipMediaApplication),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -190,95 +175,6 @@ func TestAccChimeSdkVoiceSipMediaApplication_tags(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccSipMediaapplicationConfig(name string) string {
-	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = "sample-role-%[1]s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_lambda_function" "test" {
-  filename         = "test-fixtures/lambdatest.zip"
-  source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
-  function_name    = "chimesdkvoicesmatest-%[1]s"
-  role             = aws_iam_role.test.arn
-  runtime          = "nodejs16.x"
-  handler          = "index.handler"
-}
-
-resource "aws_chimesdkvoice_sip_media_application" "test" {
-  name = "%[1]s"
-  endpoints {
-    lambda_arn = aws_lambda_function.test.arn
-  }
-  aws_region = data.aws_region.current.name
-}
-`, name)
-}
-
-func testAccSipMediaapplicationConfig_tags(name string, tagKey1 string, tagValue1 string) string {
-	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = "sample-role-%[1]s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_lambda_function" "test" {
-  filename         = "test-fixtures/lambdatest.zip"
-  source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
-  function_name    = "chimesdkvoicesmatest-%[1]s"
-  role             = aws_iam_role.test.arn
-  runtime          = "nodejs16.x"
-  handler          = "index.handler"
-}
-
-resource "aws_chimesdkvoice_sip_media_application" "test" {
-  name = "%[1]s"
-  endpoints {
-    lambda_arn = aws_lambda_function.test.arn
-  }
-  aws_region = data.aws_region.current.name
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, name, tagKey1, tagValue1)
 }
 
 func testAccCheckSipMediaApplicationExists(ctx context.Context, name string, vc *chimesdkvoice.SipMediaApplication) resource.TestCheckFunc {
@@ -327,4 +223,90 @@ func testAccCheckSipMediaApplicationDestroy(ctx context.Context) resource.TestCh
 		}
 		return nil
 	}
+}
+
+func testAccSipMediaApplicationConfigBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_lambda_function" "test" {
+  filename         = "test-fixtures/lambdatest.zip"
+  source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
+  function_name    = %[1]q
+  role             = aws_iam_role.test.arn
+  runtime          = "nodejs16.x"
+  handler          = "index.handler"
+}
+`, rName)
+}
+
+func testAccSipMediaApplicationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccSipMediaApplicationConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_chimesdkvoice_sip_media_application" "test" {
+  name       = %[1]q
+  aws_region = data.aws_region.current.name
+  endpoints {
+    lambda_arn = aws_lambda_function.test.arn
+  }
+}
+`, rName))
+}
+
+func testAccSipMediaApplicationConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccSipMediaApplicationConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_chimesdkvoice_sip_media_application" "test" {
+  name       = %[1]q
+  aws_region = data.aws_region.current.name
+  endpoints {
+    lambda_arn = aws_lambda_function.test.arn
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccSipMediaApplicationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccSipMediaApplicationConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_chimesdkvoice_sip_media_application" "test" {
+  name       = %[1]q
+  aws_region = data.aws_region.current.name
+  endpoints {
+    lambda_arn = aws_lambda_function.test.arn
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
