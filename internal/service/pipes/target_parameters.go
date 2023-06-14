@@ -490,12 +490,6 @@ func targetParametersSchema() *schema.Schema {
 							"task_count": {
 								Type:     schema.TypeInt,
 								Optional: true,
-								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									if new != "" && new != "0" {
-										return false
-									}
-									return old == "1"
-								},
 							},
 							"task_definition_arn": {
 								Type:         schema.TypeString,
