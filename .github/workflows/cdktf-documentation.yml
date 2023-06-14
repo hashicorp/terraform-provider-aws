@@ -54,3 +54,4 @@ jobs:
           commit-message: "docs: update cdktf documentation"
           title: "docs: update cdktf documentation"
           body: "This PR updates the cdktf related documentation based on the current HCL-based documentation. It is automatically created by the cdktf-documentation GitHub action."
+          token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
