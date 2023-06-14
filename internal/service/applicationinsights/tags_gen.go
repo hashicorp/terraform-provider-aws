@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn applicationinsightsiface.ApplicationInsi
 // ListTags lists applicationinsights service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ApplicationInsightsConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ApplicationInsightsConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -138,5 +138,5 @@ func UpdateTags(ctx context.Context, conn applicationinsightsiface.ApplicationIn
 // UpdateTags updates applicationinsights service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).ApplicationInsightsConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).ApplicationInsightsConn(ctx), identifier, oldTags, newTags)
 }

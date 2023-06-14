@@ -325,7 +325,7 @@ func resourceCertificate() *schema.Resource {
 }
 
 func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMClient()
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	if _, ok := d.GetOk("domain_name"); ok {
 		_, v1 := d.GetOk("certificate_authority_arn")
@@ -401,7 +401,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMClient()
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	certificate, err := findCertificateByARN(ctx, conn, d.Id())
 
@@ -470,7 +470,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMClient()
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	if d.HasChanges("private_key", "certificate_body", "certificate_chain") {
 		oCBRaw, nCBRaw := d.GetChange("certificate_body")
@@ -526,7 +526,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMClient()
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
 	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, certificateCrossServicePropagationTimeout,

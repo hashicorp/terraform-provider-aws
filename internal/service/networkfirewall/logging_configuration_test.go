@@ -617,7 +617,7 @@ func testAccCheckLoggingConfigurationDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
 			output, err := tfnetworkfirewall.FindLoggingConfiguration(ctx, conn, rs.Primary.ID)
 			if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 				continue
@@ -645,7 +645,7 @@ func testAccCheckLoggingConfigurationExists(ctx context.Context, n string) resou
 			return fmt.Errorf("No NetworkFirewall Logging Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
 		output, err := tfnetworkfirewall.FindLoggingConfiguration(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -766,11 +766,6 @@ resource "aws_s3_bucket" "test" {
     create_before_destroy = true
   }
 }
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
 `, rName)
 }
 
@@ -861,17 +856,12 @@ resource "aws_s3_bucket" "logs" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "logs_acl" {
-  bucket = aws_s3_bucket.logs.id
-  acl    = "private"
-}
-
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.test]
   name        = %[2]q
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.test.arn
     bucket_arn = aws_s3_bucket.logs.arn
   }

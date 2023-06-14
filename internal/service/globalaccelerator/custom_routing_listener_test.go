@@ -77,7 +77,7 @@ func TestAccGlobalAcceleratorCustomRoutingListener_disappears(t *testing.T) {
 
 func testAccCheckCustomRoutingListenerExists(ctx context.Context, n string, v *globalaccelerator.CustomRoutingListener) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -102,7 +102,7 @@ func testAccCheckCustomRoutingListenerExists(ctx context.Context, n string, v *g
 
 func testAccCheckCustomRoutingListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_globalaccelerator_custom_routing_listener" {

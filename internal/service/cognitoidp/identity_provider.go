@@ -90,7 +90,7 @@ func ResourceIdentityProvider() *schema.Resource {
 
 func resourceIdentityProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 	log.Print("[DEBUG] Creating Cognito Identity Provider")
 
 	providerName := d.Get("provider_name").(string)
@@ -125,7 +125,7 @@ func resourceIdentityProviderCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceIdentityProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 	log.Printf("[DEBUG] Reading Cognito Identity Provider: %s", d.Id())
 
 	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
@@ -180,7 +180,7 @@ func resourceIdentityProviderRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceIdentityProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 	log.Print("[DEBUG] Updating Cognito Identity Provider")
 
 	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
@@ -215,7 +215,7 @@ func resourceIdentityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceIdentityProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 	log.Printf("[DEBUG] Deleting Cognito Identity Provider: %s", d.Id())
 
 	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())

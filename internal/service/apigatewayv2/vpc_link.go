@@ -64,7 +64,7 @@ func ResourceVPCLink() *schema.Resource {
 
 func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	input := &apigatewayv2.CreateVpcLinkInput{
 		Name:             aws.String(d.Get("name").(string)),
@@ -90,7 +90,7 @@ func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	outputRaw, _, err := StatusVPCLink(ctx, conn, d.Id())()
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
@@ -125,7 +125,7 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceVPCLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	if d.HasChange("name") {
 		req := &apigatewayv2.UpdateVpcLinkInput{
@@ -145,7 +145,7 @@ func resourceVPCLinkUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceVPCLinkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 VPC Link: %s", d.Id())
 	_, err := conn.DeleteVpcLinkWithContext(ctx, &apigatewayv2.DeleteVpcLinkInput{

@@ -131,7 +131,7 @@ func ResourceSnapshot() *schema.Resource {
 
 func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbSnapshotID := d.Get("db_snapshot_identifier").(string)
 	input := &rds.CreateDBSnapshotInput{
@@ -169,7 +169,7 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	snapshot, err := FindDBSnapshotByID(ctx, conn, d.Id())
 
@@ -222,7 +222,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	if d.HasChange("shared_accounts") {
 		o, n := d.GetChange("shared_accounts")
@@ -251,7 +251,7 @@ func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting RDS DB Snapshot: %s", d.Id())
 	_, err := conn.DeleteDBSnapshotWithContext(ctx, &rds.DeleteDBSnapshotInput{

@@ -165,7 +165,7 @@ func testAccCheckVocabularyExists(ctx context.Context, resourceName string, func
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		params := &connect.DescribeVocabularyInput{
 			InstanceId:   aws.String(instanceID),
@@ -190,7 +190,7 @@ func testAccCheckVocabularyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 			instanceID, vocabularyID, err := tfconnect.VocabularyParseID(rs.Primary.ID)
 

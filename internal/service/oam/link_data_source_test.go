@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/oam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -18,7 +17,6 @@ func TestAccObservabilityAccessManagerLinkDataSource_basic(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var link oam.GetLinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_oam_link.test"
 
@@ -31,12 +29,10 @@ func TestAccObservabilityAccessManagerLinkDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckLinkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLinkDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(dataSourceName, &link),
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "oam", regexp.MustCompile(`link/+.`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "label"),
 					resource.TestCheckResourceAttr(dataSourceName, "label_template", "$AccountName"),

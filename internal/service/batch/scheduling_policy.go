@@ -98,7 +98,7 @@ func ResourceSchedulingPolicy() *schema.Resource {
 }
 
 func resourceSchedulingPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &batch.CreateSchedulingPolicyInput{
@@ -120,7 +120,7 @@ func resourceSchedulingPolicyCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	sp, err := FindSchedulingPolicyByARN(ctx, conn, d.Id())
 
@@ -146,7 +146,7 @@ func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceSchedulingPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	if d.HasChange("fair_share_policy") {
 		input := &batch.UpdateSchedulingPolicyInput{
@@ -165,7 +165,7 @@ func resourceSchedulingPolicyUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceSchedulingPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Batch Scheduling Policy: %s", d.Id())
 	_, err := conn.DeleteSchedulingPolicyWithContext(ctx, &batch.DeleteSchedulingPolicyInput{

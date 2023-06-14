@@ -51,7 +51,7 @@ func DataSourceProduct() *schema.Resource {
 
 func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PricingConn()
+	conn := meta.(*conns.AWSClient).PricingConn(ctx)
 
 	params := &pricing.GetProductsInput{
 		ServiceCode: aws.String(d.Get("service_code").(string)),

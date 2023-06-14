@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn signeriface.SignerAPI, identifier string
 // ListTags lists signer service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).SignerConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).SignerConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -121,5 +121,5 @@ func UpdateTags(ctx context.Context, conn signeriface.SignerAPI, identifier stri
 // UpdateTags updates signer service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).SignerConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).SignerConn(ctx), identifier, oldTags, newTags)
 }

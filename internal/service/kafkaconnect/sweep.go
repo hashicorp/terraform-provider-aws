@@ -35,7 +35,7 @@ func sweepConnectors(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).KafkaConnectConn()
+	conn := client.(*conns.AWSClient).KafkaConnectConn(ctx)
 	input := &kafkaconnect.ListConnectorsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -79,7 +79,7 @@ func sweepCustomPlugins(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).KafkaConnectConn()
+	conn := client.(*conns.AWSClient).KafkaConnectConn(ctx)
 	input := &kafkaconnect.ListCustomPluginsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

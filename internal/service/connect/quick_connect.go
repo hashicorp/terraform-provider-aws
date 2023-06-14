@@ -136,7 +136,7 @@ func ResourceQuickConnect() *schema.Resource {
 }
 
 func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -169,7 +169,7 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 
@@ -212,7 +212,7 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 
@@ -261,7 +261,7 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceQuickConnectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 

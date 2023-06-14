@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn pinpointiface.PinpointAPI, identifier st
 // ListTags lists pinpoint service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).PinpointConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).PinpointConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -121,5 +121,5 @@ func UpdateTags(ctx context.Context, conn pinpointiface.PinpointAPI, identifier 
 // UpdateTags updates pinpoint service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).PinpointConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).PinpointConn(ctx), identifier, oldTags, newTags)
 }

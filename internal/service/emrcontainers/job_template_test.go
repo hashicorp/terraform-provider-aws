@@ -120,7 +120,7 @@ func testAccCheckJobTemplateExists(ctx context.Context, n string, v *emrcontaine
 			return fmt.Errorf("No EMR Containers Job Template ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn(ctx)
 
 		output, err := tfemrcontainers.FindJobTemplateByID(ctx, conn, rs.Primary.ID)
 
@@ -136,7 +136,7 @@ func testAccCheckJobTemplateExists(ctx context.Context, n string, v *emrcontaine
 
 func testAccCheckJobTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emrcontainers_job_template" {

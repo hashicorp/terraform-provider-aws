@@ -42,7 +42,7 @@ func sweepDirectoryConfigs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppStreamConn()
+	conn := client.(*conns.AWSClient).AppStreamConn(ctx)
 	input := &appstream.DescribeDirectoryConfigsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -86,7 +86,7 @@ func sweepFleets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppStreamConn()
+	conn := client.(*conns.AWSClient).AppStreamConn(ctx)
 	input := &appstream.DescribeFleetsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -130,7 +130,7 @@ func sweepImageBuilders(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppStreamConn()
+	conn := client.(*conns.AWSClient).AppStreamConn(ctx)
 	input := &appstream.DescribeImageBuildersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -174,7 +174,7 @@ func sweepStacks(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppStreamConn()
+	conn := client.(*conns.AWSClient).AppStreamConn(ctx)
 	input := &appstream.DescribeStacksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

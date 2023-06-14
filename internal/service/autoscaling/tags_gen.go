@@ -75,7 +75,7 @@ func ListTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identif
 // ListTags lists autoscaling service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).AutoScalingConn(), identifier, resourceType)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).AutoScalingConn(ctx), identifier, resourceType)
 
 	if err != nil {
 		return err
@@ -279,5 +279,5 @@ func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, ident
 // UpdateTags updates autoscaling service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).AutoScalingConn(), identifier, resourceType, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).AutoScalingConn(ctx), identifier, resourceType, oldTags, newTags)
 }

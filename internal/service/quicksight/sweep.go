@@ -56,7 +56,7 @@ func sweepDashboards(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn()
+	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -110,7 +110,7 @@ func sweepDataSets(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn()
+	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -164,7 +164,7 @@ func sweepDataSources(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn()
+	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -218,7 +218,7 @@ func sweepFolders(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn()
+	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
 	awsAccountId := client.(*conns.AWSClient).AccountID
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
@@ -244,7 +244,7 @@ func sweepFolders(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing QuickSight Folder for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping QuickSight Folder for %s: %w", region, err))
 	}
 
@@ -264,7 +264,7 @@ func sweepTemplates(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn()
+	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -318,7 +318,7 @@ func sweepUsers(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn()
+	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
 	awsAccountId := client.(*conns.AWSClient).AccountID
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
@@ -346,7 +346,7 @@ func sweepUsers(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing QuickSight Users for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping QuickSight Users for %s: %w", region, err))
 	}
 

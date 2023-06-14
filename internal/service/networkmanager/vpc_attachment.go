@@ -123,7 +123,7 @@ func ResourceVPCAttachment() *schema.Resource {
 }
 
 func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	vpcARN := d.Get("vpc_arn").(string)
@@ -155,7 +155,7 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	vpcAttachment, err := FindVPCAttachmentByID(ctx, conn, d.Id())
 
@@ -202,7 +202,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &networkmanager.UpdateVpcAttachmentInput{
@@ -250,7 +250,7 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	// If ResourceAttachmentAccepter is used, then VPC Attachment state
 	// is not updated from StatePendingAttachmentAcceptance and the delete fails if deleted immediately after create

@@ -28,7 +28,7 @@ func sweepVaults(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &glacier.ListVaultsInput{}
-	conn := client.(*conns.AWSClient).GlacierClient()
+	conn := client.(*conns.AWSClient).GlacierClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := glacier.NewListVaultsPaginator(conn, input)

@@ -141,7 +141,7 @@ const (
 )
 
 func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	name := d.Get("configuration_set_name").(string)
 

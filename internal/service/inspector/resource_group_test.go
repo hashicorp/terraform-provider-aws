@@ -48,7 +48,7 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 
 func testAccCheckResourceGroupExists(ctx context.Context, name string, rg *inspector.ResourceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

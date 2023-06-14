@@ -132,7 +132,7 @@ func ResourceStack() *schema.Resource {
 
 func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	requestToken := id.UniqueId()
 	name := d.Get("name").(string)
@@ -214,7 +214,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	input := &cloudformation.DescribeStacksInput{
 		StackName: aws.String(d.Id()),
@@ -314,7 +314,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	requestToken := id.UniqueId()
 	input := &cloudformation.UpdateStackInput{
@@ -397,7 +397,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	requestToken := id.UniqueId()
 	input := &cloudformation.DeleteStackInput{

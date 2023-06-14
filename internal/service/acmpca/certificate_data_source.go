@@ -43,7 +43,7 @@ func DataSourceCertificate() *schema.Resource {
 
 func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 	certificateARN := d.Get("arn").(string)
 
 	getCertificateInput := &acmpca.GetCertificateInput{

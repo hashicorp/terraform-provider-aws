@@ -242,7 +242,7 @@ func ResourceFleet() *schema.Resource {
 
 func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	input := &gamelift.CreateFleetInput{
 		EC2InstanceType: aws.String(d.Get("ec2_instance_type").(string)),
@@ -325,7 +325,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	log.Printf("[INFO] Describing GameLift Fleet: %s", d.Id())
 	fleet, err := FindFleetByID(ctx, conn, d.Id())
@@ -381,7 +381,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	log.Printf("[INFO] Updating GameLift Fleet: %s", d.Id())
 
@@ -428,7 +428,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	log.Printf("[INFO] Deleting GameLift Fleet: %s", d.Id())
 	// It can take ~ 1 hr as GameLift will keep retrying on errors like

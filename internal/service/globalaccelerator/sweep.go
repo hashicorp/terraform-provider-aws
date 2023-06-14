@@ -65,7 +65,7 @@ func sweepAccelerators(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListAcceleratorsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -109,7 +109,7 @@ func sweepEndpointGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListAcceleratorsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -198,7 +198,7 @@ func sweepListeners(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListAcceleratorsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -265,7 +265,7 @@ func sweepCustomRoutingAccelerators(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListCustomRoutingAcceleratorsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -309,7 +309,7 @@ func sweepCustomRoutingEndpointGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListCustomRoutingAcceleratorsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -398,7 +398,7 @@ func sweepCustomRoutingListeners(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListCustomRoutingAcceleratorsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)

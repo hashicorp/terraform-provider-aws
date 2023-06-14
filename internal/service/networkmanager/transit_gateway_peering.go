@@ -87,7 +87,7 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 }
 
 func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	transitGatewayARN := d.Get("transit_gateway_arn").(string)
@@ -114,7 +114,7 @@ func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	transitGatewayPeering, err := FindTransitGatewayPeeringByID(ctx, conn, d.Id())
 
@@ -156,7 +156,7 @@ func resourceTransitGatewayPeeringUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceTransitGatewayPeeringDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Transit Gateway Peering: %s", d.Id())
 	_, err := conn.DeletePeeringWithContext(ctx, &networkmanager.DeletePeeringInput{

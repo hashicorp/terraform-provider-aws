@@ -204,7 +204,7 @@ func ResourceDirectory() *schema.Resource {
 
 func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	name := d.Get("name").(string)
 	var creator directoryCreator
@@ -279,7 +279,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	dir, err := FindDirectoryByID(ctx, conn, d.Id())
 
@@ -333,7 +333,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	if d.HasChange("desired_number_of_domain_controllers") {
 		if err := updateNumberOfDomainControllers(ctx, conn, d.Id(), d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -358,7 +358,7 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {

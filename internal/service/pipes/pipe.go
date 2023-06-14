@@ -2,8 +2,8 @@ package pipes
 
 import (
 	"context"
-	"log"
 	"errors"
+	"log"
 	"regexp"
 	"time"
 
@@ -122,7 +122,7 @@ const (
 )
 
 func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).PipesClient()
+	conn := meta.(*conns.AWSClient).PipesClient(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &pipes.CreatePipeInput{
@@ -170,7 +170,7 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).PipesClient()
+	conn := meta.(*conns.AWSClient).PipesClient(ctx)
 
 	output, err := findPipeByName(ctx, conn, d.Id())
 
@@ -219,7 +219,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).PipesClient()
+	conn := meta.(*conns.AWSClient).PipesClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &pipes.UpdatePipeInput{
@@ -271,7 +271,7 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourcePipeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).PipesClient()
+	conn := meta.(*conns.AWSClient).PipesClient(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Pipes Pipe: %s", d.Id())
 	_, err := conn.DeletePipe(ctx, &pipes.DeletePipeInput{
@@ -334,7 +334,7 @@ const (
 
 func statusPipe(ctx context.Context, conn *pipes.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindPipeByName(ctx, conn, name)
+		output, err := findPipeByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -347,7 +347,6 @@ func statusPipe(ctx context.Context, conn *pipes.Client, name string) retry.Stat
 		return output, string(output.CurrentState), nil
 	}
 }
-
 
 func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
 	stateConf := &retry.StateChangeConf{

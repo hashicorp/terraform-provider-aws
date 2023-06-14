@@ -78,7 +78,7 @@ func ResourceHSMConfiguration() *schema.Resource {
 
 func resourceHSMConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	hsmConfigurationID := d.Get("hsm_configuration_identifier").(string)
 	input := &redshift.CreateHsmConfigurationInput{
@@ -104,7 +104,7 @@ func resourceHSMConfigurationCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceHSMConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	hsmConfiguration, err := FindHSMConfigurationByID(ctx, conn, d.Id())
 
@@ -148,7 +148,7 @@ func resourceHSMConfigurationUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceHSMConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift HSM Configuration: %s", d.Id())
 	_, err := conn.DeleteHsmConfigurationWithContext(ctx, &redshift.DeleteHsmConfigurationInput{

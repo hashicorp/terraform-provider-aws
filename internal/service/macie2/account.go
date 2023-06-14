@@ -58,7 +58,7 @@ func ResourceAccount() *schema.Resource {
 }
 
 func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.EnableMacieInput{
 		ClientToken: aws.String(id.UniqueId()),
@@ -98,7 +98,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.GetMacieSessionInput{}
 
@@ -125,7 +125,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.UpdateMacieSessionInput{}
 
@@ -146,7 +146,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DisableMacieInput{}
 

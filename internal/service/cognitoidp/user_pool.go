@@ -617,7 +617,7 @@ func ResourceUserPool() *schema.Resource {
 
 func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	input := &cognitoidentityprovider.CreateUserPoolInput{
 		PoolName:     aws.String(d.Get("name").(string)),
@@ -844,7 +844,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	params := &cognitoidentityprovider.DescribeUserPoolInput{
 		UserPoolId: aws.String(d.Id()),
@@ -966,7 +966,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	// Multi-Factor Authentication updates
 	if d.HasChanges(
@@ -1232,7 +1232,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceUserPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	params := &cognitoidentityprovider.DeleteUserPoolInput{
 		UserPoolId: aws.String(d.Id()),

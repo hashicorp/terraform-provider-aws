@@ -106,7 +106,7 @@ func ResourceServerCertificate() *schema.Resource {
 
 func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	sslCertName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &iam.UploadServerCertificateInput{
@@ -159,7 +159,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	cert, err := FindServerCertificateByName(ctx, conn, d.Get("name").(string))
 
@@ -199,7 +199,7 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -221,7 +221,7 @@ func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceServerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Server Certificate: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 15*time.Minute, func() (interface{}, error) {
