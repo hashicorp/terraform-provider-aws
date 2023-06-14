@@ -194,6 +194,8 @@ func TestAccChimeSdkVoiceSipMediaApplication_tags(t *testing.T) {
 
 func testAccSipMediaapplicationConfig(name string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_iam_role" "test" {
   name = "sample-role-%[1]s"
 
@@ -228,13 +230,15 @@ resource "aws_chimesdkvoice_sip_media_application" "test" {
   endpoints {
     lambda_arn = aws_lambda_function.test.arn
   }
-  aws_region = "us-east-1"
+  aws_region = data.aws_region.current.name
 }
 `, name)
 }
 
 func testAccSipMediaapplicationConfig_tags(name string, tagKey1 string, tagValue1 string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_iam_role" "test" {
   name = "sample-role-%[1]s"
 
@@ -269,7 +273,7 @@ resource "aws_chimesdkvoice_sip_media_application" "test" {
   endpoints {
     lambda_arn = aws_lambda_function.test.arn
   }
-  aws_region = "us-east-1"
+  aws_region = data.aws_region.current.name
   tags = {
     %[2]q = %[3]q
   }
