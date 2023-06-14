@@ -41,10 +41,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceApplication,
 			TypeName: "aws_elastic_beanstalk_application",
+			Name:     "Application",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceApplicationVersion,
 			TypeName: "aws_elastic_beanstalk_application_version",
+			Name:     "Application Version",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceConfigurationTemplate,
@@ -53,6 +61,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceEnvironment,
 			TypeName: "aws_elastic_beanstalk_environment",
+			Name:     "Environment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

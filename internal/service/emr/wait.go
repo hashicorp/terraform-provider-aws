@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -22,7 +22,7 @@ const (
 )
 
 func waitClusterCreated(ctx context.Context, conn *emr.EMR, id string) (*emr.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{emr.ClusterStateBootstrapping, emr.ClusterStateStarting},
 		Target:     []string{emr.ClusterStateRunning, emr.ClusterStateWaiting},
 		Refresh:    statusCluster(ctx, conn, id),
@@ -45,7 +45,7 @@ func waitClusterCreated(ctx context.Context, conn *emr.EMR, id string) (*emr.Clu
 }
 
 func waitClusterDeleted(ctx context.Context, conn *emr.EMR, id string) (*emr.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{emr.ClusterStateTerminating},
 		Target:     []string{emr.ClusterStateTerminated, emr.ClusterStateTerminatedWithErrors},
 		Refresh:    statusCluster(ctx, conn, id),

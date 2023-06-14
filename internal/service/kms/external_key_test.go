@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
@@ -497,7 +497,7 @@ func testAccCheckExternalKeyHasPolicy(ctx context.Context, name string, expected
 			return fmt.Errorf("No KMS External Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		output, err := tfkms.FindKeyPolicyByKeyIDAndPolicyName(ctx, conn, rs.Primary.ID, tfkms.PolicyNameDefault)
 
@@ -522,7 +522,7 @@ func testAccCheckExternalKeyHasPolicy(ctx context.Context, name string, expected
 
 func testAccCheckExternalKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kms_external_key" {
@@ -557,7 +557,7 @@ func testAccCheckExternalKeyExists(ctx context.Context, name string, key *kms.Ke
 			return fmt.Errorf("No KMS External Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		outputRaw, err := tfresource.RetryWhenNotFound(ctx, tfkms.PropagationTimeout, func() (interface{}, error) {
 			return tfkms.FindKeyByID(ctx, conn, rs.Primary.ID)

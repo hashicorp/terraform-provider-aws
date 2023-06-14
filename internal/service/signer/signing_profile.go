@@ -18,9 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_signer_signing_profile")
+// @SDKResource("aws_signer_signing_profile", name="Signing Profile")
+// @Tags(identifierAttribute="arn")
 func ResourceSigningProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSigningProfileCreate,
@@ -78,8 +80,8 @@ func ResourceSigningProfile() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -128,9 +130,7 @@ func ResourceSigningProfile() *schema.Resource {
 
 func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).SignerConn(ctx)
 
 	log.Printf("[DEBUG] Creating Signer signing profile")
 
@@ -140,6 +140,7 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	signingProfileInput := &signer.PutSigningProfileInput{
 		ProfileName: aws.String(profileName),
 		PlatformId:  aws.String(d.Get("platform_id").(string)),
+		Tags:        GetTagsIn(ctx),
 	}
 
 	if v, exists := d.GetOk("signature_validity_period"); exists {
@@ -148,10 +149,6 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 			Value: aws.Int64(int64(signatureValidityPeriod["value"].(int))),
 			Type:  aws.String(signatureValidityPeriod["type"].(string)),
 		}
-	}
-
-	if len(tags) > 0 {
-		signingProfileInput.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	_, err := conn.PutSigningProfileWithContext(ctx, signingProfileInput)
@@ -166,9 +163,7 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SignerConn(ctx)
 
 	signingProfileOutput, err := conn.GetSigningProfileWithContext(ctx, &signer.GetSigningProfileInput{
 		ProfileName: aws.String(d.Id()),
@@ -221,16 +216,7 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile status: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, signingProfileOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, signingProfileOutput.Tags)
 
 	if err := d.Set("revocation_record", flattenSigningProfileRevocationRecord(signingProfileOutput.RevocationRecord)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile revocation record: %s", err)
@@ -241,23 +227,15 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceSigningProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
 
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Signer signing profile (%s) tags: %s", arn, err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceSigningProfileRead(ctx, d, meta)...)
 }
 
 func resourceSigningProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
+	conn := meta.(*conns.AWSClient).SignerConn(ctx)
 
 	_, err := conn.CancelSigningProfileWithContext(ctx, &signer.CancelSigningProfileInput{
 		ProfileName: aws.String(d.Id()),

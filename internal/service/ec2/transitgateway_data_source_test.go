@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -17,6 +17,9 @@ func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 		"Attachment": {
 			"Filter": testAccTransitGatewayAttachmentDataSource_Filter,
 			"ID":     testAccTransitGatewayAttachmentDataSource_ID,
+		},
+		"Attachments": {
+			"Filter": testAccTransitGatewayAttachmentsDataSource_Filter,
 		},
 		"Connect": {
 			"Filter": testAccTransitGatewayConnectDataSource_Filter,
@@ -54,6 +57,14 @@ func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 			"Filter": testAccTransitGatewayRouteTablesDataSource_filter,
 			"Tags":   testAccTransitGatewayRouteTablesDataSource_tags,
 			"Empty":  testAccTransitGatewayRouteTablesDataSource_empty,
+		},
+		"RouteTableAssociations": {
+			"Filter": testAccTransitGatewayRouteTableAssociationsDataSource_filter,
+			"basic":  testAccTransitGatewayRouteTableAssociationsDataSource_basic,
+		},
+		"RouteTablePropagations": {
+			"Filter": testAccTransitGatewayRouteTablePropagationsDataSource_filter,
+			"basic":  testAccTransitGatewayRouteTablePropagationsDataSource_basic,
 		},
 		"VpcAttachment": {
 			"Filter": testAccTransitGatewayVPCAttachmentDataSource_Filter,

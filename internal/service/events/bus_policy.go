@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -58,7 +58,7 @@ func ResourceBusPolicy() *schema.Resource {
 
 func resourceBusPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName := d.Get("event_bus_name").(string)
 
@@ -87,7 +87,7 @@ func resourceBusPolicyCreate(ctx context.Context, d *schema.ResourceData, meta i
 // See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
 func resourceBusPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName := d.Id()
 
@@ -99,16 +99,16 @@ func resourceBusPolicyRead(ctx context.Context, d *schema.ResourceData, meta int
 	var policy *string
 
 	// Especially with concurrent PutPermission calls there can be a slight delay
-	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		log.Printf("[DEBUG] Reading EventBridge bus: %s", input)
 		output, err = conn.DescribeEventBusWithContext(ctx, &input)
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("reading EventBridge permission (%s) failed: %w", d.Id(), err))
+			return retry.NonRetryableError(fmt.Errorf("reading EventBridge permission (%s) failed: %w", d.Id(), err))
 		}
 
 		policy, err = getEventBusPolicy(output)
 		if err != nil {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		return nil
 	})
@@ -147,7 +147,7 @@ func resourceBusPolicyRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func getEventBusPolicy(output *eventbridge.DescribeEventBusOutput) (*string, error) {
 	if output == nil || output.Policy == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:      fmt.Sprintf("Policy for EventBridge Bus (%s) not found", *output.Name),
 			LastResponse: output,
 		}
@@ -158,7 +158,7 @@ func getEventBusPolicy(output *eventbridge.DescribeEventBusOutput) (*string, err
 
 func resourceBusPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName := d.Id()
 
@@ -184,7 +184,7 @@ func resourceBusPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceBusPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName := d.Id()
 	removeAllPermissions := true

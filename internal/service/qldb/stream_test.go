@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/qldb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfqldb "github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
@@ -151,7 +151,7 @@ func testAccCheckStreamExists(ctx context.Context, n string, v *qldb.JournalKine
 			return fmt.Errorf("No QLDB Stream ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn(ctx)
 
 		output, err := tfqldb.FindStream(ctx, conn, rs.Primary.Attributes["ledger_name"], rs.Primary.ID)
 
@@ -167,7 +167,7 @@ func testAccCheckStreamExists(ctx context.Context, n string, v *qldb.JournalKine
 
 func testAccCheckStreamDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_qldb_stream" {

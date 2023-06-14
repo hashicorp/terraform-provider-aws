@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudwatchevidently "github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
@@ -615,7 +615,7 @@ func TestAccEvidentlyLaunch_disappears(t *testing.T) {
 
 func testAccCheckLaunchDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_evidently_launch" {
 				continue
@@ -662,7 +662,7 @@ func testAccCheckLaunchExists(ctx context.Context, n string, v *cloudwatcheviden
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn(ctx)
 
 		output, err := tfcloudwatchevidently.FindLaunchWithProjectNameorARN(ctx, conn, launchName, projectNameOrARN)
 

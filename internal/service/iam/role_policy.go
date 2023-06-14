@@ -11,7 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -21,7 +22,7 @@ import (
 
 const (
 	rolePolicyNameMaxLen       = 128
-	rolePolicyNamePrefixMaxLen = rolePolicyNameMaxLen - resource.UniqueIDSuffixLength
+	rolePolicyNamePrefixMaxLen = rolePolicyNameMaxLen - id.UniqueIDSuffixLength
 )
 
 // @SDKResource("aws_iam_role_policy")
@@ -76,7 +77,7 @@ func ResourceRolePolicy() *schema.Resource {
 
 func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	policy, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
 	if err != nil {
@@ -92,9 +93,9 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("name"); ok {
 		policyName = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
-		policyName = resource.PrefixedUniqueId(v.(string))
+		policyName = id.PrefixedUniqueId(v.(string))
 	} else {
-		policyName = resource.UniqueId()
+		policyName = id.UniqueId()
 	}
 	request.PolicyName = aws.String(policyName)
 
@@ -108,7 +109,7 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	role, name, err := RolePolicyParseID(d.Id())
 	if err != nil {
@@ -122,17 +123,17 @@ func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	var getResp *iam.GetRolePolicyOutput
 
-	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 
 		getResp, err = conn.GetRolePolicyWithContext(ctx, request)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -176,7 +177,7 @@ func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRolePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	role, name, err := RolePolicyParseID(d.Id())
 	if err != nil {

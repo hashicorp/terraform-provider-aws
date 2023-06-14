@@ -11,9 +11,9 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
@@ -516,7 +516,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Simulate out of band listener removal
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
 					input := &elb.DeleteLoadBalancerListenersInput{
 						LoadBalancerName:  conf.LoadBalancerName,
 						LoadBalancerPorts: []*int64{aws.Int64(80)},
@@ -540,7 +540,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Simulate out of band listener addition
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
 					input := &elb.CreateLoadBalancerListenersInput{
 						LoadBalancerName: conf.LoadBalancerName,
 						Listeners: []*elb.Listener{
@@ -976,7 +976,7 @@ func TestValidLoadBalancerHealthCheckTarget(t *testing.T) {
 
 func testAccCheckLoadBalancerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elb" {
@@ -1011,7 +1011,7 @@ func testAccCheckLoadBalancerExists(ctx context.Context, n string, v *elb.LoadBa
 			return fmt.Errorf("No ELB Classic Load Balancer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
 
 		output, err := tfelb.FindLoadBalancerByName(ctx, conn, rs.Primary.ID)
 

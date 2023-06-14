@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,7 +29,7 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 		DeleteWithoutTimeout: resourceObjectLambdaAccessPointDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -124,7 +124,7 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 }
 
 func resourceObjectLambdaAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
@@ -154,7 +154,7 @@ func resourceObjectLambdaAccessPointCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 
@@ -193,7 +193,7 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceObjectLambdaAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 
@@ -220,7 +220,7 @@ func resourceObjectLambdaAccessPointUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceObjectLambdaAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 
@@ -254,7 +254,7 @@ func FindObjectLambdaAccessPointByTwoPartKey(ctx context.Context, conn *s3contro
 	output, err := conn.GetAccessPointConfigurationForObjectLambdaWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

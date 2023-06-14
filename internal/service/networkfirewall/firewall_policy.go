@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_networkfirewall_firewall_policy")
+// @SDKResource("aws_networkfirewall_firewall_policy", name="Firewall Policy")
+// @Tags(identifierAttribute="id")
 func ResourceFirewallPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFirewallPolicyCreate,
@@ -61,8 +63,13 @@ func ResourceFirewallPolicy() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"rule_order": {
 										Type:         schema.TypeString,
-										Required:     true,
+										Optional:     true,
 										ValidateFunc: validation.StringInSlice(networkfirewall.RuleOrder_Values(), false),
+									},
+									"stream_exception_policy": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(networkfirewall.StreamExceptionPolicy_Values(), false),
 									},
 								},
 							},
@@ -136,8 +143,8 @@ func ResourceFirewallPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"update_token": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -156,14 +163,13 @@ func ResourceFirewallPolicy() *schema.Resource {
 }
 
 func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &networkfirewall.CreateFirewallPolicyInput{
 		FirewallPolicy:     expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
 		FirewallPolicyName: aws.String(d.Get("name").(string)),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -171,10 +177,6 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 	if v, ok := d.GetOk("encryption_configuration"); ok {
 		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{}))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateFirewallPolicyWithContext(ctx, input)
@@ -189,9 +191,7 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	output, err := FindFirewallPolicyByARN(ctx, conn, d.Id())
 
@@ -215,50 +215,31 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("name", response.FirewallPolicyName)
 	d.Set("update_token", output.UpdateToken)
 
-	tags := KeyValueTags(ctx, response.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, response.Tags)
 
 	return nil
 }
 
 func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	if d.HasChanges("description", "encryption_configuration", "firewall_policy") {
 		input := &networkfirewall.UpdateFirewallPolicyInput{
-			FirewallPolicy:    expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
-			FirewallPolicyArn: aws.String(d.Id()),
-			UpdateToken:       aws.String(d.Get("update_token").(string)),
+			EncryptionConfiguration: expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
+			FirewallPolicy:          expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
+			FirewallPolicyArn:       aws.String(d.Id()),
+			UpdateToken:             aws.String(d.Get("update_token").(string)),
 		}
 
 		// Only pass non-empty description values, else API request returns an InternalServiceError
 		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
-		if d.HasChange("encryption_configuration") {
-			input.EncryptionConfiguration = expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{}))
-		}
 
 		_, err := conn.UpdateFirewallPolicyWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating NetworkFirewall Firewall Policy (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating NetworkFirewall Firewall Policy (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -269,7 +250,7 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 10 * time.Minute
 	)
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall Policy: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (interface{}, error) {
@@ -301,7 +282,7 @@ func FindFirewallPolicyByARN(ctx context.Context, conn *networkfirewall.NetworkF
 	output, err := conn.DescribeFirewallPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -318,7 +299,7 @@ func FindFirewallPolicyByARN(ctx context.Context, conn *networkfirewall.NetworkF
 	return output, nil
 }
 
-func statusFirewallPolicy(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
+func statusFirewallPolicy(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFirewallPolicyByARN(ctx, conn, arn)
 
@@ -335,7 +316,7 @@ func statusFirewallPolicy(ctx context.Context, conn *networkfirewall.NetworkFire
 }
 
 func waitFirewallPolicyDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, timeout time.Duration) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkfirewall.ResourceStatusDeleting},
 		Target:  []string{},
 		Refresh: statusFirewallPolicy(ctx, conn, arn),
@@ -359,8 +340,11 @@ func expandStatefulEngineOptions(l []interface{}) *networkfirewall.StatefulEngin
 	options := &networkfirewall.StatefulEngineOptions{}
 
 	m := l[0].(map[string]interface{})
-	if v, ok := m["rule_order"].(string); ok {
+	if v, ok := m["rule_order"].(string); ok && v != "" {
 		options.RuleOrder = aws.String(v)
+	}
+	if v, ok := m["stream_exception_policy"].(string); ok && v != "" {
+		options.StreamExceptionPolicy = aws.String(v)
 	}
 
 	return options
@@ -500,8 +484,12 @@ func flattenStatefulEngineOptions(options *networkfirewall.StatefulEngineOptions
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"rule_order": aws.StringValue(options.RuleOrder),
+	m := map[string]interface{}{}
+	if options.RuleOrder != nil {
+		m["rule_order"] = aws.StringValue(options.RuleOrder)
+	}
+	if options.StreamExceptionPolicy != nil {
+		m["stream_exception_policy"] = aws.StringValue(options.StreamExceptionPolicy)
 	}
 
 	return []interface{}{m}

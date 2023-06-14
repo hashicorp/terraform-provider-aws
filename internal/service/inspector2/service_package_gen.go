@@ -34,6 +34,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_inspector2_enabler",
 		},
 		{
+			Factory:  ResourceMemberAssociation,
+			TypeName: "aws_inspector2_member_association",
+		},
+		{
 			Factory:  ResourceOrganizationConfiguration,
 			TypeName: "aws_inspector2_organization_configuration",
 		},

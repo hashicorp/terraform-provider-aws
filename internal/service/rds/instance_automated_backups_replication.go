@@ -69,7 +69,7 @@ func ResourceInstanceAutomatedBackupsReplication() *schema.Resource {
 
 func resourceInstanceAutomatedBackupsReplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.StartDBInstanceAutomatedBackupsReplicationInput{
 		BackupRetentionPeriod: aws.Int64(int64(d.Get("retention_period").(int))),
@@ -86,7 +86,6 @@ func resourceInstanceAutomatedBackupsReplicationCreate(ctx context.Context, d *s
 
 	log.Printf("[DEBUG] Starting RDS instance automated backups replication: %s", input)
 	output, err := conn.StartDBInstanceAutomatedBackupsReplicationWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "starting RDS instance automated backups replication: %s", err)
 	}
@@ -102,7 +101,7 @@ func resourceInstanceAutomatedBackupsReplicationCreate(ctx context.Context, d *s
 
 func resourceInstanceAutomatedBackupsReplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	backup, err := FindDBInstanceAutomatedBackupByARN(ctx, conn, d.Id())
 
@@ -126,7 +125,7 @@ func resourceInstanceAutomatedBackupsReplicationRead(ctx context.Context, d *sch
 func resourceInstanceAutomatedBackupsReplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	backup, err := FindDBInstanceAutomatedBackupByARN(ctx, conn, d.Id())
 
@@ -140,7 +139,6 @@ func resourceInstanceAutomatedBackupsReplicationDelete(ctx context.Context, d *s
 
 	dbInstanceID := aws.StringValue(backup.DBInstanceIdentifier)
 	sourceDatabaseARN, err := arn.Parse(aws.StringValue(backup.DBInstanceArn))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Instance Automated Backup (%s): %s", d.Id(), err)
 	}

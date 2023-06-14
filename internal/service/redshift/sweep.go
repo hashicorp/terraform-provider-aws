@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -75,7 +75,7 @@ func sweepClusterSnapshots(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).RedshiftConn()
+	conn := client.(*conns.AWSClient).RedshiftConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -121,7 +121,7 @@ func sweepClusters(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).RedshiftConn()
+	conn := client.(*conns.AWSClient).RedshiftConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -168,7 +168,7 @@ func sweepEventSubscriptions(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).RedshiftConn()
+	conn := client.(*conns.AWSClient).RedshiftConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -210,7 +210,7 @@ func sweepScheduledActions(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).RedshiftConn()
+	conn := client.(*conns.AWSClient).RedshiftConn(ctx)
 	input := &redshift.DescribeScheduledActionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -256,7 +256,7 @@ func sweepSnapshotSchedules(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).RedshiftConn()
+	conn := client.(*conns.AWSClient).RedshiftConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -311,7 +311,7 @@ func sweepSubnetGroups(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).RedshiftConn()
+	conn := client.(*conns.AWSClient).RedshiftConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -367,7 +367,7 @@ func sweepHSMClientCertificates(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).RedshiftConn()
+	conn := client.(*conns.AWSClient).RedshiftConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -413,7 +413,7 @@ func sweepHSMConfigurations(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).RedshiftConn()
+	conn := client.(*conns.AWSClient).RedshiftConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -459,7 +459,7 @@ func sweepAuthenticationProfiles(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).RedshiftConn()
+	conn := client.(*conns.AWSClient).RedshiftConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

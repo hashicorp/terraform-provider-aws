@@ -5,11 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusServerState(ctx context.Context, conn *transfer.Transfer, id string) resource.StateRefreshFunc {
+func statusServerState(ctx context.Context, conn *transfer.Transfer, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindServerByID(ctx, conn, id)
 

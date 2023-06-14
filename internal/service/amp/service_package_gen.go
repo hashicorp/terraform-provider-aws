@@ -25,6 +25,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceWorkspace,
 			TypeName: "aws_prometheus_workspace",
 		},
+		{
+			Factory:  DataSourceWorkspaces,
+			TypeName: "aws_prometheus_workspaces",
+		},
 	}
 }
 
@@ -41,6 +45,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceWorkspace,
 			TypeName: "aws_prometheus_workspace",
+			Name:     "Workspace",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

@@ -11,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -285,14 +286,14 @@ func testAccCheckClusterInstanceAttributes(v *docdb.DBInstance) resource.TestChe
 
 func testAccClusterInstanceDisappears(ctx context.Context, v *docdb.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 		opts := &docdb.DeleteDBInstanceInput{
 			DBInstanceIdentifier: v.DBInstanceIdentifier,
 		}
 		if _, err := conn.DeleteDBInstanceWithContext(ctx, opts); err != nil {
 			return err
 		}
-		return resource.RetryContext(ctx, 40*time.Minute, func() *resource.RetryError {
+		return retry.RetryContext(ctx, 40*time.Minute, func() *retry.RetryError {
 			opts := &docdb.DescribeDBInstancesInput{
 				DBInstanceIdentifier: v.DBInstanceIdentifier,
 			}
@@ -301,10 +302,10 @@ func testAccClusterInstanceDisappears(ctx context.Context, v *docdb.DBInstance) 
 				if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBInstanceNotFoundFault) {
 					return nil
 				}
-				return resource.NonRetryableError(
+				return retry.NonRetryableError(
 					fmt.Errorf("Error retrieving DB Instances: %s", err))
 			}
-			return resource.RetryableError(fmt.Errorf(
+			return retry.RetryableError(fmt.Errorf(
 				"Waiting for instance to be deleted: %v", v.DBInstanceIdentifier))
 		})
 	}
@@ -321,7 +322,7 @@ func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *docdb.D
 			return fmt.Errorf("No DB Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 		resp, err := conn.DescribeDBInstancesWithContext(ctx, &docdb.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(rs.Primary.ID),
 		})

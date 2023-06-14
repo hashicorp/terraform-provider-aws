@@ -74,7 +74,7 @@ func ResourceXSSMatchSet() *schema.Resource {
 
 func resourceXSSMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	log.Printf("[INFO] Creating XssMatchSet: %s", d.Get("name").(string))
 
@@ -105,7 +105,7 @@ func resourceXSSMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceXSSMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 	log.Printf("[INFO] Reading WAF XSS Match Set: %s", d.Get("name").(string))
 	params := &waf.GetXssMatchSetInput{
 		XssMatchSetId: aws.String(d.Id()),
@@ -140,7 +140,7 @@ func resourceXSSMatchSetRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceXSSMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	if d.HasChange("xss_match_tuples") {
 		o, n := d.GetChange("xss_match_tuples")
@@ -157,7 +157,7 @@ func resourceXSSMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceXSSMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	oldTuples := d.Get("xss_match_tuples").(*schema.Set).List()
 	if len(oldTuples) > 0 {
@@ -196,7 +196,7 @@ func updateXSSMatchSetResource(ctx context.Context, id string, oldT, newT []inte
 		return conn.UpdateXssMatchSetWithContext(ctx, req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error updating WAF XSS Match Set: %w", err)
+		return fmt.Errorf("updating WAF XSS Match Set: %w", err)
 	}
 
 	return nil

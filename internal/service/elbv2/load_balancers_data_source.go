@@ -34,7 +34,7 @@ const (
 )
 
 func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	results, err := FindLoadBalancers(ctx, conn, &elbv2.DescribeLoadBalancersInput{})

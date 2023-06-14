@@ -36,7 +36,7 @@ func DataSourceGateway() *schema.Resource {
 
 func dataSourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 	name := d.Get("name").(string)
 
 	gateways := make([]*directconnect.Gateway, 0)

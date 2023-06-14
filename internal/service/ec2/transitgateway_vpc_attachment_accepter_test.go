@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -57,7 +57,7 @@ func testAccTransitGatewayVPCAttachmentAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayVPCAttachmentAccepter_Tags(t *testing.T) {
+func testAccTransitGatewayVPCAttachmentAccepter_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var transitGatewayVpcAttachment ec2.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment_accepter.test"

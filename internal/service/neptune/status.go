@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -21,7 +21,7 @@ const (
 )
 
 // StatusEventSubscription fetches the EventSubscription and its Status
-func StatusEventSubscription(ctx context.Context, conn *neptune.Neptune, subscriptionName string) resource.StateRefreshFunc {
+func StatusEventSubscription(ctx context.Context, conn *neptune.Neptune, subscriptionName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &neptune.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(subscriptionName),
@@ -42,7 +42,7 @@ func StatusEventSubscription(ctx context.Context, conn *neptune.Neptune, subscri
 }
 
 // StatusDBClusterEndpoint fetches the DBClusterEndpoint and its Status
-func StatusDBClusterEndpoint(ctx context.Context, conn *neptune.Neptune, id string) resource.StateRefreshFunc {
+func StatusDBClusterEndpoint(ctx context.Context, conn *neptune.Neptune, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindEndpointByID(ctx, conn, id)
 

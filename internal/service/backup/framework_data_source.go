@@ -101,7 +101,7 @@ func DataSourceFramework() *schema.Resource {
 
 func dataSourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -110,7 +110,7 @@ func dataSourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta i
 		FrameworkName: aws.String(name),
 	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error getting Backup Framework: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Backup Framework: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.FrameworkName))

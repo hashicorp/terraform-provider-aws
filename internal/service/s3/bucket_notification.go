@@ -10,7 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -143,7 +144,7 @@ func ResourceBucketNotification() *schema.Resource {
 
 func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 	bucket := d.Get("bucket").(string)
 
 	// EventBridge
@@ -165,7 +166,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		if val, ok := c["id"].(string); ok && val != "" {
 			tc.Id = aws.String(val)
 		} else {
-			tc.Id = aws.String(resource.PrefixedUniqueId("tf-s3-topic-"))
+			tc.Id = aws.String(id.PrefixedUniqueId("tf-s3-topic-"))
 		}
 
 		// TopicArn
@@ -218,7 +219,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		if val, ok := c["id"].(string); ok && val != "" {
 			qc.Id = aws.String(val)
 		} else {
-			qc.Id = aws.String(resource.PrefixedUniqueId("tf-s3-queue-"))
+			qc.Id = aws.String(id.PrefixedUniqueId("tf-s3-queue-"))
 		}
 
 		// QueueArn
@@ -271,7 +272,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		if val, ok := c["id"].(string); ok && val != "" {
 			lc.Id = aws.String(val)
 		} else {
-			lc.Id = aws.String(resource.PrefixedUniqueId("tf-s3-lambda-"))
+			lc.Id = aws.String(id.PrefixedUniqueId("tf-s3-lambda-"))
 		}
 
 		// LambdaFunctionArn
@@ -331,15 +332,15 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[DEBUG] S3 bucket: %s, Putting notification: %v", bucket, i)
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.PutBucketNotificationConfigurationWithContext(ctx, i)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -360,7 +361,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 
 func resourceBucketNotificationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	i := &s3.PutBucketNotificationConfigurationInput{
 		Bucket:                    aws.String(d.Id()),
@@ -379,7 +380,7 @@ func resourceBucketNotificationDelete(ctx context.Context, d *schema.ResourceDat
 
 func resourceBucketNotificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	notificationConfigs, err := conn.GetBucketNotificationConfigurationWithContext(ctx, &s3.GetBucketNotificationConfigurationRequest{
 		Bucket: aws.String(d.Id()),

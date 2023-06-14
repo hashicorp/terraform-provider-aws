@@ -3,7 +3,7 @@ output "subnet_group" {
 }
 
 output "db_instance_id" {
-  value = aws_db_instance.default.id
+  value = aws_db_instance.default.identifier
 }
 
 output "db_instance_address" {

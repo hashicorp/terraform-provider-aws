@@ -53,15 +53,17 @@ resource "aws_iam_role" "authenticated" {
 }
 
 data "aws_iam_policy_document" "authenticated_role_policy" {
-  effect = "Allow"
+  statement {
+    effect = "Allow"
 
-  actions = [
-    "mobileanalytics:PutEvents",
-    "cognito-sync:*",
-    "cognito-identity:*",
-  ]
+    actions = [
+      "mobileanalytics:PutEvents",
+      "cognito-sync:*",
+      "cognito-identity:*",
+    ]
 
-  resources = ["*"]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "authenticated" {

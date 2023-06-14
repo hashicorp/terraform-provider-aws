@@ -22,6 +22,7 @@ const (
 	engineNameAzuredb                    = "azuredb"
 	engineNameAzureSQLManagedInstance    = "azure-sql-managed-instance"
 	engineNameDB2                        = "db2"
+	engineNameDB2zOS                     = "db2-zos"
 	engineNameTransfer                   = "dms-transfer"
 	engineNameDocDB                      = "docdb"
 	engineNameDynamoDB                   = "dynamodb"
@@ -51,6 +52,7 @@ func engineName_Values() []string {
 		engineNameAzuredb,
 		engineNameAzureSQLManagedInstance,
 		engineNameDB2,
+		engineNameDB2zOS,
 		engineNameTransfer,
 		engineNameDocDB,
 		engineNameDynamoDB,

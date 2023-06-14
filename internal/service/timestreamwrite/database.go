@@ -2,7 +2,6 @@ package timestreamwrite
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 
@@ -15,9 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_timestreamwrite_database")
+// @SDKResource("aws_timestreamwrite_database", name="Database")
+// @Tags(identifierAttribute="arn")
 func ResourceDatabase() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDatabaseCreate,
@@ -60,10 +61,8 @@ func ResourceDatabase() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -71,32 +70,26 @@ func ResourceDatabase() *schema.Resource {
 }
 
 func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn(ctx)
 
 	dbName := d.Get("database_name").(string)
-
 	input := &timestreamwrite.CreateDatabaseInput{
 		DatabaseName: aws.String(dbName),
+		Tags:         GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	resp, err := conn.CreateDatabaseWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Timestream Database (%s): %w", dbName, err))
+		return diag.Errorf("creating Timestream Database (%s): %s", dbName, err)
 	}
 
 	if resp == nil || resp.Database == nil {
-		return diag.FromErr(fmt.Errorf("error creating Timestream Database (%s): empty output", dbName))
+		return diag.Errorf("creating Timestream Database (%s): empty output", dbName)
 	}
 
 	d.SetId(aws.StringValue(resp.Database.DatabaseName))
@@ -105,9 +98,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn(ctx)
 
 	input := &timestreamwrite.DescribeDatabaseInput{
 		DatabaseName: aws.String(d.Id()),
@@ -122,11 +113,11 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Timestream Database (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Timestream Database (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.Database == nil {
-		return diag.FromErr(fmt.Errorf("error reading Timestream Database (%s): empty output", d.Id()))
+		return diag.Errorf("reading Timestream Database (%s): empty output", d.Id())
 	}
 
 	db := resp.Database
@@ -137,28 +128,11 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("kms_key_id", db.KmsKeyId)
 	d.Set("table_count", db.TableCount)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for Timestream Database (%s): %w", arn, err))
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
-
 	return nil
 }
 
 func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn(ctx)
 
 	if d.HasChange("kms_key_id") {
 		input := &timestreamwrite.UpdateDatabaseInput{
@@ -169,15 +143,7 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.UpdateDatabaseWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Timestream Database (%s): %w", d.Id(), err))
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Timestream Database (%s) tags: %w", d.Get("arn").(string), err))
+			return diag.Errorf("updating Timestream Database (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -185,7 +151,7 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn(ctx)
 
 	log.Printf("[INFO] Deleting Timestream Database: %s", d.Id())
 	_, err := conn.DeleteDatabaseWithContext(ctx, &timestreamwrite.DeleteDatabaseInput{
@@ -197,7 +163,7 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Timestream Database (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Timestream Database (%s): %s", d.Id(), err)
 	}
 
 	return nil

@@ -109,7 +109,7 @@ The following arguments are supported:
 * `post_authentication_login_banner`- (Optional) Specify a string to display when users connect to a server. This string is displayed after the user authenticates. The SFTP protocol does not support post-authentication display banners.
 * `pre_authentication_login_banner`- (Optional) Specify a string to display when users connect to a server. This string is displayed before the user authenticates.
 * `protocol_details`- (Optional) The protocol settings that are configured for your server.
-* `security_policy_name` - (Optional) Specifies the name of the security policy that is attached to the server. Possible values are `TransferSecurityPolicy-2018-11`, `TransferSecurityPolicy-2020-06`, `TransferSecurityPolicy-FIPS-2020-06` and `TransferSecurityPolicy-2022-03`. Default value is: `TransferSecurityPolicy-2018-11`.
+* `security_policy_name` - (Optional) Specifies the name of the security policy that is attached to the server. Possible values are `TransferSecurityPolicy-2018-11`, `TransferSecurityPolicy-2020-06`, `TransferSecurityPolicy-FIPS-2020-06`, `TransferSecurityPolicy-2022-03` and `TransferSecurityPolicy-2023-05`. Default value is: `TransferSecurityPolicy-2018-11`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `workflow_details` - (Optional) Specifies the workflow details. See Workflow Details below.
 
@@ -139,6 +139,7 @@ The following arguments are supported:
 * `workflow_id` - (Required)  A unique identifier for the workflow.
 
 ## Attributes Reference
+
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of Transfer Server

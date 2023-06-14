@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -40,7 +40,7 @@ func ResourceSecurityConfiguration() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.StringLenBetween(0, 10280-resource.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 10280-id.UniqueIDSuffixLength),
 			},
 
 			"configuration": {
@@ -60,16 +60,16 @@ func ResourceSecurityConfiguration() *schema.Resource {
 
 func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	var emrSCName string
 	if v, ok := d.GetOk("name"); ok {
 		emrSCName = v.(string)
 	} else {
 		if v, ok := d.GetOk("name_prefix"); ok {
-			emrSCName = resource.PrefixedUniqueId(v.(string))
+			emrSCName = id.PrefixedUniqueId(v.(string))
 		} else {
-			emrSCName = resource.PrefixedUniqueId("tf-emr-sc-")
+			emrSCName = id.PrefixedUniqueId("tf-emr-sc-")
 		}
 	}
 
@@ -88,7 +88,7 @@ func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.Resource
 
 func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	resp, err := conn.DescribeSecurityConfigurationWithContext(ctx, &emr.DescribeSecurityConfigurationInput{
 		Name: aws.String(d.Id()),
@@ -111,7 +111,7 @@ func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	_, err := conn.DeleteSecurityConfigurationWithContext(ctx, &emr.DeleteSecurityConfigurationInput{
 		Name: aws.String(d.Id()),

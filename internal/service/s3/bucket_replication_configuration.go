@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -307,7 +307,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 
 func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 
@@ -325,13 +325,13 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 		input.Token = aws.String(v.(string))
 	}
 
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.PutBucketReplicationWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -346,23 +346,24 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 
 	d.SetId(bucket)
 
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindBucketReplicationConfigurationByID(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Replication creation on bucket (%s): %s", d.Id(), err)
+	}
+
 	return append(diags, resourceBucketReplicationConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
-	input := &s3.GetBucketReplicationInput{
-		Bucket: aws.String(d.Id()),
-	}
+	output, err := FindBucketReplicationConfigurationByID(ctx, conn, d.Id())
 
-	// Read the bucket replication configuration
-	output, err := retryWhenBucketNotFound(ctx, func() (interface{}, error) {
-		return conn.GetBucketReplicationWithContext(ctx, input)
-	})
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, s3.ErrCodeNoSuchBucket) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Replication Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -372,13 +373,7 @@ func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket Replication Configuration for bucket (%s): %s", d.Id(), err)
 	}
 
-	replication, ok := output.(*s3.GetBucketReplicationOutput)
-
-	if !ok || replication == nil || replication.ReplicationConfiguration == nil {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Replication Configuration for bucket (%s): empty output", d.Id())
-	}
-
-	r := replication.ReplicationConfiguration
+	r := output.ReplicationConfiguration
 
 	d.Set("bucket", d.Id())
 	d.Set("role", r.Role)
@@ -391,7 +386,7 @@ func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.R
 
 func resourceBucketReplicationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	rc := &s3.ReplicationConfiguration{
 		Role:  aws.String(d.Get("role").(string)),
@@ -407,13 +402,13 @@ func resourceBucketReplicationConfigurationUpdate(ctx context.Context, d *schema
 		input.Token = aws.String(v.(string))
 	}
 
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.PutBucketReplicationWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -431,7 +426,7 @@ func resourceBucketReplicationConfigurationUpdate(ctx context.Context, d *schema
 
 func resourceBucketReplicationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	input := &s3.DeleteBucketReplicationInput{
 		Bucket: aws.String(d.Id()),
@@ -448,4 +443,29 @@ func resourceBucketReplicationConfigurationDelete(ctx context.Context, d *schema
 	}
 
 	return diags
+}
+
+func FindBucketReplicationConfigurationByID(ctx context.Context, conn *s3.S3, id string) (*s3.GetBucketReplicationOutput, error) {
+	in := &s3.GetBucketReplicationInput{
+		Bucket: aws.String(id),
+	}
+
+	out, err := conn.GetBucketReplicationWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, s3.ErrCodeNoSuchBucket) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.ReplicationConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }

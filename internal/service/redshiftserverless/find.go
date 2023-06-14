@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +18,7 @@ func FindNamespaceByName(ctx context.Context, conn *redshiftserverless.RedshiftS
 	output, err := conn.GetNamespaceWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -43,7 +43,7 @@ func FindWorkgroupByName(ctx context.Context, conn *redshiftserverless.RedshiftS
 	output, err := conn.GetWorkgroupWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -68,7 +68,7 @@ func FindEndpointAccessByName(ctx context.Context, conn *redshiftserverless.Reds
 	output, err := conn.GetEndpointAccessWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -93,7 +93,7 @@ func FindUsageLimitByName(ctx context.Context, conn *redshiftserverless.Redshift
 	output, err := conn.GetUsageLimitWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, redshiftserverless.ErrCodeValidationException, "does not exist") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -118,7 +118,7 @@ func FindSnapshotByName(ctx context.Context, conn *redshiftserverless.RedshiftSe
 	output, err := conn.GetSnapshotWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, redshiftserverless.ErrCodeResourceNotFoundException, "snapshot") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -143,7 +143,7 @@ func FindResourcePolicyByARN(ctx context.Context, conn *redshiftserverless.Redsh
 	output, err := conn.GetResourcePolicyWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, redshiftserverless.ErrCodeResourceNotFoundException, "does not exist") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

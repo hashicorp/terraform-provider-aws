@@ -82,7 +82,7 @@ func DataSourceZone() *schema.Resource {
 
 func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name, nameExists := d.GetOk("name")
@@ -240,7 +240,7 @@ func hostedZoneNameServers(ctx context.Context, conn *route53.Route53, id string
 	}
 
 	if output.HostedZone != nil && output.HostedZone.Config != nil && aws.BoolValue(output.HostedZone.Config.PrivateZone) {
-		nameServers, err := getNameServers(ctx, id, name, conn)
+		nameServers, err := findNameServers(ctx, conn, id, name)
 
 		if err != nil {
 			return nil, fmt.Errorf("listing Route 53 Hosted Zone (%s) NS records: %w", id, err)

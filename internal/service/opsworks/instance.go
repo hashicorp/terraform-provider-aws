@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -456,7 +456,7 @@ func resourceInstanceValidate(d *schema.ResourceData) error {
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpsWorksConn()
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	req := &opsworks.DescribeInstancesInput{
 		InstanceIds: []*string{
@@ -567,7 +567,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpsWorksConn()
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	err := resourceInstanceValidate(d)
 	if err != nil {
@@ -731,7 +731,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpsWorksConn()
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	err := resourceInstanceValidate(d)
 	if err != nil {
@@ -813,7 +813,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpsWorksConn()
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	if v, ok := d.GetOk("status"); ok && v.(string) != instanceStatusStopped {
 		err := stopInstance(ctx, d, meta, d.Timeout(schema.TimeoutDelete))
@@ -857,7 +857,7 @@ func resourceInstanceImport(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func startInstance(ctx context.Context, d *schema.ResourceData, meta interface{}, wait bool, timeout time.Duration) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn()
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	req := &opsworks.StartInstanceInput{
 		InstanceId: aws.String(d.Id()),
@@ -883,7 +883,7 @@ func startInstance(ctx context.Context, d *schema.ResourceData, meta interface{}
 }
 
 func stopInstance(ctx context.Context, d *schema.ResourceData, meta interface{}, timeout time.Duration) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn()
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	req := &opsworks.StopInstanceInput{
 		InstanceId: aws.String(d.Id()),
@@ -907,7 +907,7 @@ func stopInstance(ctx context.Context, d *schema.ResourceData, meta interface{},
 }
 
 func waitInstanceDeleted(ctx context.Context, conn *opsworks.OpsWorks, instanceId string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{instanceStatusStopped, instanceStatusTerminating, instanceStatusTerminated},
 		Target:     []string{},
 		Refresh:    instanceStatus(ctx, conn, instanceId),
@@ -921,7 +921,7 @@ func waitInstanceDeleted(ctx context.Context, conn *opsworks.OpsWorks, instanceI
 }
 
 func waitInstanceStarted(ctx context.Context, conn *opsworks.OpsWorks, instanceId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{instanceStatusRequested, instanceStatusPending, instanceStatusBooting, instanceStatusRunningSetup},
 		Target:     []string{instanceStatusOnline},
 		Refresh:    instanceStatus(ctx, conn, instanceId),
@@ -934,7 +934,7 @@ func waitInstanceStarted(ctx context.Context, conn *opsworks.OpsWorks, instanceI
 }
 
 func waitInstanceStopped(ctx context.Context, conn *opsworks.OpsWorks, instanceId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{instanceStatusStopping, instanceStatusTerminating, instanceStatusShuttingDown, instanceStatusTerminated},
 		Target:     []string{instanceStatusStopped},
 		Refresh:    instanceStatus(ctx, conn, instanceId),
@@ -946,7 +946,7 @@ func waitInstanceStopped(ctx context.Context, conn *opsworks.OpsWorks, instanceI
 	return err
 }
 
-func instanceStatus(ctx context.Context, conn *opsworks.OpsWorks, instanceID string) resource.StateRefreshFunc {
+func instanceStatus(ctx context.Context, conn *opsworks.OpsWorks, instanceID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeInstancesWithContext(ctx, &opsworks.DescribeInstancesInput{
 			InstanceIds: []*string{aws.String(instanceID)},

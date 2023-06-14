@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -215,7 +215,7 @@ func DataSourceReceivedLicense() *schema.Resource {
 
 func dataSourceReceivedLicenseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	arn := d.Get("license_arn").(string)
 
@@ -260,7 +260,7 @@ func FindReceivedLicenseByARN(ctx context.Context, conn *licensemanager.LicenseM
 	out, err := conn.ListReceivedLicensesWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

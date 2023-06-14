@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
@@ -278,23 +279,23 @@ func testAccCheckBucketPublicAccessBlockExists(ctx context.Context, n string, co
 			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		input := &s3.GetPublicAccessBlockInput{
 			Bucket: aws.String(rs.Primary.ID),
 		}
 
 		var output *s3.GetPublicAccessBlockOutput
-		err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 			var err error
 			output, err = conn.GetPublicAccessBlockWithContext(ctx, input)
 
 			if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchPublicAccessBlockConfiguration) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
@@ -325,7 +326,7 @@ func testAccCheckBucketPublicAccessBlockDisappears(ctx context.Context, n string
 			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		deleteInput := &s3.DeletePublicAccessBlockInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -339,7 +340,7 @@ func testAccCheckBucketPublicAccessBlockDisappears(ctx context.Context, n string
 			Bucket: aws.String(rs.Primary.ID),
 		}
 
-		return resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+		return retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 			_, err := conn.GetPublicAccessBlockWithContext(ctx, getInput)
 
 			if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchPublicAccessBlockConfiguration) {
@@ -347,10 +348,10 @@ func testAccCheckBucketPublicAccessBlockDisappears(ctx context.Context, n string
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
-			return resource.RetryableError(fmt.Errorf("S3 Bucket Public Access Block (%s) still exists", rs.Primary.ID))
+			return retry.RetryableError(fmt.Errorf("S3 Bucket Public Access Block (%s) still exists", rs.Primary.ID))
 		})
 	}
 }

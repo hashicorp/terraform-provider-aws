@@ -57,6 +57,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceProvisioningTemplate,
 			TypeName: "aws_iot_provisioning_template",
+			Name:     "Provisioning Template",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceRoleAlias,
@@ -69,6 +73,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceThingGroup,
 			TypeName: "aws_iot_thing_group",
+			Name:     "Thing Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceThingGroupMembership,
@@ -81,10 +89,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceThingType,
 			TypeName: "aws_iot_thing_type",
+			Name:     "Thing Type",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceTopicRule,
 			TypeName: "aws_iot_topic_rule",
+			Name:     "Topic Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceTopicRuleDestination,

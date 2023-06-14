@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
@@ -91,7 +91,6 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "project_visibility", "PRIVATE"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role", roleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.auth.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.git_clone_depth", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", "false"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.location", "https://github.com/hashibot-test/aws-test.git"),
@@ -2631,7 +2630,7 @@ func testAccCheckProjectExists(ctx context.Context, n string, project *codebuild
 			return fmt.Errorf("No CodeBuild Project ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn(ctx)
 
 		output, err := tfcodebuild.FindProjectByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -2650,7 +2649,7 @@ func testAccCheckProjectExists(ctx context.Context, n string, project *codebuild
 
 func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codebuild_project" {
@@ -2684,7 +2683,7 @@ func testAccCheckProjectCertificate(project *codebuild.Project, expectedCertific
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn(ctx)
 
 	_, err := tfcodebuild.FindProjectByARN(ctx, conn, "tf-acc-test-precheck")
 
@@ -4793,7 +4792,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, bucketName))
 }
 
-func testAccProjectConfig_secondaryArtifactsName(rName string, name string) string { //nolint:unused // This function is used in a skipped acceptance test
+func testAccProjectConfig_secondaryArtifactsName(rName string, name string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -5183,7 +5182,7 @@ resource "aws_subnet" "private" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q

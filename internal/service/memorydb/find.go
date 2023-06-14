@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/memorydb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +18,7 @@ func FindACLByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (*
 	output, err := conn.DescribeACLsWithContext(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeACLNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -48,7 +48,7 @@ func FindClusterByName(ctx context.Context, conn *memorydb.MemoryDB, name string
 	output, err := conn.DescribeClustersWithContext(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -77,7 +77,7 @@ func FindParameterGroupByName(ctx context.Context, conn *memorydb.MemoryDB, name
 	output, err := conn.DescribeParameterGroupsWithContext(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeParameterGroupNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -106,7 +106,7 @@ func FindSnapshotByName(ctx context.Context, conn *memorydb.MemoryDB, name strin
 	output, err := conn.DescribeSnapshotsWithContext(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeSnapshotNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -135,7 +135,7 @@ func FindSubnetGroupByName(ctx context.Context, conn *memorydb.MemoryDB, name st
 	output, err := conn.DescribeSubnetGroupsWithContext(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeSubnetGroupNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -164,7 +164,7 @@ func FindUserByName(ctx context.Context, conn *memorydb.MemoryDB, name string) (
 	output, err := conn.DescribeUsersWithContext(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeUserNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

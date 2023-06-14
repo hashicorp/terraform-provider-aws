@@ -9,6 +9,8 @@ val orgacctServices = mapOf(
     "config" to ServiceSpec("Config" /*"TestAccConfig_serial|TestAccConfigConfigurationAggregator_"*/),
     "fms" to ServiceSpec("FMS (Firewall Manager)", regionOverride = "us-east-1"),
     "guardduty" to ServiceSpec("GuardDuty"),
+    "inspector" to ServiceSpec("Inspector Classic"),
+    "inspector2" to ServiceSpec("Inspector"),
     "licensemanager" to ServiceSpec("License Manager"),
     "macie2" to ServiceSpec("Macie"),
     "organizations" to ServiceSpec("Organizations"),

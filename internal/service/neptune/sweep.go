@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -46,7 +46,7 @@ func sweepEventSubscriptions(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).NeptuneConn()
+	conn := client.(*conns.AWSClient).NeptuneConn(ctx)
 	var sweeperErrs *multierror.Error
 
 	err = conn.DescribeEventSubscriptionsPagesWithContext(ctx, &neptune.DescribeEventSubscriptionsInput{}, func(page *neptune.DescribeEventSubscriptionsOutput, lastPage bool) bool {
@@ -102,7 +102,7 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NeptuneConn()
+	conn := client.(*conns.AWSClient).NeptuneConn(ctx)
 
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -164,7 +164,7 @@ func sweepClusterInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NeptuneConn()
+	conn := client.(*conns.AWSClient).NeptuneConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	input := &neptune.DescribeDBInstancesInput{}

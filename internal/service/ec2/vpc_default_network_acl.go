@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ACL Network ACLs all contain explicit deny-all rules that cannot be
@@ -21,7 +22,8 @@ const (
 	defaultACLRuleNumberIPv6 = 32768
 )
 
-// @SDKResource("aws_default_network_acl")
+// @SDKResource("aws_default_network_acl", name="Network ACL")
+// @Tags(identifierAttribute="id")
 func ResourceDefaultNetworkACL() *schema.Resource {
 	networkACLRuleSetNestedBlock := &schema.Schema{
 		Type:     schema.TypeSet,
@@ -79,8 +81,8 @@ func ResourceDefaultNetworkACL() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -91,9 +93,9 @@ func ResourceDefaultNetworkACL() *schema.Resource {
 	}
 }
 
-func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	naclID := d.Get("default_network_acl_id").(string)
 	nacl, err := FindNetworkACLByID(ctx, conn, naclID)
@@ -118,10 +120,9 @@ func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	// Configure tags.
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
-	oldTags := KeyValueTags(ctx, nacl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	newTags := KeyValueTags(ctx, GetTagsIn(ctx))
+	oldTags := KeyValueTags(ctx, nacl.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
 		if err := UpdateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
@@ -134,7 +135,7 @@ func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceDefaultNetworkACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	// Subnets *must* belong to a Network ACL. Subnets are not "removed" from
 	// Network ACLs, instead their association is replaced. In a normal

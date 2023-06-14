@@ -104,7 +104,7 @@ func ResourceRoute() *schema.Resource {
 
 func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	req := &apigatewayv2.CreateRouteInput{
 		ApiId:             aws.String(d.Get("api_id").(string)),
@@ -150,7 +150,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	resp, err := conn.GetRouteWithContext(ctx, &apigatewayv2.GetRouteInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
@@ -190,7 +190,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	var requestParameters map[string]*apigatewayv2.ParameterConstraints
 
@@ -279,7 +279,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 route (%s)", d.Id())
 	_, err := conn.DeleteRouteWithContext(ctx, &apigatewayv2.DeleteRouteInput{
@@ -307,7 +307,7 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta inter
 	apiId := parts[0]
 	routeId := parts[1]
 
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	resp, err := conn.GetRouteWithContext(ctx, &apigatewayv2.GetRouteInput{
 		ApiId:   aws.String(apiId),

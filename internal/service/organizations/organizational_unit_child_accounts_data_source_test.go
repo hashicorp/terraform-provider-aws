@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -23,7 +23,7 @@ func testAccOrganizationalUnitChildAccountsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationalUnitChildAccountsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "accounts.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "accounts.#", 0),
 				),
 			},
 		},

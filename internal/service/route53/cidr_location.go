@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -78,7 +78,7 @@ func (r *resourceCIDRLocation) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	collectionID := data.CIDRCollectionID.ValueString()
 	collection, err := findCIDRCollectionByID(ctx, conn, collectionID)
@@ -130,7 +130,7 @@ func (r *resourceCIDRLocation) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	cidrBlocks, err := findCIDRLocationByTwoPartKey(ctx, conn, collectionID, name)
 
@@ -177,7 +177,7 @@ func (r *resourceCIDRLocation) Update(ctx context.Context, request resource.Upda
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	collection, err := findCIDRCollectionByID(ctx, conn, collectionID)
 
@@ -255,7 +255,7 @@ func (r *resourceCIDRLocation) Delete(ctx context.Context, request resource.Dele
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	collection, err := findCIDRCollectionByID(ctx, conn, collectionID)
 
@@ -323,7 +323,7 @@ func findCIDRLocationByTwoPartKey(ctx context.Context, conn *route53.Route53, co
 	})
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchCidrCollectionException) {
-		return nil, &sdkresource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

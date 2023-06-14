@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -56,7 +56,7 @@ func resourceAccessPointPolicy() *schema.Resource {
 }
 
 func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	resourceID, err := AccessPointCreateResourceID(d.Get("access_point_arn").(string))
 
@@ -93,7 +93,7 @@ func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID, name, err := AccessPointParseResourceID(d.Id())
 
@@ -130,7 +130,7 @@ func resourceAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID, name, err := AccessPointParseResourceID(d.Id())
 
@@ -159,7 +159,7 @@ func resourceAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAccessPointPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID, name, err := AccessPointParseResourceID(d.Id())
 
@@ -206,7 +206,7 @@ func FindAccessPointPolicyAndStatusByTwoPartKey(ctx context.Context, conn *s3con
 	output1, err := conn.GetAccessPointPolicyWithContext(ctx, input1)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
-		return "", nil, &resource.NotFoundError{
+		return "", nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input1,
 		}
@@ -234,7 +234,7 @@ func FindAccessPointPolicyAndStatusByTwoPartKey(ctx context.Context, conn *s3con
 	output2, err := conn.GetAccessPointPolicyStatusWithContext(ctx, input2)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
-		return "", nil, &resource.NotFoundError{
+		return "", nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input2,
 		}

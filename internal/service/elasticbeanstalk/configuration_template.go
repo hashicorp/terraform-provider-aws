@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -61,7 +61,7 @@ func ResourceConfigurationTemplate() *schema.Resource {
 
 func resourceConfigurationTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &elasticbeanstalk.CreateConfigurationTemplateInput{
@@ -95,7 +95,7 @@ func resourceConfigurationTemplateCreate(ctx context.Context, d *schema.Resource
 
 func resourceConfigurationTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	settings, err := FindConfigurationSettingsByTwoPartKey(ctx, conn, d.Get("application").(string), d.Id())
 
@@ -119,7 +119,7 @@ func resourceConfigurationTemplateRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	if d.HasChange("description") {
 		input := &elasticbeanstalk.UpdateConfigurationTemplateInput{
@@ -194,7 +194,7 @@ func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.Resource
 
 func resourceConfigurationTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	log.Printf("[INFO] Deleting Elastic Beanstalk Configuration Template: %s", d.Id())
 	_, err := conn.DeleteConfigurationTemplateWithContext(ctx, &elasticbeanstalk.DeleteConfigurationTemplateInput{
@@ -222,7 +222,7 @@ func FindConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbea
 	output, err := conn.DescribeConfigurationSettingsWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Configuration Template named") || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Application named") || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Platform named") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

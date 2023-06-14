@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +18,7 @@ func FindDiscovererByID(ctx context.Context, conn *schemas.Schemas, id string) (
 	output, err := conn.DescribeDiscovererWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -43,7 +43,7 @@ func FindRegistryByName(ctx context.Context, conn *schemas.Schemas, name string)
 	output, err := conn.DescribeRegistryWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -69,7 +69,7 @@ func FindSchemaByNameAndRegistryName(ctx context.Context, conn *schemas.Schemas,
 	output, err := conn.DescribeSchemaWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -94,7 +94,7 @@ func FindRegistryPolicyByName(ctx context.Context, conn *schemas.Schemas, name s
 	output, err := conn.GetResourcePolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

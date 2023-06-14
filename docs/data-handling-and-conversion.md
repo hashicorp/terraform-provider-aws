@@ -282,7 +282,7 @@ To write:
 
 ```go
 if err := d.Set("attribute_name", flattenStructures(output.Thing.AttributeName)); err != nil {
-    return fmt.Errorf("setting attribute_name: %w", err)
+    return diag.Errorf("setting attribute_name: %s", err)
 }
 ```
 
@@ -303,7 +303,7 @@ To write (_likely to have helper function introduced soon_):
 ```go
 if output.Thing.AttributeName != nil {
     if err := d.Set("attribute_name", []interface{}{flattenStructure(output.Thing.AttributeName)}); err != nil {
-        return fmt.Errorf("setting attribute_name: %w", err)
+        return diag.Errorf("setting attribute_name: %s", err)
     }
 } else {
     d.Set("attribute_name", nil)
@@ -362,7 +362,7 @@ To write:
 
 ```go
 if err := d.Set("attribute_name", flattenStructures(output.Thing.AttributeNames)); err != nil {
-    return fmt.Errorf("setting attribute_name: %w", err)
+    return diag.Errorf("setting attribute_name: %s", err)
 }
 ```
 

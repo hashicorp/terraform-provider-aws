@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -23,7 +23,7 @@ func FindClusterByID(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string
 	}
 
 	if state := aws.StringValue(output.State); state == cloudhsmv2.ClusterStateDeleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     state,
 			LastRequest: input,
 		}
@@ -31,7 +31,7 @@ func FindClusterByID(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string
 
 	// Eventual consistency check.
 	if aws.StringValue(output.ClusterId) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -105,5 +105,5 @@ func FindHSMByTwoPartKey(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, hsmID
 		}
 	}
 
-	return nil, &resource.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
