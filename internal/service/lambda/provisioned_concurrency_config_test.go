@@ -42,10 +42,13 @@ func TestAccLambdaProvisionedConcurrencyConfig_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"skip_destroy",
+					"skip_waiting",
+				},
 			},
 		},
 	})
@@ -125,10 +128,13 @@ func TestAccLambdaProvisionedConcurrencyConfig_provisionedConcurrentExecutions(t
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"skip_destroy",
+					"skip_waiting",
+				},
 			},
 			{
 				Config: testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 2),
@@ -169,10 +175,13 @@ func TestAccLambdaProvisionedConcurrencyConfig_FunctionName_arn(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"skip_destroy",
+					"skip_waiting",
+				},
 			},
 			{
 				Config: testAccProvisionedConcurrencyConfigConfig_FunctionName_arn(rName, 2),
@@ -207,10 +216,13 @@ func TestAccLambdaProvisionedConcurrencyConfig_Qualifier_aliasName(t *testing.T)
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"skip_destroy",
+					"skip_waiting",
+				},
 			},
 		},
 	})
@@ -259,6 +271,36 @@ func TestAccLambdaProvisionedConcurrencyConfig_skipDestroy(t *testing.T) {
 					testAccCheckProvisionedConcurrencyConfigExistsByName(ctx, rName, version1),
 					testAccCheckProvisionedConcurrencyConfigExistsByName(ctx, rName, version2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaProvisionedConcurrencyConfig_skipWaiting(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	lambdaFunctionResourceName := "aws_lambda_function.test"
+	resourceName := "aws_lambda_provisioned_concurrency_config.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisionedConcurrencyConfigDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProvisionedConcurrencyConfigConfig_skipWaiting(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedConcurrencyConfigExistsWithStatus(ctx, resourceName, types.ProvisionedConcurrencyStatusEnumInProgress),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
+					// Concurrent execution count will be 0 when not waiting for completion
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaFunctionResourceName, "version"),
+					resource.TestCheckResourceAttr(resourceName, "skip_waiting", "true"),
+				),
+				// Because the provisioned executions were not completed, the subsequent plan
+				// will not be empty.
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -425,6 +467,10 @@ func testAccCheckProvisionedConcurrencyConfigExists_v0Schema(ctx context.Context
 }
 
 func testAccCheckProvisionedConcurrencyConfigExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+	return testAccCheckProvisionedConcurrencyConfigExistsWithStatus(ctx, resourceName, types.ProvisionedConcurrencyStatusEnumReady)
+}
+
+func testAccCheckProvisionedConcurrencyConfigExistsWithStatus(ctx context.Context, resourceName string, wantStatus types.ProvisionedConcurrencyStatusEnum) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -453,8 +499,8 @@ func testAccCheckProvisionedConcurrencyConfigExists(ctx context.Context, resourc
 			return err
 		}
 
-		if got, want := output.Status, types.ProvisionedConcurrencyStatusEnumReady; got != want {
-			return fmt.Errorf("Lambda Provisioned Concurrency Config (%s) expected status (%s), got: %s", rs.Primary.ID, want, got)
+		if output.Status != wantStatus {
+			return fmt.Errorf("Lambda Provisioned Concurrency Config (%s) expected status (%s), got: %s", rs.Primary.ID, wantStatus, output.Status)
 		}
 
 		return nil
@@ -591,4 +637,18 @@ resource "aws_lambda_provisioned_concurrency_config" "test" {
   skip_destroy = %[1]t
 }
 `, skipDestroy))
+}
+
+func testAccProvisionedConcurrencyConfigConfig_skipWaiting(rName string, skipWaiting bool) string {
+	return acctest.ConfigCompose(
+		testAccProvisionedConcurrencyConfigConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_provisioned_concurrency_config" "test" {
+  function_name                     = aws_lambda_function.test.function_name
+  provisioned_concurrent_executions = 1
+  qualifier                         = aws_lambda_function.test.version
+
+  skip_waiting = %[1]t
+}
+`, skipWaiting))
 }

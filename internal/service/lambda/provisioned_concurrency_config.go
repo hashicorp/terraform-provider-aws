@@ -67,6 +67,11 @@ func ResourceProvisionedConcurrencyConfig() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"skip_waiting": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -100,8 +105,10 @@ func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.R
 	}
 	d.SetId(id)
 
-	if err := waitForProvisionedConcurrencyConfigStatusReady(ctx, conn, functionName, qualifier, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Provisioned Concurrency Config (%s) to be ready: %s", d.Id(), err)
+	if !d.Get("skip_waiting").(bool) {
+		if err := waitForProvisionedConcurrencyConfigStatusReady(ctx, conn, functionName, qualifier, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Lambda Provisioned Concurrency Config (%s) to be ready: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceProvisionedConcurrencyConfigRead(ctx, d, meta)...)
@@ -165,8 +172,10 @@ func resourceProvisionedConcurrencyConfigUpdate(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "updating Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForProvisionedConcurrencyConfigStatusReady(ctx, conn, functionName, qualifier, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Lambda Provisioned Concurrency Config (%s): waiting for completion: %s", d.Id(), err)
+	if !d.Get("skip_waiting").(bool) {
+		if err := waitForProvisionedConcurrencyConfigStatusReady(ctx, conn, functionName, qualifier, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Lambda Provisioned Concurrency Config (%s): waiting for completion: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceProvisionedConcurrencyConfigRead(ctx, d, meta)...)

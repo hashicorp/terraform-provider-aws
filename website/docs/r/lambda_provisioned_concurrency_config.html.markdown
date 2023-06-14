@@ -45,6 +45,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `skip_destroy` - (Optional) Whether to retain the provisoned concurrency configuration upon destruction. Defaults to `false`. If set to `true`, the resource in simply removed from state instead.
+* `skip_waiting` - (Optional) Whether to skip waiting for a provisoned concurrency configuration to reach a `READY` status. Defaults to `false`.
 
 ## Attributes Reference
 
