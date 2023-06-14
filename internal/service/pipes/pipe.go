@@ -3,6 +3,7 @@ package pipes
 import (
 	"context"
 	"log"
+	"errors"
 	"regexp"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,7 +27,7 @@ import (
 
 // @SDKResource("aws_pipes_pipe", name="Pipe")
 // @Tags(identifierAttribute="arn")
-func ResourcePipe() *schema.Resource {
+func resourcePipe() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePipeCreate,
 		ReadWithoutTimeout:   resourcePipeRead,
@@ -170,7 +172,7 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).PipesClient()
 
-	output, err := FindPipeByName(ctx, conn, d.Id())
+	output, err := findPipeByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Pipes Pipe (%s) not found, removing from state", d.Id())
@@ -289,4 +291,118 @@ func resourcePipeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	return nil
+}
+
+func findPipeByName(ctx context.Context, conn *pipes.Client, name string) (*pipes.DescribePipeOutput, error) {
+	input := &pipes.DescribePipeInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.DescribePipe(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Arn == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+const (
+	pipeStatusRunning      = string(types.PipeStateRunning)
+	pipeStatusStopped      = string(types.PipeStateStopped)
+	pipeStatusCreating     = string(types.PipeStateCreating)
+	pipeStatusUpdating     = string(types.PipeStateUpdating)
+	pipeStatusDeleting     = string(types.PipeStateDeleting)
+	pipeStatusStarting     = string(types.PipeStateStarting)
+	pipeStatusStopping     = string(types.PipeStateStopping)
+	pipeStatusCreateFailed = string(types.PipeStateCreateFailed)
+	pipeStatusUpdateFailed = string(types.PipeStateUpdateFailed)
+	pipeStatusStartFailed  = string(types.PipeStateStartFailed)
+	pipeStatusStopFailed   = string(types.PipeStateStopFailed)
+)
+
+func statusPipe(ctx context.Context, conn *pipes.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindPipeByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.CurrentState), nil
+	}
+}
+
+
+func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{pipeStatusCreating},
+		Target:                    []string{pipeStatusRunning, pipeStatusStopped},
+		Refresh:                   statusPipe(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 1,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*pipes.DescribePipeOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitPipeUpdated(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{pipeStatusUpdating},
+		Target:                    []string{pipeStatusRunning, pipeStatusStopped},
+		Refresh:                   statusPipe(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 1,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*pipes.DescribePipeOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitPipeDeleted(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{pipeStatusDeleting},
+		Target:  []string{},
+		Refresh: statusPipe(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*pipes.DescribePipeOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+
+		return output, err
+	}
+
+	return nil, err
 }
