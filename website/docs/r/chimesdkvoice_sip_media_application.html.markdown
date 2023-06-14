@@ -29,7 +29,7 @@ resource "aws_chimesdkvoice_sip_media_application" "example" {
 The following arguments are required:
 
 * `aws_region` - (Required) The AWS Region in which the AWS Chime SDK Voice Sip Media Application is created.
-* `endpoints` - (Required)  List of endpoints (Lambda Amazon Resource Names) specified for the SIP media application. Currently, only one endpoint is supported. See [ `endpoints`](#endpoints).
+* `endpoints` - (Required)  List of endpoints (Lambda Amazon Resource Names) specified for the SIP media application. Currently, only one endpoint is supported. See [`endpoints`](#endpoints).
 * `name` - (Required) The name of the AWS Chime SDK Voice Sip Media Application.
 
 The following arguments are optional:
