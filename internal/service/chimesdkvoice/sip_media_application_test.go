@@ -17,7 +17,7 @@ import (
 	tfchimesdkvoice "github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
 )
 
-func TestAccChimeSdkVoiceSipMediaApplication_basic(t *testing.T) {
+func TestAccChimeSDKVoiceSipMediaApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var chimeSipMediaApplication *chimesdkvoice.SipMediaApplication
 
@@ -53,7 +53,7 @@ func TestAccChimeSdkVoiceSipMediaApplication_basic(t *testing.T) {
 	})
 }
 
-func TestAccChimeSdkVoiceSipMediaApplication_disappears(t *testing.T) {
+func TestAccChimeSDKVoiceSipMediaApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var chimeSipMediaApplication *chimesdkvoice.SipMediaApplication
 
@@ -81,7 +81,7 @@ func TestAccChimeSdkVoiceSipMediaApplication_disappears(t *testing.T) {
 	})
 }
 
-func TestAccChimeSdkVoiceSipMediaApplication_update(t *testing.T) {
+func TestAccChimeSDKVoiceSipMediaApplication_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var chimeSipMediaApplication *chimesdkvoice.SipMediaApplication
 
@@ -128,7 +128,7 @@ func TestAccChimeSdkVoiceSipMediaApplication_update(t *testing.T) {
 	})
 }
 
-func TestAccChimeSdkVoiceSipMediaApplication_tags(t *testing.T) {
+func TestAccChimeSDKVoiceSipMediaApplication_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var sipMediaApplication *chimesdkvoice.SipMediaApplication
 
