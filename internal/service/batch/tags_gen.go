@@ -10,29 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/batch/batchiface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-// GetTag fetches an individual batch service tag for a resource.
-// Returns whether the key value and any errors. A NotFoundError is used to signal that no value was found.
-// This function will optimise the handling over ListTags, if possible.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func GetTag(ctx context.Context, conn batchiface.BatchAPI, identifier, key string) (*string, error) {
-	listTags, err := ListTags(ctx, conn, identifier)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if !listTags.KeyExists(key) {
-		return nil, tfresource.NewEmptyResultError(nil)
-	}
-
-	return listTags.KeyValue(key), nil
-}
 
 // ListTags lists batch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
