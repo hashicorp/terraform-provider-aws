@@ -26,7 +26,7 @@ func createTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ta
 
 	_, err := tfresource.RetryWhen(ctx, eventualConsistencyTimeout,
 		func() (interface{}, error) {
-			return nil, UpdateTags(ctx, conn, identifier, nil, newTagsMap)
+			return nil, updateTags(ctx, conn, identifier, nil, newTagsMap)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrCodeContains(err, ".NotFound") {

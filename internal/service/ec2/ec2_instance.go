@@ -1452,7 +1452,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		o, n := d.GetChange("volume_tags")
 
 		for _, volumeId := range volumeIds {
-			if err := UpdateTags(ctx, conn, volumeId, o, n); err != nil {
+			if err := updateTags(ctx, conn, volumeId, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating volume_tags (%s): %s", volumeId, err)
 			}
 		}
@@ -1922,7 +1922,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("root_block_device.0.tags") {
 			o, n := d.GetChange("root_block_device.0.tags")
 
-			if err := UpdateTags(ctx, conn, volumeID, o, n); err != nil {
+			if err := updateTags(ctx, conn, volumeID, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating tags for volume (%s): %s", volumeID, err)
 			}
 		}

@@ -177,7 +177,7 @@ func (r *resourceSecurityGroupRule) Create(ctx context.Context, request resource
 	data.ID = types.StringValue(securityGroupRuleID)
 
 	conn := r.Meta().EC2Conn(ctx)
-	if err := UpdateTags(ctx, conn, data.ID.ValueString(), nil, KeyValueTags(ctx, GetTagsIn(ctx))); err != nil {
+	if err := updateTags(ctx, conn, data.ID.ValueString(), nil, KeyValueTags(ctx, GetTagsIn(ctx))); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("adding VPC Security Group Rule (%s) tags", data.ID.ValueString()), err.Error())
 
 		return
