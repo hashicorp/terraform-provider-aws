@@ -4,4 +4,6 @@ package ec2
 var (
 	ResourceSecurityGroupEgressRule  = newResourceSecurityGroupEgressRule
 	ResourceSecurityGroupIngressRule = newResourceSecurityGroupIngressRule
+
+	UpdateTags = updateTags
 )
