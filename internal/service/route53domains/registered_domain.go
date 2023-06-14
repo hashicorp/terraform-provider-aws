@@ -310,7 +310,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return diag.Errorf("listing tags for Route 53 Domains Domain (%s): %s", d.Id(), err)
@@ -321,7 +321,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 	oldTags := tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
-		if err := UpdateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
+		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
 			return diag.Errorf("updating Route 53 Domains Domain (%s) tags: %s", d.Id(), err)
 		}
 	}
