@@ -210,7 +210,7 @@ The following arguments are supported:
 
 ### Lineage Configuration
 
-* `crawler_lineage_settings` - (Optional) Specifies whether data lineage is enabled for the crawler. Valid values are: `ENABLE` and `DISABLE`. Default value is `Disable`.
+* `crawler_lineage_settings` - (Optional) Specifies whether data lineage is enabled for the crawler. Valid values are: `ENABLE` and `DISABLE`. Default value is `DISABLE`.
 
 ### Recrawl Policy
 
