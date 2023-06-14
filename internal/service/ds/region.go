@@ -172,7 +172,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.FromErr(err)
 	}
 
-	tags, err := ListTags(ctx, regionConn, directoryID)
+	tags, err := listTags(ctx, regionConn, directoryID)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Directory Service Directory (%s): %s", directoryID, err)
@@ -205,7 +205,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(ctx, conn, directoryID, o, n); err != nil {
+		if err := updateTags(ctx, conn, directoryID, o, n); err != nil {
 			return diag.Errorf("updating Directory Service Directory (%s) tags: %s", directoryID, err)
 		}
 	}
