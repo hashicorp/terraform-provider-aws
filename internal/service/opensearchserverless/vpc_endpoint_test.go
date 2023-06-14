@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -32,16 +32,16 @@ func TestAccOpenSearchServerlessVPCEndpoint_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckVPCEndpoint(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointDestroy,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointExists(resourceName, &vpcendpoint),
+					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 				),
@@ -68,16 +68,16 @@ func TestAccOpenSearchServerlessVPCEndpoint_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckVPCEndpoint(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointDestroy,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointExists(resourceName, &vpcendpoint1),
+					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint1),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 				),
@@ -85,7 +85,7 @@ func TestAccOpenSearchServerlessVPCEndpoint_update(t *testing.T) {
 			{
 				Config: testAccVPCEndpointConfig_multiple_subnets(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointExists(resourceName, &vpcendpoint2),
+					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint2),
 					testAccCheckVPCEndpointNotRecreated(&vpcendpoint1, &vpcendpoint2),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
@@ -94,7 +94,7 @@ func TestAccOpenSearchServerlessVPCEndpoint_update(t *testing.T) {
 			{
 				Config: testAccVPCEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointExists(resourceName, &vpcendpoint3),
+					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint3),
 					testAccCheckVPCEndpointNotRecreated(&vpcendpoint2, &vpcendpoint3),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
@@ -122,16 +122,16 @@ func TestAccOpenSearchServerlessVPCEndpoint_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckVPCEndpoint(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointDestroy,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointExists(resourceName, &vpcendpoint),
+					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceVPCEndpoint, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -140,33 +140,35 @@ func TestAccOpenSearchServerlessVPCEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCEndpointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
-	ctx := context.Background()
+func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+		ctx := context.Background()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opensearchserverless_vpc_endpointa" {
-			continue
-		}
-
-		_, err := conn.BatchGetVpcEndpoint(ctx, &opensearchserverless.BatchGetVpcEndpointInput{
-			Ids: []string{rs.Primary.ID},
-		})
-		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opensearchserverless_vpc_endpointa" {
+				continue
 			}
-			return err
+
+			_, err := conn.BatchGetVpcEndpoint(ctx, &opensearchserverless.BatchGetVpcEndpointInput{
+				Ids: []string{rs.Primary.ID},
+			})
+			if err != nil {
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					return nil
+				}
+				return err
+			}
+
+			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingDestroyed, tfopensearchserverless.ResNameVPCEndpoint, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		return create.Error(names.OpenSearchServerless, create.ErrActionCheckingDestroyed, tfopensearchserverless.ResNameVPCEndpoint, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckVPCEndpointExists(name string, vpcendpoint *opensearchserverless.BatchGetVpcEndpointOutput) resource.TestCheckFunc {
+func testAccCheckVPCEndpointExists(ctx context.Context, name string, vpcendpoint *opensearchserverless.BatchGetVpcEndpointOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -177,7 +179,7 @@ func testAccCheckVPCEndpointExists(name string, vpcendpoint *opensearchserverles
 			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameVPCEndpoint, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 		ctx := context.Background()
 		resp, err := conn.BatchGetVpcEndpoint(ctx, &opensearchserverless.BatchGetVpcEndpointInput{
 			Ids: []string{rs.Primary.ID},
@@ -193,8 +195,8 @@ func testAccCheckVPCEndpointExists(name string, vpcendpoint *opensearchserverles
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
+func testAccPreCheckVPCEndpoint(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 
 	input := &opensearchserverless.ListVpcEndpointsInput{}
 	_, err := conn.ListVpcEndpoints(ctx, input)

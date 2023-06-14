@@ -85,12 +85,12 @@ func FindSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserver
 	return out.SecurityPolicyDetail, nil
 }
 
-func findVPCEndpointByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.VpcEndpointDetail, error) {
+func FindVPCEndpointByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.VpcEndpointDetail, error) {
 	in := &opensearchserverless.BatchGetVpcEndpointInput{
 		Ids: []string{id},
 	}
 	out, err := conn.BatchGetVpcEndpoint(ctx, in)
-	
+
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
