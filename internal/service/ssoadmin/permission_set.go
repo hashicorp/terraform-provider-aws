@@ -163,7 +163,7 @@ func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("relay_state", permissionSet.RelayState)
 	d.Set("session_duration", permissionSet.SessionDuration)
 
-	tags, err := ListTags(ctx, conn, arn, instanceARN)
+	tags, err := listTags(ctx, conn, arn, instanceARN)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for SSO Permission Set (%s): %s", arn, err)
@@ -215,7 +215,7 @@ func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, arn, instanceARN, o, n); err != nil {
+		if err := updateTags(ctx, conn, arn, instanceARN, o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
