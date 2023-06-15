@@ -81,7 +81,7 @@ func resourceVPCIngressConnectionCreate(ctx context.Context, d *schema.ResourceD
 	name := d.Get("name").(string)
 	input := &apprunner.CreateVpcIngressConnectionInput{
 		ServiceArn:               aws.String(d.Get("service_arn").(string)),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 		VpcIngressConnectionName: aws.String(name),
 	}
 
