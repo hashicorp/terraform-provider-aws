@@ -183,7 +183,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		Command: expandJobCommand(d.Get("command").([]interface{})),
 		Name:    aws.String(name),
 		Role:    aws.String(d.Get("role_arn").(string)),
-		Tags:    GetTagsIn(ctx),
+		Tags:    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("connections"); ok {
