@@ -272,7 +272,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	input := &elb.CreateLoadBalancerInput{
 		LoadBalancerName: aws.String(elbName),
 		Listeners:        listeners,
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if _, ok := d.GetOk("internal"); ok {
