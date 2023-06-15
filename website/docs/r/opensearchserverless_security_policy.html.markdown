@@ -19,16 +19,39 @@ resource "aws_opensearchserverless_security_policy" "example" {
   name = "example"
   type = "encryption"
   policy = jsonencode({
-    "Rules" = [
+    Rules = [
       {
-        "Resource" = [
+        Resource = [
           "collection/example"
         ],
-        "ResourceType" = "collection"
+        ResourceType = "collection"
       }
     ],
-    "AWSOwnedKey" = true
+    AWSOwnedKey = true
   })
+}
+```
+
+### Network
+
+```terraform
+resource "aws_opensearchserverless_security_policy" "example" {
+  name = "example"
+  type = "network"
+  policy = jsonencode([
+    {
+      Description = "Public access fo example collection",
+      Rules = [
+        {
+          ResourceType = "collection",
+          Resource = [
+            "collection/example*"
+          ]
+        }
+      ],
+      AllowFromPublic = true
+    }
+  ])
 }
 ```
 
