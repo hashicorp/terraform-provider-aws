@@ -590,7 +590,7 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
+	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
 		layer, err := FindLayerByID(ctx, conn, d.Id())
 
 		if err != nil {

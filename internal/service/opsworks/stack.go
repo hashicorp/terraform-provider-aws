@@ -299,7 +299,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Resource:  fmt.Sprintf("stack/%s/", d.Id()),
 	}.String()
 
-	if err := createTags(ctx, conn, arn, GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, arn, getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting OpsWorks Stack (%s) tags: %s", arn, err)
 	}
 
@@ -417,7 +417,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "listing tags for OpsWorks Stack (%s): %s", arn, err)
 	}
 
-	SetTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
