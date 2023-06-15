@@ -212,31 +212,31 @@ When creating a resource, some AWS APIs support passing tags in the Create call
 while others require setting the tags after the initial creation.
 
 If the API supports tagging on creation (e.g., the `Input` struct accepts a `Tags` field),
-use the `GetTagsIn` function to get any configured tags, e.g., with EKS Clusters:
+use the `getTagsIn` function to get any configured tags, e.g., with EKS Clusters:
 
 ```go
 input := &eks.CreateClusterInput{
   /* ... other configuration ... */
-  Tags: GetTagsIn(ctx),
+  Tags: getTagsIn(ctx),
 }
 ```
 
 Otherwise, if the API does not support tagging on creation, call `createTags` after the resource has been created, e.g., with Device Farm device pools:
 
 ```go
-if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
   return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Device Pool (%s) tags: %s", d.Id(), err)
 }
 ```
 
 #### Resource Read Operation
 
-In the resource `Read` operation, use the `SetTagsOut` function to signal to the transparent tagging mechanism that the resource has tags that should be saved into Terraform state, e.g., with EKS Clusters:
+In the resource `Read` operation, use the `setTagsOut` function to signal to the transparent tagging mechanism that the resource has tags that should be saved into Terraform state, e.g., with EKS Clusters:
 
 ```go
 /* ... other d.Set(...) logic ... */
 
-SetTagsOut(ctx, cluster.Tags)
+setTagsOut(ctx, cluster.Tags)
 ```
 
 If the service API does not return the tags directly from reading the resource and requires use of the generated `listTags` function, do nothing and the transparent tagging mechanism will make the `listTags` call and save any tags into Terraform state.
