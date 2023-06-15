@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -16,12 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfopensearchserverless "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpenSearchServerlessSecurityConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var securityconfig opensearchserverless.GetSecurityConfigOutput
+	var securityconfig types.SecurityConfigDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_security_config.test"
 
@@ -41,6 +41,7 @@ func TestAccOpenSearchServerlessSecurityConfig_basic(t *testing.T) {
 					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
 					resource.TestCheckResourceAttr(resourceName, "type", "saml"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "saml_options.session_timeout"),
 				),
 			},
 			{
@@ -52,9 +53,49 @@ func TestAccOpenSearchServerlessSecurityConfig_basic(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchServerlessSecurityConfig_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var securityconfig types.SecurityConfigDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_security_config.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheckSecurityConfig(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityConfigDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityConfig_update(rName, "test-fixtures/idp-metadata.xml", "description", 60),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
+					resource.TestCheckResourceAttr(resourceName, "type", "saml"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.session_timeout", "60"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description"),
+				),
+			},
+			{
+				Config: testAccSecurityConfig_update(rName, "test-fixtures/idp-metadata.xml", "description updated", 40),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
+					resource.TestCheckResourceAttr(resourceName, "type", "saml"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.session_timeout", "40"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description updated"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchServerlessSecurityConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var securityconfig opensearchserverless.GetSecurityConfigOutput
+	var securityconfig types.SecurityConfigDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_security_config.test"
 
@@ -89,14 +130,13 @@ func testAccCheckSecurityConfigDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := conn.GetSecurityConfig(ctx, &opensearchserverless.GetSecurityConfigInput{
-				Id: aws.String(rs.Primary.ID),
-			})
+			_, err := tfopensearchserverless.FindSecurityConfigByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
@@ -107,7 +147,7 @@ func testAccCheckSecurityConfigDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckSecurityConfigExists(ctx context.Context, name string, securityconfig *opensearchserverless.GetSecurityConfigOutput) resource.TestCheckFunc {
+func testAccCheckSecurityConfigExists(ctx context.Context, name string, securityconfig *types.SecurityConfigDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -119,9 +159,7 @@ func testAccCheckSecurityConfigExists(ctx context.Context, name string, security
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
-		resp, err := conn.GetSecurityConfig(ctx, &opensearchserverless.GetSecurityConfigInput{
-			Id: aws.String(rs.Primary.ID),
-		})
+		resp, err := tfopensearchserverless.FindSecurityConfigByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameSecurityConfig, rs.Primary.ID, err)
@@ -160,4 +198,19 @@ resource "aws_opensearchserverless_security_config" "test" {
   }
 }
 `, rName, samlOptions)
+}
+
+func testAccSecurityConfig_update(rName, samlOptions, description string, sessionTimeout int) string {
+	return fmt.Sprintf(`
+resource "aws_opensearchserverless_security_config" "test" {
+  name        = %[1]q
+  description = %[3]q
+  type        = "saml"
+
+  saml_options {
+    metadata        = file("%[2]s")
+    session_timeout = %[4]d
+  }
+}
+`, rName, samlOptions, description, sessionTimeout)
 }

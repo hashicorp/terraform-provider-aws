@@ -305,9 +305,9 @@ func (so *samlOptions) expand(ctx context.Context) *awstypes.SamlConfigOptions {
 	return result
 }
 
-func expandSAMLOptions(ctx context.Context, list types.Object, diags *diag.Diagnostics) *awstypes.SamlConfigOptions {
+func expandSAMLOptions(ctx context.Context, object types.Object, diags *diag.Diagnostics) *awstypes.SamlConfigOptions {
 	var options samlOptions
-	diags.Append(list.As(ctx, &options, basetypes.ObjectAsOptions{})...)
+	diags.Append(object.As(ctx, &options, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
 		return nil
 	}
