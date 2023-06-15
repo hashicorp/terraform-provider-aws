@@ -57,7 +57,7 @@ func ResourceNamedQuery() *schema.Resource {
 
 func resourceNamedQueryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	input := &athena.CreateNamedQueryInput{
 		Database:    aws.String(d.Get("database").(string)),
@@ -81,7 +81,7 @@ func resourceNamedQueryCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceNamedQueryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	input := &athena.GetNamedQueryInput{
 		NamedQueryId: aws.String(d.Id()),
@@ -107,7 +107,7 @@ func resourceNamedQueryRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceNamedQueryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	input := &athena.DeleteNamedQueryInput{
 		NamedQueryId: aws.String(d.Id()),

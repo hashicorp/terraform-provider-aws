@@ -41,7 +41,7 @@ func DataSourceVault() *schema.Resource {
 
 func dataSourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -51,7 +51,7 @@ func dataSourceVaultRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	resp, err := conn.DescribeBackupVaultWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error getting Backup Vault: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Backup Vault: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.BackupVaultName))

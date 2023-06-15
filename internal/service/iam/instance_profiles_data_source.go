@@ -41,7 +41,7 @@ func DataSourceInstanceProfiles() *schema.Resource {
 }
 
 func dataSourceInstanceProfilesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	roleName := d.Get("role_name").(string)
 	input := &iam.ListInstanceProfilesForRoleInput{

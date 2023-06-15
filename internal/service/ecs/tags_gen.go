@@ -9,11 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/ecs/ecsiface"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // GetTag fetches an individual ecs service tag for a resource.
@@ -46,7 +47,7 @@ func ListTags(ctx context.Context, conn ecsiface.ECSAPI, identifier string) (tft
 	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, "InvalidParameterException", "The specified cluster is inactive. Specify an active cluster and try again.") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -59,8 +60,10 @@ func ListTags(ctx context.Context, conn ecsiface.ECSAPI, identifier string) (tft
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists ecs service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ECSConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ECSConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -106,7 +109,7 @@ func KeyValueTags(ctx context.Context, tags []*ecs.Tag) tftags.KeyValueTags {
 // nil is returned if there are no input tags.
 func GetTagsIn(ctx context.Context) []*ecs.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -121,18 +124,28 @@ func SetTagsOut(ctx context.Context, tags []*ecs.Tag) {
 	}
 }
 
+// createTags creates ecs service tags for new resources.
+func createTags(ctx context.Context, conn ecsiface.ECSAPI, identifier string, tags []*ecs.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return UpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // UpdateTags updates ecs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn ecsiface.ECSAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.ECS)
+	if len(removedTags) > 0 {
 		input := &ecs.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -142,10 +155,12 @@ func UpdateTags(ctx context.Context, conn ecsiface.ECSAPI, identifier string, ol
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.ECS)
+	if len(updatedTags) > 0 {
 		input := &ecs.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
@@ -158,6 +173,8 @@ func UpdateTags(ctx context.Context, conn ecsiface.ECSAPI, identifier string, ol
 	return nil
 }
 
+// UpdateTags updates ecs service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).ECSConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).ECSConn(ctx), identifier, oldTags, newTags)
 }

@@ -46,13 +46,13 @@ func ResourceTag() *schema.Resource {
 }
 
 func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	identifier := d.Get("resource_id").(string)
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
 
-	if err := CreateTags(ctx, conn, identifier, map[string]string{key: value}); err != nil {
+	if err := createTags(ctx, conn, identifier, Tags(tftags.New(ctx, map[string]string{key: value}))); err != nil {
 		return diag.Errorf("creating %s resource (%s) tag (%s): %s", ec2.ServiceID, identifier, key, err)
 	}
 
@@ -62,7 +62,7 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
@@ -89,7 +89,7 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface
 }
 
 func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
@@ -104,7 +104,7 @@ func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {

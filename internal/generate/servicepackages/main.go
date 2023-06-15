@@ -133,7 +133,9 @@ func main() {
 type ResourceDatum struct {
 	FactoryName             string
 	Name                    string // Friendly name (without service name), e.g. "Topic", not "SNS Topic"
+	TransparentTagging      bool
 	TagsIdentifierAttribute string
+	TagsResourceType        string
 }
 
 type ServiceDatum struct {
@@ -222,15 +224,18 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 && m[1] == "Tags" {
 			args := common.ParseArgs(m[3])
 
+			d.TransparentTagging = true
+
 			if attr, ok := args.Keyword["identifierAttribute"]; ok {
 				if d.TagsIdentifierAttribute != "" {
 					v.err = multierror.Append(v.err, fmt.Errorf("multiple Tags annotations: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
 				d.TagsIdentifierAttribute = attr
-			} else {
-				v.err = multierror.Append(v.err, fmt.Errorf("no Tags(identifierAttribute): %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				continue
+			}
+
+			if attr, ok := args.Keyword["resourceType"]; ok {
+				d.TagsResourceType = attr
 			}
 		}
 	}

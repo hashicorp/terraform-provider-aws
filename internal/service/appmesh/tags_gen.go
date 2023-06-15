@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists appmesh service tags.
@@ -30,8 +31,10 @@ func ListTags(ctx context.Context, conn appmeshiface.AppMeshAPI, identifier stri
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists appmesh service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).AppMeshConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).AppMeshConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -77,7 +80,7 @@ func KeyValueTags(ctx context.Context, tags []*appmesh.TagRef) tftags.KeyValueTa
 // nil is returned if there are no input tags.
 func GetTagsIn(ctx context.Context) []*appmesh.TagRef {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -95,15 +98,16 @@ func SetTagsOut(ctx context.Context, tags []*appmesh.TagRef) {
 // UpdateTags updates appmesh service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn appmeshiface.AppMeshAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.AppMesh)
+	if len(removedTags) > 0 {
 		input := &appmesh.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -113,10 +117,12 @@ func UpdateTags(ctx context.Context, conn appmeshiface.AppMeshAPI, identifier st
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.AppMesh)
+	if len(updatedTags) > 0 {
 		input := &appmesh.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
@@ -129,6 +135,8 @@ func UpdateTags(ctx context.Context, conn appmeshiface.AppMeshAPI, identifier st
 	return nil
 }
 
+// UpdateTags updates appmesh service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).AppMeshConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).AppMeshConn(ctx), identifier, oldTags, newTags)
 }

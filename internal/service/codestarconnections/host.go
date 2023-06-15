@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -96,7 +96,7 @@ func ResourceHost() *schema.Resource {
 
 func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &codestarconnections.CreateHostInput{
@@ -124,7 +124,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 	output, err := FindHostByARN(ctx, conn, d.Id())
 
@@ -150,7 +150,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 	if d.HasChanges("provider_endpoint", "vpc_configuration") {
 		input := &codestarconnections.UpdateHostInput{
@@ -175,7 +175,7 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CodeStar Connections Host: %s", d.Id())
 	_, err := conn.DeleteHostWithContext(ctx, &codestarconnections.DeleteHostInput{
@@ -231,7 +231,7 @@ func flattenHostVPCConfiguration(vpcConfig *codestarconnections.VpcConfiguration
 	return []interface{}{m}
 }
 
-func statusHost(ctx context.Context, conn *codestarconnections.CodeStarConnections, arn string) resource.StateRefreshFunc {
+func statusHost(ctx context.Context, conn *codestarconnections.CodeStarConnections, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindHostByARN(ctx, conn, arn)
 
@@ -256,7 +256,7 @@ const (
 )
 
 func waitHostPendingOrAvailable(ctx context.Context, conn *codestarconnections.CodeStarConnections, arn string, timeout time.Duration) (*codestarconnections.Host, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{hostStatusVPCConfigInitializing},
 		Target:  []string{hostStatusAvailable, hostStatusPending},
 		Refresh: statusHost(ctx, conn, arn),

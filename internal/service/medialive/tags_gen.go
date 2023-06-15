@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists medialive service tags.
@@ -29,8 +30,10 @@ func ListTags(ctx context.Context, conn *medialive.Client, identifier string) (t
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists medialive service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).MediaLiveClient(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).MediaLiveClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -59,7 +62,7 @@ func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTa
 // nil is returned if there are no input tags.
 func GetTagsIn(ctx context.Context) map[string]string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -81,10 +84,12 @@ func UpdateTags(ctx context.Context, conn *medialive.Client, identifier string, 
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.MediaLive)
+	if len(removedTags) > 0 {
 		input := &medialive.DeleteTagsInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     removedTags.IgnoreAWS().Keys(),
+			TagKeys:     removedTags.Keys(),
 		}
 
 		_, err := conn.DeleteTags(ctx, input)
@@ -94,10 +99,12 @@ func UpdateTags(ctx context.Context, conn *medialive.Client, identifier string, 
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.MediaLive)
+	if len(updatedTags) > 0 {
 		input := &medialive.CreateTagsInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.CreateTags(ctx, input)
@@ -110,6 +117,8 @@ func UpdateTags(ctx context.Context, conn *medialive.Client, identifier string, 
 	return nil
 }
 
+// UpdateTags updates medialive service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).MediaLiveClient(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).MediaLiveClient(ctx), identifier, oldTags, newTags)
 }

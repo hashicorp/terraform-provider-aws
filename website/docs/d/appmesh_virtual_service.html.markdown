@@ -3,7 +3,7 @@ subcategory: "App Mesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_virtual_service"
 description: |-
-    Provides an AWS App Mesh virtual service resource.
+    Terraform data source for managing an AWS App Mesh Virtual Service.
 ---
 
 # Data Source: aws_appmesh_virtual_service

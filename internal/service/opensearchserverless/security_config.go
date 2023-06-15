@@ -38,7 +38,6 @@ func newResourceSecurityConfig(_ context.Context) (resource.ResourceWithConfigur
 
 const (
 	ResNameSecurityConfig = "Security Config"
-	idSeparator           = "/"
 )
 
 type resourceSecurityConfig struct {
@@ -127,7 +126,7 @@ func (r *resourceSecurityConfig) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	conn := r.Meta().OpenSearchServerlessClient()
+	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	in := &opensearchserverless.CreateSecurityConfigInput{
 		ClientToken: aws.String(sdkid.UniqueId()),
@@ -163,7 +162,7 @@ func (r *resourceSecurityConfig) Create(ctx context.Context, req resource.Create
 }
 
 func (r *resourceSecurityConfig) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().OpenSearchServerlessClient()
+	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	var state resourceSecurityConfigData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -183,7 +182,7 @@ func (r *resourceSecurityConfig) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *resourceSecurityConfig) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().OpenSearchServerlessClient()
+	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	var plan, state resourceSecurityConfigData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -226,7 +225,7 @@ func (r *resourceSecurityConfig) Update(ctx context.Context, req resource.Update
 }
 
 func (r *resourceSecurityConfig) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().OpenSearchServerlessClient()
+	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	var state resourceSecurityConfigData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

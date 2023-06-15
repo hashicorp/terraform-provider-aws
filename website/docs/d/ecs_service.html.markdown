@@ -35,5 +35,5 @@ In addition to all arguments above, the following attributes are exported:
 * `desired_count` - Number of tasks for the ECS Service
 * `launch_type` - Launch type for the ECS Service
 * `scheduling_strategy` - Scheduling strategy for the ECS Service
-* `task_definition` - Family for the latest ACTIVE revision
+* `task_definition` - Family for the latest ACTIVE revision or full ARN of the task definition.
 * `tags` - Resource tags.

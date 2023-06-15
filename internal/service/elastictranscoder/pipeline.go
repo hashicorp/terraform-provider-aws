@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -232,7 +232,7 @@ func ResourcePipeline() *schema.Resource {
 
 func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 	req := &elastictranscoder.CreatePipelineInput{
 		AwsKmsKeyArn:    aws.String(d.Get("aws_kms_key_arn").(string)),
@@ -250,7 +250,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	if name, ok := d.GetOk("name"); ok {
 		req.Name = aws.String(name.(string))
 	} else {
-		name := resource.PrefixedUniqueId("tf-et-")
+		name := id.PrefixedUniqueId("tf-et-")
 		d.Set("name", name)
 		req.Name = aws.String(name)
 	}
@@ -409,7 +409,7 @@ func flattenETPermList(perms []*elastictranscoder.Permission) []map[string]inter
 
 func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 	req := &elastictranscoder.UpdatePipelineInput{
 		Id: aws.String(d.Id()),
@@ -459,7 +459,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 	resp, err := conn.ReadPipelineWithContext(ctx, &elastictranscoder.ReadPipelineInput{
 		Id: aws.String(d.Id()),
@@ -525,7 +525,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 	log.Printf("[DEBUG] Elastic Transcoder Delete Pipeline: %s", d.Id())
 	_, err := conn.DeletePipelineWithContext(ctx, &elastictranscoder.DeletePipelineInput{

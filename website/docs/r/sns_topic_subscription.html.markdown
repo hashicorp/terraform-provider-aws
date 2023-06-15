@@ -205,20 +205,20 @@ provider "aws" {
 }
 
 resource "aws_sns_topic" "sns-topic" {
-  provider     = "aws.sns"
+  provider     = aws.sns
   name         = var.sns["name"]
   display_name = var.sns["display_name"]
   policy       = data.aws_iam_policy_document.sns-topic-policy.json
 }
 
 resource "aws_sqs_queue" "sqs-queue" {
-  provider = "aws.sqs"
+  provider = aws.sqs
   name     = var.sqs["name"]
   policy   = data.aws_iam_policy_document.sqs-queue-policy.json
 }
 
 resource "aws_sns_topic_subscription" "sns-topic" {
-  provider  = "aws.sns2sqs"
+  provider  = aws.sns2sqs
   topic_arn = aws_sns_topic.sns-topic.arn
   protocol  = "sqs"
   endpoint  = aws_sqs_queue.sqs-queue.arn

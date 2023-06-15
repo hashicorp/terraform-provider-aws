@@ -10,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfworklink "github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
@@ -287,7 +288,7 @@ func testAccCheckFleetDisappears(ctx context.Context, resourceName string) resou
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn(ctx)
 
 		input := &worklink.DeleteFleetInput{
 			FleetArn: aws.String(rs.Primary.ID),
@@ -297,7 +298,7 @@ func testAccCheckFleetDisappears(ctx context.Context, resourceName string) resou
 			return err
 		}
 
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    []string{"DELETING"},
 			Target:     []string{"DELETED"},
 			Refresh:    tfworklink.FleetStateRefresh(ctx, conn, rs.Primary.ID),
@@ -314,7 +315,7 @@ func testAccCheckFleetDisappears(ctx context.Context, resourceName string) resou
 
 func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_worklink_fleet" {
@@ -351,7 +352,7 @@ func testAccCheckFleetExists(ctx context.Context, n string) resource.TestCheckFu
 			return fmt.Errorf("No Worklink Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn(ctx)
 		_, err := conn.DescribeFleetMetadataWithContext(ctx, &worklink.DescribeFleetMetadataInput{
 			FleetArn: aws.String(rs.Primary.ID),
 		})
@@ -361,7 +362,7 @@ func testAccCheckFleetExists(ctx context.Context, n string) resource.TestCheckFu
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn(ctx)
 
 	input := &worklink.ListFleetsInput{
 		MaxResults: aws.Int64(1),

@@ -57,6 +57,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceBucket,
 			TypeName: "aws_s3_bucket",
+			Name:     "Bucket",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceBucketAccelerateConfiguration,
@@ -101,6 +103,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceBucketObject,
 			TypeName: "aws_s3_bucket_object",
+			Name:     "Object",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceBucketObjectLockConfiguration,
@@ -141,10 +145,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceObject,
 			TypeName: "aws_s3_object",
+			Name:     "Object",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceObjectCopy,
 			TypeName: "aws_s3_object_copy",
+			Name:     "Object",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }

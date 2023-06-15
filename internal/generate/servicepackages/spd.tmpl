@@ -21,9 +21,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			{{- if ne .Name "" }}
 			Name:    "{{ .Name }}",
 			{{- end }}
-			{{- if ne .TagsIdentifierAttribute "" }}
+			{{- if .TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
+				{{- if ne .TagsIdentifierAttribute "" }}
 				IdentifierAttribute: "{{ .TagsIdentifierAttribute }}",
+				{{- end }}
+				{{- if ne .TagsResourceType "" }}
+				ResourceType: "{{ .TagsResourceType }}",
+				{{- end }}
 			},
 			{{- end }}
 		},
@@ -39,9 +44,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			{{- if ne .Name "" }}
 			Name:    "{{ .Name }}",
 			{{- end }}
-			{{- if ne .TagsIdentifierAttribute "" }}
+			{{- if .TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
+				{{- if ne .TagsIdentifierAttribute "" }}
 				IdentifierAttribute: "{{ .TagsIdentifierAttribute }}",
+				{{- end }}
+				{{- if ne .TagsResourceType "" }}
+				ResourceType: "{{ .TagsResourceType }}",
+				{{- end }}
 			},
 			{{- end }}
 		},
@@ -58,9 +68,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			{{- if ne $value.Name "" }}
 			Name:     "{{ $value.Name }}",
 			{{- end }}
-			{{- if ne $value.TagsIdentifierAttribute "" }}
+			{{- if $value.TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
+				{{- if ne $value.TagsIdentifierAttribute "" }}
 				IdentifierAttribute: "{{ $value.TagsIdentifierAttribute }}",
+				{{- end }}
+				{{- if ne .TagsResourceType "" }}
+				ResourceType: "{{ .TagsResourceType }}",
+				{{- end }}
 			},
 			{{- end }}
 		},
@@ -77,9 +92,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			{{- if ne $value.Name "" }}
 			Name:     "{{ $value.Name }}",
 			{{- end }}
-			{{- if ne $value.TagsIdentifierAttribute "" }}
+			{{- if $value.TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
+				{{- if ne $value.TagsIdentifierAttribute "" }}
 				IdentifierAttribute: "{{ $value.TagsIdentifierAttribute }}",
+				{{- end }}
+				{{- if ne .TagsResourceType "" }}
+				ResourceType: "{{ .TagsResourceType }}",
+				{{- end }}
 			},
 			{{- end }}
 		},

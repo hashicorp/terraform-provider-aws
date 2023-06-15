@@ -41,18 +41,34 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceComputeEnvironment,
 			TypeName: "aws_batch_compute_environment",
+			Name:     "Compute Environment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceJobDefinition,
 			TypeName: "aws_batch_job_definition",
+			Name:     "Job Definition",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceJobQueue,
 			TypeName: "aws_batch_job_queue",
+			Name:     "Job Queue",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceSchedulingPolicy,
 			TypeName: "aws_batch_scheduling_policy",
+			Name:     "Job Definition",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

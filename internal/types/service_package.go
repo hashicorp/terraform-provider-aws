@@ -11,6 +11,7 @@ import (
 // ServicePackageResourceTags represents resource-level tagging information.
 type ServicePackageResourceTags struct {
 	IdentifierAttribute string // The attribute for the identifier for UpdateTags etc.
+	ResourceType        string // Extra resourceType parameter value for UpdateTags etc.
 }
 
 // ServicePackageFrameworkDataSource represents a Terraform Plugin Framework data source

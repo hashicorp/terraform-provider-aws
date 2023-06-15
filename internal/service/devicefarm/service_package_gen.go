@@ -28,22 +28,42 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDevicePool,
 			TypeName: "aws_devicefarm_device_pool",
+			Name:     "Device Pool",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceInstanceProfile,
 			TypeName: "aws_devicefarm_instance_profile",
+			Name:     "Instance Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceNetworkProfile,
 			TypeName: "aws_devicefarm_network_profile",
+			Name:     "Network Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceProject,
 			TypeName: "aws_devicefarm_project",
+			Name:     "Project",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceTestGridProject,
 			TypeName: "aws_devicefarm_test_grid_project",
+			Name:     "Test Grid Project",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUpload,

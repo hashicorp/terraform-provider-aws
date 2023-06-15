@@ -7,12 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func waitClusterActive(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{cloudhsmv2.ClusterStateCreateInProgress, cloudhsmv2.ClusterStateInitializeInProgress},
 		Target:     []string{cloudhsmv2.ClusterStateActive},
 		Refresh:    statusCluster(ctx, conn, id),
@@ -33,7 +33,7 @@ func waitClusterActive(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id stri
 }
 
 func waitClusterDeleted(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{cloudhsmv2.ClusterStateDeleteInProgress},
 		Target:     []string{},
 		Refresh:    statusCluster(ctx, conn, id),
@@ -54,7 +54,7 @@ func waitClusterDeleted(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id str
 }
 
 func waitClusterUninitialized(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{cloudhsmv2.ClusterStateCreateInProgress, cloudhsmv2.ClusterStateInitializeInProgress},
 		Target:     []string{cloudhsmv2.ClusterStateUninitialized},
 		Refresh:    statusCluster(ctx, conn, id),
@@ -75,7 +75,7 @@ func waitClusterUninitialized(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, 
 }
 
 func waitHSMCreated(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Hsm, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{cloudhsmv2.HsmStateCreateInProgress},
 		Target:     []string{cloudhsmv2.HsmStateActive},
 		Refresh:    statusHSM(ctx, conn, id),
@@ -96,7 +96,7 @@ func waitHSMCreated(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string,
 }
 
 func waitHSMDeleted(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Hsm, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{cloudhsmv2.HsmStateDeleteInProgress},
 		Target:     []string{},
 		Refresh:    statusHSM(ctx, conn, id),

@@ -4,7 +4,6 @@ package autoscaling
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
@@ -14,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // GetTag fetches an individual autoscaling service tag for a resource.
@@ -72,8 +72,10 @@ func ListTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identif
 	return KeyValueTags(ctx, output.Tags, identifier, resourceType), nil
 }
 
+// ListTags lists autoscaling service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).AutoScalingConn(), identifier, resourceType)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).AutoScalingConn(ctx), identifier, resourceType)
 
 	if err != nil {
 		return err
@@ -104,27 +106,6 @@ func ListOfMap(tags tftags.KeyValueTags) []any {
 			"value": aws.StringValue(tags.KeyValue(key)),
 
 			"propagate_at_launch": aws.BoolValue(tags.KeyAdditionalBoolValue(key, "PropagateAtLaunch")),
-		}
-
-		result = append(result, m)
-	}
-
-	return result
-}
-
-// ListOfStringMap returns a list of autoscaling tags in flattened map of only string values.
-//
-// Compatible with setting Terraform state for legacy []map[string]string schema.
-// Deprecated: Will be removed in a future major version without replacement.
-func ListOfStringMap(tags tftags.KeyValueTags) []any {
-	var result []any
-
-	for _, key := range tags.Keys() {
-		m := map[string]string{
-			"key":   key,
-			"value": aws.StringValue(tags.KeyValue(key)),
-
-			"propagate_at_launch": strconv.FormatBool(aws.BoolValue(tags.KeyAdditionalBoolValue(key, "PropagateAtLaunch"))),
 		}
 
 		result = append(result, m)
@@ -225,12 +206,6 @@ func KeyValueTags(ctx context.Context, tags any, identifier, resourceType string
 				tagData.AdditionalBoolFields["PropagateAtLaunch"] = &v
 			}
 
-			// Deprecated: Legacy map handling
-			if v, ok := tfMap["propagate_at_launch"].(string); ok {
-				b, _ := strconv.ParseBool(v)
-				tagData.AdditionalBoolFields["PropagateAtLaunch"] = &b
-			}
-
 			tagData.AdditionalStringFields = make(map[string]*string)
 			tagData.AdditionalStringFields["ResourceId"] = &identifier
 			tagData.AdditionalStringFields["ResourceType"] = &resourceType
@@ -248,7 +223,7 @@ func KeyValueTags(ctx context.Context, tags any, identifier, resourceType string
 // nil is returned if there are no input tags.
 func GetTagsIn(ctx context.Context) []*autoscaling.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -270,9 +245,11 @@ func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, ident
 	oldTags := KeyValueTags(ctx, oldTagsSet, identifier, resourceType)
 	newTags := KeyValueTags(ctx, newTagsSet, identifier, resourceType)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.AutoScaling)
+	if len(removedTags) > 0 {
 		input := &autoscaling.DeleteTagsInput{
-			Tags: Tags(removedTags.IgnoreAWS()),
+			Tags: Tags(removedTags),
 		}
 
 		_, err := conn.DeleteTagsWithContext(ctx, input)
@@ -282,9 +259,11 @@ func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, ident
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.AutoScaling)
+	if len(updatedTags) > 0 {
 		input := &autoscaling.CreateOrUpdateTagsInput{
-			Tags: Tags(updatedTags.IgnoreAWS()),
+			Tags: Tags(updatedTags),
 		}
 
 		_, err := conn.CreateOrUpdateTagsWithContext(ctx, input)
@@ -297,6 +276,8 @@ func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, ident
 	return nil
 }
 
-func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, resourceType string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).AutoScalingConn(), identifier, resourceType, oldTags, newTags)
+// UpdateTags updates autoscaling service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).AutoScalingConn(ctx), identifier, resourceType, oldTags, newTags)
 }

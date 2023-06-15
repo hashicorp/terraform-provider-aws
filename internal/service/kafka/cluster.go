@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_msk_cluster")
+// @SDKResource("aws_msk_cluster", name="Cluster")
+// @Tags(identifierAttribute="id")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -41,12 +43,6 @@ func ResourceCluster() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta interface{}) bool {
 				return verify.SemVerLessThan(new.(string), old.(string))
-			}),
-			customdiff.ComputedIf("broker_node_group_info.0.storage_info", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("broker_node_group_info.0.ebs_volume_size")
-			}),
-			customdiff.ComputedIf("broker_node_group_info.0.ebs_volume_size", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("broker_node_group_info.0.storage_info")
 			}),
 			verify.SetTagsDiff,
 		),
@@ -132,14 +128,6 @@ func ResourceCluster() *schema.Resource {
 								},
 							},
 						},
-						"ebs_volume_size": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Computed:      true,
-							Deprecated:    "use 'storage_info' argument instead",
-							ValidateFunc:  validation.IntBetween(1, 16384),
-							ConflictsWith: []string{"broker_node_group_info.0.storage_info"},
-						},
 						"instance_type": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -153,11 +141,10 @@ func ResourceCluster() *schema.Resource {
 							},
 						},
 						"storage_info": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							Computed:      true,
-							MaxItems:      1,
-							ConflictsWith: []string{"broker_node_group_info.0.ebs_volume_size"},
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ebs_storage_info": {
@@ -466,8 +453,8 @@ func ResourceCluster() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(kafka.StorageMode_Values(), true),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"zookeeper_connect_string": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -481,16 +468,14 @@ func ResourceCluster() *schema.Resource {
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	name := d.Get("cluster_name").(string)
 	input := &kafka.CreateClusterInput{
 		ClusterName:         aws.String(name),
 		KafkaVersion:        aws.String(d.Get("kafka_version").(string)),
 		NumberOfBrokerNodes: aws.Int64(int64(d.Get("number_of_broker_nodes").(int))),
-		Tags:                Tags(tags.IgnoreAWS()),
+		Tags:                GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("broker_node_group_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -543,9 +528,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	cluster, err := FindClusterByARN(ctx, conn, d.Id())
 
@@ -638,22 +621,13 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("zookeeper_connect_string", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
 	d.Set("zookeeper_connect_string_tls", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectStringTls)))
 
-	tags := KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, cluster.Tags)
 
 	return nil
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	if d.HasChange("broker_node_group_info.0.instance_type") {
 		input := &kafka.UpdateBrokerTypeInput{
@@ -682,52 +656,32 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChanges("broker_node_group_info.0.ebs_volume_size", "broker_node_group_info.0.storage_info") {
+	if d.HasChanges("broker_node_group_info.0.storage_info") {
 		input := &kafka.UpdateBrokerStorageInput{
 			ClusterArn:     aws.String(d.Id()),
 			CurrentVersion: aws.String(d.Get("current_version").(string)),
-		}
-		if d.HasChange("broker_node_group_info.0.storage_info") {
-			// case 1: deprecated ebs_volume_size replaced with storage_info
-			// case 2: regular update of storage_info
-			ebsVolumeInfo := &kafka.BrokerEBSVolumeInfo{
+			TargetBrokerEBSVolumeInfo: []*kafka.BrokerEBSVolumeInfo{{
 				KafkaBrokerNodeId: aws.String("All"),
 				VolumeSizeGB:      aws.Int64(int64(d.Get("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size").(int))),
-			}
-			if v, ok := d.GetOk("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				ebsVolumeInfo.ProvisionedThroughput = expandProvisionedThroughput(v.([]interface{})[0].(map[string]interface{}))
-			}
-			input.TargetBrokerEBSVolumeInfo = []*kafka.BrokerEBSVolumeInfo{ebsVolumeInfo}
-		} else {
-			// case 3: regular update of deprecated ebs_volume_size
-			input.TargetBrokerEBSVolumeInfo = []*kafka.BrokerEBSVolumeInfo{
-				{
-					KafkaBrokerNodeId: aws.String("All"),
-					VolumeSizeGB:      aws.Int64(int64(d.Get("broker_node_group_info.0.ebs_volume_size").(int))),
-				},
-			}
+			}},
+		}
+
+		if v, ok := d.GetOk("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.TargetBrokerEBSVolumeInfo[0].ProvisionedThroughput = expandProvisionedThroughput(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		output, err := conn.UpdateBrokerStorageWithContext(ctx, input)
 
-		// the following error is thrown if previous ebs_volume_size and new storage_info.ebs_storage_info.volume_size have the same value:
-		// BadRequestException: The request does not include any updates to the EBS volumes of the cluster. Verify the request, then try again
-		// ignore this error to allow users to replace deprecated ebs_volume_size with storage_info - Address case 1
-		if err != nil && !tfawserr.ErrMessageContains(err, kafka.ErrCodeBadRequestException, "The request does not include any updates to the EBS volumes of the cluster") {
+		if err != nil {
 			return diag.Errorf("updating MSK Cluster (%s) broker storage: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		// when there are no changes, output.ClusterOperationArn is not returned leading to
-		// InvalidParameter: 1 validation error(s) found. - minimum field size of 1, DescribeClusterOperationInput.ClusterOperationArn.
-		// skip the wait if the EBS volume size is unchanged
-		if !tfawserr.ErrMessageContains(err, kafka.ErrCodeBadRequestException, "The request does not include any updates to the EBS volumes of the cluster") {
-			_, err = waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
 
-			if err != nil {
-				return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
-			}
+		if err != nil {
+			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
 		}
 
 		// refresh the current_version attribute after each update
@@ -935,19 +889,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceClusterRead(ctx, d, meta)
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MSK Cluster: %s", d.Id())
 	_, err := conn.DeleteClusterWithContext(ctx, &kafka.DeleteClusterInput{
@@ -996,14 +942,6 @@ func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *kafka.BrokerNodeGr
 
 	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroups = flex.ExpandStringSet(v)
-	}
-
-	if v, ok := tfMap["ebs_volume_size"].(int); ok && v != 0 {
-		apiObject.StorageInfo = &kafka.StorageInfo{
-			EbsStorageInfo: &kafka.EBSStorageInfo{
-				VolumeSize: aws.Int64(int64(v)),
-			},
-		}
 	}
 
 	if v, ok := tfMap["storage_info"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -1395,14 +1333,6 @@ func flattenBrokerNodeGroupInfo(apiObject *kafka.BrokerNodeGroupInfo) map[string
 		tfMap["storage_info"] = flattenStorageInfo(v)
 	}
 
-	if v := apiObject.StorageInfo; v != nil {
-		if v := v.EbsStorageInfo; v != nil {
-			if v := v.VolumeSize; v != nil {
-				tfMap["ebs_volume_size"] = aws.Int64Value(v)
-			}
-		}
-	}
-
 	return tfMap
 }
 
@@ -1755,7 +1685,7 @@ func flattenNodeExporter(apiObject *kafka.NodeExporter) map[string]interface{} {
 }
 
 func refreshClusterVersion(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	cluster, err := FindClusterByARN(ctx, conn, d.Id())
 

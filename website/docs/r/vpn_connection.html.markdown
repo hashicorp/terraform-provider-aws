@@ -147,6 +147,8 @@ The following arguments are supported:
 * `tunnel2_dpd_timeout_action` - (Optional, Default `clear`) The action to take after DPD timeout occurs for the second VPN tunnel. Specify restart to restart the IKE initiation. Specify clear to end the IKE session. Valid values are `clear | none | restart`.
 * `tunnel1_dpd_timeout_seconds` - (Optional, Default `30`) The number of seconds after which a DPD timeout occurs for the first VPN tunnel. Valid value is equal or higher than `30`.
 * `tunnel2_dpd_timeout_seconds` - (Optional, Default `30`) The number of seconds after which a DPD timeout occurs for the second VPN tunnel. Valid value is equal or higher than `30`.
+* `tunnel1_enable_tunnel_lifecycle_control` - (Optional, Default `false`) Turn on or off tunnel endpoint lifecycle control feature for the first VPN tunnel. Valid values are `true | false`.
+* `tunnel2_enable_tunnel_lifecycle_control` - (Optional, Default `false`) Turn on or off tunnel endpoint lifecycle control feature for the second VPN tunnel. Valid values are `true | false`.
 * `tunnel1_ike_versions` - (Optional) The IKE versions that are permitted for the first VPN tunnel. Valid values are `ikev1 | ikev2`.
 * `tunnel2_ike_versions` - (Optional) The IKE versions that are permitted for the second VPN tunnel. Valid values are `ikev1 | ikev2`.
 * `tunnel1_log_options` - (Optional) Options for logging VPN tunnel activity. See [Log Options](#log-options) below for more details.

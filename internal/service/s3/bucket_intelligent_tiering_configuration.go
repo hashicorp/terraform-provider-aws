@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -91,7 +91,7 @@ func ResourceBucketIntelligentTieringConfiguration() *schema.Resource {
 
 func resourceBucketIntelligentTieringConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucketName := d.Get("bucket").(string)
 	configurationName := d.Get("name").(string)
@@ -131,7 +131,7 @@ func resourceBucketIntelligentTieringConfigurationPut(ctx context.Context, d *sc
 
 func resourceBucketIntelligentTieringConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucketName, configurationName, err := BucketIntelligentTieringConfigurationParseResourceID(d.Id())
 
@@ -170,7 +170,7 @@ func resourceBucketIntelligentTieringConfigurationRead(ctx context.Context, d *s
 
 func resourceBucketIntelligentTieringConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucketName, configurationName, err := BucketIntelligentTieringConfigurationParseResourceID(d.Id())
 
@@ -184,7 +184,7 @@ func resourceBucketIntelligentTieringConfigurationDelete(ctx context.Context, d 
 		Id:     aws.String(configurationName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, ErrCodeNoSuchConfiguration) {
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, errCodeNoSuchConfiguration) {
 		return diags
 	}
 
@@ -222,8 +222,8 @@ func FindBucketIntelligentTieringConfiguration(ctx context.Context, conn *s3.S3,
 
 	output, err := conn.GetBucketIntelligentTieringConfigurationWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, ErrCodeNoSuchConfiguration) {
-		return nil, &resource.NotFoundError{
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, errCodeNoSuchConfiguration) {
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

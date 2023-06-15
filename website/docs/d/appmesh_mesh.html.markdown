@@ -3,7 +3,7 @@ subcategory: "App Mesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_mesh"
 description: |-
-    Provides details about an App Mesh Mesh service mesh resource.
+    Terraform data source for managing an AWS App Mesh Mesh.
 ---
 
 # Data Source: aws_appmesh_mesh

@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -64,7 +64,7 @@ func ResourceGlobalTable() *schema.Resource {
 
 func resourceGlobalTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &dynamodb.CreateGlobalTableInput{
@@ -89,7 +89,7 @@ func resourceGlobalTableCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceGlobalTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	globalTableDescription, err := FindGlobalTableByName(ctx, conn, d.Id())
 
@@ -114,7 +114,7 @@ func resourceGlobalTableRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceGlobalTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	o, n := d.GetChange("replica")
 	if o == nil {
@@ -154,7 +154,7 @@ func resourceGlobalTableUpdate(ctx context.Context, d *schema.ResourceData, meta
 // Deleting a DynamoDB Global Table is represented by removing all replicas.
 func resourceGlobalTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DynamoDB Global Table: %s", d.Id())
 	_, err := conn.UpdateGlobalTableWithContext(ctx, &dynamodb.UpdateGlobalTableInput{
@@ -185,7 +185,7 @@ func FindGlobalTableByName(ctx context.Context, conn *dynamodb.DynamoDB, name st
 	output, err := conn.DescribeGlobalTableWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeGlobalTableNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -202,7 +202,7 @@ func FindGlobalTableByName(ctx context.Context, conn *dynamodb.DynamoDB, name st
 	return output.GlobalTableDescription, nil
 }
 
-func statusGlobalTable(ctx context.Context, conn *dynamodb.DynamoDB, name string) resource.StateRefreshFunc {
+func statusGlobalTable(ctx context.Context, conn *dynamodb.DynamoDB, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindGlobalTableByName(ctx, conn, name)
 
@@ -219,7 +219,7 @@ func statusGlobalTable(ctx context.Context, conn *dynamodb.DynamoDB, name string
 }
 
 func waitGlobalTableCreated(ctx context.Context, conn *dynamodb.DynamoDB, name string, timeout time.Duration) (*dynamodb.GlobalTableDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{dynamodb.GlobalTableStatusCreating},
 		Target:     []string{dynamodb.GlobalTableStatusActive},
 		Refresh:    statusGlobalTable(ctx, conn, name),
@@ -237,7 +237,7 @@ func waitGlobalTableCreated(ctx context.Context, conn *dynamodb.DynamoDB, name s
 }
 
 func waitGlobalTableDeleted(ctx context.Context, conn *dynamodb.DynamoDB, name string, timeout time.Duration) (*dynamodb.GlobalTableDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{dynamodb.GlobalTableStatusActive, dynamodb.GlobalTableStatusDeleting},
 		Target:     []string{},
 		Refresh:    statusGlobalTable(ctx, conn, name),
@@ -255,7 +255,7 @@ func waitGlobalTableDeleted(ctx context.Context, conn *dynamodb.DynamoDB, name s
 }
 
 func waitGlobalTableUpdated(ctx context.Context, conn *dynamodb.DynamoDB, name string, timeout time.Duration) (*dynamodb.GlobalTableDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{dynamodb.GlobalTableStatusUpdating},
 		Target:     []string{dynamodb.GlobalTableStatusActive},
 		Refresh:    statusGlobalTable(ctx, conn, name),

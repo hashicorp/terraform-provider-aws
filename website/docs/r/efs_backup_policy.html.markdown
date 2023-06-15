@@ -35,6 +35,7 @@ The following arguments are supported:
 * `backup_policy` - (Required) A backup_policy object (documented below).
 
 ### Backup Policy Arguments
+
 For **backup_policy** the following attributes are supported:
 
 * `status` - (Required) A status of the backup policy. Valid values: `ENABLED`, `DISABLED`.

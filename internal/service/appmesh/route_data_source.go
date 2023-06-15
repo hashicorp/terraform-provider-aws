@@ -48,19 +48,19 @@ func DataSourceRoute() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"spec":         dataSourcePropertyFromResourceProperty(resourceRouteSpecSchema()),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"virtual_router_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"spec":         dataSourcePropertyFromResourceProperty(resourceRouteSpecSchema()),
-			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	routeName := d.Get("name").(string)

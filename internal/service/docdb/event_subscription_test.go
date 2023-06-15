@@ -6,9 +6,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/docdb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
@@ -69,7 +70,7 @@ func TestAccDocDBEventSubscription_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -239,7 +240,7 @@ func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 			_, err := tfdocdb.FindEventSubscriptionByID(ctx, conn, rs.Primary.ID)
 
@@ -251,7 +252,7 @@ func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestChec
 				return err
 			}
 
-			return fmt.Errorf("DocDB Event Subscription %s still exists", rs.Primary.ID)
+			return fmt.Errorf("DocumentDB Event Subscription %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -266,10 +267,10 @@ func testAccCheckEventSubscriptionExists(ctx context.Context, n string, eventSub
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DocDB Event Subscription ID is set")
+			return fmt.Errorf("No DocumentDB Event Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 		res, err := tfdocdb.FindEventSubscriptionByID(ctx, conn, rs.Primary.ID)
 

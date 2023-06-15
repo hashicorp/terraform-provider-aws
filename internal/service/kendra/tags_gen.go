@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists kendra service tags.
@@ -30,8 +31,10 @@ func ListTags(ctx context.Context, conn *kendra.Client, identifier string) (tfta
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists kendra service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).KendraClient(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).KendraClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -77,7 +80,7 @@ func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags 
 // nil is returned if there are no input tags.
 func GetTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -99,10 +102,12 @@ func UpdateTags(ctx context.Context, conn *kendra.Client, identifier string, old
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Kendra)
+	if len(removedTags) > 0 {
 		input := &kendra.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     removedTags.IgnoreAWS().Keys(),
+			TagKeys:     removedTags.Keys(),
 		}
 
 		_, err := conn.UntagResource(ctx, input)
@@ -112,10 +117,12 @@ func UpdateTags(ctx context.Context, conn *kendra.Client, identifier string, old
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Kendra)
+	if len(updatedTags) > 0 {
 		input := &kendra.TagResourceInput{
 			ResourceARN: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, input)
@@ -128,6 +135,8 @@ func UpdateTags(ctx context.Context, conn *kendra.Client, identifier string, old
 	return nil
 }
 
+// UpdateTags updates kendra service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).KendraClient(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).KendraClient(ctx), identifier, oldTags, newTags)
 }

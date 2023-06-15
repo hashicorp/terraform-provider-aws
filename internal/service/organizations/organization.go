@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -172,7 +172,7 @@ func ResourceOrganization() *schema.Resource {
 
 func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	createOpts := &organizations.CreateOrganizationInput{
 		FeatureSet: aws.String(d.Get("feature_set").(string)),
@@ -233,7 +233,7 @@ func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	log.Printf("[INFO] Reading Organization: %s", d.Id())
 	org, err := conn.DescribeOrganizationWithContext(ctx, &organizations.DescribeOrganizationInput{})
@@ -331,7 +331,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	if d.HasChange("aws_service_access_principals") {
 		oldRaw, newRaw := d.GetChange("aws_service_access_principals")
@@ -419,7 +419,7 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	log.Printf("[INFO] Deleting Organization: %s", d.Id())
 
@@ -498,12 +498,12 @@ func getOrganizationDefaultRoot(ctx context.Context, conn *organizations.Organiz
 	return roots[0], nil
 }
 
-func getOrganizationDefaultRootPolicyTypeRefreshFunc(ctx context.Context, conn *organizations.Organizations, policyType string) resource.StateRefreshFunc {
+func getOrganizationDefaultRootPolicyTypeRefreshFunc(ctx context.Context, conn *organizations.Organizations, policyType string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		defaultRoot, err := getOrganizationDefaultRoot(ctx, conn)
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error getting default root: %s", err)
+			return nil, "", fmt.Errorf("getting default root: %s", err)
 		}
 
 		for _, pt := range defaultRoot.PolicyTypes {
@@ -517,7 +517,7 @@ func getOrganizationDefaultRootPolicyTypeRefreshFunc(ctx context.Context, conn *
 }
 
 func waitForOrganizationDefaultRootPolicyTypeDisable(ctx context.Context, conn *organizations.Organizations, policyType string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			organizations.PolicyTypeStatusEnabled,
 			organizations.PolicyTypeStatusPendingDisable,
@@ -533,7 +533,7 @@ func waitForOrganizationDefaultRootPolicyTypeDisable(ctx context.Context, conn *
 }
 
 func waitForOrganizationDefaultRootPolicyTypeEnable(ctx context.Context, conn *organizations.Organizations, policyType string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			policyTypeStatusDisabled,
 			organizations.PolicyTypeStatusPendingEnable,

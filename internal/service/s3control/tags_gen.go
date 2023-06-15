@@ -43,7 +43,7 @@ func KeyValueTags(ctx context.Context, tags []*s3control.S3Tag) tftags.KeyValueT
 // nil is returned if there are no input tags.
 func GetTagsIn(ctx context.Context) []*s3control.S3Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}

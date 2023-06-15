@@ -69,6 +69,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDistribution,
 			TypeName: "aws_cloudfront_distribution",
+			Name:     "Distribution",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceFieldLevelEncryptionConfig,

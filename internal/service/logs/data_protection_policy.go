@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -27,7 +27,7 @@ func resourceDataProtectionPolicy() *schema.Resource {
 		DeleteWithoutTimeout: resourceDataProtectionPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -52,7 +52,7 @@ func resourceDataProtectionPolicy() *schema.Resource {
 }
 
 func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsClient()
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	logGroupName := d.Get("log_group_name").(string)
 
@@ -81,7 +81,7 @@ func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsClient()
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	output, err := FindDataProtectionPolicyByID(ctx, conn, d.Id())
 
@@ -115,7 +115,7 @@ func resourceDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsClient()
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Logs Data Protection Policy: %s", d.Id())
 	_, err := conn.DeleteDataProtectionPolicy(ctx, &cloudwatchlogs.DeleteDataProtectionPolicyInput{
@@ -141,7 +141,7 @@ func FindDataProtectionPolicyByID(ctx context.Context, conn *cloudwatchlogs.Clie
 	output, err := conn.GetDataProtectionPolicy(ctx, input)
 
 	if nfe := (*types.ResourceNotFoundException)(nil); errors.As(err, &nfe) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   nfe,
 			LastRequest: input,
 		}

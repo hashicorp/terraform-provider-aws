@@ -5,11 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusAlertManagerDefinition(ctx context.Context, conn *prometheusservice.PrometheusService, id string) resource.StateRefreshFunc {
+func statusAlertManagerDefinition(ctx context.Context, conn *prometheusservice.PrometheusService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindAlertManagerDefinitionByID(ctx, conn, id)
 
@@ -25,7 +25,7 @@ func statusAlertManagerDefinition(ctx context.Context, conn *prometheusservice.P
 	}
 }
 
-func statusRuleGroupNamespace(ctx context.Context, conn *prometheusservice.PrometheusService, arn string) resource.StateRefreshFunc {
+func statusRuleGroupNamespace(ctx context.Context, conn *prometheusservice.PrometheusService, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindRuleGroupNamespaceByARN(ctx, conn, arn)
 
@@ -41,7 +41,7 @@ func statusRuleGroupNamespace(ctx context.Context, conn *prometheusservice.Prome
 	}
 }
 
-func statusWorkspace(ctx context.Context, conn *prometheusservice.PrometheusService, id string) resource.StateRefreshFunc {
+func statusWorkspace(ctx context.Context, conn *prometheusservice.PrometheusService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindWorkspaceByID(ctx, conn, id)
 
@@ -57,7 +57,7 @@ func statusWorkspace(ctx context.Context, conn *prometheusservice.PrometheusServ
 	}
 }
 
-func statusLoggingConfiguration(ctx context.Context, conn *prometheusservice.PrometheusService, workspaceID string) resource.StateRefreshFunc {
+func statusLoggingConfiguration(ctx context.Context, conn *prometheusservice.PrometheusService, workspaceID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindLoggingConfigurationByWorkspaceID(ctx, conn, workspaceID)
 
