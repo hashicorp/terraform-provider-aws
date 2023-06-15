@@ -182,7 +182,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 	input := &appstream.CreateImageBuilderInput{
 		InstanceType: aws.String(d.Get("instance_type").(string)),
 		Name:         aws.String(name),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_endpoint"); ok && v.(*schema.Set).Len() > 0 {
