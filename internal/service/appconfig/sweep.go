@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func init() {
@@ -278,12 +279,12 @@ func sweepEnvironments(region string) error {
 						continue
 					}
 
-					sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceEnvironment, "", client,
-						sweep.FrameworkSupplementalAttribute{
+					sweepResources = append(sweepResources, framework.NewSweepFrameworkResource(newResourceEnvironment, "", client,
+						framework.FrameworkSupplementalAttribute{
 							Path:  "application_id",
 							Value: aws.StringValue(item.ApplicationId),
 						},
-						sweep.FrameworkSupplementalAttribute{
+						framework.FrameworkSupplementalAttribute{
 							Path:  "environment_id",
 							Value: aws.StringValue(item.Id),
 						},

@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/simpledb"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func init() {
@@ -36,7 +37,7 @@ func sweepDomains(region string) error {
 		}
 
 		for _, v := range page.DomainNames {
-			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceDomain, aws.StringValue(v), client))
+			sweepResources = append(sweepResources, framework.NewSweepFrameworkResource(newResourceDomain, aws.StringValue(v), client))
 		}
 
 		return !lastPage

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func init() {
@@ -90,7 +91,7 @@ func sweepAssessments(region string) error {
 			id := aws.ToString(assessment.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Assessment: %s", id)
-			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceAssessment, id, client))
+			sweepResources = append(sweepResources, framework.NewSweepFrameworkResource(newResourceAssessment, id, client))
 		}
 	}
 
@@ -133,18 +134,18 @@ func sweepAssessmentDelegations(region string) error {
 			id := "" // ID is a combination of attributes for this resource, but not used for deletion
 
 			// assessment ID is required for delete operations
-			assessmentIDAttr := sweep.FrameworkSupplementalAttribute{
+			assessmentIDAttr := framework.FrameworkSupplementalAttribute{
 				Path:  "assessment_id",
 				Value: aws.ToString(d.AssessmentId),
 			}
 			// delegation ID is required for delete operations
-			delegationIDAttr := sweep.FrameworkSupplementalAttribute{
+			delegationIDAttr := framework.FrameworkSupplementalAttribute{
 				Path:  "delegation_id",
 				Value: aws.ToString(d.Id),
 			}
 
 			log.Printf("[INFO] Deleting AuditManager Assessment Delegation: %s", delegationIDAttr.Value)
-			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceAssessmentDelegation, id, client, assessmentIDAttr, delegationIDAttr))
+			sweepResources = append(sweepResources, framework.NewSweepFrameworkResource(newResourceAssessmentDelegation, id, client, assessmentIDAttr, delegationIDAttr))
 		}
 	}
 
@@ -186,13 +187,13 @@ func sweepAssessmentReports(region string) error {
 		for _, report := range page.AssessmentReports {
 			id := aws.ToString(report.Id)
 			// assessment ID is required for delete operations
-			assessmentIDAttr := sweep.FrameworkSupplementalAttribute{
+			assessmentIDAttr := framework.FrameworkSupplementalAttribute{
 				Path:  "assessment_id",
 				Value: aws.ToString(report.AssessmentId),
 			}
 
 			log.Printf("[INFO] Deleting AuditManager Assessment Report: %s", id)
-			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceAssessmentReport, id, client, assessmentIDAttr))
+			sweepResources = append(sweepResources, framework.NewSweepFrameworkResource(newResourceAssessmentReport, id, client, assessmentIDAttr))
 		}
 	}
 
@@ -235,7 +236,7 @@ func sweepControls(region string) error {
 			id := aws.ToString(control.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Control: %s", id)
-			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceControl, id, client))
+			sweepResources = append(sweepResources, framework.NewSweepFrameworkResource(newResourceControl, id, client))
 		}
 	}
 
@@ -274,11 +275,11 @@ func sweepFrameworks(region string) error {
 			return fmt.Errorf("error retrieving AuditManager Frameworks: %w", err)
 		}
 
-		for _, framework := range page.FrameworkMetadataList {
-			id := aws.ToString(framework.Id)
+		for _, f := range page.FrameworkMetadataList {
+			id := aws.ToString(f.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Framework: %s", id)
-			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceFramework, id, client))
+			sweepResources = append(sweepResources, framework.NewSweepFrameworkResource(newResourceFramework, id, client))
 		}
 	}
 
@@ -321,7 +322,7 @@ func sweepFrameworkShares(region string) error {
 			id := aws.ToString(share.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Framework Share: %s", id)
-			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceFrameworkShare, id, client))
+			sweepResources = append(sweepResources, framework.NewSweepFrameworkResource(newResourceFrameworkShare, id, client))
 		}
 	}
 
