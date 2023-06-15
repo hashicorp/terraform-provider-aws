@@ -1263,11 +1263,6 @@ resource "aws_s3_bucket" "accesslogs_bucket" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "accesslogs_bucket_acl" {
-  bucket = aws_s3_bucket.accesslogs_bucket.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.accesslogs_bucket.id
   policy = <<EOF
