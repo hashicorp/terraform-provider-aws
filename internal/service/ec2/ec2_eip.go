@@ -205,7 +205,6 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 	res, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindEIPByAllocationID(ctx, conn, d.Id())
 	}, d.IsNewResource())
-	address := res.(*ec2.Address)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 EIP (%s) not found, removing from state", d.Id())
@@ -216,6 +215,8 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s): %s", d.Id(), err)
 	}
+
+	address := res.(*ec2.Address)
 
 	d.Set("allocation_id", address.AllocationId)
 	d.Set("association_id", address.AssociationId)
