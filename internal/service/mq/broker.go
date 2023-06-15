@@ -366,7 +366,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		EngineVersion:           aws.String(d.Get("engine_version").(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 		Users:                   expandUsers(d.Get("user").(*schema.Set).List()),
 	}
 
@@ -481,7 +481,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("setting user: %s", err)
 	}
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return nil
 }
