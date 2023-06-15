@@ -1609,7 +1609,7 @@ resource "aws_elb" "test" {
 func testAccLoadBalancerConfig_baseSubnets(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block           = "10.0.0.0/16"
+  cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
 
   tags = {
@@ -1617,12 +1617,32 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_subnet" "test" {
-  count = %[2]d
+resource "aws_subnet" "public_a_one" {
+  vpc_id = aws_vpc.test.id
 
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "public_b_one" {
+  vpc_id = aws_vpc.test.id
+
+  cidr_block        = "10.1.7.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "public_a_two" {
+  vpc_id = aws_vpc.test.id
+
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
