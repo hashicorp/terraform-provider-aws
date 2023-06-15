@@ -83,33 +83,15 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags:        GetTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating Organizations Policy (%s): %v", name, input)
-
-	var err error
-	var resp *organizations.CreatePolicyOutput
-	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
-		resp, err = conn.CreatePolicyWithContext(ctx, input)
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeFinalizingOrganizationException) {
-				log.Printf("[DEBUG] Retrying creating Organizations Policy (%s): %s", name, err)
-				return retry.RetryableError(err)
-			}
-
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		resp, err = conn.CreatePolicyWithContext(ctx, input)
-	}
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 4*time.Minute, func() (interface{}, error) {
+		return conn.CreatePolicyWithContext(ctx, input)
+	}, organizations.ErrCodeFinalizingOrganizationException)
 
 	if err != nil {
 		return diag.Errorf("creating Organizations Policy (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.Policy.PolicySummary.Id))
+	d.SetId(aws.StringValue(outputRaw.(*organizations.CreatePolicyOutput).Policy.PolicySummary.Id))
 
 	return resourcePolicyRead(ctx, d, meta)
 }
