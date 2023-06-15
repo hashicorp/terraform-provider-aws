@@ -304,7 +304,7 @@ func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta i
 		FileCacheTypeVersion: aws.String(d.Get("file_cache_type_version").(string)),
 		StorageCapacity:      aws.Int64(int64(d.Get("storage_capacity").(int))),
 		SubnetIds:            flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 	if v, ok := d.GetOk("copy_tags_to_data_repository_associations"); ok {
 		input.CopyTagsToDataRepositoryAssociations = aws.Bool(v.(bool))
