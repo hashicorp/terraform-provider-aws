@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -81,37 +81,31 @@ func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.Schema
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"saml_options": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtLeast(1),
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"group_attribute": schema.StringAttribute{
-							Optional: true,
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(1, 2048),
-							},
+			"saml_options": schema.SingleNestedBlock{
+				Attributes: map[string]schema.Attribute{
+					"group_attribute": schema.StringAttribute{
+						Optional: true,
+						Validators: []validator.String{
+							stringvalidator.LengthBetween(1, 2048),
 						},
-						"metadata": schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(1, 20480),
-							},
+					},
+					"metadata": schema.StringAttribute{
+						Required: true,
+						Validators: []validator.String{
+							stringvalidator.LengthBetween(1, 20480),
 						},
-						"session_timeout": schema.Int64Attribute{
-							Optional: true,
-							Computed: true,
-							Validators: []validator.Int64{
-								int64validator.Between(5, 1540),
-							},
+					},
+					"session_timeout": schema.Int64Attribute{
+						Optional: true,
+						Computed: true,
+						Validators: []validator.Int64{
+							int64validator.Between(5, 1540),
 						},
-						"user_attribute": schema.StringAttribute{
-							Optional: true,
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(1, 2048),
-							},
+					},
+					"user_attribute": schema.StringAttribute{
+						Optional: true,
+						Validators: []validator.String{
+							stringvalidator.LengthBetween(1, 2048),
 						},
 					},
 				},
@@ -269,7 +263,7 @@ type resourceSecurityConfigData struct {
 	ConfigVersion types.String `tfsdk:"config_version"`
 	Description   types.String `tfsdk:"description"`
 	Name          types.String `tfsdk:"name"`
-	SamlOptions   types.List   `tfsdk:"saml_options"`
+	SamlOptions   types.Object `tfsdk:"saml_options"`
 	Type          types.String `tfsdk:"type"`
 }
 
@@ -311,25 +305,21 @@ func (so *samlOptions) expand(ctx context.Context) *awstypes.SamlConfigOptions {
 	return result
 }
 
-func expandSAMLOptions(ctx context.Context, list types.List, diags *diag.Diagnostics) *awstypes.SamlConfigOptions {
-	var options []samlOptions
-	diags.Append(list.ElementsAs(ctx, &options, false)...)
+func expandSAMLOptions(ctx context.Context, list types.Object, diags *diag.Diagnostics) *awstypes.SamlConfigOptions {
+	var options samlOptions
+	diags.Append(list.As(ctx, &options, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
 		return nil
 	}
 
-	if len(options) == 1 {
-		return options[0].expand(ctx)
-	}
-	return nil
+	return options.expand(ctx)
 }
 
-func flattenSAMLOptions(ctx context.Context, so *awstypes.SamlConfigOptions) types.List {
+func flattenSAMLOptions(ctx context.Context, so *awstypes.SamlConfigOptions) types.Object {
 	attributeTypes := framework.AttributeTypesMust[samlOptions](ctx)
-	elemType := types.ObjectType{AttrTypes: attributeTypes}
 
 	if so == nil {
-		return types.ListNull(elemType)
+		return types.ObjectNull(attributeTypes)
 	}
 
 	attrs := map[string]attr.Value{}
@@ -339,7 +329,5 @@ func flattenSAMLOptions(ctx context.Context, so *awstypes.SamlConfigOptions) typ
 	attrs["session_timeout"] = flex.Int64ToFramework(ctx, &timeout)
 	attrs["user_attribute"] = flex.StringToFramework(ctx, so.UserAttribute)
 
-	val := types.ObjectValueMust(attributeTypes, attrs)
-
-	return types.ListValueMust(elemType, []attr.Value{val})
+	return types.ObjectValueMust(attributeTypes, attrs)
 }
