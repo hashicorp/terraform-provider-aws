@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -33,12 +33,12 @@ func TestAccOpenSearchServerlessSecurityConfig_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityConfigDestroy,
+		CheckDestroy:             testAccCheckSecurityConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityConfig_basic(rName, "test-fixtures/idp-metadata.xml"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityConfigExists(resourceName, &securityconfig),
+					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
 					resource.TestCheckResourceAttr(resourceName, "type", "saml"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -66,12 +66,12 @@ func TestAccOpenSearchServerlessSecurityConfig_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityConfigDestroy,
+		CheckDestroy:             testAccCheckSecurityConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityConfig_basic(rName, "test-fixtures/idp-metadata.xml"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityConfigExists(resourceName, &securityconfig),
+					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceSecurityConfig, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,33 +80,34 @@ func TestAccOpenSearchServerlessSecurityConfig_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSecurityConfigDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
-	ctx := context.Background()
+func testAccCheckSecurityConfigDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opensearchserverless_security_config" {
-			continue
-		}
-
-		_, err := conn.GetSecurityConfig(ctx, &opensearchserverless.GetSecurityConfigInput{
-			Id: aws.String(rs.Primary.ID),
-		})
-		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opensearchserverless_security_config" {
+				continue
 			}
-			return err
+
+			_, err := conn.GetSecurityConfig(ctx, &opensearchserverless.GetSecurityConfigInput{
+				Id: aws.String(rs.Primary.ID),
+			})
+			if err != nil {
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					return nil
+				}
+				return err
+			}
+
+			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingDestroyed, tfopensearchserverless.ResNameSecurityConfig, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		return create.Error(names.OpenSearchServerless, create.ErrActionCheckingDestroyed, tfopensearchserverless.ResNameSecurityConfig, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckSecurityConfigExists(name string, securityconfig *opensearchserverless.GetSecurityConfigOutput) resource.TestCheckFunc {
+func testAccCheckSecurityConfigExists(ctx context.Context, name string, securityconfig *opensearchserverless.GetSecurityConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -117,8 +118,7 @@ func testAccCheckSecurityConfigExists(name string, securityconfig *opensearchser
 			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameSecurityConfig, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 		resp, err := conn.GetSecurityConfig(ctx, &opensearchserverless.GetSecurityConfigInput{
 			Id: aws.String(rs.Primary.ID),
 		})
@@ -133,8 +133,8 @@ func testAccCheckSecurityConfigExists(name string, securityconfig *opensearchser
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
+func testAccPreCheckSecurityConfig(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 
 	input := &opensearchserverless.ListSecurityConfigsInput{
 		Type: types.SecurityConfigTypeSaml,

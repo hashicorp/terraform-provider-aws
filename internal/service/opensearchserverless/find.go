@@ -60,7 +60,7 @@ func FindCollectionByID(ctx context.Context, conn *opensearchserverless.Client, 
 	return &out.CollectionDetails[0], nil
 }
 
-func findSecurityConfigByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.SecurityConfigDetail, error) {
+func FindSecurityConfigByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.SecurityConfigDetail, error) {
 	in := &opensearchserverless.GetSecurityConfigInput{
 		Id: aws.String(id),
 	}
