@@ -82,7 +82,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		ClusterSubnetGroupName: aws.String(name),
 		Description:            aws.String(d.Get("description").(string)),
 		SubnetIds:              subnetIds,
-		Tags:                   GetTagsIn(ctx),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating Redshift Subnet Group: %s", input)
@@ -125,7 +125,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("name", d.Id())
 	d.Set("subnet_ids", subnetIdsToSlice(subnetgroup.Subnets))
 
-	SetTagsOut(ctx, subnetgroup.Tags)
+	setTagsOut(ctx, subnetgroup.Tags)
 
 	return diags
 }

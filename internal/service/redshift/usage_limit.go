@@ -90,7 +90,7 @@ func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ClusterIdentifier: aws.String(clusterId),
 		FeatureType:       aws.String(d.Get("feature_type").(string)),
 		LimitType:         aws.String(d.Get("limit_type").(string)),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("breach_action"); ok {
@@ -143,7 +143,7 @@ func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("breach_action", out.BreachAction)
 	d.Set("cluster_identifier", out.ClusterIdentifier)
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	return diags
 }
