@@ -621,7 +621,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &cognitoidentityprovider.CreateUserPoolInput{
 		PoolName:     aws.String(d.Get("name").(string)),
-		UserPoolTags: GetTagsIn(ctx),
+		UserPoolTags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("admin_create_user_config"); ok {
@@ -937,7 +937,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("last_modified_date", userPool.LastModifiedDate.Format(time.RFC3339))
 	d.Set("name", userPool.Name)
 
-	SetTagsOut(ctx, userPool.UserPoolTags)
+	setTagsOut(ctx, userPool.UserPoolTags)
 
 	input := &cognitoidentityprovider.GetUserPoolMfaConfigInput{
 		UserPoolId: aws.String(d.Id()),
@@ -1049,7 +1049,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	) {
 		input := &cognitoidentityprovider.UpdateUserPoolInput{
 			UserPoolId:   aws.String(d.Id()),
-			UserPoolTags: GetTagsIn(ctx),
+			UserPoolTags: getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("admin_create_user_config"); ok {
