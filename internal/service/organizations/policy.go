@@ -164,8 +164,8 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Name = aws.String(d.Get("name").(string))
 	}
 
-	log.Printf("[DEBUG] Updating Organizations Policy: %s", input)
 	_, err := conn.UpdatePolicyWithContext(ctx, input)
+
 	if err != nil {
 		return diag.Errorf("updating Organizations policy (%s): %s", d.Id(), err)
 	}
@@ -174,25 +174,28 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+
 	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Organizations Policy: %s", d.Id())
 		return nil
 	}
 
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
-
 	input := &organizations.DeletePolicyInput{
 		PolicyId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting Organizations Policy: %s", input)
+	log.Printf("[DEBUG] Deleting Organizations Policy: %s", d.Id())
 	_, err := conn.DeletePolicyWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
-			return nil
-		}
 		return diag.Errorf("deleting Organizations policy (%s): %s", d.Id(), err)
 	}
+
 	return nil
 }
 
