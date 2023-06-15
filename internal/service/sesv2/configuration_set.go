@@ -185,7 +185,7 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 
 	in := &sesv2.CreateConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Get("configuration_set_name").(string)),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("delivery_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
