@@ -36,6 +36,30 @@ func FindAccessPolicyByNameAndType(ctx context.Context, conn *opensearchserverle
 	return out.AccessPolicyDetail, nil
 }
 
+func FindCollectionByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.CollectionDetail, error) {
+	in := &opensearchserverless.BatchGetCollectionInput{
+		Ids: []string{id},
+	}
+	out, err := conn.BatchGetCollection(ctx, in)
+	if err != nil {
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.CollectionDetails == nil || len(out.CollectionDetails) == 0 {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return &out.CollectionDetails[0], nil
+}
+
 func FindSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, name, policyType string) (*types.SecurityPolicyDetail, error) {
 	in := &opensearchserverless.GetSecurityPolicyInput{
 		Name: aws.String(name),
@@ -59,4 +83,29 @@ func FindSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserver
 	}
 
 	return out.SecurityPolicyDetail, nil
+}
+
+func FindVPCEndpointByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.VpcEndpointDetail, error) {
+	in := &opensearchserverless.BatchGetVpcEndpointInput{
+		Ids: []string{id},
+	}
+	out, err := conn.BatchGetVpcEndpoint(ctx, in)
+
+	if err != nil {
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.VpcEndpointDetails == nil || len(out.VpcEndpointDetails) == 0 {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return &out.VpcEndpointDetails[0], nil
 }

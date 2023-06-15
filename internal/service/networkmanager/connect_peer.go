@@ -439,7 +439,7 @@ func waitConnectPeerDeleted(ctx context.Context, conn *networkmanager.NetworkMan
 	return nil, err
 }
 
-// validationExceptionMessageContains returns true if the error matches all these conditions:
+// validationExceptionMessage_Contains returns true if the error matches all these conditions:
 //   - err is of type networkmanager.ValidationException
 //   - ValidationException.Reason equals reason
 //   - ValidationException.Message_ contains message

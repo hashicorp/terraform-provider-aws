@@ -75,13 +75,12 @@ func ResourceDataQualityRuleset() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						// not found in SDK
-						// "catalog_id": {
-						// 	Type:         schema.TypeString,
-						// 	Optional:     true,
-						// 	ForceNew:     true,
-						// 	ValidateFunc: validation.StringLenBetween(1, 255),
-						// },
+						"catalog_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(1, 255),
+						},
 						"database_name": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -223,6 +222,10 @@ func expandTargetTable(tfMap map[string]interface{}) *glue.DataQualityTargetTabl
 		TableName:    aws.String(tfMap["table_name"].(string)),
 	}
 
+	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+		apiObject.CatalogId = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -234,6 +237,10 @@ func flattenTargetTable(apiObject *glue.DataQualityTargetTable) []interface{} {
 	tfMap := map[string]interface{}{
 		"database_name": aws.StringValue(apiObject.DatabaseName),
 		"table_name":    aws.StringValue(apiObject.TableName),
+	}
+
+	if v := apiObject.CatalogId; v != nil {
+		tfMap["catalog_id"] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}
