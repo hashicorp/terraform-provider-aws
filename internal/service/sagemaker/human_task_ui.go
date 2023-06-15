@@ -83,7 +83,7 @@ func resourceHumanTaskUICreate(ctx context.Context, d *schema.ResourceData, meta
 	name := d.Get("human_task_ui_name").(string)
 	input := &sagemaker.CreateHumanTaskUiInput{
 		HumanTaskUiName: aws.String(name),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 		UiTemplate:      expandHumanTaskUiUiTemplate(d.Get("ui_template").([]interface{})),
 	}
 

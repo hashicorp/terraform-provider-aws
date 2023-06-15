@@ -86,7 +86,7 @@ func resourceCodeRepositoryCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &sagemaker.CreateCodeRepositoryInput{
 		CodeRepositoryName: aws.String(name),
 		GitConfig:          expandCodeRepositoryGitConfig(d.Get("git_config").([]interface{})),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] sagemaker code repository create config: %#v", *input)

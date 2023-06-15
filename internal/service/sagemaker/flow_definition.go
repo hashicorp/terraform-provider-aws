@@ -254,7 +254,7 @@ func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		HumanLoopConfig:    expandFlowDefinitionHumanLoopConfig(d.Get("human_loop_config").([]interface{})),
 		RoleArn:            aws.String(d.Get("role_arn").(string)),
 		OutputConfig:       expandFlowDefinitionOutputConfig(d.Get("output_config").([]interface{})),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("human_loop_activation_config"); ok && (len(v.([]interface{})) > 0) {
