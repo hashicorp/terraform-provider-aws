@@ -66,15 +66,7 @@ func DataSourceDelegatedAdministrators() *schema.Resource {
 	}
 }
 
-func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
-
-	input := &organizations.ListDelegatedAdministratorsInput{}
-
-	if v, ok := d.GetOk("service_principal"); ok {
-		input.ServicePrincipal = aws.String(v.(string))
-	}
-
+func listDelegatedAdministrators(ctx context.Context, conn *organizations.Organizations, input *organizations.ListDelegatedAdministratorsInput) ([]*organizations.DelegatedAdministrator, error) {
 	var delegators []*organizations.DelegatedAdministrator
 
 	err := conn.ListDelegatedAdministratorsPagesWithContext(ctx, input, func(page *organizations.ListDelegatedAdministratorsOutput, lastPage bool) bool {
@@ -86,6 +78,20 @@ func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.Resour
 
 		return !lastPage
 	})
+
+	return delegators, err
+}
+
+func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+
+	input := &organizations.ListDelegatedAdministratorsInput{}
+
+	if v, ok := d.GetOk("service_principal"); ok {
+		input.ServicePrincipal = aws.String(v.(string))
+	}
+
+	delegators, err := listDelegatedAdministrators(ctx, conn, input)
 	if err != nil {
 		return diag.Errorf("describing organizations delegated Administrators: %s", err)
 	}
