@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -38,7 +37,7 @@ func sweepAccountAssignments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SSOAdminConn(ctx)
+	conn := client.SSOAdminConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -80,7 +79,7 @@ func sweepAccountAssignments(region string) error {
 			permissionSetArn := aws.StringValue(permissionSet)
 
 			input := &ssoadmin.ListAccountAssignmentsInput{
-				AccountId:        aws.String(client.(*conns.AWSClient).AccountID),
+				AccountId:        aws.String(client.AccountID),
 				InstanceArn:      aws.String(instanceArn),
 				PermissionSetArn: permissionSet,
 			}
@@ -143,7 +142,7 @@ func sweepPermissionSets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SSOAdminConn(ctx)
+	conn := client.SSOAdminConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error

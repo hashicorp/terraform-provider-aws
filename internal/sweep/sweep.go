@@ -31,18 +31,18 @@ const (
 
 const defaultSweeperAssumeRoleDurationSeconds = 3600
 
-// SweeperClients is a shared cache of regional conns.AWSClient
+// sweeperClients is a shared cache of regional conns.AWSClient
 // This prevents client re-initialization for every resource with no benefit.
-var SweeperClients map[string]interface{}
+var sweeperClients map[string]*conns.AWSClient = make(map[string]*conns.AWSClient)
 
 // SharedRegionalSweepClient returns a common conns.AWSClient setup needed for the sweeper
 // functions for a given region
-func SharedRegionalSweepClient(region string) (interface{}, error) {
+func SharedRegionalSweepClient(region string) (*conns.AWSClient, error) {
 	return SharedRegionalSweepClientWithContext(Context(region), region)
 }
 
-func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (interface{}, error) {
-	if client, ok := SweeperClients[region]; ok {
+func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (*conns.AWSClient, error) {
+	if client, ok := sweeperClients[region]; ok {
 		return client, nil
 	}
 
@@ -92,7 +92,7 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 		return nil, fmt.Errorf("getting AWS client: %#v", diags)
 	}
 
-	SweeperClients[region] = client
+	sweeperClients[region] = client
 
 	return client, nil
 }
@@ -103,11 +103,11 @@ type Sweepable interface {
 
 type SweepResource struct {
 	d        *schema.ResourceData
-	meta     interface{}
+	meta     *conns.AWSClient
 	resource *schema.Resource
 }
 
-func NewSweepResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) *SweepResource {
+func NewSweepResource(resource *schema.Resource, d *schema.ResourceData, meta *conns.AWSClient) *SweepResource {
 	return &SweepResource{
 		d:        d,
 		meta:     meta,

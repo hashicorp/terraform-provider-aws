@@ -1129,7 +1129,7 @@ func sweepThings(region string) error {
     return fmt.Errorf("getting client: %w", err)
   }
 
-  conn := client.(*conns.AWSClient).ExampleConn(ctx)
+  conn := client.ExampleConn(ctx)
   sweepResources := make([]sweep.Sweepable, 0)
   var errs *multierror.Error
 
@@ -1196,7 +1196,7 @@ func sweepThings(region string) error {
     return fmt.Errorf("getting client: %w", err)
   }
 
-  conn := client.(*conns.AWSClient).ExampleConn(ctx)
+  conn := client.ExampleConn(ctx)
   sweepResources := make([]sweep.Sweepable, 0)
   var errs *multierror.Error
 

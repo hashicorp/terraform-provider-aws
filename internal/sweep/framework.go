@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -27,7 +28,7 @@ type FrameworkSupplementalAttributes []FrameworkSupplementalAttribute
 type SweepFrameworkResource struct {
 	factory func(context.Context) (fwresource.ResourceWithConfigure, error)
 	id      string
-	meta    interface{}
+	meta    *conns.AWSClient
 
 	// supplementalAttributes stores additional attributes to set in state.
 	//
@@ -49,7 +50,7 @@ func (f *FrameworkSupplementalAttributes) Add(path string, value any) {
 	*f = append(*f, item)
 }
 
-func NewSweepFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}, supplementalAttributes ...FrameworkSupplementalAttribute) *SweepFrameworkResource {
+func NewSweepFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta *conns.AWSClient, supplementalAttributes ...FrameworkSupplementalAttribute) *SweepFrameworkResource {
 	return &SweepFrameworkResource{
 		factory:                factory,
 		id:                     id,

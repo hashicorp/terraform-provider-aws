@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -70,7 +69,7 @@ func sweepAssessments(region string) error {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AuditManagerClient(ctx)
+	conn := client.AuditManagerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.ListAssessmentsInput{}
 	var errs *multierror.Error
@@ -113,7 +112,7 @@ func sweepAssessmentDelegations(region string) error {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AuditManagerClient(ctx)
+	conn := client.AuditManagerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.GetDelegationsInput{}
 	var errs *multierror.Error
@@ -167,7 +166,7 @@ func sweepAssessmentReports(region string) error {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AuditManagerClient(ctx)
+	conn := client.AuditManagerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.ListAssessmentReportsInput{}
 	var errs *multierror.Error
@@ -215,7 +214,7 @@ func sweepControls(region string) error {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AuditManagerClient(ctx)
+	conn := client.AuditManagerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.ListControlsInput{ControlType: types.ControlTypeCustom}
 	var errs *multierror.Error
@@ -258,7 +257,7 @@ func sweepFrameworks(region string) error {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AuditManagerClient(ctx)
+	conn := client.AuditManagerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.ListAssessmentFrameworksInput{FrameworkType: types.FrameworkTypeCustom}
 	var errs *multierror.Error
@@ -301,7 +300,7 @@ func sweepFrameworkShares(region string) error {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AuditManagerClient(ctx)
+	conn := client.AuditManagerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.ListAssessmentFrameworkShareRequestsInput{RequestType: types.ShareRequestTypeSent}
 	var errs *multierror.Error

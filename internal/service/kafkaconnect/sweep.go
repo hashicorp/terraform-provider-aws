@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -35,7 +34,7 @@ func sweepConnectors(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).KafkaConnectConn(ctx)
+	conn := client.KafkaConnectConn(ctx)
 	input := &kafkaconnect.ListConnectorsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -79,7 +78,7 @@ func sweepCustomPlugins(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).KafkaConnectConn(ctx)
+	conn := client.KafkaConnectConn(ctx)
 	input := &kafkaconnect.ListCustomPluginsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
