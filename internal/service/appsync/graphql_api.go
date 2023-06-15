@@ -279,7 +279,7 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &appsync.CreateGraphqlApiInput{
 		AuthenticationType: aws.String(d.Get("authentication_type").(string)),
 		Name:               aws.String(name),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("additional_authentication_provider"); ok {
@@ -367,7 +367,7 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting xray_enabled: %s", err)
 	}
 
-	SetTagsOut(ctx, api.Tags)
+	setTagsOut(ctx, api.Tags)
 
 	return diags
 }
