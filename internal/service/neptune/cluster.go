@@ -327,7 +327,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Port:                             aws.Int64(int64(d.Get("port").(int))),
 		StorageEncrypted:                 aws.Bool(d.Get("storage_encrypted").(bool)),
 		DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:                             GetTagsIn(ctx),
+		Tags:                             getTagsIn(ctx),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 	}
 	inputR := &neptune.RestoreDBClusterFromSnapshotInput{
@@ -337,7 +337,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Port:                             aws.Int64(int64(d.Get("port").(int))),
 		SnapshotIdentifier:               aws.String(d.Get("snapshot_identifier").(string)),
 		DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:                             GetTagsIn(ctx),
+		Tags:                             getTagsIn(ctx),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 	}
 	inputM := &neptune.ModifyDBClusterInput{
