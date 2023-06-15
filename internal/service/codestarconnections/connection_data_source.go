@@ -51,7 +51,7 @@ func DataSourceConnection() *schema.Resource {
 
 func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var connection *codestarconnections.Connection

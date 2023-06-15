@@ -59,7 +59,7 @@ func DataSourcePolicies() *schema.Resource {
 
 func dataSourcePoliciesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	filter := d.Get("filter").(string)
 

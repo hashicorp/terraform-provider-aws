@@ -54,7 +54,7 @@ func ResourceKeyPolicy() *schema.Resource {
 
 func resourceKeyPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID := d.Get("key_id").(string)
 
@@ -69,7 +69,7 @@ func resourceKeyPolicyCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceKeyPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	key, err := findKey(ctx, conn, d.Id(), d.IsNewResource())
 
@@ -96,7 +96,7 @@ func resourceKeyPolicyRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceKeyPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	if d.HasChange("policy") {
 		if err := updateKeyPolicy(ctx, conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
@@ -109,7 +109,7 @@ func resourceKeyPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceKeyPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	if !d.Get("bypass_policy_lockout_safety_check").(bool) {
 		if err := updateKeyPolicy(ctx, conn, d.Get("key_id").(string), meta.(*conns.AWSClient).DefaultKMSKeyPolicy(), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {

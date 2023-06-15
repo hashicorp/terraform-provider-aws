@@ -134,7 +134,7 @@ func ResourceRuleGroup() *schema.Resource {
 }
 
 func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	name := d.Get("name").(string)
 	input := &wafv2.CreateRuleGroupInput{
@@ -170,7 +170,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	output, err := FindRuleGroupByThreePartKey(ctx, conn, d.Id(), d.Get("name").(string), d.Get("scope").(string))
 
@@ -204,7 +204,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &wafv2.UpdateRuleGroupInput{
@@ -238,7 +238,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	input := &wafv2.DeleteRuleGroupInput{
 		Id:        aws.String(d.Id()),

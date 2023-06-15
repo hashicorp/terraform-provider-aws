@@ -301,7 +301,7 @@ func ResourcePolicy() *schema.Resource {
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 	params := getPutScalingPolicyInput(d)
 
@@ -398,7 +398,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 	params := getPutScalingPolicyInput(d)
 
@@ -427,7 +427,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 	p, err := getPolicy(ctx, d, meta)
 	if err != nil {
 		return create.DiagError(names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
@@ -741,7 +741,7 @@ func getPutScalingPolicyInput(d *schema.ResourceData) applicationautoscaling.Put
 }
 
 func getPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) (*applicationautoscaling.ScalingPolicy, error) {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 	params := applicationautoscaling.DescribeScalingPoliciesInput{
 		PolicyNames:       []*string{aws.String(d.Get("name").(string))},

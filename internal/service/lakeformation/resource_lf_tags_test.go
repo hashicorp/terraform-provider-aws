@@ -206,7 +206,7 @@ func testAccResourceLFTags_tableWithColumns(t *testing.T) {
 
 func testAccCheckDatabaseLFTagsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lakeformation_resource_lf_tags" {
@@ -393,7 +393,7 @@ func testAccCheckDatabaseLFTagsExists(ctx context.Context, resourceName string) 
 			}
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
 		_, err := conn.GetResourceLFTagsWithContext(ctx, input)
 
 		return err

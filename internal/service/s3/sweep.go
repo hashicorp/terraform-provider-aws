@@ -47,7 +47,7 @@ func sweepObjects(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).S3ConnURICleaningDisabled()
+	conn := client.(*conns.AWSClient).S3ConnURICleaningDisabled(ctx)
 	input := &s3.ListBucketsInput{}
 
 	output, err := conn.ListBucketsWithContext(ctx, input)
@@ -122,7 +122,7 @@ func sweepBuckets(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).S3Conn()
+	conn := client.(*conns.AWSClient).S3Conn(ctx)
 	input := &s3.ListBucketsInput{}
 
 	output, err := conn.ListBucketsWithContext(ctx, input)

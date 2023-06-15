@@ -30,6 +30,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ecr_image",
 		},
 		{
+			Factory:  DataSourcePullThroughCacheRule,
+			TypeName: "aws_ecr_pull_through_cache_rule",
+		},
+		{
 			Factory:  DataSourceRepository,
 			TypeName: "aws_ecr_repository",
 		},

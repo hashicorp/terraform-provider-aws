@@ -101,7 +101,7 @@ func FetchKeybasePubkeys(input []string) (map[string]string, error) {
 		serializedEntity.Reset()
 		err = entityList[0].Serialize(serializedEntity)
 		if err != nil {
-			return nil, fmt.Errorf("error serializing entity for user %q: %w", usernames[i], err)
+			return nil, fmt.Errorf("serializing entity for user %q: %w", usernames[i], err)
 		}
 
 		// The API returns values in the same ordering requested, so this should properly match

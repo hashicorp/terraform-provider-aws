@@ -201,7 +201,7 @@ func ResourceStack() *schema.Resource {
 
 func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpsWorksConn()
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	name := d.Get("name").(string)
 	region := d.Get("region").(string)
@@ -319,11 +319,11 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var err error
-	conn := meta.(*conns.AWSClient).OpsWorksConn()
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
 		log.Printf(`[DEBUG] overriding region using "stack_endpoint": %s`, v)
-		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
+		conn, err = regionalConn(ctx, meta.(*conns.AWSClient), v.(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, `reading OpsWorks Stack (%s): creating client for "stack_endpoint" (%s): %s`, d.Id(), v, err)
 		}
@@ -337,7 +337,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		// See https://github.com/hashicorp/terraform/issues/12842.
 		v := endpoints.UsEast1RegionID
 		log.Printf(`[DEBUG] overriding region using legacy region: %s`, v)
-		conn, err = regionalConn(meta.(*conns.AWSClient), v)
+		conn, err = regionalConn(ctx, meta.(*conns.AWSClient), v)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, `reading OpsWorks Stack (%s): creating client for legacy region (%s): %s`, d.Id(), v, err)
 		}
@@ -425,10 +425,10 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var err error
-	conn := meta.(*conns.AWSClient).OpsWorksConn()
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
-		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
+		conn, err = regionalConn(ctx, meta.(*conns.AWSClient), v.(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, `updating OpsWorks Stack (%s): creating client for "stack_endpoint" (%s): %s`, d.Id(), v, err)
 		}
@@ -541,10 +541,10 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var err error
-	conn := meta.(*conns.AWSClient).OpsWorksConn()
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
-		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
+		conn, err = regionalConn(ctx, meta.(*conns.AWSClient), v.(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, `deleting OpsWorks Stack (%s): creating client for "stack_endpoint" (%s): %s`, d.Id(), v, err)
 		}
@@ -686,8 +686,8 @@ func flattenSource(apiObject *opsworks.Source) map[string]interface{} {
 // See:
 //   - https://github.com/hashicorp/terraform/pull/12688
 //   - https://github.com/hashicorp/terraform/issues/12842
-func regionalConn(client *conns.AWSClient, regionName string) (*opsworks.OpsWorks, error) {
-	conn := client.OpsWorksConn()
+func regionalConn(ctx context.Context, client *conns.AWSClient, regionName string) (*opsworks.OpsWorks, error) {
+	conn := client.OpsWorksConn(ctx)
 
 	// Regions are the same, no need to reconfigure.
 	if aws.StringValue(conn.Config.Region) == regionName {

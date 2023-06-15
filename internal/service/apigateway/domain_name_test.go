@@ -404,7 +404,7 @@ func testAccCheckDomainNameExists(ctx context.Context, n string, v *apigateway.D
 			return fmt.Errorf("No API Gateway Domain Name ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		output, err := tfapigateway.FindDomainName(ctx, conn, rs.Primary.ID)
 
@@ -420,7 +420,7 @@ func testAccCheckDomainNameExists(ctx context.Context, n string, v *apigateway.D
 
 func testAccCheckDomainNameDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_domain_name" {

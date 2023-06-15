@@ -55,7 +55,7 @@ func DataSourceOrganizationalUnitChildAccounts() *schema.Resource {
 
 func dataSourceOrganizationalUnitChildAccountsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	parentID := d.Get("parent_id").(string)
 	accounts, err := findAccountsForParent(ctx, conn, parentID)

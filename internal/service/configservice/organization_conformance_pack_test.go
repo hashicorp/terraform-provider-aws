@@ -427,7 +427,7 @@ func testAccOrganizationConformancePack_updateTemplateBody(t *testing.T) {
 
 func testAccCheckOrganizationConformancePackDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_config_organization_conformance_pack" {
@@ -466,7 +466,7 @@ func testAccCheckOrganizationConformancePackExists(ctx context.Context, resource
 			return fmt.Errorf("Not Found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
 		pack, err := tfconfig.DescribeOrganizationConformancePack(ctx, conn, rs.Primary.ID)
 

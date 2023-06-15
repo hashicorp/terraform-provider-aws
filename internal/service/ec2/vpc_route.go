@@ -178,7 +178,7 @@ func ResourceRoute() *schema.Resource {
 
 func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
@@ -266,7 +266,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
@@ -330,7 +330,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
@@ -411,7 +411,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 

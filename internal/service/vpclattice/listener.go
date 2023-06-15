@@ -163,7 +163,7 @@ const (
 )
 
 func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	in := &vpclattice.CreateListenerInput{
 		Name:          aws.String(d.Get("name").(string)),
@@ -185,7 +185,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if in.ServiceIdentifier == nil {
-		return diag.FromErr(fmt.Errorf("must specify either service_arn or service_identifier"))
+		return diag.Errorf("must specify either service_arn or service_identifier")
 	}
 
 	out, err := conn.CreateListener(ctx, in)
@@ -213,7 +213,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	// GetListener requires the ID or Amazon Resource Name (ARN) of the service
 	serviceId := d.Get("service_identifier").(string)
@@ -249,7 +249,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	serviceId := d.Get("service_identifier").(string)
 	listenerId := d.Get("listener_id").(string)
@@ -276,7 +276,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPC Lattice Listener %s", d.Id())
 

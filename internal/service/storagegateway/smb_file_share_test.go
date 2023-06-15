@@ -911,7 +911,7 @@ func TestAccStorageGatewaySMBFileShare_adminUserList(t *testing.T) {
 
 func testAccCheckSMBFileShareDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_storagegateway_smb_file_share" {
@@ -942,7 +942,7 @@ func testAccCheckSMBFileShareExists(ctx context.Context, resourceName string, sm
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
 		output, err := tfstoragegateway.FindSMBFileShareByARN(ctx, conn, rs.Primary.ID)
 

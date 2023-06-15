@@ -59,7 +59,7 @@ func ResourceFirewallRuleGroup() *schema.Resource {
 }
 
 func resourceFirewallRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &route53resolver.CreateFirewallRuleGroupInput{
@@ -80,7 +80,7 @@ func resourceFirewallRuleGroupCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceFirewallRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	ruleGroup, err := FindFirewallRuleGroupByID(ctx, conn, d.Id())
 
@@ -109,7 +109,7 @@ func resourceFirewallRuleGroupUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceFirewallRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Rule Group: %s", d.Id())
 	_, err := conn.DeleteFirewallRuleGroupWithContext(ctx, &route53resolver.DeleteFirewallRuleGroupInput{

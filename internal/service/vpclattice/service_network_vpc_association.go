@@ -84,7 +84,7 @@ const (
 )
 
 func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	in := &vpclattice.CreateServiceNetworkVpcAssociationInput{
 		ClientToken:              aws.String(id.UniqueId()),
@@ -116,7 +116,7 @@ func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.R
 }
 
 func resourceServiceNetworkVPCAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	out, err := findServiceNetworkVPCAssociationByID(ctx, conn, d.Id())
 
@@ -141,7 +141,7 @@ func resourceServiceNetworkVPCAssociationRead(ctx context.Context, d *schema.Res
 }
 
 func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &vpclattice.UpdateServiceNetworkVpcAssociationInput{
 			ServiceNetworkVpcAssociationIdentifier: aws.String(d.Id()),
@@ -162,7 +162,7 @@ func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.R
 }
 
 func resourceServiceNetworkVPCAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice Service Network VPC Association %s", d.Id())
 

@@ -51,7 +51,7 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", string(types.CertificateTypeAmazonIssued)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "validation_emails.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "validation_emails.#", 0),
 					resource.TestMatchResourceAttr(resourceName, "validation_emails.0", regexp.MustCompile(`^[^@]+@.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodEmail)),
 					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
@@ -177,7 +177,7 @@ func TestAccACMCertificate_validationOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.CertificateStatusPendingValidation)),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "validation_emails.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "validation_emails.#", 0),
 					resource.TestMatchResourceAttr(resourceName, "validation_emails.0", regexp.MustCompile(`^[^@]+@.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodEmail)),
 					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "1"),
@@ -237,7 +237,7 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
 					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -265,7 +265,7 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
 					_, err := conn.RenewCertificate(ctx, &acm.RenewCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -289,7 +289,7 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
 					_, err := tfacm.WaitCertificateRenewed(ctx, conn, aws.ToString(v1.CertificateArn), tfacm.CertificateRenewalTimeout)
 					if err != nil {
@@ -363,7 +363,7 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
 					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -390,7 +390,7 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
 					_, err := conn.RenewCertificate(ctx, &acm.RenewCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -473,7 +473,7 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalGoDuration(t *testin
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
 					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -547,7 +547,7 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalRFC3339Duration(t *t
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
 					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -621,7 +621,7 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPast(t *testing.T) 
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
 					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -762,7 +762,7 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalFuture(t *testing.T
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
 					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -848,7 +848,7 @@ func TestAccACMCertificate_privateCertificate_updateEarlyRenewalFuture(t *testin
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
 					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -918,7 +918,7 @@ func TestAccACMCertificate_privateCertificate_removeEarlyRenewal(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
 					_, err := conn.ExportCertificate(ctx, &acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -1691,7 +1691,7 @@ func testAccCheckCertificateExists(ctx context.Context, n string, v *types.Certi
 			return fmt.Errorf("no ACM Certificate ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
 		output, err := tfacm.FindCertificateByARN(ctx, conn, rs.Primary.ID)
 
@@ -1707,7 +1707,7 @@ func testAccCheckCertificateExists(ctx context.Context, n string, v *types.Certi
 
 func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_acm_certificate" {

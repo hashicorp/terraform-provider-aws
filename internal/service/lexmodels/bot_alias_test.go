@@ -369,7 +369,7 @@ func testAccCheckBotAliasExists(ctx context.Context, rName string, output *lexmo
 		botAliasName := rs.Primary.Attributes["name"]
 
 		var err error
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
 
 		output, err = conn.GetBotAliasWithContext(ctx, &lexmodelbuildingservice.GetBotAliasInput{
 			BotName: aws.String(botName),
@@ -388,7 +388,7 @@ func testAccCheckBotAliasExists(ctx context.Context, rName string, output *lexmo
 
 func testAccCheckBotAliasDestroy(ctx context.Context, botName, botAliasName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
 
 		_, err := conn.GetBotAliasWithContext(ctx, &lexmodelbuildingservice.GetBotAliasInput{
 			BotName: aws.String(botName),

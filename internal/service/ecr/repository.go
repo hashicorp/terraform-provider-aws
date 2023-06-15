@@ -113,7 +113,7 @@ func ResourceRepository() *schema.Resource {
 
 func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &ecr.CreateRepositoryInput{
@@ -164,7 +164,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindRepositoryByName(ctx, conn, d.Id())
@@ -199,7 +199,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	if d.HasChange("image_tag_mutability") {
 		input := &ecr.PutImageTagMutabilityInput{
@@ -239,7 +239,7 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	log.Printf("[DEBUG] Deleting ECR Repository: %s", d.Id())
 	_, err := conn.DeleteRepositoryWithContext(ctx, &ecr.DeleteRepositoryInput{

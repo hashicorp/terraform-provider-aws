@@ -51,11 +51,6 @@ const (
 	stackSetOperationDelay = 5 * time.Second
 )
 
-const (
-	// Default maximum amount of time to wait for a StackSet to be Updated
-	StackSetUpdatedDefaultTimeout = 30 * time.Minute
-)
-
 func WaitStackSetOperationSucceeded(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, operationID, callAs string, timeout time.Duration) (*cloudformation.StackSetOperation, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{cloudformation.StackSetOperationStatusRunning, cloudformation.StackSetOperationStatusQueued},

@@ -2,7 +2,6 @@ package s3
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -97,7 +96,7 @@ func ResourceBucketLogging() *schema.Resource {
 }
 
 func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -127,7 +126,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error putting S3 bucket (%s) logging: %w", bucket, err))
+		return diag.Errorf("putting S3 bucket (%s) logging: %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
@@ -136,7 +135,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -162,14 +161,14 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading S3 Bucket (%s) Logging: %w", d.Id(), err))
+		return diag.Errorf("reading S3 Bucket (%s) Logging: %s", d.Id(), err)
 	}
 
 	output, ok := resp.(*s3.GetBucketLoggingOutput)
 
 	if !ok || output.LoggingEnabled == nil {
 		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading S3 Bucket (%s) Logging: empty output", d.Id()))
+			return diag.Errorf("reading S3 Bucket (%s) Logging: empty output", d.Id())
 		}
 		log.Printf("[WARN] S3 Bucket Logging (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -184,14 +183,14 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("target_prefix", loggingEnabled.TargetPrefix)
 
 	if err := d.Set("target_grant", flattenBucketLoggingTargetGrants(loggingEnabled.TargetGrants)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting target_grant: %w", err))
+		return diag.Errorf("setting target_grant: %s", err)
 	}
 
 	return nil
 }
 
 func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -223,14 +222,14 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating S3 bucket (%s) logging: %w", d.Id(), err))
+		return diag.Errorf("updating S3 bucket (%s) logging: %s", d.Id(), err)
 	}
 
 	return resourceBucketLoggingRead(ctx, d, meta)
 }
 
 func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -253,7 +252,7 @@ func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting S3 Bucket (%s) Logging: %w", d.Id(), err))
+		return diag.Errorf("deleting S3 Bucket (%s) Logging: %s", d.Id(), err)
 	}
 
 	return nil

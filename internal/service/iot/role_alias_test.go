@@ -82,7 +82,7 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 
 func testAccCheckRoleAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_role_alias" {
 				continue
@@ -111,7 +111,7 @@ func testAccCheckRoleAliasExists(ctx context.Context, n string) resource.TestChe
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 		role_arn := rs.Primary.Attributes["role_arn"]
 
 		roleAliasDescription, err := tfiot.GetRoleAliasDescription(ctx, conn, rs.Primary.ID)

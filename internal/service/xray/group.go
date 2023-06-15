@@ -75,7 +75,7 @@ func resourceGroup() *schema.Resource {
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).XRayClient()
+	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	name := d.Get("group_name").(string)
 	input := &xray.CreateGroupInput{
@@ -101,7 +101,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).XRayClient()
+	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	group, err := findGroupByARN(ctx, conn, d.Id())
 
@@ -127,7 +127,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).XRayClient()
+	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &xray.UpdateGroupInput{GroupARN: aws.String(d.Id())}
@@ -152,7 +152,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).XRayClient()
+	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	log.Printf("[INFO] Deleting XRay Group: %s", d.Id())
 	_, err := conn.DeleteGroup(ctx, &xray.DeleteGroupInput{

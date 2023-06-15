@@ -27,13 +27,13 @@ func TestAccProvider_DefaultTags_emptyBlock(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_defaultTagsEmptyConfigurationBlock(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProviderDefaultTags_Tags(t, &provider, map[string]string{}),
+					testAccCheckProviderDefaultTags_Tags(ctx, t, &provider, map[string]string{}),
 				),
 			},
 		},
@@ -47,13 +47,13 @@ func TestAccProvider_DefaultTagsTags_none(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigDefaultTags_Tags0(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProviderDefaultTags_Tags(t, &provider, map[string]string{}),
+					testAccCheckProviderDefaultTags_Tags(ctx, t, &provider, map[string]string{}),
 				),
 			},
 		},
@@ -67,13 +67,13 @@ func TestAccProvider_DefaultTagsTags_one(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigDefaultTags_Tags1("test", "value"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProviderDefaultTags_Tags(t, &provider, map[string]string{"test": "value"}),
+					testAccCheckProviderDefaultTags_Tags(ctx, t, &provider, map[string]string{"test": "value"}),
 				),
 			},
 		},
@@ -87,13 +87,13 @@ func TestAccProvider_DefaultTagsTags_multiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigDefaultTags_Tags2("test1", "value1", "test2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProviderDefaultTags_Tags(t, &provider, map[string]string{
+					testAccCheckProviderDefaultTags_Tags(ctx, t, &provider, map[string]string{
 						"test1": "value1",
 						"test2": "value2",
 					}),
@@ -110,15 +110,15 @@ func TestAccProvider_DefaultAndIgnoreTags_emptyBlocks(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_defaultAndIgnoreTagsEmptyConfigurationBlock(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProviderDefaultTags_Tags(t, &provider, map[string]string{}),
-					testAccCheckIgnoreTagsKeys(t, &provider, []string{}),
-					testAccCheckIgnoreTagsKeyPrefixes(t, &provider, []string{}),
+					testAccCheckProviderDefaultTags_Tags(ctx, t, &provider, map[string]string{}),
+					testAccCheckIgnoreTagsKeys(ctx, t, &provider, []string{}),
+					testAccCheckIgnoreTagsKeyPrefixes(ctx, t, &provider, []string{}),
 				),
 			},
 		},
@@ -138,13 +138,13 @@ func TestAccProvider_endpoints(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_endpoints(endpoints.String()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpoints(&provider),
+					testAccCheckEndpoints(ctx, &provider),
 				),
 			},
 		},
@@ -188,15 +188,15 @@ func TestAccProvider_unusualEndpoints(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_unusualEndpoints(unusual1, unusual2, unusual3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUnusualEndpoints(&provider, unusual1),
-					testAccCheckUnusualEndpoints(&provider, unusual2),
-					testAccCheckUnusualEndpoints(&provider, unusual3),
+					testAccCheckUnusualEndpoints(ctx, &provider, unusual1),
+					testAccCheckUnusualEndpoints(ctx, &provider, unusual2),
+					testAccCheckUnusualEndpoints(ctx, &provider, unusual3),
 				),
 			},
 		},
@@ -210,14 +210,14 @@ func TestAccProvider_IgnoreTags_emptyBlock(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_ignoreTagsEmptyConfigurationBlock(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIgnoreTagsKeys(t, &provider, []string{}),
-					testAccCheckIgnoreTagsKeyPrefixes(t, &provider, []string{}),
+					testAccCheckIgnoreTagsKeys(ctx, t, &provider, []string{}),
+					testAccCheckIgnoreTagsKeyPrefixes(ctx, t, &provider, []string{}),
 				),
 			},
 		},
@@ -231,13 +231,13 @@ func TestAccProvider_IgnoreTagsKeyPrefixes_none(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_ignoreTagsKeyPrefixes0(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIgnoreTagsKeyPrefixes(t, &provider, []string{}),
+					testAccCheckIgnoreTagsKeyPrefixes(ctx, t, &provider, []string{}),
 				),
 			},
 		},
@@ -251,13 +251,13 @@ func TestAccProvider_IgnoreTagsKeyPrefixes_one(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_ignoreTagsKeyPrefixes3("test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIgnoreTagsKeyPrefixes(t, &provider, []string{"test"}),
+					testAccCheckIgnoreTagsKeyPrefixes(ctx, t, &provider, []string{"test"}),
 				),
 			},
 		},
@@ -271,13 +271,13 @@ func TestAccProvider_IgnoreTagsKeyPrefixes_multiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_ignoreTagsKeyPrefixes2("test1", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIgnoreTagsKeyPrefixes(t, &provider, []string{"test1", "test2"}),
+					testAccCheckIgnoreTagsKeyPrefixes(ctx, t, &provider, []string{"test1", "test2"}),
 				),
 			},
 		},
@@ -291,13 +291,13 @@ func TestAccProvider_IgnoreTagsKeys_none(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_ignoreTagsKeys0(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIgnoreTagsKeys(t, &provider, []string{}),
+					testAccCheckIgnoreTagsKeys(ctx, t, &provider, []string{}),
 				),
 			},
 		},
@@ -311,13 +311,13 @@ func TestAccProvider_IgnoreTagsKeys_one(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_ignoreTagsKeys1("test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIgnoreTagsKeys(t, &provider, []string{"test"}),
+					testAccCheckIgnoreTagsKeys(ctx, t, &provider, []string{"test"}),
 				),
 			},
 		},
@@ -331,13 +331,13 @@ func TestAccProvider_IgnoreTagsKeys_multiple(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_ignoreTagsKeys2("test1", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIgnoreTagsKeys(t, &provider, []string{"test1", "test2"}),
+					testAccCheckIgnoreTagsKeys(ctx, t, &provider, []string{"test1", "test2"}),
 				),
 			},
 		},
@@ -351,15 +351,15 @@ func TestAccProvider_Region_c2s(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_region(endpoints.UsIsoEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDNSSuffix(t, &provider, "c2s.ic.gov"),
-					testAccCheckPartition(t, &provider, endpoints.AwsIsoPartitionID),
-					testAccCheckReverseDNSPrefix(t, &provider, "gov.ic.c2s"),
+					testAccCheckDNSSuffix(ctx, t, &provider, "c2s.ic.gov"),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsIsoPartitionID),
+					testAccCheckReverseDNSPrefix(ctx, t, &provider, "gov.ic.c2s"),
 				),
 				PlanOnly: true,
 			},
@@ -374,15 +374,15 @@ func TestAccProvider_Region_china(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_region(endpoints.CnNorthwest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDNSSuffix(t, &provider, "amazonaws.com.cn"),
-					testAccCheckPartition(t, &provider, endpoints.AwsCnPartitionID),
-					testAccCheckReverseDNSPrefix(t, &provider, "cn.com.amazonaws"),
+					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com.cn"),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsCnPartitionID),
+					testAccCheckReverseDNSPrefix(ctx, t, &provider, "cn.com.amazonaws"),
 				),
 				PlanOnly: true,
 			},
@@ -397,15 +397,15 @@ func TestAccProvider_Region_commercial(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_region(endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDNSSuffix(t, &provider, "amazonaws.com"),
-					testAccCheckPartition(t, &provider, endpoints.AwsPartitionID),
-					testAccCheckReverseDNSPrefix(t, &provider, "com.amazonaws"),
+					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com"),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsPartitionID),
+					testAccCheckReverseDNSPrefix(ctx, t, &provider, "com.amazonaws"),
 				),
 				PlanOnly: true,
 			},
@@ -420,15 +420,15 @@ func TestAccProvider_Region_govCloud(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_region(endpoints.UsGovWest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDNSSuffix(t, &provider, "amazonaws.com"),
-					testAccCheckPartition(t, &provider, endpoints.AwsUsGovPartitionID),
-					testAccCheckReverseDNSPrefix(t, &provider, "com.amazonaws"),
+					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com"),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsUsGovPartitionID),
+					testAccCheckReverseDNSPrefix(ctx, t, &provider, "com.amazonaws"),
 				),
 				PlanOnly: true,
 			},
@@ -443,15 +443,15 @@ func TestAccProvider_Region_sc2s(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_region(endpoints.UsIsobEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDNSSuffix(t, &provider, "sc2s.sgov.gov"),
-					testAccCheckPartition(t, &provider, endpoints.AwsIsoBPartitionID),
-					testAccCheckReverseDNSPrefix(t, &provider, "gov.sgov.sc2s"),
+					testAccCheckDNSSuffix(ctx, t, &provider, "sc2s.sgov.gov"),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsIsoBPartitionID),
+					testAccCheckReverseDNSPrefix(ctx, t, &provider, "gov.sgov.sc2s"),
 				),
 				PlanOnly: true,
 			},
@@ -466,14 +466,14 @@ func TestAccProvider_Region_stsRegion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_stsRegion(endpoints.UsEast1RegionID, endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegion(t, &provider, endpoints.UsEast1RegionID),
-					testAccCheckSTSRegion(t, &provider, endpoints.UsWest2RegionID),
+					testAccCheckRegion(ctx, t, &provider, endpoints.UsEast1RegionID),
+					testAccCheckSTSRegion(ctx, t, &provider, endpoints.UsWest2RegionID),
 				),
 				PlanOnly: true,
 			},
@@ -499,8 +499,8 @@ func TestAccProvider_AssumeRole_empty(t *testing.T) {
 	})
 }
 
-func testAccProtoV5ProviderFactoriesInternal(t *testing.T, v **schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
-	providerServerFactory, p, err := provider.ProtoV5ProviderServerFactory(context.Background())
+func testAccProtoV5ProviderFactoriesInternal(ctx context.Context, t *testing.T, v **schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
+	providerServerFactory, p, err := provider.ProtoV5ProviderServerFactory(ctx)
 
 	if err != nil {
 		t.Fatal(err)
@@ -516,7 +516,7 @@ func testAccProtoV5ProviderFactoriesInternal(t *testing.T, v **schema.Provider) 
 	}
 }
 
-func testAccCheckPartition(t *testing.T, p **schema.Provider, expectedPartition string) resource.TestCheckFunc { //nolint:unparam
+func testAccCheckPartition(ctx context.Context, t *testing.T, p **schema.Provider, expectedPartition string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -532,7 +532,7 @@ func testAccCheckPartition(t *testing.T, p **schema.Provider, expectedPartition 
 	}
 }
 
-func testAccCheckDNSSuffix(t *testing.T, p **schema.Provider, expectedDnsSuffix string) resource.TestCheckFunc { //nolint:unparam
+func testAccCheckDNSSuffix(ctx context.Context, t *testing.T, p **schema.Provider, expectedDnsSuffix string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -548,7 +548,7 @@ func testAccCheckDNSSuffix(t *testing.T, p **schema.Provider, expectedDnsSuffix 
 	}
 }
 
-func testAccCheckRegion(t *testing.T, p **schema.Provider, expectedRegion string) resource.TestCheckFunc { //nolint:unparam
+func testAccCheckRegion(ctx context.Context, t *testing.T, p **schema.Provider, expectedRegion string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -562,13 +562,13 @@ func testAccCheckRegion(t *testing.T, p **schema.Provider, expectedRegion string
 	}
 }
 
-func testAccCheckSTSRegion(t *testing.T, p **schema.Provider, expectedRegion string) resource.TestCheckFunc { //nolint:unparam
+func testAccCheckSTSRegion(ctx context.Context, t *testing.T, p **schema.Provider, expectedRegion string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
 		}
 
-		stsRegion := aws.StringValue((*p).Meta().(*conns.AWSClient).STSConn().Config.Region)
+		stsRegion := aws.StringValue((*p).Meta().(*conns.AWSClient).STSConn(ctx).Config.Region)
 
 		if stsRegion != expectedRegion {
 			return fmt.Errorf("expected STS Region (%s), got: %s", expectedRegion, stsRegion)
@@ -578,7 +578,7 @@ func testAccCheckSTSRegion(t *testing.T, p **schema.Provider, expectedRegion str
 	}
 }
 
-func testAccCheckReverseDNSPrefix(t *testing.T, p **schema.Provider, expectedReverseDnsPrefix string) resource.TestCheckFunc { //nolint:unparam
+func testAccCheckReverseDNSPrefix(ctx context.Context, t *testing.T, p **schema.Provider, expectedReverseDnsPrefix string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -593,7 +593,7 @@ func testAccCheckReverseDNSPrefix(t *testing.T, p **schema.Provider, expectedRev
 	}
 }
 
-func testAccCheckIgnoreTagsKeyPrefixes(t *testing.T, p **schema.Provider, expectedKeyPrefixes []string) resource.TestCheckFunc { //nolint:unparam
+func testAccCheckIgnoreTagsKeyPrefixes(ctx context.Context, t *testing.T, p **schema.Provider, expectedKeyPrefixes []string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -650,7 +650,7 @@ func testAccCheckIgnoreTagsKeyPrefixes(t *testing.T, p **schema.Provider, expect
 	}
 }
 
-func testAccCheckIgnoreTagsKeys(t *testing.T, p **schema.Provider, expectedKeys []string) resource.TestCheckFunc { //nolint:unparam
+func testAccCheckIgnoreTagsKeys(ctx context.Context, t *testing.T, p **schema.Provider, expectedKeys []string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -707,7 +707,7 @@ func testAccCheckIgnoreTagsKeys(t *testing.T, p **schema.Provider, expectedKeys 
 	}
 }
 
-func testAccCheckProviderDefaultTags_Tags(t *testing.T, p **schema.Provider, expectedTags map[string]string) resource.TestCheckFunc { //nolint:unparam
+func testAccCheckProviderDefaultTags_Tags(ctx context.Context, t *testing.T, p **schema.Provider, expectedTags map[string]string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -764,7 +764,7 @@ func testAccCheckProviderDefaultTags_Tags(t *testing.T, p **schema.Provider, exp
 	}
 }
 
-func testAccCheckEndpoints(p **schema.Provider) resource.TestCheckFunc {
+func testAccCheckEndpoints(_ context.Context, p **schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -803,7 +803,7 @@ func testAccCheckEndpoints(p **schema.Provider) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckUnusualEndpoints(p **schema.Provider, unusual unusualEndpoint) resource.TestCheckFunc {
+func testAccCheckUnusualEndpoints(_ context.Context, p **schema.Provider, unusual unusualEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")

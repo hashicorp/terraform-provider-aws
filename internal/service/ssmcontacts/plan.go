@@ -96,7 +96,7 @@ const (
 )
 
 func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SSMContactsClient()
+	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	contactId := d.Get("contact_id").(string)
 	stages := expandStages(d.Get("stage").([]interface{}))
@@ -126,7 +126,7 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SSMContactsClient()
+	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	out, err := findContactByID(ctx, conn, d.Id())
 
@@ -148,7 +148,7 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SSMContactsClient()
+	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	update := false
 
@@ -178,7 +178,7 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SSMContactsClient()
+	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	log.Printf("[INFO] Deleting SSMContacts Plan %s", d.Id())
 

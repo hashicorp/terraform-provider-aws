@@ -67,6 +67,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Group",
 		},
 		{
+			Factory:  DataSourceTheme,
+			TypeName: "aws_quicksight_theme",
+			Name:     "Theme",
+		},
+		{
 			Factory:  DataSourceUser,
 			TypeName: "aws_quicksight_user",
 			Name:     "User",
@@ -80,6 +85,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceAccountSubscription,
 			TypeName: "aws_quicksight_account_subscription",
 			Name:     "Account Subscription",
+		},
+		{
+			Factory:  ResourceAnalysis,
+			TypeName: "aws_quicksight_analysis",
+			Name:     "Analysis",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceDashboard,
+			TypeName: "aws_quicksight_dashboard",
+			Name:     "Dashboard",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceDataSet,
@@ -119,6 +140,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceTemplate,
 			TypeName: "aws_quicksight_template",
 			Name:     "Template",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceTheme,
+			TypeName: "aws_quicksight_theme",
+			Name:     "Theme",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},

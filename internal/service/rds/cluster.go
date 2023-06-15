@@ -533,7 +533,7 @@ func ResourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing
@@ -1075,7 +1075,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbc, err := FindDBClusterByID(ctx, conn, d.Id())
 
@@ -1199,7 +1199,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	if d.HasChangesExcept(
 		"allow_major_version_upgrade",
@@ -1235,7 +1235,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("db_cluster_instance_class") {
-			input.EngineVersion = aws.String(d.Get("db_cluster_instance_class").(string))
+			input.DBClusterInstanceClass = aws.String(d.Get("db_cluster_instance_class").(string))
 		}
 
 		if d.HasChange("db_cluster_parameter_group_name") {
@@ -1432,7 +1432,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	// Automatically remove from global cluster to bypass this error on deletion:
 	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
@@ -1674,6 +1674,7 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, timeout
 			ClusterStatusModifying,
 			ClusterStatusRenaming,
 			ClusterStatusResettingMasterCredentials,
+			ClusterStatusScalingCompute,
 			ClusterStatusUpgrading,
 		},
 		Target:     []string{ClusterStatusAvailable},

@@ -764,7 +764,7 @@ func instanceFleetConfigSchema() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	applications := d.Get("applications").(*schema.Set).List()
 	keepJobFlowAliveWhenNoSteps := true
@@ -1043,7 +1043,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	cluster, err := FindClusterByID(ctx, conn, d.Id())
 
@@ -1213,7 +1213,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	if d.HasChange("visible_to_all_users") {
 		_, err := conn.SetVisibleToAllUsersWithContext(ctx, &emr.SetVisibleToAllUsersInput{
@@ -1413,7 +1413,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	log.Printf("[DEBUG] Deleting EMR Cluster: %s", d.Id())
 	_, err := conn.TerminateJobFlowsWithContext(ctx, &emr.TerminateJobFlowsInput{

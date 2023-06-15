@@ -146,5 +146,5 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 // {{ .UpdateTagsFunc }} updates {{ .ServicePackage }} service tags.
 // It is called from outside this package.
 func (p *servicePackage) {{ .UpdateTagsFunc }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTags, newTags any) error {
-	return  {{ .UpdateTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(), identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, oldTags, newTags)
+	return  {{ .UpdateTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(ctx), identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, oldTags, newTags)
 }

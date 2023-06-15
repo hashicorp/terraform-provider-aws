@@ -519,7 +519,7 @@ func TestAccCloudControlResource_lambdaFunction(t *testing.T) {
 
 func testAccCheckResourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudControlClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudControlClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudcontrolapi_resource" {

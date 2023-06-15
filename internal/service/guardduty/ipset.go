@@ -50,17 +50,10 @@ func ResourceIPSet() *schema.Resource {
 				Required: true,
 			},
 			"format": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					guardduty.IpSetFormatTxt,
-					guardduty.IpSetFormatStix,
-					guardduty.IpSetFormatOtxCsv,
-					guardduty.IpSetFormatAlienVault,
-					guardduty.IpSetFormatProofPoint,
-					guardduty.IpSetFormatFireEye,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(guardduty.IpSetFormat_Values(), false),
 			},
 			"location": {
 				Type:     schema.TypeString,
@@ -80,7 +73,7 @@ func ResourceIPSet() *schema.Resource {
 
 func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	detectorID := d.Get("detector_id").(string)
 	input := &guardduty.CreateIPSetInput{
@@ -117,7 +110,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
 	if err != nil {
@@ -160,7 +153,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
 	if err != nil {
@@ -194,7 +187,7 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
 	if err != nil {

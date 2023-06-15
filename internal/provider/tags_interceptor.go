@@ -43,7 +43,9 @@ func tagsUpdateFunc(ctx context.Context, d schemaResourceData, sp conns.ServiceP
 		c := config.GetAttr(names.AttrTags)
 		if !c.IsNull() {
 			for k, v := range c.AsValueMap() {
-				configTags[k] = v.AsString()
+				if !v.IsNull() {
+					configTags[k] = v.AsString()
+				}
 			}
 		}
 	}

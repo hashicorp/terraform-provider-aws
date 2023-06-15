@@ -33,7 +33,7 @@ func TestAccEC2EBSEncryptionByDefaultDataSource_basic(t *testing.T) {
 
 func testAccCheckEBSEncryptionByDefaultDataSource(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn codegururevieweriface.CodeGuruReviewerAP
 // ListTags lists codegurureviewer service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).CodeGuruReviewerConn(), identifier)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).CodeGuruReviewerConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -121,5 +121,5 @@ func UpdateTags(ctx context.Context, conn codegururevieweriface.CodeGuruReviewer
 // UpdateTags updates codegurureviewer service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).CodeGuruReviewerConn(), identifier, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).CodeGuruReviewerConn(ctx), identifier, oldTags, newTags)
 }

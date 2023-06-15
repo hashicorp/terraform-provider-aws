@@ -157,6 +157,28 @@ func TestAccVPC_tags_computed(t *testing.T) {
 	})
 }
 
+func TestAccVPC_tags_null(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCConfig_tags_null,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPC_DefaultTags_zeroValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc ec2.Vpc
@@ -489,6 +511,52 @@ func TestAccVPC_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
+					testAccVPCConfig_tags1("overlapkey", "overlapvalue"),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPC_DefaultTagsProviderAndResource_moveDuplicateTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					testAccVPCConfig_tags1("overlapkey", "overlapvalue"),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					testAccVPCConfig_basic,
+					acctest.ConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
 					testAccVPCConfig_tags1("overlapkey", "overlapvalue"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -1032,7 +1100,7 @@ func TestAccVPC_IPAMIPv6(t *testing.T) {
 
 func testAccCheckVPCDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc" {
@@ -1058,7 +1126,7 @@ func testAccCheckVPCDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckVPCUpdateTags(ctx context.Context, vpc *ec2.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		return tfec2.UpdateTags(ctx, conn, aws.StringValue(vpc.VpcId), oldTags, newTags)
 	}
@@ -1135,6 +1203,16 @@ resource "aws_vpc" "test" {
 
   tags = {
     eip = aws_eip.test.public_ip
+  }
+}
+`
+
+const testAccVPCConfig_tags_null = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = null
   }
 }
 `

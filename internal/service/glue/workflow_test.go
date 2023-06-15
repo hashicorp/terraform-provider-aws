@@ -229,7 +229,7 @@ func TestAccGlueWorkflow_disappears(t *testing.T) {
 }
 
 func testAccPreCheckWorkflow(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 	_, err := conn.ListWorkflowsWithContext(ctx, &glue.ListWorkflowsInput{})
 
@@ -254,7 +254,7 @@ func testAccCheckWorkflowExists(ctx context.Context, resourceName string, workfl
 			return fmt.Errorf("No Glue Workflow ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		output, err := conn.GetWorkflowWithContext(ctx, &glue.GetWorkflowInput{
 			Name: aws.String(rs.Primary.ID),
@@ -283,7 +283,7 @@ func testAccCheckWorkflowDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 			output, err := conn.GetWorkflowWithContext(ctx, &glue.GetWorkflowInput{
 				Name: aws.String(rs.Primary.ID),

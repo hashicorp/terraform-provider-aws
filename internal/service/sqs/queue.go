@@ -196,7 +196,7 @@ func ResourceQueue() *schema.Resource {
 }
 
 func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn()
+	conn := meta.(*conns.AWSClient).SQSConn(ctx)
 
 	var name string
 	fifoQueue := d.Get("fifo_queue").(bool)
@@ -260,7 +260,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn()
+	conn := meta.(*conns.AWSClient).SQSConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNotFound(ctx, queueReadTimeout, func() (interface{}, error) {
 		return FindQueueAttributesByURL(ctx, conn, d.Id())
@@ -307,7 +307,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn()
+	conn := meta.(*conns.AWSClient).SQSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		attributes, err := queueAttributeMap.ResourceDataToAPIAttributesUpdate(d)
@@ -339,7 +339,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn()
+	conn := meta.(*conns.AWSClient).SQSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SQS Queue: %s", d.Id())
 	_, err := conn.DeleteQueueWithContext(ctx, &sqs.DeleteQueueInput{

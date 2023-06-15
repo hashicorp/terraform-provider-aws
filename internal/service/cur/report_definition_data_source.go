@@ -70,7 +70,7 @@ func DataSourceReportDefinition() *schema.Resource {
 
 func dataSourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CURConn()
+	conn := meta.(*conns.AWSClient).CURConn(ctx)
 
 	reportName := d.Get("report_name").(string)
 

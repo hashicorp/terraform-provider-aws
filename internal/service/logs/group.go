@@ -76,7 +76,7 @@ func resourceGroup() *schema.Resource {
 }
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &cloudwatchlogs.CreateLogGroupInput{
@@ -115,7 +115,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	lg, err := FindLogGroupByName(ctx, conn, d.Id())
 
@@ -147,7 +147,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	if d.HasChange("retention_in_days") {
 		if v, ok := d.GetOk("retention_in_days"); ok {
@@ -212,7 +212,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return nil
 	}
 
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Log Group: %s", d.Id())
 	_, err := conn.DeleteLogGroupWithContext(ctx, &cloudwatchlogs.DeleteLogGroupInput{

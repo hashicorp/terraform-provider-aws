@@ -127,7 +127,7 @@ func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 
 func testAccCheckLocationObjectStorageDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datasync_location_object_storage" {
@@ -158,7 +158,7 @@ func testAccCheckLocationObjectStorageExists(ctx context.Context, resourceName s
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 		output, err := tfdatasync.FindLocationObjectStorageByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {

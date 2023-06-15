@@ -28,7 +28,7 @@ func sweepAssociations(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &codegurureviewer.ListRepositoryAssociationsInput{}
-	conn := client.(*conns.AWSClient).CodeGuruReviewerConn()
+	conn := client.(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 
