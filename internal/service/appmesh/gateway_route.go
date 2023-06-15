@@ -487,7 +487,7 @@ func resourceGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, met
 		GatewayRouteName:   aws.String(name),
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandGatewayRouteSpec(d.Get("spec").([]interface{})),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
 	}
 
