@@ -16,9 +16,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-type Attribute struct {
-	Path  string
-	Value any
+type attribute struct {
+	path  string
+	value any
+}
+
+func NewAttribute(path string, value any) attribute {
+	return attribute{
+		path:  path,
+		value: value,
+	}
+}
+
+func NewIDAttribute(value any) attribute {
+	return NewAttribute("id", value)
 }
 
 type SweepResource struct {
@@ -30,10 +41,10 @@ type SweepResource struct {
 	//
 	// This can be used in situations where the Delete method requires multiple attributes
 	// to destroy the underlying resource.
-	attributes []Attribute
+	attributes []attribute
 }
 
-func NewSweepResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta *conns.AWSClient, attributes ...Attribute) *SweepResource {
+func NewSweepResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta *conns.AWSClient, attributes ...attribute) *SweepResource {
 	return &SweepResource{
 		factory:    factory,
 		id:         id,
@@ -65,7 +76,7 @@ func (sr *SweepResource) Delete(ctx context.Context, timeout time.Duration, optF
 	return err
 }
 
-func deleteResource(ctx context.Context, factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}, attributes []Attribute) error {
+func deleteResource(ctx context.Context, factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta *conns.AWSClient, attributes []attribute) error {
 	resource, err := factory(ctx)
 
 	if err != nil {
@@ -82,11 +93,13 @@ func deleteResource(ctx context.Context, factory func(context.Context) (fwresour
 		Raw:    tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil),
 		Schema: schemaResp.Schema,
 	}
-	state.SetAttribute(ctx, path.Root("id"), id)
+	if id != "" {
+		attributes = append(attributes, NewIDAttribute(id))
+	}
 
-	// Set supplemental attibutes, if provided
+	// Set supplemental attributes, if provided
 	for _, attr := range attributes {
-		d := state.SetAttribute(ctx, path.Root(attr.Path), attr.Value)
+		d := state.SetAttribute(ctx, path.Root(attr.path), attr.value)
 		if d.HasError() {
 			return fwdiag.DiagnosticsError(d)
 		}

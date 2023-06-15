@@ -133,19 +133,11 @@ func sweepAssessmentDelegations(region string) error {
 		for _, d := range page.Delegations {
 			id := "" // ID is a combination of attributes for this resource, but not used for deletion
 
-			// assessment ID is required for delete operations
-			assessmentIDAttr := framework.Attribute{
-				Path:  "assessment_id",
-				Value: aws.ToString(d.AssessmentId),
-			}
-			// delegation ID is required for delete operations
-			delegationIDAttr := framework.Attribute{
-				Path:  "delegation_id",
-				Value: aws.ToString(d.Id),
-			}
-
-			log.Printf("[INFO] Deleting AuditManager Assessment Delegation: %s", delegationIDAttr.Value)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessmentDelegation, id, client, assessmentIDAttr, delegationIDAttr))
+			log.Printf("[INFO] Deleting AuditManager Assessment Delegation: %s", aws.ToString(d.Id))
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessmentDelegation, id, client,
+				framework.NewAttribute("assessment_id", aws.ToString(d.AssessmentId)),
+				framework.NewAttribute("delegation_id", aws.ToString(d.Id)),
+			))
 		}
 	}
 
@@ -186,14 +178,11 @@ func sweepAssessmentReports(region string) error {
 
 		for _, report := range page.AssessmentReports {
 			id := aws.ToString(report.Id)
-			// assessment ID is required for delete operations
-			assessmentIDAttr := framework.Attribute{
-				Path:  "assessment_id",
-				Value: aws.ToString(report.AssessmentId),
-			}
 
 			log.Printf("[INFO] Deleting AuditManager Assessment Report: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessmentReport, id, client, assessmentIDAttr))
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessmentReport, id, client,
+				framework.NewAttribute("assessment_id", aws.ToString(report.AssessmentId)),
+			))
 		}
 	}
 
