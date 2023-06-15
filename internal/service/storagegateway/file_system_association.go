@@ -107,7 +107,7 @@ func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.Resource
 		GatewayARN:  aws.String(gatewayARN),
 		LocationARN: aws.String(d.Get("location_arn").(string)),
 		Password:    aws.String(d.Get("password").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 		UserName:    aws.String(d.Get("username").(string)),
 	}
 
@@ -159,7 +159,7 @@ func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "setting cache_attributes: %s", err)
 	}
 
-	SetTagsOut(ctx, filesystem.Tags)
+	setTagsOut(ctx, filesystem.Tags)
 
 	return diags
 }
