@@ -155,12 +155,12 @@ func sourceParametersSchema() *schema.Schema {
 					Type:             schema.TypeList,
 					Optional:         true,
 					MaxItems:         1,
-					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					DiffSuppressFunc: suppressEmptyConfigurationBlock("source_parameters.0.filter_criteria"),
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"filter": {
 								Type:     schema.TypeList,
-								Required: true,
+								Optional: true,
 								MaxItems: 5,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
@@ -618,6 +618,8 @@ func expandUpdatePipeSourceParameters(tfMap map[string]interface{}) *types.Updat
 
 	if v, ok := tfMap["filter_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.FilterCriteria = expandFilterCriteria(v[0].(map[string]interface{}))
+	} else {
+		apiObject.FilterCriteria = &types.FilterCriteria{}
 	}
 
 	if v, ok := tfMap["kinesis_stream_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -687,7 +689,7 @@ func expandFilters(tfList []interface{}) []types.Filter {
 
 		apiObject := expandFilter(tfMap)
 
-		if apiObject == nil {
+		if apiObject == nil || apiObject.Pattern == nil {
 			continue
 		}
 

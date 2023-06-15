@@ -228,11 +228,7 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			DesiredState: types.RequestedPipeState(d.Get("desired_state").(string)),
 			Name:         aws.String(d.Id()),
 			RoleArn:      aws.String(d.Get("role_arn").(string)),
-			// Reset state in case it's a deletion.
-			SourceParameters: &types.UpdatePipeSourceParameters{
-				FilterCriteria: &types.FilterCriteria{},
-			},
-			Target: aws.String(d.Get("target").(string)),
+			Target:       aws.String(d.Get("target").(string)),
 			// Reset state in case it's a deletion, have to set the input to an empty string otherwise it doesn't get overwritten.
 			TargetParameters: &types.PipeTargetParameters{
 				InputTemplate: aws.String(""),
@@ -240,9 +236,7 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		if d.HasChange("enrichment") {
-			if v, ok := d.GetOk("enrichment"); ok && v.(string) != "" {
-				input.Enrichment = aws.String(v.(string))
-			}
+			input.Enrichment = aws.String(d.Get("enrichment").(string))
 		}
 
 		if v, ok := d.GetOk("enrichment_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -405,4 +399,19 @@ func waitPipeDeleted(ctx context.Context, conn *pipes.Client, id string, timeout
 	}
 
 	return nil, err
+}
+
+func suppressEmptyConfigurationBlock(key string) schema.SchemaDiffSuppressFunc {
+	return func(k, o, n string, d *schema.ResourceData) bool {
+		if k != key+".#" {
+			return false
+		}
+
+		if o == "0" && n == "1" {
+			v := d.Get(key).([]interface{})
+			return len(v) == 0 || v[0] == nil || len(v[0].(map[string]interface{})) == 0
+		}
+
+		return false
+	}
 }

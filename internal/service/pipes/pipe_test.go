@@ -48,7 +48,7 @@ func TestAccPipesPipe_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_sqs_queue.source", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_sqs_queue.target", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "0"),
@@ -300,8 +300,7 @@ func TestAccPipesPipe_sourceParameters_filterCriteria(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.0.filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.#", "0"),
 				),
 			},
 			{
@@ -324,7 +323,7 @@ func TestAccPipesPipe_sourceParameters_filterCriteria(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.#", "1"),
 				),
 			},
 		},
