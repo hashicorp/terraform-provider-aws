@@ -233,7 +233,6 @@ func (r *resourceEnvironment) Update(ctx context.Context, request resource.Updat
 	if !plan.Description.Equal(state.Description) ||
 		!plan.Name.Equal(state.Name) ||
 		!plan.Monitors.Equal(state.Monitors) {
-
 		updateInput := plan.updateEnvironmentInput()
 
 		if !plan.Description.Equal(state.Description) {
