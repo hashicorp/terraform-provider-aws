@@ -601,6 +601,7 @@ func TestAccELBLoadBalancer_ListenerSSLCertificateID_iamServerCertificate(t *tes
 func TestAccELBLoadBalancer_Swap_subnets(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elb.LoadBalancerDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -610,21 +611,21 @@ func TestAccELBLoadBalancer_Swap_subnets(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_subnets,
+				Config: testAccLoadBalancerConfig_subnets(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_subnetSwap,
+				Config: testAccLoadBalancerConfig_subnetSwap(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, "aws_elb.test", &conf),
 					resource.TestCheckResourceAttr("aws_elb.test", "subnets.#", "2"),
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_subnetCompleteSwap,
+				Config: testAccLoadBalancerConfig_subnetCompleteSwap(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, "aws_elb.test", &conf),
 					resource.TestCheckResourceAttr("aws_elb.test", "subnets.#", "2"),
@@ -1605,64 +1606,41 @@ resource "aws_elb" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-const testAccLoadBalancerConfig_subnets = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "azelb" {
-  cidr_block           = "10.1.0.0/16"
+func testAccLoadBalancerConfig_baseSubnets(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
 
   tags = {
-    Name = "terraform-testacc-elb-subnets"
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "public_a_one" {
-  vpc_id = aws_vpc.azelb.id
+resource "aws_subnet" "test" {
+  count = %[2]d
 
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  tags = {
-    Name = "tf-acc-elb-subnets-a-one"
-  }
-}
-
-resource "aws_subnet" "public_b_one" {
-  vpc_id = aws_vpc.azelb.id
-
-  cidr_block        = "10.1.7.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 
   tags = {
-    Name = "tf-acc-elb-subnets-b-one"
+    Name = %[1]q
   }
 }
-
-resource "aws_subnet" "public_a_two" {
-  vpc_id = aws_vpc.azelb.id
-
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-elb-subnets-a-two"
-  }
+`, rName))
 }
 
+func testAccLoadBalancerConfig_subnets(rName string) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseSubnets(rName), fmt.Sprintf(`
 resource "aws_elb" "test" {
-
   subnets = [
     aws_subnet.public_a_one.id,
     aws_subnet.public_b_one.id,
   ]
 
+  name = %[1]q
+
   listener {
     instance_port     = 80
     instance_protocol = "http"
@@ -1670,74 +1648,21 @@ resource "aws_elb" "test" {
     lb_protocol       = "http"
   }
 
-  depends_on = [aws_internet_gateway.gw]
+  depends_on = [aws_internet_gateway.test]
+}
+`, rName))
 }
 
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.azelb.id
-
-  tags = {
-    Name = "main"
-  }
-}
-`
-
-const testAccLoadBalancerConfig_subnetSwap = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "azelb" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = "terraform-testacc-elb-subnet-swap"
-  }
-}
-
-resource "aws_subnet" "public_a_one" {
-  vpc_id = aws_vpc.azelb.id
-
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  tags = {
-    Name = "tf-acc-elb-subnet-swap-a-one"
-  }
-}
-
-resource "aws_subnet" "public_b_one" {
-  vpc_id = aws_vpc.azelb.id
-
-  cidr_block        = "10.1.7.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  tags = {
-    Name = "tf-acc-elb-subnet-swap-b-one"
-  }
-}
-
-resource "aws_subnet" "public_a_two" {
-  vpc_id = aws_vpc.azelb.id
-
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  tags = {
-    Name = "tf-acc-elb-subnet-swap-a-two"
-  }
-}
-
+func testAccLoadBalancerConfig_subnetSwap(rName string) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseSubnets(rName), fmt.Sprintf(`
 resource "aws_elb" "test" {
-
   subnets = [
     aws_subnet.public_a_two.id,
     aws_subnet.public_b_one.id,
   ]
 
+  name = %[1]q
+
   listener {
     instance_port     = 80
     instance_protocol = "http"
@@ -1745,17 +1670,43 @@ resource "aws_elb" "test" {
     lb_protocol       = "http"
   }
 
-  depends_on = [aws_internet_gateway.gw]
+  depends_on = [aws_internet_gateway.test]
+}
+`, rName))
 }
 
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.azelb.id
+func testAccLoadBalancerConfig_subnetCompleteSwap(rName string) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseSubnets(rName), fmt.Sprintf(`
+resource "aws_subnet" "public_b_two" {
+  vpc_id = aws_vpc.test.id
+
+  cidr_block        = "10.1.6.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
-    Name = "main"
+    Name = %[1]q
   }
 }
-`
+
+resource "aws_elb" "test" {
+  subnets = [
+    aws_subnet.public_a_one.id,
+    aws_subnet.public_b_two.id,
+  ]
+
+  name = %[1]q
+
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+`, rName))
+}
 
 func testAccLoadBalancerConfig_desyncMitigationMode(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
@@ -1811,88 +1762,3 @@ resource "aws_elb" "test" {
 }
 `, rName))
 }
-
-const testAccLoadBalancerConfig_subnetCompleteSwap = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "azelb" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = "terraform-testacc-elb-subnet-swap"
-  }
-}
-
-resource "aws_subnet" "public_a_one" {
-  vpc_id = aws_vpc.azelb.id
-
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  tags = {
-    Name = "tf-acc-elb-subnet-swap-a-one"
-  }
-}
-
-resource "aws_subnet" "public_b_one" {
-  vpc_id = aws_vpc.azelb.id
-
-  cidr_block        = "10.1.7.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  tags = {
-    Name = "tf-acc-elb-subnet-swap-b-one"
-  }
-}
-
-resource "aws_subnet" "public_b_two" {
-  vpc_id = aws_vpc.azelb.id
-
-  cidr_block        = "10.1.6.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  tags = {
-    Name = "tf-acc-elb-subnet-swap-b-two"
-  }
-}
-
-resource "aws_subnet" "public_a_two" {
-  vpc_id = aws_vpc.azelb.id
-
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  tags = {
-    Name = "tf-acc-elb-subnet-swap-a-two"
-  }
-}
-
-resource "aws_elb" "test" {
-
-  subnets = [
-    aws_subnet.public_a_one.id,
-    aws_subnet.public_b_two.id,
-  ]
-
-  listener {
-    instance_port     = 80
-    instance_protocol = "http"
-    lb_port           = 80
-    lb_protocol       = "http"
-  }
-
-  depends_on = [aws_internet_gateway.gw]
-}
-
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.azelb.id
-
-  tags = {
-    Name = "main"
-  }
-}
-`
