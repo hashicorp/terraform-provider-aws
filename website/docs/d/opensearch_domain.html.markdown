@@ -84,6 +84,12 @@ The following attributes are exported:
     * `enabled` - Whether log publishing is enabled.
 * `node_to_node_encryption` - Domain in transit encryption related options.
     * `enabled` - Whether node to node encryption is enabled.
+* `off_peak_window_options` - Off Peak update options
+    * `enabled` - Enabled disabled toggle for off-peak update window
+    * `off_peak_window`
+        * `window_start_time` - 10h window for updates
+            * `hours` - Starting hour of the 10-hour window for updates
+            * `minutes` - Starting minute of the 10-hour window for updates
 * `processing` – Status of a configuration change in the domain.
 * `snapshot_options` – Domain snapshot related options.
     * `automated_snapshot_start_hour` - Hour during which the service takes an automated daily snapshot of the indices in the domain.

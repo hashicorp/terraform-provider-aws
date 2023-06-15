@@ -71,7 +71,7 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn()
+	conn := client.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -118,7 +118,7 @@ func sweepGlobalReplicationGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn()
+	conn := client.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	var grgGroup multierror.Group
 
@@ -173,7 +173,7 @@ func sweepParameterGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn()
+	conn := client.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	err = conn.DescribeCacheParameterGroupsPagesWithContext(ctx, &elasticache.DescribeCacheParameterGroupsInput{}, func(page *elasticache.DescribeCacheParameterGroupsOutput, lastPage bool) bool {
 		if len(page.CacheParameterGroups) == 0 {
@@ -217,7 +217,7 @@ func sweepReplicationGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ElastiCacheConn()
+	conn := client.(*conns.AWSClient).ElastiCacheConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -267,7 +267,7 @@ func sweepSubnetGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn()
+	conn := client.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	err = conn.DescribeCacheSubnetGroupsPagesWithContext(ctx, &elasticache.DescribeCacheSubnetGroupsInput{}, func(page *elasticache.DescribeCacheSubnetGroupsOutput, lastPage bool) bool {
 		if len(page.CacheSubnetGroups) == 0 {

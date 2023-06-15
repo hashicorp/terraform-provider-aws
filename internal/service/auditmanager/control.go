@@ -126,7 +126,7 @@ func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest
 }
 
 func (r *resourceControl) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan resourceControlData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -186,7 +186,7 @@ func (r *resourceControl) Create(ctx context.Context, req resource.CreateRequest
 }
 
 func (r *resourceControl) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceControlData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -216,7 +216,7 @@ func (r *resourceControl) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *resourceControl) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan, state resourceControlData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -283,7 +283,7 @@ func (r *resourceControl) Update(ctx context.Context, req resource.UpdateRequest
 }
 
 func (r *resourceControl) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceControlData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

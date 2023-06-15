@@ -277,7 +277,7 @@ func TestAccSSOAdminPermissionSet_mixedPolicyAttachments(t *testing.T) {
 
 func testAccCheckPermissionSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssoadmin_permission_set" {
@@ -323,7 +323,7 @@ func testAccCheckSOAdminPermissionSetExists(ctx context.Context, resourceName st
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
 
 		arn, instanceArn, err := tfssoadmin.ParseResourceID(rs.Primary.ID)
 

@@ -55,7 +55,7 @@ func TestAccKafkaKafkaVersionDataSource_preferred(t *testing.T) {
 }
 
 func testAccVersionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn(ctx)
 
 	input := &kafka.ListKafkaVersionsInput{}
 

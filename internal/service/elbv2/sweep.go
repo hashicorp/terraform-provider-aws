@@ -46,7 +46,7 @@ func sweepLoadBalancers(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ELBV2Conn()
+	conn := client.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	var sweeperErrs *multierror.Error
 	err = conn.DescribeLoadBalancersPagesWithContext(ctx, &elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, lastPage bool) bool {
@@ -86,7 +86,7 @@ func sweepTargetGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ELBV2Conn()
+	conn := client.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	err = conn.DescribeTargetGroupsPagesWithContext(ctx, &elbv2.DescribeTargetGroupsInput{}, func(page *elbv2.DescribeTargetGroupsOutput, lastPage bool) bool {
 		if page == nil || len(page.TargetGroups) == 0 {
@@ -124,7 +124,7 @@ func sweepListeners(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).ELBV2Conn()
+	conn := client.(*conns.AWSClient).ELBV2Conn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

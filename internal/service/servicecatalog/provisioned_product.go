@@ -277,7 +277,7 @@ func refreshOutputsDiff(_ context.Context, diff *schema.ResourceDiff, meta inter
 
 func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.ProvisionProductInput{
 		ProvisionToken:         aws.String(id.UniqueId()),
@@ -374,7 +374,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	// There are two API operations for getting information about provisioned products:
 	// 1. DescribeProvisionedProduct (used in WaitProvisionedProductReady) and
@@ -483,7 +483,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.UpdateProvisionedProductInput{
 		UpdateToken:          aws.String(id.UniqueId()),
@@ -560,7 +560,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.TerminateProvisionedProductInput{
 		TerminateToken:       aws.String(id.UniqueId()),

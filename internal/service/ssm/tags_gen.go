@@ -35,7 +35,7 @@ func ListTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceTyp
 // ListTags lists ssm service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).SSMConn(), identifier, resourceType)
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).SSMConn(ctx), identifier, resourceType)
 
 	if err != nil {
 		return err
@@ -150,5 +150,5 @@ func UpdateTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceT
 // UpdateTags updates ssm service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).SSMConn(), identifier, resourceType, oldTags, newTags)
+	return UpdateTags(ctx, meta.(*conns.AWSClient).SSMConn(ctx), identifier, resourceType, oldTags, newTags)
 }

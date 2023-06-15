@@ -2576,6 +2576,32 @@ func WaitSpotFleetRequestUpdated(ctx context.Context, conn *ec2.EC2, id string, 
 	return nil, err
 }
 
+func WaitSpotInstanceRequestFulfilled(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SpotInstanceRequest, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{spotInstanceRequestStatusCodePendingEvaluation, spotInstanceRequestStatusCodePendingFulfillment},
+		Target:     []string{spotInstanceRequestStatusCodeFulfilled},
+		Refresh:    StatusSpotInstanceRequest(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.SpotInstanceRequest); ok {
+		if fault := output.Fault; fault != nil {
+			errFault := fmt.Errorf("%s: %s", aws.StringValue(fault.Code), aws.StringValue(fault.Message))
+			tfresource.SetLastError(err, fmt.Errorf("%s %w", aws.StringValue(output.Status.Message), errFault))
+		} else {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitVPCEndpointAccepted(ctx context.Context, conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{vpcEndpointStatePendingAcceptance},

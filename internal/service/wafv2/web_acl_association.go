@@ -51,7 +51,7 @@ func ResourceWebACLAssociation() *schema.Resource {
 }
 
 func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	webACLARN := d.Get("web_acl_arn").(string)
 	resourceARN := d.Get("resource_arn").(string)
@@ -76,7 +76,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	_, resourceARN, err := WebACLAssociationParseResourceID(d.Id())
 
@@ -103,7 +103,7 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	_, resourceARN, err := WebACLAssociationParseResourceID(d.Id())
 

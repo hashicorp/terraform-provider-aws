@@ -240,7 +240,7 @@ func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 			_, err := tfdocdb.FindEventSubscriptionByID(ctx, conn, rs.Primary.ID)
 
@@ -270,7 +270,7 @@ func testAccCheckEventSubscriptionExists(ctx context.Context, n string, eventSub
 			return fmt.Errorf("No DocumentDB Event Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 		res, err := tfdocdb.FindEventSubscriptionByID(ctx, conn, rs.Primary.ID)
 

@@ -87,7 +87,7 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 		clusterEndpointCreateTimeout = 30 * time.Minute
 	)
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	endpointID := d.Get("cluster_endpoint_identifier").(string)
 	input := &rds.CreateDBClusterEndpointInput{
@@ -121,7 +121,7 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	clusterEp, err := FindDBClusterEndpointByID(ctx, conn, d.Id())
 
@@ -149,7 +149,7 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &rds.ModifyDBClusterEndpointInput{
@@ -183,7 +183,7 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting RDS Cluster Endpoint: %s", d.Id())
 	_, err := conn.DeleteDBClusterEndpointWithContext(ctx, &rds.DeleteDBClusterEndpointInput{

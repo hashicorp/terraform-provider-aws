@@ -100,7 +100,7 @@ func TestAccDSRadiusSettings_disappears(t *testing.T) {
 
 func testAccCheckRadiusSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_radius_settings" {
@@ -135,7 +135,7 @@ func testAccCheckRadiusSettingsExists(ctx context.Context, n string, v *director
 			return fmt.Errorf("No Directory Service RADIUS Settings ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
 		output, err := tfds.FindRadiusSettings(ctx, conn, rs.Primary.ID)
 

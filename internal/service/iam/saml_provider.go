@@ -65,7 +65,7 @@ func ResourceSAMLProvider() *schema.Resource {
 }
 
 func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &iam.CreateSAMLProviderInput{
@@ -107,7 +107,7 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	output, err := FindSAMLProviderByARN(ctx, conn, d.Id())
 
@@ -142,7 +142,7 @@ func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &iam.UpdateSAMLProviderInput{
@@ -176,7 +176,7 @@ func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceSAMLProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM SAML Provider: %s", d.Id())
 	_, err := conn.DeleteSAMLProviderWithContext(ctx, &iam.DeleteSAMLProviderInput{

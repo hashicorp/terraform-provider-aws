@@ -31,6 +31,7 @@ nav:
       - Data Handling and Conversion: data-handling-and-conversion.md
       - Dependency Updates: dependency-updates.md
       - AWS SDK for Go Versions: aws-go-sdk-versions.md
+      - Terraform Plugin Versions: terraform-plugin-versions.md
       - AWS Go SDK Base: aws-go-sdk-base.md
       - Error Handling: error-handling.md
       - Provider Design: provider-design.md

@@ -41,7 +41,7 @@ func sweepNamespaces(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := client.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 	input := &redshiftserverless.ListNamespacesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
@@ -85,7 +85,7 @@ func sweepWorkgroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := client.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 	input := &redshiftserverless.ListWorkgroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
@@ -129,7 +129,7 @@ func sweepSnapshots(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := client.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 	input := &redshiftserverless.ListSnapshotsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error

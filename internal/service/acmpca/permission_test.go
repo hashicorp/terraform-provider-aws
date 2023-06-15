@@ -92,7 +92,7 @@ func TestAccACMPCAPermission_sourceAccount(t *testing.T) {
 
 func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_acmpca_permission" {
@@ -139,7 +139,7 @@ func testAccCheckPermissionExists(ctx context.Context, n string, v *acmpca.Permi
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
 
 		output, err := tfacmpca.FindPermission(ctx, conn, caARN, principal, sourceAccount)
 

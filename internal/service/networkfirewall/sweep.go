@@ -51,7 +51,7 @@ func sweepFirewallPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkFirewallConn()
+	conn := client.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	input := &networkfirewall.ListFirewallPoliciesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -95,7 +95,7 @@ func sweepFirewalls(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkFirewallConn()
+	conn := client.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	input := &networkfirewall.ListFirewallsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -139,7 +139,7 @@ func sweepLoggingConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkFirewallConn()
+	conn := client.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	input := &networkfirewall.ListFirewallsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -183,7 +183,7 @@ func sweepRuleGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkFirewallConn()
+	conn := client.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	input := &networkfirewall.ListRuleGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

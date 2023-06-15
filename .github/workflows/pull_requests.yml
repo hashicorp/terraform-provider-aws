@@ -11,7 +11,7 @@ jobs:
   Labeler:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
       - name: Apply Labels
         uses: actions/labeler@v4
         with:
@@ -20,15 +20,19 @@ jobs:
 
   NeedsTriageLabeler:
     needs: community_check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
-      - name: Apply needs-triage Label
-        uses: actions/labeler@v4
-        if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'false'
-        with:
-          configuration-path: .github/labeler-pr-needs-triage.yml
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+    name: 'Apply needs-triage to New Pull Requests'
+    if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'false'
+    uses: ./.github/workflows/reusable-add-or-remove-labels.yml
+    with:
+      add: needs-triage
+
+  PartnerLabeler:
+    needs: community_check
+    name: 'Apply Partner Label'
+    if: github.event.action == 'opened' && needs.community_check.outputs.partner == 'true'
+    uses: ./.github/workflows/reusable-add-or-remove-labels.yml
+    with:
+      add: partner
 
   SizeLabeler:
     runs-on: ubuntu-latest

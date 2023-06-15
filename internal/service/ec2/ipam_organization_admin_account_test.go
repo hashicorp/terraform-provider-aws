@@ -50,7 +50,7 @@ func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 
 func testAccCheckIPAMOrganizationAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipam_organization_admin_account" {
@@ -90,7 +90,7 @@ func testAccCheckIPAMOrganizationAdminAccountExists(ctx context.Context, n strin
 
 		accountID := rs.Primary.ID
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
 		input := &organizations.ListDelegatedAdministratorsInput{
 			ServicePrincipal: aws.String(tfec2.IPAMServicePrincipal),
 		}

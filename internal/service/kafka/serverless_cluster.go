@@ -118,7 +118,7 @@ func ResourceServerlessCluster() *schema.Resource {
 }
 
 func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	name := d.Get("cluster_name").(string)
 	input := &kafka.CreateClusterV2Input{
@@ -149,7 +149,7 @@ func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	cluster, err := FindServerlessClusterByARN(ctx, conn, d.Id())
 

@@ -62,7 +62,7 @@ func ResourceWebhook() *schema.Resource {
 
 func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	input := &amplify.CreateWebhookInput{
 		AppId:      aws.String(d.Get("app_id").(string)),
@@ -87,7 +87,7 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	webhook, err := FindWebhookByID(ctx, conn, d.Id())
 
@@ -126,7 +126,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	input := &amplify.UpdateWebhookInput{
 		WebhookId: aws.String(d.Id()),
@@ -152,7 +152,7 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Amplify Webhook: %s", d.Id())
 	_, err := conn.DeleteWebhookWithContext(ctx, &amplify.DeleteWebhookInput{

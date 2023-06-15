@@ -179,7 +179,7 @@ func TestAccKinesisVideoStream_disappears(t *testing.T) {
 
 func testAccCheckStreamDisappears(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisVideoConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisVideoConn(ctx)
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -227,7 +227,7 @@ func testAccCheckStreamExists(ctx context.Context, n string, stream *kinesisvide
 			return fmt.Errorf("No Kinesis ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisVideoConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisVideoConn(ctx)
 		describeOpts := &kinesisvideo.DescribeStreamInput{
 			StreamARN: aws.String(rs.Primary.ID),
 		}
@@ -248,7 +248,7 @@ func testAccCheckStreamDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_kinesis_video_stream" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisVideoConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisVideoConn(ctx)
 			describeOpts := &kinesisvideo.DescribeStreamInput{
 				StreamARN: aws.String(rs.Primary.ID),
 			}

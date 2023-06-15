@@ -295,7 +295,7 @@ func TestAccMemoryDBSubnetGroup_update_tags(t *testing.T) {
 
 func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_memorydb_subnet_group" {
@@ -330,7 +330,7 @@ func testAccCheckSubnetGroupExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("No MemoryDB Subnet Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
 
 		_, err := tfmemorydb.FindSubnetGroupByName(ctx, conn, rs.Primary.Attributes["name"])
 

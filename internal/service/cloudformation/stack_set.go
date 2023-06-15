@@ -208,7 +208,7 @@ func ResourceStackSet() *schema.Resource {
 
 func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloudformation.CreateStackSetInput{
@@ -275,7 +275,7 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	callAs := d.Get("call_as").(string)
 	stackSet, err := FindStackSetByName(ctx, conn, d.Id(), callAs)
@@ -326,7 +326,7 @@ func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	input := &cloudformation.UpdateStackSetInput{
 		OperationId:  aws.String(id.UniqueId()),
@@ -408,7 +408,7 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceStackSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	input := &cloudformation.DeleteStackSetInput{
 		StackSetName: aws.String(d.Id()),

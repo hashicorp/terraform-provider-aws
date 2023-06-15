@@ -27,7 +27,7 @@ func sweepReportDefinitions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CURConn()
+	conn := client.(*conns.AWSClient).CURConn(ctx)
 	input := &cur.DescribeReportDefinitionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

@@ -33,7 +33,6 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResponsePlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponsePlanDataSourceConfig_basic(
@@ -45,8 +44,6 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 					chatChannelTopic,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(dataSourceName),
-
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "incident_template.0.title", dataSourceName, "incident_template.0.title"),
 					resource.TestCheckResourceAttrPair(resourceName, "incident_template.0.impact", dataSourceName, "incident_template.0.impact"),

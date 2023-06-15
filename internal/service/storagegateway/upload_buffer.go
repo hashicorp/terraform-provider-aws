@@ -53,7 +53,7 @@ func ResourceUploadBuffer() *schema.Resource {
 
 func resourceUploadBufferCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.AddUploadBufferInput{}
 
@@ -103,7 +103,7 @@ func resourceUploadBufferCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceUploadBufferRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	gatewayARN, diskID, err := DecodeUploadBufferID(d.Id())
 	if err != nil {

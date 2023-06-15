@@ -27,7 +27,7 @@ func TestAccOrganizationsPoliciesForTargetDataSource_basic(t *testing.T) {
 			{
 				Config: testAccPoliciesForTargetDataSourceConfig_AttachQuery(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue("data.aws_organizations_policies_for_target.test", "policies.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_organizations_policies_for_target.test", "policies.#", 0),
 					resource.TestCheckResourceAttrPair(dataSourceName, "policies.0.arn", policyResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "policies.0.id", policyResourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "policies.0.name", policyResourceName, "name"),

@@ -33,7 +33,7 @@ func DataSourcePipeline() *schema.Resource {
 }
 
 func dataSourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DataPipelineConn()
+	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -41,7 +41,7 @@ func dataSourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	v, err := PipelineRetrieve(ctx, pipelineId, conn)
 	if err != nil {
-		return diag.Errorf("Error describing DataPipeline Pipeline (%s): %s", pipelineId, err)
+		return diag.Errorf("describing DataPipeline Pipeline (%s): %s", pipelineId, err)
 	}
 
 	d.Set("name", v.Name)
@@ -50,7 +50,7 @@ func dataSourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta in
 	tags := KeyValueTags(ctx, v.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	d.SetId(pipelineId)

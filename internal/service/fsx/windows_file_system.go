@@ -276,7 +276,7 @@ func ResourceWindowsFileSystem() *schema.Resource {
 
 func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -386,7 +386,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
 
@@ -442,7 +442,7 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChange("aliases") {
 		o, n := d.GetChange("aliases")
@@ -528,7 +528,7 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.DeleteFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -578,11 +578,11 @@ func updateAliases(ctx context.Context, conn *fsx.FSx, identifier string, oldSet
 			_, err := conn.AssociateFileSystemAliasesWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error associating aliases to FSx file system (%s): %w", identifier, err)
+				return fmt.Errorf("associating aliases to FSx file system (%s): %w", identifier, err)
 			}
 
 			if _, err := waitAdministrativeActionCompleted(ctx, conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasAssociation, timeout); err != nil {
-				return fmt.Errorf("error waiting for FSx Windows File System (%s) alias to be associated: %w", identifier, err)
+				return fmt.Errorf("waiting for FSx Windows File System (%s) alias to be associated: %w", identifier, err)
 			}
 		}
 	}
@@ -597,11 +597,11 @@ func updateAliases(ctx context.Context, conn *fsx.FSx, identifier string, oldSet
 			_, err := conn.DisassociateFileSystemAliasesWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error disassociating aliases from FSx file system (%s): %w", identifier, err)
+				return fmt.Errorf("disassociating aliases from FSx file system (%s): %w", identifier, err)
 			}
 
 			if _, err := waitAdministrativeActionCompleted(ctx, conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasDisassociation, timeout); err != nil {
-				return fmt.Errorf("error waiting for FSx Windows File System (%s) alias to be disassociated: %w", identifier, err)
+				return fmt.Errorf("waiting for FSx Windows File System (%s) alias to be disassociated: %w", identifier, err)
 			}
 		}
 	}

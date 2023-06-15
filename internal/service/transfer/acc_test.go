@@ -10,7 +10,7 @@ import (
 )
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.ListServersInput{}
 

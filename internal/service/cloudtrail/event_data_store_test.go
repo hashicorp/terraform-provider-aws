@@ -303,7 +303,7 @@ func testAccCheckEventDataStoreExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("No CloudTrail Event Data Store ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn(ctx)
 
 		_, err := tfcloudtrail.FindEventDataStoreByARN(ctx, conn, rs.Primary.ID)
 
@@ -313,7 +313,7 @@ func testAccCheckEventDataStoreExists(ctx context.Context, n string) resource.Te
 
 func testAccCheckEventDataStoreDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudtrail_event_data_store" {

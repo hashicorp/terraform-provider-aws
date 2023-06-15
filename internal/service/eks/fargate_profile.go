@@ -106,7 +106,7 @@ func ResourceFargateProfile() *schema.Resource {
 
 func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName := d.Get("cluster_name").(string)
 	fargateProfileName := d.Get("fargate_profile_name").(string)
@@ -163,7 +163,7 @@ func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceFargateProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, fargateProfileName, err := FargateProfileParseResourceID(d.Id())
 
@@ -213,7 +213,7 @@ func resourceFargateProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceFargateProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, fargateProfileName, err := FargateProfileParseResourceID(d.Id())
 

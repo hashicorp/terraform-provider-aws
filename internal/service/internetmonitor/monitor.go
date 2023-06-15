@@ -114,7 +114,7 @@ func ResourceMonitor() *schema.Resource {
 
 func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InternetMonitorConn()
+	conn := meta.(*conns.AWSClient).InternetMonitorConn(ctx)
 
 	monitorName := d.Get("monitor_name").(string)
 	input := &internetmonitor.CreateMonitorInput{
@@ -171,7 +171,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceMonitorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InternetMonitorConn()
+	conn := meta.(*conns.AWSClient).InternetMonitorConn(ctx)
 
 	monitor, err := FindMonitor(ctx, conn, d.Id())
 
@@ -204,7 +204,7 @@ func resourceMonitorRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InternetMonitorConn()
+	conn := meta.(*conns.AWSClient).InternetMonitorConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &internetmonitor.UpdateMonitorInput{
@@ -260,7 +260,7 @@ func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceMonitorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InternetMonitorConn()
+	conn := meta.(*conns.AWSClient).InternetMonitorConn(ctx)
 
 	input := &internetmonitor.UpdateMonitorInput{
 		ClientToken: aws.String(id.UniqueId()),

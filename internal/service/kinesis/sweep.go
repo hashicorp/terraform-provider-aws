@@ -27,7 +27,7 @@ func sweepStreams(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).KinesisConn()
+	conn := client.(*conns.AWSClient).KinesisConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	input := &kinesis.ListStreamsInput{}

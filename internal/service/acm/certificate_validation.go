@@ -48,7 +48,7 @@ func resourceCertificateValidation() *schema.Resource {
 }
 
 func resourceCertificateValidationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMClient()
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	arn := d.Get("certificate_arn").(string)
 	certificate, err := findCertificateByARN(ctx, conn, arn)
@@ -101,7 +101,7 @@ func resourceCertificateValidationCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceCertificateValidationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMClient()
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	arn := d.Get("certificate_arn").(string)
 	certificate, err := findCertificateValidationByARN(ctx, conn, arn)

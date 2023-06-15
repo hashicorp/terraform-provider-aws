@@ -141,7 +141,7 @@ func testAccCheckVoiceConnectorLoggingExists(ctx context.Context, name string) r
 			return fmt.Errorf("no Chime Voice Connector logging ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn(ctx)
 		input := &chime.GetVoiceConnectorLoggingConfigurationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
