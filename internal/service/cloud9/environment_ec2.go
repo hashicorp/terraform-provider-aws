@@ -113,7 +113,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 		ConnectionType:     aws.String(d.Get("connection_type").(string)),
 		InstanceType:       aws.String(d.Get("instance_type").(string)),
 		Name:               aws.String(name),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("automatic_stop_time_minutes"); ok {
