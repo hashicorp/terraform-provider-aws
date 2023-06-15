@@ -248,11 +248,12 @@ func resourceAwsElb() *schema.Resource {
 			"tags": tagsSchema(),
 
 			"wait_for_ready_timeout": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "5m",
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "5m",
 				ValidateFunc: validateDuration,
 			},
+
 		},
 	}
 }
