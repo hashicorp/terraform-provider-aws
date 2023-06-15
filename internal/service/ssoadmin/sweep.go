@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
 func init() {
@@ -47,7 +48,7 @@ func sweepAccountAssignments(region string) error {
 	ds := DataSourceInstances()
 	dsData := ds.Data(nil)
 
-	err = sweep.ReadResource(ctx, ds, dsData, client)
+	err = sdk.ReadResource(ctx, ds, dsData, client)
 
 	if tfawserr.ErrCodeContains(err, "AccessDenied") {
 		log.Printf("[WARN] Skipping SSO Account Assignment sweep for %s: %s", region, err)
@@ -152,7 +153,7 @@ func sweepPermissionSets(region string) error {
 	ds := DataSourceInstances()
 	dsData := ds.Data(nil)
 
-	err = sweep.ReadResource(ctx, ds, dsData, client)
+	err = sdk.ReadResource(ctx, ds, dsData, client)
 
 	if tfawserr.ErrCodeContains(err, "AccessDenied") {
 		log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)

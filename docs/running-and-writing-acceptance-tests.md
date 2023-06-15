@@ -1150,7 +1150,7 @@ func sweepThings(region string) error {
       // Perform resource specific pre-sweep setup.
       // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
       //
-      // err := sweep.ReadResource(ctx, r, d, client) // fill in data
+      // err := sdk.ReadResource(ctx, r, d, client) // fill in data
       // d.Set("skip_final_snapshot", true)           // set an argument in order to delete
 
       // This "if" is only needed if the pre-sweep setup can produce errors.
@@ -1215,7 +1215,7 @@ func sweepThings(region string) error {
       // Perform resource specific pre-sweep setup.
       // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
       //
-      // err := sweep.ReadResource(ctx, r, d, client) // fill in data
+      // err := sdk.ReadResource(ctx, r, d, client) // fill in data
       // d.Set("skip_final_snapshot", true)           // set an argument in order to delete
 
       // This "if" is only needed if the pre-sweep setup can produce errors.

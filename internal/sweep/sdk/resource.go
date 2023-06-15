@@ -2,10 +2,10 @@ package sdk
 
 import (
 	"context"
-	"log"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,27 +14,31 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-type SweepResource struct {
+type sweepResource struct {
 	d        *schema.ResourceData
 	meta     *conns.AWSClient
 	resource *schema.Resource
 }
 
-func NewSweepResource(resource *schema.Resource, d *schema.ResourceData, meta *conns.AWSClient) *SweepResource {
-	return &SweepResource{
+func NewSweepResource(resource *schema.Resource, d *schema.ResourceData, meta *conns.AWSClient) *sweepResource {
+	return &sweepResource{
 		d:        d,
 		meta:     meta,
 		resource: resource,
 	}
 }
 
-func (sr *SweepResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+func (sr *sweepResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+	ctx = tflog.SetField(ctx, "id", sr.d.Id())
+
 	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
-		err := DeleteResource(ctx, sr.resource, sr.d, sr.meta)
+		err := deleteResource(ctx, sr.resource, sr.d, sr.meta)
 
 		if err != nil {
 			if strings.Contains(err.Error(), "Throttling") {
-				log.Printf("[INFO] While sweeping resource (%s), encountered throttling error (%s). Retrying...", sr.d.Id(), err)
+				tflog.Info(ctx, "Retrying throttling error", map[string]any{
+					"err": err.Error(),
+				})
 				return retry.RetryableError(err)
 			}
 
@@ -45,13 +49,13 @@ func (sr *SweepResource) Delete(ctx context.Context, timeout time.Duration, optF
 	}, optFns...)
 
 	if tfresource.TimedOut(err) {
-		err = DeleteResource(ctx, sr.resource, sr.d, sr.meta)
+		err = deleteResource(ctx, sr.resource, sr.d, sr.meta)
 	}
 
 	return err
 }
 
-func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
+func deleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta *conns.AWSClient) error {
 	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
 		var diags diag.Diagnostics
 
@@ -67,7 +71,12 @@ func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.Re
 	return resource.Delete(d, meta)
 }
 
-func ReadResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
+// Deprecated: Create a list of Sweepables and pass them to SweepOrchestratorWithContext instead
+func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta *conns.AWSClient) error {
+	return deleteResource(ctx, resource, d, meta)
+}
+
+func ReadResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta *conns.AWSClient) error {
 	if resource.ReadContext != nil || resource.ReadWithoutTimeout != nil {
 		var diags diag.Diagnostics
 
