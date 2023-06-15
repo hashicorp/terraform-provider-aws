@@ -246,14 +246,6 @@ func resourceAwsElb() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
-
-			"wait_for_ready_timeout": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "5m",
-				ValidateFunc: validateDuration,
-			},
-
 		},
 	}
 }
@@ -303,13 +295,8 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 		elbOpts.Subnets = expandStringList(v.(*schema.Set).List())
 	}
 
-	waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
-	if err != nil {
-		return err
-	}
-
 	log.Printf("[DEBUG] ELB create configuration: %#v", elbOpts)
-	err = resource.Retry(waitForReadyTimeOut, func() *resource.RetryError {
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := elbconn.CreateLoadBalancer(elbOpts)
 
 		if err != nil {
