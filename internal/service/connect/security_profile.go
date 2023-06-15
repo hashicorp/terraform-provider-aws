@@ -82,7 +82,7 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	input := &connect.CreateSecurityProfileInput{
 		InstanceId:          aws.String(instanceID),
 		SecurityProfileName: aws.String(securityProfileName),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -155,7 +155,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("permissions", flex.FlattenStringSet(permissions))
 	}
 
-	SetTagsOut(ctx, resp.SecurityProfile.Tags)
+	setTagsOut(ctx, resp.SecurityProfile.Tags)
 
 	return nil
 }
