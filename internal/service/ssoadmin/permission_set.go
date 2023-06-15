@@ -99,7 +99,7 @@ func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, me
 	input := &ssoadmin.CreatePermissionSetInput{
 		InstanceArn: aws.String(instanceARN),
 		Name:        aws.String(name),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -169,7 +169,7 @@ func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "listing tags for SSO Permission Set (%s): %s", arn, err)
 	}
 
-	SetTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
