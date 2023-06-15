@@ -239,7 +239,7 @@ func resourcePatchBaselineCreate(ctx context.Context, d *schema.ResourceData, me
 		ApprovedPatchesComplianceLevel: aws.String(d.Get("approved_patches_compliance_level").(string)),
 		Name:                           aws.String(name),
 		OperatingSystem:                aws.String(d.Get("operating_system").(string)),
-		Tags:                           GetTagsIn(ctx),
+		Tags:                           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
