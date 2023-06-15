@@ -111,7 +111,7 @@ func resourceLocationS3Create(ctx context.Context, d *schema.ResourceData, meta 
 		S3BucketArn:  aws.String(d.Get("s3_bucket_arn").(string)),
 		S3Config:     expandS3Config(d.Get("s3_config").([]interface{})),
 		Subdirectory: aws.String(d.Get("subdirectory").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("agent_arns"); ok {
