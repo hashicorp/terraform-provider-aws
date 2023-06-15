@@ -1648,6 +1648,14 @@ resource "aws_subnet" "public_a_two" {
     Name = %[1]q
   }
 }
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
 `, rName))
 }
 
