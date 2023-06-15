@@ -76,7 +76,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	name := d.Get("name").(string)
 	input := &codestarconnections.CreateConnectionInput{
 		ConnectionName: aws.String(name),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("host_arn"); ok {
