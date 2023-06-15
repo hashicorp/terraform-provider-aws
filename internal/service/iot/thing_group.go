@@ -131,7 +131,7 @@ func resourceThingGroupCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	name := d.Get("name").(string)
 	input := &iot.CreateThingGroupInput{
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 		ThingGroupName: aws.String(name),
 	}
 

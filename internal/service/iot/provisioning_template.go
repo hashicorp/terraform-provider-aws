@@ -117,7 +117,7 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 	name := d.Get("name").(string)
 	input := &iot.CreateProvisioningTemplateInput{
 		Enabled:      aws.Bool(d.Get("enabled").(bool)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		TemplateName: aws.String(name),
 	}
 
