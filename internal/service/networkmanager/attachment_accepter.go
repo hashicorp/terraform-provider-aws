@@ -48,7 +48,8 @@ func ResourceAttachmentAccepter() *schema.Resource {
 					networkmanager.AttachmentTypeVpc,
 					networkmanager.AttachmentTypeSiteToSiteVpn,
 					networkmanager.AttachmentTypeConnect,
-				}, false),
+					networkmanager.AttachmentTypeTransitGatewayRouteTable,
+					}, false),
 			},
 			"core_network_arn": {
 				Type:     schema.TypeString,
@@ -123,6 +124,17 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 
 		d.SetId(attachmentID)
 
+	case networkmanager.AttachmentTypeTransitGatewayRouteTable:
+		tgwAttachment, err := FindTransitGatewayRouteTableAttachmentByID(ctx, conn, attachmentID)
+
+		if err != nil {
+			return diag.Errorf("reading Network Manager Transit Gateway Route Table Attachment (%s): %s", attachmentID, err)
+		}
+
+		state = aws.StringValue(tgwAttachment.Attachment.State)
+
+		d.SetId(attachmentID)
+
 	default:
 		return diag.Errorf("unsupported Network Manager Attachment type: %s", attachmentType)
 	}
@@ -152,6 +164,11 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		case networkmanager.AttachmentTypeConnect:
 			if _, err := waitConnectAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return diag.Errorf("waiting for Network Manager Connect Attachment (%s) create: %s", attachmentID, err)
+			}
+
+		case networkmanager.AttachmentTypeTransitGatewayRouteTable:
+			if _, err := waitTransitGatewayRouteTableAttachmentCreated(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return diag.Errorf("waiting for Network Manager Transit Gateway Route Table Attachment (%s) create: %s", attachmentID, err)
 			}
 		}
 	}
@@ -209,6 +226,21 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		}
 
 		a = connectAttachment.Attachment
+
+	case networkmanager.AttachmentTypeTransitGatewayRouteTable:
+		tgwAttachment, err := FindTransitGatewayRouteTableAttachmentByID(ctx, conn, d.Id())
+
+		if !d.IsNewResource() && tfresource.NotFound(err) {
+			log.Printf("[WARN] Network Manager Transit Gateway Route Table Attachment %s not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		if err != nil {
+			return diag.Errorf("reading Network Manager Transit Gateway Route Table Attachment (%s): %s", d.Id(), err)
+		}
+
+		a = tgwAttachment.Attachment
 	}
 
 	d.Set("attachment_policy_rule_number", a.AttachmentPolicyRuleNumber)
