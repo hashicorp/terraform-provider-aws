@@ -172,7 +172,7 @@ func (r *resourceVPCConnection) Create(ctx context.Context, req resource.CreateR
 		RoleArn:          aws.String(plan.RoleArn.ValueString()),
 		SecurityGroupIds: flex.ExpandFrameworkStringSet(ctx, plan.SecurityGroupIds),
 		SubnetIds:        flex.ExpandFrameworkStringSet(ctx, plan.SubnetIds),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if !plan.DnsResolvers.IsNull() {
