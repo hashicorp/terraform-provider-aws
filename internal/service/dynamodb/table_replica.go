@@ -332,7 +332,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), fmt.Errorf("tags: %w", err))
 	}
 
-	SetTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
