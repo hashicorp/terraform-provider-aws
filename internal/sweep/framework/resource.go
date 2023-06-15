@@ -2,7 +2,6 @@ package framework
 
 import (
 	"context"
-	"log"
 	"strings"
 	"time"
 
@@ -29,27 +28,58 @@ func NewAttribute(path string, value any) attribute {
 	}
 }
 
-type SweepResource struct {
+type sweepResource struct {
 	factory    func(context.Context) (fwresource.ResourceWithConfigure, error)
 	meta       *conns.AWSClient
 	attributes []attribute
 }
 
-func NewSweepResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), meta *conns.AWSClient, attributes ...attribute) *SweepResource {
-	return &SweepResource{
+func NewSweepResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), meta *conns.AWSClient, attributes ...attribute) *sweepResource {
+	return &sweepResource{
 		factory:    factory,
 		meta:       meta,
 		attributes: attributes,
 	}
 }
 
-func (sr *SweepResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
-		err := deleteResource(ctx, sr.factory, sr.meta, sr.attributes)
+func (sr *sweepResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+	resource, err := sr.factory(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	metadata := resourceMetadata(ctx, resource)
+	ctx = tflog.SetField(ctx, "resource_type", metadata.TypeName)
+
+	resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: sr.meta}, &fwresource.ConfigureResponse{})
+
+	schemaResp := fwresource.SchemaResponse{}
+	resource.Schema(ctx, fwresource.SchemaRequest{}, &schemaResp)
+
+	state := tfsdk.State{
+		Raw:    tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil),
+		Schema: schemaResp.Schema,
+	}
+
+	for _, attr := range sr.attributes {
+		d := state.SetAttribute(ctx, path.Root(attr.path), attr.value)
+		if d.HasError() {
+			return fwdiag.DiagnosticsError(d)
+		}
+		ctx = tflog.SetField(ctx, attr.path, attr.value)
+	}
+
+	tflog.Info(ctx, "Sweeping resource")
+
+	err = tfresource.Retry(ctx, timeout, func() *retry.RetryError {
+		err := deleteResource(ctx, state, resource)
 
 		if err != nil {
 			if strings.Contains(err.Error(), "Throttling") {
-				log.Printf("[INFO] While sweeping resource, encountered throttling error (%s). Retrying...", err)
+				tflog.Info(ctx, "Retrying throttling error", map[string]any{
+					"err": err.Error(),
+				})
 				return retry.RetryableError(err)
 			}
 
@@ -60,39 +90,22 @@ func (sr *SweepResource) Delete(ctx context.Context, timeout time.Duration, optF
 	}, optFns...)
 
 	if tfresource.TimedOut(err) {
-		err = deleteResource(ctx, sr.factory, sr.meta, sr.attributes)
+		err = deleteResource(ctx, state, resource)
 	}
 
 	return err
 }
 
-func deleteResource(ctx context.Context, factory func(context.Context) (fwresource.ResourceWithConfigure, error), meta *conns.AWSClient, attributes []attribute) error {
-	resource, err := factory(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: meta}, &fwresource.ConfigureResponse{})
-
-	schemaResp := fwresource.SchemaResponse{}
-	resource.Schema(ctx, fwresource.SchemaRequest{}, &schemaResp)
-
-	state := tfsdk.State{
-		Raw:    tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil),
-		Schema: schemaResp.Schema,
-	}
-
-	for _, attr := range attributes {
-		d := state.SetAttribute(ctx, path.Root(attr.path), attr.value)
-		if d.HasError() {
-			return fwdiag.DiagnosticsError(d)
-		}
-		ctx = tflog.SetField(ctx, attr.path, attr.value)
-	}
-
-	response := fwresource.DeleteResponse{}
+func deleteResource(ctx context.Context, state tfsdk.State, resource fwresource.Resource) error {
+	var response fwresource.DeleteResponse
 	resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 
 	return fwdiag.DiagnosticsError(response.Diagnostics)
+}
+
+func resourceMetadata(ctx context.Context, resource fwresource.Resource) fwresource.MetadataResponse {
+	var response fwresource.MetadataResponse
+	resource.Metadata(ctx, fwresource.MetadataRequest{}, &response)
+
+	return response
 }
