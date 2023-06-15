@@ -59,6 +59,10 @@ func ResourceLoadBalancer() *schema.Resource {
 			verify.SetTagsDiff,
 		),
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"access_logs": {
 				Type:     schema.TypeList,
@@ -303,7 +307,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Subnets = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return conn.CreateLoadBalancerWithContext(ctx, input)
 	}, elb.ErrCodeCertificateNotFoundException)
 
