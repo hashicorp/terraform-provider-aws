@@ -79,7 +79,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the Email Identity.
-* `dkim_signing_attributes` - An object that contains information about the private key and selector that you want to use to configure DKIM for the identity for Bring Your Own DKIM (BYODKIM) for the identity, or, configures the key length to be used for Easy DKIM.
+* `dkim_signing_attributes` - A list of objects that contains at most one element with information about the private key and selector that you want to use to configure DKIM for the identity for Bring Your Own DKIM (BYODKIM) for the identity, or, configures the key length to be used for Easy DKIM.
     * `current_signing_key_length` - [Easy DKIM] The key length of the DKIM key pair in use.
     * `last_key_generation_timestamp` - [Easy DKIM] The last time a key pair was generated for this identity.
     * `next_signing_key_length` - [Easy DKIM] The key length of the future DKIM key pair to be generated. This can be changed at most once per day.

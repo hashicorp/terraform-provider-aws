@@ -29,6 +29,17 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceDedicatedIPPool,
 			TypeName: "aws_sesv2_dedicated_ip_pool",
 		},
+		{
+			Factory:  DataSourceEmailIdentity,
+			TypeName: "aws_sesv2_email_identity",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  DataSourceEmailIdentityMailFromAttributes,
+			TypeName: "aws_sesv2_email_identity_mail_from_attributes",
+		},
 	}
 }
 
