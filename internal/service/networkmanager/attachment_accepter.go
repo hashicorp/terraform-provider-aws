@@ -49,7 +49,7 @@ func ResourceAttachmentAccepter() *schema.Resource {
 					networkmanager.AttachmentTypeSiteToSiteVpn,
 					networkmanager.AttachmentTypeConnect,
 					networkmanager.AttachmentTypeTransitGatewayRouteTable,
-					}, false),
+				}, false),
 			},
 			"core_network_arn": {
 				Type:     schema.TypeString,
