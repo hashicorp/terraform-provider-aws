@@ -10,11 +10,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccPolicyDataSource_UnattachedPolicy(t *testing.T) {
+func TestAccOrganizationsPoliciesForTargetDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	datasourceName := "data.aws_organizations_policies_for_target.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_organizations_policy.test"
-	dataSourceName := "data.aws_organizations_policy.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -25,24 +24,25 @@ func testAccPolicyDataSource_UnattachedPolicy(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDataSourceConfig_unattachedPolicy(rName),
+				Config: testAccPoliciesForTargetDataSourceConfig_AttachQuery(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "policy_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "content", dataSourceName, "content"),
-					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "ids.#", 0),
 				),
 			},
 		},
 	})
 }
 
-func testAccPolicyDataSourceConfig_unattachedPolicy(rName string) string {
+func testAccPoliciesForTargetDataSourceConfig_AttachQuery(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
   feature_set          = "ALL"
   enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY", "BACKUP_POLICY", "AISERVICES_OPT_OUT_POLICY"]
+}
+
+resource "aws_organizations_organizational_unit" "test" {
+  name      = %[1]q
+  parent_id = aws_organizations_organization.test.roots[0].id
 }
 
 resource "aws_organizations_policy" "test" {
@@ -62,8 +62,20 @@ EOF
   name = %[1]q
 }
 
+resource "aws_organizations_policy_attachment" "test" {
+  depends_on = [aws_organizations_policy.test]
+  policy_id  = aws_organizations_policy.test.id
+  target_id  = aws_organizations_organizational_unit.test.id
+}
+
+data "aws_organizations_policies_for_target" "test" {
+  depends_on = [aws_organizations_policy_attachment.test]
+  target_id  = aws_organizations_organizational_unit.test.id
+  filter     = "SERVICE_CONTROL_POLICY"
+}
+
 data "aws_organizations_policy" "test" {
-  policy_id = aws_organizations_policy.test.id
+  policy_id = data.aws_organizations_policies_for_target.test.ids[0]
 }
 `, rName)
 }
