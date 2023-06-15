@@ -45,7 +45,7 @@ func sweepIndexes(region string) error {
 		}
 
 		for _, v := range page.Indexes {
-			sweepResources = append(sweepResources, framework.NewSweepFrameworkResource(newResourceIndex, aws.ToString(v.Arn), client))
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceIndex, aws.ToString(v.Arn), client))
 		}
 	}
 
