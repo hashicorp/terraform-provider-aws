@@ -81,7 +81,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &cloudwatchlogs.CreateLogGroupInput{
 		LogGroupName: aws.String(name),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
@@ -141,7 +141,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("listing tags for CloudWatch Logs Log Group (%s): %s", d.Id(), err)
 	}
 
-	SetTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	return nil
 }
