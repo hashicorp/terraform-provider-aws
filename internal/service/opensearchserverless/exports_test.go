@@ -2,8 +2,8 @@ package opensearchserverless
 
 // Exports for use in tests only.
 var (
-	ResourceCollection     = newResourceCollection
 	ResourceAccessPolicy   = newResourceAccessPolicy
+	ResourceCollection     = newResourceCollection
 	ResourceSecurityConfig = newResourceSecurityConfig
 	ResourceSecurityPolicy = newResourceSecurityPolicy
 	ResourceVPCEndpoint    = newResourceVPCEndpoint
