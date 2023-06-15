@@ -13,16 +13,9 @@ import (
 
 func TestAccOrganizationsPoliciesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	//Setting the two data sources on the same policy
-	datasourceServiceControlPolicy := "data.aws_organizations_policy.test"
-	dataSourceServiceControlPolicies := "data.aws_organizations_policies.test"
-
-	//Setting prefix and scp policy content
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	serviceControlPolicyContent := `{"Version": "2012-10-17", "Statement": { "Effect": "Deny", "Action": "*", "Resource": "*"}}`
-
-	//Set Up List calls for each policy type
-	listServiceControlPolicies := "data.aws_organizations_policies.test"
+	datasourceName := "data.aws_organizations_policies.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -35,12 +28,7 @@ func TestAccOrganizationsPoliciesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccPoliciesDataSourceConfig_ServiceControlPolicy(rName, organizations.PolicyTypeServiceControlPolicy, serviceControlPolicyContent),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanOrEqualValue(listServiceControlPolicies, "policies.#", 0),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceServiceControlPolicies, "policies.0.arn", datasourceServiceControlPolicy, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceServiceControlPolicies, "policies.0.aws_managed", datasourceServiceControlPolicy, "aws_managed"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceServiceControlPolicies, "policies.0.description", datasourceServiceControlPolicy, "description"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceServiceControlPolicies, "policies.0.name", datasourceServiceControlPolicy, "name"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceServiceControlPolicies, "policies.0.type", datasourceServiceControlPolicy, "type"),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(datasourceName, "ids.#", 1),
 				),
 			},
 		},
@@ -49,26 +37,14 @@ func TestAccOrganizationsPoliciesDataSource_basic(t *testing.T) {
 
 func testAccPoliciesDataSourceConfig_ServiceControlPolicy(rName, policyType, policyContent string) string {
 	return fmt.Sprintf(`
-data "aws_organizations_organization" "test" {}
-
 resource "aws_organizations_policy" "test" {
-  depends_on = [data.aws_organizations_organization.test]
-
-  name    = "%s"
-  type    = "%s"
-  content = %s
+  name    = %[1]q
+  type    = %[2]q
+  content = %[3]s
 }
 
 data "aws_organizations_policies" "test" {
-  depends_on = [aws_organizations_policy.test]
-  filter     = "%s"
+  filter = aws_organizations_policy.test.type
 }
-
-data "aws_organizations_policy" "test" {
-  depends_on = [aws_organizations_policy.test]
-  policy_id  = data.aws_organizations_policies.test.policies[0].id
-}
-
-
-`, rName, policyType, strconv.Quote(policyContent), policyType)
+`, rName, policyType, strconv.Quote(policyContent))
 }
