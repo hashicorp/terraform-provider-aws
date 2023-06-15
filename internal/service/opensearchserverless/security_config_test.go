@@ -29,7 +29,7 @@ func TestAccOpenSearchServerlessSecurityConfig_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckSecurityConfig(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -62,7 +62,7 @@ func TestAccOpenSearchServerlessSecurityConfig_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckSecurityConfig(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

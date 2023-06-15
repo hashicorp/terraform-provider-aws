@@ -4,6 +4,7 @@ package opensearchserverless
 var (
 	ResourceCollection     = newResourceCollection
 	ResourceAccessPolicy   = newResourceAccessPolicy
+	ResourceSecurityConfig = newResourceSecurityConfig
 	ResourceSecurityPolicy = newResourceSecurityPolicy
 	ResourceVPCEndpoint    = newResourceVPCEndpoint
 )

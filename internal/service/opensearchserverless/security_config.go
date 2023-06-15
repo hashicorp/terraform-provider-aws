@@ -72,6 +72,9 @@ func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.Schema
 			},
 			"type": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.SecurityConfigType](),
 				},
@@ -195,7 +198,7 @@ func (r *resourceSecurityConfig) Update(ctx context.Context, req resource.Update
 
 	input := &opensearchserverless.UpdateSecurityConfigInput{
 		ClientToken:   aws.String(sdkid.UniqueId()),
-		ConfigVersion: flex.StringFromFramework(ctx, plan.ConfigVersion),
+		ConfigVersion: flex.StringFromFramework(ctx, state.ConfigVersion),
 		Id:            flex.StringFromFramework(ctx, plan.ID),
 	}
 
@@ -219,7 +222,7 @@ func (r *resourceSecurityConfig) Update(ctx context.Context, req resource.Update
 		resp.Diagnostics.AddError(fmt.Sprintf("updating Security Policy (%s)", plan.Name.ValueString()), err.Error())
 		return
 	}
-	state.refreshFromOutput(ctx, out.SecurityConfigDetail)
+	plan.refreshFromOutput(ctx, out.SecurityConfigDetail)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
