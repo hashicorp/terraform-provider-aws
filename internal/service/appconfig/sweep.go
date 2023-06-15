@@ -279,7 +279,7 @@ func sweepEnvironments(region string) error {
 						continue
 					}
 
-					sweepResources = append(sweepResources, framework.NewSweepResource(newResourceEnvironment, "", client,
+					sweepResources = append(sweepResources, framework.NewSweepResource(newResourceEnvironment, client,
 						framework.NewAttribute("application_id", aws.StringValue(item.ApplicationId)),
 						framework.NewAttribute("environment_id", aws.StringValue(item.Id)),
 					))
