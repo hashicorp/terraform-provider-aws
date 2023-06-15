@@ -149,7 +149,7 @@ func (r *resourceControl) Create(ctx context.Context, req resource.CreateRequest
 	in := auditmanager.CreateControlInput{
 		Name:                  aws.String(plan.Name.ValueString()),
 		ControlMappingSources: cmsInput,
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 	}
 	if !plan.ActionPlanInstructions.IsNull() {
 		in.ActionPlanInstructions = aws.String(plan.ActionPlanInstructions.ValueString())
@@ -431,7 +431,7 @@ func (rd *resourceControlData) refreshFromOutput(ctx context.Context, out *awsty
 	rd.ARN = flex.StringToFramework(ctx, out.Arn)
 	rd.Type = types.StringValue(string(out.Type))
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	return diags
 }
