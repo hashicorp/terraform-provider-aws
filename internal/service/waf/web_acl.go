@@ -166,7 +166,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			DefaultAction: ExpandAction(d.Get("default_action").([]interface{})),
 			MetricName:    aws.String(d.Get("metric_name").(string)),
 			Name:          aws.String(d.Get("name").(string)),
-			Tags:          GetTagsIn(ctx),
+			Tags:          getTagsIn(ctx),
 		}
 
 		return conn.CreateWebACLWithContext(ctx, input)
