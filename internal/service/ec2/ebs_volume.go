@@ -217,7 +217,7 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("throughput", volume.Throughput)
 	d.Set("type", volume.VolumeType)
 
-	SetTagsOut(ctx, volume.Tags)
+	setTagsOut(ctx, volume.Tags)
 
 	return diags
 }

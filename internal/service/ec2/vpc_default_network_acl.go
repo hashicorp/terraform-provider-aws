@@ -121,7 +121,7 @@ func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData
 
 	// Configure tags.
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := KeyValueTags(ctx, GetTagsIn(ctx))
+	newTags := KeyValueTags(ctx, getTagsIn(ctx))
 	oldTags := KeyValueTags(ctx, nacl.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {

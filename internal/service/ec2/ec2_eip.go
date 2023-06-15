@@ -242,7 +242,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.SetId(aws.StringValue(address.AllocationId))
 	}
 
-	SetTagsOut(ctx, address.Tags)
+	setTagsOut(ctx, address.Tags)
 
 	return diags
 }

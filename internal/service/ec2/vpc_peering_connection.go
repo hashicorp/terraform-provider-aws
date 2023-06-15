@@ -197,7 +197,7 @@ func resourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceDat
 		d.Set("requester", nil)
 	}
 
-	SetTagsOut(ctx, vpcPeeringConnection.Tags)
+	setTagsOut(ctx, vpcPeeringConnection.Tags)
 
 	return diags
 }

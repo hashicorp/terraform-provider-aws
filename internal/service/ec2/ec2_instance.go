@@ -1258,7 +1258,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("monitoring", monitoringState == ec2.MonitoringStateEnabled || monitoringState == ec2.MonitoringStatePending)
 	}
 
-	SetTagsOut(ctx, instance.Tags)
+	setTagsOut(ctx, instance.Tags)
 
 	if _, ok := d.GetOk("volume_tags"); ok && !blockDeviceTagsDefined(d) {
 		volumeTags, err := readVolumeTags(ctx, conn, d.Id())

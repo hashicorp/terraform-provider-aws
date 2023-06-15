@@ -239,7 +239,7 @@ func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting ingress: %s", err)
 	}
 
-	SetTagsOut(ctx, nacl.Tags)
+	setTagsOut(ctx, nacl.Tags)
 
 	return diags
 }
