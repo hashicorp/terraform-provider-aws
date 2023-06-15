@@ -195,7 +195,7 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	name := d.Get("workgroup_name").(string)
 	input := redshiftserverless.CreateWorkgroupInput{
 		NamespaceName: aws.String(d.Get("namespace_name").(string)),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 		WorkgroupName: aws.String(name),
 	}
 
