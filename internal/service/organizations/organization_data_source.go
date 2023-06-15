@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -161,7 +162,21 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("master_account_email", org.Organization.MasterAccountEmail)
 	d.Set("master_account_id", org.Organization.MasterAccountId)
 
-	if aws.StringValue(org.Organization.MasterAccountId) == meta.(*conns.AWSClient).AccountID {
+	delegatedAdministrators, err := listDelegatedAdministrators(ctx, conn, new(organizations.ListDelegatedAdministratorsInput))
+	if err != nil && !tfawserr.ErrCodeEquals(err, organizations.ErrCodeAccessDeniedException) {
+		return sdkdiag.AppendErrorf(diags, "listing AWS Organization (%s) delegated administrators: %s", d.Id(), err)
+	}
+
+	var isDelegatedAccount bool
+
+	for _, delegated := range delegatedAdministrators {
+		if aws.StringValue(delegated.Id) == meta.(*conns.AWSClient).AccountID {
+			isDelegatedAccount = true
+			break
+		}
+	}
+
+	if aws.StringValue(org.Organization.MasterAccountId) == meta.(*conns.AWSClient).AccountID || isDelegatedAccount {
 		var accounts []*organizations.Account
 		var nonMasterAccounts []*organizations.Account
 		err = conn.ListAccountsPagesWithContext(ctx, &organizations.ListAccountsInput{}, func(page *organizations.ListAccountsOutput, lastPage bool) bool {
