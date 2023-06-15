@@ -104,7 +104,7 @@ func resourceSchedulingPolicyCreate(ctx context.Context, d *schema.ResourceData,
 	input := &batch.CreateSchedulingPolicyInput{
 		FairsharePolicy: expandFairsharePolicy(d.Get("fair_share_policy").([]interface{})),
 		Name:            aws.String(name),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateSchedulingPolicyWithContext(ctx, input)
@@ -140,7 +140,7 @@ func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("name", sp.Name)
 
-	SetTagsOut(ctx, sp.Tags)
+	setTagsOut(ctx, sp.Tags)
 
 	return diags
 }
