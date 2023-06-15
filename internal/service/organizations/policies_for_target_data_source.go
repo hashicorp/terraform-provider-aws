@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_organizations_policies")
-func DataSourcePolicies() *schema.Resource {
+// @SDKDataSource("aws_organizations_policies_for_target")
+func DataSourcePoliciesForTarget() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourcePoliciesRead,
+		ReadWithoutTimeout: dataSourcePoliciesForTargetRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": {
@@ -26,19 +26,25 @@ func DataSourcePolicies() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"target_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
 
-func dataSourcePoliciesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePoliciesForTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
+	targetID := d.Get("target_id").(string)
 	filter := d.Get("filter").(string)
-	policies, err := findPolicies(ctx, conn, filter)
+	policies, err := findPoliciesForTarget(ctx, conn, targetID, filter)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Organizations Policies (%s): %s", filter, err)
+		return sdkdiag.AppendErrorf(diags, "listing Organizations Policies (%s) for target (%s): %s", filter, targetID, err)
 	}
 
 	var policyIDs []string
@@ -47,19 +53,21 @@ func dataSourcePoliciesRead(ctx context.Context, d *schema.ResourceData, meta in
 		policyIDs = append(policyIDs, aws.StringValue(v.Id))
 	}
 
-	d.SetId(filter)
+	d.SetId(targetID)
+
 	d.Set("ids", policyIDs)
 
 	return diags
 }
 
-func findPolicies(ctx context.Context, conn *organizations.Organizations, filter string) ([]*organizations.PolicySummary, error) {
-	input := &organizations.ListPoliciesInput{
-		Filter: aws.String(filter),
+func findPoliciesForTarget(ctx context.Context, conn *organizations.Organizations, targetID string, filter string) ([]*organizations.PolicySummary, error) {
+	input := &organizations.ListPoliciesForTargetInput{
+		Filter:   aws.String(filter),
+		TargetId: aws.String(targetID),
 	}
 	var output []*organizations.PolicySummary
 
-	err := conn.ListPoliciesPagesWithContext(ctx, input, func(page *organizations.ListPoliciesOutput, lastPage bool) bool {
+	err := conn.ListPoliciesForTargetPagesWithContext(ctx, input, func(page *organizations.ListPoliciesForTargetOutput, lastPage bool) bool {
 		output = append(output, page.Policies...)
 
 		return !lastPage
