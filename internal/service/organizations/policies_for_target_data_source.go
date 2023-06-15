@@ -17,53 +17,22 @@ func DataSourcePoliciesForTarget() *schema.Resource {
 		ReadWithoutTimeout: dataSourcePoliciesForTargetRead,
 
 		Schema: map[string]*schema.Schema{
-			"target_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"filter": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"policies": {
+			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"aws_managed": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"target_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
 }
-
-const (
-	DSNamePoliciesForTarget = "PoliciesForTarget Data Source"
-)
 
 func dataSourcePoliciesForTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -72,26 +41,29 @@ func dataSourcePoliciesForTargetRead(ctx context.Context, d *schema.ResourceData
 
 	targetID := d.Get("target_id").(string)
 	filter := d.Get("filter").(string)
-
 	policies, err := findPoliciesForTarget(ctx, conn, targetID, filter)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Organizations Policies for target (%s): %s", targetID, err)
+		return sdkdiag.AppendErrorf(diags, "listing Organizations Policies (%s) for target (%s): %s", filter, targetID, err)
+	}
+
+	var policyIDs []string
+
+	for _, v := range policies {
+		policyIDs = append(policyIDs, aws.StringValue(v.Id))
 	}
 
 	d.SetId(targetID)
-	d.Set("filter", filter)
 
-	if err := d.Set("policies", FlattenOrganizationPolicies(policies)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting policies: %s", err)
-	}
+	d.Set("ids", policyIDs)
 
 	return diags
 }
 
-func findPoliciesForTarget(ctx context.Context, conn *organizations.Organizations, id string, filter string) ([]*organizations.PolicySummary, error) {
+func findPoliciesForTarget(ctx context.Context, conn *organizations.Organizations, targetID string, filter string) ([]*organizations.PolicySummary, error) {
 	input := &organizations.ListPoliciesForTargetInput{
-		TargetId: aws.String(id),
 		Filter:   aws.String(filter),
+		TargetId: aws.String(targetID),
 	}
 	var output []*organizations.PolicySummary
 
@@ -106,22 +78,4 @@ func findPoliciesForTarget(ctx context.Context, conn *organizations.Organization
 	}
 
 	return output, nil
-}
-
-func FlattenOrganizationPolicies(policies []*organizations.PolicySummary) []map[string]interface{} {
-	if len(policies) == 0 {
-		return nil
-	}
-	var result []map[string]interface{}
-	for _, policy := range policies {
-		result = append(result, map[string]interface{}{
-			"arn":         aws.StringValue(policy.Arn),
-			"aws_managed": aws.BoolValue(policy.AwsManaged),
-			"description": aws.StringValue(policy.Description),
-			"id":          aws.StringValue(policy.Id),
-			"name":        aws.StringValue(policy.Name),
-			"type":        aws.StringValue(policy.Type),
-		})
-	}
-	return result
 }

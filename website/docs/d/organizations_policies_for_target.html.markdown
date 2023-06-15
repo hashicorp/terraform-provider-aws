@@ -15,11 +15,16 @@ Terraform data source for managing an AWS Organizations Policies For Target.
 ### Basic Usage
 
 ```terraform
-data "aws_organizations_organization" "org" {}
+data "aws_organizations_organization" "example" {}
 
-data "aws_organizations_policies_for_target" "policies" {
-  target_id = data.aws_organizations_organization.org.roots[0].id
+data "aws_organizations_policies_for_target" "example" {
+  target_id = data.aws_organizations_organization.example.roots[0].id
   filter    = "SERVICE_CONTROL_POLICY"
+}
+
+data "aws_organizations_policy" "example" {
+  for_each  = toset(data.aws_organizations_policies_for_target.example.ids)
+  policy_id = each.value
 }
 ```
 
@@ -32,12 +37,4 @@ The following arguments are required:
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
-
-* `policies` - List of child accounts, which have the following attributes:
-    * `arn` - The Amazon Resource Name (ARN) of the account.
-    * `aws_managed` - Indicates if a policy is AWS managed.
-    * `description` - Description of the policy.
-    * `id` - The unique identifier (ID) of the policy.
-    * `name` - The friendly name of the policy.
-    * `type` - The type of policy.
+* `ids` - List of all the policy ids found.

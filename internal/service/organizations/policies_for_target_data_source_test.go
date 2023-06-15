@@ -12,14 +12,13 @@ import (
 
 func TestAccOrganizationsPoliciesForTargetDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_organizations_policies_for_target.test"
-	policyResourceName := "data.aws_organizations_policy.test"
+	datasourceName := "data.aws_organizations_policies_for_target.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -27,12 +26,7 @@ func TestAccOrganizationsPoliciesForTargetDataSource_basic(t *testing.T) {
 			{
 				Config: testAccPoliciesForTargetDataSourceConfig_AttachQuery(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue("data.aws_organizations_policies_for_target.test", "policies.#", 0),
-					resource.TestCheckResourceAttrPair(dataSourceName, "policies.0.arn", policyResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "policies.0.id", policyResourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "policies.0.name", policyResourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "policies.0.description", policyResourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "policies.0.type", policyResourceName, "type"),
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "ids.#", 0),
 				),
 			},
 		},
@@ -41,16 +35,18 @@ func TestAccOrganizationsPoliciesForTargetDataSource_basic(t *testing.T) {
 
 func testAccPoliciesForTargetDataSourceConfig_AttachQuery(rName string) string {
 	return fmt.Sprintf(`
-data "aws_organizations_organization" "test" {
+resource "aws_organizations_organization" "test" {
+  feature_set          = "ALL"
+  enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY", "BACKUP_POLICY", "AISERVICES_OPT_OUT_POLICY"]
 }
 
 resource "aws_organizations_organizational_unit" "test" {
   name      = %[1]q
-  parent_id = data.aws_organizations_organization.test.roots[0].id
+  parent_id = aws_organizations_organization.test.roots[0].id
 }
 
 resource "aws_organizations_policy" "test" {
-  depends_on = [data.aws_organizations_organization.test]
+  depends_on = [aws_organizations_organization.test]
 
   content = <<EOF
 {
@@ -79,7 +75,7 @@ data "aws_organizations_policies_for_target" "test" {
 }
 
 data "aws_organizations_policy" "test" {
-  policy_id = data.aws_organizations_policies_for_target.test.policies[0].id
+  policy_id = data.aws_organizations_policies_for_target.test.ids[0]
 }
 `, rName)
 }
