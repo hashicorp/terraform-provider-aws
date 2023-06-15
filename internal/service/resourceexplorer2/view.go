@@ -125,7 +125,7 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 		ClientToken:        aws.String(id.UniqueId()),
 		Filters:            r.expandSearchFilter(ctx, data.Filters),
 		IncludedProperties: r.expandIncludedProperties(ctx, data.IncludedProperties),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		ViewName:           aws.String(data.Name.ValueString()),
 	}
 
@@ -220,7 +220,7 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 	name := parts[1]
 	data.Name = types.StringValue(name)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
