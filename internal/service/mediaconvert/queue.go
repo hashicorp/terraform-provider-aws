@@ -113,7 +113,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Name:        aws.String(d.Get("name").(string)),
 		Status:      aws.String(d.Get("status").(string)),
 		PricingPlan: aws.String(d.Get("pricing_plan").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -171,7 +171,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "listing tags for Media Convert Queue (%s): %s", d.Id(), err)
 	}
 
-	SetTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
