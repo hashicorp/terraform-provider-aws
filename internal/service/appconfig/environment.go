@@ -73,7 +73,7 @@ func (r *resourceEnvironment) Schema(ctx context.Context, request resource.Schem
 			"description": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  stringdefault.StaticString(""),
+				Default:  stringdefault.StaticString(""), // Needed for backwards compatibility with SDK resource
 			},
 			"environment_id": schema.StringAttribute{
 				Computed: true,
