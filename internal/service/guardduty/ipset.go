@@ -82,7 +82,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Format:     aws.String(d.Get("format").(string)),
 		Location:   aws.String(d.Get("location").(string)),
 		Activate:   aws.Bool(d.Get("activate").(bool)),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateIPSetWithContext(ctx, input)
@@ -146,7 +146,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("name", resp.Name)
 	d.Set("activate", aws.StringValue(resp.Status) == guardduty.IpSetStatusActive)
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	return diags
 }

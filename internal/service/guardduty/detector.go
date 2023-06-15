@@ -152,7 +152,7 @@ func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := guardduty.CreateDetectorInput{
 		Enable: aws.Bool(d.Get("enable").(bool)),
-		Tags:   GetTagsIn(ctx),
+		Tags:   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("finding_publishing_frequency"); ok {
@@ -214,7 +214,7 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("enable", aws.StringValue(gdo.Status) == guardduty.DetectorStatusEnabled)
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 
-	SetTagsOut(ctx, gdo.Tags)
+	setTagsOut(ctx, gdo.Tags)
 
 	return diags
 }
