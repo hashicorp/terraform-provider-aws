@@ -120,7 +120,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(name)
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		alarm, err := FindCompositeAlarmByName(ctx, conn, d.Id())
 
 		if err != nil {
@@ -237,7 +237,7 @@ func FindCompositeAlarmByName(ctx context.Context, conn *cloudwatch.CloudWatch, 
 func expandPutCompositeAlarmInput(ctx context.Context, d *schema.ResourceData) *cloudwatch.PutCompositeAlarmInput {
 	apiObject := &cloudwatch.PutCompositeAlarmInput{
 		ActionsEnabled: aws.Bool(d.Get("actions_enabled").(bool)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("alarm_actions"); ok {
