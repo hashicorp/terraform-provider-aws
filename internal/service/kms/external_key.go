@@ -125,7 +125,7 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
 		KeyUsage:                       aws.String(kms.KeyUsageTypeEncryptDecrypt),
 		Origin:                         aws.String(kms.OriginTypeExternal),
-		Tags:                           GetTagsIn(ctx),
+		Tags:                           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -191,7 +191,7 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
+	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
 		if err := WaitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS External Key (%s) tag propagation: %s", d.Id(), err)
 		}
@@ -250,7 +250,7 @@ func resourceExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("valid_to", nil)
 	}
 
-	SetTagsOut(ctx, key.tags)
+	setTagsOut(ctx, key.tags)
 
 	return diags
 }
