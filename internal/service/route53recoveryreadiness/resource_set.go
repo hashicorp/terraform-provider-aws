@@ -166,7 +166,7 @@ func resourceResourceSetCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(output.ResourceSetName))
 
-	if err := createTags(ctx, conn, aws.StringValue(output.ResourceSetArn), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, aws.StringValue(output.ResourceSetArn), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Recovery Readiness Resource Set (%s) tags: %s", d.Id(), err)
 	}
 
