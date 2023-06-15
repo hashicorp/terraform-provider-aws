@@ -59,6 +59,6 @@ func createTags(ctx context.Context, conn inspectoriface.InspectorAPI, identifie
 
 // UpdateTags updates Inspector Classic service tags.
 // It is called from outside this package.
-func (p *servicePackage) updateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return updateTags(ctx, meta.(*conns.AWSClient).InspectorConn(ctx), identifier, oldTags, newTags)
 }
