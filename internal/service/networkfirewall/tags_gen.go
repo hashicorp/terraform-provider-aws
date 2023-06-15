@@ -76,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*networkfirewall.Tag) tftags.KeyVa
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns networkfirewall service tags from Context.
+// getTagsIn returns networkfirewall service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*networkfirewall.Tag {
+func getTagsIn(ctx context.Context) []*networkfirewall.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,8 +88,8 @@ func GetTagsIn(ctx context.Context) []*networkfirewall.Tag {
 	return nil
 }
 
-// SetTagsOut sets networkfirewall service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*networkfirewall.Tag) {
+// setTagsOut sets networkfirewall service tags in Context.
+func setTagsOut(ctx context.Context, tags []*networkfirewall.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}

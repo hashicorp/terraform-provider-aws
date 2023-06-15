@@ -43,9 +43,9 @@ func KeyValueTags(ctx context.Context, tags []*datapipeline.Tag) tftags.KeyValue
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns datapipeline service tags from Context.
+// getTagsIn returns datapipeline service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*datapipeline.Tag {
+func getTagsIn(ctx context.Context) []*datapipeline.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -55,8 +55,8 @@ func GetTagsIn(ctx context.Context) []*datapipeline.Tag {
 	return nil
 }
 
-// SetTagsOut sets datapipeline service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*datapipeline.Tag) {
+// setTagsOut sets datapipeline service tags in Context.
+func setTagsOut(ctx context.Context, tags []*datapipeline.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}

@@ -105,9 +105,9 @@ func KeyValueTags(ctx context.Context, tags []*ecs.Tag) tftags.KeyValueTags {
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns ecs service tags from Context.
+// getTagsIn returns ecs service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*ecs.Tag {
+func getTagsIn(ctx context.Context) []*ecs.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -117,8 +117,8 @@ func GetTagsIn(ctx context.Context) []*ecs.Tag {
 	return nil
 }
 
-// SetTagsOut sets ecs service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*ecs.Tag) {
+// setTagsOut sets ecs service tags in Context.
+func setTagsOut(ctx context.Context, tags []*ecs.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}

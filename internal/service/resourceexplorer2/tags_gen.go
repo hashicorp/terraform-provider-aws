@@ -58,9 +58,9 @@ func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTa
 	return tftags.New(ctx, tags)
 }
 
-// GetTagsIn returns resourceexplorer2 service tags from Context.
+// getTagsIn returns resourceexplorer2 service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) map[string]string {
+func getTagsIn(ctx context.Context) map[string]string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -70,8 +70,8 @@ func GetTagsIn(ctx context.Context) map[string]string {
 	return nil
 }
 
-// SetTagsOut sets resourceexplorer2 service tags in Context.
-func SetTagsOut(ctx context.Context, tags map[string]string) {
+// setTagsOut sets resourceexplorer2 service tags in Context.
+func setTagsOut(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}

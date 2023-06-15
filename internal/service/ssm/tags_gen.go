@@ -77,9 +77,9 @@ func KeyValueTags(ctx context.Context, tags []*ssm.Tag) tftags.KeyValueTags {
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns ssm service tags from Context.
+// getTagsIn returns ssm service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*ssm.Tag {
+func getTagsIn(ctx context.Context) []*ssm.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -89,8 +89,8 @@ func GetTagsIn(ctx context.Context) []*ssm.Tag {
 	return nil
 }
 
-// SetTagsOut sets ssm service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*ssm.Tag) {
+// setTagsOut sets ssm service tags in Context.
+func setTagsOut(ctx context.Context, tags []*ssm.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}

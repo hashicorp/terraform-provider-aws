@@ -76,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*devicefarm.Tag) tftags.KeyValueTa
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns devicefarm service tags from Context.
+// getTagsIn returns devicefarm service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*devicefarm.Tag {
+func getTagsIn(ctx context.Context) []*devicefarm.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,8 +88,8 @@ func GetTagsIn(ctx context.Context) []*devicefarm.Tag {
 	return nil
 }
 
-// SetTagsOut sets devicefarm service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*devicefarm.Tag) {
+// setTagsOut sets devicefarm service tags in Context.
+func setTagsOut(ctx context.Context, tags []*devicefarm.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}

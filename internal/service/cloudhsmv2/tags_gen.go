@@ -76,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*cloudhsmv2.Tag) tftags.KeyValueTa
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns cloudhsmv2 service tags from Context.
+// getTagsIn returns cloudhsmv2 service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*cloudhsmv2.Tag {
+func getTagsIn(ctx context.Context) []*cloudhsmv2.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,8 +88,8 @@ func GetTagsIn(ctx context.Context) []*cloudhsmv2.Tag {
 	return nil
 }
 
-// SetTagsOut sets cloudhsmv2 service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*cloudhsmv2.Tag) {
+// setTagsOut sets cloudhsmv2 service tags in Context.
+func setTagsOut(ctx context.Context, tags []*cloudhsmv2.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}

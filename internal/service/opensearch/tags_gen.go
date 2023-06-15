@@ -76,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*opensearchservice.Tag) tftags.Key
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns opensearch service tags from Context.
+// getTagsIn returns opensearch service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*opensearchservice.Tag {
+func getTagsIn(ctx context.Context) []*opensearchservice.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,8 +88,8 @@ func GetTagsIn(ctx context.Context) []*opensearchservice.Tag {
 	return nil
 }
 
-// SetTagsOut sets opensearch service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*opensearchservice.Tag) {
+// setTagsOut sets opensearch service tags in Context.
+func setTagsOut(ctx context.Context, tags []*opensearchservice.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}

@@ -59,9 +59,9 @@ func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueT
 	return tftags.New(ctx, tags)
 }
 
-// GetTagsIn returns qldb service tags from Context.
+// getTagsIn returns qldb service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) map[string]*string {
+func getTagsIn(ctx context.Context) map[string]*string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -71,8 +71,8 @@ func GetTagsIn(ctx context.Context) map[string]*string {
 	return nil
 }
 
-// SetTagsOut sets qldb service tags in Context.
-func SetTagsOut(ctx context.Context, tags map[string]*string) {
+// setTagsOut sets qldb service tags in Context.
+func setTagsOut(ctx context.Context, tags map[string]*string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}

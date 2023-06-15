@@ -76,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*acmpca.Tag) tftags.KeyValueTags {
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns acmpca service tags from Context.
+// getTagsIn returns acmpca service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*acmpca.Tag {
+func getTagsIn(ctx context.Context) []*acmpca.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,8 +88,8 @@ func GetTagsIn(ctx context.Context) []*acmpca.Tag {
 	return nil
 }
 
-// SetTagsOut sets acmpca service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*acmpca.Tag) {
+// setTagsOut sets acmpca service tags in Context.
+func setTagsOut(ctx context.Context, tags []*acmpca.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}

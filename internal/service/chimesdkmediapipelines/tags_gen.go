@@ -76,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*chimesdkmediapipelines.Tag) tftag
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns chimesdkmediapipelines service tags from Context.
+// getTagsIn returns chimesdkmediapipelines service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*chimesdkmediapipelines.Tag {
+func getTagsIn(ctx context.Context) []*chimesdkmediapipelines.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,8 +88,8 @@ func GetTagsIn(ctx context.Context) []*chimesdkmediapipelines.Tag {
 	return nil
 }
 
-// SetTagsOut sets chimesdkmediapipelines service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*chimesdkmediapipelines.Tag) {
+// setTagsOut sets chimesdkmediapipelines service tags in Context.
+func setTagsOut(ctx context.Context, tags []*chimesdkmediapipelines.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}

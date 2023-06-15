@@ -43,9 +43,9 @@ func KeyValueTags(ctx context.Context, tags []*emr.Tag) tftags.KeyValueTags {
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns emr service tags from Context.
+// getTagsIn returns emr service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*emr.Tag {
+func getTagsIn(ctx context.Context) []*emr.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -55,8 +55,8 @@ func GetTagsIn(ctx context.Context) []*emr.Tag {
 	return nil
 }
 
-// SetTagsOut sets emr service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*emr.Tag) {
+// setTagsOut sets emr service tags in Context.
+func setTagsOut(ctx context.Context, tags []*emr.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}

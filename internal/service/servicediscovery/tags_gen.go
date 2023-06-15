@@ -76,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*servicediscovery.Tag) tftags.KeyV
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns servicediscovery service tags from Context.
+// getTagsIn returns servicediscovery service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*servicediscovery.Tag {
+func getTagsIn(ctx context.Context) []*servicediscovery.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,8 +88,8 @@ func GetTagsIn(ctx context.Context) []*servicediscovery.Tag {
 	return nil
 }
 
-// SetTagsOut sets servicediscovery service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*servicediscovery.Tag) {
+// setTagsOut sets servicediscovery service tags in Context.
+func setTagsOut(ctx context.Context, tags []*servicediscovery.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}

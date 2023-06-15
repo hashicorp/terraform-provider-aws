@@ -76,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*waf.Tag) tftags.KeyValueTags {
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns wafregional service tags from Context.
+// getTagsIn returns wafregional service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*waf.Tag {
+func getTagsIn(ctx context.Context) []*waf.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,8 +88,8 @@ func GetTagsIn(ctx context.Context) []*waf.Tag {
 	return nil
 }
 
-// SetTagsOut sets wafregional service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*waf.Tag) {
+// setTagsOut sets wafregional service tags in Context.
+func setTagsOut(ctx context.Context, tags []*waf.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}

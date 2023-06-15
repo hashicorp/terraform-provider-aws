@@ -76,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*ecrpublic.Tag) tftags.KeyValueTag
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns ecrpublic service tags from Context.
+// getTagsIn returns ecrpublic service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*ecrpublic.Tag {
+func getTagsIn(ctx context.Context) []*ecrpublic.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,8 +88,8 @@ func GetTagsIn(ctx context.Context) []*ecrpublic.Tag {
 	return nil
 }
 
-// SetTagsOut sets ecrpublic service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*ecrpublic.Tag) {
+// setTagsOut sets ecrpublic service tags in Context.
+func setTagsOut(ctx context.Context, tags []*ecrpublic.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}

@@ -76,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*redshiftserverless.Tag) tftags.Ke
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns redshiftserverless service tags from Context.
+// getTagsIn returns redshiftserverless service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*redshiftserverless.Tag {
+func getTagsIn(ctx context.Context) []*redshiftserverless.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,8 +88,8 @@ func GetTagsIn(ctx context.Context) []*redshiftserverless.Tag {
 	return nil
 }
 
-// SetTagsOut sets redshiftserverless service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*redshiftserverless.Tag) {
+// setTagsOut sets redshiftserverless service tags in Context.
+func setTagsOut(ctx context.Context, tags []*redshiftserverless.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}

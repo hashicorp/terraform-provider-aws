@@ -76,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*sagemaker.Tag) tftags.KeyValueTag
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns sagemaker service tags from Context.
+// getTagsIn returns sagemaker service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*sagemaker.Tag {
+func getTagsIn(ctx context.Context) []*sagemaker.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,8 +88,8 @@ func GetTagsIn(ctx context.Context) []*sagemaker.Tag {
 	return nil
 }
 
-// SetTagsOut sets sagemaker service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*sagemaker.Tag) {
+// setTagsOut sets sagemaker service tags in Context.
+func setTagsOut(ctx context.Context, tags []*sagemaker.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
