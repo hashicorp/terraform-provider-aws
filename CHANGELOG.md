@@ -1,4 +1,5 @@
-## 5.4.0 (Unreleased)
+## 5.5.0 (Unreleased)
+## 5.4.0 (June 15, 2023)
 
 FEATURES:
 
