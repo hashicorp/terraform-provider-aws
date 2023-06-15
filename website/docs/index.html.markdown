@@ -240,7 +240,7 @@ credential_process = custom-process --username jdoe
 |Profile|`profile`|`AWS_PROFILE` or `AWS_DEFAULT_PROFILE`|N/A|
 |Retry Mode|`retry_mode`|`AWS_RETRY_MODE`|`retry_mode`|
 |Shared Config Files|`shared_config_files`|`AWS_CONFIG_FILE`|N/A|
-|Shared Credentials Files|`shared_credentials_files` or `shared_credentials_file`|`AWS_SHARED_CREDENTIALS_FILE`|N/A|
+|Shared Credentials Files|`shared_credentials_files`|`AWS_SHARED_CREDENTIALS_FILE`|N/A|
 |Use DualStack Endpoints|`use_dualstack_endpoint`|`AWS_USE_DUALSTACK_ENDPOINT`|`use_dualstack_endpoint`|
 |Use FIPS Endpoints|`use_fips_endpoint`|`AWS_USE_FIPS_ENDPOINT`|`use_fips_endpoint`|
 
