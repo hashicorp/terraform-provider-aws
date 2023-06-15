@@ -78,7 +78,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	in := lightsail.CreateBucketInput{
 		BucketName: aws.String(d.Get("name").(string)),
 		BundleId:   aws.String(d.Get("bundle_id").(string)),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateBucket(ctx, &in)
@@ -123,7 +123,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("support_code", out.SupportCode)
 	d.Set("url", out.Url)
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	return nil
 }
