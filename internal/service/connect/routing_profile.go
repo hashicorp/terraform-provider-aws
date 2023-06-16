@@ -131,7 +131,7 @@ func ResourceRoutingProfile() *schema.Resource {
 }
 
 func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -141,7 +141,7 @@ func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, m
 		InstanceId:             aws.String(instanceID),
 		MediaConcurrencies:     expandRoutingProfileMediaConcurrencies(d.Get("media_concurrencies").(*schema.Set).List()),
 		Name:                   aws.String(name),
-		Tags:                   GetTagsIn(ctx),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("queue_configs"); ok && v.(*schema.Set).Len() > 0 && v.(*schema.Set).Len() <= CreateRoutingProfileQueuesMaxItems {
@@ -175,7 +175,7 @@ func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
 
@@ -225,13 +225,13 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("queue_configs", queueConfigs)
 
-	SetTagsOut(ctx, resp.RoutingProfile.Tags)
+	setTagsOut(ctx, resp.RoutingProfile.Tags)
 
 	return nil
 }
 
 func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
 
@@ -371,7 +371,7 @@ func updateQueueConfigs(ctx context.Context, conn *connect.Connect, instanceID, 
 }
 
 // func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-// 	conn := meta.(*conns.AWSClient).ConnectConn()
+// 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 // 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
 

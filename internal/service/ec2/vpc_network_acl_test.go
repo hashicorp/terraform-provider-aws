@@ -646,7 +646,7 @@ func TestAccVPCNetworkACL_espProtocol(t *testing.T) {
 
 func testAccCheckNetworkACLDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_network_acl" {
@@ -681,7 +681,7 @@ func testAccCheckNetworkACLExists(ctx context.Context, n string, v *ec2.NetworkA
 			return fmt.Errorf("No EC2 Network ACL ID is set: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindNetworkACLByID(ctx, conn, rs.Primary.ID)
 

@@ -243,7 +243,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, res *elastictrans
 			return fmt.Errorf("No Pipeline ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 		out, err := conn.ReadPipelineWithContext(ctx, &elastictranscoder.ReadPipelineInput{
 			Id: aws.String(rs.Primary.ID),
@@ -261,7 +261,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, res *elastictrans
 
 func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elastictranscoder_pipline" {
@@ -287,7 +287,7 @@ func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 	input := &elastictranscoder.ListPipelinesInput{}
 

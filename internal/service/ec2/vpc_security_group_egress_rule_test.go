@@ -79,7 +79,7 @@ func TestAccVPCSecurityGroupEgressRule_disappears(t *testing.T) {
 
 func testAccCheckSecurityGroupEgressRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_security_group_egress_rule" {
@@ -114,7 +114,7 @@ func testAccCheckSecurityGroupEgressRuleExists(ctx context.Context, n string, v 
 			return fmt.Errorf("No VPC Security Group Egress Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindSecurityGroupEgressRuleByID(ctx, conn, rs.Primary.ID)
 

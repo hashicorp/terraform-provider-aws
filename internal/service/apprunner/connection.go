@@ -62,13 +62,13 @@ func ResourceConnection() *schema.Resource {
 }
 
 func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	name := d.Get("connection_name").(string)
 	input := &apprunner.CreateConnectionInput{
 		ConnectionName: aws.String(name),
 		ProviderType:   aws.String(d.Get("provider_type").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateConnectionWithContext(ctx, input)
@@ -87,7 +87,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	c, err := FindConnectionSummaryByName(ctx, conn, d.Id())
 
@@ -126,7 +126,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.DeleteConnectionInput{
 		ConnectionArn: aws.String(d.Get("arn").(string)),

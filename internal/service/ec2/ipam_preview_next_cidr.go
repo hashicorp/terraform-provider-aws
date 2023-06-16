@@ -65,7 +65,7 @@ func ResourceIPAMPreviewNextCIDR() *schema.Resource {
 
 func resourceIPAMPreviewNextCIDRCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	poolId := d.Get("ipam_pool_id").(string)
 
 	input := &ec2.AllocateIpamPoolCidrInput{

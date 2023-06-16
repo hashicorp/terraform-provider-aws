@@ -273,13 +273,13 @@ func ResourceGraphQLAPI() *schema.Resource {
 
 func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &appsync.CreateGraphqlApiInput{
 		AuthenticationType: aws.String(d.Get("authentication_type").(string)),
 		Name:               aws.String(name),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("additional_authentication_provider"); ok {
@@ -329,7 +329,7 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	api, err := FindGraphQLAPIByID(ctx, conn, d.Id())
 
@@ -367,14 +367,14 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting xray_enabled: %s", err)
 	}
 
-	SetTagsOut(ctx, api.Tags)
+	setTagsOut(ctx, api.Tags)
 
 	return diags
 }
 
 func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &appsync.UpdateGraphqlApiInput{
@@ -427,7 +427,7 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceGraphQLAPIDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	log.Printf("[DEBUG] Deleting AppSync GraphQL API: %s", d.Id())
 	_, err := conn.DeleteGraphqlApiWithContext(ctx, &appsync.DeleteGraphqlApiInput{

@@ -70,12 +70,12 @@ func ResourceDatabase() *schema.Resource {
 }
 
 func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn(ctx)
 
 	dbName := d.Get("database_name").(string)
 	input := &timestreamwrite.CreateDatabaseInput{
 		DatabaseName: aws.String(dbName),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
@@ -98,7 +98,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn(ctx)
 
 	input := &timestreamwrite.DescribeDatabaseInput{
 		DatabaseName: aws.String(d.Id()),
@@ -132,7 +132,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn(ctx)
 
 	if d.HasChange("kms_key_id") {
 		input := &timestreamwrite.UpdateDatabaseInput{
@@ -151,7 +151,7 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn(ctx)
 
 	log.Printf("[INFO] Deleting Timestream Database: %s", d.Id())
 	_, err := conn.DeleteDatabaseWithContext(ctx, &timestreamwrite.DeleteDatabaseInput{

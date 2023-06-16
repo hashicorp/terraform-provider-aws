@@ -27,7 +27,7 @@ func sweepEnvironmentEC2s(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).Cloud9Conn()
+	conn := client.(*conns.AWSClient).Cloud9Conn(ctx)
 	input := &cloud9.ListEnvironmentsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

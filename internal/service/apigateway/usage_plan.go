@@ -144,12 +144,12 @@ func ResourceUsagePlan() *schema.Resource {
 
 func resourceUsagePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &apigateway.CreateUsagePlanInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("api_stages"); ok && v.(*schema.Set).Len() > 0 {
@@ -213,7 +213,7 @@ func resourceUsagePlanCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceUsagePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	up, err := FindUsagePlanByID(ctx, conn, d.Id())
 
@@ -253,14 +253,14 @@ func resourceUsagePlanRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	SetTagsOut(ctx, up.Tags)
+	setTagsOut(ctx, up.Tags)
 
 	return diags
 }
 
 func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		operations := make([]*apigateway.PatchOperation, 0)
@@ -462,7 +462,7 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceUsagePlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	// Removing existing api stages associated
 	if apistages, ok := d.GetOk("api_stages"); ok {

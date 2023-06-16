@@ -80,13 +80,13 @@ func ResourceCodeRepository() *schema.Resource {
 
 func resourceCodeRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("code_repository_name").(string)
 	input := &sagemaker.CreateCodeRepositoryInput{
 		CodeRepositoryName: aws.String(name),
 		GitConfig:          expandCodeRepositoryGitConfig(d.Get("git_config").([]interface{})),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] sagemaker code repository create config: %#v", *input)
@@ -102,7 +102,7 @@ func resourceCodeRepositoryCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceCodeRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	codeRepository, err := FindCodeRepositoryByName(ctx, conn, d.Id())
 	if err != nil {
@@ -127,7 +127,7 @@ func resourceCodeRepositoryRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceCodeRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	if d.HasChange("git_config") {
 		input := &sagemaker.UpdateCodeRepositoryInput{
@@ -147,7 +147,7 @@ func resourceCodeRepositoryUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceCodeRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.DeleteCodeRepositoryInput{
 		CodeRepositoryName: aws.String(d.Id()),

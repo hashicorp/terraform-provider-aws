@@ -52,7 +52,7 @@ func DataSourceMesh() *schema.Resource {
 
 func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	meshName := d.Get("name").(string)
@@ -80,7 +80,7 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var tags tftags.KeyValueTags
 
 	if meshOwner == meta.(*conns.AWSClient).AccountID {
-		tags, err = ListTags(ctx, conn, arn)
+		tags, err = listTags(ctx, conn, arn)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Service Mesh (%s): %s", arn, err)

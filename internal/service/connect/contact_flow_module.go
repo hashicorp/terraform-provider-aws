@@ -86,7 +86,7 @@ func ResourceContactFlowModule() *schema.Resource {
 }
 
 func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -94,7 +94,7 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 	input := &connect.CreateContactFlowModuleInput{
 		Name:       aws.String(name),
 		InstanceId: aws.String(instanceID),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -133,7 +133,7 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
 
@@ -167,13 +167,13 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("description", resp.ContactFlowModule.Description)
 	d.Set("content", resp.ContactFlowModule.Content)
 
-	SetTagsOut(ctx, resp.ContactFlowModule.Tags)
+	setTagsOut(ctx, resp.ContactFlowModule.Tags)
 
 	return nil
 }
 
 func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
 
@@ -229,7 +229,7 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceContactFlowModuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
 	if err != nil {

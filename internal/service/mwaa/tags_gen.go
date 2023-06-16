@@ -26,9 +26,9 @@ func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueT
 	return tftags.New(ctx, tags)
 }
 
-// GetTagsIn returns mwaa service tags from Context.
+// getTagsIn returns mwaa service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) map[string]*string {
+func getTagsIn(ctx context.Context) map[string]*string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -38,17 +38,17 @@ func GetTagsIn(ctx context.Context) map[string]*string {
 	return nil
 }
 
-// SetTagsOut sets mwaa service tags in Context.
-func SetTagsOut(ctx context.Context, tags map[string]*string) {
+// setTagsOut sets mwaa service tags in Context.
+func setTagsOut(ctx context.Context, tags map[string]*string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates mwaa service tags.
+// updateTags updates mwaa service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn mwaaiface.MWAAAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn mwaaiface.MWAAAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -88,5 +88,5 @@ func UpdateTags(ctx context.Context, conn mwaaiface.MWAAAPI, identifier string, 
 // UpdateTags updates mwaa service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).MWAAConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).MWAAConn(ctx), identifier, oldTags, newTags)
 }

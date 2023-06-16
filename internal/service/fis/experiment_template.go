@@ -233,7 +233,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 }
 
 func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).FISClient()
+	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
 	input := &fis.CreateExperimentTemplateInput{
 		Actions:        expandExperimentTemplateActions(d.Get("action").(*schema.Set)),
@@ -241,7 +241,7 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 		Description:    aws.String(d.Get("description").(string)),
 		RoleArn:        aws.String(d.Get("role_arn").(string)),
 		StopConditions: expandExperimentTemplateStopConditions(d.Get("stop_condition").(*schema.Set)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	targets, err := expandExperimentTemplateTargets(d.Get("target").(*schema.Set))
@@ -261,7 +261,7 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).FISClient()
+	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
 	input := &fis.GetExperimentTemplateInput{Id: aws.String(d.Id())}
 	out, err := conn.GetExperimentTemplate(ctx, input)
@@ -304,13 +304,13 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "target", err)
 	}
 
-	SetTagsOut(ctx, experimentTemplate.Tags)
+	setTagsOut(ctx, experimentTemplate.Tags)
 
 	return nil
 }
 
 func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).FISClient()
+	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
 	input := &fis.UpdateExperimentTemplateInput{
 		Id: aws.String(d.Id()),
@@ -349,7 +349,7 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceExperimentTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).FISClient()
+	conn := meta.(*conns.AWSClient).FISClient(ctx)
 	_, err := conn.DeleteExperimentTemplate(ctx, &fis.DeleteExperimentTemplateInput{
 		Id: aws.String(d.Id()),
 	})

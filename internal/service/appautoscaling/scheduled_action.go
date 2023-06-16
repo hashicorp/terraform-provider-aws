@@ -108,7 +108,7 @@ func ResourceScheduledAction() *schema.Resource {
 
 func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 	input := &applicationautoscaling.PutScheduledActionInput{
 		ScheduledActionName: aws.String(d.Get("name").(string)),
@@ -203,7 +203,7 @@ func scheduledActionPopulateInputForUpdate(input *applicationautoscaling.PutSche
 
 func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 	scheduledAction, err := FindScheduledAction(ctx, conn, d.Get("name").(string), d.Get("service_namespace").(string), d.Get("resource_id").(string))
 	if tfresource.NotFound(err) && !d.IsNewResource() {
@@ -234,7 +234,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 	input := &applicationautoscaling.DeleteScheduledActionInput{
 		ScheduledActionName: aws.String(d.Get("name").(string)),

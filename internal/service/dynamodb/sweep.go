@@ -41,7 +41,7 @@ func sweepTables(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).DynamoDBConn()
+	conn := client.(*conns.AWSClient).DynamoDBConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -112,7 +112,7 @@ func sweepBackups(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).DynamoDBConn()
+	conn := client.(*conns.AWSClient).DynamoDBConn(ctx)
 	sweepables := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group

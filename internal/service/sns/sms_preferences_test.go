@@ -106,7 +106,7 @@ func testAccCheckSMSPreferencesDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
 
 			attrs, err := conn.GetSMSAttributesWithContext(ctx, &sns.GetSMSAttributesInput{})
 

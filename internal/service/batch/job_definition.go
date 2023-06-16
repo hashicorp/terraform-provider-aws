@@ -185,13 +185,13 @@ func ResourceJobDefinition() *schema.Resource {
 
 func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &batch.RegisterJobDefinitionInput{
 		JobDefinitionName: aws.String(name),
 		PropagateTags:     aws.Bool(d.Get("propagate_tags").(bool)),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 		Type:              aws.String(d.Get("type").(string)),
 	}
 
@@ -243,7 +243,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	jobDefinition, err := FindJobDefinitionByARN(ctx, conn, d.Id())
 
@@ -282,7 +282,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("retry_strategy", nil)
 	}
 
-	SetTagsOut(ctx, jobDefinition.Tags)
+	setTagsOut(ctx, jobDefinition.Tags)
 
 	if jobDefinition.Timeout != nil {
 		if err := d.Set("timeout", []interface{}{flattenJobTimeout(jobDefinition.Timeout)}); err != nil {
@@ -308,7 +308,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Batch Job Definition: %s", d.Id())
 	_, err := conn.DeregisterJobDefinitionWithContext(ctx, &batch.DeregisterJobDefinitionInput{

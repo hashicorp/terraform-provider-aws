@@ -4,7 +4,6 @@
 package pipes
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -24,20 +23,19 @@ func init() {
 }
 
 func sweepPipes(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-
-	conn := client.(*conns.AWSClient).PipesClient()
+	conn := client.(*conns.AWSClient).PipesClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	paginator := pipes.NewListPipesPaginator(conn, &pipes.ListPipesInput{})
 
 	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(context.Background())
+		page, err := paginator.NextPage(ctx)
 
 		if err != nil {
 			errs = multierror.Append(errs, fmt.Errorf("listing Pipes for %s: %w", region, err))
@@ -55,7 +53,7 @@ func sweepPipes(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Pipe for %s: %w", region, err))
 	}
 

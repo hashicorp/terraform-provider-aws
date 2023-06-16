@@ -115,13 +115,13 @@ func ResourceLink() *schema.Resource {
 }
 
 func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	input := &networkmanager.CreateLinkInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 		SiteId:          aws.String(d.Get("site_id").(string)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("bandwidth"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -157,7 +157,7 @@ func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	link, err := FindLinkByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
@@ -186,13 +186,13 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("site_id", link.SiteId)
 	d.Set("type", link.Type)
 
-	SetTagsOut(ctx, link.Tags)
+	setTagsOut(ctx, link.Tags)
 
 	return nil
 }
 
 func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		globalNetworkID := d.Get("global_network_id").(string)
@@ -224,7 +224,7 @@ func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceLinkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 

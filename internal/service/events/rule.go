@@ -111,11 +111,11 @@ func ResourceRule() *schema.Resource {
 
 func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := expandPutRuleInput(d, name)
-	input.Tags = GetTagsIn(ctx)
+	input.Tags = getTagsIn(ctx)
 
 	arn, err := retryPutRule(ctx, conn, input)
 
@@ -142,7 +142,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, arn, tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -160,7 +160,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName, ruleName, err := RuleParseResourceID(d.Id())
 
@@ -202,7 +202,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		_, ruleName, err := RuleParseResourceID(d.Id())
@@ -224,7 +224,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName, ruleName, err := RuleParseResourceID(d.Id())
 

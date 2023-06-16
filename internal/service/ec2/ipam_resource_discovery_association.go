@@ -82,7 +82,7 @@ func ResourceIPAMResourceDiscoveryAssociation() *schema.Resource {
 
 func resourceIPAMResourceDiscoveryAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	ipamID := d.Get("ipam_id").(string)
 	ipamResourceDiscoveryID := d.Get("ipam_resource_discovery_id").(string)
@@ -110,7 +110,7 @@ func resourceIPAMResourceDiscoveryAssociationCreate(ctx context.Context, d *sche
 
 func resourceIPAMResourceDiscoveryAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	rda, err := FindIPAMResourceDiscoveryAssociationByID(ctx, conn, d.Id())
 
@@ -133,7 +133,7 @@ func resourceIPAMResourceDiscoveryAssociationRead(ctx context.Context, d *schema
 	d.Set("owner_id", rda.OwnerId)
 	d.Set("state", rda.State)
 
-	SetTagsOut(ctx, rda.Tags)
+	setTagsOut(ctx, rda.Tags)
 
 	return nil
 }
@@ -148,7 +148,7 @@ func resourceIPAMResourceDiscoveryAssociationUpdate(ctx context.Context, d *sche
 
 func resourceIPAMResourceDiscoveryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting IPAM Resource Discovery Association: %s", d.Id())
 	_, err := conn.DisassociateIpamResourceDiscoveryWithContext(ctx, &ec2.DisassociateIpamResourceDiscoveryInput{

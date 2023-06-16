@@ -355,12 +355,12 @@ func ResourceReplicationGroup() *schema.Resource {
 
 func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	replicationGroupID := d.Get("replication_group_id").(string)
 	input := &elasticache.CreateReplicationGroupInput{
 		ReplicationGroupId: aws.String(replicationGroupID),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -517,7 +517,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(output.ReplicationGroup.ARN), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -535,7 +535,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	rgp, err := FindReplicationGroupByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -662,7 +662,7 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		if d.HasChanges(
@@ -843,7 +843,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceReplicationGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	v, hasGlobalReplicationGroupID := d.GetOk("global_replication_group_id")
 	if hasGlobalReplicationGroupID {

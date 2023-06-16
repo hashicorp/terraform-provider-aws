@@ -149,7 +149,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 }
 
 func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	securityGroupID := d.Get("security_group_id").(string)
 
 	conns.GlobalMutexKV.Lock(securityGroupID)
@@ -247,7 +247,7 @@ information and instructions for recovery. Error: %s`, securityGroupID, err)
 }
 
 func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	securityGroupID := d.Get("security_group_id").(string)
 	ruleType := d.Get("type").(string)
 
@@ -309,7 +309,7 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceSecurityGroupRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("description") {
 		securityGroupID := d.Get("security_group_id").(string)
@@ -353,7 +353,7 @@ func resourceSecurityGroupRuleUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceSecurityGroupRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	securityGroupID := d.Get("security_group_id").(string)
 
 	conns.GlobalMutexKV.Lock(securityGroupID)

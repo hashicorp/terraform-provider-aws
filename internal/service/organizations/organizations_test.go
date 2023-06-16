@@ -69,6 +69,9 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"SkipDestroy":        testAccPolicyAttachment_skipDestroy,
 			"disappears":         testAccPolicyAttachment_disappears,
 		},
+		"PolicyDataSource": {
+			"UnattachedPolicy": testAccPolicyDataSource_UnattachedPolicy,
+		},
 		"DelegatedAdministrator": {
 			"basic":      testAccDelegatedAdministrator_basic,
 			"disappears": testAccDelegatedAdministrator_disappears,

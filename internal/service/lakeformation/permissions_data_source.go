@@ -248,7 +248,7 @@ func DataSourcePermissions() *schema.Resource {
 
 func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &lakeformation.DataLakePrincipal{

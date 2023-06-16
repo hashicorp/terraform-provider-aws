@@ -105,6 +105,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/oam"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/pipes"

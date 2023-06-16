@@ -99,13 +99,13 @@ func ResourceTransitGatewayRouteTableAttachment() *schema.Resource {
 }
 
 func resourceTransitGatewayRouteTableAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	peeringID := d.Get("peering_id").(string)
 	transitGatewayRouteTableARN := d.Get("transit_gateway_route_table_arn").(string)
 	input := &networkmanager.CreateTransitGatewayRouteTableAttachmentInput{
 		PeeringId:                   aws.String(peeringID),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 		TransitGatewayRouteTableArn: aws.String(transitGatewayRouteTableARN),
 	}
 
@@ -126,7 +126,7 @@ func resourceTransitGatewayRouteTableAttachmentCreate(ctx context.Context, d *sc
 }
 
 func resourceTransitGatewayRouteTableAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	transitGatewayRouteTableAttachment, err := FindTransitGatewayRouteTableAttachmentByID(ctx, conn, d.Id())
 
@@ -160,7 +160,7 @@ func resourceTransitGatewayRouteTableAttachmentRead(ctx context.Context, d *sche
 	d.Set("state", a.State)
 	d.Set("transit_gateway_route_table_arn", transitGatewayRouteTableAttachment.TransitGatewayRouteTableArn)
 
-	SetTagsOut(ctx, a.Tags)
+	setTagsOut(ctx, a.Tags)
 
 	return nil
 }
@@ -171,7 +171,7 @@ func resourceTransitGatewayRouteTableAttachmentUpdate(ctx context.Context, d *sc
 }
 
 func resourceTransitGatewayRouteTableAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Transit Gateway Route Table Attachment: %s", d.Id())
 	_, err := conn.DeleteAttachmentWithContext(ctx, &networkmanager.DeleteAttachmentInput{

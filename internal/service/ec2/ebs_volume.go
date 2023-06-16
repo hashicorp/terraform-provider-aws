@@ -123,7 +123,7 @@ func ResourceEBSVolume() *schema.Resource {
 
 func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateVolumeInput{
 		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
@@ -184,7 +184,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	volume, err := FindEBSVolumeByID(ctx, conn, d.Id())
 
@@ -217,14 +217,14 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("throughput", volume.Throughput)
 	d.Set("type", volume.VolumeType)
 
-	SetTagsOut(ctx, volume.Tags)
+	setTagsOut(ctx, volume.Tags)
 
 	return diags
 }
 
 func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyVolumeInput{
@@ -274,7 +274,7 @@ func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.Get("final_snapshot").(bool) {
 		input := &ec2.CreateSnapshotInput{

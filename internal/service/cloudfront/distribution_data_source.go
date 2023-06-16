@@ -66,7 +66,7 @@ func DataSourceDistribution() *schema.Resource {
 
 func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindDistributionByID(ctx, conn, d.Get("id").(string))
@@ -91,7 +91,7 @@ func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 	}
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for CloudFront Distribution (%s): %s", d.Id(), err)
 	}

@@ -186,7 +186,7 @@ func ResourceSelection() *schema.Resource {
 
 func resourceSelectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	selection := &backup.Selection{
 		Conditions:    expandConditions(d.Get("condition").(*schema.Set).List()),
@@ -244,7 +244,7 @@ func resourceSelectionCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	input := &backup.GetBackupSelectionInput{
 		BackupPlanId: aws.String(d.Get("plan_id").(string)),
@@ -342,7 +342,7 @@ func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceSelectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	input := &backup.DeleteBackupSelectionInput{
 		BackupPlanId: aws.String(d.Get("plan_id").(string)),

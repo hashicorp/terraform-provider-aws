@@ -35,7 +35,7 @@ func sweepServices(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).VPCLatticeClient()
+	conn := client.(*conns.AWSClient).VPCLatticeClient(ctx)
 	input := &vpclattice.ListServicesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -76,7 +76,7 @@ func sweepServiceNetworks(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).VPCLatticeClient()
+	conn := client.(*conns.AWSClient).VPCLatticeClient(ctx)
 	input := &vpclattice.ListServiceNetworksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

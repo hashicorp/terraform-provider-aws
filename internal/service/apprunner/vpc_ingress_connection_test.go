@@ -128,7 +128,7 @@ func testAccCheckVPCIngressConnectionDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
 
 			input := &apprunner.DescribeVpcIngressConnectionInput{
 				VpcIngressConnectionArn: aws.String(rs.Primary.ID),
@@ -164,7 +164,7 @@ func testAccCheckVPCIngressConnectionExists(ctx context.Context, n string) resou
 			return fmt.Errorf("No App Runner Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
 
 		input := &apprunner.DescribeVpcIngressConnectionInput{
 			VpcIngressConnectionArn: aws.String(rs.Primary.ID),

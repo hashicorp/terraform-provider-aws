@@ -56,7 +56,7 @@ func DataSourceSecretRotation() *schema.Resource {
 
 func dataSourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	secretID := d.Get("secret_id").(string)
 	output, err := FindSecretByID(ctx, conn, secretID)

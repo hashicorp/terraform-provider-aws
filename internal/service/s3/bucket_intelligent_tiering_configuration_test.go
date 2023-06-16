@@ -361,7 +361,7 @@ func testAccCheckBucketIntelligentTieringConfigurationExists(ctx context.Context
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		output, err := tfs3.FindBucketIntelligentTieringConfiguration(ctx, conn, bucketName, configurationName)
 
@@ -377,7 +377,7 @@ func testAccCheckBucketIntelligentTieringConfigurationExists(ctx context.Context
 
 func testAccCheckBucketIntelligentTieringConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_intelligent_tiering_configuration" {

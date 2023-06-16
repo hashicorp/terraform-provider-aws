@@ -144,7 +144,7 @@ func ResourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -153,7 +153,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		PhoneConfig:        expandPhoneConfig(d.Get("phone_config").([]interface{})),
 		RoutingProfileId:   aws.String(d.Get("routing_profile_id").(string)),
 		SecurityProfileIds: flex.ExpandStringSet(d.Get("security_profile_ids").(*schema.Set)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		Username:           aws.String(name),
 	}
 
@@ -189,7 +189,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userID, err := UserParseID(d.Id())
 
@@ -235,13 +235,13 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("setting phone_config: %s", err)
 	}
 
-	SetTagsOut(ctx, resp.User.Tags)
+	setTagsOut(ctx, resp.User.Tags)
 
 	return nil
 }
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userID, err := UserParseID(d.Id())
 
@@ -338,7 +338,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userID, err := UserParseID(d.Id())
 

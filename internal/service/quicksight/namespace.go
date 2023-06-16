@@ -102,7 +102,7 @@ func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaReque
 }
 
 func (r *resourceNamespace) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var plan resourceNamespaceData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -119,7 +119,7 @@ func (r *resourceNamespace) Create(ctx context.Context, req resource.CreateReque
 		AwsAccountId:  aws.String(plan.AWSAccountID.ValueString()),
 		Namespace:     aws.String(plan.Namespace.ValueString()),
 		IdentityStore: aws.String(plan.IdentityStore.ValueString()),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateNamespaceWithContext(ctx, &in)
@@ -156,7 +156,7 @@ func (r *resourceNamespace) Create(ctx context.Context, req resource.CreateReque
 }
 
 func (r *resourceNamespace) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceNamespaceData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -212,7 +212,7 @@ func (r *resourceNamespace) Update(ctx context.Context, req resource.UpdateReque
 }
 
 func (r *resourceNamespace) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceNamespaceData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

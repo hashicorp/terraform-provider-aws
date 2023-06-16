@@ -151,12 +151,12 @@ func ResourceDevice() *schema.Resource {
 }
 
 func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	input := &networkmanager.CreateDeviceInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -208,7 +208,7 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	device, err := FindDeviceByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
@@ -246,13 +246,13 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("type", device.Type)
 	d.Set("vendor", device.Vendor)
 
-	SetTagsOut(ctx, device.Tags)
+	setTagsOut(ctx, device.Tags)
 
 	return nil
 }
 
 func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		globalNetworkID := d.Get("global_network_id").(string)
@@ -291,7 +291,7 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 

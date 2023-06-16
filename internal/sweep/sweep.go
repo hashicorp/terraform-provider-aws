@@ -138,10 +138,6 @@ func (sr *SweepResource) Delete(ctx context.Context, timeout time.Duration, optF
 	return err
 }
 
-func SweepOrchestrator(sweepables []Sweepable) error {
-	return SweepOrchestratorWithContext(context.Background(), sweepables)
-}
-
 func SweepOrchestratorWithContext(ctx context.Context, sweepables []Sweepable, optFns ...tfresource.OptionsFunc) error {
 	var g multierror.Group
 

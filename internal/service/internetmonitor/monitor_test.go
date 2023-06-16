@@ -153,7 +153,7 @@ func TestAccInternetMonitorMonitor_tags(t *testing.T) {
 
 func testAccCheckMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InternetMonitorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InternetMonitorConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_internetmonitor_monitor" {
@@ -188,7 +188,7 @@ func testAccCheckMonitorExists(ctx context.Context, resourceName string) resourc
 			return fmt.Errorf("No InternetMonitor Monitor ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InternetMonitorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InternetMonitorConn(ctx)
 
 		_, err := tfinternetmonitor.FindMonitor(ctx, conn, rs.Primary.ID)
 

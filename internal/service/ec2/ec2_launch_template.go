@@ -975,7 +975,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 
 func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &ec2.CreateLaunchTemplateInput{
@@ -1007,7 +1007,7 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	lt, err := FindLaunchTemplateByID(ctx, conn, d.Id())
 
@@ -1046,14 +1046,14 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	SetTagsOut(ctx, lt.Tags)
+	setTagsOut(ctx, lt.Tags)
 
 	return diags
 }
 
 func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	updateKeys := []string{
 		"block_device_mappings",
@@ -1138,7 +1138,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceLaunchTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Launch Template: %s", d.Id())
 	_, err := conn.DeleteLaunchTemplateWithContext(ctx, &ec2.DeleteLaunchTemplateInput{

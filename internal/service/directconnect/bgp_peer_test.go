@@ -44,7 +44,7 @@ func TestAccDirectConnectBGPPeer_basic(t *testing.T) {
 
 func testAccCheckBGPPeerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_bgp_peer" {

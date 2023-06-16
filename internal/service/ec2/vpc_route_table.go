@@ -161,7 +161,7 @@ func ResourceRouteTable() *schema.Resource {
 
 func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateRouteTableInput{
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
@@ -205,9 +205,10 @@ func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-
-	routeTable, err := FindRouteTableByID(ctx, conn, d.Id())
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, RouteTableAssociationPropagationTimeout, func() (interface{}, error) {
+		return FindRouteTableByID(ctx, conn, d.Id())
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table (%s) not found, removing from state", d.Id())
@@ -219,6 +220,7 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", d.Id(), err)
 	}
 
+	routeTable := outputRaw.(*ec2.RouteTable)
 	ownerID := aws.StringValue(routeTable.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -242,14 +244,14 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("vpc_id", routeTable.VpcId)
 
 	// Ignore the AmazonFSx service tag in addition to standard ignores.
-	SetTagsOut(ctx, Tags(KeyValueTags(ctx, routeTable.Tags).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))))
+	setTagsOut(ctx, Tags(KeyValueTags(ctx, routeTable.Tags).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))))
 
 	return diags
 }
 
 func resourceRouteTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("propagating_vgws") {
 		o, n := d.GetChange("propagating_vgws")
@@ -340,7 +342,7 @@ func resourceRouteTableUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	routeTable, err := FindRouteTableByID(ctx, conn, d.Id())
 
