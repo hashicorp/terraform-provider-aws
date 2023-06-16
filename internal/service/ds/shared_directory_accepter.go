@@ -21,6 +21,7 @@ const (
 	ResNameSharedDirectoryAccepter = "Shared Directory Accepter"
 )
 
+// @SDKResource("aws_directory_service_shared_directory_accepter")
 func ResourceSharedDirectoryAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSharedDirectoryAccepterCreate,
@@ -63,7 +64,7 @@ func ResourceSharedDirectoryAccepter() *schema.Resource {
 }
 
 func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	input := directoryservice.AcceptSharedDirectoryInput{
 		SharedDirectoryId: aws.String(d.Get("shared_directory_id").(string)),
@@ -95,7 +96,7 @@ func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	dir, err := FindDirectoryByID(ctx, conn, d.Id())
 
@@ -112,7 +113,7 @@ func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceSharedDirectoryAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {

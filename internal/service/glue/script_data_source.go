@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_glue_script")
 func DataSourceScript() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceScriptRead,
@@ -101,7 +102,7 @@ func DataSourceScript() *schema.Resource {
 
 func dataSourceScriptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	dagEdge := d.Get("dag_edge").([]interface{})
 	dagNode := d.Get("dag_node").([]interface{})

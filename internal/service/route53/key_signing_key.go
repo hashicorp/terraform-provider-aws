@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53_key_signing_key")
 func ResourceKeySigningKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeySigningKeyCreate,
@@ -103,14 +104,14 @@ func ResourceKeySigningKey() *schema.Resource {
 
 func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	hostedZoneID := d.Get("hosted_zone_id").(string)
 	name := d.Get("name").(string)
 	status := d.Get("status").(string)
 
 	input := &route53.CreateKeySigningKeyInput{
-		CallerReference: aws.String(resource.UniqueId()),
+		CallerReference: aws.String(id.UniqueId()),
 		HostedZoneId:    aws.String(hostedZoneID),
 		Name:            aws.String(name),
 		Status:          aws.String(status),
@@ -143,7 +144,7 @@ func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	hostedZoneID, name, err := KeySigningKeyParseResourceID(d.Id())
 
@@ -199,7 +200,7 @@ func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	if d.HasChange("status") {
 		status := d.Get("status").(string)
@@ -253,7 +254,7 @@ func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	status := d.Get("status").(string)
 

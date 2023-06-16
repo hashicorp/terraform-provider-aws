@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -27,8 +27,8 @@ func TestAccIVSChatRoom_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
@@ -61,8 +61,8 @@ func TestAccIVSChatRoom_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
@@ -110,8 +110,8 @@ func TestAccIVSChatRoom_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
@@ -141,8 +141,8 @@ func TestAccIVSChatRoom_update(t *testing.T) {
 	fallbackResult := "DENY"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
@@ -184,8 +184,8 @@ func TestAccIVSChatRoom_loggingConfiguration(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
@@ -244,8 +244,8 @@ func TestAccIVSChatRoom_update_remove_messageReviewHandler_uri(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IVSChatEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
@@ -277,7 +277,7 @@ func TestAccIVSChatRoom_update_remove_messageReviewHandler_uri(t *testing.T) {
 
 func testAccCheckRoomDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ivschat_room" {
@@ -314,7 +314,7 @@ func testAccCheckRoomExists(ctx context.Context, name string, room *ivschat.GetR
 			return create.Error(names.IVSChat, create.ErrActionCheckingExistence, tfivschat.ResNameRoom, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient(ctx)
 
 		resp, err := conn.GetRoom(ctx, &ivschat.GetRoomInput{
 			Identifier: aws.String(rs.Primary.ID),
@@ -331,7 +331,7 @@ func testAccCheckRoomExists(ctx context.Context, name string, room *ivschat.GetR
 }
 
 func testAccPreCheckRoom(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient(ctx)
 
 	input := &ivschat.ListRoomsInput{}
 	_, err := conn.ListRooms(ctx, input)

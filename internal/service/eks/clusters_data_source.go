@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_eks_clusters")
 func DataSourceClusters() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClustersRead,
@@ -27,7 +28,7 @@ func DataSourceClusters() *schema.Resource {
 
 func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	var clusters []*string
 

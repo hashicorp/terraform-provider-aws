@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_directory_service_log_subscription")
 func ResourceLogSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLogSubscriptionCreate,
@@ -38,7 +39,7 @@ func ResourceLogSubscription() *schema.Resource {
 
 func resourceLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryId := d.Get("directory_id")
 	logGroupName := d.Get("log_group_name")
@@ -60,7 +61,7 @@ func resourceLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryId := d.Id()
 
@@ -88,7 +89,7 @@ func resourceLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceLogSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryId := d.Id()
 

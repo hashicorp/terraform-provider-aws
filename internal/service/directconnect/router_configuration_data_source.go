@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_dx_router_configuration")
 func DataSourceRouterConfiguration() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouterConfigurationRead,
@@ -77,7 +78,7 @@ const (
 )
 
 func dataSourceRouterConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	routerTypeIdentifier := d.Get("router_type_identifier").(string)
 	virtualInterfaceId := d.Get("virtual_interface_id").(string)

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_db_proxy_target")
 func ResourceProxyTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyTargetCreate,
@@ -90,7 +91,7 @@ func ResourceProxyTarget() *schema.Resource {
 
 func resourceProxyTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbProxyName := d.Get("db_proxy_name").(string)
 	targetGroupName := d.Get("target_group_name").(string)
@@ -112,7 +113,6 @@ func resourceProxyTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 			return conn.RegisterDBProxyTargetsWithContext(ctx, input)
 		},
 		rds.ErrCodeInvalidDBInstanceStateFault, "CREATING")
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "registering RDS DB Proxy (%s/%s) Target: %s", dbProxyName, targetGroupName, err)
 	}
@@ -134,7 +134,7 @@ func ProxyTargetParseID(id string) (string, string, string, string, error) {
 
 func resourceProxyTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbProxyName, targetGroupName, targetType, rdsResourceId, err := ProxyTargetParseID(d.Id())
 	if err != nil {
@@ -185,7 +185,7 @@ func resourceProxyTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceProxyTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	params := rds.DeregisterDBProxyTargetsInput{
 		DBProxyName:     aws.String(d.Get("db_proxy_name").(string)),

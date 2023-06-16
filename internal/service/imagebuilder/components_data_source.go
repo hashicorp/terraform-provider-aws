@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
+// @SDKDataSource("aws_imagebuilder_components")
 func DataSourceComponents() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceComponentsRead,
@@ -39,7 +40,7 @@ func DataSourceComponents() *schema.Resource {
 
 func dataSourceComponentsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.ListComponentsInput{}
 

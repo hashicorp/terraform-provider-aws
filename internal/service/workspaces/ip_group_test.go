@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
@@ -25,7 +25,7 @@ func testAccIPGroup_basic(t *testing.T) {
 	resourceName := "aws_workspaces_ip_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPGroupDestroy(ctx),
@@ -70,7 +70,7 @@ func testAccIPGroup_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPGroupDestroy(ctx),
@@ -117,7 +117,7 @@ func testAccIPGroup_disappears(t *testing.T) {
 	resourceName := "aws_workspaces_ip_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPGroupDestroy(ctx),
@@ -147,7 +147,7 @@ func testAccIPGroup_MultipleDirectories(t *testing.T) {
 	directoryResourceName2 := "aws_workspaces_directory.test2"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPGroupDestroy(ctx),
@@ -173,7 +173,7 @@ func testAccCheckIPGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn(ctx)
 			resp, err := conn.DescribeIpGroupsWithContext(ctx, &workspaces.DescribeIpGroupsInput{
 				GroupIds: []*string{aws.String(rs.Primary.ID)},
 			})
@@ -207,7 +207,7 @@ func testAccCheckIPGroupExists(ctx context.Context, n string, v *workspaces.IpGr
 			return fmt.Errorf("No Workpsaces IP Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn(ctx)
 		resp, err := conn.DescribeIpGroupsWithContext(ctx, &workspaces.DescribeIpGroupsInput{
 			GroupIds: []*string{aws.String(rs.Primary.ID)},
 		})

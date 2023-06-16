@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_kinesis_firehose_delivery_stream")
 func DataSourceDeliveryStream() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDeliveryStreamRead,
@@ -28,7 +29,7 @@ func DataSourceDeliveryStream() *schema.Resource {
 
 func dataSourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FirehoseConn()
+	conn := meta.(*conns.AWSClient).FirehoseConn(ctx)
 
 	sn := d.Get("name").(string)
 	output, err := FindDeliveryStreamByName(ctx, conn, sn)

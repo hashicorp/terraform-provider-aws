@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_config_configuration_recorder")
 func ResourceConfigurationRecorder() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationRecorderPut,
@@ -72,7 +73,7 @@ func ResourceConfigurationRecorder() *schema.Resource {
 
 func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("name").(string)
 	recorder := configservice.ConfigurationRecorder{
@@ -99,7 +100,7 @@ func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceDat
 
 func resourceConfigurationRecorderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	input := configservice.DescribeConfigurationRecordersInput{
 		ConfigurationRecorderNames: []*string{aws.String(d.Id())},
@@ -149,7 +150,7 @@ func resourceConfigurationRecorderRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceConfigurationRecorderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 	input := configservice.DeleteConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Id()),
 	}

@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -23,7 +23,7 @@ func TestAccInspectorAssessmentTemplate_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
@@ -56,7 +56,7 @@ func TestAccInspectorAssessmentTemplate_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
@@ -80,7 +80,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
@@ -137,7 +137,7 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 	event2 := "ASSESSMENT_RUN_STATE_CHANGED"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
@@ -186,7 +186,7 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 
 func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_inspector_assessment_template" {
@@ -204,7 +204,7 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			if err != nil {
-				return fmt.Errorf("Error finding Inspector Assessment Template: %s", err)
+				return fmt.Errorf("finding Inspector Classic Assessment Template: %s", err)
 			}
 
 			if len(resp.AssessmentTemplates) > 0 {
@@ -218,7 +218,7 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckTemplateDisappears(ctx context.Context, v *inspector.AssessmentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
 
 		_, err := conn.DeleteAssessmentTemplateWithContext(ctx, &inspector.DeleteAssessmentTemplateInput{
 			AssessmentTemplateArn: v.Arn,
@@ -236,10 +236,10 @@ func testAccCheckTemplateExists(ctx context.Context, name string, v *inspector.A
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Inspector assessment template ID is set")
+			return fmt.Errorf("No Inspector Classic Assessment template ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
 
 		resp, err := conn.DescribeAssessmentTemplatesWithContext(ctx, &inspector.DescribeAssessmentTemplatesInput{
 			AssessmentTemplateArns: aws.StringSlice([]string{rs.Primary.ID}),
@@ -249,7 +249,7 @@ func testAccCheckTemplateExists(ctx context.Context, name string, v *inspector.A
 		}
 
 		if resp.AssessmentTemplates == nil || len(resp.AssessmentTemplates) == 0 {
-			return fmt.Errorf("Inspector assessment template not found")
+			return fmt.Errorf("Inspector Classic Assessment template not found")
 		}
 
 		*v = *resp.AssessmentTemplates[0]

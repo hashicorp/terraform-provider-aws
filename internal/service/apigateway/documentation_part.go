@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_api_gateway_documentation_part")
 func ResourceDocumentationPart() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentationPartCreate,
@@ -77,7 +78,7 @@ func ResourceDocumentationPart() *schema.Resource {
 
 func resourceDocumentationPartCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	apiId := d.Get("rest_api_id").(string)
 	out, err := conn.CreateDocumentationPartWithContext(ctx, &apigateway.CreateDocumentationPartInput{
@@ -95,7 +96,7 @@ func resourceDocumentationPartCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	log.Printf("[INFO] Reading API Gateway Documentation Part %s", d.Id())
 
@@ -126,7 +127,7 @@ func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceDocumentationPartUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	apiId, id, err := DecodeDocumentationPartID(d.Id())
 	if err != nil {
@@ -159,7 +160,7 @@ func resourceDocumentationPartUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceDocumentationPartDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	apiId, id, err := DecodeDocumentationPartID(d.Id())
 	if err != nil {

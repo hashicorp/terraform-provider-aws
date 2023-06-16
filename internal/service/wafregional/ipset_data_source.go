@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_wafregional_ipset")
 func DataSourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIPSetRead,
@@ -26,7 +27,7 @@ func DataSourceIPSet() *schema.Resource {
 
 func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	name := d.Get("name").(string)
 
 	ipsets := make([]*waf.IPSetSummary, 0)

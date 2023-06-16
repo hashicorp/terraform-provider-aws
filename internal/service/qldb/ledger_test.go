@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/qldb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfqldb "github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
@@ -23,7 +23,7 @@ func TestAccQLDBLedger_basic(t *testing.T) {
 	resourceName := "aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, qldb.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, qldb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLedgerDestroy(ctx),
@@ -56,7 +56,7 @@ func TestAccQLDBLedger_disappears(t *testing.T) {
 	resourceName := "aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, qldb.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, qldb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLedgerDestroy(ctx),
@@ -79,7 +79,7 @@ func TestAccQLDBLedger_nameGenerated(t *testing.T) {
 	resourceName := "aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, qldb.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, qldb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLedgerDestroy(ctx),
@@ -107,7 +107,7 @@ func TestAccQLDBLedger_update(t *testing.T) {
 	resourceName := "aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, qldb.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, qldb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLedgerDestroy(ctx),
@@ -153,7 +153,7 @@ func TestAccQLDBLedger_kmsKey(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, qldb.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, qldb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLedgerDestroy(ctx),
@@ -188,7 +188,7 @@ func TestAccQLDBLedger_tags(t *testing.T) {
 	resourceName := "aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, qldb.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, qldb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLedgerDestroy(ctx),
@@ -229,7 +229,7 @@ func TestAccQLDBLedger_tags(t *testing.T) {
 
 func testAccCheckLedgerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_qldb_ledger" {
@@ -264,7 +264,7 @@ func testAccCheckLedgerExists(ctx context.Context, n string, v *qldb.DescribeLed
 			return fmt.Errorf("No QLDB Ledger ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn(ctx)
 
 		output, err := tfqldb.FindLedgerByName(ctx, conn, rs.Primary.ID)
 

@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,8 +21,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_grafana_workspace", name="Workspace")
+// @Tags(identifierAttribute="arn")
 func ResourceWorkspace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkspaceCreate,
@@ -35,8 +38,8 @@ func ResourceWorkspace() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -87,12 +90,35 @@ func ResourceWorkspace() *schema.Resource {
 			},
 			"grafana_version": {
 				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
 				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			"network_access_control": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"prefix_list_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MaxItems: 100,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"vpce_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MaxItems: 100,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
 			},
 			"notification_destinations": {
 				Type:     schema.TypeList,
@@ -129,8 +155,8 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_configuration": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -161,16 +187,14 @@ func ResourceWorkspace() *schema.Resource {
 
 func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	input := &managedgrafana.CreateWorkspaceInput{
 		AccountAccessType:       aws.String(d.Get("account_access_type").(string)),
 		AuthenticationProviders: flex.ExpandStringList(d.Get("authentication_providers").([]interface{})),
-		ClientToken:             aws.String(resource.UniqueId()),
+		ClientToken:             aws.String(id.UniqueId()),
 		PermissionType:          aws.String(d.Get("permission_type").(string)),
-		Tags:                    Tags(tags.IgnoreAWS()),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("configuration"); ok {
@@ -187,6 +211,10 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if v, ok := d.GetOk("name"); ok {
 		input.WorkspaceName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("grafana_version"); ok {
+		input.GrafanaVersion = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("notification_destinations"); ok {
@@ -213,6 +241,10 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("network_access_control"); ok {
+		input.NetworkAccessControl = expandNetworkAccessControl(v.([]interface{}))
+	}
+
 	log.Printf("[DEBUG] Creating Grafana Workspace: %s", input)
 	output, err := conn.CreateWorkspaceWithContext(ctx, input)
 
@@ -231,9 +263,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	workspace, err := FindWorkspaceByID(ctx, conn, d.Id())
 
@@ -275,16 +305,11 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting vpc_configuration: %s", err)
 	}
 
-	tags := KeyValueTags(workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	if err := d.Set("network_access_control", flattenNetworkAccessControl(workspace.NetworkAccessControl)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting network_access_control: %s", err)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, workspace.Tags)
 
 	input := &managedgrafana.DescribeWorkspaceConfigurationInput{
 		WorkspaceId: aws.String(d.Id()),
@@ -303,7 +328,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	if d.HasChangesExcept("configuration", "tags", "tags_all") {
 		input := &managedgrafana.UpdateWorkspaceInput{
@@ -351,7 +376,23 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange("vpc_configuration") {
-			input.VpcConfiguration = expandVPCConfiguration(d.Get("vpc_configuration").([]interface{}))
+			if v, ok := d.Get("vpc_configuration").([]interface{}); ok {
+				if len(v) > 0 {
+					input.VpcConfiguration = expandVPCConfiguration(v)
+				} else {
+					input.RemoveVpcConfiguration = aws.Bool(true)
+				}
+			}
+		}
+
+		if d.HasChange("network_access_control") {
+			if v, ok := d.Get("network_access_control").([]interface{}); ok {
+				if len(v) > 0 {
+					input.NetworkAccessControl = expandNetworkAccessControl(v)
+				} else {
+					input.RemoveNetworkAccessConfiguration = aws.Bool(true)
+				}
+			}
 		}
 
 		_, err := conn.UpdateWorkspaceWithContext(ctx, input)
@@ -382,20 +423,12 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Grafana Workspace (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceWorkspaceRead(ctx, d, meta)...)
 }
 
 func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Grafana Workspace: %s", d.Id())
 	_, err := conn.DeleteWorkspaceWithContext(ctx, &managedgrafana.DeleteWorkspaceInput{
@@ -448,6 +481,42 @@ func flattenVPCConfiguration(rs *managedgrafana.VpcConfiguration) []interface{} 
 	}
 	if rs.SubnetIds != nil {
 		m["subnet_ids"] = flex.FlattenStringSet(rs.SubnetIds)
+	}
+
+	return []interface{}{m}
+}
+
+func expandNetworkAccessControl(cfg []interface{}) *managedgrafana.NetworkAccessConfiguration {
+	if len(cfg) < 1 {
+		return nil
+	}
+
+	conf := cfg[0].(map[string]interface{})
+
+	out := managedgrafana.NetworkAccessConfiguration{}
+
+	if v, ok := conf["prefix_list_ids"].(*schema.Set); ok && v.Len() > 0 {
+		out.PrefixListIds = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := conf["vpce_ids"].(*schema.Set); ok && v.Len() > 0 {
+		out.VpceIds = flex.ExpandStringSet(v)
+	}
+
+	return &out
+}
+
+func flattenNetworkAccessControl(rs *managedgrafana.NetworkAccessConfiguration) []interface{} {
+	if rs == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+	if rs.PrefixListIds != nil {
+		m["prefix_list_ids"] = flex.FlattenStringSet(rs.PrefixListIds)
+	}
+	if rs.VpceIds != nil {
+		m["vpce_ids"] = flex.FlattenStringSet(rs.VpceIds)
 	}
 
 	return []interface{}{m}

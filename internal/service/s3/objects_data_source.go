@@ -13,6 +13,7 @@ import (
 
 const keyRequestPageSize = 1000
 
+// @SDKDataSource("aws_s3_objects")
 func DataSourceObjects() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceObjectsRead,
@@ -68,7 +69,7 @@ func DataSourceObjects() *schema.Resource {
 
 func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	prefix := d.Get("prefix").(string)

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_vpc_dhcp_options_association")
 func ResourceVPCDHCPOptionsAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCDHCPOptionsAssociationPut,
@@ -43,7 +44,7 @@ func ResourceVPCDHCPOptionsAssociation() *schema.Resource {
 
 func resourceVPCDHCPOptionsAssociationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	dhcpOptionsID := d.Get("dhcp_options_id").(string)
 	vpcID := d.Get("vpc_id").(string)
@@ -67,7 +68,7 @@ func resourceVPCDHCPOptionsAssociationPut(ctx context.Context, d *schema.Resourc
 
 func resourceVPCDHCPOptionsAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	dhcpOptionsID, vpcID, err := VPCDHCPOptionsAssociationParseResourceID(d.Id())
 
@@ -97,7 +98,7 @@ func resourceVPCDHCPOptionsAssociationRead(ctx context.Context, d *schema.Resour
 
 func resourceVPCDHCPOptionsAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	dhcpOptionsID, vpcID, err := VPCDHCPOptionsAssociationParseResourceID(d.Id())
 
@@ -130,12 +131,12 @@ func resourceVPCDHCPOptionsAssociationDelete(ctx context.Context, d *schema.Reso
 }
 
 func resourceVPCDHCPOptionsAssociationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpc, err := FindVPCByID(ctx, conn, d.Id())
 
 	if err != nil {
-		return nil, fmt.Errorf("error reading EC2 VPC (%s): %w", d.Id(), err)
+		return nil, fmt.Errorf("reading EC2 VPC (%s): %w", d.Id(), err)
 	}
 
 	dhcpOptionsID := aws.StringValue(vpc.DhcpOptionsId)

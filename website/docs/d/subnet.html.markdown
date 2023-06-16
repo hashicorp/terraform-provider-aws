@@ -83,6 +83,7 @@ In addition to the attributes above, the following attributes are exported:
 * `available_ip_address_count` - Available IP addresses of the subnet.
 * `customer_owned_ipv4_pool` - Identifier of customer owned IPv4 address pool.
 * `enable_dns64` - Whether DNS queries made to the Amazon-provided DNS Resolver in this subnet return synthetic IPv6 addresses for IPv4-only destinations.
+* `enable_lni_at_device_index` - Indicates the device position for local network interfaces in this subnet. For example, 1 indicates local network interfaces in this subnet are the secondary network interface (eth1). A local network interface cannot be the primary network interface (eth0).
 * `enable_resource_name_dns_aaaa_record_on_launch` - Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
 * `enable_resource_name_dns_a_record_on_launch` - Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
 * `ipv6_cidr_block_association_id` - Association ID of the IPv6 CIDR block.

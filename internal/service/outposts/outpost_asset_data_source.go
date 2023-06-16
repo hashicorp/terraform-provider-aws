@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_outposts_asset")
 func DataSourceOutpostAsset() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: DataSourceOutpostAssetRead,
@@ -48,7 +49,7 @@ func DataSourceOutpostAsset() *schema.Resource {
 
 func DataSourceOutpostAssetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OutpostsConn()
+	conn := meta.(*conns.AWSClient).OutpostsConn(ctx)
 	outpost_id := aws.String(d.Get("arn").(string))
 
 	input := &outposts.ListAssetsInput{

@@ -25,6 +25,7 @@ const (
 	slotTypeDeleteTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_lex_slot_type")
 func ResourceSlotType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSlotTypeCreate,
@@ -136,7 +137,7 @@ func hasSlotTypeConfigChanges(d verify.ResourceDiffer) bool {
 
 func resourceSlotTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &lexmodelbuildingservice.PutSlotTypeInput{
@@ -173,7 +174,7 @@ func resourceSlotTypeCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	output, err := FindSlotTypeVersionByName(ctx, conn, d.Id(), SlotTypeVersionLatest)
 
@@ -211,7 +212,7 @@ func resourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSlotTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	input := &lexmodelbuildingservice.PutSlotTypeInput{
 		Checksum:               aws.String(d.Get("checksum").(string)),
@@ -238,7 +239,7 @@ func resourceSlotTypeUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceSlotTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	input := &lexmodelbuildingservice.DeleteSlotTypeInput{
 		Name: aws.String(d.Id()),

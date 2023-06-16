@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_kms_ciphertext")
 func ResourceCiphertext() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCiphertextCreate,
@@ -52,7 +53,7 @@ func ResourceCiphertext() *schema.Resource {
 
 func resourceCiphertextCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	//lintignore:R017 // Allow legacy unstable ID usage in managed resource
 	d.SetId(time.Now().UTC().String())

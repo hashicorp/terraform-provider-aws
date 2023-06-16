@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ec2_transit_gateway_connect_peer: Add `bgp_peer_address` and `bgp_transit_gateway_addresses` attributes
+```
+
+```release-note:enhancement
+data/aws_ec2_transit_gateway_connect_peer: Add `bgp_peer_address` and `bgp_transit_gateway_addresses` attributes
+```

@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_vpcs")
 func DataSourceVPCs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCsRead,
@@ -35,13 +36,13 @@ func DataSourceVPCs() *schema.Resource {
 
 func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeVpcsInput{}
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 

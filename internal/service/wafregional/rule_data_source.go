@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_wafregional_rule")
 func DataSourceRule() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRuleRead,
@@ -26,7 +27,7 @@ func DataSourceRule() *schema.Resource {
 
 func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	name := d.Get("name").(string)
 
 	rules := make([]*waf.RuleSummary, 0)

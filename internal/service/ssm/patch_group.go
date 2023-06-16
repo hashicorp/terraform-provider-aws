@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_ssm_patch_group")
 func ResourcePatchGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePatchGroupCreate,
@@ -47,7 +48,7 @@ func ResourcePatchGroup() *schema.Resource {
 
 func resourcePatchGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	baselineId := d.Get("baseline_id").(string)
 	patchGroup := d.Get("patch_group").(string)
@@ -69,7 +70,7 @@ func resourcePatchGroupCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
 	if err != nil {
@@ -105,7 +106,7 @@ func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePatchGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
 	if err != nil {

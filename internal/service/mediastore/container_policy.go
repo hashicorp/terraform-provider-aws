@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_media_store_container_policy")
 func ResourceContainerPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerPolicyPut,
@@ -47,7 +48,7 @@ func ResourceContainerPolicy() *schema.Resource {
 
 func resourceContainerPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaStoreConn()
+	conn := meta.(*conns.AWSClient).MediaStoreConn(ctx)
 
 	name := d.Get("container_name").(string)
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -72,7 +73,7 @@ func resourceContainerPolicyPut(ctx context.Context, d *schema.ResourceData, met
 
 func resourceContainerPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaStoreConn()
+	conn := meta.(*conns.AWSClient).MediaStoreConn(ctx)
 
 	input := &mediastore.GetContainerPolicyInput{
 		ContainerName: aws.String(d.Id()),
@@ -107,7 +108,7 @@ func resourceContainerPolicyRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceContainerPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaStoreConn()
+	conn := meta.(*conns.AWSClient).MediaStoreConn(ctx)
 
 	input := &mediastore.DeleteContainerPolicyInput{
 		ContainerName: aws.String(d.Id()),

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_kms_secrets")
 func DataSourceSecrets() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretsRead,
@@ -64,7 +65,7 @@ func DataSourceSecrets() *schema.Resource {
 }
 
 func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	secrets := d.Get("secret").(*schema.Set).List()
 	plaintext := make(map[string]string, len(secrets))

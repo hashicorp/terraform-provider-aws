@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_load_balancer_listener_policy")
 func ResourceListenerPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerPolicySet,
@@ -38,13 +39,18 @@ func ResourceListenerPolicy() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"triggers": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
 
 func resourceListenerPolicySet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName := d.Get("load_balancer_name").(string)
 	lbPort := d.Get("load_balancer_port").(int)
@@ -71,7 +77,7 @@ func resourceListenerPolicySet(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceListenerPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName, lbPort, err := ListenerPolicyParseResourceID(d.Id())
 
@@ -100,7 +106,7 @@ func resourceListenerPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceListenerPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName, lbPort, err := ListenerPolicyParseResourceID(d.Id())
 

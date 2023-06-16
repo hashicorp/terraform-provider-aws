@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_wafv2_web_acl")
 func DataSourceWebACL() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWebACLRead,
@@ -40,7 +41,7 @@ func DataSourceWebACL() *schema.Resource {
 
 func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 	name := d.Get("name").(string)
 
 	var foundWebACL *wafv2.WebACLSummary

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_apigatewayv2_deployment")
 func ResourceDeployment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentCreate,
@@ -53,7 +54,7 @@ func ResourceDeployment() *schema.Resource {
 
 func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	req := &apigatewayv2.CreateDeploymentInput{
 		ApiId: aws.String(d.Get("api_id").(string)),
@@ -79,7 +80,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	outputRaw, _, err := StatusDeployment(ctx, conn, d.Get("api_id").(string), d.Id())()
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
@@ -100,7 +101,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	req := &apigatewayv2.UpdateDeploymentInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -125,7 +126,7 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 deployment (%s)", d.Id())
 	_, err := conn.DeleteDeploymentWithContext(ctx, &apigatewayv2.DeleteDeploymentInput{

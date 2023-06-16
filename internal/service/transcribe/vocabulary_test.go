@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -30,8 +30,8 @@ func TestAccTranscribeVocabulary_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccVocabulariesPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
@@ -69,8 +69,8 @@ func TestAccTranscribeVocabulary_basicPhrases(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccVocabulariesPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
@@ -104,8 +104,8 @@ func TestAccTranscribeVocabulary_updateS3URI(t *testing.T) {
 	file2 := "test2.txt"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccVocabulariesPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
@@ -144,8 +144,8 @@ func TestAccTranscribeVocabulary_updateTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccVocabulariesPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
@@ -193,8 +193,8 @@ func TestAccTranscribeVocabulary_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccVocabulariesPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
@@ -215,7 +215,7 @@ func TestAccTranscribeVocabulary_disappears(t *testing.T) {
 
 func testAccCheckVocabularyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transcribe_vocabulary" {
@@ -250,7 +250,7 @@ func testAccCheckVocabularyExists(ctx context.Context, name string, vocabulary *
 			return create.Error(names.Transcribe, create.ErrActionCheckingExistence, tftranscribe.ResNameVocabulary, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
 		resp, err := tftranscribe.FindVocabularyByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -264,7 +264,7 @@ func testAccCheckVocabularyExists(ctx context.Context, name string, vocabulary *
 }
 
 func testAccVocabulariesPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
 
 	input := &transcribe.ListVocabulariesInput{}
 

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cognito_identity_pool_provider_principal_tag")
 func ResourcePoolProviderPrincipalTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePoolProviderPrincipalTagCreate,
@@ -61,7 +62,7 @@ func ResourcePoolProviderPrincipalTag() *schema.Resource {
 
 func resourcePoolProviderPrincipalTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 	log.Print("[DEBUG] Creating Cognito Identity Provider Principal Tags")
 
 	providerName := d.Get("identity_provider_name").(string)
@@ -92,7 +93,7 @@ func resourcePoolProviderPrincipalTagCreate(ctx context.Context, d *schema.Resou
 
 func resourcePoolProviderPrincipalTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 	log.Printf("[DEBUG] Reading Cognito Identity Provider Principal Tags: %s", d.Id())
 
 	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())
@@ -129,7 +130,7 @@ func resourcePoolProviderPrincipalTagRead(ctx context.Context, d *schema.Resourc
 
 func resourcePoolProviderPrincipalTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 	log.Print("[DEBUG] Updating Cognito Identity Provider Principal Tags")
 
 	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())
@@ -157,7 +158,7 @@ func resourcePoolProviderPrincipalTagUpdate(ctx context.Context, d *schema.Resou
 
 func resourcePoolProviderPrincipalTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 	log.Printf("[DEBUG] Deleting Cognito Identity Provider Principal Tags: %s", d.Id())
 
 	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())

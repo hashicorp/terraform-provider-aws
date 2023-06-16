@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cloudfront_cache_policy")
 func DataSourceCachePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCachePolicyRead,
@@ -142,7 +143,7 @@ func DataSourceCachePolicy() *schema.Resource {
 }
 func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	var cachePolicyID string
 

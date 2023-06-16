@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/lightsail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
@@ -93,7 +95,7 @@ func TestContainerServiceDeploymentVersionParseResourceID(t *testing.T) {
 	}
 }
 
-func TestAccLightsailContainerServiceDeploymentVersion_Container_Basic(t *testing.T) {
+func TestAccLightsailContainerServiceDeploymentVersion_container_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	containerName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -101,11 +103,11 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Basic(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -114,7 +116,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Basic(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttr(resourceName, "state", lightsail.ContainerServiceDeploymentStateActive),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.container_name", containerName),
@@ -134,7 +136,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Basic(t *testin
 	})
 }
 
-func TestAccLightsailContainerServiceDeploymentVersion_Container_Multiple(t *testing.T) {
+func TestAccLightsailContainerServiceDeploymentVersion_container_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	containerName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -143,11 +145,11 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Multiple(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -155,7 +157,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Multiple(t *tes
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_multiple(rName, containerName1, helloWorldImage, containerName2, redisImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", lightsail.ContainerServiceDeploymentStateActive),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.container_name", containerName1),
@@ -173,7 +175,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Multiple(t *tes
 	})
 }
 
-func TestAccLightsailContainerServiceDeploymentVersion_Container_Environment(t *testing.T) {
+func TestAccLightsailContainerServiceDeploymentVersion_container_environment(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	containerName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -181,11 +183,11 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Environment(t *
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -193,7 +195,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Environment(t *
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_environment1(rName, containerName, "A", "a"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", lightsail.ContainerServiceDeploymentStateActive),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.environment.%", "1"),
@@ -209,7 +211,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Environment(t *
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_environment1(rName, containerName, "B", "b"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", lightsail.ContainerServiceDeploymentStateActive),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, "version", "2"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.environment.%", "1"),
@@ -220,7 +222,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Environment(t *
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_environment2(rName, containerName, "A", "a", "B", "b"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", lightsail.ContainerServiceDeploymentStateActive),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, "version", "3"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.environment.%", "2"),
@@ -237,7 +239,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Environment(t *
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_basic(rName, containerName, helloWorldImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", lightsail.ContainerServiceDeploymentStateActive),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, "version", "4"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.environment.%", "0"),
@@ -252,7 +254,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Environment(t *
 	})
 }
 
-func TestAccLightsailContainerServiceDeploymentVersion_Container_Ports(t *testing.T) {
+func TestAccLightsailContainerServiceDeploymentVersion_container_ports(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	containerName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -260,23 +262,23 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Ports(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerServiceDeploymentVersionConfig_Container_ports1(rName, containerName, "80", lightsail.ContainerServiceProtocolHttp),
+				Config: testAccContainerServiceDeploymentVersionConfig_Container_ports1(rName, containerName, "80", string(types.ContainerServiceProtocolHttp)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", lightsail.ContainerServiceDeploymentStateActive),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "container.0.ports.80", lightsail.ContainerServiceProtocolHttp),
+					resource.TestCheckResourceAttr(resourceName, "container.0.ports.80", string(types.ContainerServiceProtocolHttp)),
 				),
 			},
 			{
@@ -285,33 +287,33 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Ports(t *testin
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccContainerServiceDeploymentVersionConfig_Container_ports1(rName, containerName, "90", lightsail.ContainerServiceProtocolTcp),
+				Config: testAccContainerServiceDeploymentVersionConfig_Container_ports1(rName, containerName, "90", string(types.ContainerServiceProtocolTcp)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", lightsail.ContainerServiceDeploymentStateActive),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, "version", "2"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "container.0.ports.90", lightsail.ContainerServiceProtocolTcp),
+					resource.TestCheckResourceAttr(resourceName, "container.0.ports.90", string(types.ContainerServiceProtocolTcp)),
 				),
 			},
 			{
-				Config: testAccContainerServiceDeploymentVersionConfig_Container_ports2(rName, containerName, "80", lightsail.ContainerServiceProtocolHttp, "90", lightsail.ContainerServiceProtocolTcp),
+				Config: testAccContainerServiceDeploymentVersionConfig_Container_ports2(rName, containerName, "80", string(types.ContainerServiceProtocolHttp), "90", string(types.ContainerServiceProtocolTcp)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", lightsail.ContainerServiceDeploymentStateActive),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, "version", "3"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "container.0.ports.80", lightsail.ContainerServiceProtocolHttp),
-					resource.TestCheckResourceAttr(resourceName, "container.0.ports.90", lightsail.ContainerServiceProtocolTcp),
+					resource.TestCheckResourceAttr(resourceName, "container.0.ports.80", string(types.ContainerServiceProtocolHttp)),
+					resource.TestCheckResourceAttr(resourceName, "container.0.ports.90", string(types.ContainerServiceProtocolTcp)),
 				),
 			},
 			{
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_basic(rName, containerName, helloWorldImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", lightsail.ContainerServiceDeploymentStateActive),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, "version", "4"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.%", "0"),
@@ -326,7 +328,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_Ports(t *testin
 	})
 }
 
-func TestAccLightsailContainerServiceDeploymentVersion_Container_PublicEndpoint(t *testing.T) {
+func TestAccLightsailContainerServiceDeploymentVersion_container_publicEndpoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	containerName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -336,11 +338,11 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_PublicEndpoint(
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -348,11 +350,11 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_PublicEndpoint(
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_publicEndpoint(rName, containerName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", lightsail.ContainerServiceDeploymentStateActive),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "container.0.ports.80", lightsail.ContainerServiceProtocolHttp),
+					resource.TestCheckResourceAttr(resourceName, "container.0.ports.80", string(types.ContainerServiceProtocolHttp)),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.container_name", containerName1),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.container_port", "80"),
@@ -374,7 +376,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_PublicEndpoint(
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_publicEndpointCompleteHealthCheck(rName, containerName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", lightsail.ContainerServiceDeploymentStateActive),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, "version", "2"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.#", "1"),
@@ -393,7 +395,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_PublicEndpoint(
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_publicEndpointMinimalHealthCheck(rName, containerName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", lightsail.ContainerServiceDeploymentStateActive),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, "version", "3"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.container_name", containerName2),
@@ -411,7 +413,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_PublicEndpoint(
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_publicEndpoint(rName, containerName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", lightsail.ContainerServiceDeploymentStateActive),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, "version", "4"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.#", "1"),
@@ -430,7 +432,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_PublicEndpoint(
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_basic(rName, containerName1, helloWorldImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", lightsail.ContainerServiceDeploymentStateActive),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, "version", "5"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.#", "0"),
 				),
@@ -439,7 +441,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_PublicEndpoint(
 	})
 }
 
-func TestAccLightsailContainerServiceDeploymentVersion_Container_EnableService(t *testing.T) {
+func TestAccLightsailContainerServiceDeploymentVersion_Container_enableService(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	containerName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -447,11 +449,11 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_EnableService(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -463,7 +465,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_EnableService(t
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_withDisabledService(rName, containerName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", lightsail.ContainerServiceDeploymentStateActive),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.container_name", containerName),
 				),
@@ -488,7 +490,7 @@ func testAccCheckContainerServiceDeploymentVersionExists(ctx context.Context, re
 			return fmt.Errorf("no Lightsail Container Service Deployment Version ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 		serviceName, version, err := tflightsail.ContainerServiceDeploymentVersionParseResourceID(rs.Primary.ID)
 		if err != nil {

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_waf_regex_pattern_set")
 func ResourceRegexPatternSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegexPatternSetCreate,
@@ -46,7 +47,7 @@ func ResourceRegexPatternSet() *schema.Resource {
 
 func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	log.Printf("[INFO] Creating WAF Regex Pattern Set: %s", d.Get("name").(string))
 
@@ -70,7 +71,7 @@ func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 	log.Printf("[INFO] Reading WAF Regex Pattern Set: %s", d.Get("name").(string))
 	params := &waf.GetRegexPatternSetInput{
 		RegexPatternSetId: aws.String(d.Id()),
@@ -103,7 +104,7 @@ func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRegexPatternSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	log.Printf("[INFO] Updating WAF Regex Pattern Set: %s", d.Get("name").(string))
 
@@ -121,7 +122,7 @@ func resourceRegexPatternSetUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceRegexPatternSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	oldPatterns := d.Get("regex_pattern_strings").(*schema.Set).List()
 	if len(oldPatterns) > 0 {

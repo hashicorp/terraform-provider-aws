@@ -36,3 +36,4 @@ In addition to all arguments above, the following attributes are exported:
 * `registered_container_instances_count` - The number of registered container instances for the ECS Cluster
 * `service_connect_defaults` - The default Service Connect namespace
 * `setting` - Settings associated with the ECS Cluster
+* `tags` - Key-value map of resource tags

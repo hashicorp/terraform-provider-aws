@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ses_receipt_rule")
 func ResourceReceiptRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReceiptRuleCreate,
@@ -270,7 +271,7 @@ func ResourceReceiptRule() *schema.Resource {
 
 func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &ses.CreateReceiptRuleInput{
@@ -295,7 +296,7 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	ruleSetName := d.Get("rule_set_name").(string)
 	rule, err := FindReceiptRuleByTwoPartKey(ctx, conn, d.Id(), ruleSetName)
@@ -476,7 +477,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	input := &ses.UpdateReceiptRuleInput{
 		Rule:        buildReceiptRule(d),
@@ -508,7 +509,7 @@ func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceReceiptRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SES Receipt Rule: %s", d.Id())
 	_, err := conn.DeleteReceiptRuleWithContext(ctx, &ses.DeleteReceiptRuleInput{
@@ -548,7 +549,7 @@ func FindReceiptRuleByTwoPartKey(ctx context.Context, conn *ses.SES, ruleName, r
 	output, err := conn.DescribeReceiptRuleWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleDoesNotExistException, ses.ErrCodeRuleSetDoesNotExistException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

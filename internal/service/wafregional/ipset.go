@@ -19,6 +19,7 @@ import (
 // WAF requires UpdateIPSet operations be split into batches of 1000 Updates
 const ipSetUpdatesLimit = 1000
 
+// @SDKResource("aws_wafregional_ipset")
 func ResourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPSetCreate,
@@ -61,7 +62,7 @@ func ResourceIPSet() *schema.Resource {
 
 func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	wr := NewRetryer(conn, region)
@@ -82,7 +83,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
 	params := &waf.GetIPSetInput{
 		IPSetId: aws.String(d.Id()),
@@ -130,7 +131,7 @@ func flattenIPSetDescriptorWR(in []*waf.IPSetDescriptor) []interface{} {
 
 func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("ip_set_descriptor") {
@@ -147,7 +148,7 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	oldD := d.Get("ip_set_descriptor").(*schema.Set).List()

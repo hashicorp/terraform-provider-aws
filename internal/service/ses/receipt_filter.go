@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_ses_receipt_filter")
 func ResourceReceiptFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReceiptFilterCreate,
@@ -67,7 +68,7 @@ func ResourceReceiptFilter() *schema.Resource {
 
 func resourceReceiptFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	name := d.Get("name").(string)
 
@@ -93,7 +94,7 @@ func resourceReceiptFilterCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	listOpts := &ses.ListReceiptFiltersInput{}
 
@@ -135,7 +136,7 @@ func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceReceiptFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	deleteOpts := &ses.DeleteReceiptFilterInput{
 		FilterName: aws.String(d.Id()),

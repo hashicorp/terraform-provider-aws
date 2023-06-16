@@ -15,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_kendra_query_suggestions_block_list")
 func DataSourceQuerySuggestionsBlockList() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQuerySuggestionsBlockListRead,
@@ -97,7 +98,7 @@ func DataSourceQuerySuggestionsBlockList() *schema.Resource {
 }
 
 func dataSourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	querySuggestionsBlockListID := d.Get("query_suggestions_block_list_id").(string)
@@ -133,7 +134,7 @@ func dataSourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.Reso
 		return diag.Errorf("setting source_s3_path: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
+	tags, err := listTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Kendra QuerySuggestionsBlockList (%s): %s", arn, err)

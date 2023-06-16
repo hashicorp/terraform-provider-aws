@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_lakeformation_resource")
 func DataSourceResource() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceRead,
@@ -39,7 +40,7 @@ func DataSourceResource() *schema.Resource {
 
 func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.DescribeResourceInput{}
 

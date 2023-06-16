@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_efs_access_points")
 func DataSourceAccessPoints() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccessPointsRead,
@@ -38,7 +39,7 @@ func DataSourceAccessPoints() *schema.Resource {
 
 func dataSourceAccessPointsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	fileSystemID := d.Get("file_system_id").(string)
 	input := &efs.DescribeAccessPointsInput{

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_apigatewayv2_integration_response")
 func ResourceIntegrationResponse() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIntegrationResponseCreate,
@@ -65,7 +66,7 @@ func ResourceIntegrationResponse() *schema.Resource {
 
 func resourceIntegrationResponseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	req := &apigatewayv2.CreateIntegrationResponseInput{
 		ApiId:                  aws.String(d.Get("api_id").(string)),
@@ -95,7 +96,7 @@ func resourceIntegrationResponseCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	resp, err := conn.GetIntegrationResponseWithContext(ctx, &apigatewayv2.GetIntegrationResponseInput{
 		ApiId:                 aws.String(d.Get("api_id").(string)),
@@ -124,7 +125,7 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 
 func resourceIntegrationResponseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	req := &apigatewayv2.UpdateIntegrationResponseInput{
 		ApiId:                 aws.String(d.Get("api_id").(string)),
@@ -155,7 +156,7 @@ func resourceIntegrationResponseUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 integration response (%s)", d.Id())
 	_, err := conn.DeleteIntegrationResponseWithContext(ctx, &apigatewayv2.DeleteIntegrationResponseInput{

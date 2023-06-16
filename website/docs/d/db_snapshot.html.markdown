@@ -21,7 +21,7 @@ resource "aws_db_instance" "prod" {
   engine               = "mysql"
   engine_version       = "5.6.17"
   instance_class       = "db.t2.micro"
-  name                 = "mydb"
+  db_name              = "mydb"
   username             = "foo"
   password             = "bar"
   db_subnet_group_name = "my_database_subnet_group"
@@ -29,14 +29,14 @@ resource "aws_db_instance" "prod" {
 }
 
 data "aws_db_snapshot" "latest_prod_snapshot" {
-  db_instance_identifier = aws_db_instance.prod.id
+  db_instance_identifier = aws_db_instance.prod.identifier
   most_recent            = true
 }
 
 # Use the latest production snapshot to create a dev instance.
 resource "aws_db_instance" "dev" {
   instance_class      = "db.t2.micro"
-  name                = "mydbdev"
+  db_name             = "mydbdev"
   snapshot_identifier = data.aws_db_snapshot.latest_prod_snapshot.id
 
   lifecycle {

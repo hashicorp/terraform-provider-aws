@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_glue_security_configuration")
 func ResourceSecurityConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityConfigurationCreate,
@@ -122,7 +123,7 @@ func ResourceSecurityConfiguration() *schema.Resource {
 
 func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	name := d.Get("name").(string)
 
 	input := &glue.CreateSecurityConfigurationInput{
@@ -143,7 +144,7 @@ func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.Resource
 
 func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.GetSecurityConfigurationInput{
 		Name: aws.String(d.Id()),
@@ -180,7 +181,7 @@ func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Security Configuration: %s", d.Id())
 	err := DeleteSecurityConfiguration(ctx, conn, d.Id())

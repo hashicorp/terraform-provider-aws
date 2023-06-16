@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_pinpoint_apns_sandbox_channel")
 func ResourceAPNSSandboxChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPNSSandboxChannelUpsert,
@@ -86,7 +87,7 @@ func resourceAPNSSandboxChannelUpsert(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "At least one set of credentials is required; either [certificate, private_key] or [bundle_id, team_id, token_key, token_key_id]")
 	}
 
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	applicationId := d.Get("application_id").(string)
 
@@ -120,7 +121,7 @@ func resourceAPNSSandboxChannelUpsert(ctx context.Context, d *schema.ResourceDat
 
 func resourceAPNSSandboxChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[INFO] Reading Pinpoint APNs Channel for Application %s", d.Id())
 
@@ -147,7 +148,7 @@ func resourceAPNSSandboxChannelRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceAPNSSandboxChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Pinpoint APNs Sandbox Channel: %s", d.Id())
 	_, err := conn.DeleteApnsSandboxChannelWithContext(ctx, &pinpoint.DeleteApnsSandboxChannelInput{

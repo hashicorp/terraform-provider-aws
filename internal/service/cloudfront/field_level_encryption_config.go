@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_cloudfront_field_level_encryption_config")
 func ResourceFieldLevelEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFieldLevelEncryptionConfigCreate,
@@ -126,10 +127,10 @@ func ResourceFieldLevelEncryptionConfig() *schema.Resource {
 
 func resourceFieldLevelEncryptionConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	apiObject := &cloudfront.FieldLevelEncryptionConfig{
-		CallerReference: aws.String(resource.UniqueId()),
+		CallerReference: aws.String(id.UniqueId()),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -162,7 +163,7 @@ func resourceFieldLevelEncryptionConfigCreate(ctx context.Context, d *schema.Res
 
 func resourceFieldLevelEncryptionConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	output, err := FindFieldLevelEncryptionConfigByID(ctx, conn, d.Id())
 
@@ -200,7 +201,7 @@ func resourceFieldLevelEncryptionConfigRead(ctx context.Context, d *schema.Resou
 
 func resourceFieldLevelEncryptionConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	apiObject := &cloudfront.FieldLevelEncryptionConfig{
 		CallerReference: aws.String(d.Get("caller_reference").(string)),
@@ -236,7 +237,7 @@ func resourceFieldLevelEncryptionConfigUpdate(ctx context.Context, d *schema.Res
 
 func resourceFieldLevelEncryptionConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Field-level Encryption Config: (%s)", d.Id())
 	_, err := conn.DeleteFieldLevelEncryptionConfigWithContext(ctx, &cloudfront.DeleteFieldLevelEncryptionConfigInput{

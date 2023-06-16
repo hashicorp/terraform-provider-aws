@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_iot_role_alias")
 func ResourceRoleAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleAliasCreate,
@@ -48,7 +49,7 @@ func ResourceRoleAlias() *schema.Resource {
 
 func resourceRoleAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	roleAlias := d.Get("alias").(string)
 	roleArn := d.Get("role_arn").(string)
@@ -86,7 +87,7 @@ func GetRoleAliasDescription(ctx context.Context, conn *iot.IoT, alias string) (
 
 func resourceRoleAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	var roleAliasDescription *iot.RoleAliasDescription
 
@@ -112,7 +113,7 @@ func resourceRoleAliasRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceRoleAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	alias := d.Get("alias").(string)
 
@@ -129,7 +130,7 @@ func resourceRoleAliasDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceRoleAliasUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	if d.HasChange("credential_duration") {
 		roleAliasInput := &iot.UpdateRoleAliasInput{

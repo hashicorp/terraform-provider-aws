@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -29,7 +29,7 @@ func TestAccS3ObjectDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_s3_object.obj"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                  func() { acctest.PreCheck(t) },
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
@@ -63,7 +63,7 @@ func TestAccS3ObjectDataSource_basicViaAccessPoint(t *testing.T) {
 	accessPointResourceName := "aws_s3_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -92,7 +92,7 @@ func TestAccS3ObjectDataSource_readableBody(t *testing.T) {
 	dataSourceName := "data.aws_s3_object.obj"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                  func() { acctest.PreCheck(t) },
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
@@ -127,7 +127,7 @@ func TestAccS3ObjectDataSource_kmsEncrypted(t *testing.T) {
 	dataSourceName := "data.aws_s3_object.obj"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                  func() { acctest.PreCheck(t) },
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
@@ -164,7 +164,7 @@ func TestAccS3ObjectDataSource_bucketKeyEnabled(t *testing.T) {
 	dataSourceName := "data.aws_s3_object.obj"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                  func() { acctest.PreCheck(t) },
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
@@ -202,7 +202,7 @@ func TestAccS3ObjectDataSource_allParams(t *testing.T) {
 	dataSourceName := "data.aws_s3_object.obj"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                  func() { acctest.PreCheck(t) },
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
@@ -254,7 +254,7 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 	dataSourceName := "data.aws_s3_object.obj"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                  func() { acctest.PreCheck(t) },
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
@@ -290,7 +290,7 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 	dataSourceName := "data.aws_s3_object.obj"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                  func() { acctest.PreCheck(t) },
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
@@ -328,7 +328,7 @@ func TestAccS3ObjectDataSource_leadingSlash(t *testing.T) {
 	resourceOnlyConf, conf := testAccObjectDataSourceConfig_leadingSlash(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                  func() { acctest.PreCheck(t) },
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
@@ -383,7 +383,7 @@ func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 	resourceOnlyConf, conf := testAccObjectDataSourceConfig_multipleSlashes(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                  func() { acctest.PreCheck(t) },
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
@@ -426,7 +426,7 @@ func TestAccS3ObjectDataSource_singleSlashAsKey(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                  func() { acctest.PreCheck(t) },
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
@@ -452,7 +452,7 @@ func testAccCheckObjectExistsDataSource(ctx context.Context, n string, obj *s3.G
 			return fmt.Errorf("S3 object data source ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 		out, err := conn.GetObjectWithContext(ctx, &s3.GetObjectInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
 			Key:    aws.String(rs.Primary.Attributes["key"]),

@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sesv2_configuration_set_event_destination")
 func ResourceConfigurationSetEventDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationSetEventDestinationCreate,
@@ -178,7 +179,7 @@ const (
 )
 
 func resourceConfigurationSetEventDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.CreateConfigurationSetEventDestinationInput{
 		ConfigurationSetName: aws.String(d.Get("configuration_set_name").(string)),
@@ -203,7 +204,7 @@ func resourceConfigurationSetEventDestinationCreate(ctx context.Context, d *sche
 }
 
 func resourceConfigurationSetEventDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	configurationSetName, _, err := ParseConfigurationSetEventDestinationID(d.Id())
 	if err != nil {
@@ -233,7 +234,7 @@ func resourceConfigurationSetEventDestinationRead(ctx context.Context, d *schema
 }
 
 func resourceConfigurationSetEventDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	configurationSetName, eventDestinationName, err := ParseConfigurationSetEventDestinationID(d.Id())
 	if err != nil {
@@ -258,7 +259,7 @@ func resourceConfigurationSetEventDestinationUpdate(ctx context.Context, d *sche
 }
 
 func resourceConfigurationSetEventDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	log.Printf("[INFO] Deleting SESV2 ConfigurationSetEventDestination %s", d.Id())
 
@@ -297,7 +298,7 @@ func FindConfigurationSetEventDestinationByID(ctx context.Context, conn *sesv2.C
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return types.EventDestination{}, &resource.NotFoundError{
+			return types.EventDestination{}, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -316,7 +317,7 @@ func FindConfigurationSetEventDestinationByID(ctx context.Context, conn *sesv2.C
 		}
 	}
 
-	return types.EventDestination{}, &resource.NotFoundError{}
+	return types.EventDestination{}, &retry.NotFoundError{}
 }
 
 func flattenEventDestination(apiObject types.EventDestination) map[string]interface{} {

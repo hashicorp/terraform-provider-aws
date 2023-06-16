@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_backup_vault_policy")
 func ResourceVaultPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultPolicyPut,
@@ -54,7 +55,7 @@ func ResourceVaultPolicy() *schema.Resource {
 
 func resourceVaultPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -81,7 +82,7 @@ func resourceVaultPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceVaultPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	output, err := FindVaultAccessPolicyByName(ctx, conn, d.Id())
 
@@ -117,7 +118,7 @@ func resourceVaultPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceVaultPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Vault Policy (%s)", d.Id())
 	_, err := conn.DeleteBackupVaultAccessPolicyWithContext(ctx, &backup.DeleteBackupVaultAccessPolicyInput{

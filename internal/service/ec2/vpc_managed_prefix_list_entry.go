@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ec2_managed_prefix_list_entry")
 func ResourceManagedPrefixListEntry() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -49,7 +50,7 @@ func ResourceManagedPrefixListEntry() *schema.Resource {
 }
 
 func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	cidr := d.Get("cidr").(string)
 	plID := d.Get("prefix_list_id").(string)
@@ -95,7 +96,7 @@ func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	plID, cidr, err := ManagedPrefixListEntryParseResourceID(d.Id())
 
@@ -126,7 +127,7 @@ func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	plID, cidr, err := ManagedPrefixListEntryParseResourceID(d.Id())
 

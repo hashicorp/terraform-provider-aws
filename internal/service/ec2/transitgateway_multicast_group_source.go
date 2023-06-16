@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_transit_gateway_multicast_group_source")
 func ResourceTransitGatewayMulticastGroupSource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayMulticastGroupSourceCreate,
@@ -44,7 +45,7 @@ func ResourceTransitGatewayMulticastGroupSource() *schema.Resource {
 }
 
 func resourceTransitGatewayMulticastGroupSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	multicastDomainID := d.Get("transit_gateway_multicast_domain_id").(string)
 	groupIPAddress := d.Get("group_ip_address").(string)
@@ -69,7 +70,7 @@ func resourceTransitGatewayMulticastGroupSourceCreate(ctx context.Context, d *sc
 }
 
 func resourceTransitGatewayMulticastGroupSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	multicastDomainID, groupIPAddress, eniID, err := TransitGatewayMulticastGroupSourceParseResourceID(d.Id())
 
@@ -101,7 +102,7 @@ func resourceTransitGatewayMulticastGroupSourceRead(ctx context.Context, d *sche
 }
 
 func resourceTransitGatewayMulticastGroupSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	multicastDomainID, groupIPAddress, eniID, err := TransitGatewayMulticastGroupSourceParseResourceID(d.Id())
 

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_cloud9_environment_membership")
 func ResourceEnvironmentMembership() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEnvironmentMembershipCreate,
@@ -56,7 +57,7 @@ func ResourceEnvironmentMembership() *schema.Resource {
 
 func resourceEnvironmentMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Cloud9Conn()
+	conn := meta.(*conns.AWSClient).Cloud9Conn(ctx)
 
 	envId := d.Get("environment_id").(string)
 	userArn := d.Get("user_arn").(string)
@@ -79,7 +80,7 @@ func resourceEnvironmentMembershipCreate(ctx context.Context, d *schema.Resource
 
 func resourceEnvironmentMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Cloud9Conn()
+	conn := meta.(*conns.AWSClient).Cloud9Conn(ctx)
 
 	envId, userArn, err := DecodeEnviornmentMemberId(d.Id())
 	if err != nil {
@@ -108,7 +109,7 @@ func resourceEnvironmentMembershipRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceEnvironmentMembershipUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Cloud9Conn()
+	conn := meta.(*conns.AWSClient).Cloud9Conn(ctx)
 
 	input := cloud9.UpdateEnvironmentMembershipInput{
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
@@ -128,7 +129,7 @@ func resourceEnvironmentMembershipUpdate(ctx context.Context, d *schema.Resource
 
 func resourceEnvironmentMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Cloud9Conn()
+	conn := meta.(*conns.AWSClient).Cloud9Conn(ctx)
 
 	_, err := conn.DeleteEnvironmentMembershipWithContext(ctx, &cloud9.DeleteEnvironmentMembershipInput{
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),

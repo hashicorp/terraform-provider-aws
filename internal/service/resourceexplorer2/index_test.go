@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfresourceexplorer2 "github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
@@ -20,7 +20,10 @@ func testAccIndex_basic(t *testing.T) {
 	resourceName := "aws_resourceexplorer2_index.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(names.ResourceExplorer2EndpointID, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
@@ -47,7 +50,10 @@ func testAccIndex_disappears(t *testing.T) {
 	resourceName := "aws_resourceexplorer2_index.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(names.ResourceExplorer2EndpointID, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
@@ -56,7 +62,7 @@ func testAccIndex_disappears(t *testing.T) {
 				Config: testAccIndexConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfresourceexplorer2.ResourceIndex, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfresourceexplorer2.ResourceIndex, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,7 +75,10 @@ func testAccIndex_tags(t *testing.T) {
 	resourceName := "aws_resourceexplorer2_index.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(names.ResourceExplorer2EndpointID, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
@@ -113,7 +122,10 @@ func testAccIndex_type(t *testing.T) {
 	resourceName := "aws_resourceexplorer2_index.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(names.ResourceExplorer2EndpointID, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
@@ -143,7 +155,7 @@ func testAccIndex_type(t *testing.T) {
 
 func testAccCheckIndexDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_resourceexplorer2_index" {
@@ -177,7 +189,7 @@ func testAccCheckIndexExists(ctx context.Context, n string) resource.TestCheckFu
 			return fmt.Errorf("No Resource Explorer Index ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client(ctx)
 
 		_, err := tfresourceexplorer2.FindIndex(ctx, conn)
 

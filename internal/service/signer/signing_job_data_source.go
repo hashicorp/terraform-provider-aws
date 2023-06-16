@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_signer_signing_job")
 func DataSourceSigningJob() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSigningJobRead,
@@ -147,7 +148,7 @@ func DataSourceSigningJob() *schema.Resource {
 
 func dataSourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
+	conn := meta.(*conns.AWSClient).SignerConn(ctx)
 	jobId := d.Get("job_id").(string)
 
 	describeSigningJobOutput, err := conn.DescribeSigningJobWithContext(ctx, &signer.DescribeSigningJobInput{

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_client_vpn_authorization_rule")
 func ResourceClientVPNAuthorizationRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientVPNAuthorizationRuleCreate,
@@ -68,7 +69,7 @@ func ResourceClientVPNAuthorizationRule() *schema.Resource {
 
 func resourceClientVPNAuthorizationRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	targetNetworkCIDR := d.Get("target_network_cidr").(string)
@@ -112,7 +113,7 @@ func resourceClientVPNAuthorizationRuleCreate(ctx context.Context, d *schema.Res
 
 func resourceClientVPNAuthorizationRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID, targetNetworkCIDR, accessGroupID, err := ClientVPNAuthorizationRuleParseResourceID(d.Id())
 
@@ -143,7 +144,7 @@ func resourceClientVPNAuthorizationRuleRead(ctx context.Context, d *schema.Resou
 
 func resourceClientVPNAuthorizationRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID, targetNetworkCIDR, accessGroupID, err := ClientVPNAuthorizationRuleParseResourceID(d.Id())
 

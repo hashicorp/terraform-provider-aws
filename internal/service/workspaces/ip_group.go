@@ -13,8 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_workspaces_ip_group", name="IP Group")
+// @Tags(identifierAttribute="id")
 func ResourceIPGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPGroupCreate,
@@ -53,8 +56,8 @@ func ResourceIPGroup() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -63,18 +66,16 @@ func ResourceIPGroup() *schema.Resource {
 
 func resourceIPGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
 
 	rules := d.Get("rules").(*schema.Set).List()
-
 	resp, err := conn.CreateIpGroupWithContext(ctx, &workspaces.CreateIpGroupInput{
 		GroupName: aws.String(d.Get("name").(string)),
 		GroupDesc: aws.String(d.Get("description").(string)),
 		UserRules: expandIPGroupRules(rules),
-		Tags:      Tags(tags.IgnoreAWS()),
+		Tags:      getTagsIn(ctx),
 	})
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating WorkSpaces IP Group: %s", err)
 	}
@@ -86,9 +87,7 @@ func resourceIPGroupCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceIPGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
 
 	resp, err := conn.DescribeIpGroupsWithContext(ctx, &workspaces.DescribeIpGroupsInput{
 		GroupIds: []*string{aws.String(d.Id())},
@@ -117,28 +116,12 @@ func resourceIPGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("description", ipGroup.GroupDesc)
 	d.Set("rules", flattenIPGroupRules(ipGroup.UserRules))
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for WorkSpaces IP Group (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceIPGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn()
+	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
 
 	if d.HasChange("rules") {
 		rules := d.Get("rules").(*schema.Set).List()
@@ -152,19 +135,12 @@ func resourceIPGroupUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceIPGroupRead(ctx, d, meta)...)
 }
 
 func resourceIPGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn()
+	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
 
 	var found bool
 	log.Printf("[DEBUG] Finding directories associated with WorkSpaces IP Group (%s)", d.Id())

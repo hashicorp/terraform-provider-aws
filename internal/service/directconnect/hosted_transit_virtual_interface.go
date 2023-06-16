@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dx_hosted_transit_virtual_interface")
 func ResourceHostedTransitVirtualInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostedTransitVirtualInterfaceCreate,
@@ -116,7 +117,7 @@ func ResourceHostedTransitVirtualInterface() *schema.Resource {
 
 func resourceHostedTransitVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	req := &directconnect.AllocateTransitVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
@@ -156,7 +157,7 @@ func resourceHostedTransitVirtualInterfaceCreate(ctx context.Context, d *schema.
 
 func resourceHostedTransitVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
@@ -198,7 +199,7 @@ func resourceHostedTransitVirtualInterfaceDelete(ctx context.Context, d *schema.
 }
 
 func resourceHostedTransitVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {

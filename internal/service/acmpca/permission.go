@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_acmpca_permission")
 func ResourcePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionCreate,
@@ -65,7 +66,7 @@ func ResourcePermission() *schema.Resource {
 
 func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	caARN := d.Get("certificate_authority_arn").(string)
 	principal := d.Get("principal").(string)
@@ -95,7 +96,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	caARN, principal, sourceAccount, err := PermissionParseResourceID(d.Id())
 
@@ -126,7 +127,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	caARN, principal, sourceAccount, err := PermissionParseResourceID(d.Id())
 

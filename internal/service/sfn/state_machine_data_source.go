@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_sfn_state_machine")
 func DataSourceStateMachine() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStateMachineRead,
@@ -45,7 +46,7 @@ func DataSourceStateMachine() *schema.Resource {
 }
 
 func dataSourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
+	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	name := d.Get("name").(string)
 	var arns []string

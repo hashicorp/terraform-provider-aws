@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_wafv2_rule_group")
 func DataSourceRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRuleGroupRead,
@@ -40,7 +41,7 @@ func DataSourceRuleGroup() *schema.Resource {
 
 func dataSourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 	name := d.Get("name").(string)
 
 	var foundRuleGroup *wafv2.RuleGroupSummary

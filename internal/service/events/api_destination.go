@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_cloudwatch_event_api_destination")
 func ResourceAPIDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPIDestinationCreate,
@@ -71,7 +72,7 @@ func ResourceAPIDestination() *schema.Resource {
 
 func resourceAPIDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.CreateApiDestinationInput{}
 
@@ -108,7 +109,7 @@ func resourceAPIDestinationCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceAPIDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.DescribeApiDestinationInput{
 		Name: aws.String(d.Id()),
@@ -137,7 +138,7 @@ func resourceAPIDestinationRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceAPIDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.UpdateApiDestinationInput{}
 
@@ -170,7 +171,7 @@ func resourceAPIDestinationUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceAPIDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge API Destination (%s)", d.Id())
 	input := &eventbridge.DeleteApiDestinationInput{

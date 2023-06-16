@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cloudwatch_event_connection")
 func DataSourceConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectionRead,
@@ -41,7 +42,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	d.SetId(d.Get("name").(string))
 
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.DescribeConnectionInput{
 		Name: aws.String(d.Id()),

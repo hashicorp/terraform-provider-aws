@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_dax_parameter_group")
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,
@@ -58,7 +59,7 @@ func ResourceParameterGroup() *schema.Resource {
 
 func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DAXConn()
+	conn := meta.(*conns.AWSClient).DAXConn(ctx)
 
 	input := &dax.CreateParameterGroupInput{
 		ParameterGroupName: aws.String(d.Get("name").(string)),
@@ -82,7 +83,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DAXConn()
+	conn := meta.(*conns.AWSClient).DAXConn(ctx)
 
 	resp, err := conn.DescribeParameterGroupsWithContext(ctx, &dax.DescribeParameterGroupsInput{
 		ParameterGroupNames: []*string{aws.String(d.Id())},
@@ -129,7 +130,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DAXConn()
+	conn := meta.(*conns.AWSClient).DAXConn(ctx)
 
 	input := &dax.UpdateParameterGroupInput{
 		ParameterGroupName: aws.String(d.Id()),
@@ -151,7 +152,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DAXConn()
+	conn := meta.(*conns.AWSClient).DAXConn(ctx)
 
 	input := &dax.DeleteParameterGroupInput{
 		ParameterGroupName: aws.String(d.Id()),

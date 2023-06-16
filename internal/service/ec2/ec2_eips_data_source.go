@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_eips")
 func DataSourceEIPs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEIPsRead,
@@ -40,13 +41,13 @@ func DataSourceEIPs() *schema.Resource {
 
 func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeAddressesInput{}
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 

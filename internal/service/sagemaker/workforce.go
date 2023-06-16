@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_sagemaker_workforce")
 func ResourceWorkforce() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkforceCreate,
@@ -183,7 +184,7 @@ func ResourceWorkforce() *schema.Resource {
 
 func resourceWorkforceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("workforce_name").(string)
 	input := &sagemaker.CreateWorkforceInput{
@@ -223,7 +224,7 @@ func resourceWorkforceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkforceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	workforce, err := FindWorkforceByName(ctx, conn, d.Id())
 
@@ -264,7 +265,7 @@ func resourceWorkforceRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceWorkforceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.UpdateWorkforceInput{
 		WorkforceName: aws.String(d.Id()),
@@ -297,7 +298,7 @@ func resourceWorkforceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkforceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SageMaker Workforce: %s", d.Id())
 	_, err := conn.DeleteWorkforceWithContext(ctx, &sagemaker.DeleteWorkforceInput{

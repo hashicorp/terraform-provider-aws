@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_transfer_access")
 func ResourceAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessCreate,
@@ -123,7 +124,7 @@ func ResourceAccess() *schema.Resource {
 
 func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	externalID := d.Get("external_id").(string)
 	serverID := d.Get("server_id").(string)
@@ -176,7 +177,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 
@@ -223,7 +224,7 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 
@@ -277,7 +278,7 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 

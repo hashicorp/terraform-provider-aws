@@ -275,7 +275,18 @@ The `access_log` object supports the following:
 
 The `file` object supports the following:
 
+* `format` - (Optional) The specified format for the logs.
 * `path` - (Required) File path to write access logs to. You can use `/dev/stdout` to send access logs to standard out. Must be between 1 and 255 characters in length.
+
+The `format` object supports the following:
+
+* `json` - (Optional) The logging format for JSON.
+* `text` - (Optional) The logging format for text. Must be between 1 and 1000 characters in length.
+
+The `json` object supports the following:
+
+* `key` - (Required) The specified key for the JSON. Must be between 1 and 100 characters in length.
+* `value` - (Required) The specified value for the JSON. Must be between 1 and 100 characters in length.
 
 The `service_discovery` object supports the following:
 
@@ -292,6 +303,8 @@ Use the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_d
 The `dns` object supports the following:
 
 * `hostname` - (Required) DNS host name for your virtual node.
+* `ip_preference` - (Optional) The preferred IP version that this virtual node uses. Valid values: `IPv6_PREFERRED`, `IPv4_PREFERRED`, `IPv4_ONLY`, `IPv6_ONLY`.
+* `response_type` - (Optional) The DNS response type for the virtual node. Valid values: `LOADBALANCER`, `ENDPOINTS`.
 
 The `port_mapping` object supports the following:
 

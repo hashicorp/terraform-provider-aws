@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_cloudfront_monitoring_subscription")
 func ResourceMonitoringSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMonitoringSubscriptionCreate,
@@ -62,7 +63,7 @@ func ResourceMonitoringSubscription() *schema.Resource {
 
 func resourceMonitoringSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	id := d.Get("distribution_id").(string)
 	input := &cloudfront.CreateMonitoringSubscriptionInput{
@@ -87,7 +88,7 @@ func resourceMonitoringSubscriptionCreate(ctx context.Context, d *schema.Resourc
 
 func resourceMonitoringSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	output, err := FindMonitoringSubscriptionByDistributionID(ctx, conn, d.Id())
 
@@ -114,7 +115,7 @@ func resourceMonitoringSubscriptionRead(ctx context.Context, d *schema.ResourceD
 
 func resourceMonitoringSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Monitoring Subscription (%s)", d.Id())
 	_, err := conn.DeleteMonitoringSubscriptionWithContext(ctx, &cloudfront.DeleteMonitoringSubscriptionInput{

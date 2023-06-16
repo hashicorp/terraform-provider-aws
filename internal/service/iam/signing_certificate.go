@@ -1,6 +1,6 @@
 package iam
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 	"context"
 	"fmt"
@@ -18,6 +18,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_iam_signing_certificate")
 func ResourceSigningCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSigningCertificateCreate,
@@ -56,7 +57,7 @@ func ResourceSigningCertificate() *schema.Resource {
 
 func resourceSigningCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	createOpts := &iam.UploadSigningCertificateInput{
 		CertificateBody: aws.String(d.Get("certificate_body").(string)),
@@ -91,7 +92,7 @@ func resourceSigningCertificateCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceSigningCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())
 	if err != nil {
@@ -124,7 +125,7 @@ func resourceSigningCertificateRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceSigningCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())
 	if err != nil {
@@ -147,7 +148,7 @@ func resourceSigningCertificateUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceSigningCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 	log.Printf("[INFO] Deleting IAM Signing Certificate: %s", d.Id())
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())

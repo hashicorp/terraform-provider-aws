@@ -40,6 +40,28 @@ resource "aws_lakeformation_data_lake_settings" "example" {
 }
 ```
 
+### Enable EMR access to LakeFormation resources
+
+```terraform
+resource "aws_lakeformation_data_lake_settings" "example" {
+  admins = [aws_iam_user.test.arn, aws_iam_role.test.arn]
+
+  create_database_default_permissions {
+    permissions = ["SELECT", "ALTER", "DROP"]
+    principal   = aws_iam_user.test.arn
+  }
+
+  create_table_default_permissions {
+    permissions = ["ALL"]
+    principal   = aws_iam_role.test.arn
+  }
+
+  allow_external_data_filtering      = true
+  external_data_filtering_allow_list = [data.aws_caller_identity.current.account_id, data.aws_caller_identity.third_party.account_id]
+  authorized_session_tag_value_list  = ["Amazon EMR"]
+}
+```
+
 ## Argument Reference
 
 The following arguments are optional:
@@ -49,6 +71,9 @@ The following arguments are optional:
 * `create_database_default_permissions` - (Optional) Up to three configuration blocks of principal permissions for default create database permissions. Detailed below.
 * `create_table_default_permissions` - (Optional) Up to three configuration blocks of principal permissions for default create table permissions. Detailed below.
 * `trusted_resource_owners` – (Optional) List of the resource-owning account IDs that the caller's account can use to share their user access details (user ARNs).
+* `allow_external_data_filtering` - (Optional) Whether to allow Amazon EMR clusters to access data managed by Lake Formation.
+* `external_data_filtering_allow_list` - (Optional) A list of the account IDs of Amazon Web Services accounts with Amazon EMR clusters that are to perform data filtering.
+* `authorized_session_tag_value_list` - (Optional) Lake Formation relies on a privileged process secured by Amazon EMR or the third party integrator to tag the user's role while assuming it.
 
 ~> **NOTE:** Although optional, not including `admins`, `create_database_default_permissions`, `create_table_default_permissions`, and/or `trusted_resource_owners` results in the setting being cleared.
 

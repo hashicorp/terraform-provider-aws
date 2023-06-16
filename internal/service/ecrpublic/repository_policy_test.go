@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ecrpublic"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecrpublic "github.com/hashicorp/terraform-provider-aws/internal/service/ecrpublic"
@@ -21,7 +22,7 @@ func TestAccECRPublicRepositoryPolicy_basic(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecrpublic.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryPolicyDestroy(ctx),
@@ -55,7 +56,7 @@ func TestAccECRPublicRepositoryPolicy_disappears(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecrpublic.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryPolicyDestroy(ctx),
@@ -80,7 +81,7 @@ func TestAccECRPublicRepositoryPolicy_Disappears_repository(t *testing.T) {
 	repositoryResourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecrpublic.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryPolicyDestroy(ctx),
@@ -104,7 +105,7 @@ func TestAccECRPublicRepositoryPolicy_iam(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecrpublic.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryPolicyDestroy(ctx),
@@ -134,7 +135,7 @@ func TestAccECRPublicRepositoryPolicy_iam(t *testing.T) {
 
 func testAccCheckRepositoryPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecrpublic_repository_policy" {
@@ -169,7 +170,7 @@ func testAccCheckRepositoryPolicyExists(ctx context.Context, name string) resour
 			return fmt.Errorf("No ECR Public Repository Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn(ctx)
 
 		_, err := tfecrpublic.FindRepositoryPolicyByName(ctx, conn, rs.Primary.ID)
 

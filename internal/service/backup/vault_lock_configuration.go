@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_backup_vault_lock_configuration")
 func ResourceVaultLockConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultLockConfigurationCreate,
@@ -58,7 +59,7 @@ func ResourceVaultLockConfiguration() *schema.Resource {
 
 func resourceVaultLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	name := d.Get("backup_vault_name").(string)
 	input := &backup.PutBackupVaultLockConfigurationInput{
@@ -90,7 +91,7 @@ func resourceVaultLockConfigurationCreate(ctx context.Context, d *schema.Resourc
 
 func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	output, err := FindVaultByName(ctx, conn, d.Id())
 
@@ -114,7 +115,7 @@ func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceD
 
 func resourceVaultLockConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Vault Lock Configuration: %s", d.Id())
 	_, err := conn.DeleteBackupVaultLockConfigurationWithContext(ctx, &backup.DeleteBackupVaultLockConfigurationInput{

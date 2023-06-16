@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cognito_resource_server")
 func ResourceResourceServer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceServerCreate,
@@ -79,7 +80,7 @@ func ResourceResourceServer() *schema.Resource {
 
 func resourceResourceServerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	identifier := d.Get("identifier").(string)
 	userPoolID := d.Get("user_pool_id").(string)
@@ -100,7 +101,7 @@ func resourceResourceServerCreate(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.CreateResourceServerWithContext(ctx, params)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating Cognito Resource Server: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Cognito Resource Server: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s|%s", userPoolID, identifier))
@@ -110,7 +111,7 @@ func resourceResourceServerCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {
@@ -168,7 +169,7 @@ func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceResourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {
@@ -194,7 +195,7 @@ func resourceResourceServerUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceResourceServerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {

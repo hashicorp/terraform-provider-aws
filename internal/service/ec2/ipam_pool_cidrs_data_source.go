@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_vpc_ipam_pool_cidrs")
 func DataSourceIPAMPoolCIDRs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIPAMPoolCIDRsRead,
@@ -48,7 +49,7 @@ func DataSourceIPAMPoolCIDRs() *schema.Resource {
 
 func dataSourceIPAMPoolCIDRsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	poolID := d.Get("ipam_pool_id").(string)
 	input := &ec2.GetIpamPoolCidrsInput{

@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_backup_report_plan")
 func DataSourceReportPlan() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReportPlanRead,
@@ -65,6 +66,13 @@ func DataSourceReportPlan() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"accounts": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 						"framework_arns": {
 							Type:     schema.TypeSet,
 							Computed: true,
@@ -75,6 +83,20 @@ func DataSourceReportPlan() *schema.Resource {
 						"number_of_frameworks": {
 							Type:     schema.TypeInt,
 							Computed: true,
+						},
+						"organization_units": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"regions": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
 						"report_template": {
 							Type:     schema.TypeString,
@@ -90,7 +112,7 @@ func DataSourceReportPlan() *schema.Resource {
 
 func dataSourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -116,7 +138,7 @@ func dataSourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting report_setting: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(reportPlan.ReportPlanArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(reportPlan.ReportPlanArn))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Report Plan (%s): %s", d.Id(), err)

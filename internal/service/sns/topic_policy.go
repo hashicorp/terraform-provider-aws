@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_sns_topic_policy")
 func ResourceTopicPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicPolicyUpsert,
@@ -53,7 +54,7 @@ func ResourceTopicPolicy() *schema.Resource {
 }
 
 func resourceTopicPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
@@ -76,7 +77,7 @@ func resourceTopicPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	attributes, err := FindTopicAttributesByARN(ctx, conn, d.Id())
 
@@ -114,7 +115,7 @@ func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceTopicPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	// It is impossible to delete a policy or set to empty
 	// (confirmed by AWS Support representative)

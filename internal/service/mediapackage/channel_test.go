@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -21,7 +21,7 @@ func TestAccMediaPackageChannel_basic(t *testing.T) {
 	resourceName := "aws_media_package_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, mediapackage.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
@@ -54,7 +54,7 @@ func TestAccMediaPackageChannel_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, mediapackage.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
@@ -88,7 +88,7 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, mediapackage.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
@@ -129,7 +129,7 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 
 func testAccCheckChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_media_package_channel" {
@@ -161,7 +161,7 @@ func testAccCheckChannelExists(ctx context.Context, name string) resource.TestCh
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn(ctx)
 
 		input := &mediapackage.DescribeChannelInput{
 			Id: aws.String(rs.Primary.ID),
@@ -174,7 +174,7 @@ func testAccCheckChannelExists(ctx context.Context, name string) resource.TestCh
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn(ctx)
 
 	input := &mediapackage.ListChannelsInput{}
 

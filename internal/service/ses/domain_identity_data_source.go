@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ses_domain_identity")
 func DataSourceDomainIdentity() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDomainIdentityRead,
@@ -38,7 +39,7 @@ func DataSourceDomainIdentity() *schema.Resource {
 
 func dataSourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Get("domain").(string)
 	d.SetId(domainName)

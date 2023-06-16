@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
@@ -23,7 +23,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_basic(t *testing.T) {
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -57,7 +57,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -127,7 +127,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_multipleVersions(t *testing
 	otherResourceName := "aws_apprunner_auto_scaling_configuration_version.other"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -186,7 +186,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_updateMultipleVersions(t *t
 	otherResourceName := "aws_apprunner_auto_scaling_configuration_version.other"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -241,7 +241,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_disappears(t *testing.T) {
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -264,7 +264,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags(t *testing.T) {
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -310,7 +310,7 @@ func testAccCheckAutoScalingConfigurationVersionDestroy(ctx context.Context) res
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
 
 			input := &apprunner.DescribeAutoScalingConfigurationInput{
 				AutoScalingConfigurationArn: aws.String(rs.Primary.ID),
@@ -346,7 +346,7 @@ func testAccCheckAutoScalingConfigurationVersionExists(ctx context.Context, n st
 			return fmt.Errorf("No App Runner Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
 
 		input := &apprunner.DescribeAutoScalingConfigurationInput{
 			AutoScalingConfigurationArn: aws.String(rs.Primary.ID),

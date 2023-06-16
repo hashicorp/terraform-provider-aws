@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_iot_logging_options")
 func ResourceLoggingOptions() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoggingOptionsPut,
@@ -40,7 +41,7 @@ func ResourceLoggingOptions() *schema.Resource {
 }
 
 func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	input := &iot.SetV2LoggingOptionsInput{}
 
@@ -73,7 +74,7 @@ func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceLoggingOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	output, err := conn.GetV2LoggingOptionsWithContext(ctx, &iot.GetV2LoggingOptionsInput{})
 

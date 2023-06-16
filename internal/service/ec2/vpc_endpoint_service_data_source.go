@@ -18,6 +18,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_vpc_endpoint_service")
 func DataSourceVPCEndpointService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCEndpointServiceRead,
@@ -95,7 +96,7 @@ func DataSourceVPCEndpointService() *schema.Resource {
 
 func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeVpcEndpointServicesInput{
@@ -120,7 +121,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 
 	if v, ok := d.GetOk("tags"); ok {
 		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(v.(map[string]interface{}))),
+			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
 	}
 
@@ -193,7 +194,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("supported_ip_address_types", aws.StringValueSlice(sd.SupportedIpAddressTypes))
 	d.Set("vpc_endpoint_policy_supported", sd.VpcEndpointPolicySupported)
 
-	err = d.Set("tags", KeyValueTags(sd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	err = d.Set("tags", KeyValueTags(ctx, sd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

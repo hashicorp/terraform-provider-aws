@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/amplify"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
@@ -25,7 +25,7 @@ func testAccBackendEnvironment_basic(t *testing.T) {
 	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackendEnvironmentDestroy(ctx),
@@ -58,7 +58,7 @@ func testAccBackendEnvironment_disappears(t *testing.T) {
 	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackendEnvironmentDestroy(ctx),
@@ -84,7 +84,7 @@ func testAccBackendEnvironment_DeploymentArtifacts_StackName(t *testing.T) {
 	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackendEnvironmentDestroy(ctx),
@@ -125,7 +125,7 @@ func testAccCheckBackendEnvironmentExists(ctx context.Context, resourceName stri
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn(ctx)
 
 		backendEnvironment, err := tfamplify.FindBackendEnvironmentByAppIDAndEnvironmentName(ctx, conn, appID, environmentName)
 
@@ -141,7 +141,7 @@ func testAccCheckBackendEnvironmentExists(ctx context.Context, resourceName stri
 
 func testAccCheckBackendEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_amplify_backend_environment" {

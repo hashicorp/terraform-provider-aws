@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_msk_broker_nodes")
 func DataSourceBrokerNodes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBrokerNodesRead,
@@ -63,7 +64,7 @@ func DataSourceBrokerNodes() *schema.Resource {
 
 func dataSourceBrokerNodesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	clusterARN := d.Get("cluster_arn").(string)
 	input := &kafka.ListNodesInput{

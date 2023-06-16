@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_config_organization_managed_rule")
 func ResourceOrganizationManagedRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationManagedRuleCreate,
@@ -66,15 +67,9 @@ func ResourceOrganizationManagedRule() *schema.Resource {
 				),
 			},
 			"maximum_execution_frequency": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					configservice.MaximumExecutionFrequencyOneHour,
-					configservice.MaximumExecutionFrequencyThreeHours,
-					configservice.MaximumExecutionFrequencySixHours,
-					configservice.MaximumExecutionFrequencyTwelveHours,
-					configservice.MaximumExecutionFrequencyTwentyFourHours,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(configservice.MaximumExecutionFrequency_Values(), false),
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -117,7 +112,7 @@ func ResourceOrganizationManagedRule() *schema.Resource {
 
 func resourceOrganizationManagedRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 	name := d.Get("name").(string)
 
 	input := &configservice.PutOrganizationConfigRuleInput{
@@ -176,7 +171,7 @@ func resourceOrganizationManagedRuleCreate(ctx context.Context, d *schema.Resour
 
 func resourceOrganizationManagedRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	rule, err := DescribeOrganizationConfigRule(ctx, conn, d.Id())
 
@@ -198,6 +193,10 @@ func resourceOrganizationManagedRuleRead(ctx context.Context, d *schema.Resource
 
 	if d.IsNewResource() && rule == nil {
 		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameOrganizationManagedRule, d.Id(), errors.New("empty rule after creation"))
+	}
+
+	if rule.OrganizationCustomPolicyRuleMetadata != nil {
+		return sdkdiag.AppendErrorf(diags, "expected Organization Custom Rule, found Organization Custom Policy Rule: %s", d.Id())
 	}
 
 	if rule.OrganizationCustomRuleMetadata != nil {
@@ -233,7 +232,7 @@ func resourceOrganizationManagedRuleRead(ctx context.Context, d *schema.Resource
 
 func resourceOrganizationManagedRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	input := &configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
@@ -289,7 +288,7 @@ func resourceOrganizationManagedRuleUpdate(ctx context.Context, d *schema.Resour
 
 func resourceOrganizationManagedRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	input := &configservice.DeleteOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),

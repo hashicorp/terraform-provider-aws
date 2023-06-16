@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/configservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
@@ -23,7 +23,7 @@ func testAccConfigRule_basic(t *testing.T) {
 	resourceName := "aws_config_config_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
@@ -50,7 +50,7 @@ func testAccConfigRule_ownerAws(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	resourceName := "aws_config_config_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
@@ -93,7 +93,7 @@ func testAccConfigRule_customlambda(t *testing.T) {
 	path := "test-fixtures/lambdatest.zip"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
@@ -138,7 +138,7 @@ func testAccConfigRule_ownerPolicy(t *testing.T) {
 	resourceName := "aws_config_config_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
@@ -177,7 +177,7 @@ func testAccConfigRule_Scope_TagKey(t *testing.T) {
 	resourceName := "aws_config_config_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
@@ -209,7 +209,7 @@ func testAccConfigRule_Scope_TagKey_Empty(t *testing.T) {
 	resourceName := "aws_config_config_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
@@ -231,7 +231,7 @@ func testAccConfigRule_Scope_TagValue(t *testing.T) {
 	resourceName := "aws_config_config_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
@@ -263,7 +263,7 @@ func testAccConfigRule_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
@@ -311,7 +311,7 @@ func testAccConfigRule_disappears(t *testing.T) {
 	resourceName := "aws_config_config_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
@@ -352,7 +352,7 @@ func testAccCheckConfigRuleExists(ctx context.Context, n string, obj *configserv
 			return fmt.Errorf("No config rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
 		rule, err := tfconfig.FindConfigRule(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -366,7 +366,7 @@ func testAccCheckConfigRuleExists(ctx context.Context, n string, obj *configserv
 
 func testAccCheckConfigRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_config_config_rule" {

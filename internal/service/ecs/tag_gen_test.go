@@ -7,8 +7,8 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
@@ -18,7 +18,7 @@ import (
 
 func testAccCheckTagDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_tag" {
@@ -64,7 +64,7 @@ func testAccCheckTagExists(ctx context.Context, resourceName string) resource.Te
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
 
 		_, err = tfecs.GetTag(ctx, conn, identifier, key)
 

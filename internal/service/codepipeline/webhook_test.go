@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
@@ -29,7 +29,7 @@ func TestAccCodePipelineWebhook_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
@@ -100,7 +100,7 @@ func TestAccCodePipelineWebhook_ipAuth(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
@@ -136,7 +136,7 @@ func TestAccCodePipelineWebhook_unauthenticated(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
@@ -170,7 +170,7 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
@@ -235,7 +235,7 @@ func TestAccCodePipelineWebhook_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
@@ -265,7 +265,7 @@ func TestAccCodePipelineWebhook_UpdateAuthentication_secretToken(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
@@ -313,7 +313,7 @@ func testAccCheckWebhookExists(ctx context.Context, n string, webhook *codepipel
 			return fmt.Errorf("No webhook ARN is set as ID")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn(ctx)
 
 		resp, err := tfcodepipeline.GetWebhook(ctx, conn, rs.Primary.ID)
 

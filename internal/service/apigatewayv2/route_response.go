@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_apigatewayv2_route_response")
 func ResourceRouteResponse() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteResponseCreate,
@@ -56,7 +57,7 @@ func ResourceRouteResponse() *schema.Resource {
 
 func resourceRouteResponseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	req := &apigatewayv2.CreateRouteResponseInput{
 		ApiId:            aws.String(d.Get("api_id").(string)),
@@ -83,7 +84,7 @@ func resourceRouteResponseCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRouteResponseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	resp, err := conn.GetRouteResponseWithContext(ctx, &apigatewayv2.GetRouteResponseInput{
 		ApiId:           aws.String(d.Get("api_id").(string)),
@@ -110,7 +111,7 @@ func resourceRouteResponseRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceRouteResponseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	req := &apigatewayv2.UpdateRouteResponseInput{
 		ApiId:           aws.String(d.Get("api_id").(string)),
@@ -138,7 +139,7 @@ func resourceRouteResponseUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRouteResponseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 route response (%s)", d.Id())
 	_, err := conn.DeleteRouteResponseWithContext(ctx, &apigatewayv2.DeleteRouteResponseInput{

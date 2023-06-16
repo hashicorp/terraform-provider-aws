@@ -5,6 +5,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// @SDKResource("aws_opsworks_custom_layer", name="Custom Layer")
+// @Tags(identifierAttribute="arn")
 func ResourceCustomLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:        opsworks.LayerTypeCustom,

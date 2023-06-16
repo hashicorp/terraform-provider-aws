@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,6 +28,7 @@ const (
 	botAliasDeleteTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_lex_bot_alias")
 func ResourceBotAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBotAliasCreate,
@@ -120,7 +121,7 @@ var validBotAliasName = validation.All(
 
 func resourceBotAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	botName := d.Get("bot_name").(string)
 	botAliasName := d.Get("name").(string)
@@ -141,19 +142,19 @@ func resourceBotAliasCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.ConversationLogs = conversationLogs
 	}
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		output, err := conn.PutBotAliasWithContext(ctx, input)
 
 		input.Checksum = output.Checksum
 		// IAM eventual consistency
 		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeBadRequestException, "Lex can't access your IAM role") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
-			return resource.RetryableError(fmt.Errorf("%q bot alias still creating, another operation is pending: %w", id, err))
+			return retry.RetryableError(fmt.Errorf("%q bot alias still creating, another operation is pending: %w", id, err))
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -173,7 +174,7 @@ func resourceBotAliasCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	resp, err := conn.GetBotAliasWithContext(ctx, &lexmodelbuildingservice.GetBotAliasInput{
 		BotName: aws.String(d.Get("bot_name").(string)),
@@ -214,7 +215,7 @@ func resourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceBotAliasUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	input := &lexmodelbuildingservice.PutBotAliasInput{
 		BotName:    aws.String(d.Get("bot_name").(string)),
@@ -235,18 +236,18 @@ func resourceBotAliasUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		input.ConversationLogs = conversationLogs
 	}
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 		_, err := conn.PutBotAliasWithContext(ctx, input)
 
 		// IAM eventual consistency
 		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeBadRequestException, "Lex can't access your IAM role") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
-			return resource.RetryableError(fmt.Errorf("%q bot alias still updating", d.Id()))
+			return retry.RetryableError(fmt.Errorf("%q bot alias still updating", d.Id()))
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -265,7 +266,7 @@ func resourceBotAliasUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceBotAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	botName := d.Get("bot_name").(string)
 	botAliasName := d.Get("name").(string)
@@ -275,14 +276,14 @@ func resourceBotAliasDelete(ctx context.Context, d *schema.ResourceData, meta in
 		Name:    aws.String(botAliasName),
 	}
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		_, err := conn.DeleteBotAliasWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
-			return resource.RetryableError(fmt.Errorf("%q: bot alias still deleting", d.Id()))
+			return retry.RetryableError(fmt.Errorf("%q: bot alias still deleting", d.Id()))
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

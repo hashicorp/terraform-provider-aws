@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_workspaces_bundle")
 func DataSourceBundle() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkspaceBundleRead,
@@ -78,7 +79,7 @@ func DataSourceBundle() *schema.Resource {
 
 func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn()
+	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
 
 	var bundle *workspaces.WorkspaceBundle
 

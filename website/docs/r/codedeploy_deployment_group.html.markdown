@@ -15,24 +15,22 @@ Provides a CodeDeploy Deployment Group for a CodeDeploy Application
 ## Example Usage
 
 ```terraform
-resource "aws_iam_role" "example" {
-  name = "example-role"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "codedeploy.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
+    principals {
+      type        = "Service"
+      identifiers = ["codedeploy.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "example" {
+  name               = "example-role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_role_policy_attachment" "AWSCodeDeployRole" {
@@ -317,7 +315,7 @@ The `target_group_pair_info` configuration block supports the following:
 
 The `prod_traffic_route` configuration block supports the following:
 
-* `listener_arns` - (Required) List of Amazon Resource Names (ARNs) of the load balancer listeners.
+* `listener_arns` - (Required) List of Amazon Resource Names (ARNs) of the load balancer listeners. Must contain exactly one listener ARN.
 
 ##### load_balancer_info target_group_pair_info target_group Argument Reference
 

@@ -21,6 +21,7 @@ import (
 
 const mutexLayerKey = `aws_lambda_layer_version`
 
+// @SDKResource("aws_lambda_layer_version")
 func ResourceLayerVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLayerVersionPublish,
@@ -139,7 +140,7 @@ func ResourceLayerVersion() *schema.Resource {
 
 func resourceLayerVersionPublish(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	layerName := d.Get("layer_name").(string)
 	filename, hasFilename := d.GetOk("filename")
@@ -202,7 +203,7 @@ func resourceLayerVersionPublish(ctx context.Context, d *schema.ResourceData, me
 
 func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	layerName, version, err := LayerVersionParseID(d.Id())
 	if err != nil {
@@ -275,7 +276,7 @@ func resourceLayerVersionDelete(ctx context.Context, d *schema.ResourceData, met
 		return diags
 	}
 
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	version, err := strconv.ParseInt(d.Get("version").(string), 10, 64)
 	if err != nil {

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_iot_authorizer")
 func ResourceAuthorizer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAuthorizerCreate,
@@ -86,7 +87,7 @@ func ResourceAuthorizer() *schema.Resource {
 
 func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &iot.CreateAuthorizerInput{
@@ -119,7 +120,7 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	authorizer, err := FindAuthorizerByName(ctx, conn, d.Id())
 
@@ -147,7 +148,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	input := iot.UpdateAuthorizerInput{
 		AuthorizerName: aws.String(d.Id()),
@@ -185,7 +186,7 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	// In order to delete an IoT Authorizer, you must set it inactive first.
 	if d.Get("status").(string) == iot.AuthorizerStatusActive {

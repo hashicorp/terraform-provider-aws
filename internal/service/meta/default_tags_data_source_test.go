@@ -3,16 +3,17 @@ package meta_test
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
 
 func TestAccMetaDefaultTagsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_default_tags.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -32,10 +33,11 @@ func TestAccMetaDefaultTagsDataSource_basic(t *testing.T) {
 }
 
 func TestAccMetaDefaultTagsDataSource_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_default_tags.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -51,10 +53,11 @@ func TestAccMetaDefaultTagsDataSource_empty(t *testing.T) {
 }
 
 func TestAccMetaDefaultTagsDataSource_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_default_tags.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -75,10 +78,11 @@ func TestAccMetaDefaultTagsDataSource_multiple(t *testing.T) {
 }
 
 func TestAccMetaDefaultTagsDataSource_ignore(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_default_tags.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_iam_roles")
 func DataSourceRoles() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRolesRead,
@@ -43,7 +44,7 @@ func DataSourceRoles() *schema.Resource {
 
 func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	input := &iam.ListRolesInput{}
 

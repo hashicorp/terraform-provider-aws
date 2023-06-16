@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_directory_service_directory")
 func DataSourceDirectory() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDirectoryRead,
@@ -169,7 +170,7 @@ func DataSourceDirectory() *schema.Resource {
 
 func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dir, err := FindDirectoryByID(ctx, conn, d.Get("directory_id").(string))
@@ -224,7 +225,7 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("vpc_settings", nil)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Directory Service Directory (%s): %s", d.Id(), err)

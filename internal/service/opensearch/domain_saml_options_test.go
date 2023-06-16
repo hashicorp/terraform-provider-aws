@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
@@ -27,7 +27,7 @@ func TestAccOpenSearchDomainSAMLOptions_basic(t *testing.T) {
 	esDomainResourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx),
@@ -62,7 +62,7 @@ func TestAccOpenSearchDomainSAMLOptions_disappears(t *testing.T) {
 	esDomainResourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx),
@@ -88,7 +88,7 @@ func TestAccOpenSearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 	esDomainResourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx),
@@ -115,7 +115,7 @@ func TestAccOpenSearchDomainSAMLOptions_Update(t *testing.T) {
 	esDomainResourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx),
@@ -150,7 +150,7 @@ func TestAccOpenSearchDomainSAMLOptions_Disabled(t *testing.T) {
 	esDomainResourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx),
@@ -182,7 +182,7 @@ func testAccCheckESDomainSAMLOptionsDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
 			_, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes["domain_name"])
 
 			if tfresource.NotFound(err) {
@@ -216,7 +216,7 @@ func testAccCheckESDomainSAMLOptions(ctx context.Context, esResource string, sam
 			return fmt.Errorf("Not found: %s", samlOptionsResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
 		_, err := tfopensearch.FindDomainByName(ctx, conn, options.Primary.Attributes["domain_name"])
 
 		return err

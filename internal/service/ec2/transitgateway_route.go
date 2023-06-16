@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_transit_gateway_route")
 func ResourceTransitGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteCreate,
@@ -59,7 +60,7 @@ func ResourceTransitGatewayRoute() *schema.Resource {
 
 func resourceTransitGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	destination := d.Get("destination_cidr_block").(string)
 	transitGatewayRouteTableID := d.Get("transit_gateway_route_table_id").(string)
@@ -89,7 +90,7 @@ func resourceTransitGatewayRouteCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceTransitGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGatewayRouteTableID, destination, err := TransitGatewayRouteParseResourceID(d.Id())
 
@@ -128,7 +129,7 @@ func resourceTransitGatewayRouteRead(ctx context.Context, d *schema.ResourceData
 
 func resourceTransitGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGatewayRouteTableID, destination, err := TransitGatewayRouteParseResourceID(d.Id())
 

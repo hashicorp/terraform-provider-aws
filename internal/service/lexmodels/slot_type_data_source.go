@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_lex_slot_type")
 func DataSourceSlotType() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSlotTypeRead,
@@ -79,7 +80,7 @@ func DataSourceSlotType() *schema.Resource {
 
 func dataSourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	name := d.Get("name").(string)
 	version := d.Get("version").(string)

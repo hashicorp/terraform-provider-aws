@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_api_gateway_rest_api_policy")
 func ResourceRestAPIPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRestAPIPolicyPut,
@@ -51,7 +52,7 @@ func ResourceRestAPIPolicy() *schema.Resource {
 
 func resourceRestAPIPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	restApiId := d.Get("rest_api_id").(string)
 	log.Printf("[DEBUG] Setting API Gateway REST API Policy: %s", restApiId)
@@ -88,7 +89,7 @@ func resourceRestAPIPolicyPut(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRestAPIPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Reading API Gateway REST API Policy %s", d.Id())
 
@@ -129,7 +130,7 @@ func resourceRestAPIPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceRestAPIPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	restApiId := d.Get("rest_api_id").(string)
 	log.Printf("[DEBUG] Deleting API Gateway REST API Policy: %s", restApiId)

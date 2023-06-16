@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 
 // waitReportGroupDeleted waits for an ReportGroup to return Deleted
 func waitReportGroupDeleted(ctx context.Context, conn *codebuild.CodeBuild, arn string) (*codebuild.ReportGroup, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{codebuild.ReportGroupStatusTypeDeleting},
 		Target:  []string{},
 		Refresh: statusReportGroup(ctx, conn, arn),

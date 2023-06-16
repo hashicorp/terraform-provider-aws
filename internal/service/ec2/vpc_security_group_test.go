@@ -11,10 +11,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -792,106 +793,6 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 	}
 }
 
-func TestExpandIPPerms_nonVPC(t *testing.T) {
-	t.Parallel()
-
-	hash := schema.HashString
-
-	expanded := []interface{}{
-		map[string]interface{}{
-			"protocol":    "icmp",
-			"from_port":   1,
-			"to_port":     -1,
-			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
-				"sg-11111",
-				"foo/sg-22222",
-			}),
-		},
-		map[string]interface{}{
-			"protocol":  "icmp",
-			"from_port": 1,
-			"to_port":   -1,
-			"self":      true,
-		},
-	}
-	group := &ec2.SecurityGroup{
-		GroupName: aws.String("foo"),
-	}
-	perms, err := tfec2.ExpandIPPerms(group, expanded)
-	if err != nil {
-		t.Fatalf("error expanding perms: %v", err)
-	}
-
-	expected := []ec2.IpPermission{
-		{
-			IpProtocol: aws.String("icmp"),
-			FromPort:   aws.Int64(1),
-			ToPort:     aws.Int64(int64(-1)),
-			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
-			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				{
-					GroupName: aws.String("sg-22222"),
-				},
-				{
-					GroupName: aws.String("sg-11111"),
-				},
-			},
-		},
-		{
-			IpProtocol: aws.String("icmp"),
-			FromPort:   aws.Int64(1),
-			ToPort:     aws.Int64(int64(-1)),
-			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				{
-					GroupName: aws.String("foo"),
-				},
-			},
-		},
-	}
-
-	exp := expected[0]
-	perm := perms[0]
-
-	if aws.Int64Value(exp.FromPort) != aws.Int64Value(perm.FromPort) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.Int64Value(perm.FromPort),
-			aws.Int64Value(exp.FromPort))
-	}
-
-	if aws.StringValue(exp.IpRanges[0].CidrIp) != aws.StringValue(perm.IpRanges[0].CidrIp) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.IpRanges[0].CidrIp),
-			aws.StringValue(exp.IpRanges[0].CidrIp))
-	}
-
-	if aws.StringValue(exp.UserIdGroupPairs[0].GroupName) != aws.StringValue(perm.UserIdGroupPairs[0].GroupName) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.UserIdGroupPairs[0].GroupName),
-			aws.StringValue(exp.UserIdGroupPairs[0].GroupName))
-	}
-
-	if aws.StringValue(exp.UserIdGroupPairs[1].GroupName) != aws.StringValue(perm.UserIdGroupPairs[1].GroupName) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.UserIdGroupPairs[1].GroupName),
-			aws.StringValue(exp.UserIdGroupPairs[1].GroupName))
-	}
-
-	exp = expected[1]
-	perm = perms[1]
-
-	if aws.StringValue(exp.UserIdGroupPairs[0].GroupName) != aws.StringValue(perm.UserIdGroupPairs[0].GroupName) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.UserIdGroupPairs[0].GroupName),
-			aws.StringValue(exp.UserIdGroupPairs[0].GroupName))
-	}
-}
-
 func TestFlattenSecurityGroups(t *testing.T) {
 	t.Parallel()
 
@@ -914,8 +815,6 @@ func TestFlattenSecurityGroups(t *testing.T) {
 				},
 			},
 		},
-		// include the owner id, but keep it consitent with the same account. Tests
-		// EC2 classic situation
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
@@ -930,28 +829,6 @@ func TestFlattenSecurityGroups(t *testing.T) {
 				},
 			},
 		},
-
-		// include the owner id, but from a different account. This is reflects
-		// EC2 Classic when referring to groups by name
-		{
-			ownerId: aws.String("user1234"),
-			pairs: []*ec2.UserIdGroupPair{
-				{
-					GroupId:   aws.String("sg-12345"),
-					GroupName: aws.String("somegroup"), // GroupName is only included in Classic
-					UserId:    aws.String("user4321"),
-				},
-			},
-			expected: []*tfec2.GroupIdentifier{
-				{
-					GroupId:   aws.String("sg-12345"),
-					GroupName: aws.String("user4321/somegroup"),
-				},
-			},
-		},
-
-		// include the owner id, but from a different account. This reflects in
-		// EC2 VPC when referring to groups by id
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
@@ -1000,7 +877,7 @@ func TestAccVPCSecurityGroup_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1038,7 +915,7 @@ func TestAccVPCSecurityGroup_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1062,7 +939,7 @@ func TestAccVPCSecurityGroup_noVPC(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1099,7 +976,7 @@ func TestAccVPCSecurityGroup_nameGenerated(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1109,7 +986,7 @@ func TestAccVPCSecurityGroup_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -1130,7 +1007,7 @@ func TestAccVPCSecurityGroup_nameTerraformPrefix(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("terraform-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1160,7 +1037,7 @@ func TestAccVPCSecurityGroup_namePrefix(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1191,7 +1068,7 @@ func TestAccVPCSecurityGroup_namePrefixTerraform(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1221,7 +1098,7 @@ func TestAccVPCSecurityGroup_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1268,7 +1145,7 @@ func TestAccVPCSecurityGroup_allowAll(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1296,7 +1173,7 @@ func TestAccVPCSecurityGroup_sourceSecurityGroup(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1324,7 +1201,7 @@ func TestAccVPCSecurityGroup_ipRangeAndSecurityGroupWithSameRules(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1352,7 +1229,7 @@ func TestAccVPCSecurityGroup_ipRangesWithSameRules(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1380,7 +1257,7 @@ func TestAccVPCSecurityGroup_egressMode(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkACLDestroy(ctx),
@@ -1423,7 +1300,7 @@ func TestAccVPCSecurityGroup_ingressMode(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkACLDestroy(ctx),
@@ -1466,7 +1343,7 @@ func TestAccVPCSecurityGroup_ruleGathering(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1580,7 +1457,7 @@ func TestAccVPCSecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 	testRemoveCycle := testRemoveRuleCycle(ctx, &primary, &secondary)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1648,6 +1525,10 @@ func TestAccVPCSecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 
 func TestAccVPCSecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var primary ec2.SecurityGroup
 	var secondary ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1661,7 +1542,7 @@ func TestAccVPCSecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 	testRemoveCycle := testRemoveRuleCycle(ctx, &primary, &secondary)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1717,7 +1598,7 @@ func TestAccVPCSecurityGroup_change(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1787,7 +1668,7 @@ func TestAccVPCSecurityGroup_ipv6(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1850,7 +1731,7 @@ func TestAccVPCSecurityGroup_self(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1886,7 +1767,7 @@ func TestAccVPCSecurityGroup_vpc(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1931,7 +1812,7 @@ func TestAccVPCSecurityGroup_vpcNegOneIngress(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -1968,7 +1849,7 @@ func TestAccVPCSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2005,7 +1886,7 @@ func TestAccVPCSecurityGroup_multiIngress(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2033,7 +1914,7 @@ func TestAccVPCSecurityGroup_vpcAllEgress(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2070,7 +1951,7 @@ func TestAccVPCSecurityGroup_ruleDescription(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2184,7 +2065,7 @@ func TestAccVPCSecurityGroup_defaultEgressVPC(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2215,7 +2096,7 @@ func TestAccVPCSecurityGroup_driftComplex(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2290,7 +2171,7 @@ func TestAccVPCSecurityGroup_driftComplex(t *testing.T) {
 func TestAccVPCSecurityGroup_invalidCIDRBlock(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2322,7 +2203,7 @@ func TestAccVPCSecurityGroup_cidrAndGroups(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2350,7 +2231,7 @@ func TestAccVPCSecurityGroup_ingressWithCIDRAndSGsVPC(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2403,7 +2284,7 @@ func TestAccVPCSecurityGroup_egressWithPrefixList(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2432,7 +2313,7 @@ func TestAccVPCSecurityGroup_ingressWithPrefixList(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2461,7 +2342,7 @@ func TestAccVPCSecurityGroup_ipv4AndIPv6Egress(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2515,7 +2396,7 @@ func TestAccVPCSecurityGroup_failWithDiffMismatch(t *testing.T) {
 	resourceName := "aws_security_group.test1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2540,7 +2421,7 @@ var ruleLimit int
 func testAccSecurityGroup_ruleLimit(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2568,7 +2449,7 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededAppend(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2618,7 +2499,7 @@ func TestAccVPCSecurityGroup_RuleLimit_cidrBlockExceededAppend(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2646,7 +2527,7 @@ func TestAccVPCSecurityGroup_RuleLimit_cidrBlockExceededAppend(t *testing.T) {
 
 					id := aws.StringValue(group.GroupId)
 
-					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 					match, err := tfec2.FindSecurityGroupByID(ctx, conn, id)
 					if tfresource.NotFound(err) {
@@ -2682,7 +2563,7 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededPrepend(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2730,7 +2611,7 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededAllNew(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2774,7 +2655,7 @@ func TestAccVPCSecurityGroup_rulesDropOnError(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2807,12 +2688,16 @@ func TestAccVPCSecurityGroup_rulesDropOnError(t *testing.T) {
 // a rule in another SG, it could not previously be deleted.
 func TestAccVPCSecurityGroup_emrDependencyViolation(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.allow_access"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
@@ -2863,7 +2748,7 @@ func testAddRuleCycle(ctx context.Context, primary, secondary *ec2.SecurityGroup
 			return fmt.Errorf("Secondary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		// cycle from primary to secondary
 		perm1 := cycleIPPermForGroup(aws.StringValue(secondary.GroupId))
@@ -2903,7 +2788,7 @@ func testRemoveRuleCycle(ctx context.Context, primary, secondary *ec2.SecurityGr
 			return fmt.Errorf("Secondary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 		for _, sg := range []*ec2.SecurityGroup{primary, secondary} {
 			var err error
 			if sg.IpPermissions != nil {
@@ -2934,7 +2819,7 @@ func testRemoveRuleCycle(ctx context.Context, primary, secondary *ec2.SecurityGr
 
 func testAccCheckSecurityGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_security_group" {
@@ -2969,7 +2854,7 @@ func testAccCheckSecurityGroupExists(ctx context.Context, n string, v *ec2.Secur
 			return fmt.Errorf("No VPC Security Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindSecurityGroupByID(ctx, conn, rs.Primary.ID)
 
@@ -3013,7 +2898,7 @@ func testAccCheckSecurityGroupRuleCount(ctx context.Context, group *ec2.Security
 }
 
 func testSecurityGroupRuleCount(ctx context.Context, id string, expectedIngressCount, expectedEgressCount int) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	group, err := tfec2.FindSecurityGroupByID(ctx, conn, id)
 	if tfresource.NotFound(err) {
@@ -4882,7 +4767,7 @@ resource "aws_internet_gateway" "gw" {
 
 # elastic ip for NAT gateway
 resource "aws_eip" "nat" {
-  vpc = true
+  domain = "vpc"
   tags = {
     Name = %[1]q
   }

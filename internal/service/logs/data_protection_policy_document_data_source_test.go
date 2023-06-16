@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -17,7 +17,7 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_basic(t *testing.T) {
 	targetName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Logs),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx),
@@ -39,7 +39,7 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_empty(t *testing.T) {
 	logGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Logs),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx),
@@ -59,7 +59,7 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_empty(t *testing.T) {
 func TestAccLogsDataProtectionPolicyDocumentDataSource_errorOnBadOrderOfStatements(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Logs),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx),
@@ -75,7 +75,7 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_errorOnBadOrderOfStatemen
 func TestAccLogsDataProtectionPolicyDocumentDataSource_errorOnNoOperation(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Logs),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx),
@@ -169,9 +169,9 @@ resource "aws_kinesis_firehose_delivery_stream" "audit" {
   depends_on = [aws_iam_role_policy.firehose]
 
   name        = %[2]q
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.firehose.arn
     bucket_arn = aws_s3_bucket.audit.arn
   }

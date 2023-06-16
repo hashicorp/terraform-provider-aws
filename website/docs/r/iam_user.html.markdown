@@ -28,24 +28,18 @@ resource "aws_iam_access_key" "lb" {
   user = aws_iam_user.lb.name
 }
 
-resource "aws_iam_user_policy" "lb_ro" {
-  name = "test"
-  user = aws_iam_user.lb.name
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
+data "aws_iam_policy_document" "lb_ro" {
+  statement {
+    effect    = "Allow"
+    actions   = ["ec2:Describe*"]
+    resources = ["*"]
+  }
 }
-EOF
+
+resource "aws_iam_user_policy" "lb_ro" {
+  name   = "test"
+  user   = aws_iam_user.lb.name
+  policy = data.aws_iam_policy_document.lb_ro.json
 }
 ```
 

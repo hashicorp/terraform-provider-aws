@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_kms_ciphertext")
 func DataSourceCiphertext() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCiphertextRead,
@@ -46,7 +47,7 @@ func DataSourceCiphertext() *schema.Resource {
 
 func dataSourceCiphertextRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID := d.Get("key_id").(string)
 	req := &kms.EncryptInput{

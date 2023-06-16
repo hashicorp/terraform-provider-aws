@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_ssoadmin_permission_set")
 func DataSourcePermissionSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePermissionSetRead,
@@ -73,7 +74,7 @@ func DataSourcePermissionSet() *schema.Resource {
 
 func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceArn := d.Get("instance_arn").(string)
@@ -162,7 +163,7 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("session_duration", permissionSet.SessionDuration)
 	d.Set("relay_state", permissionSet.RelayState)
 
-	tags, err := ListTags(ctx, conn, arn, instanceArn)
+	tags, err := listTags(ctx, conn, arn, instanceArn)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for SSO Permission Set (%s): %s", arn, err)
 	}

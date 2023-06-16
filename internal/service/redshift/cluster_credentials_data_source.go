@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_redshift_cluster_credentials")
 func DataSourceClusterCredentials() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterCredentialsRead,
@@ -61,7 +62,7 @@ func DataSourceClusterCredentials() *schema.Resource {
 
 func dataSourceClusterCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	clusterID := d.Get("cluster_identifier").(string)
 	input := &redshift.GetClusterCredentialsInput{

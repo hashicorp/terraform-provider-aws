@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_emr_instance_fleet")
 func ResourceInstanceFleet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceFleetCreate,
@@ -219,7 +220,7 @@ func ResourceInstanceFleet() *schema.Resource {
 
 func resourceInstanceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	taskFleet := map[string]interface{}{
 		"name":                      d.Get("name"),
@@ -246,7 +247,7 @@ func resourceInstanceFleetCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceInstanceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	fleet, err := FindInstanceFleetByTwoPartKey(ctx, conn, d.Get("cluster_id").(string), d.Id())
 
@@ -277,7 +278,7 @@ func resourceInstanceFleetRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceInstanceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	modifyConfig := &emr.InstanceFleetModifyConfig{
 		InstanceFleetId:        aws.String(d.Id()),
@@ -295,7 +296,7 @@ func resourceInstanceFleetUpdate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "updating EMR Instance Fleet (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{emr.InstanceFleetStateProvisioning, emr.InstanceFleetStateBootstrapping, emr.InstanceFleetStateResizing},
 		Target:     []string{emr.InstanceFleetStateRunning},
 		Refresh:    statusInstanceFleet(ctx, conn, d.Get("cluster_id").(string), d.Id()),
@@ -315,7 +316,7 @@ func resourceInstanceFleetUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceInstanceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	// AWS EMR Instance Fleet does not support DELETE; resizing cluster to zero before removing from state.
 	log.Printf("[DEBUG] Deleting EMR Instance Fleet: %s", d.Id())
@@ -369,10 +370,10 @@ func FindInstanceFleetByTwoPartKey(ctx context.Context, conn *emr.EMR, clusterID
 		}
 	}
 
-	return nil, &resource.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
-func statusInstanceFleet(ctx context.Context, conn *emr.EMR, clusterID, fleetID string) resource.StateRefreshFunc {
+func statusInstanceFleet(ctx context.Context, conn *emr.EMR, clusterID, fleetID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindInstanceFleetByTwoPartKey(ctx, conn, clusterID, fleetID)
 

@@ -17,10 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_organizations_policy_attachment")
 func ResourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourcePolicyAttachmentRead,
+		UpdateWithoutTimeout: resourcePolicyAttachmentUpdate,
 		DeleteWithoutTimeout: resourcePolicyAttachmentDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -33,6 +35,10 @@ func ResourcePolicyAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"target_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -44,7 +50,7 @@ func ResourcePolicyAttachment() *schema.Resource {
 
 func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	policyID := d.Get("policy_id").(string)
 	targetID := d.Get("target_id").(string)
@@ -69,7 +75,7 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	targetID, policyID, err := DecodePolicyAttachmentID(d.Id())
 	if err != nil {
@@ -94,9 +100,20 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// Update is just a pass-through to allow skip_destroy to be updated in-place
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
+}
+
+func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Organizations Policy Attachment: %s", d.Id())
+		return nil
+	}
+
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	targetID, policyID, err := DecodePolicyAttachmentID(d.Id())
 	if err != nil {

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_cloudwatch_event_connection")
 func ResourceConnection() *schema.Resource {
 	connectionHttpParameters := &schema.Resource{
 		Schema: map[string]*schema.Schema{
@@ -261,7 +262,7 @@ func ResourceConnection() *schema.Resource {
 
 func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &eventbridge.CreateConnectionInput{
@@ -293,7 +294,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	output, err := FindConnectionByName(ctx, conn, d.Id())
 
@@ -325,7 +326,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.UpdateConnectionInput{
 		Name: aws.String(d.Id()),
@@ -360,7 +361,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge connection (%s)", d.Id())
 	_, err := conn.DeleteConnectionWithContext(ctx, &eventbridge.DeleteConnectionInput{

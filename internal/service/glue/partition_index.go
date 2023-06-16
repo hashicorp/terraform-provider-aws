@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_glue_partition_index")
 func ResourcePartitionIndex() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePartitionIndexCreate,
@@ -81,7 +82,7 @@ func ResourcePartitionIndex() *schema.Resource {
 
 func resourcePartitionIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	tableName := d.Get("table_name").(string)
@@ -110,7 +111,7 @@ func resourcePartitionIndexCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourcePartitionIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID, dbName, tableName, _, err := readPartitionIndexID(d.Id())
 	if err != nil {
@@ -142,7 +143,7 @@ func resourcePartitionIndexRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourcePartitionIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID, dbName, tableName, partIndex, err := readPartitionIndexID(d.Id())
 	if err != nil {

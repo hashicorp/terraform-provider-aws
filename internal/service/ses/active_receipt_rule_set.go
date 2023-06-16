@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_ses_active_receipt_rule_set")
 func ResourceActiveReceiptRuleSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActiveReceiptRuleSetUpdate,
@@ -41,7 +42,7 @@ func ResourceActiveReceiptRuleSet() *schema.Resource {
 
 func resourceActiveReceiptRuleSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	ruleSetName := d.Get("rule_set_name").(string)
 
@@ -61,7 +62,7 @@ func resourceActiveReceiptRuleSetUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	describeOpts := &ses.DescribeActiveReceiptRuleSetInput{}
 
@@ -97,7 +98,7 @@ func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	deleteOpts := &ses.SetActiveReceiptRuleSetInput{
 		RuleSetName: nil,

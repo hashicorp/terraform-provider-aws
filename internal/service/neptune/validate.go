@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -34,7 +34,7 @@ func validEventSubscriptionNamePrefix(v interface{}, k string) (ws []string, err
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters and hyphens allowed in %q", k))
 	}
-	prefixMaxLength := 255 - resource.UniqueIDSuffixLength
+	prefixMaxLength := 255 - id.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than %d characters", k, prefixMaxLength))
@@ -140,7 +140,7 @@ func validParamGroupNamePrefix(v interface{}, k string) (ws []string, errors []e
 		errors = append(errors, fmt.Errorf(
 			"%q cannot contain two consecutive hyphens", k))
 	}
-	prefixMaxLength := 255 - resource.UniqueIDSuffixLength
+	prefixMaxLength := 255 - id.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than %d characters", k, prefixMaxLength))
@@ -171,7 +171,7 @@ func validSubnetGroupNamePrefix(v interface{}, k string) (ws []string, errors []
 		errors = append(errors, fmt.Errorf(
 			"only lowercase alphanumeric characters, hyphens, underscores, periods, and spaces allowed in %q", k))
 	}
-	prefixMaxLength := 255 - resource.UniqueIDSuffixLength
+	prefixMaxLength := 255 - id.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than %d characters", k, prefixMaxLength))

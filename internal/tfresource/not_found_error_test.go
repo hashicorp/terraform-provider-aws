@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 func TestEmptyResultErrorAsNotFoundError(t *testing.T) {
@@ -14,7 +14,7 @@ func TestEmptyResultErrorAsNotFoundError(t *testing.T) {
 	lastRequest := 123
 	err := NewEmptyResultError(lastRequest)
 
-	var nfe *resource.NotFoundError
+	var nfe *retry.NotFoundError
 	ok := errors.As(err, &nfe)
 
 	if !ok {
@@ -95,7 +95,7 @@ func TestTooManyResultsErrorAsNotFoundError(t *testing.T) {
 	lastRequest := 123
 	err := NewTooManyResultsError(count, lastRequest)
 
-	var nfe *resource.NotFoundError
+	var nfe *retry.NotFoundError
 	ok := errors.As(err, &nfe)
 
 	if !ok {

@@ -54,6 +54,7 @@ user guide for more information.
 * `throughput_mode` - (Optional) Throughput mode for the file system. Defaults to `bursting`. Valid values: `bursting`, `provisioned`, or `elastic`. When using `provisioned`, also set `provisioned_throughput_in_mibps`.
 
 ### Lifecycle Policy Arguments
+
 For **lifecycle_policy** the following attributes are supported:
 
 * `transition_to_ia` - (Optional) Indicates how long it takes to transition files to the IA storage class. Valid values: `AFTER_1_DAY`, `AFTER_7_DAYS`, `AFTER_14_DAYS`, `AFTER_30_DAYS`, `AFTER_60_DAYS`, or `AFTER_90_DAYS`.

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -18,14 +18,11 @@ const (
 
 	replicationGroupDeletedMinTimeout = 10 * time.Second
 	replicationGroupDeletedDelay      = 30 * time.Second
-
-	UserActiveTimeout  = 5 * time.Minute
-	UserDeletedTimeout = 5 * time.Minute
 )
 
 // WaitReplicationGroupAvailable waits for a ReplicationGroup to return Available
 func WaitReplicationGroupAvailable(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) (*elasticache.ReplicationGroup, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			ReplicationGroupStatusCreating,
 			ReplicationGroupStatusModifying,
@@ -47,7 +44,7 @@ func WaitReplicationGroupAvailable(ctx context.Context, conn *elasticache.Elasti
 
 // WaitReplicationGroupDeleted waits for a ReplicationGroup to be deleted
 func WaitReplicationGroupDeleted(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) (*elasticache.ReplicationGroup, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			ReplicationGroupStatusCreating,
 			ReplicationGroupStatusAvailable,
@@ -69,7 +66,7 @@ func WaitReplicationGroupDeleted(ctx context.Context, conn *elasticache.ElastiCa
 
 // WaitReplicationGroupMemberClustersAvailable waits for all of a ReplicationGroup's Member Clusters to return Available
 func WaitReplicationGroupMemberClustersAvailable(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) ([]*elasticache.CacheCluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			CacheClusterStatusCreating,
 			CacheClusterStatusDeleting,
@@ -103,7 +100,7 @@ const (
 
 // waitCacheClusterAvailable waits for a Cache Cluster to return Available
 func waitCacheClusterAvailable(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) (*elasticache.CacheCluster, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			CacheClusterStatusCreating,
 			CacheClusterStatusModifying,
@@ -126,7 +123,7 @@ func waitCacheClusterAvailable(ctx context.Context, conn *elasticache.ElastiCach
 
 // WaitCacheClusterDeleted waits for a Cache Cluster to be deleted
 func WaitCacheClusterDeleted(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) (*elasticache.CacheCluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			CacheClusterStatusCreating,
 			CacheClusterStatusAvailable,
@@ -165,7 +162,7 @@ const (
 // waitGlobalReplicationGroupAvailable waits for a Global Replication Group to be available,
 // with status either "available" or "primary-only"
 func waitGlobalReplicationGroupAvailable(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID string, timeout time.Duration) (*elasticache.GlobalReplicationGroup, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{GlobalReplicationGroupStatusCreating, GlobalReplicationGroupStatusModifying},
 		Target:     []string{GlobalReplicationGroupStatusAvailable, GlobalReplicationGroupStatusPrimaryOnly},
 		Refresh:    statusGlobalReplicationGroup(ctx, conn, globalReplicationGroupID),
@@ -183,7 +180,7 @@ func waitGlobalReplicationGroupAvailable(ctx context.Context, conn *elasticache.
 
 // waitGlobalReplicationGroupDeleted waits for a Global Replication Group to be deleted
 func waitGlobalReplicationGroupDeleted(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID string, timeout time.Duration) (*elasticache.GlobalReplicationGroup, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			GlobalReplicationGroupStatusAvailable,
 			GlobalReplicationGroupStatusPrimaryOnly,
@@ -217,7 +214,7 @@ const (
 )
 
 func waitGlobalReplicationGroupMemberDetached(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID, id string) (*elasticache.GlobalReplicationGroupMember, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			GlobalReplicationGroupMemberStatusAssociated,
 		},
@@ -233,32 +230,4 @@ func waitGlobalReplicationGroupMemberDetached(ctx context.Context, conn *elastic
 		return v, err
 	}
 	return nil, err
-}
-
-// WaitUserActive waits for an ElastiCache user to reach an active state after modifications
-func WaitUserActive(ctx context.Context, conn *elasticache.ElastiCache, userId string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{UserStatusModifying},
-		Target:  []string{UserStatusActive},
-		Refresh: StatusUser(ctx, conn, userId),
-		Timeout: UserActiveTimeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
-// WaitUserDeleted waits for an ElastiCache user to be deleted
-func WaitUserDeleted(ctx context.Context, conn *elasticache.ElastiCache, userId string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{UserStatusDeleting},
-		Target:  []string{},
-		Refresh: StatusUser(ctx, conn, userId),
-		Timeout: UserDeletedTimeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
 }

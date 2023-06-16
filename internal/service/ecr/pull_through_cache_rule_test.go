@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ecr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
@@ -22,7 +22,7 @@ func TestAccECRPullThroughCacheRule_basic(t *testing.T) {
 	resourceName := "aws_ecr_pull_through_cache_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
@@ -51,7 +51,7 @@ func TestAccECRPullThroughCacheRule_disappears(t *testing.T) {
 	resourceName := "aws_ecr_pull_through_cache_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
@@ -78,7 +78,7 @@ func TestAccECRPullThroughCacheRule_failWhenAlreadyExists(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
@@ -96,7 +96,7 @@ func TestAccECRPullThroughCacheRule_failWhenAlreadyExists(t *testing.T) {
 
 func testAccCheckPullThroughCacheRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecr_pull_through_cache_rule" {
@@ -131,7 +131,7 @@ func testAccCheckPullThroughCacheRuleExists(ctx context.Context, n string) resou
 			return fmt.Errorf("No ECR Pull Through Cache Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
 
 		_, err := tfecr.FindPullThroughCacheRuleByRepositoryPrefix(ctx, conn, rs.Primary.ID)
 

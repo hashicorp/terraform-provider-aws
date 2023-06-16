@@ -38,5 +38,6 @@ In addition to all arguments above, the following attributes are exported:
 * `creation_time` - When the function URL was created, in [ISO-8601 format](https://www.w3.org/TR/NOTE-datetime).
 * `function_arn` - ARN of the function.
 * `function_url` - HTTP URL endpoint for the function in the format `https://<url_id>.lambda-url.<region>.on.aws`.
+* `invoke_mode` - Whether the Lambda function responds in `BUFFERED` or `RESPONSE_STREAM` mode.
 * `last_modified_time` - When the function URL configuration was last updated, in [ISO-8601 format](https://www.w3.org/TR/NOTE-datetime).
 * `url_id` - Generated ID for the endpoint.

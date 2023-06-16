@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_imagebuilder_image_pipeline")
 func DataSourceImagePipeline() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceImagePipelineRead,
@@ -114,7 +115,7 @@ func DataSourceImagePipeline() *schema.Resource {
 
 func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.GetImagePipelineInput{}
 
@@ -163,7 +164,7 @@ func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.Set("status", imagePipeline.Status)
-	d.Set("tags", KeyValueTags(imagePipeline.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(ctx, imagePipeline.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 
 	return diags
 }

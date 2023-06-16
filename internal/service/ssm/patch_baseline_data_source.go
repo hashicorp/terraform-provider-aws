@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ssm_patch_baseline")
 func DataSourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataPatchBaselineRead,
@@ -151,7 +152,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 
 func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	filters := []*ssm.PatchOrchestratorFilter{
 		{

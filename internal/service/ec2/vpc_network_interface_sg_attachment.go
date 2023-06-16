@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_network_interface_sg_attachment")
 func ResourceNetworkInterfaceSGAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInterfaceSGAttachmentCreate,
@@ -42,7 +43,7 @@ func ResourceNetworkInterfaceSGAttachment() *schema.Resource {
 
 func resourceNetworkInterfaceSGAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	networkInterfaceID := d.Get("network_interface_id").(string)
 	sgID := d.Get("security_group_id").(string)
@@ -91,7 +92,7 @@ func resourceNetworkInterfaceSGAttachmentCreate(ctx context.Context, d *schema.R
 
 func resourceNetworkInterfaceSGAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	networkInterfaceID := d.Get("network_interface_id").(string)
 	sgID := d.Get("security_group_id").(string)
@@ -119,7 +120,7 @@ func resourceNetworkInterfaceSGAttachmentRead(ctx context.Context, d *schema.Res
 
 func resourceNetworkInterfaceSGAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	networkInterfaceID := d.Get("network_interface_id").(string)
 	sgID := d.Get("security_group_id").(string)
@@ -183,7 +184,7 @@ func resourceNetworkInterfaceSGAttachmentImport(ctx context.Context, d *schema.R
 
 	log.Printf("[DEBUG] Importing network interface security group association, Interface: %s, Security Group: %s", networkInterfaceID, securityGroupID)
 
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	networkInterface, err := FindNetworkInterfaceByID(ctx, conn, networkInterfaceID)
 

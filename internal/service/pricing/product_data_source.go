@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_pricing_product")
 func DataSourceProduct() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProductRead,
@@ -50,7 +51,7 @@ func DataSourceProduct() *schema.Resource {
 
 func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PricingConn()
+	conn := meta.(*conns.AWSClient).PricingConn(ctx)
 
 	params := &pricing.GetProductsInput{
 		ServiceCode: aws.String(d.Get("service_code").(string)),

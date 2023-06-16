@@ -23,6 +23,7 @@ const (
 	permissionsBoundaryAttachmentTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_ssoadmin_permissions_boundary_attachment")
 func ResourcePermissionsBoundaryAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionsBoundaryAttachmentCreate,
@@ -92,7 +93,7 @@ func ResourcePermissionsBoundaryAttachment() *schema.Resource {
 
 func resourcePermissionsBoundaryAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	tfMap := d.Get("permissions_boundary").([]interface{})[0].(map[string]interface{})
 	instanceARN := d.Get("instance_arn").(string)
@@ -125,7 +126,7 @@ func resourcePermissionsBoundaryAttachmentCreate(ctx context.Context, d *schema.
 
 func resourcePermissionsBoundaryAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	permissionSetARN, instanceARN, err := PermissionsBoundaryAttachmentParseResourceID(d.Id())
 
@@ -156,7 +157,7 @@ func resourcePermissionsBoundaryAttachmentRead(ctx context.Context, d *schema.Re
 
 func resourcePermissionsBoundaryAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	permissionSetARN, instanceARN, err := PermissionsBoundaryAttachmentParseResourceID(d.Id())
 

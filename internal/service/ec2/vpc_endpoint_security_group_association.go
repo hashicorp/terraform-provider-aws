@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_vpc_endpoint_security_group_association")
 func ResourceVPCEndpointSecurityGroupAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointSecurityGroupAssociationCreate,
@@ -44,7 +45,7 @@ func ResourceVPCEndpointSecurityGroupAssociation() *schema.Resource {
 
 func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
 	securityGroupID := d.Get("security_group_id").(string)
@@ -106,7 +107,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *s
 
 func resourceVPCEndpointSecurityGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
 	securityGroupID := d.Get("security_group_id").(string)
@@ -130,7 +131,7 @@ func resourceVPCEndpointSecurityGroupAssociationRead(ctx context.Context, d *sch
 
 func resourceVPCEndpointSecurityGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
 	securityGroupID := d.Get("security_group_id").(string)

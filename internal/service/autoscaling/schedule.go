@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -20,6 +20,7 @@ import (
 
 const ScheduleTimeLayout = "2006-01-02T15:04:05Z"
 
+// @SDKResource("aws_autoscaling_schedule")
 func ResourceSchedule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSchedulePut,
@@ -89,7 +90,7 @@ func ResourceSchedule() *schema.Resource {
 
 func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	name := d.Get("scheduled_action_name").(string)
 	input := &autoscaling.PutScheduledUpdateGroupActionInput{
@@ -150,7 +151,7 @@ func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	sa, err := FindScheduledUpdateGroupAction(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
 
@@ -195,7 +196,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	log.Printf("[INFO] Deleting Auto Scaling Scheduled Action: %s", d.Id())
 	_, err := conn.DeleteScheduledActionWithContext(ctx, &autoscaling.DeleteScheduledActionInput{
@@ -259,7 +260,7 @@ func FindScheduledUpdateGroupAction(ctx context.Context, conn *autoscaling.AutoS
 	})
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ec2_local_gateway_virtual_interface_groups")
 func DataSourceLocalGatewayVirtualInterfaceGroups() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocalGatewayVirtualInterfaceGroupsRead,
@@ -40,12 +41,12 @@ func DataSourceLocalGatewayVirtualInterfaceGroups() *schema.Resource {
 
 func dataSourceLocalGatewayVirtualInterfaceGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput{}
 
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, BuildFiltersDataSource(

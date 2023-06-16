@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_apigatewayv2_model")
 func ResourceModel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceModelCreate,
@@ -72,7 +73,7 @@ func ResourceModel() *schema.Resource {
 
 func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	req := &apigatewayv2.CreateModelInput{
 		ApiId:       aws.String(d.Get("api_id").(string)),
@@ -97,7 +98,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	resp, err := conn.GetModelWithContext(ctx, &apigatewayv2.GetModelInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
@@ -122,7 +123,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	req := &apigatewayv2.UpdateModelInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
@@ -152,7 +153,7 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 model (%s)", d.Id())
 	_, err := conn.DeleteModelWithContext(ctx, &apigatewayv2.DeleteModelInput{

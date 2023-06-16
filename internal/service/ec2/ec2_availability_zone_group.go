@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_ec2_availability_zone_group")
 func ResourceAvailabilityZoneGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAvailabilityZoneGroupCreate,
@@ -44,7 +45,7 @@ func ResourceAvailabilityZoneGroup() *schema.Resource {
 
 func resourceAvailabilityZoneGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	groupName := d.Get("group_name").(string)
 	availabilityZone, err := FindAvailabilityZoneGroupByName(ctx, conn, groupName)
@@ -66,7 +67,7 @@ func resourceAvailabilityZoneGroupCreate(ctx context.Context, d *schema.Resource
 
 func resourceAvailabilityZoneGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	availabilityZone, err := FindAvailabilityZoneGroupByName(ctx, conn, d.Id())
 
@@ -86,7 +87,7 @@ func resourceAvailabilityZoneGroupRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceAvailabilityZoneGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if err := modifyAvailabilityZoneOptInStatus(ctx, conn, d.Id(), d.Get("opt_in_status").(string)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EC2 Availability Zone Group (%s): %s", d.Id(), err)

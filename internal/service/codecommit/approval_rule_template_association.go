@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_codecommit_approval_rule_template_association")
 func ResourceApprovalRuleTemplateAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApprovalRuleTemplateAssociationCreate,
@@ -49,7 +50,7 @@ func ResourceApprovalRuleTemplateAssociation() *schema.Resource {
 
 func resourceApprovalRuleTemplateAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	approvalRuleTemplateName := d.Get("approval_rule_template_name").(string)
 	repositoryName := d.Get("repository_name").(string)
@@ -72,7 +73,7 @@ func resourceApprovalRuleTemplateAssociationCreate(ctx context.Context, d *schem
 
 func resourceApprovalRuleTemplateAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	approvalRuleTemplateName, repositoryName, err := ApprovalRuleTemplateAssociationParseID(d.Id())
 
@@ -100,7 +101,7 @@ func resourceApprovalRuleTemplateAssociationRead(ctx context.Context, d *schema.
 
 func resourceApprovalRuleTemplateAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	approvalRuleTemplateName, repositoryName, err := ApprovalRuleTemplateAssociationParseID(d.Id())
 

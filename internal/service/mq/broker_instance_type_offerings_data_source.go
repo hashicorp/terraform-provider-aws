@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_mq_broker_instance_type_offerings")
 func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBrokerInstanceTypeOfferingsRead,
@@ -78,7 +79,7 @@ func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 }
 
 func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn()
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	input := &mq.DescribeBrokerInstanceOptionsInput{}
 

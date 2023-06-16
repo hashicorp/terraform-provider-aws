@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ram_resource_share_accepter")
 func ResourceResourceShareAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceShareAccepterCreate,
@@ -84,7 +85,7 @@ func ResourceResourceShareAccepter() *schema.Resource {
 
 func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	shareARN := d.Get("share_arn").(string)
 
@@ -101,7 +102,7 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 	}
 
 	input := &ram.AcceptResourceShareInvitationInput{
-		ClientToken:                aws.String(resource.UniqueId()),
+		ClientToken:                aws.String(id.UniqueId()),
 		ResourceShareInvitationArn: invitation.ResourceShareInvitationArn,
 	}
 
@@ -129,7 +130,7 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	accountID := meta.(*conns.AWSClient).AccountID
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	invitation, err := FindResourceShareInvitationByResourceShareARNAndStatus(ctx, conn, d.Id(), ram.ResourceShareInvitationStatusAccepted)
 
@@ -194,7 +195,7 @@ func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	receiverAccountID := d.Get("receiver_account_id").(string)
 
@@ -203,7 +204,7 @@ func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.Resource
 	}
 
 	input := &ram.DisassociateResourceShareInput{
-		ClientToken:      aws.String(resource.UniqueId()),
+		ClientToken:      aws.String(id.UniqueId()),
 		ResourceShareArn: aws.String(d.Id()),
 		Principals:       []*string{aws.String(receiverAccountID)},
 	}

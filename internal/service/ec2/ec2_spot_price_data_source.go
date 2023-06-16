@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ec2_spot_price")
 func DataSourceSpotPrice() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSpotPriceRead,
@@ -44,7 +45,7 @@ func DataSourceSpotPrice() *schema.Resource {
 
 func dataSourceSpotPriceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	now := time.Now()
 	input := &ec2.DescribeSpotPriceHistoryInput{

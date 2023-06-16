@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -27,7 +27,7 @@ func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 	policyName3 := fmt.Sprintf("tf-acc-policy-gpa-basic-3-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupPolicyAttachmentDestroy,
@@ -43,7 +43,7 @@ func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 				ResourceName:      "aws_iam_group_policy_attachment.test-attach",
 				ImportState:       true,
 				ImportStateIdFunc: testAccGroupPolicyAttachmentImportStateIdFunc("aws_iam_group_policy_attachment.test-attach"),
-				// We do not have a way to align IDs since the Create function uses resource.PrefixedUniqueId()
+				// We do not have a way to align IDs since the Create function uses id.PrefixedUniqueId()
 				// Failed state verification, resource with ID GROUP-POLICYARN not found
 				// ImportStateVerify: true,
 				ImportStateCheck: func(s []*terraform.InstanceState) error {
@@ -83,7 +83,7 @@ func testAccCheckGroupPolicyAttachmentExists(ctx context.Context, n string, c in
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 		group := rs.Primary.Attributes["group"]
 
 		attachedPolicies, err := conn.ListAttachedGroupPoliciesWithContext(ctx, &iam.ListAttachedGroupPoliciesInput{

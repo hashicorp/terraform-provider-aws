@@ -11,9 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
@@ -26,7 +26,7 @@ func TestAccS3BucketAnalyticsConfiguration_basic(t *testing.T) {
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
@@ -57,7 +57,7 @@ func TestAccS3BucketAnalyticsConfiguration_removed(t *testing.T) {
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
@@ -88,7 +88,7 @@ func TestAccS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
@@ -139,7 +139,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_empty(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
@@ -163,7 +163,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefix(t *testing.T) {
 	prefixUpdate := fmt.Sprintf("prefix-update-%d/", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
@@ -206,7 +206,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_singleTag(t *testing.T) {
 	tag1Update := fmt.Sprintf("tag-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
@@ -253,7 +253,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_multipleTags(t *testing.T)
 	tag2Update := fmt.Sprintf("tag2-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
@@ -304,7 +304,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefixAndTags(t *testing.T
 	tag2Update := fmt.Sprintf("tag2-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
@@ -350,7 +350,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_remove(t *testing.T) {
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
@@ -382,7 +382,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_empty(t *tes
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
@@ -403,7 +403,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_default(t *t
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
@@ -440,7 +440,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_full(t *test
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
@@ -470,7 +470,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_full(t *test
 
 func testAccCheckBucketAnalyticsConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_analytics_configuration" {
@@ -495,7 +495,7 @@ func testAccCheckBucketAnalyticsConfigurationExists(ctx context.Context, n strin
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 		output, err := conn.GetBucketAnalyticsConfigurationWithContext(ctx, &s3.GetBucketAnalyticsConfigurationInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
 			Id:     aws.String(rs.Primary.Attributes["name"]),
@@ -517,7 +517,7 @@ func testAccCheckBucketAnalyticsConfigurationExists(ctx context.Context, n strin
 
 func testAccCheckBucketAnalyticsConfigurationRemoved(ctx context.Context, name, bucket string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 		return tfs3.WaitForDeleteBucketAnalyticsConfiguration(ctx, conn, bucket, name, 1*time.Minute)
 	}
 }
@@ -731,6 +731,7 @@ resource "aws_s3_bucket" "destination" {
 func TestExpandAnalyticsFilter(t *testing.T) {
 	t.Parallel()
 
+	ctx := context.Background()
 	testCases := map[string]struct {
 		Input    []interface{}
 		Expected *s3.AnalyticsFilter
@@ -841,14 +842,14 @@ func TestExpandAnalyticsFilter(t *testing.T) {
 	}
 
 	for k, tc := range testCases {
-		value := tfs3.ExpandAnalyticsFilter(tc.Input)
+		value := tfs3.ExpandAnalyticsFilter(ctx, tc.Input)
 
 		if value == nil {
 			if tc.Expected == nil {
 				continue
-			} else {
-				t.Errorf("Case %q: Got nil\nExpected:\n%v", k, tc.Expected)
 			}
+
+			t.Errorf("Case %q: Got nil\nExpected:\n%v", k, tc.Expected)
 		}
 
 		if tc.Expected == nil {
@@ -1023,6 +1024,7 @@ func TestExpandStorageClassAnalysis(t *testing.T) {
 func TestFlattenAnalyticsFilter(t *testing.T) {
 	t.Parallel()
 
+	ctx := context.Background()
 	testCases := map[string]struct {
 		Input    *s3.AnalyticsFilter
 		Expected []map[string]interface{}
@@ -1134,7 +1136,7 @@ func TestFlattenAnalyticsFilter(t *testing.T) {
 	}
 
 	for k, tc := range testCases {
-		value := tfs3.FlattenAnalyticsFilter(tc.Input)
+		value := tfs3.FlattenAnalyticsFilter(ctx, tc.Input)
 
 		if !reflect.DeepEqual(value, tc.Expected) {
 			t.Errorf("Case %q: Got:\n%v\n\nExpected:\n%v", k, value, tc.Expected)

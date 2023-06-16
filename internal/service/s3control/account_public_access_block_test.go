@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
@@ -42,7 +42,7 @@ func testAccAccountPublicAccessBlock_basic(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy(ctx),
@@ -73,7 +73,7 @@ func testAccAccountPublicAccessBlock_disappears(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy(ctx),
@@ -96,7 +96,7 @@ func testAccAccountPublicAccessBlock_AccountID(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy(ctx),
@@ -123,7 +123,7 @@ func testAccAccountPublicAccessBlock_BlockPublicACLs(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy(ctx),
@@ -164,7 +164,7 @@ func testAccAccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy(ctx),
@@ -205,7 +205,7 @@ func testAccAccountPublicAccessBlock_IgnorePublicACLs(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy(ctx),
@@ -246,7 +246,7 @@ func testAccAccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy(ctx),
@@ -292,7 +292,7 @@ func testAccCheckAccountPublicAccessBlockExists(ctx context.Context, n string, v
 			return fmt.Errorf("No S3 Account Public Access Block ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
 
 		output, err := tfs3control.FindPublicAccessBlockByAccountID(ctx, conn, rs.Primary.ID)
 
@@ -308,7 +308,7 @@ func testAccCheckAccountPublicAccessBlockExists(ctx context.Context, n string, v
 
 func testAccCheckAccountPublicAccessBlockDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_account_public_access_block" {

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_appsync_api_cache")
 func ResourceAPICache() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPICacheCreate,
@@ -60,7 +61,7 @@ func ResourceAPICache() *schema.Resource {
 
 func resourceAPICacheCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID := d.Get("api_id").(string)
 
@@ -95,7 +96,7 @@ func resourceAPICacheCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAPICacheRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	cache, err := FindAPICacheByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -120,7 +121,7 @@ func resourceAPICacheRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceAPICacheUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	params := &appsync.UpdateApiCacheInput{
 		ApiId: aws.String(d.Id()),
@@ -152,7 +153,7 @@ func resourceAPICacheUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAPICacheDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	input := &appsync.DeleteApiCacheInput{
 		ApiId: aws.String(d.Id()),

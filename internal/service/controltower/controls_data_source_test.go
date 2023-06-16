@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/controltower"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -19,7 +19,7 @@ func TestAccControlTowerControlsDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
@@ -39,7 +39,7 @@ func TestAccControlTowerControlsDataSource_basic(t *testing.T) {
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	// leverage the control tower created "aws-controltower-BaselineCloudTrail" to confirm control tower is deployed
 	var trails []string
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn(ctx)
 
 	input := &cloudtrail.ListTrailsInput{}
 	err := conn.ListTrailsPagesWithContext(ctx, input, func(page *cloudtrail.ListTrailsOutput, lastPage bool) bool {

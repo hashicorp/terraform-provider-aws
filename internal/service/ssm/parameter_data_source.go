@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ssm_parameter")
 func DataSourceParameter() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataParameterRead,
@@ -48,7 +49,7 @@ func DataSourceParameter() *schema.Resource {
 
 func dataParameterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	name := d.Get("name").(string)
 

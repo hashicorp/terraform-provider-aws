@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_backup_selection")
 func DataSourceSelection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSelectionRead,
@@ -43,7 +44,7 @@ func DataSourceSelection() *schema.Resource {
 
 func dataSourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	input := &backup.GetBackupSelectionInput{
 		BackupPlanId: aws.String(d.Get("plan_id").(string)),
@@ -52,7 +53,7 @@ func dataSourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	resp, err := conn.GetBackupSelectionWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error getting Backup Selection: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Backup Selection: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.SelectionId))

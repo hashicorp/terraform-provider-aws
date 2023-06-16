@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -34,6 +34,8 @@ const (
 	ResNameTable                  = "Table"
 )
 
+// @SDKResource("aws_dynamodb_table", name="Table")
+// @Tags(identifierAttribute="arn")
 func ResourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -80,7 +82,7 @@ func ResourceTable() *schema.Resource {
 			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				if diff.Id() != "" && diff.HasChange("stream_enabled") {
 					if err := diff.SetNewComputed("stream_arn"); err != nil {
-						return fmt.Errorf("error setting stream_arn to computed: %s", err)
+						return fmt.Errorf("setting stream_arn to computed: %s", err)
 					}
 				}
 				return nil
@@ -144,6 +146,10 @@ func ResourceTable() *schema.Resource {
 				Optional:     true,
 				Default:      dynamodb.BillingModeProvisioned,
 				ValidateFunc: validation.StringInSlice(dynamodb.BillingMode_Values(), false),
+			},
+			"deletion_protection_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"global_secondary_index": {
 				Type:     schema.TypeSet,
@@ -355,8 +361,12 @@ func ResourceTable() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(append(dynamodb.StreamViewType_Values(), ""), false),
 			},
 			"table_class": {
-				Type:         schema.TypeString,
-				Optional:     true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  dynamodb.TableClassStandard,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old == "" && new == dynamodb.TableClassStandard
+				},
 				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -392,9 +402,7 @@ func ResourceTable() *schema.Resource {
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get(names.AttrTags).(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	tableName := d.Get(names.AttrName).(string)
 	keySchemaMap := map[string]interface{}{
@@ -480,10 +488,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			BillingMode: aws.String(d.Get("billing_mode").(string)),
 			KeySchema:   expandKeySchema(keySchemaMap),
 			TableName:   aws.String(tableName),
-		}
-
-		if len(tags) > 0 {
-			input.Tags = Tags(tags.IgnoreAWS())
+			Tags:        getTagsIn(ctx),
 		}
 
 		billingMode := d.Get("billing_mode").(string)
@@ -498,6 +503,10 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		if v, ok := d.GetOk("attribute"); ok {
 			aSet := v.(*schema.Set)
 			input.AttributeDefinitions = expandAttributes(aSet.List())
+		}
+
+		if v, ok := d.GetOk("deletion_protection_enabled"); ok {
+			input.DeletionProtectionEnabled = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("local_secondary_index"); ok {
@@ -594,7 +603,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Id(), fmt.Errorf("replicas: %w", err))
 		}
 
-		if err := updateReplicaTags(ctx, conn, aws.StringValue(output.TableArn), v.List(), tags, meta.(*conns.AWSClient).TerraformVersion); err != nil {
+		if err := updateReplicaTags(ctx, conn, aws.StringValue(output.TableArn), v.List(), KeyValueTags(ctx, getTagsIn(ctx)), meta.(*conns.AWSClient).TerraformVersion); err != nil {
 			return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Id(), fmt.Errorf("replica tags: %w", err))
 		}
 	}
@@ -604,7 +613,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	table, err := FindTableByName(ctx, conn, d.Id())
 
@@ -626,6 +635,8 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	} else {
 		d.Set("billing_mode", dynamodb.BillingModeProvisioned)
 	}
+
+	d.Set("deletion_protection_enabled", table.DeletionProtectionEnabled)
 
 	if table.ProvisionedThroughput != nil {
 		d.Set("write_capacity", table.ProvisionedThroughput.WriteCapacityUnits)
@@ -655,8 +666,8 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if table.StreamSpecification != nil {
-		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
 		d.Set("stream_enabled", table.StreamSpecification.StreamEnabled)
+		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
 	} else {
 		d.Set("stream_enabled", false)
 		d.Set("stream_view_type", d.Get("stream_view_type").(string))
@@ -692,7 +703,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if table.TableClassSummary != nil {
 		d.Set("table_class", table.TableClassSummary.TableClass)
 	} else {
-		d.Set("table_class", nil)
+		d.Set("table_class", dynamodb.TableClassStandard)
 	}
 
 	pitrOut, err := conn.DescribeContinuousBackupsWithContext(ctx, &dynamodb.DescribeContinuousBackupsInput{
@@ -719,32 +730,12 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return create.DiagSettingError(names.DynamoDB, ResNameTable, d.Id(), "ttl", err)
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	tags, err := ListTags(ctx, conn, d.Get(names.AttrARN).(string))
-	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
-	if err != nil && !(tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id(), fmt.Errorf("tags: %w", err))
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagSettingError(names.DynamoDB, ResNameTable, d.Id(), names.AttrTags, err)
-	}
-
-	if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
-		return create.DiagSettingError(names.DynamoDB, ResNameTable, d.Id(), names.AttrTagsAll, err)
-	}
-
 	return diags
 }
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 	o, n := d.GetChange("billing_mode")
 	billingMode := n.(string)
 	oldBillingMode := o.(string)
@@ -792,6 +783,20 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
+	// Table Class cannot be changed concurrently with other values
+	if d.HasChange("table_class") {
+		_, err := conn.UpdateTableWithContext(ctx, &dynamodb.UpdateTableInput{
+			TableName:  aws.String(d.Id()),
+			TableClass: aws.String(d.Get("table_class").(string)),
+		})
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) table class: %s", d.Id(), err)
+		}
+		if _, err := waitTableActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) table class: waiting for completion: %s", d.Id(), err)
+		}
+	}
+
 	hasTableUpdate := false
 	input := &dynamodb.UpdateTableInput{
 		TableName: aws.String(d.Id()),
@@ -807,6 +812,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		input.BillingMode = aws.String(billingMode)
 		input.ProvisionedThroughput = expandProvisionedThroughputUpdate(d.Id(), capacityMap, billingMode, oldBillingMode)
+	}
+
+	if d.HasChange("deletion_protection_enabled") {
+		hasTableUpdate = true
+		input.DeletionProtectionEnabled = aws.Bool(d.Get("deletion_protection_enabled").(bool))
 	}
 
 	// make change when
@@ -847,11 +857,6 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			hasTableUpdate = true
 			input.GlobalSecondaryIndexUpdates = append(input.GlobalSecondaryIndexUpdates, gsiUpdate)
 		}
-	}
-
-	if d.HasChange("table_class") {
-		hasTableUpdate = true
-		input.TableClass = aws.String(d.Get("table_class").(string))
 	}
 
 	if hasTableUpdate {
@@ -982,11 +987,6 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange(names.AttrTagsAll) {
 		replicaTagsChange = true
-
-		o, n := d.GetChange(names.AttrTagsAll)
-		if err := UpdateTags(ctx, conn, d.Get(names.AttrARN).(string), o, n); err != nil {
-			return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTable, d.Id(), err)
-		}
 	}
 
 	if replicaTagsChange {
@@ -1008,7 +1008,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	if replicas := d.Get("replica").(*schema.Set).List(); len(replicas) > 0 {
 		log.Printf("[DEBUG] Deleting DynamoDB Table replicas: %s", d.Id())
@@ -1141,23 +1141,23 @@ func createReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 			}
 		}
 
-		err := resource.RetryContext(ctx, maxDuration(replicaUpdateTimeout, timeout), func() *resource.RetryError {
+		err := retry.RetryContext(ctx, maxDuration(replicaUpdateTimeout, timeout), func() *retry.RetryError {
 			_, err := conn.UpdateTableWithContext(ctx, input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 				if tfawserr.ErrMessageContains(err, "ValidationException", "Replica specified in the Replica Update or Replica Delete action of the request was not found") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 				if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -1218,12 +1218,12 @@ func updateReplicaTags(ctx context.Context, conn *dynamodb.DynamoDB, rn string, 
 				return fmt.Errorf("per region ARN for replica (%s): %w", region, err)
 			}
 
-			oldTags, err := ListTags(ctx, conn, repARN)
+			oldTags, err := listTags(ctx, conn, repARN)
 			if err != nil {
 				return fmt.Errorf("listing tags (%s): %w", repARN, err)
 			}
 
-			if err := UpdateTags(ctx, conn, repARN, oldTags, newTags); err != nil {
+			if err := updateTags(ctx, conn, repARN, oldTags, newTags); err != nil {
 				return fmt.Errorf("updating tags: %w", err)
 			}
 		}
@@ -1276,14 +1276,14 @@ func updatePITR(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, 
 		conn = dynamodb.New(session)
 	}
 
-	err := resource.RetryContext(ctx, updateTableContinuousBackupsTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, updateTableContinuousBackupsTimeout, func() *retry.RetryError {
 		_, err := conn.UpdateContinuousBackupsWithContext(ctx, input)
 		if err != nil {
 			// Backups are still being enabled for this newly created table
 			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeContinuousBackupsUnavailableException, "Backups are being enabled") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -1403,7 +1403,7 @@ func updateReplica(ctx context.Context, d *schema.ResourceData, conn *dynamodb.D
 	return nil
 }
 
-func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dynamodb.GlobalSecondaryIndexUpdate, e error) {
+func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) ([]*dynamodb.GlobalSecondaryIndexUpdate, error) {
 	// Transform slices into maps
 	oldGsis := make(map[string]interface{})
 	for _, gsidata := range oldGsi {
@@ -1414,11 +1414,13 @@ func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dyn
 	for _, gsidata := range newGsi {
 		m := gsidata.(map[string]interface{})
 		// validate throughput input early, to avoid unnecessary processing
-		if e = validateGSIProvisionedThroughput(m, billingMode); e != nil {
-			return
+		if err := validateGSIProvisionedThroughput(m, billingMode); err != nil {
+			return nil, err
 		}
 		newGsis[m[names.AttrName].(string)] = m
 	}
+
+	var ops []*dynamodb.GlobalSecondaryIndexUpdate
 
 	for _, data := range newGsi {
 		newMap := data.(map[string]interface{})
@@ -1570,28 +1572,28 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 				},
 			}
 
-			err := resource.RetryContext(ctx, updateTableTimeout, func() *resource.RetryError {
+			err := retry.RetryContext(ctx, updateTableTimeout, func() *retry.RetryError {
 				_, err := conn.UpdateTableWithContext(ctx, input)
 				notFoundRetries := 0
 				if err != nil {
 					if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
 					if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 						notFoundRetries++
 						if notFoundRetries > 3 {
-							return resource.NonRetryableError(err)
+							return retry.NonRetryableError(err)
 						}
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
 					if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
 					if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
 
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 				return nil
 			})

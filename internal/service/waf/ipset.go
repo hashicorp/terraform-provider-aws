@@ -19,6 +19,7 @@ import (
 // WAF requires UpdateIPSet operations be split into batches of 1000 Updates
 const ipSetUpdatesLimit = 1000
 
+// @SDKResource("aws_waf_ipset")
 func ResourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPSetCreate,
@@ -66,7 +67,7 @@ func ResourceIPSet() *schema.Resource {
 
 func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -94,7 +95,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	params := &waf.GetIPSetInput{
 		IPSetId: aws.String(d.Id()),
@@ -138,7 +139,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	if d.HasChange("ip_set_descriptors") {
 		o, n := d.GetChange("ip_set_descriptors")
@@ -155,7 +156,7 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	oldDescriptors := d.Get("ip_set_descriptors").(*schema.Set).List()
 

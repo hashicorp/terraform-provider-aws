@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dx_gateway_association")
 func ResourceGatewayAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayAssociationCreate,
@@ -113,7 +114,7 @@ func ResourceGatewayAssociation() *schema.Resource {
 
 func resourceGatewayAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	var associationID string
 	directConnectGatewayID := d.Get("dx_gateway_id").(string)
@@ -174,7 +175,7 @@ func resourceGatewayAssociationCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceGatewayAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	associationID := d.Get("dx_gateway_association_id").(string)
 
@@ -206,7 +207,7 @@ func resourceGatewayAssociationRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceGatewayAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	associationID := d.Get("dx_gateway_association_id").(string)
 	input := &directconnect.UpdateDirectConnectGatewayAssociationInput{
@@ -240,7 +241,7 @@ func resourceGatewayAssociationUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceGatewayAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	associationID := d.Get("dx_gateway_association_id").(string)
 
@@ -265,7 +266,7 @@ func resourceGatewayAssociationDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceGatewayAssociationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	parts := strings.Split(d.Id(), "/")
 

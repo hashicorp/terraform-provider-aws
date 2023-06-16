@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_network_acl_rule")
 func ResourceNetworkACLRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkACLRuleCreate,
@@ -118,7 +119,7 @@ func ResourceNetworkACLRule() *schema.Resource {
 
 func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	protocol := d.Get("protocol").(string)
 	protocolNumber, err := networkACLProtocolNumber(protocol)
@@ -174,7 +175,7 @@ func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	egress := d.Get("egress").(bool)
 	naclID := d.Get("network_acl_id").(string)
@@ -229,7 +230,7 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceNetworkACLRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Network ACL Rule: %s", d.Id())
 	_, err := conn.DeleteNetworkAclEntryWithContext(ctx, &ec2.DeleteNetworkAclEntryInput{

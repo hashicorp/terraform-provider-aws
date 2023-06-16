@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/licensemanager"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflicensemanager "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
@@ -33,7 +33,7 @@ func TestAccLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 	resourceName := "aws_licensemanager_license_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLicenseConfigurationDestroy(ctx),
@@ -69,14 +69,14 @@ func TestAccLicenseManagerLicenseConfiguration_disappears(t *testing.T) {
 	resourceName := "aws_licensemanager_license_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLicenseConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLicenseConfigurationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflicensemanager.ResourceLicenseConfiguration(), resourceName),
 				),
@@ -93,14 +93,14 @@ func TestAccLicenseManagerLicenseConfiguration_tags(t *testing.T) {
 	resourceName := "aws_licensemanager_license_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLicenseConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLicenseConfigurationConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -113,7 +113,7 @@ func TestAccLicenseManagerLicenseConfiguration_tags(t *testing.T) {
 			},
 			{
 				Config: testAccLicenseConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -122,7 +122,7 @@ func TestAccLicenseManagerLicenseConfiguration_tags(t *testing.T) {
 			},
 			{
 				Config: testAccLicenseConfigurationConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -140,7 +140,7 @@ func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
 	resourceName := "aws_licensemanager_license_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLicenseConfigurationDestroy(ctx),
@@ -197,7 +197,7 @@ func testAccCheckLicenseConfigurationExists(ctx context.Context, n string, v *li
 			return fmt.Errorf("No License Manager License Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
 
 		output, err := tflicensemanager.FindLicenseConfigurationByARN(ctx, conn, rs.Primary.ID)
 
@@ -213,7 +213,7 @@ func testAccCheckLicenseConfigurationExists(ctx context.Context, n string, v *li
 
 func testAccCheckLicenseConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_licensemanager_license_configuration" {

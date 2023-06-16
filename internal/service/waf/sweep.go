@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -137,7 +137,7 @@ func sweepByteMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.(*conns.AWSClient).WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -212,7 +212,7 @@ func sweepGeoMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.(*conns.AWSClient).WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -287,7 +287,7 @@ func sweepIPSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.(*conns.AWSClient).WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -362,7 +362,7 @@ func sweepRateBasedRules(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.(*conns.AWSClient).WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -437,7 +437,7 @@ func sweepRegexMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.(*conns.AWSClient).WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -512,7 +512,7 @@ func sweepRegexPatternSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.(*conns.AWSClient).WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -587,7 +587,7 @@ func sweepRuleGroups(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.(*conns.AWSClient).WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -662,7 +662,7 @@ func sweepRules(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.(*conns.AWSClient).WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -741,7 +741,7 @@ func sweepSizeConstraintSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.(*conns.AWSClient).WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -816,7 +816,7 @@ func sweepSQLInjectionMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.(*conns.AWSClient).WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -891,7 +891,7 @@ func sweepWebACLs(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.(*conns.AWSClient).WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -970,7 +970,7 @@ func sweepXSSMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn()
+	conn := client.(*conns.AWSClient).WAFConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group

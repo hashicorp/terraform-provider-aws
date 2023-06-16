@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_waf_rate_based_rule")
 func DataSourceRateBasedRule() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRateBasedRuleRead,
@@ -26,7 +27,7 @@ func DataSourceRateBasedRule() *schema.Resource {
 
 func dataSourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 	name := d.Get("name").(string)
 
 	rules := make([]*waf.RuleSummary, 0)

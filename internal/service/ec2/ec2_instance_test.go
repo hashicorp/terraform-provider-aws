@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -16,10 +17,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -188,7 +189,7 @@ func TestAccEC2Instance_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		// No subnet_id specified requires default VPC with default subnets.
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckHasDefaultVPCDefaultSubnets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -221,7 +222,7 @@ func TestAccEC2Instance_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		// No subnet_id specified requires default VPC with default subnets.
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckHasDefaultVPCDefaultSubnets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -248,7 +249,7 @@ func TestAccEC2Instance_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		// No subnet_id specified requires default VPC with default subnets.
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckHasDefaultVPCDefaultSubnets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -297,7 +298,7 @@ func TestAccEC2Instance_inDefaultVPCBySgName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -325,7 +326,7 @@ func TestAccEC2Instance_inDefaultVPCBySgID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -353,7 +354,7 @@ func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -398,7 +399,7 @@ func TestAccEC2Instance_EBSBlockDevice_kmsKeyARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -422,14 +423,14 @@ func TestAccEC2Instance_EBSBlockDevice_kmsKeyARN(t *testing.T) {
 func TestAccEC2Instance_EBSBlockDevice_invalidIopsForVolumeType(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccInstanceConfig_ebsBlockDeviceInvalidIOPS,
-				ExpectError: regexp.MustCompile(`error creating resource: iops attribute not supported for ebs_block_device with volume_type gp2`),
+				ExpectError: regexp.MustCompile(`creating resource: iops attribute not supported for ebs_block_device with volume_type gp2`),
 			},
 		},
 	})
@@ -438,14 +439,14 @@ func TestAccEC2Instance_EBSBlockDevice_invalidIopsForVolumeType(t *testing.T) {
 func TestAccEC2Instance_EBSBlockDevice_invalidThroughputForVolumeType(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccInstanceConfig_ebsBlockDeviceInvalidThroughput,
-				ExpectError: regexp.MustCompile(`error creating resource: throughput attribute not supported for ebs_block_device with volume_type gp2`),
+				ExpectError: regexp.MustCompile(`creating resource: throughput attribute not supported for ebs_block_device with volume_type gp2`),
 			},
 		},
 	})
@@ -461,7 +462,7 @@ func TestAccEC2Instance_EBSBlockDevice_RootBlockDevice_removed(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -488,7 +489,7 @@ func TestAccEC2Instance_RootBlockDevice_kmsKeyARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -519,7 +520,7 @@ func TestAccEC2Instance_userDataBase64(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -548,7 +549,7 @@ func TestAccEC2Instance_userDataBase64_updateWithBashFile(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -583,7 +584,7 @@ func TestAccEC2Instance_userDataBase64_updateWithZipFile(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -618,7 +619,7 @@ func TestAccEC2Instance_userDataBase64_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -671,7 +672,7 @@ func TestAccEC2Instance_gp2IopsDevice(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -705,14 +706,14 @@ func TestAccEC2Instance_gp2WithIopsValue(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccInstanceConfig_gp2IOPSValue(rName),
-				ExpectError: regexp.MustCompile(`error creating resource: iops attribute not supported for root_block_device with volume_type gp2`),
+				ExpectError: regexp.MustCompile(`creating resource: iops attribute not supported for root_block_device with volume_type gp2`),
 			},
 		},
 	})
@@ -767,7 +768,7 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 	rootVolumeSize := "11"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -844,7 +845,7 @@ func TestAccEC2Instance_rootInstanceStore(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -901,7 +902,7 @@ func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -957,7 +958,7 @@ func TestAccEC2Instance_sourceDestCheck(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1000,7 +1001,7 @@ func TestAccEC2Instance_autoRecovery(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1038,7 +1039,7 @@ func TestAccEC2Instance_disableAPIStop(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1074,7 +1075,7 @@ func TestAccEC2Instance_disableAPITerminationFinalFalse(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1110,7 +1111,7 @@ func TestAccEC2Instance_disableAPITerminationFinalTrue(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1139,7 +1140,7 @@ func TestAccEC2Instance_dedicatedInstance(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1174,7 +1175,7 @@ func TestAccEC2Instance_outpost(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1203,7 +1204,7 @@ func TestAccEC2Instance_placementGroup(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1232,7 +1233,7 @@ func TestAccEC2Instance_placementPartitionNumber(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1262,7 +1263,7 @@ func TestAccEC2Instance_IPv6_supportAddressCount(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1289,7 +1290,7 @@ func TestAccEC2Instance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1309,7 +1310,7 @@ func TestAccEC2Instance_IPv6_supportAddressCountWithIPv4(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1338,7 +1339,7 @@ func TestAccEC2Instance_networkInstanceSecurityGroups(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1366,7 +1367,7 @@ func TestAccEC2Instance_networkInstanceRemovingAllSecurityGroups(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1405,7 +1406,7 @@ func TestAccEC2Instance_networkInstanceVPCSecurityGroupIDs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1435,7 +1436,7 @@ func TestAccEC2Instance_BlockDeviceTags_volumeTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1489,7 +1490,7 @@ func TestAccEC2Instance_BlockDeviceTags_withAttachedVolume(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1539,7 +1540,7 @@ func TestAccEC2Instance_BlockDeviceTags_ebsAndRoot(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1608,7 +1609,7 @@ func TestAccEC2Instance_instanceProfileChange(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1666,7 +1667,7 @@ func TestAccEC2Instance_withIAMInstanceProfile(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1696,7 +1697,7 @@ func TestAccEC2Instance_withIAMInstanceProfilePath(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1734,7 +1735,7 @@ func TestAccEC2Instance_privateIP(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1773,7 +1774,7 @@ func TestAccEC2Instance_associatePublicIPAndPrivateIP(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1814,7 +1815,7 @@ func TestAccEC2Instance_Empty_privateIP(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1843,7 +1844,7 @@ func TestAccEC2Instance_PrivateDNSNameOptions_computed(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1870,20 +1871,20 @@ func TestAccEC2Instance_PrivateDNSNameOptions_computed(t *testing.T) {
 
 func TestAccEC2Instance_PrivateDNSNameOptions_configured(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v1, v2, v3 ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_PrivateDNSNameOptions_configured(rName),
+				Config: testAccInstanceConfig_PrivateDNSNameOptions_configured(rName, false, true, "ip-name"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "false"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "true"),
@@ -1895,6 +1896,35 @@ func TestAccEC2Instance_PrivateDNSNameOptions_configured(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_PrivateDNSNameOptions_configured(rName, true, true, "ip-name"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.hostname_type", "ip-name"),
+				),
+			},
+			// "InvalidParameterValue: Cannot modify hostname-type for running instances".
+			{
+				Config: testAccInstanceConfig_PrivateDNSNameOptions_configured(rName, true, true, "ip-name"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStopInstance(ctx, &v2),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_PrivateDNSNameOptions_configured(rName, true, true, "resource-name"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v3),
+					testAccCheckInstanceNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.hostname_type", "resource-name"),
+				),
 			},
 		},
 	})
@@ -1915,7 +1945,7 @@ func TestAccEC2Instance_keyPairCheck(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1938,7 +1968,7 @@ func TestAccEC2Instance_rootBlockDeviceMismatch(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -1977,7 +2007,7 @@ func TestAccEC2Instance_forceNewAndTagsDrift(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2014,7 +2044,7 @@ func TestAccEC2Instance_changeInstanceType(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2056,7 +2086,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserData(t *testing.T) {
 	expectedUserDataUpdated := hex.EncodeToString(hash2[:])
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2094,7 +2124,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserDataBase64(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2132,7 +2162,7 @@ func TestAccEC2Instance_EBSRootDevice_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2169,7 +2199,7 @@ func TestAccEC2Instance_EBSRootDevice_modifySize(t *testing.T) {
 	updatedSize := "32"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2211,7 +2241,7 @@ func TestAccEC2Instance_EBSRootDevice_modifyType(t *testing.T) {
 	updatedType := "standard"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2254,7 +2284,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io1(t *testing.T) {
 	updatedIOPS := "200"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2299,7 +2329,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io2(t *testing.T) {
 	updatedIOPS := "200"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2344,7 +2374,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyThroughput_gp3(t *testing.T) {
 	updatedThroughput := "300"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2388,7 +2418,7 @@ func TestAccEC2Instance_EBSRootDevice_modifyDeleteOnTermination(t *testing.T) {
 	updatedDeleteOnTermination := "true"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2435,7 +2465,7 @@ func TestAccEC2Instance_EBSRootDevice_modifyAll(t *testing.T) {
 	updatedDeleteOnTermination := "true"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2477,7 +2507,7 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifySize(t *testing.
 	updatedRootVolumeSize := "14"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2532,7 +2562,7 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifyDeleteOnTerminat
 	updatedDeleteOnTermination := "true"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2584,7 +2614,7 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2654,7 +2684,7 @@ func TestAccEC2Instance_gp3RootBlockDevice(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2690,7 +2720,7 @@ func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2727,7 +2757,7 @@ func TestAccEC2Instance_networkCardIndex(t *testing.T) {
 	// Only specialized (and expensive) instance types support multiple network cards (and hence network_card_index > 0).
 	// Don't attempt to test with such instance types.
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2762,7 +2792,7 @@ func TestAccEC2Instance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2797,7 +2827,7 @@ func TestAccEC2Instance_addSecondaryInterface(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2837,7 +2867,7 @@ func TestAccEC2Instance_addSecurityGroupNetworkInterface(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2874,7 +2904,7 @@ func TestAccEC2Instance_NewNetworkInterface_publicIPAndSecondaryPrivateIPs(t *te
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2916,7 +2946,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 	secondaryIPs := fmt.Sprintf("%q, %q", "10.1.1.42", "10.1.1.43")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2949,7 +2979,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 	secondaryIPs := fmt.Sprintf("%s, %q", secondaryIP, "10.1.1.43")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -2998,7 +3028,7 @@ func TestAccEC2Instance_NewNetworkInterface_privateIPAndSecondaryPrivateIPs(t *t
 	secondaryIPs := fmt.Sprintf("%q, %q", "10.1.1.43", "10.1.1.44")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3032,7 +3062,7 @@ func TestAccEC2Instance_NewNetworkInterface_privateIPAndSecondaryPrivateIPsUpdat
 	secondaryIPs := fmt.Sprintf("%s, %q", secondaryIP, "10.1.1.44")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3079,7 +3109,7 @@ func TestAccEC2Instance_AssociatePublic_defaultPrivate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3110,7 +3140,7 @@ func TestAccEC2Instance_AssociatePublic_defaultPublic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3141,7 +3171,7 @@ func TestAccEC2Instance_AssociatePublic_explicitPublic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3172,7 +3202,7 @@ func TestAccEC2Instance_AssociatePublic_explicitPrivate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3203,7 +3233,7 @@ func TestAccEC2Instance_AssociatePublic_overridePublic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3234,7 +3264,7 @@ func TestAccEC2Instance_AssociatePublic_overridePrivate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3267,7 +3297,7 @@ func TestAccEC2Instance_LaunchTemplate_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3297,7 +3327,7 @@ func TestAccEC2Instance_LaunchTemplate_overrideTemplate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3323,7 +3353,7 @@ func TestAccEC2Instance_LaunchTemplate_setSpecificVersion(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3357,7 +3387,7 @@ func TestAccEC2Instance_LaunchTemplateModifyTemplate_defaultVersion(t *testing.T
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3391,7 +3421,7 @@ func TestAccEC2Instance_LaunchTemplate_updateTemplateVersion(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3425,7 +3455,7 @@ func TestAccEC2Instance_LaunchTemplate_swapIDAndName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3459,7 +3489,7 @@ func TestAccEC2Instance_LaunchTemplate_withIAMInstanceProfile(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3484,7 +3514,7 @@ func TestAccEC2Instance_LaunchTemplate_spotAndStop(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3512,7 +3542,7 @@ func TestAccEC2Instance_GetPasswordData_falseToTrue(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3556,7 +3586,7 @@ func TestAccEC2Instance_GetPasswordData_trueToFalse(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3592,6 +3622,432 @@ func TestAccEC2Instance_GetPasswordData_trueToFalse(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspecified(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2, v3, v4 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// AMD SEV-SNP currently only supported in us-east-2
+			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					// empty string set if amd_sev_snp is not specified
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				// test DiffSuppressFunc to suppress "" to "disabled"
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					// Since read is not triggered, empty string is returned
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ""),
+				),
+			},
+			{
+				// expect recreation when it is enabled
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v3),
+					testAccCheckInstanceRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+				),
+			},
+			{
+				// expect no recreation if the cpu options block is removed - amd_sev_snp should still be enabled
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v4),
+					testAccCheckInstanceNotRecreated(&v3, &v4),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspecified(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2, v3, v4 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// AMD SEV-SNP currently only supported in us-east-2
+			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					// API returns empty string if amd_sev_snp is not specified
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				// expect recreation when it is enabled
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+				),
+			},
+			{
+				// expect recreation when it is disabled
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v3),
+					testAccCheckInstanceRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+				),
+			},
+			{
+				// expect no recreation if the cpu options block is removed - amd_sev_snp should still be disabled
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v4),
+					testAccCheckInstanceNotRecreated(&v3, &v4),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsAmdSevSnpEnabledToDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// AMD SEV-SNP currently only supported in us-east-2
+			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsAmdSevSnpDisabledToEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// AMD SEV-SNP currently only supported in us-east-2
+			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	originalCoreCount := 2
+	updatedCoreCount := 3
+	originalThreadsPerCore := 2
+	updatedThreadsPerCore := 1
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// AMD SEV-SNP currently only supported in us-east-2
+			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, ec2.AmdSevSnpSpecificationEnabled, originalCoreCount, originalThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(originalCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(originalThreadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(originalCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(originalThreadsPerCore)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, ec2.AmdSevSnpSpecificationDisabled, updatedCoreCount, updatedThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(updatedCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(updatedCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsCoreThreads(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	originalCoreCount := 2
+	updatedCoreCount := 3
+	originalThreadsPerCore := 2
+	updatedThreadsPerCore := 1
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, originalCoreCount, originalThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(originalCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(originalThreadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(originalCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(originalThreadsPerCore)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, updatedCoreCount, updatedThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(updatedCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(updatedCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsCoreThreadsMigration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	coreCount := 2
+	threadsPerCore := 2
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsCoreThreadsDeprecated(rName, coreCount, threadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(coreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(threadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(coreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(threadsPerCore)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				// EC2 instance should not be recreated
+				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, coreCount, threadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(coreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(threadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(coreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(threadsPerCore)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsCoreThreadsUnspecifiedToSpecified(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	defaultCoreCount := 4
+	defaultThreadsPerCore := 2
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(defaultCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(defaultThreadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(defaultCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(defaultThreadsPerCore)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				// EC2 instance should not be recreated
+				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, defaultCoreCount, defaultThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(defaultCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(defaultThreadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(defaultCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(defaultThreadsPerCore)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_CreditSpecificationEmpty_nonBurstable(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Instance
@@ -3599,7 +4055,7 @@ func TestAccEC2Instance_CreditSpecificationEmpty_nonBurstable(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3628,7 +4084,7 @@ func TestAccEC2Instance_CreditSpecificationUnspecifiedToEmpty_nonBurstable(t *te
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3662,7 +4118,7 @@ func TestAccEC2Instance_CreditSpecification_unspecifiedDefaultsToStandard(t *tes
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3692,7 +4148,7 @@ func TestAccEC2Instance_CreditSpecification_standardCPUCredits(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3730,7 +4186,7 @@ func TestAccEC2Instance_CreditSpecification_unlimitedCPUCredits(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3768,7 +4224,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t2(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3798,7 +4254,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t3(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3828,7 +4284,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t3a(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3858,7 +4314,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t4g(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3888,7 +4344,7 @@ func TestAccEC2Instance_CreditSpecification_updateCPUCredits(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3934,7 +4390,7 @@ func TestAccEC2Instance_CreditSpecification_isNotAppliedToNonBurstable(t *testin
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3962,7 +4418,7 @@ func TestAccEC2Instance_CreditSpecificationT3_unspecifiedDefaultsToUnlimited(t *
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -3992,7 +4448,7 @@ func TestAccEC2Instance_CreditSpecificationT3_standardCPUCredits(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4030,7 +4486,7 @@ func TestAccEC2Instance_CreditSpecificationT3_unlimitedCPUCredits(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4068,7 +4524,7 @@ func TestAccEC2Instance_CreditSpecificationT3_updateCPUCredits(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4114,7 +4570,7 @@ func TestAccEC2Instance_CreditSpecificationStandardCPUCredits_t2Tot3Taint(t *tes
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4153,7 +4609,7 @@ func TestAccEC2Instance_CreditSpecificationUnlimitedCPUCredits_t2Tot3Taint(t *te
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4192,7 +4648,7 @@ func TestAccEC2Instance_UserData(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4220,7 +4676,7 @@ func TestAccEC2Instance_UserData_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4254,7 +4710,7 @@ func TestAccEC2Instance_UserData_stringToEncodedString(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4288,7 +4744,7 @@ func TestAccEC2Instance_UserData_emptyStringToUnspecified(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4322,7 +4778,7 @@ func TestAccEC2Instance_UserData_unspecifiedToEmptyString(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4356,7 +4812,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4392,7 +4848,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On_Base64(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4428,7 +4884,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4464,7 +4920,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off_Base64(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4500,7 +4956,7 @@ func TestAccEC2Instance_hibernation(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4537,13 +4993,24 @@ func TestAccEC2Instance_metadataOptions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_metadataOptions(rName),
+				Config: testAccInstanceConfig_metadataOptionsDefaults(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "optional"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "disabled"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_metadataOptionsDisabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
@@ -4592,7 +5059,7 @@ func TestAccEC2Instance_enclaveOptions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4631,7 +5098,7 @@ func TestAccEC2Instance_CapacityReservation_unspecifiedDefaultsToOpen(t *testing
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4668,7 +5135,7 @@ func TestAccEC2Instance_CapacityReservationPreference_open(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4699,7 +5166,7 @@ func TestAccEC2Instance_CapacityReservationPreference_none(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4730,7 +5197,7 @@ func TestAccEC2Instance_CapacityReservation_targetID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4762,7 +5229,7 @@ func TestAccEC2Instance_CapacityReservation_modifyPreference(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4803,7 +5270,7 @@ func TestAccEC2Instance_CapacityReservation_modifyTarget(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -4864,7 +5331,7 @@ func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckInstanceDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_instance" {
@@ -4903,7 +5370,7 @@ func testAccCheckInstanceExistsWithProvider(ctx context.Context, n string, v *ec
 			return fmt.Errorf("No EC2 Instance ID is set")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).EC2Conn()
+		conn := providerF().Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindInstanceByID(ctx, conn, rs.Primary.ID)
 
@@ -4919,7 +5386,7 @@ func testAccCheckInstanceExistsWithProvider(ctx context.Context, n string, v *ec
 
 func testAccCheckStopInstance(ctx context.Context, v *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		return tfec2.StopInstance(ctx, conn, aws.StringValue(v.InstanceId), 10*time.Minute)
 	}
@@ -4927,7 +5394,7 @@ func testAccCheckStopInstance(ctx context.Context, v *ec2.Instance) resource.Tes
 
 func testAccCheckDetachVolumes(ctx context.Context, instance *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, v := range instance.BlockDeviceMappings {
 			if v.Ebs != nil && v.Ebs.VolumeId != nil {
@@ -4979,10 +5446,12 @@ func TestInstanceCPUCoreCountSchema(t *testing.T) {
 
 	actualSchema := tfec2.ResourceInstance().Schema["cpu_core_count"]
 	expectedSchema := &schema.Schema{
-		Type:     schema.TypeInt,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
+		Type:          schema.TypeInt,
+		Optional:      true,
+		Computed:      true,
+		ForceNew:      true,
+		Deprecated:    "use 'cpu_options' argument instead",
+		ConflictsWith: []string{"cpu_options.0.core_count"},
 	}
 	if !reflect.DeepEqual(actualSchema, expectedSchema) {
 		t.Fatalf(
@@ -4997,10 +5466,12 @@ func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
 
 	actualSchema := tfec2.ResourceInstance().Schema["cpu_threads_per_core"]
 	expectedSchema := &schema.Schema{
-		Type:     schema.TypeInt,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
+		Type:          schema.TypeInt,
+		Optional:      true,
+		Computed:      true,
+		ForceNew:      true,
+		Deprecated:    "use 'cpu_options' argument instead",
+		ConflictsWith: []string{"cpu_options.0.threads_per_core"},
 	}
 	if !reflect.DeepEqual(actualSchema, expectedSchema) {
 		t.Fatalf(
@@ -5012,7 +5483,7 @@ func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
 
 func driftTags(ctx context.Context, instance *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 		_, err := conn.CreateTagsWithContext(ctx, &ec2.CreateTagsInput{
 			Resources: []*string{instance.InstanceId},
 			Tags: []*ec2.Tag{
@@ -5039,7 +5510,7 @@ func testAccPreCheckHasDefaultVPCDefaultSubnets(ctx context.Context, t *testing.
 
 // defaultVPC returns the ID of the default VPC for the current AWS Region, or "" if none exists.
 func defaultVPC(ctx context.Context, t *testing.T) string {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	output, err := conn.DescribeAccountAttributesWithContext(ctx, &ec2.DescribeAccountAttributesInput{
 		AttributeNames: aws.StringSlice([]string{ec2.AccountAttributeNameDefaultVpc}),
@@ -5068,7 +5539,7 @@ func hasDefaultVPC(ctx context.Context, t *testing.T) bool {
 
 // defaultSubnetCount returns the number of default subnets in the current region's default VPC.
 func defaultSubnetCount(ctx context.Context, t *testing.T) int {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
 		Filters: tfec2.BuildAttributeFilterList(
@@ -5089,6 +5560,46 @@ func defaultSubnetCount(ctx context.Context, t *testing.T) int {
 	}
 
 	return len(subnets)
+}
+
+func TestAccEC2Instance_basicWithSpot(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		// No subnet_id specified requires default VPC with default subnets.
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_basicWithSpot(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "spot_instance_request_id"),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle", "spot"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.market_type", "spot"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.instance_interruption_behavior", "terminate"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_market_options.0.spot_options.0.max_price"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.spot_instance_type", "one-time"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.valid_until", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+		},
+	})
 }
 
 // testAccLatestAmazonLinuxPVEBSAMIConfig returns the configuration for a data source that
@@ -5128,6 +5639,28 @@ data "aws_ami" "win2016core-ami" {
   }
 }
 `
+}
+
+// testAccLatestAmazonLinux2023AMIConfig returns the configuration for a data source that
+// describes the latest Amazon Linux 2023 AMI for x86.
+// The data source is named 'amzn-linux-2023-ami'.
+func testAccLatestAmazonLinux2023AMIConfig() string {
+	return testAccLatestAmazonLinux2023AMIConfigWithProvider(acctest.ProviderName)
+}
+
+func testAccLatestAmazonLinux2023AMIConfigWithProvider(provider string) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-linux-2023-ami" {
+  provider    = %[1]q
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-2023.*-x86_64"]
+  }
+}
+`, provider)
 }
 
 func testAccAvailableAZsWavelengthZonesExcludeConfig(excludeZoneIds ...string) string {
@@ -6750,7 +7283,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstancePrivateDNSNameOptionsBaseConfig(rName string) string {
+func testAccInstancePrivateDNSNameOptionsConfig_base(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
@@ -6784,7 +7317,7 @@ resource "aws_subnet" "test" {
 func testAccInstanceConfig_PrivateDNSNameOptions_computed(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		testAccInstancePrivateDNSNameOptionsBaseConfig(rName),
+		testAccInstancePrivateDNSNameOptionsConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -6798,10 +7331,10 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_PrivateDNSNameOptions_configured(rName string) string {
+func testAccInstanceConfig_PrivateDNSNameOptions_configured(rName string, enableAAAA, enableA bool, hostNameType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		testAccInstancePrivateDNSNameOptionsBaseConfig(rName),
+		testAccInstancePrivateDNSNameOptionsConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -6809,16 +7342,16 @@ resource "aws_instance" "test" {
   subnet_id     = aws_subnet.test.id
 
   private_dns_name_options {
-    enable_resource_name_dns_aaaa_record = false
-    enable_resource_name_dns_a_record    = true
-    hostname_type                        = "ip-name"
+    enable_resource_name_dns_aaaa_record = %[2]t
+    enable_resource_name_dns_a_record    = %[3]t
+    hostname_type                        = %[4]q
   }
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName, enableAAAA, enableA, hostNameType))
 }
 
 func testAccInstanceConfig_networkSecurityGroups(rName string) string {
@@ -6842,7 +7375,7 @@ resource "aws_instance" "test" {
 
 resource "aws_eip" "test" {
   instance   = aws_instance.test.id
-  vpc        = true
+  domain     = "vpc"
   depends_on = [aws_internet_gateway.test]
 
   tags = {
@@ -6872,7 +7405,7 @@ resource "aws_instance" "test" {
 
 resource "aws_eip" "test" {
   instance   = aws_instance.test.id
-  vpc        = true
+  domain     = "vpc"
   depends_on = [aws_internet_gateway.test]
 
   tags = {
@@ -6902,7 +7435,7 @@ resource "aws_instance" "test" {
 
 resource "aws_eip" "test" {
   instance   = aws_instance.test.id
-  vpc        = true
+  domain     = "vpc"
   depends_on = [aws_internet_gateway.test]
 
   tags = {
@@ -7504,6 +8037,132 @@ resource "aws_instance" "test" {
 `, rName, publicKey, val))
 }
 
+func testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceVPCConfig(rName, false, 0),
+		testAccLatestAmazonLinux2023AMIConfig(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, amdSevSnp string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceVPCConfig(rName, false, 0),
+		testAccLatestAmazonLinux2023AMIConfig(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  cpu_options {
+    amd_sev_snp = %[2]q
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, amdSevSnp))
+}
+
+func testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, amdSevSnp string, coreCount, threadsPerCore int) string {
+	return acctest.ConfigCompose(
+		testAccInstanceVPCConfig(rName, false, 0),
+		testAccLatestAmazonLinux2023AMIConfig(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  cpu_options {
+    amd_sev_snp      = %[2]q
+    core_count       = %[3]d
+    threads_per_core = %[4]d
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, amdSevSnp, coreCount, threadsPerCore))
+}
+
+func testAccInstanceConfig_cpuOptionsUnspecified(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceVPCConfig(rName, false, 0),
+		testAccLatestAmazonLinux2023AMIConfig(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_cpuOptionsCoreThreads(rName string, coreCount, threadsPerCore int) string {
+	return acctest.ConfigCompose(
+		testAccInstanceVPCConfig(rName, false, 0),
+		testAccLatestAmazonLinux2023AMIConfig(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  cpu_options {
+    core_count       = %[2]d
+    threads_per_core = %[3]d
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, coreCount, threadsPerCore))
+}
+
+func testAccInstanceConfig_cpuOptionsCoreThreadsDeprecated(rName string, coreCount, threadsPerCore int) string {
+	return acctest.ConfigCompose(
+		testAccInstanceVPCConfig(rName, false, 0),
+		testAccLatestAmazonLinux2023AMIConfig(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  cpu_core_count       = %[2]d
+  cpu_threads_per_core = %[3]d
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, coreCount, threadsPerCore))
+}
+
 func testAccInstanceConfig_creditSpecificationEmptyNonBurstable(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
@@ -7821,7 +8480,27 @@ resource "aws_instance" "test" {
 `, rName, hibernation))
 }
 
-func testAccInstanceConfig_metadataOptions(rName string) string {
+func testAccInstanceConfig_metadataOptionsDefaults(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		testAccInstanceVPCConfig(rName, false, 0),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  metadata_options {}
+}
+`, rName))
+}
+
+func testAccInstanceConfig_metadataOptionsDisabled(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccInstanceVPCConfig(rName, false, 0),
@@ -8234,6 +8913,27 @@ resource "aws_instance" "test" {
   launch_template {
     name = aws_launch_template.test.name
   }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_basicWithSpot(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("t4g.nano"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
+
+  instance_market_options {
+    market_type = "spot"
+  }
+
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   tags = {
     Name = %[1]q

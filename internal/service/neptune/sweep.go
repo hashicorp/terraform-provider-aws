@@ -11,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -33,6 +34,9 @@ func init() {
 	resource.AddTestSweepers("aws_neptune_cluster_instance", &resource.Sweeper{
 		Name: "aws_neptune_cluster_instance",
 		F:    sweepClusterInstances,
+		Dependencies: []string{
+			"aws_rds_global_cluster",
+		},
 	})
 }
 
@@ -42,7 +46,7 @@ func sweepEventSubscriptions(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).NeptuneConn()
+	conn := client.(*conns.AWSClient).NeptuneConn(ctx)
 	var sweeperErrs *multierror.Error
 
 	err = conn.DescribeEventSubscriptionsPagesWithContext(ctx, &neptune.DescribeEventSubscriptionsInput{}, func(page *neptune.DescribeEventSubscriptionsOutput, lastPage bool) bool {
@@ -98,7 +102,7 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NeptuneConn()
+	conn := client.(*conns.AWSClient).NeptuneConn(ctx)
 
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -120,11 +124,13 @@ func sweepClusters(region string) error {
 			d.Set("deletion_protection", false)
 			d.Set("skip_final_snapshot", true)
 
-			globalCluster, err := findGlobalClusterByARN(ctx, conn, arn)
+			globalCluster, err := findGlobalClusterByClusterARN(ctx, conn, arn)
 
 			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("reading Neptune Global Cluster information for Neptune Cluster (%s): %s", id, err))
-				continue
+				if !tfresource.NotFound(err) {
+					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("reading Neptune Global Cluster information for Neptune Cluster (%s): %s", id, err))
+					continue
+				}
 			}
 
 			if globalCluster != nil && globalCluster.GlobalClusterIdentifier != nil {
@@ -158,7 +164,7 @@ func sweepClusterInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NeptuneConn()
+	conn := client.(*conns.AWSClient).NeptuneConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	input := &neptune.DescribeDBInstancesInput{}

@@ -6,9 +6,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_lb_attachment")
 func ResourceLoadBalancerAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerAttachmentCreate,
@@ -48,29 +51,23 @@ func ResourceLoadBalancerAttachment() *schema.Resource {
 }
 
 func resourceLoadBalancerAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
-
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
+	lbName := d.Get("lb_name").(string)
 	req := lightsail.AttachInstancesToLoadBalancerInput{
-		LoadBalancerName: aws.String(d.Get("lb_name").(string)),
-		InstanceNames:    aws.StringSlice([]string{d.Get("instance_name").(string)}),
+		LoadBalancerName: aws.String(lbName),
+		InstanceNames:    []string{d.Get("instance_name").(string)},
 	}
 
-	out, err := conn.AttachInstancesToLoadBalancerWithContext(ctx, &req)
+	out, err := conn.AttachInstancesToLoadBalancer(ctx, &req)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachInstancesToLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), err)
+		return create.DiagError(names.Lightsail, string(types.OperationTypeAttachInstancesToLoadBalancer), ResLoadBalancerAttachment, lbName, err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachInstancesToLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), errors.New("No operations found for Attach Instances to Load Balancer request"))
-	}
+	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeAttachInstancesToLoadBalancer, ResLoadBalancerAttachment, lbName)
 
-	op := out.Operations[0]
-
-	err = waitOperation(ctx, conn, op.Id)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachInstancesToLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), errors.New("Error waiting for Attach Instances to Load Balancer request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	// Generate an ID
@@ -85,7 +82,7 @@ func resourceLoadBalancerAttachmentCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceLoadBalancerAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindLoadBalancerAttachmentById(ctx, conn, d.Id())
 
@@ -106,7 +103,7 @@ func resourceLoadBalancerAttachmentRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceLoadBalancerAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	id_parts := strings.SplitN(d.Id(), ",", -1)
 	if len(id_parts) != 2 {
@@ -118,25 +115,19 @@ func resourceLoadBalancerAttachmentDelete(ctx context.Context, d *schema.Resourc
 
 	in := lightsail.DetachInstancesFromLoadBalancerInput{
 		LoadBalancerName: aws.String(lbName),
-		InstanceNames:    aws.StringSlice([]string{iName}),
+		InstanceNames:    []string{iName},
 	}
 
-	out, err := conn.DetachInstancesFromLoadBalancerWithContext(ctx, &in)
+	out, err := conn.DetachInstancesFromLoadBalancer(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), err)
+		return create.DiagError(names.Lightsail, string(types.OperationTypeDetachInstancesFromLoadBalancer), ResLoadBalancerAttachment, lbName, err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), errors.New("No operations found for Detach Instances from Load Balancer request"))
-	}
+	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, lbName)
 
-	op := out.Operations[0]
-
-	err = waitOperation(ctx, conn, op.Id)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), errors.New("Error waiting for Instances to Detach from the Load Balancer request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	return nil
@@ -147,4 +138,45 @@ func expandLoadBalancerNameFromId(id string) string {
 	lbName := id_parts[0]
 
 	return lbName
+}
+
+func FindLoadBalancerAttachmentById(ctx context.Context, conn *lightsail.Client, id string) (*string, error) {
+	id_parts := strings.SplitN(id, ",", -1)
+	if len(id_parts) != 2 {
+		return nil, errors.New("invalid load balancer attachment id")
+	}
+
+	lbName := id_parts[0]
+	iName := id_parts[1]
+
+	in := &lightsail.GetLoadBalancerInput{LoadBalancerName: aws.String(lbName)}
+	out, err := conn.GetLoadBalancer(ctx, in)
+
+	if IsANotFoundError(err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	var entry *string
+	entryExists := false
+
+	for _, n := range out.LoadBalancer.InstanceHealthSummary {
+		if iName == aws.ToString(n.InstanceName) {
+			entry = n.InstanceName
+			entryExists = true
+			break
+		}
+	}
+
+	if !entryExists {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return entry, nil
 }

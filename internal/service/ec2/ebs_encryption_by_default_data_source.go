@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ebs_encryption_by_default")
 func DataSourceEBSEncryptionByDefault() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEBSEncryptionByDefaultRead,
@@ -29,11 +30,11 @@ func DataSourceEBSEncryptionByDefault() *schema.Resource {
 }
 func dataSourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	res, err := conn.GetEbsEncryptionByDefaultWithContext(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error reading default EBS encryption toggle: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading default EBS encryption toggle: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ec2_transit_gateway_vpn_attachment")
 func DataSourceTransitGatewayVPNAttachment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayVPNAttachmentRead,
@@ -39,7 +40,7 @@ func DataSourceTransitGatewayVPNAttachment() *schema.Resource {
 
 func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{
@@ -54,7 +55,7 @@ func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.Re
 
 	if v, ok := d.GetOk("tags"); ok {
 		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(v.(map[string]interface{}))),
+			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
 	}
 
@@ -80,7 +81,7 @@ func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.Re
 	d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
 	d.Set("vpn_connection_id", transitGatewayAttachment.ResourceId)
 
-	if err := d.Set("tags", KeyValueTags(transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
