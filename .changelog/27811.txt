@@ -1,3 +1,3 @@
 ```release-note:enhancement
-* resource/aws_datasync_task: Add `object_tags` to `options` configuration block ([#27811](https://github.com/hashicorp/terraform-provider-aws/pull/27811))
+* resource/aws_datasync_task: Add `object_tags` attribute to `options` configuration block
 ```
