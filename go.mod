@@ -14,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.5
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.13
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.21.1
-	github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.3
+	github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.11
