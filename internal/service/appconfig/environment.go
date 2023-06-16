@@ -6,10 +6,10 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -24,7 +24,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	flex_ "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -134,7 +136,7 @@ func (r *resourceEnvironment) Schema(ctx context.Context, request resource.Schem
 }
 
 func (r *resourceEnvironment) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	conn := r.Meta().AppConfigConn(ctx)
+	conn := r.Meta().AppConfigClient(ctx)
 
 	var plan resourceEnvironmentData
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
@@ -153,7 +155,7 @@ func (r *resourceEnvironment) Create(ctx context.Context, request resource.Creat
 	input := &appconfig.CreateEnvironmentInput{
 		Name:          aws.String(plan.Name.ValueString()),
 		ApplicationId: aws.String(appId),
-		Tags:          getTagsIn(ctx),
+		Tags:          aws.ToStringMap(getTagsIn(ctx)),
 		Monitors:      expandMonitors(monitors),
 	}
 
@@ -161,7 +163,7 @@ func (r *resourceEnvironment) Create(ctx context.Context, request resource.Creat
 		input.Description = aws.String(plan.Description.ValueString())
 	}
 
-	environment, err := conn.CreateEnvironmentWithContext(ctx, input)
+	environment, err := conn.CreateEnvironment(ctx, input)
 	if err != nil {
 		response.Diagnostics.AddError(
 			fmt.Sprintf("creating AppConfig Environment for Application (%s)", appId),
@@ -186,7 +188,7 @@ func (r *resourceEnvironment) Create(ctx context.Context, request resource.Creat
 }
 
 func (r *resourceEnvironment) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	conn := r.Meta().AppConfigConn(ctx)
+	conn := r.Meta().AppConfigClient(ctx)
 
 	var state resourceEnvironmentData
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
@@ -194,8 +196,8 @@ func (r *resourceEnvironment) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	output, err := conn.GetEnvironmentWithContext(ctx, state.getEnvironmentInput())
-	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+	output, err := conn.GetEnvironment(ctx, state.getEnvironmentInput())
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -216,7 +218,7 @@ func (r *resourceEnvironment) Read(ctx context.Context, request resource.ReadReq
 }
 
 func (r *resourceEnvironment) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	conn := r.Meta().AppConfigConn(ctx)
+	conn := r.Meta().AppConfigClient(ctx)
 
 	var state resourceEnvironmentData
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
@@ -252,7 +254,7 @@ func (r *resourceEnvironment) Update(ctx context.Context, request resource.Updat
 			updateInput.Monitors = expandMonitors(monitors)
 		}
 
-		output, err := conn.UpdateEnvironmentWithContext(ctx, updateInput)
+		output, err := conn.UpdateEnvironment(ctx, updateInput)
 		if err != nil {
 			response.Diagnostics.AddError(
 				fmt.Sprintf("updating AppConfig Environment (%s) for Application (%s)", state.EnvironmentID.ValueString(), state.ApplicationID.ValueString()),
@@ -270,7 +272,7 @@ func (r *resourceEnvironment) Update(ctx context.Context, request resource.Updat
 }
 
 func (r *resourceEnvironment) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	conn := r.Meta().AppConfigConn(ctx)
+	conn := r.Meta().AppConfigClient(ctx)
 
 	var state resourceEnvironmentData
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
@@ -283,8 +285,8 @@ func (r *resourceEnvironment) Delete(ctx context.Context, request resource.Delet
 		"environment_id": state.EnvironmentID.ValueString(),
 	})
 
-	_, err := conn.DeleteEnvironmentWithContext(ctx, state.deleteEnvironmentInput())
-	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+	_, err := conn.DeleteEnvironment(ctx, state.deleteEnvironmentInput())
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 	if err != nil {
@@ -330,17 +332,17 @@ func (d *resourceEnvironmentData) refreshFromCreateOutput(ctx context.Context, m
 		return diags
 	}
 
-	appID := aws.StringValue(out.ApplicationId)
-	envID := aws.StringValue(out.Id)
+	appID := aws.ToString(out.ApplicationId)
+	envID := aws.ToString(out.Id)
 
 	d.ApplicationID = types.StringValue(appID)
-	d.ARN = types.StringValue(environmentARN(meta, aws.StringValue(out.ApplicationId), aws.StringValue(out.Id)).String())
+	d.ARN = types.StringValue(environmentARN(meta, aws.ToString(out.ApplicationId), aws.ToString(out.Id)).String())
 	d.Description = flex.StringToFrameworkLegacy(ctx, out.Description)
 	d.EnvironmentID = types.StringValue(envID)
 	d.ID = types.StringValue(fmt.Sprintf("%s:%s", envID, appID))
 	d.Monitors = flattenMonitors(ctx, out.Monitors, &diags)
 	d.Name = flex.StringToFramework(ctx, out.Name)
-	d.State = flex.StringToFramework(ctx, out.State)
+	d.State = flex_.StringValueToFramework(ctx, out.State)
 
 	return diags
 }
@@ -352,17 +354,17 @@ func (d *resourceEnvironmentData) refreshFromGetOutput(ctx context.Context, meta
 		return diags
 	}
 
-	appID := aws.StringValue(out.ApplicationId)
-	envID := aws.StringValue(out.Id)
+	appID := aws.ToString(out.ApplicationId)
+	envID := aws.ToString(out.Id)
 
 	d.ApplicationID = types.StringValue(appID)
-	d.ARN = types.StringValue(environmentARN(meta, aws.StringValue(out.ApplicationId), aws.StringValue(out.Id)).String())
+	d.ARN = types.StringValue(environmentARN(meta, aws.ToString(out.ApplicationId), aws.ToString(out.Id)).String())
 	d.Description = flex.StringToFrameworkLegacy(ctx, out.Description)
 	d.EnvironmentID = types.StringValue(envID)
 	d.ID = types.StringValue(fmt.Sprintf("%s:%s", envID, appID))
 	d.Monitors = flattenMonitors(ctx, out.Monitors, &diags)
 	d.Name = flex.StringToFramework(ctx, out.Name)
-	d.State = flex.StringToFramework(ctx, out.State)
+	d.State = flex_.StringValueToFramework(ctx, out.State)
 
 	return diags
 }
@@ -374,37 +376,40 @@ func (d *resourceEnvironmentData) refreshFromUpdateOutput(ctx context.Context, m
 		return diags
 	}
 
-	appID := aws.StringValue(out.ApplicationId)
-	envID := aws.StringValue(out.Id)
+	appID := aws.ToString(out.ApplicationId)
+	envID := aws.ToString(out.Id)
 
 	d.ApplicationID = types.StringValue(appID)
-	d.ARN = types.StringValue(environmentARN(meta, aws.StringValue(out.ApplicationId), aws.StringValue(out.Id)).String())
+	d.ARN = types.StringValue(environmentARN(meta, aws.ToString(out.ApplicationId), aws.ToString(out.Id)).String())
 	d.Description = flex.StringToFrameworkLegacy(ctx, out.Description)
 	d.EnvironmentID = types.StringValue(envID)
 	d.ID = types.StringValue(fmt.Sprintf("%s:%s", envID, appID))
 	d.Monitors = flattenMonitors(ctx, out.Monitors, &diags)
 	d.Name = flex.StringToFramework(ctx, out.Name)
-	d.State = flex.StringToFramework(ctx, out.State)
+	d.State = flex_.StringValueToFramework(ctx, out.State)
 
 	return diags
 }
 
 func (d *resourceEnvironmentData) getEnvironmentInput() *appconfig.GetEnvironmentInput {
-	return (&appconfig.GetEnvironmentInput{}).
-		SetApplicationId(d.ApplicationID.ValueString()).
-		SetEnvironmentId(d.EnvironmentID.ValueString())
+	return &appconfig.GetEnvironmentInput{
+		ApplicationId: aws.String(d.ApplicationID.ValueString()),
+		EnvironmentId: aws.String(d.EnvironmentID.ValueString()),
+	}
 }
 
 func (d *resourceEnvironmentData) updateEnvironmentInput() *appconfig.UpdateEnvironmentInput {
-	return (&appconfig.UpdateEnvironmentInput{}).
-		SetApplicationId(d.ApplicationID.ValueString()).
-		SetEnvironmentId(d.EnvironmentID.ValueString())
+	return &appconfig.UpdateEnvironmentInput{
+		ApplicationId: aws.String(d.ApplicationID.ValueString()),
+		EnvironmentId: aws.String(d.EnvironmentID.ValueString()),
+	}
 }
 
 func (d *resourceEnvironmentData) deleteEnvironmentInput() *appconfig.DeleteEnvironmentInput {
-	return (&appconfig.DeleteEnvironmentInput{}).
-		SetApplicationId(d.ApplicationID.ValueString()).
-		SetEnvironmentId(d.EnvironmentID.ValueString())
+	return &appconfig.DeleteEnvironmentInput{
+		ApplicationId: aws.String(d.ApplicationID.ValueString()),
+		EnvironmentId: aws.String(d.EnvironmentID.ValueString()),
+	}
 }
 
 func environmentARN(meta *conns.AWSClient, appID, envID string) arn.ARN {
@@ -417,15 +422,15 @@ func environmentARN(meta *conns.AWSClient, appID, envID string) arn.ARN {
 	}
 }
 
-func expandMonitors(l []monitorData) []*appconfig.Monitor {
-	monitors := make([]*appconfig.Monitor, len(l))
+func expandMonitors(l []monitorData) []awstypes.Monitor {
+	monitors := make([]awstypes.Monitor, len(l))
 	for i, item := range l {
 		monitors[i] = item.expand()
 	}
 	return monitors
 }
 
-func flattenMonitors(ctx context.Context, apiObjects []*appconfig.Monitor, diags *diag.Diagnostics) types.Set {
+func flattenMonitors(ctx context.Context, apiObjects []awstypes.Monitor, diags *diag.Diagnostics) types.Set {
 	monitorDataTypes := framework.AttributeTypesMust[monitorData](ctx)
 	elemType := types.ObjectType{AttrTypes: monitorDataTypes}
 
@@ -449,8 +454,8 @@ type monitorData struct {
 	AlarmRoleARN fwtypes.ARN `tfsdk:"alarm_role_arn"`
 }
 
-func (m monitorData) expand() *appconfig.Monitor {
-	result := &appconfig.Monitor{
+func (m monitorData) expand() awstypes.Monitor {
+	result := awstypes.Monitor{
 		AlarmArn: aws.String(m.AlarmARN.ValueARN().String()),
 	}
 
@@ -461,7 +466,7 @@ func (m monitorData) expand() *appconfig.Monitor {
 	return result
 }
 
-func flattenMonitorData(ctx context.Context, apiObject *appconfig.Monitor, diags *diag.Diagnostics) monitorData {
+func flattenMonitorData(ctx context.Context, apiObject awstypes.Monitor, diags *diag.Diagnostics) monitorData {
 	return monitorData{
 		AlarmARN:     flex.StringToFrameworkARN(ctx, apiObject.AlarmArn, diags),
 		AlarmRoleARN: flex.StringToFrameworkARN(ctx, apiObject.AlarmRoleArn, diags),
