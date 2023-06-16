@@ -4,51 +4,51 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8
-	github.com/aws/aws-sdk-go v1.44.282
+	github.com/aws/aws-sdk-go v1.44.283
 	github.com/aws/aws-sdk-go-v2 v1.18.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.4
-	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.19.13
-	github.com/aws/aws-sdk-go-v2/service/account v1.10.7
-	github.com/aws/aws-sdk-go-v2/service/acm v1.17.12
-	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.8
-	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.5
-	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.13
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.21.1
-	github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.3
-	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.24.1
-	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.2
-	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.11
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.100.0
-	github.com/aws/aws-sdk-go-v2/service/finspace v1.10.1
-	github.com/aws/aws-sdk-go-v2/service/fis v1.14.11
-	github.com/aws/aws-sdk-go-v2/service/glacier v1.14.12
-	github.com/aws/aws-sdk-go-v2/service/healthlake v1.16.1
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.12
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.14.1
-	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.6
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.40.3
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.35.1
-	github.com/aws/aws-sdk-go-v2/service/lightsail v1.27.0
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.31.5
-	github.com/aws/aws-sdk-go-v2/service/oam v1.1.12
-	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.5
-	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.7
-	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.13
-	github.com/aws/aws-sdk-go-v2/service/rds v1.45.1
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.14
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.2.1
-	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.11
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.31.6
-	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.12
-	github.com/aws/aws-sdk-go-v2/service/securitylake v1.4.2
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.18.1
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.36.5
-	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.15.5
-	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.21.5
-	github.com/aws/aws-sdk-go-v2/service/swf v1.15.1
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.7
-	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.6
-	github.com/aws/aws-sdk-go-v2/service/xray v1.16.12
+	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.19.14
+	github.com/aws/aws-sdk-go-v2/service/account v1.10.8
+	github.com/aws/aws-sdk-go-v2/service/acm v1.17.13
+	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.25.0
+	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.6
+	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.14
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.21.2
+	github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.4
+	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.24.2
+	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.3
+	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.12
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.100.1
+	github.com/aws/aws-sdk-go-v2/service/finspace v1.10.2
+	github.com/aws/aws-sdk-go-v2/service/fis v1.14.12
+	github.com/aws/aws-sdk-go-v2/service/glacier v1.14.13
+	github.com/aws/aws-sdk-go-v2/service/healthlake v1.16.2
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.13
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.14.2
+	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.7
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.40.4
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.35.2
+	github.com/aws/aws-sdk-go-v2/service/lightsail v1.27.1
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.31.6
+	github.com/aws/aws-sdk-go-v2/service/oam v1.1.13
+	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.6
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.8
+	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.14
+	github.com/aws/aws-sdk-go-v2/service/rds v1.45.2
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.15
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.2.2
+	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.12
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.31.7
+	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.13
+	github.com/aws/aws-sdk-go-v2/service/securitylake v1.4.3
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.18.2
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.36.6
+	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.15.6
+	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.21.6
+	github.com/aws/aws-sdk-go-v2/service/swf v1.15.2
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.8
+	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.7
+	github.com/aws/aws-sdk-go-v2/service/xray v1.16.13
 	github.com/aws/smithy-go v1.13.5
 	github.com/beevik/etree v1.2.0
 	github.com/google/go-cmp v0.5.9
@@ -100,12 +100,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.34 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.28 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.34 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iam v1.20.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iam v1.20.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.28 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.14.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.12.11 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.11 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.19.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.12.12 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.12 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.19.2 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
