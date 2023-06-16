@@ -3,7 +3,7 @@ subcategory: "Chime SDK Voice"
 layout: "aws"
 page_title: "AWS: aws_chimesdkvoice_sip_rule"
 description: |-
-A SIP rule associates your SIP media application with a phone number or a Request URI hostname. You can associate a SIP rule with more than one SIP media application. Each application then runs only that rule.
+    A SIP rule associates your SIP media application with a phone number or a Request URI hostname. You can associate a SIP rule with more than one SIP media application. Each application then runs only that rule.
 ---
 # Resource: aws_chimesdkvoice_sip_rule
 

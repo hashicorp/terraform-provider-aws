@@ -3,6 +3,8 @@ package chimesdkvoice_test
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/chime"
@@ -13,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfchimesdkvoice "github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
-	"testing"
 )
 
 func TestAccChimeSDKVoiceSipRule_basic(t *testing.T) {
