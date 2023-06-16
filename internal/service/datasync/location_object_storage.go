@@ -163,14 +163,8 @@ func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location Object Storage (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
-
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
 	uri := aws.StringValue(output.LocationUri)
-	hostname, bucketName, err := decodeObjectStorageURI(uri)
+	hostname, bucketName, subdirectory, err := decodeObjectStorageURI(uri)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -255,17 +249,17 @@ func resourceLocationObjectStorageDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func decodeObjectStorageURI(uri string) (string, string, error) {
+func decodeObjectStorageURI(uri string) (string, string, string, error) {
 	prefix := "object-storage://"
 	if !strings.HasPrefix(uri, prefix) {
-		return "", "", fmt.Errorf("incorrect uri format needs to start with %s", prefix)
+		return "", "", "", fmt.Errorf("incorrect uri format needs to start with %s", prefix)
 	}
 	trimmedUri := strings.TrimPrefix(uri, prefix)
 	uriParts := strings.Split(trimmedUri, "/")
 
 	if len(uri) < 2 {
-		return "", "", fmt.Errorf("incorrect uri format needs to start with %sSERVER-NAME/BUCKET-NAME/SUBDIRECTORY", prefix)
+		return "", "", "", fmt.Errorf("incorrect uri format needs to start with %sSERVER-NAME/BUCKET-NAME/SUBDIRECTORY", prefix)
 	}
 
-	return uriParts[0], uriParts[1], nil
+	return uriParts[0], uriParts[1], "/" + strings.Join(uriParts[2:], "/"), nil
 }
