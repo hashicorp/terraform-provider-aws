@@ -26,7 +26,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.12
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.14.1
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.6
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.40.3
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.40.4
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.31.5
