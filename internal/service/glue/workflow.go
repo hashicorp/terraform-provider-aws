@@ -42,7 +42,7 @@ func ResourceWorkflow() *schema.Resource {
 			"default_run_properties": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				Elem:     schema.TypeString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"description": {
 				Type:     schema.TypeString,
