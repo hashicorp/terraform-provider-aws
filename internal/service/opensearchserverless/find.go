@@ -60,6 +60,30 @@ func FindCollectionByID(ctx context.Context, conn *opensearchserverless.Client, 
 	return &out.CollectionDetails[0], nil
 }
 
+func FindSecurityConfigByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.SecurityConfigDetail, error) {
+	in := &opensearchserverless.GetSecurityConfigInput{
+		Id: aws.String(id),
+	}
+	out, err := conn.GetSecurityConfig(ctx, in)
+	if err != nil {
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.SecurityConfigDetail == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.SecurityConfigDetail, nil
+}
+
 func FindSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, name, policyType string) (*types.SecurityPolicyDetail, error) {
 	in := &opensearchserverless.GetSecurityPolicyInput{
 		Name: aws.String(name),
