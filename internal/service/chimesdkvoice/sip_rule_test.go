@@ -183,14 +183,14 @@ func testAccSipRuleConfig_basic(rName string) string {
 		testAccSipRuleConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_chimesdkvoice_sip_rule" "test" {
-  name = %[1]q
-  disabled = "false"
-  trigger_type = "RequestUriHostname"
+  name          = %[1]q
+  disabled      = "false"
+  trigger_type  = "RequestUriHostname"
   trigger_value = aws_chime_voice_connector.test.outbound_host_name
   target_applications {
-	priority = 1
+    priority                 = 1
     sip_media_application_id = aws_chimesdkvoice_sip_media_application.test.id
-	aws_region = data.aws_region.current.name
+    aws_region               = data.aws_region.current.name
   }
 }
 `, rName))
@@ -201,14 +201,14 @@ func testAccSipRuleConfig_update(rName string) string {
 		testAccSipRuleConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_chimesdkvoice_sip_rule" "test" {
-  name = %[1]q
-  disabled = "true"
-  trigger_type = "RequestUriHostname"
+  name          = %[1]q
+  disabled      = "true"
+  trigger_type  = "RequestUriHostname"
   trigger_value = aws_chime_voice_connector.test.outbound_host_name
   target_applications {
-	priority = 1
+    priority                 = 1
     sip_media_application_id = aws_chimesdkvoice_sip_media_application.test.id
-	aws_region = data.aws_region.current.name
+    aws_region               = data.aws_region.current.name
   }
 }
 `, rName))

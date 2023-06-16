@@ -8,19 +8,20 @@ A SIP rule associates your SIP media application with a phone number or a Reques
 # Resource: aws_chimesdkvoice_sip_rule
 
 A SIP rule associates your SIP media application with a phone number or a Request URI hostname. You can associate a SIP rule with more than one SIP media application. Each application then runs only that rule.
+
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
 resource "aws_chimesdkvoice_sip_rule" "example" {
-  name = "example-sip-rule"
-  trigger_type = "RequestUriHostname"
+  name          = "example-sip-rule"
+  trigger_type  = "RequestUriHostname"
   trigger_value = aws_chime_voice_connector.example-voice-connector.outbound_host_name
   target_applications {
-	priority = 1
-	sip_media_application_id = aws_chimesdkvoice_sip_media_application.example-sma.id
-	aws_region = "us-east-1"
+    priority                 = 1
+    sip_media_application_id = aws_chimesdkvoice_sip_media_application.example-sma.id
+    aws_region               = "us-east-1"
   }
 }
 ```
@@ -45,7 +46,6 @@ List of SIP media applications with priority and AWS Region. Only one SIP applic
 * `AwsRegion` - (Required) The AWS Region of the target application.
 * `Priority` - (Required) Priority of the SIP media application in the target list.
 * `SipMediaApplicationId` - (Required) The SIP media application ID.
-
 
 ## Attributes Reference
 
