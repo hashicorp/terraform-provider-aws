@@ -91,7 +91,7 @@ func resourceSnapshotScheduleCreate(ctx context.Context, d *schema.ResourceData,
 	createOpts := &redshift.CreateSnapshotScheduleInput{
 		ScheduleIdentifier:  aws.String(identifier),
 		ScheduleDefinitions: flex.ExpandStringSet(d.Get("definitions").(*schema.Set)),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 	if attr, ok := d.GetOk("description"); ok {
 		createOpts.ScheduleDescription = aws.String(attr.(string))
@@ -133,7 +133,7 @@ func resourceSnapshotScheduleRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting definitions: %s", err)
 	}
 
-	SetTagsOut(ctx, snapshotSchedule.Tags)
+	setTagsOut(ctx, snapshotSchedule.Tags)
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,

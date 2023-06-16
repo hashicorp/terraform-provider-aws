@@ -113,7 +113,7 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.StringValue(output.Role.Arn))
 
-	if tags := GetTagsIn(ctx); len(tags) > 0 {
+	if tags := getTagsIn(ctx); len(tags) > 0 {
 		_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 
 		if err != nil {
@@ -170,7 +170,7 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("path", role.Path)
 	d.Set("unique_id", role.RoleId)
 
-	SetTagsOut(ctx, role.Tags)
+	setTagsOut(ctx, role.Tags)
 
 	return diags
 }

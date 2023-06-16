@@ -393,7 +393,7 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 		AzMode:                types.KxAzMode(d.Get("az_mode").(string)),
 		CapacityConfiguration: expandCapacityConfiguration(d.Get("capacity_configuration").([]interface{})),
 		ClientToken:           aws.String(id.UniqueId()),
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

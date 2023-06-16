@@ -506,7 +506,7 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 		ExecutionRoleArn: aws.String(d.Get("execution_role_arn").(string)),
 		PolicyDetails:    expandPolicyDetails(d.Get("policy_details").([]interface{})),
 		State:            aws.String(d.Get("state").(string)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	log.Printf("[INFO] Creating DLM lifecycle policy: %s", input)
@@ -550,7 +550,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting policy details %s", err)
 	}
 
-	SetTagsOut(ctx, out.Policy.Tags)
+	setTagsOut(ctx, out.Policy.Tags)
 
 	return diags
 }

@@ -162,7 +162,7 @@ func resourceLocationHDFSCreate(ctx context.Context, d *schema.ResourceData, met
 		NameNodes:          expandHDFSNameNodes(d.Get("name_node").(*schema.Set)),
 		AuthenticationType: aws.String(d.Get("authentication_type").(string)),
 		Subdirectory:       aws.String(d.Get("subdirectory").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("simple_user"); ok {

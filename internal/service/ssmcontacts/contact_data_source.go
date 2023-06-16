@@ -59,7 +59,7 @@ func dataSourceContactRead(ctx context.Context, d *schema.ResourceData, meta int
 		return create.DiagError(names.SSMContacts, create.ErrActionSetting, DSNameContact, d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 	if err != nil {
 		return create.DiagError(names.SSMContacts, create.ErrActionReading, DSNameContact, d.Id(), err)
 	}

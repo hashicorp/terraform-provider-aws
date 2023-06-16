@@ -144,7 +144,7 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 		WorkforceName:     aws.String(d.Get("workforce_name").(string)),
 		Description:       aws.String(d.Get("description").(string)),
 		MemberDefinitions: expandWorkteamMemberDefinition(d.Get("member_definition").([]interface{})),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("notification_configuration"); ok {

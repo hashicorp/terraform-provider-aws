@@ -310,7 +310,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			Engine:              aws.String(d.Get("engine").(string)),
 			SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-			Tags:                GetTagsIn(ctx),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
@@ -398,7 +398,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-			Tags:                GetTagsIn(ctx),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if attr, ok := d.GetOk("global_cluster_identifier"); ok {

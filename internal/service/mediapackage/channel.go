@@ -92,7 +92,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	input := &mediapackage.CreateChannelInput{
 		Id:          aws.String(d.Get("channel_id").(string)),
 		Description: aws.String(d.Get("description").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateChannelWithContext(ctx, input)
@@ -124,7 +124,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting hls_ingest: %s", err)
 	}
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	return diags
 }

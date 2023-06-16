@@ -73,7 +73,7 @@ func resourceIPGroupCreate(ctx context.Context, d *schema.ResourceData, meta int
 		GroupName: aws.String(d.Get("name").(string)),
 		GroupDesc: aws.String(d.Get("description").(string)),
 		UserRules: expandIPGroupRules(rules),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 	})
 
 	if err != nil {

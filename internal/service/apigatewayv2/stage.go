@@ -211,7 +211,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		ApiId:      aws.String(apiId),
 		AutoDeploy: aws.Bool(d.Get("auto_deploy").(bool)),
 		StageName:  aws.String(d.Get("name").(string)),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 	if v, ok := d.GetOk("access_log_settings"); ok {
 		req.AccessLogSettings = expandAccessLogSettings(v.([]interface{}))
@@ -303,7 +303,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting stage_variables: %s", err)
 	}
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	apiOutput, err := conn.GetApiWithContext(ctx, &apigatewayv2.GetApiInput{
 		ApiId: aws.String(apiId),

@@ -146,7 +146,7 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("spread_level", pg.SpreadLevel)
 	d.Set("strategy", pg.Strategy)
 
-	SetTagsOut(ctx, pg.Tags)
+	setTagsOut(ctx, pg.Tags)
 
 	return diags
 }

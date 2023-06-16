@@ -173,7 +173,7 @@ func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData,
 		ServiceName: aws.String(serviceName),
 		Power:       types.ContainerServicePowerName(d.Get("power").(string)),
 		Scale:       aws.Int32(int32(d.Get("scale").(int))),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("public_domain_names"); ok {
@@ -251,7 +251,7 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("state", cs.State)
 	d.Set("url", cs.Url)
 
-	SetTagsOut(ctx, cs.Tags)
+	setTagsOut(ctx, cs.Tags)
 
 	return nil
 }

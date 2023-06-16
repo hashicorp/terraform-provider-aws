@@ -140,7 +140,7 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	signingProfileInput := &signer.PutSigningProfileInput{
 		ProfileName: aws.String(profileName),
 		PlatformId:  aws.String(d.Get("platform_id").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, exists := d.GetOk("signature_validity_period"); exists {
@@ -216,7 +216,7 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile status: %s", err)
 	}
 
-	SetTagsOut(ctx, signingProfileOutput.Tags)
+	setTagsOut(ctx, signingProfileOutput.Tags)
 
 	if err := d.Set("revocation_record", flattenSigningProfileRevocationRecord(signingProfileOutput.RevocationRecord)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile revocation record: %s", err)

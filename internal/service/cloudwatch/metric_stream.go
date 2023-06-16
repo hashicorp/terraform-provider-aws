@@ -205,7 +205,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 		Name:                         aws.String(name),
 		OutputFormat:                 aws.String(d.Get("output_format").(string)),
 		RoleArn:                      aws.String(d.Get("role_arn").(string)),
-		Tags:                         GetTagsIn(ctx),
+		Tags:                         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("exclude_filter"); ok && v.(*schema.Set).Len() > 0 {
@@ -240,7 +240,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(output.Arn), tags)
 
 		// If default tags only, continue. Otherwise, error.

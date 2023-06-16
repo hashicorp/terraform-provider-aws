@@ -86,7 +86,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		ResourceId:        aws.String(resourceID),
 		ScalableDimension: aws.String(d.Get("scalable_dimension").(string)),
 		ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("role_arn"); ok {

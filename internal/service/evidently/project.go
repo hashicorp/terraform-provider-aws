@@ -160,7 +160,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 	name := d.Get("name").(string)
 	input := &cloudwatchevidently.CreateProjectInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -217,7 +217,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", project.Name)
 	d.Set("status", project.Status)
 
-	SetTagsOut(ctx, project.Tags)
+	setTagsOut(ctx, project.Tags)
 
 	return nil
 }

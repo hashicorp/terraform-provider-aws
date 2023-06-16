@@ -112,7 +112,7 @@ func resourceLocationNFSCreate(ctx context.Context, d *schema.ResourceData, meta
 		OnPremConfig:   expandOnPremConfig(d.Get("on_prem_config").([]interface{})),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("mount_options"); ok {

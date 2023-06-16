@@ -152,7 +152,7 @@ func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("traffic_mirror_target_id", session.TrafficMirrorTargetId)
 	d.Set("virtual_network_id", session.VirtualNetworkId)
 
-	SetTagsOut(ctx, session.Tags)
+	setTagsOut(ctx, session.Tags)
 
 	return diags
 }

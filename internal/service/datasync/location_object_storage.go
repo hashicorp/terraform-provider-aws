@@ -113,7 +113,7 @@ func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.Resource
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		BucketName:     aws.String(d.Get("bucket_name").(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_key"); ok {

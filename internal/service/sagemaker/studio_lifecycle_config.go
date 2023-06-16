@@ -74,7 +74,7 @@ func resourceStudioLifecycleConfigCreate(ctx context.Context, d *schema.Resource
 		StudioLifecycleConfigName:    aws.String(name),
 		StudioLifecycleConfigAppType: aws.String(d.Get("studio_lifecycle_config_app_type").(string)),
 		StudioLifecycleConfigContent: aws.String(d.Get("studio_lifecycle_config_content").(string)),
-		Tags:                         GetTagsIn(ctx),
+		Tags:                         getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating SageMaker Studio Lifecycle Config : %s", input)

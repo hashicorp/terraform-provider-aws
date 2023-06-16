@@ -124,7 +124,7 @@ func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceDat
 	input := &connect.CreateUserHierarchyGroupInput{
 		InstanceId: aws.String(instanceID),
 		Name:       aws.String(userHierarchyGroupName),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("parent_group_id"); ok {
@@ -185,7 +185,7 @@ func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("setting Connect User Hierarchy Group hierarchy_path (%s): %s", d.Id(), err)
 	}
 
-	SetTagsOut(ctx, resp.HierarchyGroup.Tags)
+	setTagsOut(ctx, resp.HierarchyGroup.Tags)
 
 	return nil
 }

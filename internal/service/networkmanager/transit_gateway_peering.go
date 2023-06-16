@@ -93,7 +93,7 @@ func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.Resource
 	transitGatewayARN := d.Get("transit_gateway_arn").(string)
 	input := &networkmanager.CreateTransitGatewayPeeringInput{
 		CoreNetworkId:     aws.String(coreNetworkID),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 		TransitGatewayArn: aws.String(transitGatewayARN),
 	}
 
@@ -145,7 +145,7 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("transit_gateway_arn", transitGatewayPeering.TransitGatewayArn)
 	d.Set("transit_gateway_peering_attachment_id", transitGatewayPeering.TransitGatewayPeeringAttachmentId)
 
-	SetTagsOut(ctx, p.Tags)
+	setTagsOut(ctx, p.Tags)
 
 	return nil
 }

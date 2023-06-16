@@ -223,7 +223,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		ApplicationName: aws.String(d.Get("application").(string)),
 		EnvironmentName: aws.String(name),
 		OptionSettings:  extractOptionSettings(d.Get("setting").(*schema.Set)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v := d.Get("description"); v.(string) != "" {

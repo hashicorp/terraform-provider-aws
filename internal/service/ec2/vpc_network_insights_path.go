@@ -131,7 +131,7 @@ func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData
 	d.Set("source", nip.Source)
 	d.Set("source_ip", nip.SourceIp)
 
-	SetTagsOut(ctx, nip.Tags)
+	setTagsOut(ctx, nip.Tags)
 
 	return nil
 }

@@ -137,7 +137,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 		ClientRequestToken: aws.String(id.UniqueId()),
 		ClusterName:        aws.String(clusterName),
 		Oidc:               oidc,
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	_, err := conn.AssociateIdentityProviderConfigWithContext(ctx, input)
@@ -187,7 +187,7 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set("status", oidc.Status)
 
-	SetTagsOut(ctx, oidc.Tags)
+	setTagsOut(ctx, oidc.Tags)
 
 	return nil
 }

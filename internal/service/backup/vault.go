@@ -84,7 +84,7 @@ func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	name := d.Get("name").(string)
 	input := &backup.CreateBackupVaultInput{
 		BackupVaultName: aws.String(name),
-		BackupVaultTags: GetTagsIn(ctx),
+		BackupVaultTags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {

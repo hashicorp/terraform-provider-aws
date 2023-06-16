@@ -158,7 +158,7 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 	input := &glue.CreateDatabaseInput{
 		CatalogId:     aws.String(catalogID),
 		DatabaseInput: dbInput,
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	_, err := conn.CreateDatabaseWithContext(ctx, input)

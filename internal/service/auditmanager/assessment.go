@@ -189,7 +189,7 @@ func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequ
 		Name:                         aws.String(plan.Name.ValueString()),
 		Roles:                        expandAssessmentRoles(roles),
 		Scope:                        scopeInput,
-		Tags:                         GetTagsIn(ctx),
+		Tags:                         getTagsIn(ctx),
 	}
 
 	if !plan.Description.IsNull() {
@@ -485,7 +485,7 @@ func (rd *resourceAssessmentData) refreshFromOutput(ctx context.Context, out *aw
 	diags.Append(d...)
 	rd.Scope = scope
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	return diags
 }

@@ -180,7 +180,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	createOpts := &sagemaker.CreateEndpointInput{
 		EndpointName:       aws.String(name),
 		EndpointConfigName: aws.String(d.Get("endpoint_config_name").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]interface{})) > 0) {

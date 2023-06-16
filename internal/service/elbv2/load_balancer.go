@@ -318,7 +318,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	lbType := d.Get("load_balancer_type").(string)
 	input := &elbv2.CreateLoadBalancerInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 		Type: aws.String(lbType),
 	}
 
@@ -366,7 +366,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.

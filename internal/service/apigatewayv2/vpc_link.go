@@ -70,7 +70,7 @@ func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Name:             aws.String(d.Get("name").(string)),
 		SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
 		SubnetIds:        flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating API Gateway v2 VPC Link: %s", input)
@@ -118,7 +118,7 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

@@ -177,7 +177,7 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &glue.CreateDevEndpointInput{
 		EndpointName: aws.String(name),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("arguments"); ok {

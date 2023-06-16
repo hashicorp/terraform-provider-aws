@@ -166,7 +166,7 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 	input := &imagebuilder.CreateImagePipelineInput{
 		ClientToken:                  aws.String(id.UniqueId()),
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
-		Tags:                         GetTagsIn(ctx),
+		Tags:                         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("container_recipe_arn"); ok {
@@ -275,7 +275,7 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("status", imagePipeline.Status)
 
-	SetTagsOut(ctx, imagePipeline.Tags)
+	setTagsOut(ctx, imagePipeline.Tags)
 
 	return diags
 }

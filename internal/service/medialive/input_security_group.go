@@ -81,7 +81,7 @@ func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateInputSecurityGroupInput{
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 		WhitelistRules: expandWhitelistRules(d.Get("whitelist_rules").(*schema.Set).List()),
 	}
 

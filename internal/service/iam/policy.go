@@ -113,7 +113,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Path:           aws.String(d.Get("path").(string)),
 		PolicyDocument: aws.String(policy),
 		PolicyName:     aws.String(name),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	output, err := conn.CreatePolicyWithContext(ctx, input)
@@ -132,7 +132,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.StringValue(output.Policy.Arn))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := policyCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -194,7 +194,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("path", policy.Path)
 	d.Set("policy_id", policy.PolicyId)
 
-	SetTagsOut(ctx, policy.Tags)
+	setTagsOut(ctx, policy.Tags)
 
 	policyDocument, err := url.QueryUnescape(aws.StringValue(output.policyVersion.Document))
 

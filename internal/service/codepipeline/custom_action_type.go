@@ -187,7 +187,7 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 	input := &codepipeline.CreateCustomActionTypeInput{
 		Category: aws.String(category),
 		Provider: aws.String(provider),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 		Version:  aws.String(version),
 	}
 

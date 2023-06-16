@@ -690,7 +690,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		AppNetworkAccessType: aws.String(d.Get("app_network_access_type").(string)),
 		SubnetIds:            flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		DefaultUserSettings:  expandDomainDefaultUserSettings(d.Get("default_user_settings").([]interface{})),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("app_security_group_management"); ok {

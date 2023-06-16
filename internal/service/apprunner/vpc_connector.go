@@ -78,7 +78,7 @@ func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, met
 	input := &apprunner.CreateVpcConnectorInput{
 		SecurityGroups:   flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
 		Subnets:          flex.ExpandStringSet(d.Get("subnets").(*schema.Set)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 		VpcConnectorName: aws.String(vpcConnectorName),
 	}
 

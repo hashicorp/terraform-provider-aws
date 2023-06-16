@@ -505,7 +505,7 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 	createOpts := &sagemaker.CreateEndpointConfigInput{
 		EndpointConfigName: aws.String(name),
 		ProductionVariants: expandProductionVariants(d.Get("production_variants").([]interface{})),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {

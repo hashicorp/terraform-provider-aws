@@ -103,7 +103,7 @@ func resourceServiceNetworkServiceAssociationCreate(ctx context.Context, d *sche
 		ClientToken:              aws.String(id.UniqueId()),
 		ServiceIdentifier:        aws.String(d.Get("service_identifier").(string)),
 		ServiceNetworkIdentifier: aws.String(d.Get("service_network_identifier").(string)),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateServiceNetworkServiceAssociation(ctx, in)

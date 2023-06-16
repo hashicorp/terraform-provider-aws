@@ -327,7 +327,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	input := &amplify.CreateAppInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_token"); ok {
@@ -455,7 +455,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	d.Set("repository", app.Repository)
 
-	SetTagsOut(ctx, app.Tags)
+	setTagsOut(ctx, app.Tags)
 
 	return diags
 }

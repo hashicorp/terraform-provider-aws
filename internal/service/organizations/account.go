@@ -127,7 +127,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		d.Get("email").(string),
 		iamUserAccessToBilling,
 		roleName,
-		GetTagsIn(ctx),
+		getTagsIn(ctx),
 		d.Get("create_govcloud").(bool),
 	)
 

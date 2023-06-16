@@ -119,7 +119,7 @@ func (r *resourceNamespace) Create(ctx context.Context, req resource.CreateReque
 		AwsAccountId:  aws.String(plan.AWSAccountID.ValueString()),
 		Namespace:     aws.String(plan.Namespace.ValueString()),
 		IdentityStore: aws.String(plan.IdentityStore.ValueString()),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateNamespaceWithContext(ctx, &in)
