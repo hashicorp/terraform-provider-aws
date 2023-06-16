@@ -96,7 +96,7 @@ func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(err)
 	}
 
-	if err := UpdateTags(ctx, conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
+	if err := updateTags(ctx, conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
 		return diag.Errorf("updating %s resource (%s) tag (%s): %s", ec2.ServiceID, identifier, key, err)
 	}
 
@@ -111,7 +111,7 @@ func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(err)
 	}
 
-	if err := UpdateTags(ctx, conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
+	if err := updateTags(ctx, conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
 		return diag.Errorf("deleting %s resource (%s) tag (%s): %s", ec2.ServiceID, identifier, key, err)
 	}
 

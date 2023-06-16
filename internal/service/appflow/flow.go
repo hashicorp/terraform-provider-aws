@@ -1222,7 +1222,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		FlowName:                  aws.String(d.Get(names.AttrName).(string)),
 		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").(*schema.Set).List()),
 		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
-		Tags:                      GetTagsIn(ctx),
+		Tags:                      getTagsIn(ctx),
 		Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
 		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]interface{})[0].(map[string]interface{})),
 	}

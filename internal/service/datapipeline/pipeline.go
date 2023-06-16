@@ -61,7 +61,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := datapipeline.CreatePipelineInput{
 		Name:     aws.String(d.Get("name").(string)),
 		UniqueId: aws.String(uniqueID),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -96,7 +96,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name", v.Name)
 	d.Set("description", v.Description)
 
-	SetTagsOut(ctx, v.Tags)
+	setTagsOut(ctx, v.Tags)
 
 	return diags
 }

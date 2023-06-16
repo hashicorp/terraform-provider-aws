@@ -848,7 +848,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ImportMode:       aws.String(d.Get("import_mode").(string)),
 		PhysicalTableMap: expandDataSetPhysicalTableMap(d.Get("physical_table_map").(*schema.Set)),
 		Name:             aws.String(d.Get("name").(string)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("column_groups"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {

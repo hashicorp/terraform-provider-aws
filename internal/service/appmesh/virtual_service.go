@@ -143,7 +143,7 @@ func resourceVirtualServiceCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &appmesh.CreateVirtualServiceInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandVirtualServiceSpec(d.Get("spec").([]interface{})),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		VirtualServiceName: aws.String(name),
 	}
 

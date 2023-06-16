@@ -84,7 +84,7 @@ func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		UserName:      aws.String(d.Get("name").(string)),
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
 		IamRole:       aws.String(d.Get("iam_role").(string)),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	out, err := client.CreateKxUser(ctx, in)

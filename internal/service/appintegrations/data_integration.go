@@ -113,7 +113,7 @@ func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, 
 		Name:           aws.String(name),
 		ScheduleConfig: expandScheduleConfig(d.Get("schedule_config").([]interface{})),
 		SourceURI:      aws.String(d.Get("source_uri").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -157,7 +157,7 @@ func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	d.Set("source_uri", output.SourceURI)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return nil
 }

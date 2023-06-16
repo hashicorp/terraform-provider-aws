@@ -186,7 +186,7 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 	d.Set("transit_gateway_address", transitGatewayConnectPeer.ConnectPeerConfiguration.TransitGatewayAddress)
 	d.Set("transit_gateway_attachment_id", transitGatewayConnectPeer.TransitGatewayAttachmentId)
 
-	SetTagsOut(ctx, transitGatewayConnectPeer.Tags)
+	setTagsOut(ctx, transitGatewayConnectPeer.Tags)
 
 	return nil
 }

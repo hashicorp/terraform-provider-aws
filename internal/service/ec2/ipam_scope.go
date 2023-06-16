@@ -130,7 +130,7 @@ func resourceIPAMScopeRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("is_default", scope.IsDefault)
 	d.Set("pool_count", scope.PoolCount)
 
-	SetTagsOut(ctx, scope.Tags)
+	setTagsOut(ctx, scope.Tags)
 
 	return diags
 }

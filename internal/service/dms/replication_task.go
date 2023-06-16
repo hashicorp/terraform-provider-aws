@@ -126,7 +126,7 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 		ReplicationTaskIdentifier: aws.String(taskId),
 		SourceEndpointArn:         aws.String(d.Get("source_endpoint_arn").(string)),
 		TableMappings:             aws.String(d.Get("table_mappings").(string)),
-		Tags:                      GetTagsIn(ctx),
+		Tags:                      getTagsIn(ctx),
 		TargetEndpointArn:         aws.String(d.Get("target_endpoint_arn").(string)),
 	}
 

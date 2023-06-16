@@ -258,7 +258,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		Match:              expandRuleMatch(d.Get("match").([]interface{})[0].(map[string]interface{})),
 		Name:               aws.String(name),
 		ServiceIdentifier:  aws.String(d.Get("service_identifier").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("priority"); ok {

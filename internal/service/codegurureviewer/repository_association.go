@@ -269,7 +269,7 @@ func resourceRepositoryAssociationCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 
 	in := &codegurureviewer.AssociateRepositoryInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	in.KMSKeyDetails = expandKMSKeyDetails(d.Get("kms_key_details").([]interface{}))

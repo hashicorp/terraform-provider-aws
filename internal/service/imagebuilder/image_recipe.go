@@ -252,7 +252,7 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	input := &imagebuilder.CreateImageRecipeInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("block_device_mapping"); ok && v.(*schema.Set).Len() > 0 {
@@ -346,7 +346,7 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("parent_image", imageRecipe.ParentImage)
 	d.Set("platform", imageRecipe.Platform)
 
-	SetTagsOut(ctx, imageRecipe.Tags)
+	setTagsOut(ctx, imageRecipe.Tags)
 
 	if imageRecipe.AdditionalInstanceConfiguration != nil {
 		d.Set("systems_manager_agent", []interface{}{flattenSystemsManagerAgent(imageRecipe.AdditionalInstanceConfiguration.SystemsManagerAgent)})

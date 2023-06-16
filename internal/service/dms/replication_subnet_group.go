@@ -87,7 +87,7 @@ func resourceReplicationSubnetGroupCreate(ctx context.Context, d *schema.Resourc
 		ReplicationSubnetGroupIdentifier:  aws.String(d.Get("replication_subnet_group_id").(string)),
 		ReplicationSubnetGroupDescription: aws.String(d.Get("replication_subnet_group_description").(string)),
 		SubnetIds:                         flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:                              GetTagsIn(ctx),
+		Tags:                              getTagsIn(ctx),
 	}
 
 	log.Println("[DEBUG] DMS create replication subnet group:", request)

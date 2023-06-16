@@ -83,7 +83,7 @@ func resourceThreatIntelSetCreate(ctx context.Context, d *schema.ResourceData, m
 		Format:     aws.String(d.Get("format").(string)),
 		Location:   aws.String(d.Get("location").(string)),
 		Activate:   aws.Bool(d.Get("activate").(bool)),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateThreatIntelSetWithContext(ctx, input)
@@ -146,7 +146,7 @@ func resourceThreatIntelSetRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("name", resp.Name)
 	d.Set("activate", aws.StringValue(resp.Status) == guardduty.ThreatIntelSetStatusActive)
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	return diags
 }

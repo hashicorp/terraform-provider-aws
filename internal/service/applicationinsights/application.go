@@ -86,7 +86,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		CWEMonitorEnabled: aws.Bool(d.Get("cwe_monitor_enabled").(bool)),
 		OpsCenterEnabled:  aws.Bool(d.Get("ops_center_enabled").(bool)),
 		ResourceGroupName: aws.String(d.Get("resource_group_name").(string)),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("grouping_type"); ok {

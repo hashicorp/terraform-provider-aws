@@ -111,7 +111,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	to_date := out.ValidToDate.String()
 	d.Set("valid_to_date", to_date)
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(out.CertificateArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(out.CertificateArn))
 
 	if err != nil {
 		return create.DiagError(names.DMS, create.ErrActionReading, DSNameCertificate, d.Id(), err)

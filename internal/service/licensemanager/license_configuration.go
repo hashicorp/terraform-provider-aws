@@ -89,7 +89,7 @@ func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceD
 	input := &licensemanager.CreateLicenseConfigurationInput{
 		LicenseCountingType: aws.String(d.Get("license_counting_type").(string)),
 		Name:                aws.String(name),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -144,7 +144,7 @@ func resourceLicenseConfigurationRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("name", output.Name)
 	d.Set("owner_account_id", output.OwnerAccountId)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return nil
 }

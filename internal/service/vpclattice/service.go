@@ -108,7 +108,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	in := &vpclattice.CreateServiceInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(d.Get("name").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("auth_type"); ok {

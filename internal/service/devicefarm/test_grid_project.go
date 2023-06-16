@@ -103,7 +103,7 @@ func resourceTestGridProjectCreate(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(aws.StringValue(output.TestGridProject.Arn))
 
-	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Test Grid Project (%s) tags: %s", d.Id(), err)
 	}
 

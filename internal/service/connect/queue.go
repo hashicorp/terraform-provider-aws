@@ -119,7 +119,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &connect.CreateQueueInput{
 		InstanceId: aws.String(instanceID),
 		Name:       aws.String(name),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -208,7 +208,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("quick_connect_ids", aws.StringValueSlice(quickConnectIds))
 
-	SetTagsOut(ctx, resp.Queue.Tags)
+	setTagsOut(ctx, resp.Queue.Tags)
 
 	return nil
 }

@@ -81,7 +81,7 @@ func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &athena.CreateDataCatalogInput{
 		Name:        aws.String(name),
 		Description: aws.String(d.Get("description").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 		Type:        aws.String(d.Get("type").(string)),
 	}
 

@@ -595,7 +595,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ClientToken: aws.String(id.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 		Type:        types.DataSourceType(d.Get("type").(string)),
 	}
 

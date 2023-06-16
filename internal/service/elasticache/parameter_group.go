@@ -90,7 +90,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 		CacheParameterGroupName:   aws.String(d.Get("name").(string)),
 		CacheParameterGroupFamily: aws.String(d.Get("family").(string)),
 		Description:               aws.String(d.Get("description").(string)),
-		Tags:                      GetTagsIn(ctx),
+		Tags:                      getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateCacheParameterGroupWithContext(ctx, &input)

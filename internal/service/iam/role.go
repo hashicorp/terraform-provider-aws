@@ -191,7 +191,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		AssumeRolePolicyDocument: aws.String(assumeRolePolicy),
 		Path:                     aws.String(d.Get("path").(string)),
 		RoleName:                 aws.String(name),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -238,7 +238,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	d.SetId(roleName)
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := roleCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -325,7 +325,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set("managed_policy_arns", managedPolicies)
 
-	SetTagsOut(ctx, role.Tags)
+	setTagsOut(ctx, role.Tags)
 
 	return diags
 }

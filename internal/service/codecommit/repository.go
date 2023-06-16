@@ -84,7 +84,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &codecommit.CreateRepositoryInput{
 		RepositoryName:        aws.String(d.Get("repository_name").(string)),
 		RepositoryDescription: aws.String(d.Get("description").(string)),
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateRepositoryWithContext(ctx, input)

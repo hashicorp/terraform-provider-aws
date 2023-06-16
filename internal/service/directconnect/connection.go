@@ -243,7 +243,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ConnectionName: aws.String(name),
 		Location:       aws.String(d.Get("location").(string)),
 		RequestMACSec:  aws.Bool(d.Get("request_macsec").(bool)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("provider_name"); ok {

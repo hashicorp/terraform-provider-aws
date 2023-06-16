@@ -288,7 +288,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &keyspaces.CreateTableInput{
 		KeyspaceName: aws.String(keyspaceName),
 		TableName:    aws.String(tableName),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("capacity_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {

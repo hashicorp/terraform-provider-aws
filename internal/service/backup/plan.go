@@ -181,7 +181,7 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 			Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
 			AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 		},
-		BackupPlanTags: GetTagsIn(ctx),
+		BackupPlanTags: getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateBackupPlanWithContext(ctx, input)

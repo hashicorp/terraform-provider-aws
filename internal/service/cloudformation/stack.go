@@ -139,7 +139,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &cloudformation.CreateStackInput{
 		ClientRequestToken: aws.String(requestToken),
 		StackName:          aws.String(name),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("template_body"); ok {
@@ -295,7 +295,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Stack (%s): %s", d.Id(), err)
 	}
 
-	SetTagsOut(ctx, stack.Tags)
+	setTagsOut(ctx, stack.Tags)
 
 	err = d.Set("outputs", flattenOutputs(stack.Outputs))
 	if err != nil {
@@ -349,7 +349,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Parameters = expandParameters(v.(map[string]interface{}))
 	}
 
-	if tags := GetTagsIn(ctx); len(tags) > 0 {
+	if tags := getTagsIn(ctx); len(tags) > 0 {
 		input.Tags = tags
 	}
 

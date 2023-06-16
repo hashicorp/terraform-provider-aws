@@ -149,7 +149,7 @@ func resourceUsagePlanCreate(ctx context.Context, d *schema.ResourceData, meta i
 	name := d.Get("name").(string)
 	input := &apigateway.CreateUsagePlanInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("api_stages"); ok && v.(*schema.Set).Len() > 0 {
@@ -253,7 +253,7 @@ func resourceUsagePlanRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	SetTagsOut(ctx, up.Tags)
+	setTagsOut(ctx, up.Tags)
 
 	return diags
 }

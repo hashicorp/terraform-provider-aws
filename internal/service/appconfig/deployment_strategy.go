@@ -92,7 +92,7 @@ func resourceDeploymentStrategyCreate(ctx context.Context, d *schema.ResourceDat
 		GrowthType:                  aws.String(d.Get("growth_type").(string)),
 		Name:                        aws.String(name),
 		ReplicateTo:                 aws.String(d.Get("replicate_to").(string)),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

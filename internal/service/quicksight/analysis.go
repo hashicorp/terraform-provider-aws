@@ -153,7 +153,7 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 		AwsAccountId: aws.String(awsAccountId),
 		AnalysisId:   aws.String(analysisId),
 		Name:         aws.String(d.Get("name").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("source_entity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {

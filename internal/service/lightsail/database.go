@@ -195,7 +195,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 		RelationalDatabaseBlueprintId: aws.String(d.Get("blueprint_id").(string)),
 		RelationalDatabaseBundleId:    aws.String(d.Get("bundle_id").(string)),
 		RelationalDatabaseName:        aws.String(relationalDatabaseName),
-		Tags:                          GetTagsIn(ctx),
+		Tags:                          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("availability_zone"); ok {
@@ -308,7 +308,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("secondary_availability_zone", rd.SecondaryAvailabilityZone)
 	d.Set("support_code", rd.SupportCode)
 
-	SetTagsOut(ctx, rd.Tags)
+	setTagsOut(ctx, rd.Tags)
 
 	return nil
 }

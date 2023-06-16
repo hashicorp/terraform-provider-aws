@@ -242,7 +242,7 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("vpc_id", routeTable.VpcId)
 
 	// Ignore the AmazonFSx service tag in addition to standard ignores.
-	SetTagsOut(ctx, Tags(KeyValueTags(ctx, routeTable.Tags).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))))
+	setTagsOut(ctx, Tags(KeyValueTags(ctx, routeTable.Tags).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))))
 
 	return diags
 }

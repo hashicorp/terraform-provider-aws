@@ -142,7 +142,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		Name:             aws.String(name),
 		Rules:            expandRules(d.Get("rule").(*schema.Set).List()),
 		Scope:            aws.String(d.Get("scope").(string)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 

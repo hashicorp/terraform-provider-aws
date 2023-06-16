@@ -120,7 +120,7 @@ func resourceLocationFSxWindowsFileSystemCreate(ctx context.Context, d *schema.R
 		User:              aws.String(d.Get("user").(string)),
 		Password:          aws.String(d.Get("password").(string)),
 		SecurityGroupArns: flex.ExpandStringSet(d.Get("security_group_arns").(*schema.Set)),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("subdirectory"); ok {

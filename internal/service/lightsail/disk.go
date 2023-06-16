@@ -81,7 +81,7 @@ func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
 		SizeInGb:         aws.Int32(int32(d.Get("size_in_gb").(int))),
 		DiskName:         aws.String(id),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateDisk(ctx, &in)
@@ -123,7 +123,7 @@ func resourceDiskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("size_in_gb", out.SizeInGb)
 	d.Set("support_code", out.SupportCode)
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	return nil
 }

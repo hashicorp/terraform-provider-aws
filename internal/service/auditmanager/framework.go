@@ -124,7 +124,7 @@ func (r *resourceFramework) Create(ctx context.Context, req resource.CreateReque
 	in := auditmanager.CreateAssessmentFrameworkInput{
 		Name:        aws.String(plan.Name.ValueString()),
 		ControlSets: csInput,
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if !plan.ComplianceType.IsNull() {
@@ -378,7 +378,7 @@ func (rd *resourceFrameworkData) refreshFromOutput(ctx context.Context, out *aws
 	rd.FrameworkType = flex.StringValueToFramework(ctx, out.Type)
 	rd.ARN = flex.StringToFramework(ctx, out.Arn)
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	return diags
 }

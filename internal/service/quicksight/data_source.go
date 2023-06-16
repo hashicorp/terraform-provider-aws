@@ -618,7 +618,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		DataSourceId:         aws.String(id),
 		DataSourceParameters: expandDataSourceParameters(d.Get("parameters").([]interface{})),
 		Name:                 aws.String(d.Get("name").(string)),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 		Type:                 aws.String(d.Get("type").(string)),
 	}
 

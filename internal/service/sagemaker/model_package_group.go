@@ -66,7 +66,7 @@ func resourceModelPackageGroupCreate(ctx context.Context, d *schema.ResourceData
 	name := d.Get("model_package_group_name").(string)
 	input := &sagemaker.CreateModelPackageGroupInput{
 		ModelPackageGroupName: aws.String(name),
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("model_package_group_description"); ok {

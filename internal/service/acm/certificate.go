@@ -339,7 +339,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		input := &acm.RequestCertificateInput{
 			DomainName:       aws.String(domainName),
 			IdempotencyToken: aws.String(id.PrefixedUniqueId("tf")), // 32 character limit
-			Tags:             GetTagsIn(ctx),
+			Tags:             getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("certificate_authority_arn"); ok {
@@ -377,7 +377,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		input := &acm.ImportCertificateInput{
 			Certificate: []byte(d.Get("certificate_body").(string)),
 			PrivateKey:  []byte(d.Get("private_key").(string)),
-			Tags:        GetTagsIn(ctx),
+			Tags:        getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("certificate_chain"); ok {

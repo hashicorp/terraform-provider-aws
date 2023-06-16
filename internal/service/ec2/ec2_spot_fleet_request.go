@@ -1068,7 +1068,7 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("fleet_type", config.Type)
 	d.Set("launch_specification", launchSpec)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	if err := d.Set("launch_template_config", flattenLaunchTemplateConfigs(config.LaunchTemplateConfigs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting launch_template_config: %s", err)

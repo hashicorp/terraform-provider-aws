@@ -278,7 +278,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		NodeType:                aws.String(d.Get("node_type").(string)),
 		NumReplicasPerShard:     aws.Int64(int64(d.Get("num_replicas_per_shard").(int))),
 		NumShards:               aws.Int64(int64(d.Get("num_shards").(int))),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 		TLSEnabled:              aws.Bool(d.Get("tls_enabled").(bool)),
 	}
 

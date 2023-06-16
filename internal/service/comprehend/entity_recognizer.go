@@ -494,7 +494,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 		VersionName:        versionName,
 		VpcConfig:          expandVPCConfig(d.Get("vpc_config").([]interface{})),
 		ClientRequestToken: aws.String(id.UniqueId()),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.Get("model_kms_key_id").(string); ok && v != "" {

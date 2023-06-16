@@ -136,7 +136,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	req := lightsail.CreateCertificateInput{
 		CertificateName: aws.String(d.Get("name").(string)),
 		DomainName:      aws.String(d.Get("domain_name").(string)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("subject_alternative_names"); ok {
@@ -183,7 +183,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("name", certificate.Name)
 	d.Set("subject_alternative_names", certificate.SubjectAlternativeNames)
 
-	SetTagsOut(ctx, certificate.Tags)
+	setTagsOut(ctx, certificate.Tags)
 
 	return nil
 }

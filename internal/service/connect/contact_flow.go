@@ -99,7 +99,7 @@ func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &connect.CreateContactFlowInput{
 		Name:       aws.String(name),
 		InstanceId: aws.String(instanceID),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 		Type:       aws.String(d.Get("type").(string)),
 	}
 
@@ -174,7 +174,7 @@ func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("type", resp.ContactFlow.Type)
 	d.Set("content", resp.ContactFlow.Content)
 
-	SetTagsOut(ctx, resp.ContactFlow.Tags)
+	setTagsOut(ctx, resp.ContactFlow.Tags)
 
 	return nil
 }

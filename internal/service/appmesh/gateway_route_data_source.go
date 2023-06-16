@@ -91,7 +91,7 @@ func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, met
 	var tags tftags.KeyValueTags
 
 	if meshOwner == meta.(*conns.AWSClient).AccountID {
-		tags, err = ListTags(ctx, conn, arn)
+		tags, err = listTags(ctx, conn, arn)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Gateway Route (%s): %s", arn, err)

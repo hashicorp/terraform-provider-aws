@@ -274,7 +274,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	input := &batch.CreateComputeEnvironmentInput{
 		ComputeEnvironmentName: aws.String(computeEnvironmentName),
 		ServiceRole:            aws.String(d.Get("service_role").(string)),
-		Tags:                   GetTagsIn(ctx),
+		Tags:                   getTagsIn(ctx),
 		Type:                   aws.String(computeEnvironmentType),
 	}
 
@@ -349,7 +349,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("eks_configuration", nil)
 	}
 
-	SetTagsOut(ctx, computeEnvironment.Tags)
+	setTagsOut(ctx, computeEnvironment.Tags)
 
 	return diags
 }

@@ -80,7 +80,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Description: aws.String(d.Get("description").(string)),
 		Name:        aws.String(name),
 		Type:        aws.String(d.Get("type").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 4*time.Minute, func() (interface{}, error) {

@@ -105,7 +105,7 @@ func resourceTransitGatewayRouteTableAttachmentCreate(ctx context.Context, d *sc
 	transitGatewayRouteTableARN := d.Get("transit_gateway_route_table_arn").(string)
 	input := &networkmanager.CreateTransitGatewayRouteTableAttachmentInput{
 		PeeringId:                   aws.String(peeringID),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 		TransitGatewayRouteTableArn: aws.String(transitGatewayRouteTableARN),
 	}
 
@@ -160,7 +160,7 @@ func resourceTransitGatewayRouteTableAttachmentRead(ctx context.Context, d *sche
 	d.Set("state", a.State)
 	d.Set("transit_gateway_route_table_arn", transitGatewayRouteTableAttachment.TransitGatewayRouteTableArn)
 
-	SetTagsOut(ctx, a.Tags)
+	setTagsOut(ctx, a.Tags)
 
 	return nil
 }

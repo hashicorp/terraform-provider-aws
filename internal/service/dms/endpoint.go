@@ -698,7 +698,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		EndpointIdentifier: aws.String(endpointID),
 		EndpointType:       aws.String(d.Get("endpoint_type").(string)),
 		EngineName:         aws.String(d.Get("engine_name").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("certificate_arn"); ok {

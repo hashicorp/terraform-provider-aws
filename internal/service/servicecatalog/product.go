@@ -172,7 +172,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ProvisioningArtifactParameters: expandProvisioningArtifactParameters(
 			d.Get("provisioning_artifact_parameters").([]interface{})[0].(map[string]interface{}),
 		),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("accept_language"); ok {
@@ -283,7 +283,7 @@ func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("support_url", pvs.SupportUrl)
 	d.Set("type", pvs.Type)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

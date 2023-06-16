@@ -122,7 +122,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &resourcegroups.CreateGroupInput{
 		Description: aws.String(d.Get("description").(string)),
 		Name:        aws.String(name),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	waitForConfigurationAttached := false
