@@ -98,7 +98,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	in := &ivs.CreateChannelInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("authorized"); ok {

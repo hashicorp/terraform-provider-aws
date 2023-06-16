@@ -1201,7 +1201,7 @@ func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta i
 	ruleName := d.Get("name").(string)
 	input := &iot.CreateTopicRuleInput{
 		RuleName:         aws.String(ruleName),
-		Tags:             aws.String(KeyValueTags(ctx, GetTagsIn(ctx)).URLQueryString()),
+		Tags:             aws.String(KeyValueTags(ctx, getTagsIn(ctx)).URLQueryString()),
 		TopicRulePayload: expandTopicRulePayload(d),
 	}
 

@@ -123,7 +123,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &glue.CreateConnectionInput{
 		CatalogId:       aws.String(catalogID),
 		ConnectionInput: expandConnectionInput(d),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating Glue Connection: %s", input)

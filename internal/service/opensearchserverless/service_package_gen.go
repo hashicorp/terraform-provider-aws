@@ -16,7 +16,27 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceAccessPolicy,
+		},
+		{
+			Factory: newResourceCollection,
+			Name:    "Collection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory: newResourceSecurityConfig,
+		},
+		{
+			Factory: newResourceSecurityPolicy,
+		},
+		{
+			Factory: newResourceVPCEndpoint,
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {

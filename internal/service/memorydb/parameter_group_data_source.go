@@ -85,7 +85,7 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("failed to set parameter: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for MemoryDB Parameter Group (%s): %s", d.Id(), err)

@@ -94,7 +94,7 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 	input := &connect.CreateContactFlowModuleInput{
 		Name:       aws.String(name),
 		InstanceId: aws.String(instanceID),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -167,7 +167,7 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("description", resp.ContactFlowModule.Description)
 	d.Set("content", resp.ContactFlowModule.Content)
 
-	SetTagsOut(ctx, resp.ContactFlowModule.Tags)
+	setTagsOut(ctx, resp.ContactFlowModule.Tags)
 
 	return nil
 }

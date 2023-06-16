@@ -60,7 +60,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	applicationName := d.Get("name").(string)
 	input := &appconfig.CreateApplicationInput{
 		Name: aws.String(applicationName),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

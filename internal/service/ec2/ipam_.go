@@ -167,7 +167,7 @@ func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("private_default_scope_id", ipam.PrivateDefaultScopeId)
 	d.Set("scope_count", ipam.ScopeCount)
 
-	SetTagsOut(ctx, ipam.Tags)
+	setTagsOut(ctx, ipam.Tags)
 
 	return diags
 }

@@ -217,7 +217,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ReplicationFactor: aws.Int64(numNodes),
 		SecurityGroupIds:  securityIds,
 		SubnetGroupName:   aws.String(subnetGroupName),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	// optionals can be defaulted by AWS

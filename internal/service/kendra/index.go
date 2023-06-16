@@ -383,7 +383,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(name),
 		RoleArn:     aws.String(d.Get("role_arn").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

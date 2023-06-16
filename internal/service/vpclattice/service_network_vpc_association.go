@@ -90,7 +90,7 @@ func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.R
 		ClientToken:              aws.String(id.UniqueId()),
 		ServiceNetworkIdentifier: aws.String(d.Get("service_network_identifier").(string)),
 		VpcIdentifier:            aws.String(d.Get("vpc_identifier").(string)),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("security_group_ids"); ok {

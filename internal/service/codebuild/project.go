@@ -725,7 +725,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		LogsConfig:          projectLogsConfig,
 		BuildBatchConfig:    projectBatchConfig,
 		FileSystemLocations: projectFileSystemLocations,
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cache"); ok {
@@ -1364,7 +1364,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("badge_url", "")
 	}
 
-	SetTagsOut(ctx, project.Tags)
+	setTagsOut(ctx, project.Tags)
 
 	return diags
 }
@@ -1505,7 +1505,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		// The documentation clearly says "The replacement set of tags for this build project."
 		// But its a slice of pointers so if not set for every update, they get removed.
-		input.Tags = GetTagsIn(ctx)
+		input.Tags = getTagsIn(ctx)
 
 		// Handle IAM eventual consistency
 		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {

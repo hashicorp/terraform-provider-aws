@@ -220,7 +220,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 		RequesterPays:          aws.Bool(d.Get("requester_pays").(bool)),
 		Role:                   aws.String(d.Get("role_arn").(string)),
 		SMBACLEnabled:          aws.Bool(d.Get("smb_acl_enabled").(bool)),
-		Tags:                   GetTagsIn(ctx),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("admin_user_list"); ok && v.(*schema.Set).Len() > 0 {
@@ -351,7 +351,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("valid_user_list", aws.StringValueSlice(fileshare.ValidUserList))
 	d.Set("vpc_endpoint_dns_name", fileshare.VPCEndpointDNSName)
 
-	SetTagsOut(ctx, fileshare.Tags)
+	setTagsOut(ctx, fileshare.Tags)
 
 	return diags
 }

@@ -168,7 +168,7 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		NotebookInstanceName:                 aws.String(name),
 		RoleArn:                              aws.String(d.Get("role_arn").(string)),
 		SecurityGroupIds:                     flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
-		Tags:                                 GetTagsIn(ctx),
+		Tags:                                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("accelerator_types"); ok && v.(*schema.Set).Len() > 0 {

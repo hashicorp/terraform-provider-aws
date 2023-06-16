@@ -203,7 +203,7 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 	input := &cloudwatchevidently.CreateFeatureInput{
 		Name:       aws.String(name),
 		Project:    aws.String(project),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 		Variations: expandVariations(d.Get("variations").(*schema.Set).List()),
 	}
 
@@ -281,7 +281,7 @@ func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("status", feature.Status)
 	d.Set("value_type", feature.ValueType)
 
-	SetTagsOut(ctx, feature.Tags)
+	setTagsOut(ctx, feature.Tags)
 
 	return nil
 }

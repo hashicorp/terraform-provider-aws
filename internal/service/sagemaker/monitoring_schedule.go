@@ -104,7 +104,7 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 	createOpts := &sagemaker.CreateMonitoringScheduleInput{
 		MonitoringScheduleConfig: expandMonitoringScheduleConfig(d.Get("monitoring_schedule_config").([]interface{})),
 		MonitoringScheduleName:   aws.String(name),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	_, err := conn.CreateMonitoringScheduleWithContext(ctx, createOpts)

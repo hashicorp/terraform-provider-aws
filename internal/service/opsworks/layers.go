@@ -590,7 +590,7 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
+	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
 		layer, err := FindLayerByID(ctx, conn, d.Id())
 
 		if err != nil {
@@ -598,7 +598,7 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 		}
 
 		arn := aws.StringValue(layer.Arn)
-		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
+		if err := updateTags(ctx, conn, arn, nil, tags); err != nil {
 			return diag.Errorf("adding OpsWorks Layer (%s) tags: %s", arn, err)
 		}
 	}

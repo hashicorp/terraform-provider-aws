@@ -120,7 +120,7 @@ func resourceLocationSMBCreate(ctx context.Context, d *schema.ResourceData, meta
 		Password:       aws.String(d.Get("password").(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 		User:           aws.String(d.Get("user").(string)),
 	}
 

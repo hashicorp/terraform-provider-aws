@@ -178,7 +178,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 	name := d.Get("name").(string)
 	input := &apigateway.CreateRestApiInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("api_key_source"); ok {
@@ -365,7 +365,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("policy", policyToSet)
 
-	SetTagsOut(ctx, api.Tags)
+	setTagsOut(ctx, api.Tags)
 
 	return diags
 }

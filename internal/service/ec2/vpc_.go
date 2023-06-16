@@ -370,7 +370,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		}
 	}
 
-	SetTagsOut(ctx, vpc.Tags)
+	setTagsOut(ctx, vpc.Tags)
 
 	return diags
 }

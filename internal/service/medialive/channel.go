@@ -714,7 +714,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	in := &medialive.CreateChannelInput{
 		Name:      aws.String(d.Get("name").(string)),
 		RequestId: aws.String(id.UniqueId()),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cdi_input_specification"); ok && len(v.([]interface{})) > 0 {

@@ -149,7 +149,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
 		RoleArn:    aws.String(d.Get("role_arn").(string)),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 		Type:       aws.String(d.Get("type").(string)),
 	}
 

@@ -176,7 +176,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Name:             aws.String(name),
 		Rules:            expandWebACLRules(d.Get("rule").(*schema.Set).List()),
 		Scope:            aws.String(d.Get("scope").(string)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 

@@ -974,7 +974,7 @@ func resourceVirtualNodeCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &appmesh.CreateVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
 		Spec:            expandVirtualNodeSpec(d.Get("spec").([]interface{})),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 		VirtualNodeName: aws.String(name),
 	}
 

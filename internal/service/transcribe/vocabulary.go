@@ -95,7 +95,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	in := &transcribe.CreateVocabularyInput{
 		VocabularyName: aws.String(d.Get("vocabulary_name").(string)),
 		LanguageCode:   types.LanguageCode(d.Get("language_code").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("vocabulary_file_uri"); ok {

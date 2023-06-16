@@ -109,7 +109,7 @@ func resourceTransitGatewayPolicyTableRead(ctx context.Context, d *schema.Resour
 	d.Set("state", transitGatewayPolicyTable.State)
 	d.Set("transit_gateway_id", transitGatewayPolicyTable.TransitGatewayId)
 
-	SetTagsOut(ctx, transitGatewayPolicyTable.Tags)
+	setTagsOut(ctx, transitGatewayPolicyTable.Tags)
 
 	return diags
 }

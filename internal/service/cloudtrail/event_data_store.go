@@ -186,7 +186,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 		MultiRegionEnabled:           aws.Bool(d.Get("multi_region_enabled").(bool)),
 		TerminationProtectionEnabled: aws.Bool(d.Get("termination_protection_enabled").(bool)),
 		RetentionPeriod:              aws.Int64(int64(d.Get("retention_period").(int))),
-		TagsList:                     GetTagsIn(ctx),
+		TagsList:                     getTagsIn(ctx),
 	}
 
 	if _, ok := d.GetOk("advanced_event_selector"); ok {

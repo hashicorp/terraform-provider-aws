@@ -105,7 +105,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		InstanceId:     aws.String(instanceID),
 		Content:        aws.String(d.Get("content").(string)),
 		LanguageCode:   aws.String(d.Get("language_code").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 		VocabularyName: aws.String(vocabularyName),
 	}
 
@@ -172,7 +172,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("state", vocabulary.State)
 	d.Set("vocabulary_id", vocabulary.Id)
 
-	SetTagsOut(ctx, resp.Vocabulary.Tags)
+	setTagsOut(ctx, resp.Vocabulary.Tags)
 
 	return nil
 }

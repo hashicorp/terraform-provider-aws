@@ -1315,11 +1315,6 @@ resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "private"
-}
-
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "firehose_role" {
@@ -1344,9 +1339,9 @@ EOF
 
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   name        = %[1]q
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.firehose_role.arn
     bucket_arn = aws_s3_bucket.bucket.arn
   }

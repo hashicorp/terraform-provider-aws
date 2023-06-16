@@ -184,7 +184,7 @@ func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	input := &athena.CreateWorkGroupInput{
 		Configuration: expandWorkGroupConfiguration(d.Get("configuration").([]interface{})),
 		Name:          aws.String(name),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

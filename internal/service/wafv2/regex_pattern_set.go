@@ -109,7 +109,7 @@ func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, 
 		Name:                  aws.String(name),
 		RegularExpressionList: []*wafv2.Regex{},
 		Scope:                 aws.String(d.Get("scope").(string)),
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

@@ -551,7 +551,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	input := &elasticsearch.CreateElasticsearchDomainInput{
 		DomainName:           aws.String(name),
 		ElasticsearchVersion: aws.String(d.Get("elasticsearch_version").(string)),
-		TagList:              GetTagsIn(ctx),
+		TagList:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_policies"); ok {

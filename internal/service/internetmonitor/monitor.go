@@ -120,7 +120,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta int
 	input := &internetmonitor.CreateMonitorInput{
 		ClientToken: aws.String(id.UniqueId()),
 		MonitorName: aws.String(monitorName),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("max_city_networks_to_monitor"); ok {
@@ -197,7 +197,7 @@ func resourceMonitorRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("status", monitor.Status)
 	d.Set("resources", flex.FlattenStringSet(monitor.Resources))
 
-	SetTagsOut(ctx, monitor.Tags)
+	setTagsOut(ctx, monitor.Tags)
 
 	return diags
 }

@@ -172,7 +172,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	req := &pinpoint.CreateAppInput{
 		CreateApplicationRequest: &pinpoint.CreateApplicationRequest{
 			Name: aws.String(name),
-			Tags: GetTagsIn(ctx),
+			Tags: getTagsIn(ctx),
 		},
 	}
 

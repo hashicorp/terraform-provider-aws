@@ -209,7 +209,7 @@ func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &sagemaker.CreateSpaceInput{
 		SpaceName: aws.String(spaceName),
 		DomainId:  aws.String(domainId),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("space_settings"); ok && len(v.([]interface{})) > 0 {

@@ -86,7 +86,7 @@ func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		Aggregation:       aws.String(d.Get("aggregation").(string)),
 		Pattern:           aws.String(d.Get("pattern").(string)),
 		ProtectionGroupId: aws.String(protectionGroupID),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("members"); ok {

@@ -150,7 +150,7 @@ func resourcePrivateVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 			Asn:                  aws.Int64(int64(d.Get("bgp_asn").(int))),
 			EnableSiteLink:       aws.Bool(d.Get("sitelink_enabled").(bool)),
 			Mtu:                  aws.Int64(int64(d.Get("mtu").(int))),
-			Tags:                 GetTagsIn(ctx),
+			Tags:                 getTagsIn(ctx),
 			VirtualInterfaceName: aws.String(d.Get("name").(string)),
 			Vlan:                 aws.Int64(int64(d.Get("vlan").(int))),
 		},

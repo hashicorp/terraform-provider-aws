@@ -60,7 +60,7 @@ func resourceGlobalNetworkCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	input := &networkmanager.CreateGlobalNetworkInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -101,7 +101,7 @@ func resourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("arn", globalNetwork.GlobalNetworkArn)
 	d.Set("description", globalNetwork.Description)
 
-	SetTagsOut(ctx, globalNetwork.Tags)
+	setTagsOut(ctx, globalNetwork.Tags)
 
 	return nil
 }

@@ -142,7 +142,7 @@ func resourceNotificationRuleCreate(ctx context.Context, d *schema.ResourceData,
 		Name:         aws.String(d.Get("name").(string)),
 		Resource:     aws.String(d.Get("resource").(string)),
 		Status:       aws.String(d.Get("status").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		Targets:      expandNotificationRuleTargets(d.Get("target").(*schema.Set).List()),
 	}
 
@@ -187,7 +187,7 @@ func resourceNotificationRuleRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("status", rule.Status)
 	d.Set("resource", rule.Resource)
 
-	SetTagsOut(ctx, rule.Tags)
+	setTagsOut(ctx, rule.Tags)
 
 	targets := make([]map[string]interface{}, 0, len(rule.Targets))
 	for _, t := range rule.Targets {

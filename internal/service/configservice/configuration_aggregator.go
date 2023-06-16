@@ -128,7 +128,7 @@ func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceD
 
 	input := &configservice.PutConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Get("name").(string)),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("account_aggregation_source"); ok && len(v.([]interface{})) > 0 {

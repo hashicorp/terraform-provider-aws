@@ -68,7 +68,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &apprunner.CreateConnectionInput{
 		ConnectionName: aws.String(name),
 		ProviderType:   aws.String(d.Get("provider_type").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateConnectionWithContext(ctx, input)

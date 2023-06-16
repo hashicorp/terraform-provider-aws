@@ -672,7 +672,7 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("setting row_level_permission_tag_configuration: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for QuickSight Data Set (%s): %s", d.Id(), err)

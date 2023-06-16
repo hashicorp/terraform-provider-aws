@@ -75,7 +75,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 	dbName := d.Get("database_name").(string)
 	input := &timestreamwrite.CreateDatabaseInput{
 		DatabaseName: aws.String(dbName),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {

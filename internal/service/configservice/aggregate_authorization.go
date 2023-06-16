@@ -65,7 +65,7 @@ func resourceAggregateAuthorizationPut(ctx context.Context, d *schema.ResourceDa
 	input := &configservice.PutAggregationAuthorizationInput{
 		AuthorizedAccountId: aws.String(accountId),
 		AuthorizedAwsRegion: aws.String(region),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	_, err := conn.PutAggregationAuthorizationWithContext(ctx, input)

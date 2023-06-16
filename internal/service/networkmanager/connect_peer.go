@@ -187,7 +187,7 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 		ConnectAttachmentId: aws.String(connectAttachmentID),
 		InsideCidrBlocks:    insideCIDRBlocks,
 		PeerAddress:         aws.String(peerAddress),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("bgp_options"); ok && len(v.([]interface{})) > 0 {
@@ -276,7 +276,7 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("peer_address", connectPeer.Configuration.PeerAddress)
 	d.Set("state", connectPeer.State)
 
-	SetTagsOut(ctx, connectPeer.Tags)
+	setTagsOut(ctx, connectPeer.Tags)
 
 	return nil
 }
@@ -439,7 +439,7 @@ func waitConnectPeerDeleted(ctx context.Context, conn *networkmanager.NetworkMan
 	return nil, err
 }
 
-// validationExceptionMessageContains returns true if the error matches all these conditions:
+// validationExceptionMessage_Contains returns true if the error matches all these conditions:
 //   - err is of type networkmanager.ValidationException
 //   - ValidationException.Reason equals reason
 //   - ValidationException.Message_ contains message

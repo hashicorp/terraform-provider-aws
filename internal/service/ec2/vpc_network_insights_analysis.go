@@ -1466,7 +1466,7 @@ func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resource
 	d.Set("status_message", output.StatusMessage)
 	d.Set("warning_message", output.WarningMessage)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return nil
 }

@@ -26,6 +26,14 @@ jobs:
     with:
       add: needs-triage
 
+  PartnerLabeler:
+    needs: community_check
+    name: 'Apply Partner Label'
+    if: github.event.action == 'opened' && needs.community_check.outputs.partner == 'true'
+    uses: ./.github/workflows/reusable-add-or-remove-labels.yml
+    with:
+      add: partner
+
   SizeLabeler:
     runs-on: ubuntu-latest
     steps:

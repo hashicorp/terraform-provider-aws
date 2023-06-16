@@ -141,7 +141,7 @@ func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, m
 		InstanceId:             aws.String(instanceID),
 		MediaConcurrencies:     expandRoutingProfileMediaConcurrencies(d.Get("media_concurrencies").(*schema.Set).List()),
 		Name:                   aws.String(name),
-		Tags:                   GetTagsIn(ctx),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("queue_configs"); ok && v.(*schema.Set).Len() > 0 && v.(*schema.Set).Len() <= CreateRoutingProfileQueuesMaxItems {
@@ -225,7 +225,7 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("queue_configs", queueConfigs)
 
-	SetTagsOut(ctx, resp.RoutingProfile.Tags)
+	setTagsOut(ctx, resp.RoutingProfile.Tags)
 
 	return nil
 }

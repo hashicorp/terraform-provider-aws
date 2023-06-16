@@ -224,7 +224,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	name := d.Get("name").(string)
 	input := &codepipeline.CreatePipelineInput{
 		Pipeline: pipeline,
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {

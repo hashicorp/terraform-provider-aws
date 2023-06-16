@@ -178,7 +178,7 @@ func networkACLAssociationDelete(ctx context.Context, conn *ec2.EC2, association
 	return nil
 }
 
-// networkACLAssociationDelete deletes the specified NACL associations for the specified subnets.
+// networkACLAssociationsDelete deletes the specified NACL associations for the specified subnets.
 // Each subnet's current association is replaced by an association with the specified VPC's default NACL.
 func networkACLAssociationsDelete(ctx context.Context, conn *ec2.EC2, vpcID string, subnetIDs []interface{}) error {
 	defaultNACL, err := FindVPCDefaultNetworkACL(ctx, conn, vpcID)

@@ -206,7 +206,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Name:            aws.String(d.Get("name").(string)),
 		InstanceType:    aws.String(d.Get("instance_type").(string)),
 		ComputeCapacity: expandComputeCapacity(d.Get("compute_capacity").([]interface{})),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
