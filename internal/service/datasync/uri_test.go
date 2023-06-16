@@ -1,10 +1,6 @@
-package datasync_test
+package datasync
 
-import (
-	"testing"
-
-	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
-)
+import "testing"
 
 func TestSubdirectoryFromLocationURI(t *testing.T) {
 	t.Parallel()
@@ -167,7 +163,7 @@ func TestSubdirectoryFromLocationURI(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tfdatasync.SubdirectoryFromLocationURI(testCase.InputURI)
+			got, err := subdirectoryFromLocationURI(testCase.InputURI)
 
 			if err == nil && testCase.ExpectedError {
 				t.Fatalf("expected error")

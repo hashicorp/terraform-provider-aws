@@ -163,10 +163,10 @@ func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location Object Storage (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
+	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing DataSync Location Object Storage (%s) location URI: %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	uri := aws.StringValue(output.LocationUri)
