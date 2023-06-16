@@ -49,8 +49,8 @@ github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.5 h1:1bMcslfWfTA8PtVJ0XyVxL
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.5/go.mod h1:kEOOfzYBRPmMvAhxer+ztu/WC0KC8l4nTytGUemU/Og=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.13 h1:jXg70EsRDjYVOv8yt0j7M19FqZcmc3ILIU8exdtp+v8=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.13/go.mod h1:WDIYAtWm2b8ET3y8hSuUHLwSsOB5ZwBZkK7ioTTo7S4=
-github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.21.1 h1:6eY82ywwKl43+ZBqurKauX2kXgMgJ0a/lueLqME8JUk=
-github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.21.1/go.mod h1:zuZWQM3kYD+ibkP3GBrAMbsfUvHK7p7yOwWh9MKsnYQ=
+github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.21.2 h1:zMnh9plMceN5DVuG55IjzEwAS3kbeG0GTNzmbnqI/C8=
+github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.21.2/go.mod h1:zuZWQM3kYD+ibkP3GBrAMbsfUvHK7p7yOwWh9MKsnYQ=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.3 h1:IeiVhPkLpV5QXk4evXSPfi35tYNsX+ZzTs8+xbuOO8Q=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.3/go.mod h1:t1X+vZJVxh7GXE8xoXpr8SG1RT31bXSF9BN6Rw9pt1Y=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.24.1 h1:4v/PocHorBZNv1ouzwokzmplR+yPAy1gQ/UbRGljRsA=
