@@ -200,11 +200,15 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_core_network" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
-  policy_document   = data.aws_networkmanager_core_network_policy_document.test.json
 
   tags = {
     Name = %[1]q
   }
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 
 data "aws_networkmanager_core_network_policy_document" "test" {

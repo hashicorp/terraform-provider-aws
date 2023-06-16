@@ -349,7 +349,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("vpc_id", ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
 
-	SetTagsOut(ctx, ep.Tags)
+	setTagsOut(ctx, ep.Tags)
 
 	return diags
 }

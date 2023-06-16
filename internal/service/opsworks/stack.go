@@ -299,7 +299,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Resource:  fmt.Sprintf("stack/%s/", d.Id()),
 	}.String()
 
-	if err := createTags(ctx, conn, arn, GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, arn, getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting OpsWorks Stack (%s) tags: %s", arn, err)
 	}
 
@@ -411,13 +411,13 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("use_opsworks_security_groups", stack.UseOpsworksSecurityGroups)
 	d.Set("vpc_id", stack.VpcId)
 
-	tags, err := ListTags(ctx, conn, arn)
+	tags, err := listTags(ctx, conn, arn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for OpsWorks Stack (%s): %s", arn, err)
 	}
 
-	SetTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
@@ -530,7 +530,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := updateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating OpsWorks Stack (%s) tags: %s", d.Id(), err)
 		}
 	}

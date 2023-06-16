@@ -105,7 +105,7 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		SchemaName:       aws.String(d.Get("schema_name").(string)),
 		SchemaDefinition: aws.String(d.Get("schema_definition").(string)),
 		DataFormat:       aws.String(d.Get("data_format").(string)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("registry_arn"); ok {

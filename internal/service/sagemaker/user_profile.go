@@ -417,7 +417,7 @@ func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &sagemaker.CreateUserProfileInput{
 		UserProfileName: aws.String(d.Get("user_profile_name").(string)),
 		DomainId:        aws.String(d.Get("domain_id").(string)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("user_settings"); ok {

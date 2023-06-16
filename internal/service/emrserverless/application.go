@@ -226,7 +226,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		ClientToken:  aws.String(id.UniqueId()),
 		ReleaseLabel: aws.String(d.Get("release_label").(string)),
 		Name:         aws.String(name),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		Type:         aws.String(d.Get("type").(string)),
 	}
 
@@ -319,7 +319,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
-	SetTagsOut(ctx, application.Tags)
+	setTagsOut(ctx, application.Tags)
 
 	return diags
 }

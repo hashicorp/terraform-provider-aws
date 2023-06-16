@@ -52,7 +52,7 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
 
-	if err := UpdateTagsNoIgnoreSystem(ctx, conn, identifier, nil, map[string]string{key: value}); err != nil {
+	if err := updateTagsNoIgnoreSystem(ctx, conn, identifier, nil, map[string]string{key: value}); err != nil {
 		return diag.Errorf("creating %s resource (%s) tag (%s): %s", transfer.ServiceID, identifier, key, err)
 	}
 
@@ -96,7 +96,7 @@ func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(err)
 	}
 
-	if err := UpdateTagsNoIgnoreSystem(ctx, conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
+	if err := updateTagsNoIgnoreSystem(ctx, conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
 		return diag.Errorf("updating %s resource (%s) tag (%s): %s", transfer.ServiceID, identifier, key, err)
 	}
 
@@ -111,7 +111,7 @@ func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(err)
 	}
 
-	if err := UpdateTagsNoIgnoreSystem(ctx, conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
+	if err := updateTagsNoIgnoreSystem(ctx, conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
 		return diag.Errorf("deleting %s resource (%s) tag (%s): %s", transfer.ServiceID, identifier, key, err)
 	}
 

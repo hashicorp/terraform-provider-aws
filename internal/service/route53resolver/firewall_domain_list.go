@@ -65,7 +65,7 @@ func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceDat
 	input := &route53resolver.CreateFirewallDomainListInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-domain-list-")),
 		Name:             aws.String(name),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateFirewallDomainListWithContext(ctx, input)

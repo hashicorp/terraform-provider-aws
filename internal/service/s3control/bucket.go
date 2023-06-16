@@ -96,7 +96,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(output.BucketArn))
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
+	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
 		if err := bucketUpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
 			return diag.Errorf("adding S3 Control Bucket (%s) tags: %s", d.Id(), err)
 		}
@@ -147,7 +147,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("listing tags for S3 Control Bucket (%s): %s", d.Id(), err)
 	}
 
-	SetTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	return nil
 }

@@ -89,7 +89,7 @@ func dataSourceReplicationSubnetGroupRead(ctx context.Context, d *schema.Resourc
 	}
 	d.Set("subnet_ids", subnetIDs)
 
-	tags, err := ListTags(ctx, conn, arn)
+	tags, err := listTags(ctx, conn, arn)
 	if err != nil {
 		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationSubnetGroup, d.Id(), err)
 	}

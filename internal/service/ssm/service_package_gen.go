@@ -5,11 +5,18 @@ package ssm
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	ssm_sdkv1 "github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct{}
+type servicePackage struct {
+	config map[string]any
+}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
@@ -125,6 +132,28 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.SSM
+}
+
+func (p *servicePackage) Configure(ctx context.Context, config map[string]any) {
+	p.config = config
+}
+
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context) (*ssm_sdkv1.SSM, error) {
+	sess := p.config["session"].(*session_sdkv1.Session)
+
+	return ssm_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))})), nil
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context) (*ssm_sdkv2.Client, error) {
+	cfg := *(p.config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return ssm_sdkv2.NewFromConfig(cfg, func(o *ssm_sdkv2.Options) {
+		if endpoint := p.config["endpoint"].(string); endpoint != "" {
+			o.EndpointResolver = ssm_sdkv2.EndpointResolverFromURL(endpoint)
+		}
+	}), nil
 }
 
 var ServicePackage = &servicePackage{}

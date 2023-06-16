@@ -151,7 +151,7 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &memorydb.CreateSnapshotInput{
 		ClusterName:  aws.String(d.Get("cluster_name").(string)),
 		SnapshotName: aws.String(name),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {

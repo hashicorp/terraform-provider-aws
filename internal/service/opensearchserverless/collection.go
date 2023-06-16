@@ -144,7 +144,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 	in := &opensearchserverless.CreateCollectionInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(plan.Name.ValueString()),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if !plan.Description.IsNull() {

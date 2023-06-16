@@ -154,7 +154,7 @@ func resourceDashboardCreate(ctx context.Context, d *schema.ResourceData, meta i
 		AwsAccountId: aws.String(awsAccountId),
 		DashboardId:  aws.String(dashboardId),
 		Name:         aws.String(d.Get("name").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("version_description"); ok {

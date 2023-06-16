@@ -117,7 +117,7 @@ func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceD
 		ApplicationId: aws.String(appId),
 		LocationUri:   aws.String(d.Get("location_uri").(string)),
 		Name:          aws.String(name),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

@@ -203,7 +203,7 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("vdm_options", nil)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
 		return create.DiagError(names.SESV2, create.ErrActionReading, DSNameConfigurationSet, d.Id(), err)
 	}

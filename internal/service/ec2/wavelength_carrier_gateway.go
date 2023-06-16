@@ -108,7 +108,7 @@ func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("owner_id", ownerID)
 	d.Set("vpc_id", carrierGateway.VpcId)
 
-	SetTagsOut(ctx, carrierGateway.Tags)
+	setTagsOut(ctx, carrierGateway.Tags)
 
 	return diags
 }

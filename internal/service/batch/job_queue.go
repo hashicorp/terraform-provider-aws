@@ -83,7 +83,7 @@ func resourceJobQueueCreate(ctx context.Context, d *schema.ResourceData, meta in
 		JobQueueName:            aws.String(d.Get("name").(string)),
 		Priority:                aws.Int64(int64(d.Get("priority").(int))),
 		State:                   aws.String(d.Get("state").(string)),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("scheduling_policy_arn"); ok {
@@ -152,7 +152,7 @@ func resourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("scheduling_policy_arn", jq.SchedulingPolicyArn)
 	d.Set("state", jq.State)
 
-	SetTagsOut(ctx, jq.Tags)
+	setTagsOut(ctx, jq.Tags)
 
 	return diags
 }

@@ -99,7 +99,7 @@ func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData
 		Duration:                 aws.Int64(int64(d.Get("duration").(int))),
 		Name:                     aws.String(name),
 		Schedule:                 aws.String(d.Get("schedule").(string)),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

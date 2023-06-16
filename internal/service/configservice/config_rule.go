@@ -209,7 +209,7 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := configservice.PutConfigRuleInput{
 		ConfigRule: &ruleInput,
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 	log.Printf("[DEBUG] Creating AWSConfig config rule: %s", input)
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {

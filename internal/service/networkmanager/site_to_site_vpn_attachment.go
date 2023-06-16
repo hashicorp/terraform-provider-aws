@@ -104,7 +104,7 @@ func resourceSiteToSiteVPNAttachmentCreate(ctx context.Context, d *schema.Resour
 	vpnConnectionARN := d.Get("vpn_connection_arn").(string)
 	input := &networkmanager.CreateSiteToSiteVpnAttachmentInput{
 		CoreNetworkId:    aws.String(coreNetworkID),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 		VpnConnectionArn: aws.String(vpnConnectionARN),
 	}
 
@@ -157,7 +157,7 @@ func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.Resource
 	d.Set("state", a.State)
 	d.Set("vpn_connection_arn", a.ResourceArn)
 
-	SetTagsOut(ctx, a.Tags)
+	setTagsOut(ctx, a.Tags)
 
 	return nil
 }

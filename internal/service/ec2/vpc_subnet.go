@@ -278,7 +278,7 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("private_dns_hostname_type_on_launch", nil)
 	}
 
-	SetTagsOut(ctx, subnet.Tags)
+	setTagsOut(ctx, subnet.Tags)
 
 	return diags
 }

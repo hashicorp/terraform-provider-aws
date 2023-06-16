@@ -130,7 +130,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		AccessString:       aws.String(d.Get("access_string").(string)),
 		Engine:             aws.String(d.Get("engine").(string)),
 		NoPasswordRequired: aws.Bool(d.Get("no_password_required").(bool)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		UserId:             aws.String(userID),
 		UserName:           aws.String(d.Get("user_name").(string)),
 	}
@@ -163,7 +163,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(output.ARN), tags)
 
 		// If default tags only, continue. Otherwise, error.

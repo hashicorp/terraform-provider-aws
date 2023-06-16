@@ -141,7 +141,7 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 		CoreNetworkId:         aws.String(coreNetworkID),
 		EdgeLocation:          aws.String(edgeLocation),
 		Options:               options,
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 		TransportAttachmentId: aws.String(transportAttachmentID),
 	}
 
@@ -229,7 +229,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("state", a.State)
 	d.Set("transport_attachment_id", connectAttachment.TransportAttachmentId)
 
-	SetTagsOut(ctx, a.Tags)
+	setTagsOut(ctx, a.Tags)
 
 	return nil
 }

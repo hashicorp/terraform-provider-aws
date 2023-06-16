@@ -99,7 +99,7 @@ func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Name:            aws.String(d.Get("name").(string)),
 		OperatingSystem: aws.String(d.Get("operating_system").(string)),
 		StorageLocation: expandStorageLocation(d.Get("storage_location").([]interface{})),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("version"); ok {

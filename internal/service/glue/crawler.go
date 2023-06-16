@@ -575,7 +575,7 @@ func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName
 		Name:         aws.String(crawlerName),
 		DatabaseName: aws.String(d.Get("database_name").(string)),
 		Role:         aws.String(d.Get("role").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		Targets:      expandCrawlerTargets(d),
 	}
 	if description, ok := d.GetOk("description"); ok {

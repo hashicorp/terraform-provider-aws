@@ -101,7 +101,7 @@ func resourceRateBasedRuleCreate(ctx context.Context, d *schema.ResourceData, me
 			Name:        aws.String(d.Get("name").(string)),
 			RateKey:     aws.String(d.Get("rate_key").(string)),
 			RateLimit:   aws.Int64(int64(d.Get("rate_limit").(int))),
-			Tags:        GetTagsIn(ctx),
+			Tags:        getTagsIn(ctx),
 		}
 
 		return conn.CreateRateBasedRuleWithContext(ctx, input)

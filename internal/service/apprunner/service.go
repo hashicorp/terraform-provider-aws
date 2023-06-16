@@ -438,7 +438,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	input := &apprunner.CreateServiceInput{
 		ServiceName:         aws.String(serviceName),
 		SourceConfiguration: expandServiceSourceConfiguration(d.Get("source_configuration").([]interface{})),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("auto_scaling_configuration_arn"); ok {

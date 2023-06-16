@@ -475,7 +475,7 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 		JobDefinitionName:           aws.String(name),
 		JobResources:                expandMonitoringResources(d.Get("job_resources").([]interface{})),
 		RoleArn:                     aws.String(roleArn),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("data_quality_baseline_config"); ok && len(v.([]interface{})) > 0 {

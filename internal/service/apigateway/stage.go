@@ -168,7 +168,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		RestApiId:    aws.String(restAPIID),
 		StageName:    aws.String(stageName),
 		DeploymentId: aws.String(deploymentID),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	waitForCache := false
@@ -288,7 +288,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("web_acl_arn", stage.WebAclArn)
 	d.Set("xray_tracing_enabled", stage.TracingEnabled)
 
-	SetTagsOut(ctx, stage.Tags)
+	setTagsOut(ctx, stage.Tags)
 
 	return diags
 }

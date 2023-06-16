@@ -283,7 +283,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 		FileSystemType:     aws.String(fsx.FileSystemTypeWindows),
 		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
 		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		WindowsConfiguration: &fsx.CreateFileSystemWindowsConfiguration{
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 			CopyTagsToBackups:            aws.Bool(d.Get("copy_tags_to_backups").(bool)),
@@ -294,7 +294,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	backupInput := &fsx.CreateFileSystemFromBackupInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		WindowsConfiguration: &fsx.CreateFileSystemWindowsConfiguration{
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 			CopyTagsToBackups:            aws.Bool(d.Get("copy_tags_to_backups").(bool)),
@@ -435,7 +435,7 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", filesystem.WindowsConfiguration.WeeklyMaintenanceStartTime)
 
-	SetTagsOut(ctx, filesystem.Tags)
+	setTagsOut(ctx, filesystem.Tags)
 
 	return diags
 }

@@ -770,7 +770,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting vgw_telemetry: %s", err)
 	}
 
-	SetTagsOut(ctx, vpnConnection.Tags)
+	setTagsOut(ctx, vpnConnection.Tags)
 
 	if v := vpnConnection.Options; v != nil {
 		d.Set("enable_acceleration", v.EnableAcceleration)

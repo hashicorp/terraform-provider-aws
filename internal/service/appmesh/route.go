@@ -744,7 +744,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		RouteName:         aws.String(name),
 		Spec:              expandRouteSpec(d.Get("spec").([]interface{})),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 	}
 

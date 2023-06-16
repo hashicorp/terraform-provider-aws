@@ -122,7 +122,7 @@ func resourceTrafficMirrorFilterRead(ctx context.Context, d *schema.ResourceData
 	d.Set("description", trafficMirrorFilter.Description)
 	d.Set("network_services", aws.StringValueSlice(trafficMirrorFilter.NetworkServices))
 
-	SetTagsOut(ctx, trafficMirrorFilter.Tags)
+	setTagsOut(ctx, trafficMirrorFilter.Tags)
 
 	return diags
 }

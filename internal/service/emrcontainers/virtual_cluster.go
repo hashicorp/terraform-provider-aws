@@ -113,7 +113,7 @@ func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, m
 	name := d.Get("name").(string)
 	input := &emrcontainers.CreateVirtualClusterInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("container_provider"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -156,7 +156,7 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("name", vc.Name)
 
-	SetTagsOut(ctx, vc.Tags)
+	setTagsOut(ctx, vc.Tags)
 
 	return nil
 }

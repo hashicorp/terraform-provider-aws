@@ -149,7 +149,7 @@ func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceD
 
 	in := &ivschat.CreateLoggingConfigurationInput{
 		DestinationConfiguration: expandDestinationConfiguration(d.Get("destination_configuration").([]interface{})),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("name"); ok {

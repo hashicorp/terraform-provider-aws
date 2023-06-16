@@ -225,7 +225,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("arn", cluster.ARN)
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(cluster.ARN))
+	tags, err := listTags(ctx, conn, aws.StringValue(cluster.ARN))
 
 	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache Cluster (%s): %s", d.Id(), err)

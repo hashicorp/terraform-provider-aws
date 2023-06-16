@@ -246,7 +246,7 @@ func resourceOntapFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 			ThroughputCapacity:           aws.Int64(int64(d.Get("throughput_capacity").(int))),
 			PreferredSubnetId:            aws.String(d.Get("preferred_subnet_id").(string)),
 		},
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
@@ -353,7 +353,7 @@ func resourceOntapFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
 
-	SetTagsOut(ctx, filesystem.Tags)
+	setTagsOut(ctx, filesystem.Tags)
 
 	return diags
 }

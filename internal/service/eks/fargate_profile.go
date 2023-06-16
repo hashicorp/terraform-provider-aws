@@ -118,7 +118,7 @@ func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, m
 		PodExecutionRoleArn: aws.String(d.Get("pod_execution_role_arn").(string)),
 		Selectors:           expandFargateProfileSelectors(d.Get("selector").(*schema.Set).List()),
 		Subnets:             flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	// mutex lock for creation/deletion serialization
@@ -198,7 +198,7 @@ func resourceFargateProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
-	SetTagsOut(ctx, fargateProfile.Tags)
+	setTagsOut(ctx, fargateProfile.Tags)
 
 	return diags
 }

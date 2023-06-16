@@ -839,7 +839,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 		},
 	}
 
-	if tags := GetTagsIn(ctx); len(tags) > 0 {
+	if tags := getTagsIn(ctx); len(tags) > 0 {
 		input.DistributionConfigWithTags.Tags.Items = tags
 	}
 

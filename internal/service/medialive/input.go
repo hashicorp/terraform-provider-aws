@@ -188,7 +188,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	in := &medialive.CreateInputInput{
 		RequestId: aws.String(id.UniqueId()),
 		Name:      aws.String(d.Get("name").(string)),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 		Type:      types.InputType(d.Get("type").(string)),
 	}
 

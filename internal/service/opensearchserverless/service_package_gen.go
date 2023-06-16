@@ -5,11 +5,15 @@ package opensearchserverless
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct{}
+type servicePackage struct {
+	config map[string]any
+}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
@@ -26,6 +30,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
+		},
+		{
+			Factory: newResourceSecurityConfig,
 		},
 		{
 			Factory: newResourceSecurityPolicy,
@@ -46,6 +53,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.OpenSearchServerless
+}
+
+func (p *servicePackage) Configure(ctx context.Context, config map[string]any) {
+	p.config = config
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context) (*opensearchserverless_sdkv2.Client, error) {
+	cfg := *(p.config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return opensearchserverless_sdkv2.NewFromConfig(cfg, func(o *opensearchserverless_sdkv2.Options) {
+		if endpoint := p.config["endpoint"].(string); endpoint != "" {
+			o.EndpointResolver = opensearchserverless_sdkv2.EndpointResolverFromURL(endpoint)
+		}
+	}), nil
 }
 
 var ServicePackage = &servicePackage{}

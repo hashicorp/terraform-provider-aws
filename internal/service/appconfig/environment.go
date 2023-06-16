@@ -99,7 +99,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &appconfig.CreateEnvironmentInput{
 		Name:          aws.String(d.Get("name").(string)),
 		ApplicationId: aws.String(appId),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

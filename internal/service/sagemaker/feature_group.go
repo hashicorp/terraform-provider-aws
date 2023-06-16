@@ -218,7 +218,7 @@ func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, met
 		RecordIdentifierFeatureName: aws.String(d.Get("record_identifier_feature_name").(string)),
 		RoleArn:                     aws.String(d.Get("role_arn").(string)),
 		FeatureDefinitions:          expandFeatureGroupFeatureDefinition(d.Get("feature_definition").([]interface{})),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

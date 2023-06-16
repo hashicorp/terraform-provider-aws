@@ -124,7 +124,7 @@ func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("vpc_id", ig.Attachments[0].VpcId)
 	}
 
-	SetTagsOut(ctx, ig.Tags)
+	setTagsOut(ctx, ig.Tags)
 
 	return diags
 }

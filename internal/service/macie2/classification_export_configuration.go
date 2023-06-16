@@ -61,7 +61,7 @@ func resourceClassificationExportConfigurationCreate(ctx context.Context, d *sch
 			return diag.Errorf("reading Macie classification export configuration failed: %s", err)
 		}
 
-		if (macie2.ClassificationExportConfiguration{}) != *output.Configuration { // nosemgrep: ci.prefer-aws-go-sdk-pointer-conversion-conditional
+		if (macie2.ClassificationExportConfiguration{}) != *output.Configuration { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
 			return diag.Errorf("creating Macie classification export configuration: a configuration already exists")
 		}
 	}
@@ -119,8 +119,8 @@ func resourceClassificationExportConfigurationRead(ctx context.Context, d *schem
 		return diag.Errorf("reading Macie classification export configuration failed: %s", err)
 	}
 
-	if (macie2.ClassificationExportConfiguration{}) != *output.Configuration { // nosemgrep: ci.prefer-aws-go-sdk-pointer-conversion-conditional
-		if (macie2.S3Destination{}) != *output.Configuration.S3Destination { // nosemgrep: ci.prefer-aws-go-sdk-pointer-conversion-conditional
+	if (macie2.ClassificationExportConfiguration{}) != *output.Configuration { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+		if (macie2.S3Destination{}) != *output.Configuration.S3Destination { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
 			var flattenedS3Destination = flattenClassificationExportConfigurationS3DestinationResult(output.Configuration.S3Destination)
 			if err := d.Set("s3_destination", []interface{}{flattenedS3Destination}); err != nil {
 				return diag.Errorf("setting Macie classification export configuration s3_destination: %s", err)

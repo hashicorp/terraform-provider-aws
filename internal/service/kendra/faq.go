@@ -155,7 +155,7 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		Name:        aws.String(name),
 		RoleArn:     aws.String(d.Get("role_arn").(string)),
 		S3Path:      expandS3Path(d.Get("s3_path").([]interface{})),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

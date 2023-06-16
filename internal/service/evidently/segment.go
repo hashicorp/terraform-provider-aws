@@ -98,7 +98,7 @@ func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta int
 	input := &cloudwatchevidently.CreateSegmentInput{
 		Name:    aws.String(name),
 		Pattern: aws.String(d.Get("pattern").(string)),
-		Tags:    GetTagsIn(ctx),
+		Tags:    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -140,7 +140,7 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", segment.Name)
 	d.Set("pattern", segment.Pattern)
 
-	SetTagsOut(ctx, segment.Tags)
+	setTagsOut(ctx, segment.Tags)
 
 	return nil
 }

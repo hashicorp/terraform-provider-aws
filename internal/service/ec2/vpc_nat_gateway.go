@@ -145,7 +145,7 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("connectivity_type", ng.ConnectivityType)
 	d.Set("subnet_id", ng.SubnetId)
 
-	SetTagsOut(ctx, ng.Tags)
+	setTagsOut(ctx, ng.Tags)
 
 	return nil
 }
