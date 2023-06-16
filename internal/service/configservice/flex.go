@@ -60,7 +60,6 @@ func expandRecordingGroup(configured []interface{}) *configservice.RecordingGrou
 
 	if v, ok := group["exclusion_by_resource_types"]; ok {
 		if len(v.([]interface{})) > 0 {
-
 			recordingGroup.ExclusionByResourceTypes = expandRecordingGroupExclusionByResourceTypes(v.([]interface{}))
 		}
 	}
@@ -84,7 +83,6 @@ func expandRecordingGroup(configured []interface{}) *configservice.RecordingGrou
 func expandRecordingGroupExclusionByResourceTypes(configured []interface{}) *configservice.ExclusionByResourceTypes {
 	exclusionByResourceTypes := configservice.ExclusionByResourceTypes{}
 	exclusion := configured[0].(map[string]interface{})
-
 	if v, ok := exclusion["resource_types"]; ok {
 		exclusionByResourceTypes.ResourceTypes = flex.ExpandStringSet(v.(*schema.Set))
 	}
@@ -94,7 +92,6 @@ func expandRecordingGroupExclusionByResourceTypes(configured []interface{}) *con
 func expandRecordingGroupRecordingStrategy(configured []interface{}) *configservice.RecordingStrategy {
 	recordingStrategy := configservice.RecordingStrategy{}
 	strategy := configured[0].(map[string]interface{})
-
 	if v, ok := strategy["use_only"].(string); ok {
 		recordingStrategy.UseOnly = aws.String(v)
 	}

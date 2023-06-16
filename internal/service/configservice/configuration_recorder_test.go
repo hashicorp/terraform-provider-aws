@@ -324,13 +324,6 @@ resource "aws_s3_bucket" "b" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_ownership_controls" "b" {
-	bucket = aws_s3_bucket.b.id
-	rule {
-	  object_ownership = "BucketOwnerEnforced"
-	}
-  }
-
 resource "aws_config_delivery_channel" "foo" {
   name           = "tf-acc-test-awsconfig-%d"
   s3_bucket_name = aws_s3_bucket.b.bucket
