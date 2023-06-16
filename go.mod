@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/account v1.10.7
 	github.com/aws/aws-sdk-go-v2/service/acm v1.17.12
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.8
-	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.5
+	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.6
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.13
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.3
