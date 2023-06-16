@@ -23,9 +23,11 @@ func ResourceActiveReceiptRuleSet() *schema.Resource {
 		UpdateWithoutTimeout: resourceActiveReceiptRuleSetUpdate,
 		ReadWithoutTimeout:   resourceActiveReceiptRuleSetRead,
 		DeleteWithoutTimeout: resourceActiveReceiptRuleSetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceActiveReceiptRuleSetImport,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -113,7 +115,7 @@ func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceActiveReceiptRuleSetImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	describeOpts := &ses.DescribeActiveReceiptRuleSetInput{}
 
