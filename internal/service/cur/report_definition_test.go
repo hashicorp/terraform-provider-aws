@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcur "github.com/hashicorp/terraform-provider-aws/internal/service/cur"
@@ -320,7 +320,7 @@ func testAccReportDefinition_disappears(t *testing.T) {
 
 func testAccCheckReportDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CURConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CURConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cur_report_definition" {
@@ -344,7 +344,7 @@ func testAccCheckReportDefinitionDestroy(ctx context.Context) resource.TestCheck
 
 func testAccCheckReportDefinitionExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CURConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CURConn(ctx)
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

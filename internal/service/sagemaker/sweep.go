@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -157,7 +157,7 @@ func sweepAppImagesConfig(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -206,7 +206,7 @@ func sweepSpaces(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -247,7 +247,7 @@ func sweepApps(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -295,7 +295,7 @@ func sweepCodeRepositories(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -333,7 +333,7 @@ func sweepDeviceFleets(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -373,7 +373,7 @@ func sweepDomains(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -413,7 +413,7 @@ func sweepEndpointConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -454,7 +454,7 @@ func sweepEndpoints(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	req := &sagemaker.ListEndpointsInput{
 		NameContains: aws.String(sweep.ResourcePrefix),
@@ -487,7 +487,7 @@ func sweepFeatureGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -525,7 +525,7 @@ func sweepFlowDefinitions(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -564,7 +564,7 @@ func sweepHumanTaskUIs(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -603,7 +603,7 @@ func sweepImages(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -641,7 +641,7 @@ func sweepModelPackageGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -679,7 +679,7 @@ func sweepModels(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -717,7 +717,7 @@ func sweepNotebookInstanceLifecycleConfiguration(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -760,7 +760,7 @@ func sweepNotebookInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -800,7 +800,7 @@ func sweepStudioLifecyclesConfig(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -839,7 +839,7 @@ func sweepUserProfiles(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -880,7 +880,7 @@ func sweepWorkforces(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -919,7 +919,7 @@ func sweepWorkteams(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -958,7 +958,7 @@ func sweepProjects(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn()
+	conn := client.(*conns.AWSClient).SageMakerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error

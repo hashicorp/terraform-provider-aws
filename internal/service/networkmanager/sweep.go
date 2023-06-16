@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -109,7 +109,7 @@ func sweepGlobalNetworks(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn()
+	conn := client.(*conns.AWSClient).NetworkManagerConn(ctx)
 	input := &networkmanager.DescribeGlobalNetworksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -153,7 +153,7 @@ func sweepCoreNetworks(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn()
+	conn := client.(*conns.AWSClient).NetworkManagerConn(ctx)
 	input := &networkmanager.ListCoreNetworksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -197,7 +197,7 @@ func sweepConnectAttachments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn()
+	conn := client.(*conns.AWSClient).NetworkManagerConn(ctx)
 	input := &networkmanager.ListAttachmentsInput{
 		AttachmentType: aws.String(networkmanager.AttachmentTypeConnect),
 	}
@@ -243,7 +243,7 @@ func sweepSiteToSiteVPNAttachments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn()
+	conn := client.(*conns.AWSClient).NetworkManagerConn(ctx)
 	input := &networkmanager.ListAttachmentsInput{
 		AttachmentType: aws.String(networkmanager.AttachmentTypeSiteToSiteVpn),
 	}
@@ -289,7 +289,7 @@ func sweepTransitGatewayPeerings(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn()
+	conn := client.(*conns.AWSClient).NetworkManagerConn(ctx)
 	input := &networkmanager.ListPeeringsInput{
 		PeeringType: aws.String(networkmanager.PeeringTypeTransitGateway),
 	}
@@ -335,7 +335,7 @@ func sweepTransitGatewayRouteTableAttachments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn()
+	conn := client.(*conns.AWSClient).NetworkManagerConn(ctx)
 	input := &networkmanager.ListAttachmentsInput{
 		AttachmentType: aws.String(networkmanager.AttachmentTypeTransitGatewayRouteTable),
 	}
@@ -381,7 +381,7 @@ func sweepVPCAttachments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn()
+	conn := client.(*conns.AWSClient).NetworkManagerConn(ctx)
 	input := &networkmanager.ListAttachmentsInput{
 		AttachmentType: aws.String(networkmanager.AttachmentTypeVpc),
 	}
@@ -427,7 +427,7 @@ func sweepSites(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn()
+	conn := client.(*conns.AWSClient).NetworkManagerConn(ctx)
 	input := &networkmanager.DescribeGlobalNetworksInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -495,7 +495,7 @@ func sweepDevices(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn()
+	conn := client.(*conns.AWSClient).NetworkManagerConn(ctx)
 	input := &networkmanager.DescribeGlobalNetworksInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -563,7 +563,7 @@ func sweepLinks(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn()
+	conn := client.(*conns.AWSClient).NetworkManagerConn(ctx)
 	input := &networkmanager.DescribeGlobalNetworksInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -631,7 +631,7 @@ func sweepLinkAssociations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn()
+	conn := client.(*conns.AWSClient).NetworkManagerConn(ctx)
 	input := &networkmanager.DescribeGlobalNetworksInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -698,7 +698,7 @@ func sweepConnections(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn()
+	conn := client.(*conns.AWSClient).NetworkManagerConn(ctx)
 	input := &networkmanager.DescribeGlobalNetworksInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)

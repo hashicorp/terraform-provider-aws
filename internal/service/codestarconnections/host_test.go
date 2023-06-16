@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodestarconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
@@ -130,7 +130,7 @@ func testAccCheckHostExists(ctx context.Context, n string, v *codestarconnection
 			return errors.New("No CodeStar Connections Host ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 		output, err := tfcodestarconnections.FindHostByARN(ctx, conn, rs.Primary.ID)
 
@@ -146,7 +146,7 @@ func testAccCheckHostExists(ctx context.Context, n string, v *codestarconnection
 
 func testAccCheckHostDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codestarconnections_host" {

@@ -103,11 +103,11 @@ func ResourceReplicationSet() *schema.Resource {
 }
 
 func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	input := &ssmincidents.CreateReplicationSetInput{
 		Regions: expandRegions(d.Get("region").(*schema.Set).List()),
-		Tags:    GetTagsIn(ctx),
+		Tags:    getTagsIn(ctx),
 	}
 
 	createReplicationSetOutput, err := client.CreateReplicationSet(ctx, input)
@@ -133,7 +133,7 @@ func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	replicationSet, err := FindReplicationSetByID(ctx, client, d.Id())
 
@@ -160,7 +160,7 @@ func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	if d.HasChanges("region") {
 		input := &ssmincidents.UpdateReplicationSetInput{
@@ -186,20 +186,11 @@ func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	// tags_all does not detect changes when tag value is "" while this change is detected by tags
-	if d.HasChanges("tags_all", "tags") {
-		log.Printf("[DEBUG] Updating SSMIncidents ReplicationSet tags")
-
-		if err := updateResourceTags(ctx, client, d); err != nil {
-			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
-		}
-	}
-
 	return resourceReplicationSetRead(ctx, d, meta)
 }
 
 func resourceReplicationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	log.Printf("[INFO] Deleting SSMIncidents ReplicationSet: %s", d.Id())
 	_, err := client.DeleteReplicationSet(ctx, &ssmincidents.DeleteReplicationSetInput{
@@ -284,10 +275,10 @@ func updateRegionsInput(d *schema.ResourceData, input *ssmincidents.UpdateReplic
 	return nil
 }
 
-func resourceReplicationSetImport(context context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+func resourceReplicationSetImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	arn, err := getReplicationSetARN(context, client)
+	arn, err := getReplicationSetARN(ctx, client)
 
 	if err != nil {
 		return nil, err

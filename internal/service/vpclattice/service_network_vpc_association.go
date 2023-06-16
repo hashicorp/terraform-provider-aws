@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpclattice_service_network_vpc_association")
+// @SDKResource("aws_vpclattice_service_network_vpc_association", name="Service Network VPC Association")
 // @Tags(identifierAttribute="arn")
 func ResourceServiceNetworkVPCAssociation() *schema.Resource {
 	return &schema.Resource{
@@ -71,8 +71,8 @@ func ResourceServiceNetworkVPCAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -84,13 +84,13 @@ const (
 )
 
 func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	in := &vpclattice.CreateServiceNetworkVpcAssociationInput{
 		ClientToken:              aws.String(id.UniqueId()),
 		ServiceNetworkIdentifier: aws.String(d.Get("service_network_identifier").(string)),
 		VpcIdentifier:            aws.String(d.Get("vpc_identifier").(string)),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("security_group_ids"); ok {
@@ -116,7 +116,7 @@ func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.R
 }
 
 func resourceServiceNetworkVPCAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	out, err := findServiceNetworkVPCAssociationByID(ctx, conn, d.Id())
 
@@ -141,7 +141,7 @@ func resourceServiceNetworkVPCAssociationRead(ctx context.Context, d *schema.Res
 }
 
 func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &vpclattice.UpdateServiceNetworkVpcAssociationInput{
 			ServiceNetworkVpcAssociationIdentifier: aws.String(d.Id()),
@@ -162,7 +162,7 @@ func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.R
 }
 
 func resourceServiceNetworkVPCAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice Service Network VPC Association %s", d.Id())
 

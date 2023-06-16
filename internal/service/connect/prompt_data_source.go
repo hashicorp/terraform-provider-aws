@@ -37,7 +37,7 @@ func DataSourcePrompt() *schema.Resource {
 }
 
 func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -45,11 +45,11 @@ func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta inte
 	promptSummary, err := dataSourceGetPromptSummaryByName(ctx, conn, instanceID, name)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Prompt Summary by name (%s): %w", name, err))
+		return diag.Errorf("finding Connect Prompt Summary by name (%s): %s", name, err)
 	}
 
 	if promptSummary == nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Prompt Summary by name (%s): not found", name))
+		return diag.Errorf("finding Connect Prompt Summary by name (%s): not found", name)
 	}
 
 	d.Set("arn", promptSummary.Arn)

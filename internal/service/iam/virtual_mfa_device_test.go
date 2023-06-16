@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iam"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
@@ -124,14 +124,14 @@ func TestAccIAMVirtualMFADevice_disappears(t *testing.T) {
 
 func testAccCheckVirtualMFADeviceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_virtual_mfa_device" {
 				continue
 			}
 
-			output, err := tfiam.FindVirtualMFADevice(ctx, conn, rs.Primary.ID)
+			output, err := tfiam.FindVirtualMFADeviceBySerialNumber(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -146,7 +146,7 @@ func testAccCheckVirtualMFADeviceDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckVirtualMFADeviceExists(ctx context.Context, n string, res *iam.VirtualMFADevice) resource.TestCheckFunc {
+func testAccCheckVirtualMFADeviceExists(ctx context.Context, n string, v *iam.VirtualMFADevice) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -154,17 +154,18 @@ func testAccCheckVirtualMFADeviceExists(ctx context.Context, n string, res *iam.
 		}
 
 		if rs.Primary.ID == "" {
-			return errors.New("No Virtual MFA Device name is set")
+			return errors.New("No Virtual MFA Device ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
-		output, err := tfiam.FindVirtualMFADevice(ctx, conn, rs.Primary.ID)
+		output, err := tfiam.FindVirtualMFADeviceBySerialNumber(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*res = *output
+		*v = *output
 
 		return nil
 	}

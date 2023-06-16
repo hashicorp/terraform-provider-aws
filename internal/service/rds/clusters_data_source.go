@@ -39,7 +39,7 @@ const (
 )
 
 func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeDBClustersInput{}
 
@@ -66,7 +66,6 @@ func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta in
 
 		return !lastPage
 	})
-
 	if err != nil {
 		return create.DiagError(names.RDS, create.ErrActionReading, DSNameClusters, "", err)
 	}

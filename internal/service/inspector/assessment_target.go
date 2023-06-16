@@ -47,7 +47,7 @@ func ResourceAssessmentTarget() *schema.Resource {
 
 func resourceAssessmentTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	input := &inspector.CreateAssessmentTargetInput{
 		AssessmentTargetName: aws.String(d.Get("name").(string)),
@@ -59,7 +59,7 @@ func resourceAssessmentTargetCreate(ctx context.Context, d *schema.ResourceData,
 
 	resp, err := conn.CreateAssessmentTargetWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Inspector Assessment Target: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Inspector Classic Assessment Target: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.AssessmentTargetArn))
@@ -69,16 +69,16 @@ func resourceAssessmentTargetCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	assessmentTarget, err := DescribeAssessmentTarget(ctx, conn, d.Id())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing Inspector Assessment Target (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing Inspector Classic Assessment Target (%s): %s", d.Id(), err)
 	}
 
 	if assessmentTarget == nil {
-		log.Printf("[WARN] Inspector Assessment Target (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Inspector Classic Assessment Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -92,7 +92,7 @@ func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceAssessmentTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	input := inspector.UpdateAssessmentTargetInput{
 		AssessmentTargetArn:  aws.String(d.Id()),
@@ -105,7 +105,7 @@ func resourceAssessmentTargetUpdate(ctx context.Context, d *schema.ResourceData,
 
 	_, err := conn.UpdateAssessmentTargetWithContext(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Inspector Assessment Target (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Inspector Classic Assessment Target (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceAssessmentTargetRead(ctx, d, meta)...)
@@ -113,7 +113,7 @@ func resourceAssessmentTargetUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceAssessmentTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 	input := &inspector.DeleteAssessmentTargetInput{
 		AssessmentTargetArn: aws.String(d.Id()),
 	}
@@ -134,7 +134,7 @@ func resourceAssessmentTargetDelete(ctx context.Context, d *schema.ResourceData,
 		_, err = conn.DeleteAssessmentTargetWithContext(ctx, input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Inspector Assessment Target: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Inspector Classic Assessment Target: %s", err)
 	}
 	return diags
 }

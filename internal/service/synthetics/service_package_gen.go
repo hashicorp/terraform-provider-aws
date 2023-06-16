@@ -5,11 +5,16 @@ package synthetics
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	synthetics_sdkv1 "github.com/aws/aws-sdk-go/service/synthetics"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct{}
+type servicePackage struct {
+	config map[string]any
+}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
@@ -33,11 +38,35 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 				IdentifierAttribute: "arn",
 			},
 		},
+		{
+			Factory:  ResourceGroup,
+			TypeName: "aws_synthetics_group",
+			Name:     "Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceGroupAssociation,
+			TypeName: "aws_synthetics_group_association",
+			Name:     "Group Association",
+		},
 	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.Synthetics
+}
+
+func (p *servicePackage) Configure(ctx context.Context, config map[string]any) {
+	p.config = config
+}
+
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context) (*synthetics_sdkv1.Synthetics, error) {
+	sess := p.config["session"].(*session_sdkv1.Session)
+
+	return synthetics_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))})), nil
 }
 
 var ServicePackage = &servicePackage{}

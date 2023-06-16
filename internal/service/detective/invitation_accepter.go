@@ -34,7 +34,7 @@ func ResourceInvitationAccepter() *schema.Resource {
 }
 
 func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	graphArn := d.Get("graph_arn").(string)
 
@@ -45,7 +45,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	_, err := conn.AcceptInvitationWithContext(ctx, acceptInvitationInput)
 
 	if err != nil {
-		return diag.Errorf("error accepting Detective InvitationAccepter (%s): %s", d.Id(), err)
+		return diag.Errorf("accepting Detective InvitationAccepter (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(graphArn)
@@ -54,7 +54,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	graphArn, err := FindInvitationByGraphARN(ctx, conn, d.Id())
 
@@ -65,7 +65,7 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return diag.Errorf("error listing Detective InvitationAccepter (%s): %s", d.Id(), err)
+		return diag.Errorf("listing Detective InvitationAccepter (%s): %s", d.Id(), err)
 	}
 
 	d.Set("graph_arn", graphArn)
@@ -73,7 +73,7 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	input := &detective.DisassociateMembershipInput{
 		GraphArn: aws.String(d.Id()),
@@ -84,7 +84,7 @@ func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceDat
 		if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.Errorf("error disassociating Detective InvitationAccepter (%s): %s", d.Id(), err)
+		return diag.Errorf("disassociating Detective InvitationAccepter (%s): %s", d.Id(), err)
 	}
 	return nil
 }

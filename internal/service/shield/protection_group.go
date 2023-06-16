@@ -79,14 +79,14 @@ func ResourceProtectionGroup() *schema.Resource {
 
 func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn()
+	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
 
 	protectionGroupID := d.Get("protection_group_id").(string)
 	input := &shield.CreateProtectionGroupInput{
 		Aggregation:       aws.String(d.Get("aggregation").(string)),
 		Pattern:           aws.String(d.Get("pattern").(string)),
 		ProtectionGroupId: aws.String(protectionGroupID),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("members"); ok {
@@ -111,7 +111,7 @@ func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceProtectionGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn()
+	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
 
 	input := &shield.DescribeProtectionGroupInput{
 		ProtectionGroupId: aws.String(d.Id()),
@@ -142,7 +142,7 @@ func resourceProtectionGroupRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn()
+	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &shield.UpdateProtectionGroupInput{
@@ -172,7 +172,7 @@ func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceProtectionGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn()
+	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
 
 	log.Printf("[DEBUG] Deletinh Shield Protection Group: %s", d.Id())
 	_, err := conn.DeleteProtectionGroupWithContext(ctx, &shield.DeleteProtectionGroupInput{

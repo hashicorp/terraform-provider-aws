@@ -93,22 +93,6 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.ECS, id, cluster 
 	}
 }
 
-func statusCluster(ctx context.Context, conn *ecs.ECS, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		cluster, err := FindClusterByNameOrARN(ctx, conn, arn)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return cluster, aws.StringValue(cluster.Status), err
-	}
-}
-
 func stabilityStatusTaskSet(ctx context.Context, conn *ecs.ECS, taskSetID, service, cluster string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ecs.DescribeTaskSetsInput{

@@ -36,6 +36,12 @@ func ResourceStateMachine() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(1 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -136,14 +142,14 @@ func ResourceStateMachine() *schema.Resource {
 }
 
 func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
+	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &sfn.CreateStateMachineInput{
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
 		RoleArn:    aws.String(d.Get("role_arn").(string)),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 		Type:       aws.String(d.Get("type").(string)),
 	}
 
@@ -159,7 +165,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 	// Note: the instance may be in a deleting mode, hence the retry
 	// when creating the step function. This can happen when we are
 	// updating the resource (since there is no update API call).
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, stateMachineCreatedTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return conn.CreateStateMachineWithContext(ctx, input)
 	}, sfn.ErrCodeStateMachineDeleting, "AccessDeniedException")
 
@@ -173,7 +179,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
+	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	output, err := FindStateMachineByARN(ctx, conn, d.Id())
 
@@ -218,7 +224,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
+	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		// "You must include at least one of definition or roleArn or you will receive a MissingRequiredParameter error"
@@ -247,7 +253,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		// Handle eventual consistency after update.
-		err = retry.RetryContext(ctx, stateMachineUpdatedTimeout, func() *retry.RetryError { // nosemgrep:ci.helper-schema-retry-RetryContext-without-TimeoutError-check
+		err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError { // nosemgrep:ci.helper-schema-retry-RetryContext-without-TimeoutError-check
 			output, err := FindStateMachineByARN(ctx, conn, d.Id())
 
 			if err != nil {
@@ -274,7 +280,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceStateMachineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
+	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Step Functions State Machine: %s", d.Id())
 	_, err := conn.DeleteStateMachineWithContext(ctx, &sfn.DeleteStateMachineInput{
@@ -285,7 +291,7 @@ func resourceStateMachineDelete(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("deleting Step Functions State Machine (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitStateMachineDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitStateMachineDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for Step Functions State Machine (%s) delete: %s", d.Id(), err)
 	}
 
@@ -333,18 +339,12 @@ func statusStateMachine(ctx context.Context, conn *sfn.SFN, stateMachineArn stri
 	}
 }
 
-const (
-	stateMachineCreatedTimeout = 5 * time.Minute
-	stateMachineDeletedTimeout = 5 * time.Minute
-	stateMachineUpdatedTimeout = 1 * time.Minute
-)
-
-func waitStateMachineDeleted(ctx context.Context, conn *sfn.SFN, stateMachineArn string) (*sfn.DescribeStateMachineOutput, error) {
+func waitStateMachineDeleted(ctx context.Context, conn *sfn.SFN, stateMachineArn string, timeout time.Duration) (*sfn.DescribeStateMachineOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{sfn.StateMachineStatusActive, sfn.StateMachineStatusDeleting},
 		Target:  []string{},
 		Refresh: statusStateMachine(ctx, conn, stateMachineArn),
-		Timeout: stateMachineDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

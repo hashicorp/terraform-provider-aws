@@ -156,7 +156,8 @@ The following arguments are optional:
 * `engine_version` – (Optional) Version number of the cache engine to be used.
   If not set, defaults to the latest version.
   See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html) in the AWS Documentation for supported versions.
-  When `engine` is `redis` and the version is 6 or higher, the major and minor version can be set, e.g., `6.2`,
+  When `engine` is `redis` and the version is 7 or higher, the major and minor version should be set, e.g., `7.2`.
+  When the version is 6, the major and minor version can be set, e.g., `6.2`,
   or the minor version can be unspecified which will use the latest version at creation time, e.g., `6.x`.
   Otherwise, specify the full version desired, e.g., `5.0.6`.
   The actual engine version used is returned in the attribute `engine_version_actual`, see [Attributes Reference](#attributes-reference) below.
@@ -174,7 +175,6 @@ The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09
 * `preferred_outpost_arn` - (Optional, Required if `outpost_mode` is specified) The outpost ARN in which the cache cluster will be created.
 * `replication_group_id` - (Optional, Required if `engine` is not specified) ID of the replication group to which this cluster should belong. If this parameter is specified, the cluster is added to the specified replication group as a read replica; otherwise, the cluster is a standalone primary that is not part of any replication group.
 * `security_group_ids` – (Optional, VPC only) One or more VPC security groups associated with the cache cluster
-* `security_group_names` – (Optional, EC2 Classic only) List of security group names to associate with this cache cluster. Changing this value will re-create the resource.
 * `snapshot_arns` – (Optional, Redis only) Single-element string list containing an Amazon Resource Name (ARN) of a Redis RDB snapshot file stored in Amazon S3. The object name cannot contain any commas. Changing `snapshot_arns` forces a new resource.
 * `snapshot_name` - (Optional, Redis only) Name of a snapshot from which to restore data into the new node group. Changing `snapshot_name` forces a new resource.
 * `snapshot_retention_limit` - (Optional, Redis only) Number of days for which ElastiCache will retain automatic cache cluster snapshots before deleting them. For example, if you set SnapshotRetentionLimit to 5, then a snapshot that was taken today will be retained for 5 days before being deleted. If the value of SnapshotRetentionLimit is set to zero (0), backups are turned off. Please note that setting a `snapshot_retention_limit` is not supported on cache.t1.micro cache nodes

@@ -75,7 +75,7 @@ func ResourceResourceDataSync() *schema.Resource {
 
 func resourceResourceDataSyncCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	name := d.Get("name").(string)
 
@@ -108,7 +108,7 @@ func resourceResourceDataSyncCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceResourceDataSyncRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	syncItem, err := FindResourceDataSyncItem(ctx, conn, d.Id())
 
@@ -129,7 +129,7 @@ func resourceResourceDataSyncRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceResourceDataSyncDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	input := &ssm.DeleteResourceDataSyncInput{
 		SyncName: aws.String(d.Id()),

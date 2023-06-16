@@ -48,7 +48,7 @@ func ResourceQueryLog() *schema.Resource {
 }
 
 func resourceQueryLogCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	input := &route53.CreateQueryLoggingConfigInput{
 		CloudWatchLogsLogGroupArn: aws.String(d.Get("cloudwatch_log_group_arn").(string)),
@@ -67,7 +67,7 @@ func resourceQueryLogCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceQueryLogRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	output, err := FindQueryLoggingConfigByID(ctx, conn, d.Id())
 
@@ -94,7 +94,7 @@ func resourceQueryLogRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceQueryLogDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Query Logging Config: %s", d.Id())
 	_, err := conn.DeleteQueryLoggingConfigWithContext(ctx, &route53.DeleteQueryLoggingConfigInput{

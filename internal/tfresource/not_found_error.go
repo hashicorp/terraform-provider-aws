@@ -92,13 +92,22 @@ func SingularDataSourceFindError(resourceType string, err error) error {
 	return fmt.Errorf("reading %s: %w", resourceType, err)
 }
 
-func ExpectSingleResult[T any](a []*T) error {
+func AssertSinglePtrResult[T any](a []*T) (*T, error) {
 	if l := len(a); l == 0 {
-		return NewEmptyResultError(nil)
+		return nil, NewEmptyResultError(nil)
 	} else if l > 1 {
-		return NewTooManyResultsError(l, nil)
+		return nil, NewTooManyResultsError(l, nil)
 	} else if a[0] == nil {
-		return NewEmptyResultError(nil)
+		return nil, NewEmptyResultError(nil)
 	}
-	return nil
+	return a[0], nil
+}
+
+func AssertSingleValueResult[T any](a []T) (*T, error) {
+	if l := len(a); l == 0 {
+		return nil, NewEmptyResultError(nil)
+	} else if l > 1 {
+		return nil, NewTooManyResultsError(l, nil)
+	}
+	return &a[0], nil
 }

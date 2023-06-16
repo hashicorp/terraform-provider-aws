@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -784,27 +785,6 @@ func FindEIPByAssociationID(ctx context.Context, conn *ec2.EC2, id string) (*ec2
 
 	// Eventual consistency check.
 	if aws.StringValue(output.AssociationId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
-func FindEIPByPublicIP(ctx context.Context, conn *ec2.EC2, ip string) (*ec2.Address, error) {
-	input := &ec2.DescribeAddressesInput{
-		PublicIps: aws.StringSlice([]string{ip}),
-	}
-
-	output, err := FindEIP(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Eventual consistency check.
-	if aws.StringValue(output.PublicIp) != ip {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -1665,24 +1645,6 @@ func FindNetworkInterfaceByID(ctx context.Context, conn *ec2.EC2, id string) (*e
 	return output, nil
 }
 
-func FindLambdaNetworkInterfacesBySecurityGroupIDsAndFunctionName(ctx context.Context, conn *ec2.EC2, securityGroupIDs []string, functionName string) ([]*ec2.NetworkInterface, error) {
-	// lambdaENIDescriptionPrefix is the common prefix used in the description for Lambda function
-	// elastic network interfaces (ENI). This can be used with a function name to filter to only
-	// ENIs associated with a single function.
-	lambdaENIDescriptionPrefix := "AWS Lambda VPC ENI-"
-	description := fmt.Sprintf("%s%s-*", lambdaENIDescriptionPrefix, functionName)
-
-	input := &ec2.DescribeNetworkInterfacesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
-			"interface-type": ec2.NetworkInterfaceTypeLambda,
-			"description":    description,
-		}),
-	}
-	input.Filters = append(input.Filters, NewFilter("group-id", securityGroupIDs))
-
-	return FindNetworkInterfaces(ctx, conn, input)
-}
-
 func FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx context.Context, conn *ec2.EC2, attachmentInstanceOwnerID, description string) ([]*ec2.NetworkInterface, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
@@ -2511,7 +2473,7 @@ func FindSpotInstanceRequest(ctx context.Context, conn *ec2.EC2, input *ec2.Desc
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil || output[0].State == nil {
+	if len(output) == 0 || output[0] == nil || output[0].Status == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -2794,83 +2756,6 @@ func FindVPCAttribute(ctx context.Context, conn *ec2.EC2, vpcID string, attribut
 	}
 
 	return aws.BoolValue(v.Value), nil
-}
-
-func FindVPCClassicLinkEnabled(ctx context.Context, conn *ec2.EC2, vpcID string) (bool, error) {
-	input := &ec2.DescribeVpcClassicLinkInput{
-		VpcIds: aws.StringSlice([]string{vpcID}),
-	}
-
-	output, err := conn.DescribeVpcClassicLinkWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound, errCodeUnsupportedOperation) {
-		return false, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return false, err
-	}
-
-	if output == nil || len(output.Vpcs) == 0 || output.Vpcs[0] == nil {
-		return false, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.Vpcs); count > 1 {
-		return false, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	vpc := output.Vpcs[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(vpc.VpcId) != vpcID {
-		return false, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return aws.BoolValue(vpc.ClassicLinkEnabled), nil
-}
-
-func FindVPCClassicLinkDNSSupported(ctx context.Context, conn *ec2.EC2, vpcID string) (bool, error) {
-	input := &ec2.DescribeVpcClassicLinkDnsSupportInput{
-		VpcIds: aws.StringSlice([]string{vpcID}),
-	}
-
-	output, err := conn.DescribeVpcClassicLinkDnsSupportWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound, errCodeUnsupportedOperation) ||
-		tfawserr.ErrMessageContains(err, errCodeAuthFailure, "This request has been administratively disabled") {
-		return false, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return false, err
-	}
-
-	if output == nil || len(output.Vpcs) == 0 || output.Vpcs[0] == nil {
-		return false, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.Vpcs); count > 1 {
-		return false, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	vpc := output.Vpcs[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(vpc.VpcId) != vpcID {
-		return false, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return aws.BoolValue(vpc.ClassicLinkDnsSupported), nil
 }
 
 func FindVPC(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVpcsInput) (*ec2.Vpc, error) {
@@ -3345,7 +3230,7 @@ func FindVPCEndpointServicePermissions(ctx context.Context, conn *ec2.EC2, input
 	return output, nil
 }
 
-func FindVPCEndpointServicePermissionsByID(ctx context.Context, conn *ec2.EC2, id string) ([]*ec2.AllowedPrincipal, error) {
+func FindVPCEndpointServicePermissionsByServiceID(ctx context.Context, conn *ec2.EC2, id string) ([]*ec2.AllowedPrincipal, error) {
 	input := &ec2.DescribeVpcEndpointServicePermissionsInput{
 		ServiceId: aws.String(id),
 	}
@@ -3353,22 +3238,25 @@ func FindVPCEndpointServicePermissionsByID(ctx context.Context, conn *ec2.EC2, i
 	return FindVPCEndpointServicePermissions(ctx, conn, input)
 }
 
-func FindVPCEndpointServicePermissionExists(ctx context.Context, conn *ec2.EC2, serviceID, principalARN string) error {
-	allowedPrincipals, err := FindVPCEndpointServicePermissionsByID(ctx, conn, serviceID)
+func FindVPCEndpointServicePermission(ctx context.Context, conn *ec2.EC2, serviceID, principalARN string) (*ec2.AllowedPrincipal, error) {
+	// Applying a server-side filter on "principal" can lead to errors like
+	// "An error occurred (InvalidFilter) when calling the DescribeVpcEndpointServicePermissions operation: The filter value arn:aws:iam::123456789012:role/developer contains unsupported characters".
+	// Apply the filter client-side.
+	input := &ec2.DescribeVpcEndpointServicePermissionsInput{
+		ServiceId: aws.String(serviceID),
+	}
+
+	allowedPrincipals, err := FindVPCEndpointServicePermissions(ctx, conn, input)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	for _, v := range allowedPrincipals {
-		if aws.StringValue(v.Principal) == principalARN {
-			return nil
-		}
-	}
+	allowedPrincipals = slices.Filter(allowedPrincipals, func(v *ec2.AllowedPrincipal) bool {
+		return aws.StringValue(v.Principal) == principalARN
+	})
 
-	return &retry.NotFoundError{
-		LastError: fmt.Errorf("VPC Endpoint Service (%s) Principal (%s) not found", serviceID, principalARN),
-	}
+	return tfresource.AssertSinglePtrResult(allowedPrincipals)
 }
 
 // FindVPCEndpointRouteTableAssociationExists returns NotFoundError if no association for the specified VPC endpoint and route table IDs is found.

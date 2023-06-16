@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -35,7 +35,7 @@ func sweepServices(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).VPCLatticeClient()
+	conn := client.(*conns.AWSClient).VPCLatticeClient(ctx)
 	input := &vpclattice.ListServicesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -76,7 +76,7 @@ func sweepServiceNetworks(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).VPCLatticeClient()
+	conn := client.(*conns.AWSClient).VPCLatticeClient(ctx)
 	input := &vpclattice.ListServiceNetworksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

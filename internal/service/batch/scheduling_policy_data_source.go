@@ -76,7 +76,7 @@ func DataSourceSchedulingPolicy() *schema.Resource {
 
 func dataSourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	schedulingPolicy, err := FindSchedulingPolicyByARN(ctx, conn, d.Get("arn").(string))

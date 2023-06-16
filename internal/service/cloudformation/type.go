@@ -2,7 +2,6 @@ package cloudformation
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 
@@ -133,7 +132,7 @@ func ResourceType() *schema.Resource {
 }
 
 func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	typeName := d.Get("type_name").(string)
 	input := &cloudformation.RegisterTypeInput{
@@ -157,17 +156,17 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := conn.RegisterTypeWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error registering CloudFormation Type (%s): %w", typeName, err))
+		return diag.Errorf("registering CloudFormation Type (%s): %s", typeName, err)
 	}
 
 	if output == nil || output.RegistrationToken == nil {
-		return diag.FromErr(fmt.Errorf("error registering CloudFormation Type (%s): empty result", typeName))
+		return diag.Errorf("registering CloudFormation Type (%s): empty result", typeName)
 	}
 
 	registrationOutput, err := WaitTypeRegistrationProgressStatusComplete(ctx, conn, aws.StringValue(output.RegistrationToken))
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for CloudFormation Type (%s) register: %w", typeName, err))
+		return diag.Errorf("waiting for CloudFormation Type (%s) register: %s", typeName, err)
 	}
 
 	// Type Version ARN is not available until after registration is complete
@@ -177,7 +176,7 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	output, err := FindTypeByARN(ctx, conn, d.Id())
 
@@ -188,13 +187,13 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading CloudFormation Type (%s): %w", d.Id(), err))
+		return diag.Errorf("reading CloudFormation Type (%s): %s", d.Id(), err)
 	}
 
 	typeARN, versionID, err := TypeVersionARNToTypeARNAndVersionID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error parsing CloudFormation Type (%s) ARN: %w", d.Id(), err))
+		return diag.Errorf("parsing CloudFormation Type (%s) ARN: %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.Arn)
@@ -206,7 +205,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("is_default_version", output.IsDefaultVersion)
 	if output.LoggingConfig != nil {
 		if err := d.Set("logging_config", []interface{}{flattenLoggingConfig(output.LoggingConfig)}); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting logging_config: %w", err))
+			return diag.Errorf("setting logging_config: %s", err)
 		}
 	} else {
 		d.Set("logging_config", nil)
@@ -224,7 +223,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	input := &cloudformation.DeregisterTypeInput{
 		Arn: aws.String(d.Id()),
@@ -238,7 +237,7 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		typeARN, _, err := TypeVersionARNToTypeARNAndVersionID(d.Id())
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error parsing CloudFormation Type (%s) ARN: %w", d.Id(), err))
+			return diag.Errorf("parsing CloudFormation Type (%s) ARN: %s", d.Id(), err)
 		}
 
 		input := &cloudformation.ListTypeVersionsInput{
@@ -263,7 +262,7 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		})
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error listing CloudFormation Type (%s) Versions: %w", d.Id(), err))
+			return diag.Errorf("listing CloudFormation Type (%s) Versions: %s", d.Id(), err)
 		}
 
 		if len(typeVersionSummaries) <= 1 {
@@ -278,7 +277,7 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 			}
 
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("error deregistering CloudFormation Type (%s): %w", d.Id(), err))
+				return diag.Errorf("deregistering CloudFormation Type (%s): %s", d.Id(), err)
 			}
 
 			return nil
@@ -290,7 +289,7 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deregistering CloudFormation Type (%s): %w", d.Id(), err))
+		return diag.Errorf("deregistering CloudFormation Type (%s): %s", d.Id(), err)
 	}
 
 	return nil

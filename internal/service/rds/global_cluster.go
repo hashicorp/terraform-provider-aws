@@ -133,7 +133,7 @@ func ResourceGlobalCluster() *schema.Resource {
 
 func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.CreateGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(d.Get("global_cluster_identifier").(string)),
@@ -186,7 +186,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	globalCluster, err := DescribeGlobalCluster(ctx, conn, d.Id())
 
@@ -244,7 +244,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.ModifyGlobalClusterInput{
 		DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
@@ -277,7 +277,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutDelete))
 
 	if d.Get("force_destroy").(bool) {
@@ -331,7 +331,6 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 			}
 
 			_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
-
 			if err != nil {
 				if !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
 					return sdkdiag.AppendErrorf(diags, "removing RDS DB Cluster (%s) from Global Cluster (%s): %s", writerARN, d.Id(), err)
@@ -484,7 +483,7 @@ func globalClusterRefreshFunc(ctx context.Context, conn *rds.RDS, globalClusterI
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error reading RDS Global Cluster (%s): %s", globalClusterID, err)
+			return nil, "", fmt.Errorf("reading RDS Global Cluster (%s): %s", globalClusterID, err)
 		}
 
 		if globalCluster == nil {
@@ -581,7 +580,7 @@ func waitForGlobalClusterRemoval(ctx context.Context, conn *rds.RDS, dbClusterId
 }
 
 func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{}, clusterID string, engineVersion string, timeout time.Duration) error {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.ModifyGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(clusterID),
@@ -592,7 +591,6 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{
 
 	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		_, err := conn.ModifyGlobalClusterWithContext(ctx, input)
-
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
 				return retry.NonRetryableError(err)
@@ -617,7 +615,6 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{
 	}
 
 	globalCluster, err := DescribeGlobalCluster(ctx, conn, clusterID)
-
 	if err != nil {
 		return fmt.Errorf("while upgrading major version of RDS Global Cluster (%s): %w", clusterID, err)
 	}
@@ -630,7 +627,6 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{
 		}
 
 		dbi, clusterRegion, err := ClusterIDRegionFromARN(arnID)
-
 		if err != nil {
 			return fmt.Errorf("while upgrading RDS Global Cluster Cluster minor engine version: %w", err)
 		}
@@ -655,7 +651,6 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{
 
 func ClusterIDRegionFromARN(arnID string) (string, string, error) {
 	parsedARN, err := arn.Parse(arnID)
-
 	if err != nil {
 		return "", "", fmt.Errorf("could not parse ARN (%s): %w", arnID, err)
 	}
@@ -680,7 +675,7 @@ func ClusterIDRegionFromARN(arnID string) (string, string, error) {
 }
 
 func globalClusterUpgradeMinorEngineVersion(ctx context.Context, meta interface{}, clusterMembers *schema.Set, clusterID, engineVersion string, timeout time.Duration) error {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	log.Printf("[INFO] Performing RDS Global Cluster (%s) minor version (%s) upgrade", clusterID, engineVersion)
 
@@ -696,7 +691,6 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, meta interface{
 		arnID := clusterMember["db_cluster_arn"].(string)
 
 		dbi, clusterRegion, err := ClusterIDRegionFromARN(arnID)
-
 		if err != nil {
 			return fmt.Errorf("while upgrading RDS Global Cluster Cluster minor engine version: %w", err)
 		}
@@ -721,7 +715,6 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, meta interface{
 
 		err = retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 			_, err := useConn.ModifyDBClusterWithContext(ctx, modInput)
-
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return retry.RetryableError(err)
@@ -742,7 +735,6 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, meta interface{
 
 		if tfresource.TimedOut(err) {
 			_, err := useConn.ModifyDBClusterWithContext(ctx, modInput)
-
 			if err != nil {
 				return err
 			}

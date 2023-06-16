@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
@@ -30,16 +29,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource(name="IAM Policy Assignment")
 func newResourceIAMPolicyAssignment(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceIAMPolicyAssignment{}, nil
 }
 
 const (
-	ResNameIAMPolicyAssignment = "IAMPolicyAssignment"
+	ResNameIAMPolicyAssignment = "IAM Policy Assignment"
 
 	DefaultIAMPolicyAssignmentNamespace = "default"
-	iamPropagationTimeout               = 2 * time.Minute
 	identitiesUserKey                   = "user"
 	identitiesGroupKey                  = "group"
 )
@@ -114,7 +112,7 @@ func (r *resourceIAMPolicyAssignment) Schema(ctx context.Context, req resource.S
 }
 
 func (r *resourceIAMPolicyAssignment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var plan resourceIAMPolicyAssignmentData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -179,7 +177,7 @@ func (r *resourceIAMPolicyAssignment) Create(ctx context.Context, req resource.C
 }
 
 func (r *resourceIAMPolicyAssignment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceIAMPolicyAssignmentData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -225,7 +223,7 @@ func (r *resourceIAMPolicyAssignment) Read(ctx context.Context, req resource.Rea
 }
 
 func (r *resourceIAMPolicyAssignment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var plan, state resourceIAMPolicyAssignmentData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -278,7 +276,7 @@ func (r *resourceIAMPolicyAssignment) Update(ctx context.Context, req resource.U
 }
 
 func (r *resourceIAMPolicyAssignment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceIAMPolicyAssignmentData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

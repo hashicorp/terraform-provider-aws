@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -60,7 +60,7 @@ func sweepGroups(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	input := &cloudwatchlogs.DescribeLogGroupsInput{}
-	conn := client.(*conns.AWSClient).LogsConn()
+	conn := client.(*conns.AWSClient).LogsConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeLogGroupsPagesWithContext(ctx, input, func(page *cloudwatchlogs.DescribeLogGroupsOutput, lastPage bool) bool {
@@ -104,7 +104,7 @@ func sweeplogQueryDefinitions(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{}
-	conn := client.(*conns.AWSClient).LogsConn()
+	conn := client.(*conns.AWSClient).LogsConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeQueryDefinitionsPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
@@ -148,7 +148,7 @@ func sweepResourcePolicies(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	input := &cloudwatchlogs.DescribeResourcePoliciesInput{}
-	conn := client.(*conns.AWSClient).LogsConn()
+	conn := client.(*conns.AWSClient).LogsConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeResourcePoliciesPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeResourcePoliciesOutput, lastPage bool) bool {

@@ -94,7 +94,7 @@ func ResourceProxyEndpoint() *schema.Resource {
 
 func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbProxyName := d.Get("db_proxy_name").(string)
 	dbProxyEndpointName := d.Get("db_proxy_endpoint_name").(string)
@@ -103,7 +103,7 @@ func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, me
 		DBProxyEndpointName: aws.String(dbProxyEndpointName),
 		TargetRole:          aws.String(d.Get("target_role").(string)),
 		VpcSubnetIds:        flex.ExpandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
@@ -111,7 +111,6 @@ func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	_, err := conn.CreateDBProxyEndpointWithContext(ctx, &input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "Creating RDS DB Proxy Endpoint (%s/%s): %s", dbProxyName, dbProxyEndpointName, err)
 	}
@@ -127,7 +126,7 @@ func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceProxyEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbProxyEndpoint, err := FindDBProxyEndpoint(ctx, conn, d.Id())
 
@@ -174,7 +173,7 @@ func resourceProxyEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceProxyEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	if d.HasChange("vpc_security_group_ids") {
 		params := rds.ModifyDBProxyEndpointInput{
@@ -197,7 +196,7 @@ func resourceProxyEndpointUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceProxyEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	params := rds.DeleteDBProxyEndpointInput{
 		DBProxyEndpointName: aws.String(d.Get("db_proxy_endpoint_name").(string)),
@@ -205,7 +204,6 @@ func resourceProxyEndpointDelete(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Delete DB Proxy Endpoint: %#v", params)
 	_, err := conn.DeleteDBProxyEndpointWithContext(ctx, &params)
-
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) || tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
 			return diags

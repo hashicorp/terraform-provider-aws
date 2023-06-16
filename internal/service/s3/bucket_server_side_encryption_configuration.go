@@ -2,7 +2,6 @@ package s3
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -75,7 +74,7 @@ func ResourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 }
 
 func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -100,7 +99,7 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 	)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating S3 bucket (%s) server-side encryption configuration: %w", bucket, err))
+		return diag.Errorf("creating S3 bucket (%s) server-side encryption configuration: %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
@@ -109,7 +108,7 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 }
 
 func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -139,13 +138,13 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading S3 bucket server-side encryption configuration (%s): %w", d.Id(), err))
+		return diag.Errorf("reading S3 bucket server-side encryption configuration (%s): %s", d.Id(), err)
 	}
 
 	output, ok := resp.(*s3.GetBucketEncryptionOutput)
 	if !ok || output.ServerSideEncryptionConfiguration == nil {
 		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading S3 bucket server-side encryption configuration (%s): empty output", d.Id()))
+			return diag.Errorf("reading S3 bucket server-side encryption configuration (%s): empty output", d.Id())
 		}
 		log.Printf("[WARN] S3 Bucket Server-Side Encryption Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -157,14 +156,14 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	if err := d.Set("rule", flattenBucketServerSideEncryptionConfigurationRules(sse.Rules)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting rule: %w", err))
+		return diag.Errorf("setting rule: %s", err)
 	}
 
 	return nil
 }
 
 func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -191,14 +190,14 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 	)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating S3 bucket (%s) server-side encryption configuration: %w", d.Id(), err))
+		return diag.Errorf("updating S3 bucket (%s) server-side encryption configuration: %s", d.Id(), err)
 	}
 
 	return resourceBucketServerSideEncryptionConfigurationRead(ctx, d, meta)
 }
 
 func resourceBucketServerSideEncryptionConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -220,7 +219,7 @@ func resourceBucketServerSideEncryptionConfigurationDelete(ctx context.Context, 
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting S3 bucket server-side encryption configuration (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting S3 bucket server-side encryption configuration (%s): %s", d.Id(), err)
 	}
 
 	return nil

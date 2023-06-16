@@ -709,12 +709,12 @@ const (
 )
 
 func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateChannelInput{
 		Name:      aws.String(d.Get("name").(string)),
 		RequestId: aws.String(id.UniqueId()),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cdi_input_specification"); ok && len(v.([]interface{})) > 0 {
@@ -770,7 +770,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	out, err := FindChannelByID(ctx, conn, d.Id())
 
@@ -817,7 +817,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all", "start_channel") {
 		in := &medialive.UpdateChannelInput{
@@ -915,7 +915,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	log.Printf("[INFO] Deleting MediaLive Channel %s", d.Id())
 
@@ -1422,8 +1422,8 @@ func expandChannelDestinations(tfList []interface{}) []types.OutputDestination {
 		if v, ok := m["id"].(string); ok {
 			d.Id = aws.String(v)
 		}
-		if v, ok := m["media_package_settings"].([]interface{}); ok && len(v) > 0 {
-			d.MediaPackageSettings = expandChannelDestinationsMediaPackageSettings(v)
+		if v, ok := m["media_package_settings"].(*schema.Set); ok && v.Len() > 0 {
+			d.MediaPackageSettings = expandChannelDestinationsMediaPackageSettings(v.List())
 		}
 		if v, ok := m["multiplex_settings"].([]interface{}); ok && len(v) > 0 {
 			d.MultiplexSettings = expandChannelDestinationsMultiplexSettings(v)

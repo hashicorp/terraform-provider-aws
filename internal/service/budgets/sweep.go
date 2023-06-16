@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/budgets"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -36,7 +36,7 @@ func sweepBudgetActions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).BudgetsConn()
+	conn := client.(*conns.AWSClient).BudgetsConn(ctx)
 	accountID := client.(*conns.AWSClient).AccountID
 	input := &budgets.DescribeBudgetActionsForAccountInput{
 		AccountId: aws.String(accountID),
@@ -83,7 +83,7 @@ func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).BudgetsConn()
+	conn := client.(*conns.AWSClient).BudgetsConn(ctx)
 	accountID := client.(*conns.AWSClient).AccountID
 	input := &budgets.DescribeBudgetsInput{
 		AccountId: aws.String(accountID),

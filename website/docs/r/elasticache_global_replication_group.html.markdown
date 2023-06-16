@@ -23,24 +23,24 @@ resource "aws_elasticache_global_replication_group" "example" {
 }
 
 resource "aws_elasticache_replication_group" "primary" {
-  replication_group_id          = "example-primary"
-  replication_group_description = "primary replication group"
+  replication_group_id = "example-primary"
+  description          = "primary replication group"
 
   engine         = "redis"
   engine_version = "5.0.6"
   node_type      = "cache.m5.large"
 
-  number_cache_clusters = 1
+  num_cache_clusters = 1
 }
 
 resource "aws_elasticache_replication_group" "secondary" {
   provider = aws.other_region
 
-  replication_group_id          = "example-secondary"
-  replication_group_description = "secondary replication group"
-  global_replication_group_id   = aws_elasticache_global_replication_group.example.global_replication_group_id
+  replication_group_id        = "example-secondary"
+  description                 = "secondary replication group"
+  global_replication_group_id = aws_elasticache_global_replication_group.example.global_replication_group_id
 
-  number_cache_clusters = 1
+  num_cache_clusters = 1
 }
 ```
 
@@ -67,14 +67,14 @@ resource "aws_elasticache_global_replication_group" "example" {
 }
 
 resource "aws_elasticache_replication_group" "primary" {
-  replication_group_id          = "example-primary"
-  replication_group_description = "primary replication group"
+  replication_group_id = "example-primary"
+  description          = "primary replication group"
 
   engine         = "redis"
   engine_version = "6.0"
   node_type      = "cache.m5.large"
 
-  number_cache_clusters = 1
+  num_cache_clusters = 1
 
   lifecycle {
     ignore_changes = [engine_version]
@@ -84,11 +84,11 @@ resource "aws_elasticache_replication_group" "primary" {
 resource "aws_elasticache_replication_group" "secondary" {
   provider = aws.other_region
 
-  replication_group_id          = "example-secondary"
-  replication_group_description = "secondary replication group"
-  global_replication_group_id   = aws_elasticache_global_replication_group.example.global_replication_group_id
+  replication_group_id        = "example-secondary"
+  description                 = "secondary replication group"
+  global_replication_group_id = aws_elasticache_global_replication_group.example.global_replication_group_id
 
-  number_cache_clusters = 1
+  num_cache_clusters = 1
 
   lifecycle {
     ignore_changes = [engine_version]
@@ -110,7 +110,8 @@ The following arguments are supported:
   When creating, by default the Global Replication Group inherits the version of the primary replication group.
   If a version is specified, the Global Replication Group and all member replication groups will be upgraded to this version.
   Cannot be downgraded without replacing the Global Replication Group and all member replication groups.
-  If the version is 6 or higher, the major and minor version can be set, e.g., `6.2`,
+  When the version is 7 or higher, the major and minor version should be set, e.g., `7.2`.
+  When the version is 6, the major and minor version can be set, e.g., `6.2`,
   or the minor version can be unspecified which will use the latest version at creation time, e.g., `6.x`.
   The actual engine version used is returned in the attribute `engine_version_actual`, see [Attributes Reference](#attributes-reference) below.
 * `global_replication_group_id_suffix` – (Required) The suffix name of a Global Datastore. If `global_replication_group_id_suffix` is changed, creates a new resource.

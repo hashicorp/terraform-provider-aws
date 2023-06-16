@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -698,7 +698,7 @@ func TestAccPipesPipe_targetParameters_inputTemplate(t *testing.T) {
 
 func testAccCheckPipeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PipesClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PipesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pipes_pipe" {
@@ -733,7 +733,7 @@ func testAccCheckPipeExists(ctx context.Context, name string, pipe *pipes.Descri
 			return create.Error(names.Pipes, create.ErrActionCheckingExistence, tfpipes.ResNamePipe, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PipesClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PipesClient(ctx)
 
 		output, err := tfpipes.FindPipeByName(ctx, conn, rs.Primary.ID)
 
@@ -748,7 +748,7 @@ func testAccCheckPipeExists(ctx context.Context, name string, pipe *pipes.Descri
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PipesClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PipesClient(ctx)
 
 	input := &pipes.ListPipesInput{}
 	_, err := conn.ListPipes(ctx, input)

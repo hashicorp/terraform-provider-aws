@@ -87,14 +87,14 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 		clusterEndpointCreateTimeout = 30 * time.Minute
 	)
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	endpointID := d.Get("cluster_endpoint_identifier").(string)
 	input := &rds.CreateDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(endpointID),
 		DBClusterIdentifier:         aws.String(d.Get("cluster_identifier").(string)),
 		EndpointType:                aws.String(d.Get("custom_endpoint_type").(string)),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("excluded_members"); ok && v.(*schema.Set).Len() > 0 {
@@ -106,7 +106,6 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	_, err := conn.CreateDBClusterEndpointWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS Cluster Endpoint (%s): %s", endpointID, err)
 	}
@@ -122,7 +121,7 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	clusterEp, err := FindDBClusterEndpointByID(ctx, conn, d.Id())
 
@@ -150,7 +149,7 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &rds.ModifyDBClusterEndpointInput{
@@ -174,7 +173,6 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		_, err := conn.ModifyDBClusterEndpointWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying RDS Cluster Endpoint (%s): %s", d.Id(), err)
 		}
@@ -185,13 +183,12 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting RDS Cluster Endpoint: %s", d.Id())
 	_, err := conn.DeleteDBClusterEndpointWithContext(ctx, &rds.DeleteDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Id()),
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting RDS Cluster Endpoint (%s): %s", d.Id(), err)
 	}
@@ -209,7 +206,6 @@ func FindDBClusterEndpointByID(ctx context.Context, conn *rds.RDS, id string) (*
 	}
 
 	output, err := conn.DescribeDBClusterEndpointsWithContext(ctx, input)
-
 	if err != nil {
 		return nil, err
 	}

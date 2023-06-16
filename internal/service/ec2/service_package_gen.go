@@ -5,11 +5,18 @@ package ec2
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct{}
+type servicePackage struct {
+	config map[string]any
+}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
@@ -314,10 +321,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceSubnet,
 			TypeName: "aws_subnet",
-		},
-		{
-			Factory:  DataSourceSubnetIDs,
-			TypeName: "aws_subnet_ids",
 		},
 		{
 			Factory:  DataSourceSubnets,
@@ -1117,6 +1120,28 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.EC2
+}
+
+func (p *servicePackage) Configure(ctx context.Context, config map[string]any) {
+	p.config = config
+}
+
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context) (*ec2_sdkv1.EC2, error) {
+	sess := p.config["session"].(*session_sdkv1.Session)
+
+	return ec2_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))})), nil
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context) (*ec2_sdkv2.Client, error) {
+	cfg := *(p.config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return ec2_sdkv2.NewFromConfig(cfg, func(o *ec2_sdkv2.Options) {
+		if endpoint := p.config["endpoint"].(string); endpoint != "" {
+			o.EndpointResolver = ec2_sdkv2.EndpointResolverFromURL(endpoint)
+		}
+	}), nil
 }
 
 var ServicePackage = &servicePackage{}
