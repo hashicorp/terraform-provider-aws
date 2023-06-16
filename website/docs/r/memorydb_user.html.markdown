@@ -47,8 +47,8 @@ The following arguments are optional:
 
 ### authentication_mode Configuration Block
 
-* `passwords` - (Required) The set of passwords used for authentication. You can create up to two passwords for each user.
-* `type` - (Required) Indicates whether the user requires a password to authenticate. Must be set to `password`.
+* `passwords` - (Optional) The set of passwords used for authentication if `type` is set to `password`. You can create up to two passwords for each user.
+* `type` - (Required) Specifies the authentication type. Possible options are: `password` or `iam`.
 
 ## Attributes Reference
 
