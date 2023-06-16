@@ -1,5 +1,9 @@
 ## 5.5.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_networkmanager_attachment_accepter: Added support for Transit Gateway route table attachments ([#32023](https://github.com/hashicorp/terraform-provider-aws/issues/32023))
+
 BUG FIXES:
 
 * resource/aws_eip: Fix `reading EC2 EIP (eipalloc-abcd1234): couldn't find resource` errors when reading new resource ([#32016](https://github.com/hashicorp/terraform-provider-aws/issues/32016))
