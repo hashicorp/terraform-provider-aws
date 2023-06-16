@@ -8,11 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,6 +30,10 @@ func ResourceConfigurationRecorder() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		CustomizeDiff: customdiff.All(
+			resourceConfigCustomizeDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -54,9 +60,38 @@ func ResourceConfigurationRecorder() *schema.Resource {
 							Optional: true,
 							Default:  true,
 						},
+						"exclusion_by_resource_types": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"resource_types": {
+										Type:     schema.TypeSet,
+										Set:      schema.HashString,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
 						"include_global_resource_types": {
 							Type:     schema.TypeBool,
 							Optional: true,
+						},
+						"recording_strategy": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"use_only": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(configservice.RecordingStrategyType_Values(), false),
+									},
+								},
+							},
 						},
 						"resource_types": {
 							Type:     schema.TypeSet,
@@ -161,4 +196,61 @@ func resourceConfigurationRecorderDelete(ctx context.Context, d *schema.Resource
 		}
 	}
 	return diags
+}
+
+func resourceConfigCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if diff.Id() == "" { // New resource.
+
+		if g, ok := diff.GetOk("recording_group"); ok {
+			group := g.([]interface{})[0].(map[string]interface{})
+
+			if h, ok := group["all_supported"]; ok {
+				if i, ok := group["recording_strategy"]; ok && len(i.([]interface{})) > 0 && i.([]interface{})[0] != nil {
+					strategy := i.([]interface{})[0].(map[string]interface{})
+
+					if j, ok := strategy["use_only"].(string); ok {
+						if h.(bool) && j != configservice.RecordingStrategyTypeAllSupportedResourceTypes {
+							return errors.New(` Invalid record group strategy  , all_supported must be set to true  `)
+						}
+
+						if k, ok := group["exclusion_by_resource_types"]; ok && len(k.([]interface{})) > 0 && k.([]interface{})[0] != nil {
+							if h.(bool) {
+								return errors.New(` Invalid record group , all_supported must be set to false when exclusion_by_resource_types is set `)
+							}
+
+							if j != configservice.RecordingStrategyTypeExclusionByResourceTypes {
+								return errors.New(` Invalid record group strategy ,  use only must be set to EXCLUSION_BY_RESOURCE_TYPES`)
+							}
+
+							if l, ok := group["resource_types"]; ok {
+								resourceTypes := flex.ExpandStringSet(l.(*schema.Set))
+								if len(resourceTypes) > 0 {
+									return errors.New(` Invalid record group , resource_types must not be set when exclusion_by_resource_types is set `)
+								}
+							}
+						}
+
+						if l, ok := group["resource_types"]; ok {
+							resourceTypes := flex.ExpandStringSet(l.(*schema.Set))
+							if len(resourceTypes) > 0 {
+								if h.(bool) {
+									return errors.New(` Invalid record group , all_supported must be set to false when resource_types is set `)
+								}
+
+								if j != configservice.RecordingStrategyTypeInclusionByResourceTypes {
+									return errors.New(` Invalid record group strategy ,  use only must be set to INCLUSION_BY_RESOURCE_TYPES`)
+								}
+
+								if m, ok := group["exclusion_by_resource_types"]; ok && len(m.([]interface{})) > 0 && i.([]interface{})[0] != nil {
+									return errors.New(` Invalid record group , exclusion_by_resource_types must not be set when resource_types is set `)
+								}
+							}
+						}
+					}
+				}
+
+			}
+		}
+	}
+	return nil
 }

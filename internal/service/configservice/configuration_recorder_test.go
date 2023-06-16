@@ -74,6 +74,38 @@ func testAccConfigurationRecorder_allParams(t *testing.T) {
 	})
 }
 
+func testAccConfigurationRecorder_recordStrategy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cr configservice.ConfigurationRecorder
+	rInt := sdkacctest.RandInt()
+	expectedName := fmt.Sprintf("tf-acc-test-%d", rInt)
+	expectedRoleName := fmt.Sprintf("tf-acc-test-awsconfig-%d", rInt)
+
+	resourceName := "aws_config_configuration_recorder.foo"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationRecorderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationRecorderConfig_recordStrategy(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationRecorderExists(ctx, resourceName, &cr),
+					testAccCheckConfigurationRecorderName(resourceName, expectedName, &cr),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", expectedRoleName)),
+					resource.TestCheckResourceAttr(resourceName, "name", expectedName),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.0.all_supported", "false"),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.0.exclusion_by_resource_types.0.resource_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.0.recording_strategy.0.use_only", "EXCLUSION_BY_RESOURCE_TYPES"),
+				),
+			},
+		},
+	})
+}
+
 func testAccConfigurationRecorder_importBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_config_configuration_recorder.foo"
@@ -291,6 +323,94 @@ resource "aws_s3_bucket" "b" {
   bucket        = "tf-acc-test-awsconfig-%d"
   force_destroy = true
 }
+
+resource "aws_s3_bucket_ownership_controls" "b" {
+	bucket = aws_s3_bucket.b.id
+	rule {
+	  object_ownership = "BucketOwnerEnforced"
+	}
+  }
+
+resource "aws_config_delivery_channel" "foo" {
+  name           = "tf-acc-test-awsconfig-%d"
+  s3_bucket_name = aws_s3_bucket.b.bucket
+  depends_on     = [aws_config_configuration_recorder.foo]
+}
+`, randInt, randInt, randInt, randInt, randInt)
+}
+
+func testAccConfigurationRecorderConfig_recordStrategy(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_config_configuration_recorder" "foo" {
+  name     = "tf-acc-test-%d"
+  role_arn = aws_iam_role.r.arn
+
+  recording_group {
+    all_supported                 = false
+    include_global_resource_types = false
+	exclusion_by_resource_types {
+		resource_types                = ["AWS::EC2::Instance", "AWS::CloudTrail::Trail"]
+	}
+	recording_strategy {
+		use_only = "EXCLUSION_BY_RESOURCE_TYPES"	
+	}
+  }
+}
+
+resource "aws_iam_role" "r" {
+  name = "tf-acc-test-awsconfig-%d"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "config.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "p" {
+  name = "tf-acc-test-awsconfig-%d"
+  role = aws_iam_role.r.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "s3:*"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "${aws_s3_bucket.b.arn}",
+        "${aws_s3_bucket.b.arn}/*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_s3_bucket" "b" {
+  bucket        = "tf-acc-test-awsconfig-%d"
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_ownership_controls" "b" {
+	bucket = aws_s3_bucket.b.id
+	rule {
+	  object_ownership = "BucketOwnerEnforced"
+	}
+  }
 
 resource "aws_config_delivery_channel" "foo" {
   name           = "tf-acc-test-awsconfig-%d"

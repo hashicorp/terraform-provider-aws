@@ -58,14 +58,47 @@ func expandRecordingGroup(configured []interface{}) *configservice.RecordingGrou
 		recordingGroup.AllSupported = aws.Bool(v.(bool))
 	}
 
+	if v, ok := group["exclusion_by_resource_types"]; ok {
+		if len(v.([]interface{})) > 0 {
+
+			recordingGroup.ExclusionByResourceTypes = expandRecordingGroupExclusionByResourceTypes(v.([]interface{}))
+		}
+	}
+
 	if v, ok := group["include_global_resource_types"]; ok {
 		recordingGroup.IncludeGlobalResourceTypes = aws.Bool(v.(bool))
+	}
+
+	if v, ok := group["recording_strategy"]; ok {
+		if len(v.([]interface{})) > 0 {
+			recordingGroup.RecordingStrategy = expandRecordingGroupRecordingStrategy(v.([]interface{}))
+		}
 	}
 
 	if v, ok := group["resource_types"]; ok {
 		recordingGroup.ResourceTypes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 	return &recordingGroup
+}
+
+func expandRecordingGroupExclusionByResourceTypes(configured []interface{}) *configservice.ExclusionByResourceTypes {
+	exclusionByResourceTypes := configservice.ExclusionByResourceTypes{}
+	exclusion := configured[0].(map[string]interface{})
+
+	if v, ok := exclusion["resource_types"]; ok {
+		exclusionByResourceTypes.ResourceTypes = flex.ExpandStringSet(v.(*schema.Set))
+	}
+	return &exclusionByResourceTypes
+}
+
+func expandRecordingGroupRecordingStrategy(configured []interface{}) *configservice.RecordingStrategy {
+	recordingStrategy := configservice.RecordingStrategy{}
+	strategy := configured[0].(map[string]interface{})
+
+	if v, ok := strategy["use_only"].(string); ok {
+		recordingStrategy.UseOnly = aws.String(v)
+	}
+	return &recordingStrategy
 }
 
 func expandRuleScope(l []interface{}) *configservice.Scope {
@@ -187,8 +220,16 @@ func flattenRecordingGroup(g *configservice.RecordingGroup) []map[string]interfa
 		m["all_supported"] = aws.BoolValue(g.AllSupported)
 	}
 
+	if g.ExclusionByResourceTypes != nil {
+		m["exclusion_by_resource_types"] = flattenExclusionByResourceTypes(g.ExclusionByResourceTypes)
+	}
+
 	if g.IncludeGlobalResourceTypes != nil {
 		m["include_global_resource_types"] = aws.BoolValue(g.IncludeGlobalResourceTypes)
+	}
+
+	if g.RecordingStrategy != nil {
+		m["recording_strategy"] = flattenRecordingGroupRecordingStrategy(g.RecordingStrategy)
 	}
 
 	if g.ResourceTypes != nil && len(g.ResourceTypes) > 0 {
@@ -197,7 +238,29 @@ func flattenRecordingGroup(g *configservice.RecordingGroup) []map[string]interfa
 
 	return []map[string]interface{}{m}
 }
+func flattenExclusionByResourceTypes(exclusionByResourceTypes *configservice.ExclusionByResourceTypes) []interface{} {
+	if exclusionByResourceTypes == nil {
+		return nil
+	}
+	m := make(map[string]interface{})
+	if exclusionByResourceTypes.ResourceTypes != nil {
+		m["resource_types"] = flex.FlattenStringSet(exclusionByResourceTypes.ResourceTypes)
+	}
 
+	return []interface{}{m}
+}
+
+func flattenRecordingGroupRecordingStrategy(recordingStrategy *configservice.RecordingStrategy) []interface{} {
+	if recordingStrategy == nil {
+		return nil
+	}
+	m := make(map[string]interface{})
+	if recordingStrategy.UseOnly != nil {
+		m["use_only"] = aws.StringValue(recordingStrategy.UseOnly)
+	}
+
+	return []interface{}{m}
+}
 func flattenRuleScope(scope *configservice.Scope) []interface{} {
 	var items []interface{}
 
