@@ -130,6 +130,12 @@ func ResourceTask() *schema.Resource {
 							Default:      datasync.MtimePreserve,
 							ValidateFunc: validation.StringInSlice(datasync.Mtime_Values(), false),
 						},
+						"object_tags": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.ObjectTagsPreserve,
+							ValidateFunc: validation.StringInSlice(datasync.ObjectTags_Values(), false),
+						},
 						"overwrite_mode": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -413,6 +419,7 @@ func flattenOptions(options *datasync.Options) []interface{} {
 		"gid":                            aws.StringValue(options.Gid),
 		"log_level":                      aws.StringValue(options.LogLevel),
 		"mtime":                          aws.StringValue(options.Mtime),
+		"object_tags":                    aws.StringValue(options.ObjectTags),
 		"overwrite_mode":                 aws.StringValue(options.OverwriteMode),
 		"posix_permissions":              aws.StringValue(options.PosixPermissions),
 		"preserve_deleted_files":         aws.StringValue(options.PreserveDeletedFiles),
@@ -439,6 +446,7 @@ func expandOptions(l []interface{}) *datasync.Options {
 		Gid:                  aws.String(m["gid"].(string)),
 		LogLevel:             aws.String(m["log_level"].(string)),
 		Mtime:                aws.String(m["mtime"].(string)),
+		ObjectTags:           aws.String(m["object_tags"].(string)),
 		OverwriteMode:        aws.String(m["overwrite_mode"].(string)),
 		PreserveDeletedFiles: aws.String(m["preserve_deleted_files"].(string)),
 		PreserveDevices:      aws.String(m["preserve_devices"].(string)),

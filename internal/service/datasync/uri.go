@@ -8,14 +8,14 @@ import (
 )
 
 var (
-	locationURIPattern                      = regexp.MustCompile(`^(efs|hdfs|nfs|s3|smb|fsx[a-z0-9]+|object-storage)://(.+)$`)
+	locationURIPattern                      = regexp.MustCompile(`^(efs|hdfs|nfs|s3|smb|fsx[a-z0-9]+)://(.+)$`)
 	locationURIGlobalIDAndSubdirPattern     = regexp.MustCompile(`^([a-zA-Z0-9.\-]+)(?::\d{0,5})?(/.*)$`)
 	s3OutpostsAccessPointARNResourcePattern = regexp.MustCompile(`^outpost/.*/accesspoint/.*?(/.*)$`)
 )
 
-// SubdirectoryFromLocationURI extracts the subdirectory from a location URI.
+// subdirectoryFromLocationURI extracts the subdirectory from a location URI.
 // https://docs.aws.amazon.com/datasync/latest/userguide/API_LocationListEntry.html#DataSync-Type-LocationListEntry-LocationUri
-func SubdirectoryFromLocationURI(uri string) (string, error) {
+func subdirectoryFromLocationURI(uri string) (string, error) {
 	submatches := locationURIPattern.FindStringSubmatch(uri)
 
 	if len(submatches) != 3 {
