@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -97,13 +96,7 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 		return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameEnvironment, ID, err)
 	}
 
-	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("application/%s/environment/%s", appID, envID),
-		Service:   "appconfig",
-	}.String()
+	arn := environmentARN(meta.(*conns.AWSClient), appID, envID).String()
 
 	d.Set("arn", arn)
 
@@ -135,4 +128,40 @@ func findEnvironmentByApplicationAndEnvironment(ctx context.Context, conn *appco
 	}
 
 	return res, nil
+}
+
+func flattenEnvironmentMonitors(monitors []*appconfig.Monitor) []interface{} {
+	if len(monitors) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, monitor := range monitors {
+		if monitor == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenEnvironmentMonitor(monitor))
+	}
+
+	return tfList
+}
+
+func flattenEnvironmentMonitor(monitor *appconfig.Monitor) map[string]interface{} {
+	if monitor == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := monitor.AlarmArn; v != nil {
+		tfMap["alarm_arn"] = aws.StringValue(v)
+	}
+
+	if v := monitor.AlarmRoleArn; v != nil {
+		tfMap["alarm_role_arn"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

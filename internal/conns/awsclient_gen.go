@@ -7,6 +7,7 @@ import (
 	accessanalyzer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	account_sdkv2 "github.com/aws/aws-sdk-go-v2/service/account"
 	acm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acm"
+	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
@@ -385,6 +386,10 @@ func (c *AWSClient) AppAutoScalingConn(ctx context.Context) *applicationautoscal
 
 func (c *AWSClient) AppConfigConn(ctx context.Context) *appconfig_sdkv1.AppConfig {
 	return errs.Must(conn[*appconfig_sdkv1.AppConfig](ctx, c, names.AppConfig))
+}
+
+func (c *AWSClient) AppConfigClient(ctx context.Context) *appconfig_sdkv2.Client {
+	return errs.Must(client[*appconfig_sdkv2.Client](ctx, c, names.AppConfig))
 }
 
 func (c *AWSClient) AppConfigDataConn(ctx context.Context) *appconfigdata_sdkv1.AppConfigData {

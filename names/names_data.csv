@@ -15,7 +15,7 @@ apigatewayv2,apigatewayv2,apigatewayv2,apigatewayv2,,apigatewayv2,,,APIGatewayV2
 appmesh,appmesh,appmesh,appmesh,,appmesh,,,AppMesh,AppMesh,,1,,,aws_appmesh_,,appmesh_,App Mesh,AWS,,,,,
 apprunner,apprunner,apprunner,apprunner,,apprunner,,,AppRunner,AppRunner,,1,,,aws_apprunner_,,apprunner_,App Runner,AWS,,,,,
 ,,,,,,,,,,,,,,,,,App2Container,AWS,x,,,,No SDK support
-appconfig,appconfig,appconfig,appconfig,,appconfig,,,AppConfig,AppConfig,,1,,,aws_appconfig_,,appconfig_,AppConfig,AWS,,,,,
+appconfig,appconfig,appconfig,appconfig,,appconfig,,,AppConfig,AppConfig,,1,2,,aws_appconfig_,,appconfig_,AppConfig,AWS,,,,,
 appconfigdata,appconfigdata,appconfigdata,appconfigdata,,appconfigdata,,,AppConfigData,AppConfigData,,1,,,aws_appconfigdata_,,appconfigdata_,AppConfig Data,AWS,,,,,
 appflow,appflow,appflow,appflow,,appflow,,,AppFlow,Appflow,,1,,,aws_appflow_,,appflow_,AppFlow,Amazon,,,,,
 appintegrations,appintegrations,appintegrationsservice,appintegrations,,appintegrations,,appintegrationsservice,AppIntegrations,AppIntegrationsService,,1,,,aws_appintegrations_,,appintegrations_,AppIntegrations,Amazon,,,,,
