@@ -1,6 +1,6 @@
 package elb_test
 
-import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
+import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"context"
 	"fmt"
 	"math/rand"

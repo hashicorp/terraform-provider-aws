@@ -1,6 +1,6 @@
 package elbv2
 
-import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
+import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"bytes"
 	"context"
 	"errors"

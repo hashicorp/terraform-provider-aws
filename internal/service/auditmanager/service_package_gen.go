@@ -5,15 +5,11 @@ package auditmanager
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct {
-	config map[string]any
-}
+type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
@@ -77,21 +73,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.AuditManager
-}
-
-func (p *servicePackage) Configure(ctx context.Context, config map[string]any) {
-	p.config = config
-}
-
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context) (*auditmanager_sdkv2.Client, error) {
-	cfg := *(p.config["aws_sdkv2_config"].(*aws_sdkv2.Config))
-
-	return auditmanager_sdkv2.NewFromConfig(cfg, func(o *auditmanager_sdkv2.Options) {
-		if endpoint := p.config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = auditmanager_sdkv2.EndpointResolverFromURL(endpoint)
-		}
-	}), nil
 }
 
 var ServicePackage = &servicePackage{}
