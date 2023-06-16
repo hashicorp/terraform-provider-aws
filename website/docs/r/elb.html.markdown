@@ -79,7 +79,7 @@ The following arguments are supported:
 * `availability_zones` - (Required for an EC2-classic ELB) The AZ's to serve traffic in.
 * `security_groups` - (Optional) A list of security group IDs to assign to the ELB.
   Only valid if creating an ELB within a VPC
-* `subnets` - (Required for a VPC ELB) A list of subnet IDs to attach to the ELB.
+* `subnets` - (Required for a VPC ELB) A list of subnet IDs to attach to the ELB. When an update to subnets will remove all current subnets, this will force a new resource.
 * `instances` - (Optional) A list of instance ids to place in the ELB pool.
 * `internal` - (Optional) If true, ELB will be an internal ELB.
 * `listener` - (Required) A list of listener blocks. Listeners documented below.
