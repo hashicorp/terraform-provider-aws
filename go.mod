@@ -24,7 +24,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.14.12
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.12
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.14.1
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.6
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.35.1
