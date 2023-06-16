@@ -9,9 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct {
-	config map[string]any
-}
+type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
@@ -35,10 +33,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.STS
-}
-
-func (p *servicePackage) Configure(ctx context.Context, config map[string]any) {
-	p.config = config
 }
 
 var ServicePackage = &servicePackage{}

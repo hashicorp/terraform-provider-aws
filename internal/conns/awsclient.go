@@ -4,35 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"sync"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
-	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"
-	s3_sdkv1 "github.com/aws/aws-sdk-go/service/s3"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
-
-type AWSClient struct {
-	AccountID               string
-	DefaultTagsConfig       *tftags.DefaultConfig
-	DNSSuffix               string
-	IgnoreTagsConfig        *tftags.IgnoreConfig
-	MediaConvertAccountConn *mediaconvert_sdkv1.MediaConvert
-	Partition               string
-	Region                  string
-	ReverseDNSPrefix        string
-	ServicePackages         map[string]ServicePackage
-	Session                 *session_sdkv1.Session
-	TerraformVersion        string
-
-	clients    map[string]any
-	conns      map[string]any
-	httpClient *http.Client
-	lock       sync.Mutex
-}
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
 // e.g. PREFIX.amazonaws.com
@@ -48,11 +25,11 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
 }
 
-func (client *AWSClient) S3ConnURICleaningDisabled(ctx context.Context) *s3_sdkv1.S3 {
+func (client *AWSClient) S3ConnURICleaningDisabled(ctx context.Context) *s3.S3 {
 	config := client.S3Conn(ctx).Config
-	config.DisableRestProtocolURICleaning = aws_sdkv1.Bool(true)
+	config.DisableRestProtocolURICleaning = aws.Bool(true)
 
-	return s3_sdkv1.New(client.Session.Copy(&config))
+	return s3.New(client.Session.Copy(&config))
 }
 
 // SetHTTPClient sets the http.Client used for AWS API calls.
@@ -78,7 +55,7 @@ func (client *AWSClient) APIGatewayInvokeURL(restAPIID, stageName string) string
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-publish.html and
 // https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-set-up-websocket-deployment.html.
 func (client *AWSClient) APIGatewayV2InvokeURL(protocolType, apiID, stageName string) string {
-	if protocolType == apigatewayv2_sdkv1.ProtocolTypeWebsocket {
+	if protocolType == apigatewayv2.ProtocolTypeWebsocket {
 		return fmt.Sprintf("wss://%s/%s", client.RegionalHostname(fmt.Sprintf("%s.execute-api", apiID)), stageName)
 	}
 
@@ -92,7 +69,7 @@ func (client *AWSClient) APIGatewayV2InvokeURL(protocolType, apiID, stageName st
 // CloudFrontDistributionHostedZoneID returns the Route 53 hosted zone ID
 // for Amazon CloudFront distributions in the configured AWS partition.
 func (client *AWSClient) CloudFrontDistributionHostedZoneID() string {
-	if client.Partition == endpoints_sdkv1.AwsCnPartitionID {
+	if client.Partition == endpoints.AwsCnPartitionID {
 		return "Z3RFFRIM2A3IF5" // See https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
 	}
 	return "Z2FDTNDATAQYW2" // See https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html#Route53-Type-AliasTarget-HostedZoneId
@@ -123,94 +100,4 @@ func (client *AWSClient) DefaultKMSKeyPolicy() string {
 // for AWS Global Accelerator accelerators in the configured AWS partition.
 func (client *AWSClient) GlobalAcceleratorHostedZoneID() string {
 	return "Z2BJ6XQ5FK7U4H" // See https://docs.aws.amazon.com/general/latest/gr/global_accelerator.html#global_accelerator_region
-}
-
-// conn returns the AWS SDK for Go v1 API client for the specified service.
-func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string) (T, error) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
-	if raw, ok := c.conns[servicePackageName]; ok {
-		if conn, ok := raw.(T); ok {
-			return conn, nil
-		} else {
-			var zero T
-			return zero, fmt.Errorf("AWS SDK v1 API client (%s): %T, want %T", servicePackageName, raw, zero)
-		}
-	}
-
-	sp, ok := c.ServicePackages[servicePackageName]
-	if !ok {
-		var zero T
-		return zero, fmt.Errorf("unknown service package: %s", servicePackageName)
-	}
-
-	v, ok := sp.(interface {
-		NewConn(context.Context) (T, error)
-	})
-	if !ok {
-		var zero T
-		return zero, fmt.Errorf("no AWS SDK v1 API client factory: %s", servicePackageName)
-	}
-
-	conn, err := v.NewConn(ctx)
-	if err != nil {
-		var zero T
-		return zero, err
-	}
-
-	if v, ok := sp.(interface {
-		CustomizeConn(context.Context, T) (T, error)
-	}); ok {
-		conn, err = v.CustomizeConn(ctx, conn)
-		if err != nil {
-			var zero T
-			return zero, err
-		}
-	}
-
-	c.conns[servicePackageName] = conn
-
-	return conn, nil
-}
-
-// client returns the AWS SDK for Go v2 API client for the specified service.
-func client[T any](ctx context.Context, c *AWSClient, servicePackageName string) (T, error) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
-	if raw, ok := c.clients[servicePackageName]; ok {
-		if client, ok := raw.(T); ok {
-			return client, nil
-		} else {
-			var zero T
-			return zero, fmt.Errorf("AWS SDK v2 API client (%s): %T, want %T", servicePackageName, raw, zero)
-		}
-	}
-
-	sp, ok := c.ServicePackages[servicePackageName]
-	if !ok {
-		var zero T
-		return zero, fmt.Errorf("unknown service package: %s", servicePackageName)
-	}
-
-	v, ok := sp.(interface {
-		NewClient(context.Context) (T, error)
-	})
-	if !ok {
-		var zero T
-		return zero, fmt.Errorf("no AWS SDK v2 API client factory: %s", servicePackageName)
-	}
-
-	client, err := v.NewClient(ctx)
-	if err != nil {
-		var zero T
-		return zero, err
-	}
-
-	// All customization for AWS SDK for Go v2 API clients must be done during construction.
-
-	c.clients[servicePackageName] = client
-
-	return client, nil
 }
