@@ -1,4 +1,9 @@
 ## 5.5.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_eip: Fix `reading EC2 EIP (eipalloc-abcd1234): couldn't find resource` errors when reading new resource ([#32016](https://github.com/hashicorp/terraform-provider-aws/issues/32016))
+
 ## 5.4.0 (June 15, 2023)
 
 FEATURES:
