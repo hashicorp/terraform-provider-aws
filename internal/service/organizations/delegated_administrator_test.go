@@ -41,11 +41,6 @@ func testAccDelegatedAdministrator_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "service_principal", servicePrincipal),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const policyTypeStatusDisabled = "DISABLED"
@@ -429,6 +430,29 @@ func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	return diags
+}
+
+func FindOrganization(ctx context.Context, conn *organizations.Organizations) (*organizations.Organization, error) {
+	input := &organizations.DescribeOrganizationInput{}
+
+	output, err := conn.DescribeOrganizationWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Organization == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Organization, nil
 }
 
 func flattenAccounts(accounts []*organizations.Account) []map[string]interface{} {

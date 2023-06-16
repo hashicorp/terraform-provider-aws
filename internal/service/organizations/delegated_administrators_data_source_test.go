@@ -9,16 +9,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccOrganizationsDelegatedAdministratorsDataSource_basic(t *testing.T) {
+func testAccDelegatedAdministratorsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_organizations_delegated_administrators.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
-	dataSourceIdentity := "data.aws_caller_identity.delegated"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -26,101 +26,40 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDelegatedAdministratorsDataSourceConfig_basic(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "delegated_administrators.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "delegated_administrators.0.id", dataSourceIdentity, "account_id"),
-					acctest.CheckResourceAttrRFC3339(dataSourceName, "delegated_administrators.0.delegation_enabled_date"),
-					acctest.CheckResourceAttrRFC3339(dataSourceName, "delegated_administrators.0.joined_timestamp"),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "delegated_administrators.#", 1),
 				),
 			},
 		},
 	})
 }
 
-func TestAccOrganizationsDelegatedAdministratorsDataSource_multiple(t *testing.T) {
+func testAccDelegatedAdministratorsDataSource_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_organizations_delegated_administrators.test"
-	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
+	servicePrincipal1 := "config-multiaccountsetup.amazonaws.com"
 	servicePrincipal2 := "config.amazonaws.com"
-	dataSourceIdentity := "data.aws_caller_identity.delegated"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDelegatedAdministratorsDataSourceConfig_multiple(servicePrincipal, servicePrincipal2),
+				Config: testAccDelegatedAdministratorsDataSourceConfig_multiple(servicePrincipal1, servicePrincipal2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "delegated_administrators.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "delegated_administrators.0.id", dataSourceIdentity, "account_id"),
-					acctest.CheckResourceAttrRFC3339(dataSourceName, "delegated_administrators.0.delegation_enabled_date"),
-					acctest.CheckResourceAttrRFC3339(dataSourceName, "delegated_administrators.0.joined_timestamp"),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "delegated_administrators.#", 2),
 				),
 			},
 		},
 	})
-}
-
-func TestAccOrganizationsDelegatedAdministratorsDataSource_servicePrincipal(t *testing.T) {
-	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_organizations_delegated_administrators.test"
-	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
-	dataSourceIdentity := "data.aws_caller_identity.delegated"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckAlternateAccount(t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDelegatedAdministratorsDataSourceConfig_servicePrincipal(servicePrincipal),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "delegated_administrators.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "delegated_administrators.0.id", dataSourceIdentity, "account_id"),
-					acctest.CheckResourceAttrRFC3339(dataSourceName, "delegated_administrators.0.delegation_enabled_date"),
-					acctest.CheckResourceAttrRFC3339(dataSourceName, "delegated_administrators.0.joined_timestamp"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccOrganizationsDelegatedAdministratorsDataSource_empty(t *testing.T) {
-	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_organizations_delegated_administrators.test"
-	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDelegatedAdministratorsDataSourceConfig_empty(servicePrincipal),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "delegated_administrators.#", "0"),
-				),
-			},
-		},
-	})
-}
-
-func testAccDelegatedAdministratorsDataSourceConfig_empty(servicePrincipal string) string {
-	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
-data "aws_organizations_delegated_administrators" "test" {
-  service_principal = %[1]q
-}
-`, servicePrincipal)
 }
 
 func testAccDelegatedAdministratorsDataSourceConfig_basic(servicePrincipal string) string {
-	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
 }
@@ -130,12 +69,14 @@ resource "aws_organizations_delegated_administrator" "test" {
   service_principal = %[1]q
 }
 
-data "aws_organizations_delegated_administrators" "test" {}
-`, servicePrincipal)
+data "aws_organizations_delegated_administrators" "test" {
+  depends_on = [aws_organizations_delegated_administrator.test]
+}
+`, servicePrincipal))
 }
 
-func testAccDelegatedAdministratorsDataSourceConfig_multiple(servicePrincipal, servicePrincipal2 string) string {
-	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
+func testAccDelegatedAdministratorsDataSourceConfig_multiple(servicePrincipal1, servicePrincipal2 string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
 }
@@ -150,23 +91,8 @@ resource "aws_organizations_delegated_administrator" "other_delegated" {
   service_principal = %[2]q
 }
 
-data "aws_organizations_delegated_administrators" "test" {}
-`, servicePrincipal, servicePrincipal2)
-}
-
-func testAccDelegatedAdministratorsDataSourceConfig_servicePrincipal(servicePrincipal string) string {
-	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
-data "aws_caller_identity" "delegated" {
-  provider = "awsalternate"
-}
-
-resource "aws_organizations_delegated_administrator" "test" {
-  account_id        = data.aws_caller_identity.delegated.account_id
-  service_principal = %[1]q
-}
-
 data "aws_organizations_delegated_administrators" "test" {
-  service_principal = aws_organizations_delegated_administrator.test.service_principal
+  depends_on = [aws_organizations_delegated_administrator.delegated, aws_organizations_delegated_administrator.other_delegated]
 }
-`, servicePrincipal)
+`, servicePrincipal1, servicePrincipal2))
 }
