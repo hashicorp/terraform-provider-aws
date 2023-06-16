@@ -48,7 +48,7 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "options.0.gid", "INT_VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.log_level", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.mtime", "PRESERVE"),
-					resource.TestCheckResourceAttr(resourceName, "options.0.object_tags", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.object_tags", "PRESERVE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.overwrite_mode", "ALWAYS"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.posix_permissions", "PRESERVE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.preserve_deleted_files", "PRESERVE"),
@@ -412,11 +412,11 @@ func TestAccDataSyncTask_DefaultSyncOptions_objectTags(t *testing.T) {
 		CheckDestroy:             testAccCheckTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskConfig_defaultSyncOptionsObjectTags(rName, "PRESERVE"),
+				Config: testAccTaskConfig_defaultSyncOptionsObjectTags(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "options.0.object_tags", "PRESERVE"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.object_tags", "NONE"),
 				),
 			},
 			{
@@ -425,12 +425,12 @@ func TestAccDataSyncTask_DefaultSyncOptions_objectTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskConfig_defaultSyncOptionsObjectTags(rName, "NONE"),
+				Config: testAccTaskConfig_defaultSyncOptionsObjectTags(rName, "PRESERVE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "options.0.object_tags", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.object_tags", "PRESERVE"),
 				),
 			},
 		},
