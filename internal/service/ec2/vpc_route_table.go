@@ -206,8 +206,9 @@ func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-
-	routeTable, err := FindRouteTableByID(ctx, conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, RouteTableAssociationPropagationTimeout, func() (interface{}, error) {
+		return FindRouteTableByID(ctx, conn, d.Id())
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table (%s) not found, removing from state", d.Id())
@@ -219,6 +220,7 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", d.Id(), err)
 	}
 
+	routeTable := outputRaw.(*ec2.RouteTable)
 	ownerID := aws.StringValue(routeTable.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
