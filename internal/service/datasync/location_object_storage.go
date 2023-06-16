@@ -132,7 +132,7 @@ func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.Resource
 		input.SecretKey = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("server_certficate"); ok {
+	if v, ok := d.GetOk("server_certificate"); ok {
 		input.ServerCertificate = []byte(v.(string))
 	}
 
@@ -169,25 +169,22 @@ func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "parsing DataSync Location Object Storage (%s) location URI: %s", d.Id(), err)
 	}
 
-	d.Set("agent_arns", flex.FlattenStringSet(output.AgentArns))
-	d.Set("arn", output.LocationArn)
-	d.Set("server_protocol", output.ServerProtocol)
-	d.Set("subdirectory", subdirectory)
-	d.Set("access_key", output.AccessKey)
-	d.Set("server_port", output.ServerPort)
-	d.Set("server_certificate", string(output.ServerCertificate))
-
 	uri := aws.StringValue(output.LocationUri)
-
 	hostname, bucketName, err := decodeObjectStorageURI(uri)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing DataSync Location Object Storage (%s) object-storage URI: %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("server_hostname", hostname)
+	d.Set("access_key", output.AccessKey)
+	d.Set("agent_arns", aws.StringValueSlice(output.AgentArns))
+	d.Set("arn", output.LocationArn)
 	d.Set("bucket_name", bucketName)
-
+	d.Set("server_certificate", string(output.ServerCertificate))
+	d.Set("server_hostname", hostname)
+	d.Set("server_port", output.ServerPort)
+	d.Set("server_protocol", output.ServerProtocol)
+	d.Set("subdirectory", subdirectory)
 	d.Set("uri", uri)
 
 	return diags
@@ -197,17 +194,9 @@ func resourceLocationObjectStorageUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &datasync.UpdateLocationObjectStorageInput{
 			LocationArn: aws.String(d.Id()),
-		}
-
-		if d.HasChange("server_protocol") {
-			input.ServerProtocol = aws.String(d.Get("server_protocol").(string))
-		}
-
-		if d.HasChange("server_port") {
-			input.ServerPort = aws.Int64(int64(d.Get("server_port").(int)))
 		}
 
 		if d.HasChange("access_key") {
@@ -218,12 +207,20 @@ func resourceLocationObjectStorageUpdate(ctx context.Context, d *schema.Resource
 			input.SecretKey = aws.String(d.Get("secret_key").(string))
 		}
 
-		if d.HasChange("subdirectory") {
-			input.Subdirectory = aws.String(d.Get("subdirectory").(string))
+		if d.HasChange("server_certificate") {
+			input.ServerCertificate = []byte(d.Get("server_certificate").(string))
 		}
 
-		if d.HasChange("server_certficate") {
-			input.ServerCertificate = []byte(d.Get("server_certficate").(string))
+		if d.HasChange("server_port") {
+			input.ServerPort = aws.Int64(int64(d.Get("server_port").(int)))
+		}
+
+		if d.HasChange("server_protocol") {
+			input.ServerProtocol = aws.String(d.Get("server_protocol").(string))
+		}
+
+		if d.HasChange("subdirectory") {
+			input.Subdirectory = aws.String(d.Get("subdirectory").(string))
 		}
 
 		_, err := conn.UpdateLocationObjectStorageWithContext(ctx, input)
