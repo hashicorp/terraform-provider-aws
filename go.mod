@@ -48,7 +48,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/swf v1.15.1
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.6
-	github.com/aws/aws-sdk-go-v2/service/xray v1.16.12
+	github.com/aws/aws-sdk-go-v2/service/xray v1.16.13
 	github.com/aws/smithy-go v1.13.5
 	github.com/beevik/etree v1.2.0
 	github.com/google/go-cmp v0.5.9
