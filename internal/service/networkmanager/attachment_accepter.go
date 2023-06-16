@@ -167,7 +167,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 			}
 
 		case networkmanager.AttachmentTypeTransitGatewayRouteTable:
-			if _, err := waitTransitGatewayRouteTableAttachmentCreated(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
+			if _, err := waitTransitGatewayRouteTableAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return diag.Errorf("waiting for Network Manager Transit Gateway Route Table Attachment (%s) create: %s", attachmentID, err)
 			}
 		}

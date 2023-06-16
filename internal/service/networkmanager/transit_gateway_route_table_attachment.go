@@ -268,3 +268,20 @@ func waitTransitGatewayRouteTableAttachmentDeleted(ctx context.Context, conn *ne
 
 	return nil, err
 }
+
+func waitTransitGatewayRouteTableAttachmentAvailable(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.TransitGatewayRouteTableAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingAttachmentAcceptance, networkmanager.AttachmentStatePendingNetworkUpdate},
+		Target:  []string{networkmanager.AttachmentStateAvailable},
+		Timeout: timeout,
+		Refresh: StatusTransitGatewayRouteTableAttachmentState(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkmanager.TransitGatewayRouteTableAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
