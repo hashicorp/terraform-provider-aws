@@ -75,7 +75,9 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"UnattachedPolicy": testAccPolicyDataSource_UnattachedPolicy,
 		},
 		"ResourcePolicy": {
-			"basic": testAccResourcePolicy_basic,
+			"basic":      testAccResourcePolicy_basic,
+			"disappears": testAccResourcePolicy_disappears,
+			"tags":       testAccResourcePolicy_tags,
 		},
 		"DelegatedAdministrator": {
 			"basic":      testAccDelegatedAdministrator_basic,
