@@ -1,19 +1,19 @@
 ---
 subcategory: "Organizations"
 layout: "aws"
-page_title: "AWS: aws_organizations_resource policy"
+page_title: "AWS: aws_organizations_resource_policy"
 description: |-
   Provides a resource to manage an AWS Organizations resource policy.
 ---
 
-# Resource: aws_organizations_resource
+# Resource: aws_organizations_resource_policy
 
 Provides a resource to manage a resource-based delegation policy that can be used to delegate policy management for AWS Organizations to specified member accounts to perform policy actions that are by default available only to the management account. See the [_AWS Organizations User Guide_](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_delegate_policies.html) for more information.
 
 ## Example Usage
 
 ```terraform
-resource "aws_organizations_policy" "example" {
+resource "aws_organizations_resource_policy" "example" {
   content = <<EOF
 {
   "Version": "2012-10-17",
