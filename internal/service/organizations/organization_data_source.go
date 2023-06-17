@@ -213,7 +213,8 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 
-		enabledPolicyTypes := make([]string, 0)
+		var enabledPolicyTypes []string
+
 		for _, policyType := range roots[0].PolicyTypes {
 			if aws.StringValue(policyType.Status) == organizations.PolicyTypeStatusEnabled {
 				enabledPolicyTypes = append(enabledPolicyTypes, aws.StringValue(policyType.Type))

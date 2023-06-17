@@ -23,16 +23,17 @@ func TestAccOrganizations_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Organization": {
-			"basic":                        testAccOrganization_basic,
-			"AwsServiceAccessPrincipals":   testAccOrganization_serviceAccessPrincipals,
-			"EnabledPolicyTypes":           testAccOrganization_EnabledPolicyTypes,
-			"FeatureSet_Basic":             testAccOrganization_FeatureSet,
-			"FeatureSet_Update":            testAccOrganization_FeatureSetUpdate,
-			"FeatureSet_ForcesNew":         testAccOrganization_FeatureSetForcesNew,
-			"DataSource_basic":             testAccOrganizationDataSource_basic,
-			"DataSource_memberAccount":     testAccOrganizationDataSource_memberAccount,
-			"ChildAccountsDataSource":      testAccOrganizationalUnitChildAccountsDataSource_basic,
-			"DescendantAccountsDataSource": testAccOrganizationalUnitDescendantAccountsDataSource_basic,
+			"basic":                             testAccOrganization_basic,
+			"AwsServiceAccessPrincipals":        testAccOrganization_serviceAccessPrincipals,
+			"EnabledPolicyTypes":                testAccOrganization_EnabledPolicyTypes,
+			"FeatureSet_Basic":                  testAccOrganization_FeatureSet,
+			"FeatureSet_Update":                 testAccOrganization_FeatureSetUpdate,
+			"FeatureSet_ForcesNew":              testAccOrganization_FeatureSetForcesNew,
+			"DataSource_basic":                  testAccOrganizationDataSource_basic,
+			"DataSource_memberAccount":          testAccOrganizationDataSource_memberAccount,
+			"DataSource_delegatedAdministrator": testAccOrganizationDataSource_delegatedAdministrator,
+			"ChildAccountsDataSource":           testAccOrganizationalUnitChildAccountsDataSource_basic,
+			"DescendantAccountsDataSource":      testAccOrganizationalUnitDescendantAccountsDataSource_basic,
 		},
 		"Account": {
 			"basic":           testAccAccount_basic,
