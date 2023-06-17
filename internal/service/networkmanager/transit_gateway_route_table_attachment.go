@@ -218,7 +218,7 @@ func FindTransitGatewayRouteTableAttachmentByID(ctx context.Context, conn *netwo
 	return output.TransitGatewayRouteTableAttachment, nil
 }
 
-func StatusTransitGatewayRouteTableAttachmentState(ctx context.Context, conn *networkmanager.NetworkManager, id string) retry.StateRefreshFunc {
+func statusTransitGatewayRouteTableAttachmentState(ctx context.Context, conn *networkmanager.NetworkManager, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTransitGatewayRouteTableAttachmentByID(ctx, conn, id)
 
@@ -239,7 +239,7 @@ func waitTransitGatewayRouteTableAttachmentCreated(ctx context.Context, conn *ne
 		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingNetworkUpdate},
 		Target:  []string{networkmanager.AttachmentStateAvailable, networkmanager.AttachmentStatePendingAttachmentAcceptance},
 		Timeout: timeout,
-		Refresh: StatusTransitGatewayRouteTableAttachmentState(ctx, conn, id),
+		Refresh: statusTransitGatewayRouteTableAttachmentState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -256,8 +256,25 @@ func waitTransitGatewayRouteTableAttachmentDeleted(ctx context.Context, conn *ne
 		Pending:        []string{networkmanager.AttachmentStateDeleting},
 		Target:         []string{},
 		Timeout:        timeout,
-		Refresh:        StatusTransitGatewayRouteTableAttachmentState(ctx, conn, id),
+		Refresh:        statusTransitGatewayRouteTableAttachmentState(ctx, conn, id),
 		NotFoundChecks: 1,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkmanager.TransitGatewayRouteTableAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTransitGatewayRouteTableAttachmentAvailable(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.TransitGatewayRouteTableAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingAttachmentAcceptance, networkmanager.AttachmentStatePendingNetworkUpdate},
+		Target:  []string{networkmanager.AttachmentStateAvailable},
+		Timeout: timeout,
+		Refresh: statusTransitGatewayRouteTableAttachmentState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

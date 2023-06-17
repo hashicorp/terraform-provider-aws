@@ -35,7 +35,7 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 The following arguments are required:
 
 - `attachment_id` - (Required) The ID of the attachment.
-- `attachment_type` - The type of attachment. Valid values can be found in the [AWS Documentation](https://docs.aws.amazon.com/networkmanager/latest/APIReference/API_ListAttachments.html#API_ListAttachments_RequestSyntax)
+- `attachment_type` - (Required) The type of attachment. Valid values can be found in the [AWS Documentation](https://docs.aws.amazon.com/networkmanager/latest/APIReference/API_ListAttachments.html#API_ListAttachments_RequestSyntax)
 
 ## Attributes Reference
 

@@ -183,7 +183,7 @@ resource "aws_networkmanager_transit_gateway_peering" "test" {
     Name = %[1]q
   }
 
-  depends_on = [aws_ec2_transit_gateway_policy_table.test]
+  depends_on = [aws_ec2_transit_gateway_policy_table.test, aws_networkmanager_core_network_policy_attachment.test]
 }
 
 resource "aws_ec2_transit_gateway_route_table" "test" {
@@ -209,6 +209,11 @@ resource "aws_networkmanager_transit_gateway_route_table_attachment" "test" {
 
   depends_on = [aws_ec2_transit_gateway_policy_table_association.test]
 }
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_transit_gateway_route_table_attachment.test.id
+  attachment_type = aws_networkmanager_transit_gateway_route_table_attachment.test.attachment_type
+}
 `)
 }
 
@@ -223,6 +228,11 @@ resource "aws_networkmanager_transit_gateway_route_table_attachment" "test" {
   }
 
   depends_on = [aws_ec2_transit_gateway_policy_table_association.test]
+}
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_transit_gateway_route_table_attachment.test.id
+  attachment_type = aws_networkmanager_transit_gateway_route_table_attachment.test.attachment_type
 }
 `, tagKey1, tagValue1))
 }
@@ -239,6 +249,11 @@ resource "aws_networkmanager_transit_gateway_route_table_attachment" "test" {
   }
 
   depends_on = [aws_ec2_transit_gateway_policy_table_association.test]
+}
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_transit_gateway_route_table_attachment.test.id
+  attachment_type = aws_networkmanager_transit_gateway_route_table_attachment.test.attachment_type
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }

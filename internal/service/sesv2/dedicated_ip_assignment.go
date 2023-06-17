@@ -89,8 +89,8 @@ func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceDa
 		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameDedicatedIPAssignment, d.Id(), err)
 	}
 
-	d.Set("ip", out.Ip)
-	d.Set("destination_pool_name", out.PoolName)
+	d.Set("ip", aws.ToString(out.Ip))
+	d.Set("destination_pool_name", aws.ToString(out.PoolName))
 
 	return nil
 }
