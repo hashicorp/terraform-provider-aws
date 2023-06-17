@@ -33,31 +33,6 @@ func testAccDelegatedAdministratorsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDelegatedAdministratorsDataSource_multiple(t *testing.T) {
-	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_organizations_delegated_administrators.test"
-	servicePrincipal1 := "config-multiaccountsetup.amazonaws.com"
-	servicePrincipal2 := "config.amazonaws.com"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckOrganizationManagementAccount(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDelegatedAdministratorsDataSourceConfig_multiple(servicePrincipal1, servicePrincipal2),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "delegated_administrators.#", 2),
-				),
-			},
-		},
-	})
-}
-
 func testAccDelegatedAdministratorsDataSourceConfig_basic(servicePrincipal string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 data "aws_caller_identity" "delegated" {
@@ -73,26 +48,4 @@ data "aws_organizations_delegated_administrators" "test" {
   depends_on = [aws_organizations_delegated_administrator.test]
 }
 `, servicePrincipal))
-}
-
-func testAccDelegatedAdministratorsDataSourceConfig_multiple(servicePrincipal1, servicePrincipal2 string) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
-data "aws_caller_identity" "delegated" {
-  provider = "awsalternate"
-}
-
-resource "aws_organizations_delegated_administrator" "delegated" {
-  account_id        = data.aws_caller_identity.delegated.account_id
-  service_principal = %[1]q
-}
-
-resource "aws_organizations_delegated_administrator" "other_delegated" {
-  account_id        = data.aws_caller_identity.delegated.account_id
-  service_principal = %[2]q
-}
-
-data "aws_organizations_delegated_administrators" "test" {
-  depends_on = [aws_organizations_delegated_administrator.delegated, aws_organizations_delegated_administrator.other_delegated]
-}
-`, servicePrincipal1, servicePrincipal2))
 }

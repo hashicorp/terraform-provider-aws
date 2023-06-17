@@ -2255,7 +2255,7 @@ func CheckResourceAttrGreaterThanValue(n, key string, val int) resource.TestChec
 		}
 
 		if v <= val {
-			return fmt.Errorf("%s: Attribute %q is not greater than %d, got %d", n, key, val, v)
+			return fmt.Errorf("got %d, want > %d", v, val)
 		}
 
 		return nil
@@ -2271,7 +2271,7 @@ func CheckResourceAttrGreaterThanOrEqualValue(n, key string, val int) resource.T
 		}
 
 		if v < val {
-			return fmt.Errorf("%s: Attribute %q is not greater than or equal to %d, got %d", n, key, val, v)
+			return fmt.Errorf("got %d, want >= %d", v, val)
 		}
 
 		return nil
