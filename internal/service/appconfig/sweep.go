@@ -279,14 +279,16 @@ func sweepEnvironments(region string) error {
 						continue
 					}
 
-					id := fmt.Sprintf("%s:%s", aws.StringValue(item.Id), appId)
-
-					log.Printf("[INFO] Deleting AppConfig Environment (%s)", id)
-					r := ResourceEnvironment()
-					d := r.Data(nil)
-					d.SetId(id)
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+					sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceEnvironment, "", client,
+						sweep.FrameworkSupplementalAttribute{
+							Path:  "application_id",
+							Value: aws.StringValue(item.ApplicationId),
+						},
+						sweep.FrameworkSupplementalAttribute{
+							Path:  "environment_id",
+							Value: aws.StringValue(item.Id),
+						},
+					))
 				}
 
 				return !lastPage
