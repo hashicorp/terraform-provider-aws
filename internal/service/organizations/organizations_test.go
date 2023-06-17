@@ -79,6 +79,10 @@ func TestAccOrganizations_serial(t *testing.T) {
 		"DelegatedAdministrators": {
 			"basic": testAccDelegatedAdministratorsDataSource_basic,
 		},
+		"DelegatedServices": {
+			"basic":    testAccDelegatedServicesDataSource_basic,
+			"multiple": testAccDelegatedServicesDataSource_multiple,
+		},
 		"ResourceTags": {
 			"basic": testAccResourceTagsDataSource_basic,
 		},

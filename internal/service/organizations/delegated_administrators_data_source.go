@@ -83,7 +83,6 @@ func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.Resour
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
-
 	if err = d.Set("delegated_administrators", flattenDelegatedAdministrators(output)); err != nil {
 		return diag.Errorf("setting delegated_administrators: %s", err)
 	}
