@@ -1,7 +1,6 @@
 package organizations_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
@@ -77,12 +76,11 @@ func testAccOrganizationDataSource_memberAccount(t *testing.T) {
 }
 
 // Runs as a management account in an existing organization.
-// Creates a delegated administrator account and runs the data source under that account.
+// Delegates Organizations management to a member account and runs the data source under that account.
 // All attributes will be set.
 func testAccOrganizationDataSource_delegatedAdministrator(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_organizations_organization.test"
-	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -94,7 +92,7 @@ func testAccOrganizationDataSource_delegatedAdministrator(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationDataSourceConfig_delegatedAdministrator(servicePrincipal),
+				Config: testAccOrganizationDataSourceConfig_delegatedAdministrator,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "accounts.#", 2),
 					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
@@ -124,21 +122,50 @@ const testAccOrganizationDataSourceConfig_basic = `
 data "aws_organizations_organization" "test" {}
 `
 
-func testAccOrganizationDataSourceConfig_delegatedAdministrator(servicePrincipal string) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+var testAccOrganizationDataSourceConfig_delegatedAdministrator = acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
 }
 
-resource "aws_organizations_delegated_administrator" "test" {
-  account_id        = data.aws_caller_identity.delegated.account_id
-  service_principal = %[1]q
+resource "aws_organizations_resource_policy" "test" {
+  content = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DelegatingNecessaryDescribeListActions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${data.aws_caller_identity.delegated.arn}"
+      },
+      "Action": [
+        "organizations:DescribeOrganization",
+        "organizations:DescribeOrganizationalUnit",
+        "organizations:DescribeAccount",
+        "organizations:DescribePolicy",
+        "organizations:DescribeEffectivePolicy",
+        "organizations:ListRoots",
+        "organizations:ListOrganizationalUnitsForParent",
+        "organizations:ListParents",
+        "organizations:ListChildren",
+        "organizations:ListAccounts",
+        "organizations:ListAccountsForParent",
+        "organizations:ListPolicies",
+        "organizations:ListPoliciesForTarget",
+        "organizations:ListTargetsForPolicy",
+        "organizations:ListTagsForResource",
+        "organizations:ListAWSServiceAccessForOrganization"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
 }
 
 data "aws_organizations_organization" "test" {
   provider = "awsalternate"
 
-  depends_on = [aws_organizations_delegated_administrator.test]
+  depends_on = [aws_organizations_resource_policy.test]
 }
-`, servicePrincipal))
-}
+`)

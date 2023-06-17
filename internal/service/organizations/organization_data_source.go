@@ -5,10 +5,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 // @SDKDataSource("aws_organizations_organization")
@@ -160,32 +162,25 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("feature_set", org.FeatureSet)
 	d.Set("master_account_arn", org.MasterAccountArn)
 	d.Set("master_account_email", org.MasterAccountEmail)
-	d.Set("master_account_id", org.MasterAccountId)
+	managementAccountID := aws.StringValue(org.MasterAccountId)
+	d.Set("master_account_id", managementAccountID)
 
-	accountID := meta.(*conns.AWSClient).AccountID
+	isManagementAccount := managementAccountID == meta.(*conns.AWSClient).AccountID
+	isDelegatedAdministrator := true
+	accounts, err := findAccounts(ctx, conn)
 
-	_, err = findDelegatedAdministratorByTwoPartKey(ctx, conn, accountID, "")
-	isDelegatedAccount := err == nil
-
-	if aws.StringValue(org.MasterAccountId) == accountID || isDelegatedAccount {
-		var accounts []*organizations.Account
-		var nonMasterAccounts []*organizations.Account
-
-		err := conn.ListAccountsPagesWithContext(ctx, &organizations.ListAccountsInput{}, func(page *organizations.ListAccountsOutput, lastPage bool) bool {
-			for _, account := range page.Accounts {
-				if aws.StringValue(account.Id) != aws.StringValue(org.MasterAccountId) {
-					nonMasterAccounts = append(nonMasterAccounts, account)
-				}
-
-				accounts = append(accounts, account)
-			}
-
-			return !lastPage
-		})
-
-		if err != nil {
+	if err != nil {
+		if isManagementAccount || !tfawserr.ErrCodeEquals(err, organizations.ErrCodeAccessDeniedException) {
 			return sdkdiag.AppendErrorf(diags, "reading Organizations Accounts: %s", err)
 		}
+
+		isDelegatedAdministrator = false
+	}
+
+	if isManagementAccount || isDelegatedAdministrator {
+		nonManagementAccounts := slices.Filter(accounts, func(v *organizations.Account) bool {
+			return aws.StringValue(v.Id) != managementAccountID
+		})
 
 		var roots []*organizations.Root
 
@@ -209,7 +204,7 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 			})
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "readings Organizations AWS service access: %s", err)
+				return sdkdiag.AppendErrorf(diags, "reading Organizations AWS service access: %s", err)
 			}
 		}
 
@@ -233,7 +228,7 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 			return sdkdiag.AppendErrorf(diags, "setting enabled_policy_types: %s", err)
 		}
 
-		if err := d.Set("non_master_accounts", flattenAccounts(nonMasterAccounts)); err != nil {
+		if err := d.Set("non_master_accounts", flattenAccounts(nonManagementAccounts)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting non_master_accounts: %s", err)
 		}
 

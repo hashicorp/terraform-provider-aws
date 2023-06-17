@@ -455,6 +455,27 @@ func FindOrganization(ctx context.Context, conn *organizations.Organizations) (*
 	return output.Organization, nil
 }
 
+func findAccounts(ctx context.Context, conn *organizations.Organizations) ([]*organizations.Account, error) {
+	input := &organizations.ListAccountsInput{}
+	var output []*organizations.Account
+
+	err := conn.ListAccountsPagesWithContext(ctx, input, func(page *organizations.ListAccountsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Accounts...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func flattenAccounts(accounts []*organizations.Account) []map[string]interface{} {
 	if len(accounts) == 0 {
 		return nil

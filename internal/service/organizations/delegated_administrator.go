@@ -157,9 +157,8 @@ func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.Resourc
 }
 
 func findDelegatedAdministratorByTwoPartKey(ctx context.Context, conn *organizations.Organizations, accountID, servicePrincipal string) (*organizations.DelegatedAdministrator, error) {
-	input := &organizations.ListDelegatedAdministratorsInput{}
-	if servicePrincipal != "" {
-		input.ServicePrincipal = aws.String(servicePrincipal)
+	input := &organizations.ListDelegatedAdministratorsInput{
+		ServicePrincipal: aws.String(servicePrincipal),
 	}
 
 	output, err := findDelegatedAdministrators(ctx, conn, input)
