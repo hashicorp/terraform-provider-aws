@@ -30,6 +30,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"FeatureSet_Update":            testAccOrganization_FeatureSetUpdate,
 			"FeatureSet_ForcesNew":         testAccOrganization_FeatureSetForcesNew,
 			"DataSource_basic":             testAccOrganizationDataSource_basic,
+			"DataSource_memberAccount":     testAccOrganizationDataSource_memberAccount,
 			"ChildAccountsDataSource":      testAccOrganizationalUnitChildAccountsDataSource_basic,
 			"DescendantAccountsDataSource": testAccOrganizationalUnitDescendantAccountsDataSource_basic,
 		},

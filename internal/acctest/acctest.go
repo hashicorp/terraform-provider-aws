@@ -927,6 +927,24 @@ func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 	}
 }
 
+func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
+	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
+
+	if err != nil {
+		t.Fatalf("describing AWS Organization: %s", err)
+	}
+
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSConn(ctx))
+
+	if err != nil {
+		t.Fatalf("getting current identity: %s", err)
+	}
+
+	if aws.StringValue(organization.MasterAccountId) == aws.StringValue(callerIdentity.Account) {
+		t.Skip("this AWS account must not be the management account of an AWS Organization")
+	}
+}
+
 func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
 	conn := Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
 	input := &ssoadmin.ListInstancesInput{}
