@@ -11,11 +11,11 @@ import (
 )
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context) (*s3_sdkv1.S3, error) {
-	sess := p.config["session"].(*session_sdkv1.Session)
+func (p *servicePackage) NewConn(ctx context.Context, m map[string]any) (*s3_sdkv1.S3, error) {
+	sess := m["session"].(*session_sdkv1.Session)
 	config := &aws_sdkv1.Config{
-		Endpoint:         aws_sdkv1.String(p.config["endpoint"].(string)),
-		S3ForcePathStyle: aws_sdkv1.Bool(p.config["s3_use_path_style"].(bool)),
+		Endpoint:         aws_sdkv1.String(m["endpoint"].(string)),
+		S3ForcePathStyle: aws_sdkv1.Bool(m["s3_use_path_style"].(bool)),
 	}
 
 	return s3_sdkv1.New(sess.Copy(config)), nil
