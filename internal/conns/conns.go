@@ -15,7 +15,6 @@ import (
 // ServicePackage is the minimal interface exported from each AWS service package.
 // Its methods return the Plugin SDK and Framework resources and data sources implemented in the package.
 type ServicePackage interface {
-	Configure(context.Context, map[string]any)
 	FrameworkDataSources(context.Context) []*types.ServicePackageFrameworkDataSource
 	FrameworkResources(context.Context) []*types.ServicePackageFrameworkResource
 	SDKDataSources(context.Context) []*types.ServicePackageSDKDataSource
