@@ -53,6 +53,12 @@ func TestGenericExpand(t *testing.T) {
 			Target:     &struct{}{},
 			WantTarget: &struct{}{},
 		},
+		{
+			TestName:   "single string struct pointer Source and empty Target",
+			Source:     &struct{ A string }{A: "a"},
+			Target:     &struct{}{},
+			WantTarget: &struct{}{},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -60,16 +66,19 @@ func TestGenericExpand(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			gotErr := expand(ctx, testCase.Source, testCase.Target) != nil
+			err := expand(ctx, testCase.Source, testCase.Target)
+			gotErr := err != nil
 
 			if gotErr != testCase.WantErr {
 				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
 			}
 
-			if !gotErr {
-				if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
-					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			if gotErr {
+				if !testCase.WantErr {
+					t.Errorf("err = %q", err)
 				}
+			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
 	}
