@@ -14,9 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct {
-	config map[string]any
-}
+type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
@@ -1122,23 +1120,19 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.EC2
 }
 
-func (p *servicePackage) Configure(ctx context.Context, config map[string]any) {
-	p.config = config
-}
-
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context) (*ec2_sdkv1.EC2, error) {
-	sess := p.config["session"].(*session_sdkv1.Session)
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*ec2_sdkv1.EC2, error) {
+	sess := config["session"].(*session_sdkv1.Session)
 
-	return ec2_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))})), nil
+	return ec2_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context) (*ec2_sdkv2.Client, error) {
-	cfg := *(p.config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ec2_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return ec2_sdkv2.NewFromConfig(cfg, func(o *ec2_sdkv2.Options) {
-		if endpoint := p.config["endpoint"].(string); endpoint != "" {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
 			o.EndpointResolver = ec2_sdkv2.EndpointResolverFromURL(endpoint)
 		}
 	}), nil

@@ -12,9 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct {
-	config map[string]any
-}
+type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
@@ -198,15 +196,11 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.APIGateway
 }
 
-func (p *servicePackage) Configure(ctx context.Context, config map[string]any) {
-	p.config = config
-}
-
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context) (*apigateway_sdkv1.APIGateway, error) {
-	sess := p.config["session"].(*session_sdkv1.Session)
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*apigateway_sdkv1.APIGateway, error) {
+	sess := config["session"].(*session_sdkv1.Session)
 
-	return apigateway_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))})), nil
+	return apigateway_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 var ServicePackage = &servicePackage{}

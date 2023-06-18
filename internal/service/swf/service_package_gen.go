@@ -11,9 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct {
-	config map[string]any
-}
+type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
@@ -44,16 +42,12 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.SWF
 }
 
-func (p *servicePackage) Configure(ctx context.Context, config map[string]any) {
-	p.config = config
-}
-
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context) (*swf_sdkv2.Client, error) {
-	cfg := *(p.config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*swf_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return swf_sdkv2.NewFromConfig(cfg, func(o *swf_sdkv2.Options) {
-		if endpoint := p.config["endpoint"].(string); endpoint != "" {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
 			o.EndpointResolver = swf_sdkv2.EndpointResolverFromURL(endpoint)
 		}
 	}), nil
