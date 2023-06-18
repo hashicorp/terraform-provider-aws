@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sync"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
@@ -13,6 +14,7 @@ import (
 	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"
 	s3_sdkv1 "github.com/aws/aws-sdk-go/service/s3"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type AWSClient struct {
@@ -28,10 +30,14 @@ type AWSClient struct {
 	Session                 *session_sdkv1.Session
 	TerraformVersion        string
 
-	clients    map[string]any
-	conns      map[string]any
-	httpClient *http.Client
-	lock       sync.Mutex
+	awsConfig      *aws_sdkv2.Config
+	clients        map[string]any
+	conns          map[string]any
+	endpoints      map[string]string // From provider configuration.
+	httpClient     *http.Client
+	lock           sync.Mutex
+	s3UsePathStyle bool   // From provider configuration.
+	stsRegion      string // From provider configuration.
 }
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
@@ -125,6 +131,24 @@ func (client *AWSClient) GlobalAcceleratorHostedZoneID() string {
 	return "Z2BJ6XQ5FK7U4H" // See https://docs.aws.amazon.com/general/latest/gr/global_accelerator.html#global_accelerator_region
 }
 
+// apiClientConfig returns the AWS API client configuration parameters for the specifed service.
+func (client *AWSClient) apiClientConfig(servicePackageName string) map[string]any {
+	m := map[string]any{
+		"aws_sdkv2_config": client.awsConfig,
+		"endpoint":         client.endpoints[servicePackageName],
+		"partition":        client.Partition,
+		"session":          client.Session,
+	}
+	switch servicePackageName {
+	case names.S3:
+		m["s3_use_path_style"] = client.s3UsePathStyle
+	case names.STS:
+		m["sts_region"] = client.stsRegion
+	}
+
+	return m
+}
+
 // conn returns the AWS SDK for Go v1 API client for the specified service.
 func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string) (T, error) {
 	c.lock.Lock()
@@ -146,14 +170,14 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string) (
 	}
 
 	v, ok := sp.(interface {
-		NewConn(context.Context) (T, error)
+		NewConn(context.Context, map[string]any) (T, error)
 	})
 	if !ok {
 		var zero T
 		return zero, fmt.Errorf("no AWS SDK v1 API client factory: %s", servicePackageName)
 	}
 
-	conn, err := v.NewConn(ctx)
+	conn, err := v.NewConn(ctx, c.apiClientConfig(servicePackageName))
 	if err != nil {
 		var zero T
 		return zero, err
@@ -195,14 +219,14 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string)
 	}
 
 	v, ok := sp.(interface {
-		NewClient(context.Context) (T, error)
+		NewClient(context.Context, map[string]any) (T, error)
 	})
 	if !ok {
 		var zero T
 		return zero, fmt.Errorf("no AWS SDK v2 API client factory: %s", servicePackageName)
 	}
 
-	client, err := v.NewClient(ctx)
+	client, err := v.NewClient(ctx, c.apiClientConfig(servicePackageName))
 	if err != nil {
 		var zero T
 		return zero, err

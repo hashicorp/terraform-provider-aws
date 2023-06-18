@@ -166,26 +166,14 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.SetHTTPClient(sess.Config.HTTPClient) // Must be called while client.Session is nil.
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
+
+	// Used for lazy-loading AWS API clients.
+	client.awsConfig = &cfg
 	client.clients = make(map[string]any, 0)
 	client.conns = make(map[string]any, 0)
-
-	// TODO Remove this.
-	// Configure service package.
-	// for spName, sp := range client.ServicePackages {
-	// 	m := map[string]any{
-	// 		"aws_sdkv2_config": &cfg,
-	// 		"endpoint":         c.Endpoints[spName],
-	// 		"partition":        partition,
-	// 		"session":          sess,
-	// 	}
-	// 	switch spName {
-	// 	case names.S3:
-	// 		m["s3_use_path_style"] = c.S3UsePathStyle
-	// 	case names.STS:
-	// 		m["sts_region"] = c.STSRegion
-	// 	}
-	// 	sp.Configure(ctx, m)
-	// }
+	client.endpoints = c.Endpoints
+	client.s3UsePathStyle = c.S3UsePathStyle
+	client.stsRegion = c.STSRegion
 
 	return client, nil
 }
