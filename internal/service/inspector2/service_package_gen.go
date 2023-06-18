@@ -5,11 +5,15 @@ package inspector2
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct{}
+type servicePackage struct {
+	config map[string]any
+}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
@@ -46,6 +50,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.Inspector2
+}
+
+func (p *servicePackage) Configure(ctx context.Context, config map[string]any) {
+	p.config = config
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context) (*inspector2_sdkv2.Client, error) {
+	cfg := *(p.config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return inspector2_sdkv2.NewFromConfig(cfg, func(o *inspector2_sdkv2.Options) {
+		if endpoint := p.config["endpoint"].(string); endpoint != "" {
+			o.EndpointResolver = inspector2_sdkv2.EndpointResolverFromURL(endpoint)
+		}
+	}), nil
 }
 
 var ServicePackage = &servicePackage{}

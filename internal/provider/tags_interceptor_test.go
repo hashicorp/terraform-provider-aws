@@ -34,6 +34,8 @@ func (t *mockService) ServicePackageName() string {
 	return "TestService"
 }
 
+func (t *mockService) Configure(ctx context.Context, config map[string]any) {}
+
 func (t *mockService) ListTags(ctx context.Context, meta any, identifier string) error {
 	tags := tftags.New(ctx, map[string]string{
 		"tag1": "value1",
