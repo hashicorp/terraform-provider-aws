@@ -3,7 +3,6 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"strconv"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
@@ -6913,27 +6912,4 @@ func FindInstanceStateByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 	}
 
 	return instanceState, nil
-}
-
-func findInstanceConnectEndpointByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*ec2.DescribeInstanceConnectEndpointsOutput, error) {
-	in := &ec2_sdkv2.DescribeInstanceConnectEndpointsInput{
-		//InstanceConnectEndpointIds: aws_sdkv2.StringSlice([]string{id}),
-		InstanceConnectEndpointIds: aws_sdkv2.ToStringSlice([]string{id}),
-	}
-	out, err := conn.DescribeInstanceConnectEndpoints(ctx, in)
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || out.InstanceConnectEndpoint == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out.InstanceConnectEndpoint, nil
 }

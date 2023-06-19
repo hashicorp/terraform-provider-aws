@@ -294,3 +294,13 @@ const (
 	gatewayIDLocal      = "local"
 	gatewayIDVPCLattice = "VpcLattice"
 )
+
+const (
+	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Ec2InstanceConnectEndpoint.html
+	ec2ICECreateInProgress = "create-in-progress"
+	ec2ICECreateComplete   = "create-complete"
+	ec2ICECreateFailed     = "create-failed"
+	ec2ICEDeleteInProgress = "delete-in-progress"
+	ec2ICEDeleteComplete   = "delete-complete"
+	ec2ICEDeleteFailed     = "delete-failed"
+)
