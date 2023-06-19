@@ -132,7 +132,7 @@ resource "aws_cur_report_definition" "test" {
   time_unit                  = "DAILY"
   format                     = "textORcsv"
   compression                = "GZIP"
-  additional_schema_elements = ["RESOURCES"]
+  additional_schema_elements = ["RESOURCES","SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = aws_s3_bucket.test.id
   s3_prefix                  = ""
   s3_region                  = aws_s3_bucket.test.region
@@ -202,7 +202,7 @@ resource "aws_cur_report_definition" "test" {
   time_unit                  = "DAILY"
   format                     = "textORcsv"
   compression                = "GZIP"
-  additional_schema_elements = ["RESOURCES"]
+  additional_schema_elements = ["RESOURCES","SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = aws_s3_bucket.test.id
   s3_prefix                  = ""
   s3_region                  = aws_s3_bucket.test.region

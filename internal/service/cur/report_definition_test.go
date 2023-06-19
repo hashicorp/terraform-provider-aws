@@ -38,7 +38,7 @@ func testAccReportDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "compression", "GZIP"),
-					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, "region"),
@@ -59,7 +59,7 @@ func testAccReportDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "compression", "GZIP"),
-					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, "region"),
@@ -97,7 +97,7 @@ func testAccReportDefinition_textOrCSV(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "format", format),
 					resource.TestCheckResourceAttr(resourceName, "compression", compression),
-					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", bucketPrefix),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, "region"),
@@ -142,7 +142,7 @@ func testAccReportDefinition_parquet(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "format", format),
 					resource.TestCheckResourceAttr(resourceName, "compression", compression),
-					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", bucketPrefix),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, "region"),
@@ -186,7 +186,7 @@ func testAccReportDefinition_athena(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "format", format),
 					resource.TestCheckResourceAttr(resourceName, "compression", compression),
-					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", bucketPrefix),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, "region"),
@@ -231,7 +231,7 @@ func testAccReportDefinition_refresh(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "format", format),
 					resource.TestCheckResourceAttr(resourceName, "compression", compression),
-					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", bucketPrefix),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, "region"),
@@ -276,7 +276,7 @@ func testAccReportDefinition_overwrite(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "format", format),
 					resource.TestCheckResourceAttr(resourceName, "compression", compression),
-					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, "region"),
@@ -419,7 +419,7 @@ resource "aws_cur_report_definition" "test" {
   time_unit                  = "DAILY"
   format                     = "textORcsv"
   compression                = "GZIP"
-  additional_schema_elements = ["RESOURCES"]
+  additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = aws_s3_bucket.test.id
   s3_prefix                  = %[3]q
   s3_region                  = aws_s3_bucket.test.region
@@ -491,7 +491,7 @@ resource "aws_cur_report_definition" "test" {
   time_unit                  = "DAILY"
   format                     = "%[4]s"
   compression                = "%[5]s"
-  additional_schema_elements = ["RESOURCES"]
+  additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = aws_s3_bucket.test.id
   s3_prefix                  = "%[3]s"
   s3_region                  = aws_s3_bucket.test.region
