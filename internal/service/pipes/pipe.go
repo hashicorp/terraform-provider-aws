@@ -313,20 +313,6 @@ func findPipeByName(ctx context.Context, conn *pipes.Client, name string) (*pipe
 	return output, nil
 }
 
-const (
-	pipeStatusRunning      = string(types.PipeStateRunning)
-	pipeStatusStopped      = string(types.PipeStateStopped)
-	pipeStatusCreating     = string(types.PipeStateCreating)
-	pipeStatusUpdating     = string(types.PipeStateUpdating)
-	pipeStatusDeleting     = string(types.PipeStateDeleting)
-	pipeStatusStarting     = string(types.PipeStateStarting)
-	pipeStatusStopping     = string(types.PipeStateStopping)
-	pipeStatusCreateFailed = string(types.PipeStateCreateFailed)
-	pipeStatusUpdateFailed = string(types.PipeStateUpdateFailed)
-	pipeStatusStartFailed  = string(types.PipeStateStartFailed)
-	pipeStatusStopFailed   = string(types.PipeStateStopFailed)
-)
-
 func statusPipe(ctx context.Context, conn *pipes.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findPipeByName(ctx, conn, name)
@@ -345,8 +331,8 @@ func statusPipe(ctx context.Context, conn *pipes.Client, name string) retry.Stat
 
 func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{pipeStatusCreating},
-		Target:                    []string{pipeStatusRunning, pipeStatusStopped},
+		Pending:                   enum.Slice(types.PipeStateCreating),
+		Target:                    enum.Slice(types.PipeStateRunning, types.PipeStateStopped),
 		Refresh:                   statusPipe(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -365,8 +351,8 @@ func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout
 
 func waitPipeUpdated(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{pipeStatusUpdating},
-		Target:                    []string{pipeStatusRunning, pipeStatusStopped},
+		Pending:                   enum.Slice(types.PipeStateUpdating),
+		Target:                    enum.Slice(types.PipeStateRunning, types.PipeStateStopped),
 		Refresh:                   statusPipe(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -385,7 +371,7 @@ func waitPipeUpdated(ctx context.Context, conn *pipes.Client, id string, timeout
 
 func waitPipeDeleted(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{pipeStatusDeleting},
+		Pending: enum.Slice(types.PipeStateDeleting),
 		Target:  []string{},
 		Refresh: statusPipe(ctx, conn, id),
 		Timeout: timeout,
