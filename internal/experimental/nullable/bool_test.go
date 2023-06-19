@@ -90,12 +90,12 @@ func TestValidationBool(t *testing.T) {
 		{
 			val:         "A",
 			f:           ValidateTypeStringNullableBool,
-			expectedErr: regexp.MustCompile(`[\w]+: cannot parse 'A' as boolean`),
+			expectedErr: regexp.MustCompile(`^\w+: cannot parse 'A' as boolean: .+$`),
 		},
 		{
 			val:         1,
 			f:           ValidateTypeStringNullableBool,
-			expectedErr: regexp.MustCompile(`expected type of [\w]+ to be string`),
+			expectedErr: regexp.MustCompile(`^expected type of \w+ to be string$`),
 		},
 	})
 }

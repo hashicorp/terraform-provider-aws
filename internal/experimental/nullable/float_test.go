@@ -88,12 +88,12 @@ func TestValidationFloat(t *testing.T) {
 		{
 			val:         "A",
 			f:           ValidateTypeStringNullableFloat,
-			expectedErr: regexp.MustCompile(`[\w]+: cannot parse 'A' as float: .*`),
+			expectedErr: regexp.MustCompile(`^\w+: cannot parse 'A' as float: .+$`),
 		},
 		{
 			val:         1,
 			f:           ValidateTypeStringNullableFloat,
-			expectedErr: regexp.MustCompile(`expected type of [\w]+ to be string`),
+			expectedErr: regexp.MustCompile(`^expected type of \w+ to be string$`),
 		},
 	})
 }
