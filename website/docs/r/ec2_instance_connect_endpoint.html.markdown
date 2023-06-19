@@ -27,6 +27,13 @@ The following arguments are supported:
 * `subnet_id` - (Required) The ID of the subnet in which to create the EC2 Instance Connect Endpoint.
 * `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

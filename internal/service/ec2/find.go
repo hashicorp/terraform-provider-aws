@@ -6927,9 +6927,7 @@ func FindInstanceConnectEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, in
 
 func FindInstanceConnectEndpoints(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeInstanceConnectEndpointsInput) ([]types.Ec2InstanceConnectEndpoint, error) {
 	var output []types.Ec2InstanceConnectEndpoint
-	paginator := ec2_sdkv2.NewDescribeInstanceConnectEndpointsPaginator(conn, input, func(o *ec2_sdkv2.DescribeInstanceConnectEndpointsPaginatorOptions) {
-		o.Limit = 100
-	})
+	paginator := ec2_sdkv2.NewDescribeInstanceConnectEndpointsPaginator(conn, input)
 
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)

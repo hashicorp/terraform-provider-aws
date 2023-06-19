@@ -3,6 +3,7 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -31,7 +32,11 @@ import (
 // @FrameworkResource(name="Instance Connect Endpoint")
 // @Tags(identifierAttribute="id")
 func newResourceInstanceConnectEndpoint(context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceInstanceConnectEndpoint{}, nil
+	r := &resourceInstanceConnectEndpoint{}
+	r.SetDefaultCreateTimeout(10 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
+
+	return r, nil
 }
 
 type resourceInstanceConnectEndpoint struct {
@@ -80,6 +85,7 @@ func (r *resourceInstanceConnectEndpoint) Schema(ctx context.Context, req resour
 			},
 			"preserve_client_ip": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
 				Default:  booldefault.StaticBool(true),
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
@@ -144,23 +150,24 @@ func (r *resourceInstanceConnectEndpoint) Create(ctx context.Context, request re
 		return
 	}
 
-	// Set values for unknowns.
-	instanceConnectEndpoint := output.InstanceConnectEndpoint
-	data.ARN = types.StringPointerValue(instanceConnectEndpoint.InstanceConnectEndpointArn)
-	data.AvailabilityZone = types.StringPointerValue(instanceConnectEndpoint.AvailabilityZone)
-	data.DNSName = types.StringPointerValue(instanceConnectEndpoint.DnsName)
-	data.FIPSDNSName = types.StringPointerValue(instanceConnectEndpoint.FipsDnsName)
-	data.ID = types.StringPointerValue(instanceConnectEndpoint.InstanceConnectEndpointId)
-	data.NetworkInterfaceIDs = flex.FlattenFrameworkStringValueList(ctx, instanceConnectEndpoint.NetworkInterfaceIds)
-	data.SecurityGroupIDs = flex.FlattenFrameworkStringValueSet(ctx, instanceConnectEndpoint.SecurityGroupIds)
-	data.VPCID = types.StringPointerValue(instanceConnectEndpoint.VpcId)
+	data.ID = types.StringPointerValue(output.InstanceConnectEndpoint.InstanceConnectEndpointId)
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	if _, err := WaitInstanceConnectEndpointCreated(ctx, conn, data.ID.ValueString(), createTimeout); err != nil {
+	instanceConnectEndpoint, err := WaitInstanceConnectEndpointCreated(ctx, conn, data.ID.ValueString(), createTimeout)
+	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Instance Connect Endpoint (%s) create", data.ID.ValueString()), err.Error())
 
 		return
 	}
+
+	// Set values for unknowns.
+	data.ARN = types.StringPointerValue(instanceConnectEndpoint.InstanceConnectEndpointArn)
+	data.AvailabilityZone = types.StringPointerValue(instanceConnectEndpoint.AvailabilityZone)
+	data.DNSName = types.StringPointerValue(instanceConnectEndpoint.DnsName)
+	data.FIPSDNSName = types.StringPointerValue(instanceConnectEndpoint.FipsDnsName)
+	data.NetworkInterfaceIDs = flex.FlattenFrameworkStringValueList(ctx, instanceConnectEndpoint.NetworkInterfaceIds)
+	data.SecurityGroupIDs = flex.FlattenFrameworkStringValueSet(ctx, instanceConnectEndpoint.SecurityGroupIds)
+	data.VPCID = types.StringPointerValue(instanceConnectEndpoint.VpcId)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
