@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	tfawserr_sdkv2 "github.com/hashicorp/terraform-provider-aws/internal/errs/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -6912,4 +6913,67 @@ func FindInstanceStateByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 	}
 
 	return instanceState, nil
+}
+
+func FindInstanceConnectEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeInstanceConnectEndpointsInput) (*types.Ec2InstanceConnectEndpoint, error) {
+	output, err := FindInstanceConnectEndpoints(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindInstanceConnectEndpoints(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeInstanceConnectEndpointsInput) ([]types.Ec2InstanceConnectEndpoint, error) {
+	var output []types.Ec2InstanceConnectEndpoint
+	paginator := ec2_sdkv2.NewDescribeInstanceConnectEndpointsPaginator(conn, input, func(o *ec2_sdkv2.DescribeInstanceConnectEndpointsPaginatorOptions) {
+		o.Limit = 100
+	})
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidInstanceConnectEndpointIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.InstanceConnectEndpoints...)
+	}
+
+	return output, nil
+}
+
+func FindInstanceConnectEndpointByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*types.Ec2InstanceConnectEndpoint, error) {
+	input := &ec2_sdkv2.DescribeInstanceConnectEndpointsInput{
+		InstanceConnectEndpointIds: []string{id},
+	}
+	output, err := FindInstanceConnectEndpoint(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == types.Ec2InstanceConnectEndpointStateDeleteComplete {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws_sdkv2.ToString(output.InstanceConnectEndpointId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }

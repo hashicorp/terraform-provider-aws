@@ -30,6 +30,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newResourceInstanceConnectEndpoint,
+			Name:    "Instance Connect Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
 			Factory: newResourceSecurityGroupEgressRule,
 			Name:    "Security Group Egress Rule",
 			Tags: &types.ServicePackageResourceTags{
