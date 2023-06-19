@@ -84,12 +84,27 @@ func main() {
 		}
 
 		s := ServiceDatum{
+			SkipClientGenerate:   l[names.ColSkipClientGenerate] != "",
+			GoV1Package:          l[names.ColGoV1Package],
+			GoV2Package:          l[names.ColGoV2Package],
 			ProviderPackage:      p,
 			ProviderNameUpper:    l[names.ColProviderNameUpper],
 			FrameworkDataSources: v.frameworkDataSources,
 			FrameworkResources:   v.frameworkResources,
 			SDKDataSources:       v.sdkDataSources,
 			SDKResources:         v.sdkResources,
+		}
+
+		if l[names.ColClientSDKV1] != "" {
+			s.SDKVersion = "1"
+			s.GoV1ClientTypeName = l[names.ColGoV1ClientTypeName]
+		}
+		if l[names.ColClientSDKV2] != "" {
+			if l[names.ColClientSDKV1] != "" {
+				s.SDKVersion = "1,2"
+			} else {
+				s.SDKVersion = "2"
+			}
 		}
 
 		sort.SliceStable(s.FrameworkDataSources, func(i, j int) bool {
@@ -139,6 +154,11 @@ type ResourceDatum struct {
 }
 
 type ServiceDatum struct {
+	SkipClientGenerate   bool
+	SDKVersion           string // AWS SDK for Go version ("1", "2" or "1,2")
+	GoV1Package          string // AWS SDK for Go v1 package name
+	GoV1ClientTypeName   string // AWS SDK for Go v1 client type name
+	GoV2Package          string // AWS SDK for Go v2 package name
 	ProviderPackage      string
 	ProviderNameUpper    string
 	FrameworkDataSources []ResourceDatum
