@@ -291,6 +291,11 @@ const (
 )
 
 const (
+	ResInstanceConnectEndpoint      = "Instance Connect Endpoint"
+	ResInstanceConnectEndpointState = "Instance Connect Endpoint State"
+)
+
+const (
 	gatewayIDLocal      = "local"
 	gatewayIDVPCLattice = "VpcLattice"
 )
