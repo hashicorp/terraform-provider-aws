@@ -2,21 +2,22 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_instance_state")
+// @SDKResource("aws_ec2_instance_connect_endpoint")
 func ResourceInstanceConnectEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceConnectEndpointCreate,
@@ -56,59 +57,78 @@ func ResourceInstanceConnectEndpoint() *schema.Resource {
 }
 
 func resourceInstanceConnectEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	instanceId := d.Get("instance_id").(string)
 
-	d.SetId(d.Get("instance_id").(string))
+	input := &ec2.CreateInstanceConnectEndpointInput{}
 
-	return resourceInstanceConnectEndpointRead(ctx, d, meta)
+	output, err := conn.CreateInstanceConnectEndpointWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "importing EC2 Key Pair (%s): %s", keyName, err)
+	}
+
+	d.SetId(aws.StringValue(output.KeyName))
+
+	return append(diags, resourceInstanceConnectEndpointRead(ctx, d, meta)...)
 }
 
 func resourceInstanceConnectEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	state, err := FindInstanceConnectEndpointByID(ctx, conn, d.Id())
+	InstanceConnectEndpoint, err := FindInstanceConnectEndpointByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.EC2, create.ErrActionReading, ResInstanceConnectEndpoint, d.Id())
+		log.Printf("[WARN] EC2 Key Pair (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.EC2, create.ErrActionReading, ResInstanceConnectEndpoint, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Key Pair (%s): %s", d.Id(), err)
 	}
 
-	d.Set("instance_id", d.Id())
-	d.Set("state", state.Name)
-	d.Set("force", d.Get("force").(bool))
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("key-pair/%s", d.Id()),
+	}.String()
 
-	return nil
+	d.Set("arn", arn)
+	d.Set("fingerprint", InstanceConnectEndpoint.KeyFingerprint)
+	d.Set("key_name", InstanceConnectEndpoint.KeyName)
+	d.Set("key_name_prefix", create.NamePrefixFromName(aws.StringValue(InstanceConnectEndpoint.KeyName)))
+	d.Set("key_type", InstanceConnectEndpoint.KeyType)
+	d.Set("key_pair_id", InstanceConnectEndpoint.InstanceConnectEndpointId)
+
+	setTagsOut(ctx, InstanceConnectEndpoint.Tags)
+
+	return diags
 }
 
 func resourceInstanceConnectEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	var diags diag.Diagnostics
 
-	instance, instanceErr := WaitInstanceReadyWithContext(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	// Tags only.
 
-	if instanceErr != nil {
-		return create.DiagError(names.EC2, create.ErrActionReading, ResInstance, aws.StringValue(instance.InstanceId), instanceErr)
-	}
-
-	if d.HasChange("state") {
-		o, n := d.GetChange("state")
-		err := UpdateInstanceConnectEndpoint(ctx, conn, d.Id(), o.(string), n.(string), d.Get("force").(bool))
-
-		if err != nil {
-			return err
-		}
-	}
-
-	return resourceInstanceConnectEndpointRead(ctx, d, meta)
+	return append(diags, resourceInstanceConnectEndpointRead(ctx, d, meta)...)
 }
 
 func resourceInstanceConnectEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[DEBUG] %s %s deleting an aws_ec2_instance_state resource only stops managing instance state, The Instance is left in its current state.: %s", names.EC2, ResInstanceConnectEndpoint, d.Id())
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	return nil
+	log.Printf("[DEBUG] Deleting EC2 Key Pair: %s", d.Id())
+	_, err := conn.DeleteInstanceConnectEndpointWithContext(ctx, &ec2.DeleteInstanceConnectEndpointInput{
+		KeyName: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Key Pair (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
