@@ -131,7 +131,7 @@ func (client *AWSClient) GlobalAcceleratorHostedZoneID() string {
 	return "Z2BJ6XQ5FK7U4H" // See https://docs.aws.amazon.com/general/latest/gr/global_accelerator.html#global_accelerator_region
 }
 
-// apiClientConfig returns the AWS API client configuration parameters for the specifed service.
+// apiClientConfig returns the AWS API client configuration parameters for the specified service.
 func (client *AWSClient) apiClientConfig(servicePackageName string) map[string]any {
 	m := map[string]any{
 		"aws_sdkv2_config": client.awsConfig,
