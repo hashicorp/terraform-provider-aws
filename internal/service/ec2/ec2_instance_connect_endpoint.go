@@ -247,6 +247,10 @@ func (r *resourceInstanceConnectEndpoint) ImportState(ctx context.Context, reque
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 }
 
+func (r *resourceInstanceConnectEndpoint) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
 type resourceInstanceConnectEndpointData struct {
 	ARN                 types.String   `tfsdk:"arn"`
 	AvailabilityZone    types.String   `tfsdk:"availability_zone"`
