@@ -5,6 +5,17 @@ package {{ .ProviderPackage }}
 import (
 	"context"
 
+{{if not .SkipClientGenerate }}
+	{{- if eq .SDKVersion "1" "1,2" }}
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	{{ .GoV1Package }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
+	{{- end }}
+	{{- if eq .SDKVersion "2" "1,2" }}
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	{{ .GoV2Package }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+	{{- end }}
+{{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 {{- if ne .ProviderPackage "meta" }}
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -114,5 +125,29 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.{{ .ProviderNameUpper }}
 {{- end }}
 }
+
+{{- if not .SkipClientGenerate }}
+	{{if eq .SDKVersion "1" "1,2" }}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return {{ .GoV1Package }}_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+	{{- end }}
+
+	{{if eq .SDKVersion "2" "1,2" }}
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*{{ .GoV2Package }}_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return {{ .GoV2Package }}_sdkv2.NewFromConfig(cfg, func(o *{{ .GoV2Package }}_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.EndpointResolver = {{ .GoV2Package }}_sdkv2.EndpointResolverFromURL(endpoint)
+		}
+	}), nil
+}
+	{{- end }}
+{{- end }}
 
 var ServicePackage = &servicePackage{}
