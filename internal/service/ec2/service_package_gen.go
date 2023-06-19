@@ -558,6 +558,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceInstanceConnectEndpoint,
+			TypeName: "aws_ec2_instance_connect_endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
 			Factory:  ResourceInstanceState,
 			TypeName: "aws_ec2_instance_state",
 		},
