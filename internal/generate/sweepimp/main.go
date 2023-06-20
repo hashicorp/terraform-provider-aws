@@ -64,11 +64,11 @@ func main() {
 			p = l[names.ColProviderPackageActual]
 		}
 
-		if _, err := os.Stat(fmt.Sprintf("../../service/%s", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
+		if _, err := os.Stat(fmt.Sprintf("../service/%s", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 
-		if _, err := os.Stat(fmt.Sprintf("../../service/%s/sweep.go", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
+		if _, err := os.Stat(fmt.Sprintf("../service/%s/sweep.go", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 
