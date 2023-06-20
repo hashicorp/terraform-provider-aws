@@ -6,8 +6,18 @@ import (
 	"reflect"
 )
 
-func expand(ctx context.Context, tfObject, apiObject any) error {
-	return walkStructFields(ctx, tfObject, apiObject, expandVisitor{})
+// Expand "expands" a resource's "business logic" data structure,
+// implemented using Terraform Plugin Framework data types, into
+// an AWS SDK for Go v2 API data structure.
+// The resource's data structure is walked and exported fields that
+// have a corresponding field in the API data structure (and a suitable
+// target data type) are copied.
+func Expand(ctx context.Context, tfObject, apiObject any) error {
+	if err := walkStructFields(ctx, tfObject, apiObject, expandVisitor{}); err != nil {
+		return fmt.Errorf("Expand[%T, %T]: %w", tfObject, apiObject, err)
+	}
+
+	return nil
 }
 
 // walkStructFields traverses `from` calling `visitor` for each exported field.

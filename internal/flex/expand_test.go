@@ -66,7 +66,7 @@ func TestGenericExpand(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			err := expand(ctx, testCase.Source, testCase.Target)
+			err := Expand(ctx, testCase.Source, testCase.Target)
 			gotErr := err != nil
 
 			if gotErr != testCase.WantErr {
