@@ -31,9 +31,9 @@ resource "aws_chimesdkvoice_sip_rule" "example" {
 The following arguments are required:
 
 * `name` - (Required) The name of the SIP rule.
-* `target_applications` - (Required) List of SIP media applications with priority and AWS Region. Only one SIP application per AWS Region can be used.
-* `trigger_type` - (Required) The type of trigger assigned to the SIP rule in TriggerValue, currently RequestUriHostname or ToPhoneNumber.
-* `trigger_value` - (Required) If TriggerType is RequestUriHostname, the value can be the outbound host name of an Amazon Chime Voice Connector. If TriggerType is ToPhoneNumber, the value can be a customer-owned phone number in the E164 format. The SipMediaApplication specified in the SipRule is triggered if the request URI in an incoming SIP request matches the RequestUriHostname, or if the To header in the incoming SIP request matches the ToPhoneNumber value.
+* `target_applications` - (Required) List of SIP media applications with priority and AWS Region. Only one SIP application per AWS Region can be used. See [`target_applications`](#target_applications).
+* `trigger_type` - (Required) The type of trigger assigned to the SIP rule in `trigger_value`. Valid values are `RequestUriHostname` or `ToPhoneNumber`.
+* `trigger_value` - (Required) If `trigger_type` is `RequestUriHostname`, the value can be the outbound host name of an Amazon Chime Voice Connector. If `trigger_type` is `ToPhoneNumber`, the value can be a customer-owned phone number in the E164 format. The Sip Media Application specified in the Sip Rule is triggered if the request URI in an incoming SIP request matches the `RequestUriHostname`, or if the "To" header in the incoming SIP request matches the `ToPhoneNumber` value.
 
 The following arguments are optional:
 
@@ -43,9 +43,9 @@ The following arguments are optional:
 
 List of SIP media applications with priority and AWS Region. Only one SIP application per AWS Region can be used.
 
-* `AwsRegion` - (Required) The AWS Region of the target application.
-* `Priority` - (Required) Priority of the SIP media application in the target list.
-* `SipMediaApplicationId` - (Required) The SIP media application ID.
+* `aws_region` - (Required) The AWS Region of the target application.
+* `priority` - (Required) Priority of the SIP media application in the target list.
+* `sip_media_application_id` - (Required) The SIP media application ID.
 
 ## Attributes Reference
 
