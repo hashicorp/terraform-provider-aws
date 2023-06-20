@@ -20,7 +20,9 @@ func main() {
 	)
 	g := common.NewGenerator()
 
-	g.Infof("Generating internal/provider/%s", filename)
+	packageName := os.Getenv("GOPACKAGE")
+
+	g.Infof("Generating %s/%s", packageName, filename)
 
 	data, err := common.ReadAllCSVData(namesDataFile)
 
@@ -28,7 +30,9 @@ func main() {
 		g.Fatalf("error reading %s: %s", namesDataFile, err)
 	}
 
-	td := TemplateData{}
+	td := TemplateData{
+		PackageName: packageName,
+	}
 
 	for i, l := range data {
 		if i < 1 { // no header
@@ -79,7 +83,8 @@ type ServiceDatum struct {
 }
 
 type TemplateData struct {
-	Services []ServiceDatum
+	PackageName string
+	Services    []ServiceDatum
 }
 
 //go:embed file.tmpl
