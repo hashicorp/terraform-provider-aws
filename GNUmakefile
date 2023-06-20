@@ -306,11 +306,6 @@ semgrep: semgrep-validate
 	@echo "==> Running Semgrep static analysis..."
 	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml
 
-servicepackages:
-	rm -f internal/service/**/service_package_gen.go
-	rm -f internal/provider/service_packages_gen.go
-	$(GO_VER) generate ./internal/generate/servicepackages
-
 skaff:
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
 
@@ -433,7 +428,6 @@ yamllint:
 	sanity \
 	semall \
 	semgrep \
-	servicepackages \
 	skaff \
 	sweep \
 	t \
