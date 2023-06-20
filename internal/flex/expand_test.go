@@ -35,6 +35,14 @@ type GTest struct {
 	Name *int64
 }
 
+type HTest struct {
+	Name int32
+}
+
+type ITest struct {
+	Name *int32
+}
+
 func TestGenericExpand(t *testing.T) {
 	t.Parallel()
 
@@ -122,6 +130,18 @@ func TestGenericExpand(t *testing.T) {
 			Source:     &ETest{Name: types.Int64Value(42)},
 			Target:     &GTest{},
 			WantTarget: &GTest{Name: aws.Int64(42)},
+		},
+		{
+			TestName:   "single int64 Source and single int32 Target",
+			Source:     &ETest{Name: types.Int64Value(42)},
+			Target:     &HTest{},
+			WantTarget: &HTest{Name: 42},
+		},
+		{
+			TestName:   "single int64 Source and single *int32 Target",
+			Source:     &ETest{Name: types.Int64Value(42)},
+			Target:     &ITest{},
+			WantTarget: &ITest{Name: aws.Int32(42)},
 		},
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -85,27 +86,32 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 	tFrom, kTo := vFrom.Type(ctx), valTo.Kind()
 	switch {
 	case tFrom.Equal(types.Int64Type):
+		vFrom := vFrom.(types.Int64).ValueInt64()
 		switch kTo {
-		case reflect.Int64:
-			valTo.SetInt(vFrom.(types.Int64).ValueInt64())
+		case reflect.Int32, reflect.Int64:
+			valTo.SetInt(vFrom)
 			return nil
 		case reflect.Ptr:
 			switch valTo.Type().Elem().Kind() {
+			case reflect.Int32:
+				valTo.Set(reflect.ValueOf(aws.Int32(int32(vFrom))))
+				return nil
 			case reflect.Int64:
-				valTo.Set(reflect.ValueOf(vFrom.(types.Int64).ValueInt64Pointer()))
+				valTo.Set(reflect.ValueOf(aws.Int64(vFrom)))
 				return nil
 			}
 		}
 
 	case tFrom.Equal(types.StringType):
+		vFrom := vFrom.(types.String).ValueString()
 		switch kTo {
 		case reflect.String:
-			valTo.SetString(vFrom.(types.String).ValueString())
+			valTo.SetString(vFrom)
 			return nil
 		case reflect.Ptr:
 			switch valTo.Type().Elem().Kind() {
 			case reflect.String:
-				valTo.Set(reflect.ValueOf(vFrom.(types.String).ValueStringPointer()))
+				valTo.Set(reflect.ValueOf(aws.String(vFrom)))
 				return nil
 			}
 		}
