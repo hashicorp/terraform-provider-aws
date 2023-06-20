@@ -84,6 +84,19 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 
 	tFrom, kTo := vFrom.Type(ctx), valTo.Kind()
 	switch {
+	case tFrom.Equal(types.Int64Type):
+		switch kTo {
+		case reflect.Int64:
+			valTo.SetInt(vFrom.(types.Int64).ValueInt64())
+			return nil
+		case reflect.Ptr:
+			switch valTo.Type().Elem().Kind() {
+			case reflect.Int64:
+				valTo.Set(reflect.ValueOf(vFrom.(types.Int64).ValueInt64Pointer()))
+				return nil
+			}
+		}
+
 	case tFrom.Equal(types.StringType):
 		switch kTo {
 		case reflect.String:

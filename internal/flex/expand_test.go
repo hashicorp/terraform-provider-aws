@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -16,6 +17,22 @@ type BTest struct {
 
 type CTest struct {
 	Name string
+}
+
+type DTest struct {
+	Name *string
+}
+
+type ETest struct {
+	Name types.Int64
+}
+
+type FTest struct {
+	Name int64
+}
+
+type GTest struct {
+	Name *int64
 }
 
 func TestGenericExpand(t *testing.T) {
@@ -81,6 +98,30 @@ func TestGenericExpand(t *testing.T) {
 			Source:     &BTest{Name: types.StringValue("a")},
 			Target:     &CTest{},
 			WantTarget: &CTest{Name: "a"},
+		},
+		{
+			TestName:   "single string Source and single *string Target",
+			Source:     &BTest{Name: types.StringValue("a")},
+			Target:     &DTest{},
+			WantTarget: &DTest{Name: aws.String("a")},
+		},
+		{
+			TestName: "single string Source and single int64 Target",
+			Source:   &BTest{Name: types.StringValue("a")},
+			Target:   &FTest{},
+			WantErr:  true,
+		},
+		{
+			TestName:   "single int64 Source and single int64 Target",
+			Source:     &ETest{Name: types.Int64Value(42)},
+			Target:     &FTest{},
+			WantTarget: &FTest{Name: 42},
+		},
+		{
+			TestName:   "single int64 Source and single *int64 Target",
+			Source:     &ETest{Name: types.Int64Value(42)},
+			Target:     &GTest{},
+			WantTarget: &GTest{Name: aws.Int64(42)},
 		},
 	}
 
