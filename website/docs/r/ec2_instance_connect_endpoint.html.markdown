@@ -83,5 +83,5 @@ In addition to all arguments above, the following attributes are exported:
 EC2 (Elastic Compute Cloud) Instance Connect Endpoint can be imported using the `example_id_arg`, e.g.,
 
 ```
-$ terraform import aws_ec2_instance_connect_endpoint.example rft-8012925589
+$ terraform import aws_ec2_instance_connect_endpoint.example eice-02d2b75e650eaa75a
 ```
