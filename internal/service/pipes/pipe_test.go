@@ -485,7 +485,7 @@ func TestAccPipesPipe_tags(t *testing.T) {
 	})
 }
 
-func TestAccPipesPipe_target(t *testing.T) {
+func TestAccPipesPipe_targetUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipe pipes.DescribePipeOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -514,7 +514,7 @@ func TestAccPipesPipe_target(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPipeConfig_target(rName),
+				Config: testAccPipeConfig_targetUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_sqs_queue.target2", "arn"),
@@ -1031,7 +1031,7 @@ resource "aws_pipes_pipe" "test" {
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value))
 }
 
-func testAccPipeConfig_target(rName string) string {
+func testAccPipeConfig_targetUpdated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccPipeConfig_base(rName),
 		testAccPipeConfig_baseSQSSource(rName),
