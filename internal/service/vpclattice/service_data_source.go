@@ -2,12 +2,13 @@ package vpclattice
 
 import (
 	"context"
-
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -52,11 +53,11 @@ func DataSourceService() *schema.Resource {
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
 			"service_identifier": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -74,10 +75,27 @@ const (
 func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	service_id := d.Get("service_identifier").(string)
-	out, err := findServiceByID(ctx, conn, service_id)
-	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameService, service_id, err)
+	var diags diag.Diagnostics
+	var out *vpclattice.GetServiceOutput
+
+	if v, ok := d.GetOk("service_identifier"); ok {
+		serviceId := v.(string)
+		service, err := findServiceByID(ctx, conn, serviceId)
+		if err != nil {
+			return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameService, serviceId, err)
+		}
+		out = service
+	} else {
+		name, hasName := d.GetOk("name")
+		if !hasName {
+			return diag.Errorf("service_identifier or name must be set")
+		}
+
+		service, err := findServiceByAttributes(ctx, conn, name.(string))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		out = service
 	}
 
 	//
