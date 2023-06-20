@@ -190,47 +190,6 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
 }
 ```
 
-### S3 Destination (deprecated)
-
-```terraform
-resource "aws_s3_bucket" "bucket" {
-  bucket = "tf-test-bucket"
-}
-
-resource "aws_s3_bucket_acl" "bucket_acl" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "private"
-}
-
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["firehose.amazonaws.com"]
-    }
-
-    actions = ["sts:AssumeRole"]
-  }
-}
-
-resource "aws_iam_role" "firehose_role" {
-  name               = "firehose_test_role"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
-  name        = "terraform-kinesis-firehose-test-stream"
-  destination = "s3"
-
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose_role.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
-}
-```
-
 ### Redshift Destination
 
 ```terraform
