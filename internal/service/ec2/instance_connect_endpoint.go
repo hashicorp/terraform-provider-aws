@@ -41,9 +41,9 @@ func ResourceInstanceConnectEndpoint() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -57,8 +57,7 @@ func ResourceInstanceConnectEndpoint() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchema(),
 			"preserve_client_ip": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -171,7 +170,7 @@ func resourceInstanceConnectEndpointRead(ctx context.Context, d *schema.Resource
 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	out, err := findInstanceConnectEndpointByID(ctx, conn, d.Id())
+	out, err := FindInstanceConnectEndpointByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 InstanceConnectEndpoint (%s) not found, removing from state", d.Id())
@@ -193,7 +192,6 @@ func resourceInstanceConnectEndpointRead(ctx context.Context, d *schema.Resource
 	d.Set("state_message", out.StateMessage)
 	d.Set("subnet_id", out.SubnetId)
 	d.Set("preserve_client_ip", out.PreserveClientIp)
-	SetTagsOut(ctx, out.Tags)
 
 	if err != nil {
 		return append(diags, create.DiagError(names.EC2, create.ErrActionSetting, ResNameInstanceConnectEndpoint, d.Id(), err)...)
@@ -272,7 +270,7 @@ func waitInstanceConnectEndpointDeleted(ctx context.Context, conn *ec2.EC2, inst
 
 func statusInstanceConnectEndpoint(ctx context.Context, conn *ec2.EC2, instanceConnectEndpointId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findInstanceConnectEndpointByID(ctx, conn, instanceConnectEndpointId)
+		out, err := FindInstanceConnectEndpointByID(ctx, conn, instanceConnectEndpointId)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -285,7 +283,7 @@ func statusInstanceConnectEndpoint(ctx context.Context, conn *ec2.EC2, instanceC
 	}
 }
 
-func findInstanceConnectEndpointByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Ec2InstanceConnectEndpoint, error) {
+func FindInstanceConnectEndpointByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Ec2InstanceConnectEndpoint, error) {
 	in := &ec2.DescribeInstanceConnectEndpointsInput{
 		InstanceConnectEndpointIds: aws.StringSlice([]string{id}),
 	}
@@ -343,13 +341,6 @@ func findInstanceConnectEndpoints(ctx context.Context, conn *ec2.EC2, input *ec2
 
 		return !lastPage
 	})
-
-	//if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
-	//	return nil, &retry.NotFoundError{
-	//		LastError:   err,
-	//		LastRequest: input,
-	//	}
-	//}
 
 	if err != nil {
 		return nil, err
