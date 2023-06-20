@@ -12,7 +12,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func ServicePackages(context.Context) []conns.ServicePackage {
+func servicePackages(context.Context) []conns.ServicePackage {
 	v := []conns.ServicePackage{
 {{- range .Services }}
 		{{ .ProviderPackage }}.ServicePackage,

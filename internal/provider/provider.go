@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/servicepackages"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -240,7 +239,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	var errs *multierror.Error
 	servicePackageMap := make(map[string]conns.ServicePackage)
 
-	for _, sp := range servicepackages.ServicePackages(ctx) {
+	for _, sp := range servicePackages(ctx) {
 		servicePackageName := sp.ServicePackageName()
 		servicePackageMap[servicePackageName] = sp
 

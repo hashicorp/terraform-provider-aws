@@ -16,7 +16,7 @@ import (
 func main() {
 	const (
 		filename      = `service_packages_gen.go`
-		namesDataFile = `../../../names/names_data.csv`
+		namesDataFile = `../../names/names_data.csv`
 	)
 	g := common.NewGenerator()
 
@@ -50,7 +50,7 @@ func main() {
 			p = l[names.ColProviderPackageActual]
 		}
 
-		spdFile := fmt.Sprintf("../../service/%s/service_package_gen.go", p)
+		spdFile := fmt.Sprintf("../service/%s/service_package_gen.go", p)
 
 		if _, err := os.Stat(spdFile); err != nil {
 			continue
