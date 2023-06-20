@@ -67,6 +67,19 @@ rules:
           - pattern: var $VAR = fmt.Sprintf(..., <... acctest.RandomWithPrefix(...) ...>, ...)
     severity: WARNING
 
+  - id: helper-schema-Elem-check-valid-type
+    languages: [go]
+    message: Elem must be either a *schema.Schema or *schema.Resource type
+    paths:
+      include:
+        - internal/service/**/*.go
+      exclude:
+        - internal/service/**/*_data_source.go
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern-regex: "Elem:[ ]*schema.Type[a-zA-Z]*,"
+    severity: WARNING
+
   - id: helper-schema-Set-extraneous-NewSet-with-flattenStringList
     languages: [go]
     message: Prefer `flex.FlattenStringSet()` or `flex.FlattenStringValueSet()`
