@@ -61,8 +61,8 @@ github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.3 h1:Ij9KqZAu7JM6H+1
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.3/go.mod h1:cFv2leRY0jEdFFXPC9iT4HSdYuC3LO3dhDEfMPkObtg=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.12 h1:p4VxoGiHg+nJHPAXIpTSuXF+1SoHmNPfplzkR3Fmi0k=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.12/go.mod h1:2UtZqzdVwPZMvQfbMXaiTFmqHzH0djspNEJWAmP6U9c=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.100.1 h1:AsLoN1zlf+PJ5DRzoegd8k/Zk9f/fBCMKxrZ4sXSE5k=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.100.1/go.mod h1:tIctCeX9IbzsUTKHt53SVEcgyfxV2ElxJeEB+QUbc4M=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.101.0 h1:mELn7pIvmCW/FESssXir+rNG201nkgcQtGN2iTEGu/g=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.101.0/go.mod h1:tIctCeX9IbzsUTKHt53SVEcgyfxV2ElxJeEB+QUbc4M=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.10.2 h1:SszO0FFI23oCM30QIJCJ1IKfl+FhCxoLuEwWSw5CkSg=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.10.2/go.mod h1:go0pcProAlBpDBh9g1l9h8XvOL8zfeBqA2tc2DvH9AM=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.12 h1:ePwiKxedbAePZLNza3Yb0C52dguII3gLEsxBg7D/3AI=
