@@ -77,6 +77,51 @@ func TestAccEC2InstanceConnectEndpoint_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEC2InstanceConnectEndpoint_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_instance_connect_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceConnectEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConnectEndpointConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceConnectEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceConnectEndpointConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceConnectEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccInstanceConnectEndpointConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceConnectEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceConnectEndpointExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -127,4 +172,29 @@ resource "aws_ec2_instance_connect_endpoint" "test" {
   subnet_id = aws_subnet.test[0].id
 }
 `)
+}
+
+func testAccInstanceConnectEndpointConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_ec2_instance_connect_endpoint" "test" {
+  subnet_id = aws_subnet.test[0].id
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1))
+}
+
+func testAccInstanceConnectEndpointConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_ec2_instance_connect_endpoint" "test" {
+  subnet_id = aws_subnet.test[0].id
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
