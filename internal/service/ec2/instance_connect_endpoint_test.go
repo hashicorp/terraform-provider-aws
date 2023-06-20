@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
+	"testing"
+
 	ec2v2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -16,7 +19,6 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"testing"
 )
 
 func TestAccEC2InstanceConnectEndpoint_basic(t *testing.T) {
@@ -36,7 +38,8 @@ func TestAccEC2InstanceConnectEndpoint_basic(t *testing.T) {
 				Config: testAccInstanceConnectEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceConnectEndpointExists(ctx, resourceName, &ec2DescribeIce),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ec2_instance_connect_endpoint.test", "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`instance-connect-endpoint/eice-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test", "id"),
 				),
 			},
 			{
