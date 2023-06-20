@@ -61,8 +61,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-A Lambda Provisioned Concurrency Configuration can be imported using the `function_name` and `qualifier` separated by a comma (`,`), e.g.,
+A Lambda Provisioned Concurrency Configuration can be imported using the `function_name` and `qualifier` separated by a colon (`:`), e.g.,
 
 ```
-$ terraform import aws_lambda_provisioned_concurrency_config.example my_function,production
+$ terraform import aws_lambda_provisioned_concurrency_config.example my_function:production
 ```
