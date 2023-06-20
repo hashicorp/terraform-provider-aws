@@ -143,7 +143,7 @@ gen:
 	rm -f .github/labeler-pr-triage.yml
 	rm -f infrastructure/repository/labels-service.tf
 	rm -f internal/conns/*_gen.go
-	rm -f internal/provider/*_gen.go
+	rm -f internal/provider/servicepackages/*_gen.go
 	rm -f internal/service/**/*_gen.go
 	rm -f internal/sweep/sweep_test.go
 	rm -f names/caps.md
@@ -154,8 +154,8 @@ gen:
 	rm -f .ci/.semgrep-service-name*.yml
 	$(GO_VER) generate ./...
 	# Generate service package list last as it may depend on output of earlier generators.
-	rm -f internal/provider/service_packages_gen.go
-	$(GO_VER) generate ./internal/provider
+	rm -f internal/provider/servicepackages/service_packages_gen.go
+	$(GO_VER) generate ./internal/provider/servicepackages
 
 gencheck:
 	@echo "==> Checking generated source code..."
