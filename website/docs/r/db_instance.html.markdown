@@ -370,7 +370,7 @@ This will not recreate the resource if the S3 object changes in some way.  It's 
 
 ## blue_green_update
 
-* `enabled` - (Optional) Enables [low-downtime updates](#Low-Downtime Updates) when `true`.
+* `enabled` - (Optional) Enables [low-downtime updates](#low-downtime-updates) when `true`.
   Default is `false`.
 
 [instance-replication]:
