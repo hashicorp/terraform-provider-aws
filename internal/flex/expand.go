@@ -82,13 +82,21 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 		return nil
 	}
 
-	switch tFrom, kTo := vFrom.Type(ctx), valTo.Kind(); {
+	tFrom, kTo := vFrom.Type(ctx), valTo.Kind()
+	switch {
 	case tFrom.Equal(types.StringType):
 		switch kTo {
 		case reflect.String:
 			valTo.SetString(vFrom.(types.String).ValueString())
+			return nil
+		case reflect.Ptr:
+			switch valTo.Type().Elem().Kind() {
+			case reflect.String:
+				valTo.Set(reflect.ValueOf(vFrom.(types.String).ValueStringPointer()))
+				return nil
+			}
 		}
 	}
 
-	return nil
+	return fmt.Errorf("incompatible (%s): %s", tFrom, kTo)
 }
