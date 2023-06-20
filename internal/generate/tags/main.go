@@ -201,6 +201,8 @@ func main() {
 		sdkServicePackage = &servicePackage
 	}
 
+	g.Infof("Generating internal/service/%s/%s", servicePackage, filename)
+
 	awsPkg, err := names.AWSGoPackage(*sdkServicePackage, *sdkVersion)
 	if err != nil {
 		g.Fatalf("encountered: %s", err)
