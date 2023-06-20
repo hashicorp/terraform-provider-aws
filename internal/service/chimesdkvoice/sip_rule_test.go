@@ -130,6 +130,54 @@ func TestAccChimeSDKVoiceSipRule_update(t *testing.T) {
 	})
 }
 
+func testAccCheckSipRuleExists(ctx context.Context, name string, sr *chimesdkvoice.SipRule) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("not found: %s", name)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("no ChimeSdkVoice Sip Rule ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+		input := &chimesdkvoice.GetSipRuleInput{
+			SipRuleId: aws.String(rs.Primary.ID),
+		}
+		resp, err := conn.GetSipRuleWithContext(ctx, input)
+		if err != nil {
+			return err
+		}
+
+		sr = resp.SipRule
+
+		return nil
+	}
+}
+
+func testAccCheckSipRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_chimesdkvoice_sip_rule" {
+				continue
+			}
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+			input := &chimesdkvoice.GetSipRuleInput{
+				SipRuleId: aws.String(rs.Primary.ID),
+			}
+			resp, err := conn.GetSipRuleWithContext(ctx, input)
+			if err == nil {
+				if resp.SipRule != nil && aws.StringValue(resp.SipRule.Name) != "" {
+					return fmt.Errorf("error ChimeSdkVoice Sip Rule still exists")
+				}
+			}
+			return nil
+		}
+		return nil
+	}
+}
+
 func testAccSipRuleConfigBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
@@ -213,52 +261,4 @@ resource "aws_chimesdkvoice_sip_rule" "test" {
   }
 }
 `, rName))
-}
-
-func testAccCheckSipRuleExists(ctx context.Context, name string, sr *chimesdkvoice.SipRule) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no ChimeSdkVoice Sip Rule ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
-		input := &chimesdkvoice.GetSipRuleInput{
-			SipRuleId: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.GetSipRuleWithContext(ctx, input)
-		if err != nil {
-			return err
-		}
-
-		sr = resp.SipRule
-
-		return nil
-	}
-}
-
-func testAccCheckSipRuleDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_chimesdkvoice_sip_rule" {
-				continue
-			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
-			input := &chimesdkvoice.GetSipRuleInput{
-				SipRuleId: aws.String(rs.Primary.ID),
-			}
-			resp, err := conn.GetSipRuleWithContext(ctx, input)
-			if err == nil {
-				if resp.SipRule != nil && aws.StringValue(resp.SipRule.Name) != "" {
-					return fmt.Errorf("error ChimeSdkVoice Sip Rule still exists")
-				}
-			}
-			return nil
-		}
-		return nil
-	}
 }
