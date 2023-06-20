@@ -5,7 +5,18 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+type ATest struct{}
+
+type BTest struct {
+	Name types.String
+}
+
+type CTest struct {
+	Name string
+}
 
 func TestGenericExpand(t *testing.T) {
 	t.Parallel()
@@ -25,39 +36,51 @@ func TestGenericExpand(t *testing.T) {
 		},
 		{
 			TestName: "non-pointer Target",
-			Source:   struct{}{},
+			Source:   ATest{},
 			Target:   0,
 			WantErr:  true,
 		},
 		{
 			TestName: "non-struct Source",
 			Source:   testString,
-			Target:   &struct{}{},
+			Target:   &ATest{},
 			WantErr:  true,
 		},
 		{
 			TestName: "non-struct Target",
-			Source:   struct{}{},
+			Source:   ATest{},
 			Target:   &testString,
 			WantErr:  true,
 		},
 		{
 			TestName:   "empty struct Source and Target",
-			Source:     struct{}{},
-			Target:     &struct{}{},
-			WantTarget: &struct{}{},
+			Source:     ATest{},
+			Target:     &ATest{},
+			WantTarget: &ATest{},
 		},
 		{
 			TestName:   "empty struct pointer Source and Target",
-			Source:     &struct{}{},
-			Target:     &struct{}{},
-			WantTarget: &struct{}{},
+			Source:     &ATest{},
+			Target:     &ATest{},
+			WantTarget: &ATest{},
 		},
 		{
 			TestName:   "single string struct pointer Source and empty Target",
-			Source:     &struct{ A string }{A: "a"},
-			Target:     &struct{}{},
-			WantTarget: &struct{}{},
+			Source:     &BTest{Name: types.StringValue("a")},
+			Target:     &ATest{},
+			WantTarget: &ATest{},
+		},
+		{
+			TestName: "does not implement attr.Value Source",
+			Source:   &CTest{Name: "a"},
+			Target:   &CTest{},
+			WantErr:  true,
+		},
+		{
+			TestName:   "single string Source and single string Target",
+			Source:     &BTest{Name: types.StringValue("a")},
+			Target:     &CTest{},
+			WantTarget: &CTest{Name: "a"},
 		},
 	}
 

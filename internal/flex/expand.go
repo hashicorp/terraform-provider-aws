@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // Expand "expands" a resource's "business logic" data structure,
@@ -51,6 +54,9 @@ func walkStructFields(ctx context.Context, from any, to any, visitor fieldVisito
 		if !toFieldVal.IsValid() {
 			continue // Corresponding field not found in to.
 		}
+		if !toFieldVal.CanSet() {
+			continue // Corresponding field value can't be changed.
+		}
 		if err := visitor.visit(ctx, fieldName, valFrom.Field(i), toFieldVal); err != nil {
 			return fmt.Errorf("visit (%s): %w", fieldName, err)
 		}
@@ -66,5 +72,23 @@ type fieldVisitor interface {
 type expandVisitor struct{}
 
 func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, valTo reflect.Value) error {
+	vFrom, ok := valFrom.Interface().(attr.Value)
+	if !ok {
+		return fmt.Errorf("does not implement attr.Value: %s", valFrom.Kind())
+	}
+
+	// No need to set the target value if there's no source value.
+	if vFrom.IsNull() || vFrom.IsUnknown() {
+		return nil
+	}
+
+	switch tFrom, kTo := vFrom.Type(ctx), valTo.Kind(); {
+	case tFrom.Equal(types.StringType):
+		switch kTo {
+		case reflect.String:
+			valTo.SetString(vFrom.(types.String).ValueString())
+		}
+	}
+
 	return nil
 }
