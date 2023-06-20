@@ -56,7 +56,6 @@ func ResourceInstanceConnectEndpoint() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -64,7 +63,6 @@ func ResourceInstanceConnectEndpoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
-				ForceNew: true,
 			},
 			"availability_zone": {
 				Type:     schema.TypeString,
@@ -194,6 +192,8 @@ func resourceInstanceConnectEndpointRead(ctx context.Context, d *schema.Resource
 	d.Set("state", out.State)
 	d.Set("state_message", out.StateMessage)
 	d.Set("subnet_id", out.SubnetId)
+	d.Set("preserve_client_ip", out.PreserveClientIp)
+	SetTagsOut(ctx, out.Tags)
 
 	if err != nil {
 		return append(diags, create.DiagError(names.EC2, create.ErrActionSetting, ResNameInstanceConnectEndpoint, d.Id(), err)...)
