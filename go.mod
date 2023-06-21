@@ -19,7 +19,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.3
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.12
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.101.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.102.0
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.12
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.14.13
