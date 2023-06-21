@@ -122,6 +122,49 @@ func TestAccEC2InstanceConnectEndpoint_tags(t *testing.T) {
 	})
 }
 
+func TestAccEC2InstanceConnectEndpoint_securityGroupIDs(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_instance_connect_endpoint.test"
+	securityGroup1ResourceName := "aws_security_group.test.0"
+	securityGroup2ResourceName := "aws_security_group.test.1"
+	subnetResourceName := "aws_subnet.test.0"
+	vpcResourceName := "aws_vpc.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceConnectEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConnectEndpointConfig_securityGroupIDs(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceConnectEndpointExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`instance-connect-endpoint/.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "fips_dns_name"),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "network_interface_ids.#", 1),
+					resource.TestCheckResourceAttr(resourceName, "preserve_client_ip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup1ResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup2ResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceConnectEndpointExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -197,4 +240,29 @@ resource "aws_ec2_instance_connect_endpoint" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccInstanceConnectEndpointConfig_securityGroupIDs(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  count = 2
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_instance_connect_endpoint" "test" {
+  preserve_client_ip = false
+  subnet_id          = aws_subnet.test[0].id
+  security_group_ids = aws_security_group.test[*].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
