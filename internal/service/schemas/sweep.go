@@ -37,7 +37,7 @@ func init() {
 
 func sweepDiscoverers(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
@@ -80,7 +80,7 @@ func sweepDiscoverers(region string) error {
 
 func sweepRegistries(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
@@ -128,7 +128,7 @@ func sweepRegistries(region string) error {
 
 func sweepSchemas(region string) error { // nosemgrep:ci.schemas-in-func-name
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}

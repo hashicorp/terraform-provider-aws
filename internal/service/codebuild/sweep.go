@@ -33,7 +33,7 @@ func init() {
 
 func sweepReportGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -78,7 +78,7 @@ func sweepReportGroups(region string) error {
 
 func sweepProjects(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -121,7 +121,7 @@ func sweepProjects(region string) error {
 
 func sweepSourceCredentials(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}

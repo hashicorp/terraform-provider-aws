@@ -64,7 +64,7 @@ func init() {
 
 func sweepApplication(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -116,7 +116,7 @@ func sweepApplication(region string) error {
 
 func sweepInstance(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -169,7 +169,7 @@ func sweepInstance(region string) error {
 
 func sweepRDSDBInstance(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -222,7 +222,7 @@ func sweepRDSDBInstance(region string) error {
 
 func sweepStacks(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -265,7 +265,7 @@ func sweepStacks(region string) error {
 
 func sweepLayers(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -327,7 +327,7 @@ func sweepLayers(region string) error {
 
 func sweepUserProfiles(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}

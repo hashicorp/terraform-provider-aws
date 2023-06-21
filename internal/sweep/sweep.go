@@ -32,8 +32,8 @@ var ServicePackages []conns.ServicePackage
 // This prevents client re-initialization for every resource with no benefit.
 var sweeperClients map[string]*conns.AWSClient = make(map[string]*conns.AWSClient)
 
-// SharedRegionalSweepClientWithContext returns a common conns.AWSClient setup needed for the sweeper functions for a given Region.
-func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (*conns.AWSClient, error) {
+// SharedRegionalSweepClient returns a common conns.AWSClient setup needed for the sweeper functions for a given Region.
+func SharedRegionalSweepClient(ctx context.Context, region string) (*conns.AWSClient, error) {
 	if client, ok := sweeperClients[region]; ok {
 		return client, nil
 	}
