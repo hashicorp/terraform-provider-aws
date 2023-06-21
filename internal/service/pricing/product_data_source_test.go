@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccPricingProductDataSource_ec2(t *testing.T) {
@@ -21,7 +21,7 @@ func TestAccPricingProductDataSource_ec2(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApSouth1RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, pricing.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PricingEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -43,7 +43,7 @@ func TestAccPricingProductDataSource_redshift(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApSouth1RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, pricing.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PricingEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

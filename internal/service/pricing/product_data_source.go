@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pricing"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/pricing"
+	"github.com/aws/aws-sdk-go-v2/service/pricing/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,14 +16,11 @@ import (
 )
 
 // @SDKDataSource("aws_pricing_product")
-func DataSourceProduct() *schema.Resource {
+func dataSourceProduct() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProductRead,
+
 		Schema: map[string]*schema.Schema{
-			"service_code": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"filters": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -45,31 +42,34 @@ func DataSourceProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"service_code": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
 
 func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PricingConn(ctx)
+	conn := meta.(*conns.AWSClient).PricingClient(ctx)
 
 	params := &pricing.GetProductsInput{
 		ServiceCode: aws.String(d.Get("service_code").(string)),
-		Filters:     []*pricing.Filter{},
+		Filters:     []types.Filter{},
 	}
 
 	filters := d.Get("filters")
 	for _, v := range filters.([]interface{}) {
 		m := v.(map[string]interface{})
-		params.Filters = append(params.Filters, &pricing.Filter{
+		params.Filters = append(params.Filters, types.Filter{
 			Field: aws.String(m["field"].(string)),
 			Value: aws.String(m["value"].(string)),
-			Type:  aws.String(pricing.FilterTypeTermMatch),
+			Type:  types.FilterTypeTermMatch,
 		})
 	}
 
-	log.Printf("[DEBUG] Reading pricing of products: %s", params)
-	resp, err := conn.GetProductsWithContext(ctx, params)
+	resp, err := conn.GetProducts(ctx, params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading pricing of products: %s", err)
 	}
@@ -91,7 +91,7 @@ func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "Invalid JSON value returned by AWS: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(params.String())))
+	d.SetId(fmt.Sprintf("%d", create.StringHashcode(fmt.Sprintf("%#v", params))))
 	d.Set("result", string(pricingResult))
 	return diags
 }

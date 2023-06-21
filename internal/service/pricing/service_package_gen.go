@@ -24,7 +24,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceProduct,
+			Factory:  dataSourceProduct,
 			TypeName: "aws_pricing_product",
 		},
 	}
