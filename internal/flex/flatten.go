@@ -33,6 +33,14 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 
 	kFrom, tTo := valFrom.Kind(), vTo.Type(ctx)
 	switch kFrom {
+	case reflect.Int32, reflect.Int64:
+		vFrom := valFrom.Int()
+		switch {
+		case tTo.Equal(types.Int64Type):
+			valTo.Set(reflect.ValueOf(types.Int64Value(vFrom)))
+			return nil
+		}
+
 	case reflect.String:
 		vFrom := valFrom.String()
 		switch {
@@ -44,6 +52,14 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 	case reflect.Ptr:
 		vFrom := valFrom.Elem()
 		switch valFrom.Type().Elem().Kind() {
+		case reflect.Int32, reflect.Int64:
+			if vFrom.IsValid() {
+				valTo.Set(reflect.ValueOf(types.Int64Value(vFrom.Int())))
+			} else {
+				valTo.Set(reflect.ValueOf(types.Int64Null()))
+			}
+			return nil
+
 		case reflect.String:
 			if vFrom.IsValid() {
 				valTo.Set(reflect.ValueOf(types.StringValue(vFrom.String())))
