@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -75,7 +75,7 @@ func (r *resourceAssessmentReport) Schema(ctx context.Context, req resource.Sche
 }
 
 func (r *resourceAssessmentReport) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan resourceAssessmentReportData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -113,7 +113,7 @@ func (r *resourceAssessmentReport) Create(ctx context.Context, req resource.Crea
 }
 
 func (r *resourceAssessmentReport) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceAssessmentReportData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -147,7 +147,7 @@ func (r *resourceAssessmentReport) Update(ctx context.Context, req resource.Upda
 }
 
 func (r *resourceAssessmentReport) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceAssessmentReportData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

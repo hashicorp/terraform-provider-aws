@@ -84,9 +84,9 @@ resource "aws_iam_role" "firehose_role" {
 
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   name        = "terraform-kinesis-firehose-msk-broker-logs-stream"
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.firehose_role.arn
     bucket_arn = aws_s3_bucket.bucket.arn
   }
@@ -218,7 +218,6 @@ The following arguments are supported:
 ### broker_node_group_info Argument Reference
 
 * `client_subnets` - (Required) A list of subnets to connect to in client VPC ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-prop-brokernodegroupinfo-clientsubnets)).
-* `ebs_volume_size` - (Optional, **Deprecated** use `storage_info.ebs_storage_info.volume_size` instead) The size in GiB of the EBS volume for the data drive on each broker node.
 * `instance_type` - (Required) Specify the instance type to use for the kafka brokersE.g., kafka.m5.large. ([Pricing info](https://aws.amazon.com/msk/pricing/))
 * `security_groups` - (Required) A list of the security groups to associate with the elastic network interfaces to control who can communicate with the cluster.
 * `az_distribution` - (Optional) The distribution of broker nodes across availability zones ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-brokerazdistribution)). Currently the only valid value is `DEFAULT`.
@@ -339,7 +338,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `create` - (Default `120m`)
 * `update` - (Default `120m`)
-Note that the `update` timeout is used separately for `ebs_volume_size`, `instance_type`, `number_of_broker_nodes`, `configuration_info`, `kafka_version` and monitoring and logging update timeouts.
+Note that the `update` timeout is used separately for `storage_info`, `instance_type`, `number_of_broker_nodes`, `configuration_info`, `kafka_version` and monitoring and logging update timeouts.
 * `delete` - (Default `120m`)
 
 ## Import

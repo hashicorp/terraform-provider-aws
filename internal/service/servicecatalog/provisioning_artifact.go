@@ -78,6 +78,10 @@ func ResourceProvisioningArtifact() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"provisioning_artifact_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"template_physical_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -108,7 +112,7 @@ func ResourceProvisioningArtifact() *schema.Resource {
 
 func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	parameters := make(map[string]interface{})
 	parameters["description"] = d.Get("description")
@@ -167,7 +171,7 @@ func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
 
@@ -209,6 +213,7 @@ func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("guidance", pad.Guidance)
 	d.Set("name", pad.Name)
 	d.Set("product_id", productID)
+	d.Set("provisioning_artifact_id", artifactID)
 	d.Set("type", pad.Type)
 
 	return diags
@@ -216,7 +221,7 @@ func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	if d.HasChanges("accept_language", "active", "description", "guidance", "name", "product_id") {
 		artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
@@ -275,7 +280,7 @@ func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceProvisioningArtifactDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
 

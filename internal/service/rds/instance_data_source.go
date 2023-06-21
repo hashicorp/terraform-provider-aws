@@ -74,12 +74,6 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"db_security_groups": {
-				Type:       schema.TypeList,
-				Computed:   true,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				Deprecated: `With the retirement of EC2-Classic the db_security_groups attribute has been deprecated and will be removed in a future version.`,
-			},
 			"db_subnet_group": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -214,7 +208,7 @@ func DataSourceInstance() *schema.Resource {
 
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	v, err := findDBInstanceByIDSDKv1(ctx, conn, d.Get("db_instance_identifier").(string))
@@ -238,11 +232,6 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		parameterGroupNames = append(parameterGroupNames, aws.StringValue(v.DBParameterGroupName))
 	}
 	d.Set("db_parameter_groups", parameterGroupNames)
-	var securityGroupNames []string
-	for _, v := range v.DBSecurityGroups {
-		securityGroupNames = append(securityGroupNames, aws.StringValue(v.DBSecurityGroupName))
-	}
-	d.Set("db_security_groups", securityGroupNames)
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group", v.DBSubnetGroup.DBSubnetGroupName)
 	} else {

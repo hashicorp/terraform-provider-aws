@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists globalaccelerator service tags.
+// listTags lists globalaccelerator service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn globalacceleratoriface.GlobalAcceleratorAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn globalacceleratoriface.GlobalAcceleratorAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &globalaccelerator.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn globalacceleratoriface.GlobalAccelerator
 // ListTags lists globalaccelerator service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).GlobalAcceleratorConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -76,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*globalaccelerator.Tag) tftags.Key
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns globalaccelerator service tags from Context.
+// getTagsIn returns globalaccelerator service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*globalaccelerator.Tag {
+func getTagsIn(ctx context.Context) []*globalaccelerator.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,17 +88,17 @@ func GetTagsIn(ctx context.Context) []*globalaccelerator.Tag {
 	return nil
 }
 
-// SetTagsOut sets globalaccelerator service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*globalaccelerator.Tag) {
+// setTagsOut sets globalaccelerator service tags in Context.
+func setTagsOut(ctx context.Context, tags []*globalaccelerator.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates globalaccelerator service tags.
+// updateTags updates globalaccelerator service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn globalacceleratoriface.GlobalAcceleratorAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn globalacceleratoriface.GlobalAcceleratorAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -138,5 +138,5 @@ func UpdateTags(ctx context.Context, conn globalacceleratoriface.GlobalAccelerat
 // UpdateTags updates globalaccelerator service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).GlobalAcceleratorConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx), identifier, oldTags, newTags)
 }

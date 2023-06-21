@@ -57,7 +57,7 @@ func ResourceConditionalForwarder() *schema.Resource {
 
 func resourceConditionalForwarderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	dnsIps := flex.ExpandStringList(d.Get("dns_ips").([]interface{}))
 
@@ -81,7 +81,7 @@ func resourceConditionalForwarderCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceConditionalForwarderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {
@@ -119,7 +119,7 @@ func resourceConditionalForwarderRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceConditionalForwarderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {
@@ -143,7 +143,7 @@ func resourceConditionalForwarderUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceConditionalForwarderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {

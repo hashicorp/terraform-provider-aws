@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -37,12 +37,12 @@ func testResponsePlan_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResponsePlanDestroy,
+		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponsePlanConfig_basic(rName, rTitle, rImpact),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", rTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", rImpact),
@@ -61,7 +61,7 @@ func testResponsePlan_basic(t *testing.T) {
 				// because CheckDestroy will run after the replication set has been destroyed and destroying
 				// the replication set will destroy all other resources.
 				Config: testAccResponsePlanConfig_none(),
-				Check:  testAccCheckResponsePlanDestroy,
+				Check:  testAccCheckResponsePlanDestroy(ctx),
 			},
 		},
 	})
@@ -91,12 +91,12 @@ func testResponsePlan_updateRequiredFields(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResponsePlanDestroy,
+		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponsePlanConfig_basic(iniName, iniTitle, iniImpact),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", iniName),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", iniTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", iniImpact),
@@ -113,7 +113,7 @@ func testResponsePlan_updateRequiredFields(t *testing.T) {
 			{
 				Config: testAccResponsePlanConfig_basic(iniName, updTitle, updImpact),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", iniName),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", updTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", updImpact),
@@ -130,7 +130,7 @@ func testResponsePlan_updateRequiredFields(t *testing.T) {
 			{
 				Config: testAccResponsePlanConfig_basic(updName, updTitle, updImpact),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", updName),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", updTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", updImpact),
@@ -183,7 +183,7 @@ func testResponsePlan_updateTags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResponsePlanDestroy,
+		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -191,7 +191,7 @@ func testResponsePlan_updateTags(t *testing.T) {
 					testAccResponsePlanConfig_oneTag(rName, rTitle, rKey1, rVal1Ini),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Ini),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
@@ -210,7 +210,7 @@ func testResponsePlan_updateTags(t *testing.T) {
 					testAccResponsePlanConfig_oneTag(rName, rTitle, rKey1, rVal1Upd),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Upd),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
@@ -229,7 +229,7 @@ func testResponsePlan_updateTags(t *testing.T) {
 					testAccResponsePlanConfig_twoTags(rName, rTitle, rKey2, rVal2, rKey3, rVal3),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, rVal2),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey3, rVal3),
@@ -270,12 +270,12 @@ func testResponsePlan_updateEmptyTags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResponsePlanDestroy,
+		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponsePlanConfig_oneTag(rName, rTitle, rKey1, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
 				),
@@ -289,7 +289,7 @@ func testResponsePlan_updateEmptyTags(t *testing.T) {
 			{
 				Config: testAccResponsePlanConfig_twoTags(rName, rTitle, rKey1, "", rKey2, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, ""),
@@ -304,7 +304,7 @@ func testResponsePlan_updateEmptyTags(t *testing.T) {
 			{
 				Config: testAccResponsePlanConfig_oneTag(rName, rTitle, rKey1, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
 				),
@@ -338,12 +338,12 @@ func testResponsePlan_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResponsePlanDestroy,
+		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponsePlanConfig_basic(rName, rTitle, impact),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssmincidents.ResourceResponsePlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -384,12 +384,12 @@ func testResponsePlan_incidentTemplateOptionalFields(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResponsePlanDestroy,
+		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponsePlanConfig_incidentTemplateOptionalFields(rName, rTitle, rDedupeStringIni, rSummaryIni, rTagKeyIni, rTagValIni, snsTopic1, snsTopic2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", rTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.dedupe_string", rDedupeStringIni),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.summary", rSummaryIni),
@@ -407,7 +407,7 @@ func testResponsePlan_incidentTemplateOptionalFields(t *testing.T) {
 			{
 				Config: testAccResponsePlanConfig_incidentTemplateOptionalFields(rName, rTitle, rDedupeStringUpd, rSummaryUpd, rTagKeyUpd, rTagValUpd, snsTopic2, snsTopic3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", rTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.dedupe_string", rDedupeStringUpd),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.summary", rSummaryUpd),
@@ -446,12 +446,12 @@ func testResponsePlan_displayName(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResponsePlanDestroy,
+		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponsePlanConfig_displayName(rName, oldDisplayName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "display_name", oldDisplayName),
 				),
 			},
@@ -464,7 +464,7 @@ func testResponsePlan_displayName(t *testing.T) {
 			{
 				Config: testAccResponsePlanConfig_displayName(rName, newDisplayName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "display_name", newDisplayName),
 				),
 			},
@@ -498,12 +498,12 @@ func testResponsePlan_chatChannel(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResponsePlanDestroy,
+		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponsePlanConfig_chatChannel(rName, chatChannelTopic1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.0", chatChannelTopic1, "arn"),
 				),
@@ -517,7 +517,7 @@ func testResponsePlan_chatChannel(t *testing.T) {
 			{
 				Config: testAccResponsePlanConfig_chatChannel(rName, chatChannelTopic2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.0", chatChannelTopic2, "arn"),
 				),
@@ -531,7 +531,7 @@ func testResponsePlan_chatChannel(t *testing.T) {
 			{
 				Config: testAccResponsePlanConfig_twoChatChannels(rName, chatChannelTopic1, chatChannelTopic2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.*", chatChannelTopic1, "arn"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.*", chatChannelTopic2, "arn"),
@@ -546,7 +546,7 @@ func testResponsePlan_chatChannel(t *testing.T) {
 			{
 				Config: testAccResponsePlanConfig_emptyChatChannel(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", "0"),
 				),
 			},
@@ -584,12 +584,12 @@ func testResponsePlan_engagement(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResponsePlanDestroy,
+		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponsePlanConfig_engagement(rName, contactArn1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "engagements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "engagements.0", contactArn1),
 				),
@@ -603,7 +603,7 @@ func testResponsePlan_engagement(t *testing.T) {
 			{
 				Config: testAccResponsePlanConfig_engagement(rName, contactArn2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "engagements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "engagements.0", contactArn2),
 				),
@@ -617,7 +617,7 @@ func testResponsePlan_engagement(t *testing.T) {
 			{
 				Config: testAccResponsePlanConfig_twoEngagements(rName, contactArn1, contactArn2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "engagements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "engagements.0", contactArn1),
 					resource.TestCheckResourceAttr(resourceName, "engagements.1", contactArn2),
@@ -632,7 +632,7 @@ func testResponsePlan_engagement(t *testing.T) {
 			{
 				Config: testAccResponsePlanConfig_emptyEngagements(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "engagements.#", "0"),
 				),
 			},
@@ -664,12 +664,12 @@ func testResponsePlan_action(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResponsePlanDestroy,
+		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponsePlanConfig_action1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.ssm_automation.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(
@@ -730,7 +730,7 @@ func testResponsePlan_action(t *testing.T) {
 			{
 				Config: testAccResponsePlanConfig_action2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponsePlanExists(resourceName),
+					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.ssm_automation.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(
@@ -814,7 +814,7 @@ func testResponsePlan_action(t *testing.T) {
 //		},
 //		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 //		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-//		CheckDestroy:             testAccCheckResponsePlanDestroy,
+//		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 //		Steps: []resource.TestStep{
 //			{
 //				Config: testAccResponsePlanConfig_pagerdutyIntegration(
@@ -824,7 +824,7 @@ func testResponsePlan_action(t *testing.T) {
 //					pagerdutySecretId,
 //				),
 //				Check: resource.ComposeTestCheckFunc(
-//					testAccCheckResponsePlanExists(resourceName),
+//					testAccCheckResponsePlanExists(ctx,resourceName),
 //					resource.TestCheckResourceAttr(resourceName, "integration.#", "1"),
 //					resource.TestCheckResourceAttr(resourceName, "integration.0.pagerduty.#", "1"),
 //					resource.TestCheckResourceAttr(
@@ -854,33 +854,34 @@ func testResponsePlan_action(t *testing.T) {
 //	})
 //}
 
-func testAccCheckResponsePlanDestroy(s *terraform.State) error {
-	client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient()
-	ctx := context.Background()
+func testAccCheckResponsePlanDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	for _, resource := range s.RootModule().Resources {
-		if resource.Type != "aws_ssmincidents_response_plan" {
-			continue
+		for _, resource := range s.RootModule().Resources {
+			if resource.Type != "aws_ssmincidents_response_plan" {
+				continue
+			}
+
+			_, err := tfssmincidents.FindResponsePlanByID(ctx, client, resource.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return create.Error(names.SSMIncidents, create.ErrActionCheckingDestroyed, tfssmincidents.ResNameResponsePlan, resource.Primary.ID,
+					errors.New("expected resource not found error, received an unexpected error"))
+			}
+
+			return create.Error(names.SSMIncidents, create.ErrActionCheckingDestroyed, tfssmincidents.ResNameResponsePlan, resource.Primary.ID, errors.New("not destroyed"))
 		}
 
-		_, err := tfssmincidents.FindResponsePlanByID(ctx, client, resource.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return create.Error(names.SSMIncidents, create.ErrActionCheckingDestroyed, tfssmincidents.ResNameResponsePlan, resource.Primary.ID,
-				errors.New("expected resource not found error, received an unexpected error"))
-		}
-
-		return create.Error(names.SSMIncidents, create.ErrActionCheckingDestroyed, tfssmincidents.ResNameResponsePlan, resource.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckResponsePlanExists(name string) resource.TestCheckFunc {
+func testAccCheckResponsePlanExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		resource, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -891,8 +892,7 @@ func testAccCheckResponsePlanExists(name string) resource.TestCheckFunc {
 			return create.Error(names.SSMIncidents, create.ErrActionCheckingExistence, tfssmincidents.ResNameResponsePlan, name, errors.New("not set"))
 		}
 
-		client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient()
-		ctx := context.Background()
+		client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 		_, err := tfssmincidents.FindResponsePlanByID(ctx, client, resource.Primary.ID)
 
@@ -904,7 +904,7 @@ func testAccCheckResponsePlanExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccResponsePlanConfigBase() string {
+func testAccResponsePlanConfig_base() string {
 	return fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test_replication_set" {
   region {
@@ -914,7 +914,7 @@ resource "aws_ssmincidents_replication_set" "test_replication_set" {
 `, acctest.Region())
 }
 
-func testAccResponsePlanConfigSNSTopicBase() string {
+func testAccResponsePlanConfig_baseSNSTopic() string {
 	return `
 resource "aws_sns_topic" "topic1" {}
 resource "aws_sns_topic" "topic2" {}
@@ -924,7 +924,7 @@ resource "aws_sns_topic" "topic3" {}
 
 func testAccResponsePlanConfig_basic(name, title, impact string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -941,13 +941,13 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_none() string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 	)
 }
 
 func testAccResponsePlanConfig_oneTag(name, title, tagKey, tagVal string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -968,7 +968,7 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_twoTags(name, title, tag1Key, tag1Val, tag2Key, tag2Val string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -990,8 +990,8 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_incidentTemplateOptionalFields(name, title, dedupeString, summary, tagKey, tagVal, snsTopic1, snsTopic2 string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
-		testAccResponsePlanConfigSNSTopicBase(),
+		testAccResponsePlanConfig_base(),
+		testAccResponsePlanConfig_baseSNSTopic(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1022,7 +1022,7 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_displayName(name, displayName string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1041,8 +1041,8 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_chatChannel(name, chatChannelTopic string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
-		testAccResponsePlanConfigSNSTopicBase(),
+		testAccResponsePlanConfig_base(),
+		testAccResponsePlanConfig_baseSNSTopic(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1061,8 +1061,8 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_twoChatChannels(name, chatChannelOneTopic, chatChannelTwoTopic string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
-		testAccResponsePlanConfigSNSTopicBase(),
+		testAccResponsePlanConfig_base(),
+		testAccResponsePlanConfig_baseSNSTopic(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1081,7 +1081,7 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_emptyChatChannel(name string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1100,7 +1100,7 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_engagement(name, contactArn string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1119,7 +1119,7 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_twoEngagements(name, contactArn1, contactArn2 string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1138,7 +1138,7 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_emptyEngagements(name string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
+		testAccResponsePlanConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1157,9 +1157,9 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_action1(name string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
-		testAccResponsePlanConfigIAMRoleBase(name),
-		testAccResponsePlanConfigDocumentBase(name),
+		testAccResponsePlanConfig_base(),
+		testAccResponsePlanConfig_baseIAMRole(name),
+		testAccResponsePlanConfig_baseSSMDocument(name),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1192,9 +1192,9 @@ resource "aws_ssmincidents_response_plan" "test" {
 
 func testAccResponsePlanConfig_action2(name string) string {
 	return acctest.ConfigCompose(
-		testAccResponsePlanConfigBase(),
-		testAccResponsePlanConfigIAMRoleBase(name),
-		testAccResponsePlanConfigDocumentBase(name),
+		testAccResponsePlanConfig_base(),
+		testAccResponsePlanConfig_baseIAMRole(name),
+		testAccResponsePlanConfig_baseSSMDocument(name),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_response_plan" "test" {
   name = %[1]q
@@ -1225,7 +1225,7 @@ resource "aws_ssmincidents_response_plan" "test" {
 `, name))
 }
 
-func testAccResponsePlanConfigIAMRoleBase(name string) string {
+func testAccResponsePlanConfig_baseIAMRole(name string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role1" {
   assume_role_policy = <<EOF
@@ -1275,7 +1275,7 @@ EOF
 `, name+"-role-one", name+"-role-two")
 }
 
-func testAccResponsePlanConfigDocumentBase(name string) string {
+func testAccResponsePlanConfig_baseSSMDocument(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "document1" {
   name          = %[1]q

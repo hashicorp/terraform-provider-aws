@@ -22,7 +22,7 @@ type IAMPolicyDoc struct {
 }
 
 type IAMPolicyStatement struct {
-	Sid           string
+	Sid           string                         `json:",omitempty"`
 	Effect        string                         `json:",omitempty"`
 	Actions       interface{}                    `json:"Action,omitempty"`
 	NotActions    interface{}                    `json:"NotAction,omitempty"`

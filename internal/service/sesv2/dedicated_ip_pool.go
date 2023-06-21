@@ -72,11 +72,11 @@ const (
 )
 
 func resourceDedicatedIPPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.CreateDedicatedIpPoolInput{
 		PoolName: aws.String(d.Get("pool_name").(string)),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 	if v, ok := d.GetOk("scaling_mode"); ok {
 		in.ScalingMode = types.ScalingMode(v.(string))
@@ -95,7 +95,7 @@ func resourceDedicatedIPPoolCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	out, err := FindDedicatedIPPoolByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -120,7 +120,7 @@ func resourceDedicatedIPPoolUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDedicatedIPPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	log.Printf("[INFO] Deleting SESV2 DedicatedIPPool %s", d.Id())
 	_, err := conn.DeleteDedicatedIpPool(ctx, &sesv2.DeleteDedicatedIpPoolInput{

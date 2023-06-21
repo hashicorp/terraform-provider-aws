@@ -42,6 +42,8 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - EC2 Transit Gateway Connect Peer identifier
 * `arn` - EC2 Transit Gateway Connect Peer ARN
+* `bgp_peer_address` - The IP address assigned to customer device, which is used as BGP IP address.
+* `bgp_transit_gateway_addresses` - The IP addresses assigned to Transit Gateway, which are used as BGP IP addresses.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

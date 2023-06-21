@@ -99,13 +99,13 @@ func ResourceSchema() *schema.Resource {
 
 func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.CreateSchemaInput{
 		SchemaName:       aws.String(d.Get("schema_name").(string)),
 		SchemaDefinition: aws.String(d.Get("schema_definition").(string)),
 		DataFormat:       aws.String(d.Get("data_format").(string)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("registry_arn"); ok {
@@ -137,7 +137,7 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	output, err := FindSchemaByID(ctx, conn, d.Id())
 	if err != nil {
@@ -179,7 +179,7 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.UpdateSchemaInput{
 		SchemaId: createSchemaID(d.Id()),
@@ -234,7 +234,7 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Schema: %s", d.Id())
 	input := &glue.DeleteSchemaInput{

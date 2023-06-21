@@ -130,12 +130,14 @@ func DataSourceBucketObject() *schema.Resource {
 
 			"tags": tftags.TagsSchemaComputed(),
 		},
+
+		DeprecationMessage: `use the aws_s3_object data source instead`,
 	}
 }
 
 func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)

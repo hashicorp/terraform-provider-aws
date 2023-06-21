@@ -103,7 +103,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 
 func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	var groupName string
 	if v, ok := d.GetOk("name"); ok {
@@ -118,7 +118,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 		DBClusterParameterGroupName: aws.String(groupName),
 		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
 		Description:                 aws.String(d.Get("description").(string)),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateDBClusterParameterGroupWithContext(ctx, &input)
@@ -135,7 +135,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 
 func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	describeOpts := &docdb.DescribeDBClusterParameterGroupsInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
@@ -180,7 +180,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -224,7 +224,7 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 
 func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	deleteOpts := &docdb.DeleteDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),

@@ -143,7 +143,7 @@ func DataSourceCachePolicy() *schema.Resource {
 }
 func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	var cachePolicyID string
 

@@ -73,7 +73,7 @@ func ResourceEndpointAuthorization() *schema.Resource {
 
 func resourceEndpointAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	account := d.Get("account").(string)
 	input := redshift.AuthorizeEndpointAccessInput{
@@ -98,7 +98,7 @@ func resourceEndpointAuthorizationCreate(ctx context.Context, d *schema.Resource
 
 func resourceEndpointAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	endpoint, err := FindEndpointAuthorizationById(ctx, conn, d.Id())
 
@@ -125,7 +125,7 @@ func resourceEndpointAuthorizationRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceEndpointAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	if d.HasChanges("vpc_ids") {
 		account, clusterId, err := DecodeEndpointAuthorizationID(d.Id())
@@ -169,7 +169,7 @@ func resourceEndpointAuthorizationUpdate(ctx context.Context, d *schema.Resource
 
 func resourceEndpointAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	account, clusterId, err := DecodeEndpointAuthorizationID(d.Id())
 	if err != nil {

@@ -65,7 +65,7 @@ func ResourceVPNGateway() *schema.Resource {
 
 func resourceVPNGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateVpnGatewayInput{
 		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
@@ -103,7 +103,7 @@ func resourceVPNGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindVPNGatewayByID(ctx, conn, d.Id())
@@ -141,14 +141,14 @@ func resourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	SetTagsOut(ctx, vpnGateway.Tags)
+	setTagsOut(ctx, vpnGateway.Tags)
 
 	return diags
 }
 
 func resourceVPNGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("vpc_id") {
 		o, n := d.GetChange("vpc_id")
@@ -171,7 +171,7 @@ func resourceVPNGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceVPNGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if v, ok := d.GetOk("vpc_id"); ok {
 		if err := detachVPNGatewayFromVPC(ctx, conn, d.Id(), v.(string)); err != nil {

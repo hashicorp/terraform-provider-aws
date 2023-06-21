@@ -64,7 +64,7 @@ func ResourceLFTag() *schema.Resource {
 
 func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	tagKey := d.Get("key").(string)
 	tagValues := d.Get("values").(*schema.Set)
@@ -113,7 +113,7 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {
@@ -147,7 +147,7 @@ func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {
@@ -204,7 +204,7 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceLFTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {

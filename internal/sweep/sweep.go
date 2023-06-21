@@ -4,22 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -31,18 +25,21 @@ const (
 
 const defaultSweeperAssumeRoleDurationSeconds = 3600
 
-// SweeperClients is a shared cache of regional conns.AWSClient
+// ServicePackages is set in TestMain in order to break an import cycle.
+var ServicePackages []conns.ServicePackage
+
+// sweeperClients is a shared cache of regional conns.AWSClient
 // This prevents client re-initialization for every resource with no benefit.
-var SweeperClients map[string]interface{}
+var sweeperClients map[string]*conns.AWSClient = make(map[string]*conns.AWSClient)
 
 // SharedRegionalSweepClient returns a common conns.AWSClient setup needed for the sweeper
 // functions for a given region
-func SharedRegionalSweepClient(region string) (interface{}, error) {
+func SharedRegionalSweepClient(region string) (*conns.AWSClient, error) {
 	return SharedRegionalSweepClientWithContext(Context(region), region)
 }
 
-func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (interface{}, error) {
-	if client, ok := SweeperClients[region]; ok {
+func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (*conns.AWSClient, error) {
+	if client, ok := sweeperClients[region]; ok {
 		return client, nil
 	}
 
@@ -57,6 +54,14 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 			return nil, err
 		}
 	}
+
+	meta := new(conns.AWSClient)
+	servicePackageMap := make(map[string]conns.ServicePackage)
+	for _, sp := range ServicePackages {
+		servicePackageName := sp.ServicePackageName()
+		servicePackageMap[servicePackageName] = sp
+	}
+	meta.ServicePackages = servicePackageMap
 
 	conf := &conns.Config{
 		MaxRetries:       5,
@@ -86,60 +91,19 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 	}
 
 	// configures a default client for the region, using the above env vars
-	client, diags := conf.ConfigureProvider(ctx, &conns.AWSClient{})
+	client, diags := conf.ConfigureProvider(ctx, meta)
 
 	if diags.HasError() {
 		return nil, fmt.Errorf("getting AWS client: %#v", diags)
 	}
 
-	SweeperClients[region] = client
+	sweeperClients[region] = client
 
 	return client, nil
 }
 
 type Sweepable interface {
 	Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error
-}
-
-type SweepResource struct {
-	d        *schema.ResourceData
-	meta     interface{}
-	resource *schema.Resource
-}
-
-func NewSweepResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) *SweepResource {
-	return &SweepResource{
-		d:        d,
-		meta:     meta,
-		resource: resource,
-	}
-}
-
-func (sr *SweepResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
-		err := DeleteResource(ctx, sr.resource, sr.d, sr.meta)
-
-		if err != nil {
-			if strings.Contains(err.Error(), "Throttling") {
-				log.Printf("[INFO] While sweeping resource (%s), encountered throttling error (%s). Retrying...", sr.d.Id(), err)
-				return retry.RetryableError(err)
-			}
-
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	}, optFns...)
-
-	if tfresource.TimedOut(err) {
-		err = DeleteResource(ctx, sr.resource, sr.d, sr.meta)
-	}
-
-	return err
-}
-
-func SweepOrchestrator(sweepables []Sweepable) error {
-	return SweepOrchestratorWithContext(context.Background(), sweepables)
 }
 
 func SweepOrchestratorWithContext(ctx context.Context, sweepables []Sweepable, optFns ...tfresource.OptionsFunc) error {
@@ -230,38 +194,6 @@ func SkipSweepError(err error) bool {
 		return dnsErr.IsNotFound
 	}
 	return false
-}
-
-func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
-	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
-		var diags diag.Diagnostics
-
-		if resource.DeleteContext != nil {
-			diags = resource.DeleteContext(ctx, d, meta)
-		} else {
-			diags = resource.DeleteWithoutTimeout(ctx, d, meta)
-		}
-
-		return sdkdiag.DiagnosticsError(diags)
-	}
-
-	return resource.Delete(d, meta)
-}
-
-func ReadResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
-	if resource.ReadContext != nil || resource.ReadWithoutTimeout != nil {
-		var diags diag.Diagnostics
-
-		if resource.ReadContext != nil {
-			diags = resource.ReadContext(ctx, d, meta)
-		} else {
-			diags = resource.ReadWithoutTimeout(ctx, d, meta)
-		}
-
-		return sdkdiag.DiagnosticsError(diags)
-	}
-
-	return resource.Read(d, meta)
 }
 
 func Partition(region string) string {

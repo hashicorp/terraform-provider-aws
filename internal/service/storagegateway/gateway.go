@@ -273,7 +273,7 @@ func ResourceGateway() *schema.Resource {
 
 func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	region := meta.(*conns.AWSClient).Region
 	activationKey := d.Get("activation_key").(string)
@@ -353,7 +353,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 		GatewayName:     aws.String(d.Get("gateway_name").(string)),
 		GatewayTimezone: aws.String(d.Get("gateway_timezone").(string)),
 		GatewayType:     aws.String(d.Get("gateway_type").(string)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("medium_changer_type"); ok {
@@ -484,7 +484,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	output, err := FindGatewayByARN(ctx, conn, d.Id())
 
@@ -498,7 +498,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Gateway (%s): %s", d.Id(), err)
 	}
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	smbSettingsInput := &storagegateway.DescribeSMBSettingsInput{
 		GatewayARN: aws.String(d.Id()),
@@ -643,7 +643,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	if d.HasChanges("gateway_name", "gateway_timezone", "cloudwatch_log_group_arn") {
 		input := &storagegateway.UpdateGatewayInformationInput{
@@ -785,7 +785,7 @@ func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Storage Gateway Gateway: %s", d.Id())
 	_, err := conn.DeleteGatewayWithContext(ctx, &storagegateway.DeleteGatewayInput{

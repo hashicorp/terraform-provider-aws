@@ -21,6 +21,11 @@ const (
 	sdkV2 = 2
 )
 
+const (
+	defaultListTagsFunc   = "listTags"
+	defaultUpdateTagsFunc = "updateTags"
+)
+
 var (
 	createTags               = flag.Bool("CreateTags", false, "whether to generate CreateTags")
 	getTag                   = flag.Bool("GetTag", false, "whether to generate GetTag")
@@ -33,7 +38,7 @@ var (
 
 	createTagsFunc        = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
 	getTagFunc            = flag.String("GetTagFunc", "GetTag", "getTagFunc")
-	listTagsFunc          = flag.String("ListTagsFunc", "ListTags", "listTagsFunc")
+	listTagsFunc          = flag.String("ListTagsFunc", defaultListTagsFunc, "listTagsFunc")
 	listTagsInFiltIDName  = flag.String("ListTagsInFiltIDName", "", "listTagsInFiltIDName")
 	listTagsInIDElem      = flag.String("ListTagsInIDElem", "ResourceArn", "listTagsInIDElem")
 	listTagsInIDNeedSlice = flag.String("ListTagsInIDNeedSlice", "", "listTagsInIDNeedSlice")
@@ -57,15 +62,16 @@ var (
 	untagInNeedTagKeyType = flag.String("UntagInNeedTagKeyType", "", "untagInNeedTagKeyType")
 	untagInTagsElem       = flag.String("UntagInTagsElem", "TagKeys", "untagInTagsElem")
 	untagOp               = flag.String("UntagOp", "UntagResource", "untagOp")
-	updateTagsFunc        = flag.String("UpdateTagsFunc", "UpdateTags", "updateTagsFunc")
+	updateTagsFunc        = flag.String("UpdateTagsFunc", defaultUpdateTagsFunc, "updateTagsFunc")
 
 	parentNotFoundErrCode = flag.String("ParentNotFoundErrCode", "", "Parent 'NotFound' Error Code")
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
 
-	sdkVersion   = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
-	kvtValues    = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
-	skipNamesImp = flag.Bool("SkipNamesImp", false, "Whether to skip importing names")
-	skipTypesImp = flag.Bool("SkipTypesImp", false, "Whether to skip importing types")
+	sdkServicePackage = flag.String("AWSSDKServicePackage", "", "AWS Go SDK package to use. Defaults to the provider service package name.")
+	sdkVersion        = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
+	kvtValues         = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
+	skipNamesImp      = flag.Bool("SkipNamesImp", false, "Whether to skip importing names")
+	skipTypesImp      = flag.Bool("SkipTypesImp", false, "Whether to skip importing types")
 )
 
 func usage() {
@@ -169,8 +175,10 @@ type TemplateData struct {
 	InternalTypesPkg bool
 	NamesPkg         bool
 	SkipTypesImp     bool
-	StrConvPkg       bool
 	TfResourcePkg    bool
+
+	IsDefaultListTags   bool
+	IsDefaultUpdateTags bool
 }
 
 func main() {
@@ -189,8 +197,13 @@ func main() {
 	}
 
 	servicePackage := os.Getenv("GOPACKAGE")
-	awsPkg, err := names.AWSGoPackage(servicePackage, *sdkVersion)
+	if *sdkServicePackage == "" {
+		sdkServicePackage = &servicePackage
+	}
 
+	g.Infof("Generating internal/service/%s/%s", servicePackage, filename)
+
+	awsPkg, err := names.AWSGoPackage(*sdkServicePackage, *sdkVersion)
 	if err != nil {
 		g.Fatalf("encountered: %s", err)
 	}
@@ -200,13 +213,13 @@ func main() {
 		awsIntfPkg = fmt.Sprintf("%[1]s/%[1]siface", awsPkg)
 	}
 
-	clientTypeName, err := names.AWSGoClientTypeName(servicePackage, *sdkVersion)
+	clientTypeName, err := names.AWSGoClientTypeName(*sdkServicePackage, *sdkVersion)
 
 	if err != nil {
 		g.Fatalf("encountered: %s", err)
 	}
 
-	providerNameUpper, err := names.ProviderNameUpper(servicePackage)
+	providerNameUpper, err := names.ProviderNameUpper(*sdkServicePackage)
 
 	if err != nil {
 		g.Fatalf("encountered: %s", err)
@@ -243,13 +256,12 @@ func main() {
 		ProviderNameUpper:      providerNameUpper,
 		ServicePackage:         servicePackage,
 
-		ConnsPkg:         *listTags || *updateTags,
+		ConnsPkg:         (*listTags && *listTagsFunc == defaultListTagsFunc) || (*updateTags && *updateTagsFunc == defaultUpdateTagsFunc),
 		FmtPkg:           *updateTags,
 		HelperSchemaPkg:  awsPkg == "autoscaling",
-		InternalTypesPkg: *listTags || *serviceTagsMap || *serviceTagsSlice,
+		InternalTypesPkg: (*listTags && *listTagsFunc == defaultListTagsFunc) || *serviceTagsMap || *serviceTagsSlice,
 		NamesPkg:         *updateTags && !*skipNamesImp,
 		SkipTypesImp:     *skipTypesImp,
-		StrConvPkg:       awsPkg == "autoscaling",
 		TfResourcePkg:    *getTag,
 
 		CreateTagsFunc:          createTagsFunc,
@@ -285,6 +297,9 @@ func main() {
 		UntagOp:                 *untagOp,
 		UpdateTagsFunc:          *updateTagsFunc,
 		UpdateTagsIgnoreSystem:  !*updateTagsNoIgnoreSystem,
+
+		IsDefaultListTags:   *listTagsFunc == defaultListTagsFunc,
+		IsDefaultUpdateTags: *updateTagsFunc == defaultUpdateTagsFunc,
 	}
 
 	templateBody := newTemplateBody(*sdkVersion, *kvtValues)

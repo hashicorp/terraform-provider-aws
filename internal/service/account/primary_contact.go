@@ -19,7 +19,7 @@ import (
 )
 
 // @SDKResource("aws_account_primary_contact")
-func ResourcePrimaryContact() *schema.Resource {
+func resourcePrimaryContact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePrimaryContactPut,
 		ReadWithoutTimeout:   resourcePrimaryContactRead,
@@ -92,7 +92,7 @@ func ResourcePrimaryContact() *schema.Resource {
 }
 
 func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountClient()
+	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
 	id := "default"
 	input := &account.PutContactInformationInput{
@@ -149,9 +149,9 @@ func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountClient()
+	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
-	contactInformation, err := FindContactInformation(ctx, conn, d.Get("account_id").(string))
+	contactInformation, err := findContactInformation(ctx, conn, d.Get("account_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Account Primary Contact (%s) not found, removing from state", d.Id())
@@ -180,7 +180,7 @@ func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-func FindContactInformation(ctx context.Context, conn *account.Client, accountID string) (*types.ContactInformation, error) {
+func findContactInformation(ctx context.Context, conn *account.Client, accountID string) (*types.ContactInformation, error) {
 	input := &account.GetContactInformationInput{}
 	if accountID != "" {
 		input.AccountId = aws.String(accountID)

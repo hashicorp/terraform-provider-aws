@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -347,7 +347,7 @@ func testContact_updateTags(t *testing.T) {
 
 func testAccCheckContactDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssmcontacts_contact" {
@@ -392,7 +392,7 @@ func testAccCheckContactExists(ctx context.Context, name string) resource.TestCh
 			return create.Error(names.SSMContacts, create.ErrActionCheckingExistence, tfssmcontacts.ResNameContact, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient(ctx)
 
 		_, err := conn.GetContact(ctx, &ssmcontacts.GetContactInput{
 			ContactId: aws.String(rs.Primary.ID),
@@ -407,7 +407,7 @@ func testAccCheckContactExists(ctx context.Context, name string) resource.TestCh
 }
 
 func testAccContactPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient(ctx)
 
 	input := &ssmcontacts.ListContactsInput{}
 	_, err := conn.ListContacts(ctx, input)

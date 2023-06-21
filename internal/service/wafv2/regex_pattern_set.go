@@ -102,14 +102,14 @@ func ResourceRegexPatternSet() *schema.Resource {
 }
 
 func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	name := d.Get("name").(string)
 	input := &wafv2.CreateRegexPatternSetInput{
 		Name:                  aws.String(name),
 		RegularExpressionList: []*wafv2.Regex{},
 		Scope:                 aws.String(d.Get("scope").(string)),
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -132,7 +132,7 @@ func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	output, err := FindRegexPatternSetByThreePartKey(ctx, conn, d.Id(), d.Get("name").(string), d.Get("scope").(string))
 
@@ -160,7 +160,7 @@ func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceRegexPatternSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &wafv2.UpdateRegexPatternSetInput{
@@ -191,7 +191,7 @@ func resourceRegexPatternSetUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceRegexPatternSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	input := &wafv2.DeleteRegexPatternSetInput{
 		Id:        aws.String(d.Id()),

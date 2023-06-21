@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
@@ -89,7 +89,7 @@ func testAccCheckMemberAssociationExists(ctx context.Context, n string) resource
 			return fmt.Errorf("No Inspector2 Member Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
 
 		_, err := tfinspector2.FindMemberByAccountID(ctx, conn, rs.Primary.ID)
 
@@ -99,7 +99,7 @@ func testAccCheckMemberAssociationExists(ctx context.Context, n string) resource
 
 func testAccCheckMemberAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_inspector2_member_association" {

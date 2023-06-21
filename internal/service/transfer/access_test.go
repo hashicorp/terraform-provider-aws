@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/transfer"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
@@ -182,7 +182,7 @@ func testAccCheckAccessExists(ctx context.Context, n string, v *transfer.Describ
 			return fmt.Errorf("error parsing Transfer Access ID: %w", err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		output, err := tftransfer.FindAccessByServerIDAndExternalID(ctx, conn, serverID, externalID)
 
@@ -198,7 +198,7 @@ func testAccCheckAccessExists(ctx context.Context, n string, v *transfer.Describ
 
 func testAccCheckAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_access" {

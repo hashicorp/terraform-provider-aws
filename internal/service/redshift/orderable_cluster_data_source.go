@@ -47,7 +47,7 @@ func DataSourceOrderableCluster() *schema.Resource {
 
 func dataSourceOrderableClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	input := &redshift.DescribeOrderableClusterOptionsInput{}
 

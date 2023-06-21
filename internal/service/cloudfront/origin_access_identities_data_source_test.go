@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -51,9 +51,9 @@ func TestAccCloudFrontOriginAccessIdentitiesDataSource_all(t *testing.T) {
 			{
 				Config: testAccOriginAccessIdentitiesDataSourceConfig_noComments(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "iam_arns.#", "1"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "1"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "s3_canonical_user_ids.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "iam_arns.#", 1),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", 1),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "s3_canonical_user_ids.#", 1),
 				),
 			},
 		},

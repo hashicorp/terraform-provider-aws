@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/emrserverless"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfemrserverless "github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
@@ -337,7 +337,7 @@ func testAccCheckApplicationExists(ctx context.Context, resourceName string, app
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRServerlessConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRServerlessConn(ctx)
 
 		output, err := tfemrserverless.FindApplicationByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -356,7 +356,7 @@ func testAccCheckApplicationExists(ctx context.Context, resourceName string, app
 
 func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRServerlessConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRServerlessConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emrserverless_application" {

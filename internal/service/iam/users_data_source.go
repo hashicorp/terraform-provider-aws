@@ -41,7 +41,7 @@ func DataSourceUsers() *schema.Resource {
 
 func dataSourceUsersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	nameRegex := d.Get("name_regex").(string)
 	pathPrefix := d.Get("path_prefix").(string)

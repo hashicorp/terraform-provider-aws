@@ -10,8 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -70,7 +69,7 @@ func sweepMeshes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppMeshConn()
+	conn := client.AppMeshConn(ctx)
 	input := &appmesh.ListMeshesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -114,7 +113,7 @@ func sweepVirtualGateways(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppMeshConn()
+	conn := client.AppMeshConn(ctx)
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -176,10 +175,6 @@ func sweepVirtualGateways(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping App Mesh Virtual Gateways (%s): %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping App Mesh Virtual Gateways: %w", err))
-	}
-
 	return sweeperErrs.ErrorOrNil()
 }
 
@@ -189,7 +184,7 @@ func sweepVirtualNodes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppMeshConn()
+	conn := client.AppMeshConn(ctx)
 	input := &appmesh.ListMeshesInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -260,7 +255,7 @@ func sweepVirtualRouters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppMeshConn()
+	conn := client.AppMeshConn(ctx)
 	input := &appmesh.ListMeshesInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -331,7 +326,7 @@ func sweepVirtualServices(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppMeshConn()
+	conn := client.AppMeshConn(ctx)
 	input := &appmesh.ListMeshesInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -402,7 +397,7 @@ func sweepGatewayRoutes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppMeshConn()
+	conn := client.AppMeshConn(ctx)
 	input := &appmesh.ListMeshesInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -498,7 +493,7 @@ func sweepRoutes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppMeshConn()
+	conn := client.AppMeshConn(ctx)
 	input := &appmesh.ListMeshesInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)

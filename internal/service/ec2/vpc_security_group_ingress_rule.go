@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -47,7 +47,7 @@ func (r *resourceSecurityGroupIngressRule) Metadata(_ context.Context, request r
 }
 
 func (r *resourceSecurityGroupIngressRule) createSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) (string, error) {
-	conn := r.Meta().EC2Conn()
+	conn := r.Meta().EC2Conn(ctx)
 
 	input := &ec2.AuthorizeSecurityGroupIngressInput{
 		GroupId:       flex.StringFromFramework(ctx, data.SecurityGroupID),
@@ -64,7 +64,7 @@ func (r *resourceSecurityGroupIngressRule) createSecurityGroupRule(ctx context.C
 }
 
 func (r *resourceSecurityGroupIngressRule) deleteSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) error {
-	conn := r.Meta().EC2Conn()
+	conn := r.Meta().EC2Conn(ctx)
 
 	_, err := conn.RevokeSecurityGroupIngressWithContext(ctx, &ec2.RevokeSecurityGroupIngressInput{
 		GroupId:              flex.StringFromFramework(ctx, data.SecurityGroupID),
@@ -75,7 +75,7 @@ func (r *resourceSecurityGroupIngressRule) deleteSecurityGroupRule(ctx context.C
 }
 
 func (r *resourceSecurityGroupIngressRule) findSecurityGroupRuleByID(ctx context.Context, id string) (*ec2.SecurityGroupRule, error) {
-	conn := r.Meta().EC2Conn()
+	conn := r.Meta().EC2Conn(ctx)
 
 	return FindSecurityGroupIngressRuleByID(ctx, conn, id)
 }
@@ -176,8 +176,8 @@ func (r *resourceSecurityGroupRule) Create(ctx context.Context, request resource
 
 	data.ID = types.StringValue(securityGroupRuleID)
 
-	conn := r.Meta().EC2Conn()
-	if err := UpdateTags(ctx, conn, data.ID.ValueString(), nil, KeyValueTags(ctx, GetTagsIn(ctx))); err != nil {
+	conn := r.Meta().EC2Conn(ctx)
+	if err := updateTags(ctx, conn, data.ID.ValueString(), nil, KeyValueTags(ctx, getTagsIn(ctx))); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("adding VPC Security Group Rule (%s) tags", data.ID.ValueString()), err.Error())
 
 		return
@@ -238,7 +238,7 @@ func (r *resourceSecurityGroupRule) Read(ctx context.Context, request resource.R
 		data.ToPort = flex.Int64ToFramework(ctx, output.ToPort)
 	}
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -258,7 +258,7 @@ func (r *resourceSecurityGroupRule) Update(ctx context.Context, request resource
 		return
 	}
 
-	conn := r.Meta().EC2Conn()
+	conn := r.Meta().EC2Conn(ctx)
 
 	if !new.CIDRIPv4.Equal(old.CIDRIPv4) ||
 		!new.CIDRIPv6.Equal(old.CIDRIPv6) ||

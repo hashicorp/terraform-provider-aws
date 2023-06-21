@@ -126,7 +126,7 @@ func ResourceZone() *schema.Resource {
 
 func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	input := &route53.CreateHostedZoneInput{
 		CallerReference: aws.String(id.UniqueId()),
@@ -162,7 +162,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if err := createTags(ctx, conn, d.Id(), route53.TagResourceTypeHostedzone, GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), route53.TagResourceTypeHostedzone, getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Zone (%s) tags: %s", d.Id(), err)
 	}
 
@@ -182,7 +182,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	output, err := FindHostedZoneByID(ctx, conn, d.Id())
 
@@ -244,7 +244,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("comment") {
@@ -298,7 +298,7 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	if d.Get("force_destroy").(bool) {
 		if err := deleteAllResourceRecordsFromHostedZone(ctx, conn, d.Id(), d.Get("name").(string)); err != nil {

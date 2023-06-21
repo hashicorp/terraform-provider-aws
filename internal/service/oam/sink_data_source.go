@@ -44,7 +44,7 @@ const (
 )
 
 func dataSourceSinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	sinkIdentifier := d.Get("sink_identifier").(string)
 
@@ -59,7 +59,7 @@ func dataSourceSinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("name", out.Name)
 	d.Set("sink_id", out.Id)
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 	if err != nil {
 		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, DSNameSink, d.Id(), err)
 	}

@@ -68,7 +68,7 @@ func ResourceSSLNegotiationPolicy() *schema.Resource {
 
 func resourceSSLNegotiationPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName := d.Get("load_balancer").(string)
 	lbPort := d.Get("lb_port").(int)
@@ -114,7 +114,7 @@ func resourceSSLNegotiationPolicyCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceSSLNegotiationPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName, lbPort, policyName, err := SSLNegotiationPolicyParseResourceID(d.Id())
 
@@ -158,7 +158,7 @@ func resourceSSLNegotiationPolicyRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceSSLNegotiationPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName, lbPort, policyName, err := SSLNegotiationPolicyParseResourceID(d.Id())
 

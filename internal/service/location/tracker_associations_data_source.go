@@ -38,7 +38,7 @@ const (
 )
 
 func dataSourceTrackerAssociationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	name := d.Get("tracker_name").(string)
 

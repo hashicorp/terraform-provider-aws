@@ -108,7 +108,7 @@ func ResourceNetworkProfile() *schema.Resource {
 
 func resourceNetworkProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &devicefarm.CreateNetworkProfileInput{
@@ -164,7 +164,7 @@ func resourceNetworkProfileCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(output.NetworkProfile.Arn))
 
-	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Network Profile (%s) tags: %s", d.Id(), err)
 	}
 
@@ -173,7 +173,7 @@ func resourceNetworkProfileCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceNetworkProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	project, err := FindNetworkProfileByARN(ctx, conn, d.Id())
 
@@ -213,7 +213,7 @@ func resourceNetworkProfileRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceNetworkProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &devicefarm.UpdateNetworkProfileInput{
@@ -276,7 +276,7 @@ func resourceNetworkProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceNetworkProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Network Profile: %s", d.Id())
 	_, err := conn.DeleteNetworkProfileWithContext(ctx, &devicefarm.DeleteNetworkProfileInput{

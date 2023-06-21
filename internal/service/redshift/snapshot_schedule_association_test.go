@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/redshift"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
@@ -99,7 +99,7 @@ func testAccCheckSnapshotScheduleAssociationDestroy(ctx context.Context) resourc
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 			_, _, err := tfredshift.FindScheduleAssociationById(ctx, conn, rs.Primary.ID)
 
@@ -129,7 +129,7 @@ func testAccCheckSnapshotScheduleAssociationExists(ctx context.Context, n string
 			return fmt.Errorf("No Redshift Cluster Snapshot Schedule Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		_, _, err := tfredshift.FindScheduleAssociationById(ctx, conn, rs.Primary.ID)
 

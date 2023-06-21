@@ -89,6 +89,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
@@ -128,7 +129,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
@@ -296,6 +296,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		emrserverless.ServicePackage,
 		events.ServicePackage,
 		evidently.ServicePackage,
+		finspace.ServicePackage,
 		firehose.ServicePackage,
 		fis.ServicePackage,
 		fms.ServicePackage,
@@ -335,7 +336,6 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		lightsail.ServicePackage,
 		location.ServicePackage,
 		logs.ServicePackage,
-		macie.ServicePackage,
 		macie2.ServicePackage,
 		mediaconnect.ServicePackage,
 		mediaconvert.ServicePackage,

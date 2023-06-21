@@ -20,7 +20,7 @@ resource "aws_rbin_rule" "example" {
   resource_type = "EBS_SNAPSHOT"
 
   resource_tags {
-    resource_tag_key   = tag_key
+    resource_tag_key   = "tag_key"
     resource_tag_value = "tag_value"
   }
 

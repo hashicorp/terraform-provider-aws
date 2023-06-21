@@ -156,7 +156,7 @@ func ResourceStackSetInstance() *schema.Resource {
 
 func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
@@ -251,7 +251,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 				return true, err
 			}
 
-			return false, fmt.Errorf("error waiting for CloudFormation StackSet Instance (%s) creation: %w", d.Id(), err)
+			return false, fmt.Errorf("waiting for CloudFormation StackSet Instance (%s) creation: %w", d.Id(), err)
 		},
 	)
 
@@ -264,7 +264,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	stackSetName, accountID, region, err := StackSetInstanceParseResourceID(d.Id())
 
@@ -315,7 +315,7 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	if d.HasChanges("deployment_targets", "parameter_overrides", "operation_preferences") {
 		stackSetName, accountID, region, err := StackSetInstanceParseResourceID(d.Id())
@@ -368,7 +368,7 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	stackSetName, accountID, region, err := StackSetInstanceParseResourceID(d.Id())
 

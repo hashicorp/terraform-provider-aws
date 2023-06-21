@@ -32,7 +32,7 @@ const (
 )
 
 func dataSourceSinksRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 	listSinksInput := &oam.ListSinksInput{}
 
 	paginator := oam.NewListSinksPaginator(conn, listSinksInput)

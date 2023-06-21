@@ -10,34 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/batch/batchiface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// GetTag fetches an individual batch service tag for a resource.
-// Returns whether the key value and any errors. A NotFoundError is used to signal that no value was found.
-// This function will optimise the handling over ListTags, if possible.
+// listTags lists batch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(ctx context.Context, conn batchiface.BatchAPI, identifier, key string) (*string, error) {
-	listTags, err := ListTags(ctx, conn, identifier)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if !listTags.KeyExists(key) {
-		return nil, tfresource.NewEmptyResultError(nil)
-	}
-
-	return listTags.KeyValue(key), nil
-}
-
-// ListTags lists batch service tags.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn batchiface.BatchAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn batchiface.BatchAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &batch.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -54,7 +34,7 @@ func ListTags(ctx context.Context, conn batchiface.BatchAPI, identifier string) 
 // ListTags lists batch service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).BatchConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).BatchConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -79,9 +59,9 @@ func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueT
 	return tftags.New(ctx, tags)
 }
 
-// GetTagsIn returns batch service tags from Context.
+// getTagsIn returns batch service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) map[string]*string {
+func getTagsIn(ctx context.Context) map[string]*string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -91,17 +71,17 @@ func GetTagsIn(ctx context.Context) map[string]*string {
 	return nil
 }
 
-// SetTagsOut sets batch service tags in Context.
-func SetTagsOut(ctx context.Context, tags map[string]*string) {
+// setTagsOut sets batch service tags in Context.
+func setTagsOut(ctx context.Context, tags map[string]*string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates batch service tags.
+// updateTags updates batch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn batchiface.BatchAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn batchiface.BatchAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -141,5 +121,5 @@ func UpdateTags(ctx context.Context, conn batchiface.BatchAPI, identifier string
 // UpdateTags updates batch service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).BatchConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).BatchConn(ctx), identifier, oldTags, newTags)
 }

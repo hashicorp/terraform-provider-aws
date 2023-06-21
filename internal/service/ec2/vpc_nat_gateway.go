@@ -77,7 +77,7 @@ func ResourceNATGateway() *schema.Resource {
 }
 
 func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateNatGatewayInput{
 		ClientToken:       aws.String(id.UniqueId()),
@@ -116,7 +116,7 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	ng, err := FindNATGatewayByID(ctx, conn, d.Id())
 
@@ -131,19 +131,21 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	for _, address := range ng.NatGatewayAddresses {
-		if aws.BoolValue(address.IsPrimary) {
+		// Length check guarantees the attributes are always set (#30865).
+		if len(ng.NatGatewayAddresses) == 1 || aws.BoolValue(address.IsPrimary) {
 			d.Set("allocation_id", address.AllocationId)
 			d.Set("association_id", address.AssociationId)
 			d.Set("network_interface_id", address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)
 			d.Set("public_ip", address.PublicIp)
+			break
 		}
 	}
 
 	d.Set("connectivity_type", ng.ConnectivityType)
 	d.Set("subnet_id", ng.SubnetId)
 
-	SetTagsOut(ctx, ng.Tags)
+	setTagsOut(ctx, ng.Tags)
 
 	return nil
 }
@@ -154,7 +156,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceNATGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 NAT Gateway: %s", d.Id())
 	_, err := conn.DeleteNatGatewayWithContext(ctx, &ec2.DeleteNatGatewayInput{
