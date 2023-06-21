@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	flex_ "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -342,7 +341,7 @@ func (d *resourceEnvironmentData) refreshFromCreateOutput(ctx context.Context, m
 	d.ID = types.StringValue(fmt.Sprintf("%s:%s", envID, appID))
 	d.Monitors = flattenMonitors(ctx, out.Monitors, &diags)
 	d.Name = flex.StringToFramework(ctx, out.Name)
-	d.State = flex_.StringValueToFramework(ctx, out.State)
+	d.State = flex.StringValueToFramework(ctx, out.State)
 
 	return diags
 }
@@ -364,7 +363,7 @@ func (d *resourceEnvironmentData) refreshFromGetOutput(ctx context.Context, meta
 	d.ID = types.StringValue(fmt.Sprintf("%s:%s", envID, appID))
 	d.Monitors = flattenMonitors(ctx, out.Monitors, &diags)
 	d.Name = flex.StringToFramework(ctx, out.Name)
-	d.State = flex_.StringValueToFramework(ctx, out.State)
+	d.State = flex.StringValueToFramework(ctx, out.State)
 
 	return diags
 }
@@ -386,7 +385,7 @@ func (d *resourceEnvironmentData) refreshFromUpdateOutput(ctx context.Context, m
 	d.ID = types.StringValue(fmt.Sprintf("%s:%s", envID, appID))
 	d.Monitors = flattenMonitors(ctx, out.Monitors, &diags)
 	d.Name = flex.StringToFramework(ctx, out.Name)
-	d.State = flex_.StringValueToFramework(ctx, out.State)
+	d.State = flex.StringValueToFramework(ctx, out.State)
 
 	return diags
 }

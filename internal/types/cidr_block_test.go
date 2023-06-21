@@ -1,8 +1,32 @@
-package verify
+package types
 
-import (
-	"testing"
-)
+import "testing"
+
+func TestValidateCIDRBlock(t *testing.T) {
+	t.Parallel()
+
+	for _, ts := range []struct {
+		cidr  string
+		valid bool
+	}{
+		{"10.2.2.0/24", true},
+		{"10.2.2.0/1234", false},
+		{"10.2.2.2/24", false},
+		{"::/0", true},
+		{"::0/0", true},
+		{"2000::/15", true},
+		{"2001::/15", false},
+		{"", false},
+	} {
+		err := ValidateCIDRBlock(ts.cidr)
+		if !ts.valid && err == nil {
+			t.Fatalf("Input '%s' should error but didn't!", ts.cidr)
+		}
+		if ts.valid && err != nil {
+			t.Fatalf("Got unexpected error for '%s' input: %s", ts.cidr, err)
+		}
+	}
+}
 
 func TestCIDRBlocksEqual(t *testing.T) {
 	t.Parallel()
