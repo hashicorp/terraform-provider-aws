@@ -149,6 +149,25 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 		}
 
 		// Aggregate types.
+	case tFrom.Equal(types.ListType{ElemType: types.StringType}):
+		vFrom := vFrom.(types.List)
+		switch kTo {
+		case reflect.Slice:
+			tSliceElem := valTo.Type().Elem()
+			switch tSliceElem.Kind() {
+			case reflect.String:
+				valTo.Set(reflect.ValueOf(ExpandFrameworkStringValueList(ctx, vFrom)))
+				return nil
+
+			case reflect.Ptr:
+				switch tSliceElem.Elem().Kind() {
+				case reflect.String:
+					valTo.Set(reflect.ValueOf(ExpandFrameworkStringList(ctx, vFrom)))
+					return nil
+				}
+			}
+		}
+
 	case tFrom.Equal(types.SetType{ElemType: types.StringType}):
 		vFrom := vFrom.(types.Set)
 		switch kTo {
