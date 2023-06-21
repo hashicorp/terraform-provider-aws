@@ -43,6 +43,26 @@ type ITestFlatten struct {
 	Name *int32
 }
 
+type JTestFlatten struct {
+	Name float64
+}
+
+type KTestFlatten struct {
+	Name *float64
+}
+
+type LTestFlatten struct {
+	Name types.Float64
+}
+
+type MTestFlatten struct {
+	Name float32
+}
+
+type NTestFlatten struct {
+	Name *float32
+}
+
 func TestGenericFlatten(t *testing.T) {
 	t.Parallel()
 
@@ -154,6 +174,42 @@ func TestGenericFlatten(t *testing.T) {
 			Source:     &ITestFlatten{Name: aws.Int32(42)},
 			Target:     &GTestFlatten{},
 			WantTarget: &GTestFlatten{Name: types.Int64Value(42)},
+		},
+		{
+			TestName: "single *int32 Source and single string Target",
+			Source:   &ITestFlatten{Name: aws.Int32(42)},
+			Target:   &DTestFlatten{},
+			WantErr:  true,
+		},
+		{
+			TestName:   "single float64 Source and single float64 Target",
+			Source:     &JTestFlatten{Name: 4.2},
+			Target:     &LTestFlatten{},
+			WantTarget: &LTestFlatten{Name: types.Float64Value(4.2)},
+		},
+		{
+			TestName:   "single *float64 Source and single float64 Target",
+			Source:     &KTestFlatten{Name: aws.Float64(4.2)},
+			Target:     &LTestFlatten{},
+			WantTarget: &LTestFlatten{Name: types.Float64Value(4.2)},
+		},
+		{
+			TestName:   "single float32 Source and single float64 Target",
+			Source:     &MTestFlatten{Name: 4},
+			Target:     &LTestFlatten{},
+			WantTarget: &LTestFlatten{Name: types.Float64Value(4)},
+		},
+		{
+			TestName:   "single *float32 Source and single float64 Target",
+			Source:     &NTestFlatten{Name: aws.Float32(4)},
+			Target:     &LTestFlatten{},
+			WantTarget: &LTestFlatten{Name: types.Float64Value(4)},
+		},
+		{
+			TestName:   "single nil *float32 Source and single float64 Target",
+			Source:     &NTestFlatten{},
+			Target:     &LTestFlatten{},
+			WantTarget: &LTestFlatten{Name: types.Float64Null()},
 		},
 	}
 
