@@ -204,8 +204,8 @@ func DataSourceLoadBalancer() *schema.Resource {
 
 func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
-	ec2conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
+	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	lbName := d.Get("name").(string)
@@ -308,7 +308,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for ELB (%s): %s", d.Id(), err)

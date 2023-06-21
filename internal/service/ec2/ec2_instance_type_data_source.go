@@ -291,7 +291,7 @@ func DataSourceInstanceType() *schema.Resource {
 
 func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	v, err := FindInstanceTypeByName(ctx, conn, d.Get("instance_type").(string))
 

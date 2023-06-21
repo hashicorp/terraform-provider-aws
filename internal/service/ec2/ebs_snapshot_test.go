@@ -244,7 +244,7 @@ func testAccCheckSnapshotExists(ctx context.Context, n string, v *ec2.Snapshot) 
 			return fmt.Errorf("No EBS Snapshot ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindSnapshotByID(ctx, conn, rs.Primary.ID)
 
@@ -260,7 +260,7 @@ func testAccCheckSnapshotExists(ctx context.Context, n string, v *ec2.Snapshot) 
 
 func testAccCheckEBSSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ebs_snapshot" {

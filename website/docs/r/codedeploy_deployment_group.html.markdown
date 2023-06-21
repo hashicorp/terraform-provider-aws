@@ -315,7 +315,7 @@ The `target_group_pair_info` configuration block supports the following:
 
 The `prod_traffic_route` configuration block supports the following:
 
-* `listener_arns` - (Required) List of Amazon Resource Names (ARNs) of the load balancer listeners.
+* `listener_arns` - (Required) List of Amazon Resource Names (ARNs) of the load balancer listeners. Must contain exactly one listener ARN.
 
 ##### load_balancer_info target_group_pair_info target_group Argument Reference
 

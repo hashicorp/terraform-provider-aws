@@ -75,7 +75,7 @@ func TestAccShieldProtectionHealthCheckAssociation_disappears(t *testing.T) {
 
 func testAccCheckProtectionHealthCheckAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_shield_protection_health_check_association" {
@@ -128,7 +128,7 @@ func testAccCheckProtectionHealthCheckAssociationExists(ctx context.Context, res
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
 
 		input := &shield.DescribeProtectionInput{
 			ProtectionId: aws.String(protectionId),
@@ -167,7 +167,7 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     foo  = "bar"

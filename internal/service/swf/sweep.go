@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/swf"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/swf"
+	"github.com/aws/aws-sdk-go-v2/service/swf/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -27,35 +27,32 @@ func sweepDomains(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SWFConn()
+	conn := client.SWFClient(ctx)
 	input := &swf.ListDomainsInput{
-		RegistrationStatus: aws.String(swf.RegistrationStatusRegistered),
+		RegistrationStatus: types.RegistrationStatusRegistered,
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListDomainsPagesWithContext(ctx, input, func(page *swf.ListDomainsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := swf.NewListDomainsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping SWF Domain sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing SWF Domains (%s): %w", region, err)
 		}
 
 		for _, v := range page.DomainInfos {
-			r := ResourceDomain()
+			r := resourceDomain()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.Name))
+			d.SetId(aws.ToString(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SWF Domain sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing SWF Domains (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)

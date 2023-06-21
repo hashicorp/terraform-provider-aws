@@ -55,7 +55,7 @@ func ResourceRoleAssociation() *schema.Resource {
 
 func resourceRoleAssociationUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	role := d.Get("role").(string)
 	workspaceID := d.Get("workspace_id").(string)
@@ -113,7 +113,7 @@ func populateUpdateInstructions(role string, list []*string, action string, type
 
 func resourceRoleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	roleAssociations, err := FindRoleAssociationsByRoleAndWorkspaceID(ctx, conn, d.Get("role").(string), d.Get("workspace_id").(string))
 
@@ -135,7 +135,7 @@ func resourceRoleAssociationRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRoleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	updateInstructions := make([]*managedgrafana.UpdateInstruction, 0)
 	if v, ok := d.GetOk("user_ids"); ok && v.(*schema.Set).Len() > 0 {

@@ -167,7 +167,7 @@ func ResourceWebACL() *schema.Resource {
 }
 
 func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	name := d.Get("name").(string)
 	input := &wafv2.CreateWebACLInput{
@@ -176,7 +176,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Name:             aws.String(name),
 		Rules:            expandWebACLRules(d.Get("rule").(*schema.Set).List()),
 		Scope:            aws.String(d.Get("scope").(string)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
@@ -208,7 +208,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	output, err := FindWebACLByThreePartKey(ctx, conn, d.Id(), d.Get("name").(string), d.Get("scope").(string))
 
@@ -251,7 +251,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &wafv2.UpdateWebACLInput{
@@ -294,7 +294,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	input := &wafv2.DeleteWebACLInput{
 		Id:        aws.String(d.Id()),

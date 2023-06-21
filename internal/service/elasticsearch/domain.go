@@ -50,7 +50,7 @@ func ResourceDomain() *schema.Resource {
 				newVersion := d.Get("elasticsearch_version").(string)
 				domainName := d.Get("domain_name").(string)
 
-				conn := meta.(*conns.AWSClient).ElasticsearchConn()
+				conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 				resp, err := conn.GetCompatibleElasticsearchVersionsWithContext(ctx, &elasticsearch.GetCompatibleElasticsearchVersionsInput{
 					DomainName: aws.String(domainName),
 				})
@@ -536,7 +536,7 @@ func ResourceDomain() *schema.Resource {
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn()
+	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
 	// The API doesn't check for duplicate names
 	// so w/out this check Create would act as upsert
@@ -551,7 +551,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	input := &elasticsearch.CreateElasticsearchDomainInput{
 		DomainName:           aws.String(name),
 		ElasticsearchVersion: aws.String(d.Get("elasticsearch_version").(string)),
-		TagList:              GetTagsIn(ctx),
+		TagList:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_policies"); ok {
@@ -713,7 +713,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn()
+	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
 	name := d.Get("domain_name").(string)
 	ds, err := FindDomainByName(ctx, conn, name)
@@ -840,7 +840,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn()
+	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		name := d.Get("domain_name").(string)
@@ -982,7 +982,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn()
+	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
 	name := d.Get("domain_name").(string)
 
@@ -1007,7 +1007,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceDomainImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn()
+	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
 	d.Set("domain_name", d.Id())
 

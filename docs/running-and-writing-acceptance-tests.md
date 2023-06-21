@@ -252,7 +252,7 @@ When executing the test, the following steps are taken for each `TestStep`:
           return fmt.Errorf("Not found: %s", n)
         }
 
-        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
         params := cloudwatch.GetDashboardInput{
           DashboardName: aws.String(rs.Primary.ID),
         }
@@ -289,7 +289,7 @@ When executing the test, the following steps are taken for each `TestStep`:
     ```go
     func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
 	    return func(s *terraform.State) error {
-        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 
         for _, rs := range s.RootModule().Resources {
           if rs.Type != "aws_cloudwatch_dashboard" {
@@ -628,7 +628,7 @@ func TestAccExampleThing_basic(t *testing.T) {
 }
 
 func testAccPreCheckExample(ctx context.Context, t *testing.T) {
-  conn := acctest.Provider.Meta().(*conns.AWSClient).ExampleConn()
+  conn := acctest.Provider.Meta().(*conns.AWSClient).ExampleConn(ctx)
 	input := &example.ListThingsInput{}
 	_, err := conn.ListThingsWithContext(ctx, input)
 	if testAccPreCheckSkipError(err) {
@@ -1129,7 +1129,7 @@ func sweepThings(region string) error {
     return fmt.Errorf("getting client: %w", err)
   }
 
-  conn := client.(*conns.AWSClient).ExampleConn()
+  conn := client.ExampleConn(ctx)
   sweepResources := make([]sweep.Sweepable, 0)
   var errs *multierror.Error
 
@@ -1150,7 +1150,7 @@ func sweepThings(region string) error {
       // Perform resource specific pre-sweep setup.
       // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
       //
-      // err := sweep.ReadResource(ctx, r, d, client) // fill in data
+      // err := sdk.ReadResource(ctx, r, d, client) // fill in data
       // d.Set("skip_final_snapshot", true)           // set an argument in order to delete
 
       // This "if" is only needed if the pre-sweep setup can produce errors.
@@ -1196,7 +1196,7 @@ func sweepThings(region string) error {
     return fmt.Errorf("getting client: %w", err)
   }
 
-  conn := client.(*conns.AWSClient).ExampleConn()
+  conn := client.ExampleConn(ctx)
   sweepResources := make([]sweep.Sweepable, 0)
   var errs *multierror.Error
 
@@ -1215,7 +1215,7 @@ func sweepThings(region string) error {
       // Perform resource specific pre-sweep setup.
       // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
       //
-      // err := sweep.ReadResource(ctx, r, d, client) // fill in data
+      // err := sdk.ReadResource(ctx, r, d, client) // fill in data
       // d.Set("skip_final_snapshot", true)           // set an argument in order to delete
 
       // This "if" is only needed if the pre-sweep setup can produce errors.

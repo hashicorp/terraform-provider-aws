@@ -42,7 +42,7 @@ const (
 )
 
 func dataSourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	resourceID := d.Get("resource_identifier").(string)
 	out, err := findAuthPolicy(ctx, conn, resourceID)

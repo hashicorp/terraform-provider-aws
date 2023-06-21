@@ -112,7 +112,7 @@ func resourceSamplingRule() *schema.Resource {
 
 func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).XRayClient()
+	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	name := d.Get("rule_name").(string)
 	samplingRule := &types.SamplingRule{
@@ -135,7 +135,7 @@ func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &xray.CreateSamplingRuleInput{
 		SamplingRule: samplingRule,
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateSamplingRule(ctx, input)
@@ -151,7 +151,7 @@ func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceSamplingRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).XRayClient()
+	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	samplingRule, err := findSamplingRuleByName(ctx, conn, d.Id())
 
@@ -184,7 +184,7 @@ func resourceSamplingRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceSamplingRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).XRayClient()
+	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		samplingRuleUpdate := &types.SamplingRuleUpdate{
@@ -220,7 +220,7 @@ func resourceSamplingRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceSamplingRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).XRayClient()
+	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	log.Printf("[INFO] Deleting XRay Sampling Rule: %s", d.Id())
 	_, err := conn.DeleteSamplingRule(ctx, &xray.DeleteSamplingRuleInput{

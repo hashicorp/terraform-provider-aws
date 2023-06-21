@@ -82,14 +82,14 @@ func ResourceLedger() *schema.Resource {
 }
 
 func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn()
+	conn := meta.(*conns.AWSClient).QLDBConn(ctx)
 
 	name := create.Name(d.Get("name").(string), "tf")
 	input := &qldb.CreateLedgerInput{
 		DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
 		Name:               aws.String(name),
 		PermissionsMode:    aws.String(d.Get("permissions_mode").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key"); ok {
@@ -113,7 +113,7 @@ func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn()
+	conn := meta.(*conns.AWSClient).QLDBConn(ctx)
 
 	ledger, err := FindLedgerByName(ctx, conn, d.Id())
 
@@ -141,7 +141,7 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn()
+	conn := meta.(*conns.AWSClient).QLDBConn(ctx)
 
 	if d.HasChange("permissions_mode") {
 		input := &qldb.UpdateLedgerPermissionsModeInput{
@@ -175,7 +175,7 @@ func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn()
+	conn := meta.(*conns.AWSClient).QLDBConn(ctx)
 
 	input := &qldb.DeleteLedgerInput{
 		Name: aws.String(d.Id()),

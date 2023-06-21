@@ -30,3 +30,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The SES receipt rule set name.
 * `arn` - The SES receipt rule set ARN.
+
+## Import
+
+Active SES receipt rule sets can be imported using the rule set name.
+
+```
+$ terraform import aws_ses_active_receipt_rule_set.my_rule_set my_rule_set_name
+```

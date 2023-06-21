@@ -51,7 +51,7 @@ const (
 )
 
 func dataSourceAccessKeysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	username := d.Get("user").(string)
 	out, err := FindAccessKeys(ctx, conn, username)

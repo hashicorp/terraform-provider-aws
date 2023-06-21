@@ -60,7 +60,7 @@ func ResourceTransitGatewayPrefixListReference() *schema.Resource {
 
 func resourceTransitGatewayPrefixListReferenceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateTransitGatewayPrefixListReferenceInput{}
 
@@ -98,7 +98,7 @@ func resourceTransitGatewayPrefixListReferenceCreate(ctx context.Context, d *sch
 
 func resourceTransitGatewayPrefixListReferenceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGatewayRouteTableID, prefixListID, err := TransitGatewayPrefixListReferenceParseResourceID(d.Id())
 
@@ -133,7 +133,7 @@ func resourceTransitGatewayPrefixListReferenceRead(ctx context.Context, d *schem
 
 func resourceTransitGatewayPrefixListReferenceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.ModifyTransitGatewayPrefixListReferenceInput{}
 
@@ -168,7 +168,7 @@ func resourceTransitGatewayPrefixListReferenceUpdate(ctx context.Context, d *sch
 
 func resourceTransitGatewayPrefixListReferenceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGatewayRouteTableID, prefixListID, err := TransitGatewayPrefixListReferenceParseResourceID(d.Id())
 

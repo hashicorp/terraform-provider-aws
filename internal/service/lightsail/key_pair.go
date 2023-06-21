@@ -7,9 +7,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -88,7 +88,7 @@ func ResourceKeyPair() *schema.Resource {
 
 func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	var kName string
 	if v, ok := d.GetOk("name"); ok {
@@ -100,14 +100,14 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	var pubKey string
-	var op *lightsail.Operation
+	var op *types.Operation
 	if pubKeyInterface, ok := d.GetOk("public_key"); ok {
 		pubKey = pubKeyInterface.(string)
 	}
 
 	if pubKey == "" {
 		// creating new key
-		resp, err := conn.CreateKeyPairWithContext(ctx, &lightsail.CreateKeyPairInput{
+		resp, err := conn.CreateKeyPair(ctx, &lightsail.CreateKeyPairInput{
 			KeyPairName: aws.String(kName),
 		})
 		if err != nil {
@@ -132,7 +132,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "creating Lightsail Key Pair (%s): %s", kName, err)
 		}
 		if pgpKey != "" {
-			fingerprint, encrypted, err := encryptValue(pgpKey, aws.StringValue(resp.PrivateKeyBase64), "Lightsail Private Key")
+			fingerprint, encrypted, err := encryptValue(pgpKey, aws.ToString(resp.PrivateKeyBase64), "Lightsail Private Key")
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "creating Lightsail Key Pair (%s): %s", kName, err)
 			}
@@ -146,7 +146,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 		op = resp.Operation
 	} else {
 		// importing key
-		resp, err := conn.ImportKeyPairWithContext(ctx, &lightsail.ImportKeyPairInput{
+		resp, err := conn.ImportKeyPair(ctx, &lightsail.ImportKeyPairInput{
 			KeyPairName:     aws.String(kName),
 			PublicKeyBase64: aws.String(pubKey),
 		})
@@ -159,7 +159,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 		op = resp.Operation
 	}
 
-	diag := expandOperations(ctx, conn, []*lightsail.Operation{op}, "CreateKeyPair", ResKeyPair, kName)
+	diag := expandOperations(ctx, conn, []types.Operation{*op}, "CreateKeyPair", ResKeyPair, kName)
 
 	if diag != nil {
 		return diag
@@ -170,14 +170,14 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	resp, err := conn.GetKeyPairWithContext(ctx, &lightsail.GetKeyPairInput{
+	resp, err := conn.GetKeyPair(ctx, &lightsail.GetKeyPairInput{
 		KeyPairName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		if IsANotFoundError(err) {
 			log.Printf("[WARN] Lightsail KeyPair (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -194,8 +194,8 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
-	resp, err := conn.DeleteKeyPairWithContext(ctx, &lightsail.DeleteKeyPairInput{
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
+	resp, err := conn.DeleteKeyPair(ctx, &lightsail.DeleteKeyPairInput{
 		KeyPairName: aws.String(d.Id()),
 	})
 
@@ -203,7 +203,7 @@ func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "deleting Lightsail Key Pair (%s): %s", d.Id(), err)
 	}
 
-	diag := expandOperations(ctx, conn, []*lightsail.Operation{resp.Operation}, "DeleteKeyPair", ResKeyPair, d.Id())
+	diag := expandOperations(ctx, conn, []types.Operation{*resp.Operation}, "DeleteKeyPair", ResKeyPair, d.Id())
 
 	if diag != nil {
 		return diag

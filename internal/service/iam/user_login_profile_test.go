@@ -162,7 +162,7 @@ func TestAccIAMUserLoginProfile_keybaseDoesntExist(t *testing.T) {
 			{
 				// We own this account but it doesn't have any key associated with it
 				Config:      testAccUserLoginProfileConfig_required(rName, "keybase:terraform_nope"),
-				ExpectError: regexp.MustCompile(`Error retrieving Public Key`),
+				ExpectError: regexp.MustCompile(`retrieving Public Key`),
 			},
 		},
 	})
@@ -181,7 +181,7 @@ func TestAccIAMUserLoginProfile_notAKey(t *testing.T) {
 			{
 				// We own this account but it doesn't have any key associated with it
 				Config:      testAccUserLoginProfileConfig_required(rName, "lolimnotakey"),
-				ExpectError: regexp.MustCompile(`Error encrypting Password`),
+				ExpectError: regexp.MustCompile(`encrypting Password`),
 			},
 		},
 	})
@@ -286,7 +286,7 @@ func TestAccIAMUserLoginProfile_disappears(t *testing.T) {
 
 func testAccCheckUserLoginProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_user_login_profile" {
@@ -385,7 +385,7 @@ func testAccCheckUserLoginProfileExists(ctx context.Context, n string, res *iam.
 			return errors.New("No UserName is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 		resp, err := conn.GetLoginProfileWithContext(ctx, &iam.GetLoginProfileInput{
 			UserName: aws.String(rs.Primary.ID),
 		})

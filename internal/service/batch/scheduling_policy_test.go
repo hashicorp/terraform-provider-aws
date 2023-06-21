@@ -98,7 +98,7 @@ func testAccCheckSchedulingPolicyExists(ctx context.Context, n string, v *batch.
 			return fmt.Errorf("No Batch Scheduling Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
 
 		output, err := tfbatch.FindSchedulingPolicyByARN(ctx, conn, rs.Primary.ID)
 
@@ -118,7 +118,7 @@ func testAccCheckSchedulingPolicyDestroy(ctx context.Context) resource.TestCheck
 			if rs.Type != "aws_batch_scheduling_policy" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
 
 			_, err := tfbatch.FindSchedulingPolicyByARN(ctx, conn, rs.Primary.ID)
 

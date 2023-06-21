@@ -2,7 +2,6 @@ package macie2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -37,7 +36,7 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 }
 
 func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 	adminAccountID := d.Get("admin_account_id").(string)
 	input := &macie2.EnableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(adminAccountID),
@@ -64,7 +63,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Macie OrganizationAdminAccount: %w", err))
+		return diag.Errorf("creating Macie OrganizationAdminAccount: %s", err)
 	}
 
 	d.SetId(adminAccountID)
@@ -73,7 +72,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	var err error
 
@@ -87,7 +86,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Macie OrganizationAdminAccount (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Macie OrganizationAdminAccount (%s): %s", d.Id(), err)
 	}
 
 	if res == nil {
@@ -106,7 +105,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 }
 
 func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DisableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(d.Id()),
@@ -118,7 +117,7 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error deleting Macie OrganizationAdminAccount (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Macie OrganizationAdminAccount (%s): %s", d.Id(), err)
 	}
 	return nil
 }

@@ -166,7 +166,7 @@ func TestAccVPCLatticeService_tags(t *testing.T) {
 
 func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_service" {
@@ -202,7 +202,7 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *vpclat
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 		resp, err := conn.GetService(ctx, &vpclattice.GetServiceInput{
 			ServiceIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -218,7 +218,7 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *vpclat
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	input := &vpclattice.ListServicesInput{}
 	_, err := conn.ListServices(ctx, input)

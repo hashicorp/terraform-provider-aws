@@ -2212,7 +2212,7 @@ func testAccCheckRouteExists(ctx context.Context, n string, v *ec2.Route) resour
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		var route *ec2.Route
 		var err error
@@ -2241,7 +2241,7 @@ func testAccCheckRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 			var err error
 			if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {
@@ -3155,7 +3155,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -3547,7 +3547,7 @@ resource "aws_vpc_peering_connection" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -4164,7 +4164,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q

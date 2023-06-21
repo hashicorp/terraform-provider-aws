@@ -610,7 +610,7 @@ const (
 )
 
 func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -641,52 +641,52 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("import_mode", dataSet.ImportMode)
 
 	if err := d.Set("column_groups", flattenColumnGroups(dataSet.ColumnGroups)); err != nil {
-		return diag.Errorf("error setting column_groups: %s", err)
+		return diag.Errorf("setting column_groups: %s", err)
 	}
 
 	if err := d.Set("column_level_permission_rules", flattenColumnLevelPermissionRules(dataSet.ColumnLevelPermissionRules)); err != nil {
-		return diag.Errorf("error setting column_level_permission_rules: %s", err)
+		return diag.Errorf("setting column_level_permission_rules: %s", err)
 	}
 
 	if err := d.Set("data_set_usage_configuration", flattenDataSetUsageConfiguration(dataSet.DataSetUsageConfiguration)); err != nil {
-		return diag.Errorf("error setting data_set_usage_configuration: %s", err)
+		return diag.Errorf("setting data_set_usage_configuration: %s", err)
 	}
 
 	if err := d.Set("field_folders", flattenFieldFolders(dataSet.FieldFolders)); err != nil {
-		return diag.Errorf("error setting field_folders: %s", err)
+		return diag.Errorf("setting field_folders: %s", err)
 	}
 
 	if err := d.Set("logical_table_map", flattenLogicalTableMap(dataSet.LogicalTableMap, logicalTableMapDataSourceSchema())); err != nil {
-		return diag.Errorf("error setting logical_table_map: %s", err)
+		return diag.Errorf("setting logical_table_map: %s", err)
 	}
 
 	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap, physicalTableMapDataSourceSchema())); err != nil {
-		return diag.Errorf("error setting physical_table_map: %s", err)
+		return diag.Errorf("setting physical_table_map: %s", err)
 	}
 
 	if err := d.Set("row_level_permission_data_set", flattenRowLevelPermissionDataSet(dataSet.RowLevelPermissionDataSet)); err != nil {
-		return diag.Errorf("error setting row_level_permission_data_set: %s", err)
+		return diag.Errorf("setting row_level_permission_data_set: %s", err)
 	}
 
 	if err := d.Set("row_level_permission_tag_configuration", flattenRowLevelPermissionTagConfiguration(dataSet.RowLevelPermissionTagConfiguration)); err != nil {
-		return diag.Errorf("error setting row_level_permission_tag_configuration: %s", err)
+		return diag.Errorf("setting row_level_permission_tag_configuration: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
-		return diag.Errorf("error listing tags for QuickSight Data Set (%s): %s", d.Id(), err)
+		return diag.Errorf("listing tags for QuickSight Data Set (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	permsResp, err := conn.DescribeDataSetPermissionsWithContext(ctx, &quicksight.DescribeDataSetPermissionsInput{
@@ -695,11 +695,11 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 	})
 
 	if err != nil {
-		return diag.Errorf("error describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
+		return diag.Errorf("describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
 	}
 
 	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("error setting permissions: %s", err)
+		return diag.Errorf("setting permissions: %s", err)
 	}
 	return nil
 }

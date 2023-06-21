@@ -588,14 +588,14 @@ func documentAttributeValueSchema() *schema.Schema {
 }
 
 func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &kendra.CreateDataSourceInput{
 		ClientToken: aws.String(id.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 		Type:        types.DataSourceType(d.Get("type").(string)),
 	}
 
@@ -661,7 +661,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := DataSourceParseResourceID(d.Id())
 	if err != nil {
@@ -714,7 +714,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	if d.HasChanges("configuration", "custom_document_enrichment_configuration", "description", "language_code", "name", "role_arn", "schedule") {
 		id, indexId, err := DataSourceParseResourceID(d.Id())
@@ -785,7 +785,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	log.Printf("[INFO] Deleting Kendra Data Source %s", d.Id())
 

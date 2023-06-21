@@ -60,7 +60,7 @@ func ResourceClusterActivityStream() *schema.Resource {
 }
 
 func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	arn := d.Get("resource_arn").(string)
 	input := &rds.StartActivityStreamInput{
@@ -86,7 +86,7 @@ func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	output, err := FindDBClusterWithActivityStream(ctx, conn, d.Id())
 
@@ -109,7 +109,7 @@ func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting RDS Cluster Activity Stream: %s", d.Id())
 	_, err := conn.StopActivityStreamWithContext(ctx, &rds.StopActivityStreamInput{

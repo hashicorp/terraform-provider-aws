@@ -75,6 +75,7 @@ Upgrade topics:
 - [resource/aws_security_group_rule](#resourceaws_security_group_rule)
 - [resource/aws_servicecatalog_product](#resourceaws_servicecatalog_product)
 - [resource/aws_ssm_association](#resourceaws_ssm_association)
+- [resource/aws_ssm_parameter](#resourceaws_ssm_parameter)
 - [resource/aws_vpc](#resourceaws_vpc)
 - [resource/aws_vpc_peering_connection](#resourceaws_vpc_peering_connection)
 - [resource/aws_vpc_peering_connection_accepter](#resourceaws_vpc_peering_connection_accepter)
@@ -150,8 +151,6 @@ Version 5.0.0 removes these `provider` arguments:
 * `s3_force_path_style` - Use `s3_use_path_style` instead
 * `shared_credentials_file` - Use `shared_credentials_files` instead
 * `skip_get_ec2_platforms` - Removed following the retirement of EC2-Classic
-
-The default value of `max_retries` now uses the default from the AWS SDKs instead of `25`, which could cause the provider to appear to hang in some cases.
 
 ## Default Tags
 
@@ -327,7 +326,8 @@ Remove `capacity_providers` and `default_capacity_provider_strategy` from config
 
 ## resource/aws_eip
 
-With the retirement of EC2-Classic, the `standard` domain is no longer supported.
+* With the retirement of EC2-Classic, the `standard` domain is no longer supported.
+* The `vpc` argument has been deprecated. Use `domain` argument instead.
 
 ## resource/aws_eip_association
 
@@ -406,7 +406,8 @@ Remove `policy_document` from configurations as it no longer exists. Use the `aw
 
 ## resource/aws_opensearch_domain
 
-The `kibana_endpoint` attribute has been deprecated. All configurations using `kibana_endpoint` should be updated to use the `dashboard_endpoint` attribute instead.
+* The `kibana_endpoint` attribute has been deprecated. All configurations using `kibana_endpoint` should be updated to use the `dashboard_endpoint` attribute instead.
+* The `engine_version` attribute no longer has a default value. Omitting this attribute will now create a domain with the latest OpenSearch version, consistent with the behavior of the AWS API.
 
 ## resource/aws_rds_cluster
 
@@ -557,6 +558,10 @@ Changes to any `provisioning_artifact_parameters` arguments now properly trigger
 ## resource/aws_ssm_association
 
 The `instance_id` attribute has been deprecated. All configurations using `instance_id` should be updated to use the `targets` attribute instead.
+
+## resource/aws_ssm_parameter
+
+The `overwrite` attribute has been deprecated. Existing parameters should be explicitly imported rather than relying on the "import on create" behavior previously enabled by setting `overwrite = true`. In a future major version the `overwrite` attribute will be removed and attempting to create a parameter that already exists will fail.
 
 ## resource/aws_vpc
 

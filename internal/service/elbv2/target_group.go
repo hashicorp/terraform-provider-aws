@@ -336,7 +336,7 @@ func suppressIfTargetType(t string) schema.SchemaDiffSuppressFunc {
 
 func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	var groupName string
 	if v, ok := d.GetOk("name"); ok {
@@ -359,7 +359,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	input := &elbv2.CreateTargetGroupInput{
 		Name:       aws.String(groupName),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 		TargetType: aws.String(d.Get("target_type").(string)),
 	}
 
@@ -598,7 +598,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -616,7 +616,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindTargetGroupByARN(ctx, conn, d.Id())
@@ -640,7 +640,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	if d.HasChange("health_check") {
 		var params *elbv2.ModifyTargetGroupInput
@@ -835,7 +835,7 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	const (
 		targetGroupDeleteTimeout = 2 * time.Minute
 	)
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	input := &elbv2.DeleteTargetGroupInput{
 		TargetGroupArn: aws.String(d.Id()),
@@ -1019,7 +1019,7 @@ func TargetGroupSuffixFromARN(arn *string) string {
 
 // flattenTargetGroupResource takes a *elbv2.TargetGroup and populates all respective resource fields.
 func flattenTargetGroupResource(ctx context.Context, d *schema.ResourceData, meta interface{}, targetGroup *elbv2.TargetGroup) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
@@ -1164,7 +1164,7 @@ func flattenTargetGroupStickiness(attributes []*elbv2.TargetGroupAttribute) ([]i
 			if sType, ok := m["type"].(string); !ok || sType == "app_cookie" {
 				duration, err := strconv.Atoi(aws.StringValue(attr.Value))
 				if err != nil {
-					return nil, fmt.Errorf("Error converting stickiness.app_cookie.duration_seconds to int: %s", aws.StringValue(attr.Value))
+					return nil, fmt.Errorf("converting stickiness.app_cookie.duration_seconds to int: %s", aws.StringValue(attr.Value))
 				}
 				m["cookie_duration"] = duration
 			}

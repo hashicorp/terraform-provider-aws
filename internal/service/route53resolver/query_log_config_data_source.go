@@ -57,7 +57,7 @@ const (
 )
 
 func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	configID := d.Get("resolver_query_log_config_id").(string)
 
@@ -113,7 +113,7 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("share_status", shareStatus)
 
 	if shareStatus != route53resolver.ShareStatusSharedWithMe {
-		tags, err := ListTags(ctx, conn, arn)
+		tags, err := listTags(ctx, conn, arn)
 
 		if err != nil {
 			return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameQueryLogConfig, configID, err)

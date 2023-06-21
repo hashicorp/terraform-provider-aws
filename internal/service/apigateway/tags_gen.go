@@ -26,9 +26,9 @@ func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueT
 	return tftags.New(ctx, tags)
 }
 
-// GetTagsIn returns apigateway service tags from Context.
+// getTagsIn returns apigateway service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) map[string]*string {
+func getTagsIn(ctx context.Context) map[string]*string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -38,17 +38,17 @@ func GetTagsIn(ctx context.Context) map[string]*string {
 	return nil
 }
 
-// SetTagsOut sets apigateway service tags in Context.
-func SetTagsOut(ctx context.Context, tags map[string]*string) {
+// setTagsOut sets apigateway service tags in Context.
+func setTagsOut(ctx context.Context, tags map[string]*string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates apigateway service tags.
+// updateTags updates apigateway service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn apigatewayiface.APIGatewayAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn apigatewayiface.APIGatewayAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -88,5 +88,5 @@ func UpdateTags(ctx context.Context, conn apigatewayiface.APIGatewayAPI, identif
 // UpdateTags updates apigateway service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).APIGatewayConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).APIGatewayConn(ctx), identifier, oldTags, newTags)
 }

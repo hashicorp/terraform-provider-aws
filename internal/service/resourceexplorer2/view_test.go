@@ -228,7 +228,7 @@ func testAccView_tags(t *testing.T) {
 
 func testAccCheckViewDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_resourceexplorer2_iview" {
@@ -262,7 +262,7 @@ func testAccCheckViewExists(ctx context.Context, n string, v *resourceexplorer2.
 			return fmt.Errorf("No Resource Explorer View ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client(ctx)
 
 		output, err := tfresourceexplorer2.FindViewByARN(ctx, conn, rs.Primary.ID)
 

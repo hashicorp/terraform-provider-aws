@@ -45,7 +45,7 @@ func ResourceWebACLAssociation() *schema.Resource {
 
 func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
 	log.Printf(
 		"[INFO] Creating WAF Regional Web ACL association: %s => %s",
@@ -85,7 +85,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
 	resourceArn := WebACLAssociationParseID(d.Id())
 
@@ -119,7 +119,7 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
 	resourceArn := WebACLAssociationParseID(d.Id())
 

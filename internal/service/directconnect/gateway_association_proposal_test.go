@@ -230,7 +230,7 @@ func TestAccDirectConnectGatewayAssociationProposal_allowedPrefixes(t *testing.T
 
 func testAccCheckGatewayAssociationProposalDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_gateway_association_proposal" {
@@ -265,7 +265,7 @@ func testAccCheckGatewayAssociationProposalExists(ctx context.Context, resourceN
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
 
 		output, err := tfdirectconnect.FindGatewayAssociationProposalByID(ctx, conn, rs.Primary.ID)
 
@@ -296,7 +296,7 @@ func testAccCheckGatewayAssociationProposalAccepted(ctx context.Context, resourc
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
 
 		output, err := tfdirectconnect.FindGatewayAssociationProposalByID(ctx, conn, rs.Primary.ID)
 

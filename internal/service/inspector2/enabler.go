@@ -97,7 +97,7 @@ const (
 
 func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	accountIDs := getAccountIDs(d)
 
@@ -194,7 +194,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	accountIDs, _, err := parseEnablerID(d.Id())
 	if err != nil {
@@ -240,7 +240,7 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	typeEnable := flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set))
 	var typeDisable []types.ResourceScanType
@@ -319,7 +319,7 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient)
-	conn := client.Inspector2Client()
+	conn := client.Inspector2Client(ctx)
 
 	accountIDs := getAccountIDs(d)
 	admin := slices.Contains(accountIDs, client.AccountID)

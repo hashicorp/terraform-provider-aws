@@ -278,7 +278,7 @@ func TestAccSESV2EmailIdentity_tags(t *testing.T) {
 
 func testAccCheckEmailIdentityDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sesv2_email_identity" {
@@ -313,7 +313,7 @@ func testAccCheckEmailIdentityExists(ctx context.Context, name string) resource.
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentity, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		_, err := tfsesv2.FindEmailIdentityByID(ctx, conn, rs.Primary.ID)
 

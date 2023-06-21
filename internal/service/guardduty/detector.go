@@ -148,11 +148,11 @@ func ResourceDetector() *schema.Resource {
 
 func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	input := guardduty.CreateDetectorInput{
 		Enable: aws.Bool(d.Get("enable").(bool)),
-		Tags:   GetTagsIn(ctx),
+		Tags:   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("finding_publishing_frequency"); ok {
@@ -175,7 +175,7 @@ func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	input := guardduty.GetDetectorInput{
 		DetectorId: aws.String(d.Id()),
@@ -214,14 +214,14 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("enable", aws.StringValue(gdo.Status) == guardduty.DetectorStatusEnabled)
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 
-	SetTagsOut(ctx, gdo.Tags)
+	setTagsOut(ctx, gdo.Tags)
 
 	return diags
 }
 
 func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := guardduty.UpdateDetectorInput{
@@ -237,7 +237,7 @@ func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		log.Printf("[DEBUG] Update GuardDuty Detector: %s", input)
 		_, err := conn.UpdateDetectorWithContext(ctx, &input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Updating GuardDuty Detector '%s' failed: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Detector (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -246,7 +246,7 @@ func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDetectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	input := &guardduty.DeleteDetectorInput{
 		DetectorId: aws.String(d.Id()),

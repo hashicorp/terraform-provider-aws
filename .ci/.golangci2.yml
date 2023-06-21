@@ -33,10 +33,6 @@ issues:
     - linters:
         - staticcheck
       text: "SA1019: strings.Title has been deprecated since Go 1.18 and an alternative has been available since Go 1.0"
-    - linters:
-        - staticcheck
-      path: internal/conns/
-      text: "SA1019: s3Config.DisableRestProtocolURICleaning is deprecated"
     # Per-Service
     - linters:
         - staticcheck

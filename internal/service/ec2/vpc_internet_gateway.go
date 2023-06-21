@@ -63,7 +63,7 @@ func ResourceInternetGateway() *schema.Resource {
 
 func resourceInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateInternetGatewayInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeInternetGateway),
@@ -89,7 +89,7 @@ func resourceInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindInternetGatewayByID(ctx, conn, d.Id())
@@ -124,14 +124,14 @@ func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("vpc_id", ig.Attachments[0].VpcId)
 	}
 
-	SetTagsOut(ctx, ig.Tags)
+	setTagsOut(ctx, ig.Tags)
 
 	return diags
 }
 
 func resourceInternetGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("vpc_id") {
 		o, n := d.GetChange("vpc_id")
@@ -154,7 +154,7 @@ func resourceInternetGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceInternetGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	// Detach if it is attached.
 	if v, ok := d.GetOk("vpc_id"); ok {
@@ -195,13 +195,13 @@ func attachInternetGateway(ctx context.Context, conn *ec2.EC2, internetGatewayID
 	}, errCodeInvalidInternetGatewayIDNotFound)
 
 	if err != nil {
-		return fmt.Errorf("error attaching EC2 Internet Gateway (%s) to VPC (%s): %w", internetGatewayID, vpcID, err)
+		return fmt.Errorf("attaching EC2 Internet Gateway (%s) to VPC (%s): %w", internetGatewayID, vpcID, err)
 	}
 
 	_, err = WaitInternetGatewayAttached(ctx, conn, internetGatewayID, vpcID, timeout)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Internet Gateway (%s) to attach to VPC (%s): %w", internetGatewayID, vpcID, err)
+		return fmt.Errorf("waiting for EC2 Internet Gateway (%s) to attach to VPC (%s): %w", internetGatewayID, vpcID, err)
 	}
 
 	return nil
@@ -223,13 +223,13 @@ func detachInternetGateway(ctx context.Context, conn *ec2.EC2, internetGatewayID
 	}
 
 	if err != nil {
-		return fmt.Errorf("error detaching EC2 Internet Gateway (%s) from VPC (%s): %w", internetGatewayID, vpcID, err)
+		return fmt.Errorf("detaching EC2 Internet Gateway (%s) from VPC (%s): %w", internetGatewayID, vpcID, err)
 	}
 
 	_, err = WaitInternetGatewayDetached(ctx, conn, internetGatewayID, vpcID, timeout)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Internet Gateway (%s) to detach from VPC (%s): %w", internetGatewayID, vpcID, err)
+		return fmt.Errorf("waiting for EC2 Internet Gateway (%s) to detach from VPC (%s): %w", internetGatewayID, vpcID, err)
 	}
 
 	return nil

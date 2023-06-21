@@ -86,7 +86,7 @@ func (r *resourceIngestion) Schema(ctx context.Context, req resource.SchemaReque
 }
 
 func (r *resourceIngestion) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var plan resourceIngestionData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -128,7 +128,7 @@ func (r *resourceIngestion) Create(ctx context.Context, req resource.CreateReque
 }
 
 func (r *resourceIngestion) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceIngestionData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -174,7 +174,7 @@ func (r *resourceIngestion) Update(ctx context.Context, req resource.UpdateReque
 }
 
 func (r *resourceIngestion) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceIngestionData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

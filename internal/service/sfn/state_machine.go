@@ -142,14 +142,14 @@ func ResourceStateMachine() *schema.Resource {
 }
 
 func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
+	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &sfn.CreateStateMachineInput{
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
 		RoleArn:    aws.String(d.Get("role_arn").(string)),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 		Type:       aws.String(d.Get("type").(string)),
 	}
 
@@ -179,7 +179,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
+	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	output, err := FindStateMachineByARN(ctx, conn, d.Id())
 
@@ -224,7 +224,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
+	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		// "You must include at least one of definition or roleArn or you will receive a MissingRequiredParameter error"
@@ -280,7 +280,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceStateMachineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
+	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Step Functions State Machine: %s", d.Id())
 	_, err := conn.DeleteStateMachineWithContext(ctx, &sfn.DeleteStateMachineInput{

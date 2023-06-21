@@ -26,7 +26,7 @@ func createTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ta
 
 	_, err := tfresource.RetryWhen(ctx, eventualConsistencyTimeout,
 		func() (interface{}, error) {
-			return nil, UpdateTags(ctx, conn, identifier, nil, newTagsMap)
+			return nil, updateTags(ctx, conn, identifier, nil, newTagsMap)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrCodeContains(err, ".NotFound") {
@@ -60,7 +60,7 @@ func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t s
 // getTagSpecificationsIn returns EC2 service tags from Context.
 // nil is returned if there are no input tags.
 func getTagSpecificationsIn(ctx context.Context, resourceType string) []*ec2.TagSpecification {
-	tags := GetTagsIn(ctx)
+	tags := getTagsIn(ctx)
 
 	if len(tags) == 0 {
 		return nil

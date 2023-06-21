@@ -2,7 +2,6 @@ package timestreamwrite
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 
@@ -71,12 +70,12 @@ func ResourceDatabase() *schema.Resource {
 }
 
 func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn(ctx)
 
 	dbName := d.Get("database_name").(string)
 	input := &timestreamwrite.CreateDatabaseInput{
 		DatabaseName: aws.String(dbName),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
@@ -86,11 +85,11 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 	resp, err := conn.CreateDatabaseWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Timestream Database (%s): %w", dbName, err))
+		return diag.Errorf("creating Timestream Database (%s): %s", dbName, err)
 	}
 
 	if resp == nil || resp.Database == nil {
-		return diag.FromErr(fmt.Errorf("error creating Timestream Database (%s): empty output", dbName))
+		return diag.Errorf("creating Timestream Database (%s): empty output", dbName)
 	}
 
 	d.SetId(aws.StringValue(resp.Database.DatabaseName))
@@ -99,7 +98,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn(ctx)
 
 	input := &timestreamwrite.DescribeDatabaseInput{
 		DatabaseName: aws.String(d.Id()),
@@ -114,11 +113,11 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Timestream Database (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Timestream Database (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.Database == nil {
-		return diag.FromErr(fmt.Errorf("error reading Timestream Database (%s): empty output", d.Id()))
+		return diag.Errorf("reading Timestream Database (%s): empty output", d.Id())
 	}
 
 	db := resp.Database
@@ -133,7 +132,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn(ctx)
 
 	if d.HasChange("kms_key_id") {
 		input := &timestreamwrite.UpdateDatabaseInput{
@@ -144,7 +143,7 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.UpdateDatabaseWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Timestream Database (%s): %w", d.Id(), err))
+			return diag.Errorf("updating Timestream Database (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -152,7 +151,7 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn(ctx)
 
 	log.Printf("[INFO] Deleting Timestream Database: %s", d.Id())
 	_, err := conn.DeleteDatabaseWithContext(ctx, &timestreamwrite.DeleteDatabaseInput{
@@ -164,7 +163,7 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Timestream Database (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Timestream Database (%s): %s", d.Id(), err)
 	}
 
 	return nil

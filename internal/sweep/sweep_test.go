@@ -3,6 +3,7 @@
 package sweep_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -105,6 +106,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/oam"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
@@ -150,6 +152,6 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	sweep.SweeperClients = make(map[string]interface{})
+	sweep.ServicePackages = servicePackages(context.Background())
 	resource.TestMain(m)
 }

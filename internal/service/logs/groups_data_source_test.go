@@ -52,10 +52,10 @@ func TestAccLogsGroupsDataSource_noPrefix(t *testing.T) {
 			{
 				Config: testAccGroupsDataSourceConfig_noPrefix(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "arns.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "arns.#", 1),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource1Name, "arn"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource2Name, "arn"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "log_group_names.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "log_group_names.#", 1),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource1Name, "name"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource2Name, "name"),
 				),

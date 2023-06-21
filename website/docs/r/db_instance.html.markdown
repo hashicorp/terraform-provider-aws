@@ -269,7 +269,6 @@ information on the [AWS
 Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html)
 what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `multi_az` - (Optional) Specifies if the RDS instance is multi-AZ
-* `name` - (Optional, **Deprecated** use `db_name` instead) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
 * `nchar_character_set_name` - (Optional, Forces new resource) The national character set is used in the NCHAR, NVARCHAR2, and NCLOB data types for Oracle instances. This can't be changed. See [Oracle Character Sets
 Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html).
 * `network_type` - (Optional) The network type of the DB instance. Valid values: `IPV4`, `DUAL`.
@@ -371,7 +370,7 @@ This will not recreate the resource if the S3 object changes in some way.  It's 
 
 ## blue_green_update
 
-* `enabled` - (Optional) Enables [low-downtime updates](#Low-Downtime Updates) when `true`.
+* `enabled` - (Optional) Enables [low-downtime updates](#low-downtime-updates) when `true`.
   Default is `false`.
 
 [instance-replication]:

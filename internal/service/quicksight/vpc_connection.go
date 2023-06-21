@@ -152,7 +152,7 @@ func (r *resourceVPCConnection) Schema(ctx context.Context, req resource.SchemaR
 }
 
 func (r *resourceVPCConnection) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var plan resourceVPCConnectionData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -172,7 +172,7 @@ func (r *resourceVPCConnection) Create(ctx context.Context, req resource.CreateR
 		RoleArn:          aws.String(plan.RoleArn.ValueString()),
 		SecurityGroupIds: flex.ExpandFrameworkStringSet(ctx, plan.SecurityGroupIds),
 		SubnetIds:        flex.ExpandFrameworkStringSet(ctx, plan.SubnetIds),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if !plan.DnsResolvers.IsNull() {
@@ -214,7 +214,7 @@ func (r *resourceVPCConnection) Create(ctx context.Context, req resource.CreateR
 }
 
 func (r *resourceVPCConnection) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceVPCConnectionData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -267,7 +267,7 @@ func (r *resourceVPCConnection) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *resourceVPCConnection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var plan, state resourceVPCConnectionData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -330,7 +330,7 @@ func (r *resourceVPCConnection) Update(ctx context.Context, req resource.UpdateR
 }
 
 func (r *resourceVPCConnection) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceVPCConnectionData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
