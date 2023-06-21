@@ -63,6 +63,18 @@ type NTestFlatten struct {
 	Name *float32
 }
 
+type OTestFlatten struct {
+	Name bool
+}
+
+type PTestFlatten struct {
+	Name *bool
+}
+
+type QTestFlatten struct {
+	Name types.Bool
+}
+
 func TestGenericFlatten(t *testing.T) {
 	t.Parallel()
 
@@ -210,6 +222,18 @@ func TestGenericFlatten(t *testing.T) {
 			Source:     &NTestFlatten{},
 			Target:     &LTestFlatten{},
 			WantTarget: &LTestFlatten{Name: types.Float64Null()},
+		},
+		{
+			TestName:   "single bool Source and single bool Target",
+			Source:     &OTestFlatten{Name: true},
+			Target:     &QTestFlatten{},
+			WantTarget: &QTestFlatten{Name: types.BoolValue(true)},
+		},
+		{
+			TestName:   "single *bool Source and single bool Target",
+			Source:     &PTestFlatten{Name: aws.Bool(true)},
+			Target:     &QTestFlatten{},
+			WantTarget: &QTestFlatten{Name: types.BoolValue(true)},
 		},
 	}
 
