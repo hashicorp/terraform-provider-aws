@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -51,7 +50,7 @@ func sweepHTTPNamespaces(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	conn := client.ServiceDiscoveryConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	namespaces, err := findNamespacesByType(ctx, conn, servicediscovery.NamespaceTypeHttp)
@@ -88,7 +87,7 @@ func sweepPrivateDNSNamespaces(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	conn := client.ServiceDiscoveryConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	namespaces, err := findNamespacesByType(ctx, conn, servicediscovery.NamespaceTypeDnsPrivate)
@@ -125,7 +124,7 @@ func sweepPublicDNSNamespaces(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	conn := client.ServiceDiscoveryConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	namespaces, err := findNamespacesByType(ctx, conn, servicediscovery.NamespaceTypeDnsPublic)
@@ -162,7 +161,7 @@ func sweepServices(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	conn := client.ServiceDiscoveryConn(ctx)
 	input := &servicediscovery.ListServicesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -28,7 +27,7 @@ func sweepBrokers(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &mq.ListBrokersInput{MaxResults: aws.Int64(100)}
-	conn := client.(*conns.AWSClient).MQConn(ctx)
+	conn := client.MQConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListBrokersPagesWithContext(ctx, input, func(page *mq.ListBrokersResponse, lastPage bool) bool {

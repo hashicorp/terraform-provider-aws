@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -33,7 +32,7 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EMRConn(ctx)
+	conn := client.EMRConn(ctx)
 	input := &emr.ListClustersInput{
 		ClusterStates: aws.StringSlice([]string{emr.ClusterStateBootstrapping, emr.ClusterStateRunning, emr.ClusterStateStarting, emr.ClusterStateWaiting}),
 	}
@@ -92,7 +91,7 @@ func sweepStudios(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).EMRConn(ctx)
+	conn := client.EMRConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 	input := &emr.ListStudiosInput{}

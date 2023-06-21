@@ -41,6 +41,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceSipRule,
+			TypeName: "aws_chimesdkvoice_sip_rule",
+			Name:     "Sip Rule",
+		},
+		{
 			Factory:  ResourceVoiceProfileDomain,
 			TypeName: "aws_chimesdkvoice_voice_profile_domain",
 			Name:     "Voice Profile Domain",

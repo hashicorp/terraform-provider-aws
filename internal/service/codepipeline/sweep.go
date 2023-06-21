@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -28,7 +27,7 @@ func sweepPipelines(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &codepipeline.ListPipelinesInput{}
-	conn := client.(*conns.AWSClient).CodePipelineConn(ctx)
+	conn := client.CodePipelineConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListPipelinesPagesWithContext(ctx, input, func(page *codepipeline.ListPipelinesOutput, lastPage bool) bool {

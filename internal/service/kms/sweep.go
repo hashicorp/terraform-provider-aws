@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -32,7 +31,7 @@ func sweepKeys(region string) error {
 	input := &kms.ListKeysInput{
 		Limit: aws.Int64(1000),
 	}
-	conn := client.(*conns.AWSClient).KMSConn(ctx)
+	conn := client.KMSConn(ctx)
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
