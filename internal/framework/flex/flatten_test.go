@@ -81,6 +81,10 @@ type RTestFlatten struct {
 }
 
 type STestFlatten struct {
+	Names []*string
+}
+
+type TTestFlatten struct {
 	Names types.Set
 }
 
@@ -247,14 +251,20 @@ func TestGenericFlatten(t *testing.T) {
 		{
 			TestName:   "single string slice Source and single set Target",
 			Source:     &RTestFlatten{Names: []string{"a"}},
-			Target:     &STestFlatten{},
-			WantTarget: &STestFlatten{Names: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a")})},
+			Target:     &TTestFlatten{},
+			WantTarget: &TTestFlatten{Names: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a")})},
 		},
 		{
 			TestName:   "single nil string slice Source and single set Target",
 			Source:     &RTestFlatten{},
-			Target:     &STestFlatten{},
-			WantTarget: &STestFlatten{Names: types.SetNull(types.StringType)},
+			Target:     &TTestFlatten{},
+			WantTarget: &TTestFlatten{Names: types.SetNull(types.StringType)},
+		},
+		{
+			TestName:   "single *string slice Source and single set Target",
+			Source:     &STestFlatten{Names: aws.StringSlice([]string{"a"})},
+			Target:     &TTestFlatten{},
+			WantTarget: &TTestFlatten{Names: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a")})},
 		},
 	}
 
