@@ -142,9 +142,9 @@ func (r *resourceInstanceConnectEndpoint) Create(ctx context.Context, request re
 
 	input := &ec2.CreateInstanceConnectEndpointInput{
 		ClientToken:       aws.String(id.UniqueId()),
-		PreserveClientIp:  aws.Bool(data.PreserveClientIP.ValueBool()),
-		SecurityGroupIds:  flex.ExpandFrameworkStringValueSet(ctx, data.SecurityGroupIDs),
-		SubnetId:          aws.String(data.SubnetID.ValueString()),
+		PreserveClientIp:  aws.Bool(data.PreserveClientIp.ValueBool()),
+		SecurityGroupIds:  flex.ExpandFrameworkStringValueSet(ctx, data.SecurityGroupIds),
+		SubnetId:          aws.String(data.SubnetId.ValueString()),
 		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeInstanceConnectEndpoint),
 	}
 
@@ -156,25 +156,23 @@ func (r *resourceInstanceConnectEndpoint) Create(ctx context.Context, request re
 		return
 	}
 
-	data.ID = types.StringPointerValue(output.InstanceConnectEndpoint.InstanceConnectEndpointId)
+	data.InstanceConnectEndpointId = types.StringPointerValue(output.InstanceConnectEndpoint.InstanceConnectEndpointId)
+	id := data.InstanceConnectEndpointId.ValueString()
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	instanceConnectEndpoint, err := WaitInstanceConnectEndpointCreated(ctx, conn, data.ID.ValueString(), createTimeout)
+	instanceConnectEndpoint, err := WaitInstanceConnectEndpointCreated(ctx, conn, id, createTimeout)
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Instance Connect Endpoint (%s) create", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Instance Connect Endpoint (%s) create", id), err.Error())
 
 		return
 	}
 
 	// Set values for unknowns.
-	data.ARN = types.StringPointerValue(instanceConnectEndpoint.InstanceConnectEndpointArn)
-	data.AvailabilityZone = types.StringPointerValue(instanceConnectEndpoint.AvailabilityZone)
-	data.DNSName = types.StringPointerValue(instanceConnectEndpoint.DnsName)
-	data.FIPSDNSName = types.StringPointerValue(instanceConnectEndpoint.FipsDnsName)
-	data.NetworkInterfaceIDs = flex.FlattenFrameworkStringValueList(ctx, instanceConnectEndpoint.NetworkInterfaceIds)
-	data.OwnerID = types.StringPointerValue(instanceConnectEndpoint.OwnerId)
-	data.SecurityGroupIDs = flex.FlattenFrameworkStringValueSet(ctx, instanceConnectEndpoint.SecurityGroupIds)
-	data.VPCID = types.StringPointerValue(instanceConnectEndpoint.VpcId)
+	if err := flex.Flatten(ctx, instanceConnectEndpoint, &data); err != nil {
+		response.Diagnostics.AddError("flattening data", err.Error())
+
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -190,7 +188,8 @@ func (r *resourceInstanceConnectEndpoint) Read(ctx context.Context, request reso
 
 	conn := r.Meta().EC2Client(ctx)
 
-	instanceConnectEndpoint, err := FindInstanceConnectEndpointByID(ctx, conn, data.ID.ValueString())
+	id := data.InstanceConnectEndpointId.ValueString()
+	instanceConnectEndpoint, err := FindInstanceConnectEndpointByID(ctx, conn, id)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -200,21 +199,16 @@ func (r *resourceInstanceConnectEndpoint) Read(ctx context.Context, request reso
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Instance Connect Endpoint (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Instance Connect Endpoint (%s)", id), err.Error())
 
 		return
 	}
 
-	data.ARN = types.StringPointerValue(instanceConnectEndpoint.InstanceConnectEndpointArn)
-	data.AvailabilityZone = types.StringPointerValue(instanceConnectEndpoint.AvailabilityZone)
-	data.DNSName = types.StringPointerValue(instanceConnectEndpoint.DnsName)
-	data.FIPSDNSName = types.StringPointerValue(instanceConnectEndpoint.FipsDnsName)
-	data.NetworkInterfaceIDs = flex.FlattenFrameworkStringValueList(ctx, instanceConnectEndpoint.NetworkInterfaceIds)
-	data.OwnerID = types.StringPointerValue(instanceConnectEndpoint.OwnerId)
-	data.PreserveClientIP = types.BoolPointerValue(instanceConnectEndpoint.PreserveClientIp)
-	data.SecurityGroupIDs = flex.FlattenFrameworkStringValueSet(ctx, instanceConnectEndpoint.SecurityGroupIds)
-	data.SubnetID = types.StringPointerValue(instanceConnectEndpoint.SubnetId)
-	data.VPCID = types.StringPointerValue(instanceConnectEndpoint.VpcId)
+	if err := flex.Flatten(ctx, instanceConnectEndpoint, &data); err != nil {
+		response.Diagnostics.AddError("flattening data", err.Error())
+
+		return
+	}
 
 	setTagsOutV2(ctx, instanceConnectEndpoint.Tags)
 
@@ -237,22 +231,24 @@ func (r *resourceInstanceConnectEndpoint) Delete(ctx context.Context, request re
 	conn := r.Meta().EC2Client(ctx)
 
 	_, err := conn.DeleteInstanceConnectEndpoint(ctx, &ec2.DeleteInstanceConnectEndpointInput{
-		InstanceConnectEndpointId: flex.StringFromFramework(ctx, data.ID),
+		InstanceConnectEndpointId: flex.StringFromFramework(ctx, data.InstanceConnectEndpointId),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceConnectEndpointIdNotFound) {
 		return
 	}
 
+	id := data.InstanceConnectEndpointId.ValueString()
+
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting EC2 Instance Connect Endpoint (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting EC2 Instance Connect Endpoint (%s)", id), err.Error())
 
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
-	if _, err := WaitInstanceConnectEndpointDeleted(ctx, conn, data.ID.ValueString(), deleteTimeout); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Instance Connect Endpoint (%s) delete", data.ID.ValueString()), err.Error())
+	if _, err := WaitInstanceConnectEndpointDeleted(ctx, conn, id, deleteTimeout); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Instance Connect Endpoint (%s) delete", id), err.Error())
 
 		return
 	}
@@ -262,19 +258,20 @@ func (r *resourceInstanceConnectEndpoint) ModifyPlan(ctx context.Context, reques
 	r.SetTagsAll(ctx, request, response)
 }
 
+// See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Ec2InstanceConnectEndpoint.html.
 type resourceInstanceConnectEndpointData struct {
-	ARN                 types.String   `tfsdk:"arn"`
-	AvailabilityZone    types.String   `tfsdk:"availability_zone"`
-	DNSName             types.String   `tfsdk:"dns_name"`
-	FIPSDNSName         types.String   `tfsdk:"fips_dns_name"`
-	ID                  types.String   `tfsdk:"id"`
-	NetworkInterfaceIDs types.List     `tfsdk:"network_interface_ids"`
-	OwnerID             types.String   `tfsdk:"owner_id"`
-	PreserveClientIP    types.Bool     `tfsdk:"preserve_client_ip"`
-	SecurityGroupIDs    types.Set      `tfsdk:"security_group_ids"`
-	SubnetID            types.String   `tfsdk:"subnet_id"`
-	Tags                types.Map      `tfsdk:"tags"`
-	TagsAll             types.Map      `tfsdk:"tags_all"`
-	Timeouts            timeouts.Value `tfsdk:"timeouts"`
-	VPCID               types.String   `tfsdk:"vpc_id"`
+	InstanceConnectEndpointArn types.String   `tfsdk:"arn"`
+	AvailabilityZone           types.String   `tfsdk:"availability_zone"`
+	DnsName                    types.String   `tfsdk:"dns_name"`
+	FipsDnsName                types.String   `tfsdk:"fips_dns_name"`
+	InstanceConnectEndpointId  types.String   `tfsdk:"id"`
+	NetworkInterfaceIds        types.List     `tfsdk:"network_interface_ids"`
+	OwnerId                    types.String   `tfsdk:"owner_id"`
+	PreserveClientIp           types.Bool     `tfsdk:"preserve_client_ip"`
+	SecurityGroupIds           types.Set      `tfsdk:"security_group_ids"`
+	SubnetId                   types.String   `tfsdk:"subnet_id"`
+	Tags                       types.Map      `tfsdk:"tags"`
+	TagsAll                    types.Map      `tfsdk:"tags_all"`
+	Timeouts                   timeouts.Value `tfsdk:"timeouts"`
+	VpcId                      types.String   `tfsdk:"vpc_id"`
 }
