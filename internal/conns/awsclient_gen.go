@@ -31,6 +31,7 @@ import (
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
+	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	resourceexplorer2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
@@ -256,7 +257,6 @@ import (
 	pinpointemail_sdkv1 "github.com/aws/aws-sdk-go/service/pinpointemail"
 	pinpointsmsvoice_sdkv1 "github.com/aws/aws-sdk-go/service/pinpointsmsvoice"
 	polly_sdkv1 "github.com/aws/aws-sdk-go/service/polly"
-	pricing_sdkv1 "github.com/aws/aws-sdk-go/service/pricing"
 	prometheusservice_sdkv1 "github.com/aws/aws-sdk-go/service/prometheusservice"
 	proton_sdkv1 "github.com/aws/aws-sdk-go/service/proton"
 	qldb_sdkv1 "github.com/aws/aws-sdk-go/service/qldb"
@@ -1264,8 +1264,8 @@ func (c *AWSClient) PollyConn(ctx context.Context) *polly_sdkv1.Polly {
 	return errs.Must(conn[*polly_sdkv1.Polly](ctx, c, names.Polly))
 }
 
-func (c *AWSClient) PricingConn(ctx context.Context) *pricing_sdkv1.Pricing {
-	return errs.Must(conn[*pricing_sdkv1.Pricing](ctx, c, names.Pricing))
+func (c *AWSClient) PricingClient(ctx context.Context) *pricing_sdkv2.Client {
+	return errs.Must(client[*pricing_sdkv2.Client](ctx, c, names.Pricing))
 }
 
 func (c *AWSClient) ProtonConn(ctx context.Context) *proton_sdkv1.Proton {
