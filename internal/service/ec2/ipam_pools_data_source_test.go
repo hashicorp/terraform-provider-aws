@@ -33,6 +33,7 @@ func TestAccIPAMPoolsDataSource_basic(t *testing.T) {
 
 					// DS 2 filters on 1 specific pool to validate attributes
 					resource.TestCheckResourceAttr(dataSourceNameTwo, "ipam_pools.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.address_family", resourceName, "address_family"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.allocation_default_netmask_length", resourceName, "allocation_default_netmask_length"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.allocation_max_netmask_length", resourceName, "allocation_max_netmask_length"),
