@@ -285,6 +285,16 @@ func ResourceFunction() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.Runtime](),
 			},
+			"runtime_version_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"runtime_version_update_on": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.UpdateRuntimeOn](),
+			},
 			"s3_bucket": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -567,6 +577,27 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "setting Lambda Function (%s) concurrency: %s", d.Id(), err)
 		}
 	}
+	runtimeConfiguration := &lambda.PutRuntimeManagementConfigInput{FunctionName: aws.String(d.Id())}
+
+	updatedRuntimeConfiguration := false
+
+	if v, ok := d.GetOk("runtime_version_update_on"); ok {
+		runtimeConfiguration.UpdateRuntimeOn = types.UpdateRuntimeOn(v.(string))
+		updatedRuntimeConfiguration = true
+	}
+
+	if v, ok := d.GetOk("runtime_version_arn"); ok {
+		runtimeConfiguration.RuntimeVersionArn = aws.String(v.(string))
+		updatedRuntimeConfiguration = true
+	}
+	if updatedRuntimeConfiguration {
+		_, err := conn.PutRuntimeManagementConfig(ctx, runtimeConfiguration)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting Lambda Function (%s) runtime configuration: %s", d.Id(), err)
+		}
+
+	}
 
 	return append(diags, resourceFunctionRead(ctx, d, meta)...)
 }
@@ -576,6 +607,9 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	input := &lambda.GetFunctionInput{
+		FunctionName: aws.String(d.Id()),
+	}
+	runtimeConfInput := &lambda.GetRuntimeManagementConfigInput{
 		FunctionName: aws.String(d.Id()),
 	}
 
@@ -598,6 +632,13 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	function := output.Configuration
+
+	runtimeOutput, err := findFunctionRuntime(ctx, conn, runtimeConfInput)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "Failed to reade lambda function (%s) runtime configuration : %s", d.Id(), err)
+	}
+
 	d.Set("architectures", flattenArchitectures(function.Architectures))
 	functionARN := aws.ToString(function.FunctionArn)
 	d.Set("arn", functionARN)
@@ -644,6 +685,8 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set("role", function.Role)
 	d.Set("runtime", function.Runtime)
+	d.Set("runtime_version_update_on", runtimeOutput.UpdateRuntimeOn)
+	d.Set("runtime_version_arn", runtimeOutput.RuntimeVersionArn)
 	d.Set("signing_job_arn", function.SigningJobArn)
 	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
 	// Support in-place update of non-refreshable attribute.
@@ -828,6 +871,16 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if d.HasChange("runtime") {
 			input.Runtime = types.Runtime(d.Get("runtime").(string))
+		}
+		if d.HasChanges("runtime_version_update_on", "runtime_version_arn") {
+			_, err := conn.PutRuntimeManagementConfig(ctx, &lambda.PutRuntimeManagementConfigInput{
+				FunctionName:      aws.String(d.Id()),
+				UpdateRuntimeOn:   types.UpdateRuntimeOn(d.Get("runtime_version_update_on").(string)),
+				RuntimeVersionArn: aws.String(d.Get("runtime_version_arn").(string)),
+			})
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "Failed to set lambda (%s) runtime configuration: %s", d.Id(), err)
+			}
 		}
 
 		if d.HasChange("snap_start") {
@@ -1044,6 +1097,14 @@ func findFunction(ctx context.Context, conn *lambda.Client, input *lambda.GetFun
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
+	return output, nil
+}
+
+func findFunctionRuntime(ctx context.Context, conn *lambda.Client, input *lambda.GetRuntimeManagementConfigInput) (*lambda.GetRuntimeManagementConfigOutput, error) {
+	output, err := conn.GetRuntimeManagementConfig(ctx, input)
+	if err != nil {
+		return nil, err
+	}
 	return output, nil
 }
 

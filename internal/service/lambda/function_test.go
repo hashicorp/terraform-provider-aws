@@ -2486,11 +2486,12 @@ resource "aws_security_group" "test" {
 func testAccFunctionConfig_basic(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  filename                  = "test-fixtures/lambdatest.zip"
+  function_name             = "%s"
+  role                      = aws_iam_role.iam_for_lambda.arn
+  handler                   = "exports.example"
+  runtime                   = "nodejs16.x"
+  runtime_version_update_on = "FunctionUpdate"
 }
 `, funcName)
 }
