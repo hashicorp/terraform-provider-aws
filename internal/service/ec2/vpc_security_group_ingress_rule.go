@@ -134,7 +134,7 @@ func (r *resourceSecurityGroupRule) Schema(ctx context.Context, req resource.Sch
 				Optional: true,
 			},
 			"security_group_id": schema.StringAttribute{
-				Optional: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

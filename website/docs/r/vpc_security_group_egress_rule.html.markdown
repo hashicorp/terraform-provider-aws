@@ -26,11 +26,14 @@ resource "aws_vpc_security_group_egress_rule" "example" {
   cidr_ipv4   = "10.0.0.0/8"
   from_port   = 80
   ip_protocol = "tcp"
-  to_port     = 8080
+  to_port     = 80
 }
 ```
 
 ## Argument Reference
+
+~> **NOTE on optional/required attributes:** Although `cidr_ipv4`, `cidr_ipv6`, `prefix_list_id`, and `referenced_security_group_id` are all marked as optional, you *must* provide one of them in order to configure the destination of the traffic.
+`from_port` and `to_port` are required, unless `ip_protocol` is set to `-1` or `icmpv6`.
 
 The following arguments are supported:
 
