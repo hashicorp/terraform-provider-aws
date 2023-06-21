@@ -163,7 +163,7 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("session_duration", permissionSet.SessionDuration)
 	d.Set("relay_state", permissionSet.RelayState)
 
-	tags, err := ListTags(ctx, conn, arn, instanceArn)
+	tags, err := listTags(ctx, conn, arn, instanceArn)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for SSO Permission Set (%s): %s", arn, err)
 	}

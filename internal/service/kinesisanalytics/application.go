@@ -631,7 +631,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		CloudWatchLoggingOptions: expandCloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
 		Inputs:                   expandInputs(d.Get("inputs").([]interface{})),
 		Outputs:                  expandOutputs(d.Get("outputs").(*schema.Set).List()),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {

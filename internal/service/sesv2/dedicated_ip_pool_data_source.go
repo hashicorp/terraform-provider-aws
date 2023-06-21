@@ -82,7 +82,7 @@ func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set("dedicated_ips", flattenDedicatedIPs(outIP.DedicatedIps))
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
 		return create.DiagError(names.SESV2, create.ErrActionReading, DSNameDedicatedIPPool, d.Id(), err)
 	}

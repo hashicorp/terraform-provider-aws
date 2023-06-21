@@ -160,7 +160,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &efs.CreateFileSystemInput{
 		CreationToken:  aws.String(creationToken),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 		ThroughputMode: aws.String(throughputMode),
 	}
 
@@ -245,7 +245,7 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
 	d.Set("throughput_mode", fs.ThroughputMode)
 
-	SetTagsOut(ctx, fs.Tags)
+	setTagsOut(ctx, fs.Tags)
 
 	if err := d.Set("size_in_bytes", flattenFileSystemSizeInBytes(fs.SizeInBytes)); err != nil {
 		return diag.Errorf("setting size_in_bytes: %s", err)

@@ -163,7 +163,7 @@ func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.Reso
 		DataRepositoryPath: aws.String(d.Get("data_repository_path").(string)),
 		FileSystemId:       aws.String(d.Get("file_system_id").(string)),
 		FileSystemPath:     aws.String(d.Get("file_system_path").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("batch_import_meta_data_on_create"); ok {
@@ -249,7 +249,7 @@ func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "setting s3 data repository configuration: %s", err)
 	}
 
-	SetTagsOut(ctx, association.Tags)
+	setTagsOut(ctx, association.Tags)
 
 	return diags
 }

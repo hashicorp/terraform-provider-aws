@@ -104,7 +104,7 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Content:      aws.String(d.Get("content").(string)),
 		RegistryName: aws.String(registryName),
 		SchemaName:   aws.String(name),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		Type:         aws.String(d.Get("type").(string)),
 	}
 

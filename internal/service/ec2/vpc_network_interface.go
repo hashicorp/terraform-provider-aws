@@ -450,7 +450,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if ipv4PrefixesSpecified || ipv6PrefixesSpecified {
-		if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+		if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting EC2 Network Interface (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -553,7 +553,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set("subnet_id", eni.SubnetId)
 
-	SetTagsOut(ctx, eni.TagSet)
+	setTagsOut(ctx, eni.TagSet)
 
 	return diags
 }

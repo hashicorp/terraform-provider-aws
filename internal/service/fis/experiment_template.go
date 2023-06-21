@@ -241,7 +241,7 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 		Description:    aws.String(d.Get("description").(string)),
 		RoleArn:        aws.String(d.Get("role_arn").(string)),
 		StopConditions: expandExperimentTemplateStopConditions(d.Get("stop_condition").(*schema.Set)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	targets, err := expandExperimentTemplateTargets(d.Get("target").(*schema.Set))
@@ -304,7 +304,7 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "target", err)
 	}
 
-	SetTagsOut(ctx, experimentTemplate.Tags)
+	setTagsOut(ctx, experimentTemplate.Tags)
 
 	return nil
 }

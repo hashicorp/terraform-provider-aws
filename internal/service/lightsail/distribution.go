@@ -331,7 +331,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 		DefaultCacheBehavior: expandCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
 		DistributionName:     aws.String(d.Get("name").(string)),
 		Origin:               expandInputOrigin(d.Get("origin").([]interface{})[0].(map[string]interface{})),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cache_behavior_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -438,7 +438,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("status", out.Status)
 	d.Set("support_code", out.SupportCode)
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	return nil
 }

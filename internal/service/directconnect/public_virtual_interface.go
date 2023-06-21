@@ -125,7 +125,7 @@ func resourcePublicVirtualInterfaceCreate(ctx context.Context, d *schema.Resourc
 		NewPublicVirtualInterface: &directconnect.NewPublicVirtualInterface{
 			AddressFamily:        aws.String(d.Get("address_family").(string)),
 			Asn:                  aws.Int64(int64(d.Get("bgp_asn").(int))),
-			Tags:                 GetTagsIn(ctx),
+			Tags:                 getTagsIn(ctx),
 			VirtualInterfaceName: aws.String(d.Get("name").(string)),
 			Vlan:                 aws.Int64(int64(d.Get("vlan").(int))),
 		},

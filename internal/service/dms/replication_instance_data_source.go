@@ -127,7 +127,7 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("replication_instance_class", instance.ReplicationInstanceClass)
 	d.Set("replication_instance_id", instance.ReplicationInstanceIdentifier)
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(instance.ReplicationInstanceArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(instance.ReplicationInstanceArn))
 
 	if err != nil {
 		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationInstance, d.Id(), err)

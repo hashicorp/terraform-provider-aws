@@ -214,7 +214,7 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &cloudformation.CreateStackSetInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		StackSetName:       aws.String(name),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("administration_role_arn"); ok {
@@ -317,7 +317,7 @@ func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("stack_set_id", stackSet.StackSetId)
 
-	SetTagsOut(ctx, stackSet.Tags)
+	setTagsOut(ctx, stackSet.Tags)
 
 	d.Set("template_body", stackSet.TemplateBody)
 
@@ -372,7 +372,7 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		input.CallAs = aws.String(v.(string))
 	}
 
-	if tags := GetTagsIn(ctx); len(tags) > 0 {
+	if tags := getTagsIn(ctx); len(tags) > 0 {
 		input.Tags = tags
 	}
 

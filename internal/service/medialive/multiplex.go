@@ -113,7 +113,7 @@ func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta i
 		RequestId:         aws.String(id.UniqueId()),
 		Name:              aws.String(d.Get("name").(string)),
 		AvailabilityZones: flex.ExpandStringValueList(d.Get("availability_zones").([]interface{})),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("multiplex_settings"); ok && len(v.([]interface{})) > 0 {

@@ -114,7 +114,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-rule-")),
 		DomainName:       aws.String(d.Get("domain_name").(string)),
 		RuleType:         aws.String(d.Get("rule_type").(string)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("name"); ok {

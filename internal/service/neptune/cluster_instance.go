@@ -199,7 +199,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		Engine:                  aws.String(d.Get("engine").(string)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("availability_zone"); ok {

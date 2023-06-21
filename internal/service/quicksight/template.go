@@ -139,7 +139,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 		AwsAccountId: aws.String(awsAccountId),
 		TemplateId:   aws.String(templateId),
 		Name:         aws.String(d.Get("name").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("version_description"); ok {

@@ -101,7 +101,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ConfigurationVersion:   aws.String(d.Get("configuration_version").(string)),
 		DeploymentStrategyId:   aws.String(d.Get("deployment_strategy_id").(string)),
 		Description:            aws.String(d.Get("description").(string)),
-		Tags:                   GetTagsIn(ctx),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	output, err := conn.StartDeploymentWithContext(ctx, input)

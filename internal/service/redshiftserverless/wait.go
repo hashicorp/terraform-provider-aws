@@ -48,48 +48,6 @@ func waitNamespaceUpdated(ctx context.Context, conn *redshiftserverless.Redshift
 	return nil, err
 }
 
-func waitWorkgroupAvailable(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string, wait time.Duration) (*redshiftserverless.Workgroup, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			redshiftserverless.WorkgroupStatusCreating,
-			redshiftserverless.WorkgroupStatusModifying,
-		},
-		Target: []string{
-			redshiftserverless.WorkgroupStatusAvailable,
-		},
-		Refresh: statusWorkgroup(ctx, conn, name),
-		Timeout: wait,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*redshiftserverless.Workgroup); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitWorkgroupDeleted(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string, wait time.Duration) (*redshiftserverless.Workgroup, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			redshiftserverless.WorkgroupStatusModifying,
-			redshiftserverless.WorkgroupStatusDeleting,
-		},
-		Target:  []string{},
-		Refresh: statusWorkgroup(ctx, conn, name),
-		Timeout: wait,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*redshiftserverless.Workgroup); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitEndpointAccessActive(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.EndpointAccess, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{

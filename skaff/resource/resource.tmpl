@@ -239,7 +239,7 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 		// below. Many resources do include tags so this a reminder to include them
 		// where possible.
 		{{- end }}
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("max_size"); ok {

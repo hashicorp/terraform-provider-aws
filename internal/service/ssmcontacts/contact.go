@@ -69,7 +69,7 @@ func resourceContactCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Alias:       aws.String(d.Get("alias").(string)),
 		DisplayName: aws.String(d.Get("display_name").(string)),
 		Plan:        &types.Plan{Stages: []types.Stage{}},
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 		Type:        types.ContactType(d.Get("type").(string)),
 	}
 

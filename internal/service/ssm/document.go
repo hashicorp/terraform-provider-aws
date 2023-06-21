@@ -255,7 +255,7 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 		DocumentFormat: aws.String(d.Get("document_format").(string)),
 		DocumentType:   aws.String(d.Get("document_type").(string)),
 		Name:           aws.String(name),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("attachments_source"); ok && len(v.([]interface{})) > 0 {
@@ -389,7 +389,7 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	SetTagsOut(ctx, doc.Tags)
+	setTagsOut(ctx, doc.Tags)
 
 	return diags
 }

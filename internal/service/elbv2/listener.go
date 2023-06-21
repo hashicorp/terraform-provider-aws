@@ -399,7 +399,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	lbARN := d.Get("load_balancer_arn").(string)
 	input := &elbv2.CreateListenerInput{
 		LoadBalancerArn: aws.String(lbARN),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if alpnPolicy, ok := d.GetOk("alpn_policy"); ok {
@@ -461,7 +461,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(aws.StringValue(output.Listeners[0].ListenerArn))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.

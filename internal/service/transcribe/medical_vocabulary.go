@@ -83,7 +83,7 @@ func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData
 		VocabularyName:    aws.String(vocabularyName),
 		VocabularyFileUri: aws.String(d.Get("vocabulary_file_uri").(string)),
 		LanguageCode:      types.LanguageCode(d.Get("language_code").(string)),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateMedicalVocabulary(ctx, in)

@@ -142,7 +142,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Description:                 aws.String(d.Get("description").(string)),
 		ForceOverwriteReplicaSecret: aws.Bool(d.Get("force_overwrite_replica_secret").(bool)),
 		Name:                        aws.String(secretName),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
@@ -280,7 +280,7 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("policy", "")
 	}
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

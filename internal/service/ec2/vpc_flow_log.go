@@ -315,7 +315,7 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("traffic_type", fl.TrafficType)
 	}
 
-	SetTagsOut(ctx, fl.Tags)
+	setTagsOut(ctx, fl.Tags)
 
 	return diags
 }

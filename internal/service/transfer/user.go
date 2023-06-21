@@ -142,7 +142,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	input := &transfer.CreateUserInput{
 		Role:     aws.String(d.Get("role").(string)),
 		ServerId: aws.String(serverID),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 		UserName: aws.String(userName),
 	}
 
@@ -224,7 +224,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("server_id", serverID)
 	d.Set("user_name", user.UserName)
 
-	SetTagsOut(ctx, user.Tags)
+	setTagsOut(ctx, user.Tags)
 
 	return diags
 }

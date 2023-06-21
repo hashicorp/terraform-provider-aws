@@ -99,7 +99,7 @@ func resourceDeviceFleetCreate(ctx context.Context, d *schema.ResourceData, meta
 		DeviceFleetName:    aws.String(name),
 		OutputConfig:       expandFeatureDeviceFleetOutputConfig(d.Get("output_config").([]interface{})),
 		EnableIotRoleAlias: aws.Bool(d.Get("enable_iot_role_alias").(bool)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("role_arn"); ok {

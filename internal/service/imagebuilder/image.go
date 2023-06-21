@@ -184,7 +184,7 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &imagebuilder.CreateImageInput{
 		ClientToken:                  aws.String(id.UniqueId()),
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
-		Tags:                         GetTagsIn(ctx),
+		Tags:                         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("container_recipe_arn"); ok {
@@ -289,7 +289,7 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("output_resources", nil)
 	}
 
-	SetTagsOut(ctx, image.Tags)
+	setTagsOut(ctx, image.Tags)
 
 	d.Set("version", image.Version)
 

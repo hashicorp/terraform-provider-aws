@@ -194,7 +194,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		AuthenticationProviders: flex.ExpandStringList(d.Get("authentication_providers").([]interface{})),
 		ClientToken:             aws.String(id.UniqueId()),
 		PermissionType:          aws.String(d.Get("permission_type").(string)),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("configuration"); ok {
@@ -309,7 +309,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting network_access_control: %s", err)
 	}
 
-	SetTagsOut(ctx, workspace.Tags)
+	setTagsOut(ctx, workspace.Tags)
 
 	input := &managedgrafana.DescribeWorkspaceConfigurationInput{
 		WorkspaceId: aws.String(d.Id()),

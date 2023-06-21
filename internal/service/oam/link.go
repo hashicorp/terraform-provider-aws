@@ -97,7 +97,7 @@ func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		LabelTemplate:  aws.String(d.Get("label_template").(string)),
 		ResourceTypes:  flex.ExpandStringyValueSet[types.ResourceType](d.Get("resource_types").(*schema.Set)),
 		SinkIdentifier: aws.String(d.Get("sink_identifier").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateLink(ctx, in)

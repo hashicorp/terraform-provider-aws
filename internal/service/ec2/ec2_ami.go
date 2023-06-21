@@ -364,7 +364,7 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(output.ImageId))
 
-	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EC2 AMI (%s) tags: %s", d.Id(), err)
 	}
 
@@ -453,7 +453,7 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_block_device: %s", err)
 	}
 
-	SetTagsOut(ctx, image.Tags)
+	setTagsOut(ctx, image.Tags)
 
 	return diags
 }

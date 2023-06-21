@@ -88,7 +88,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &elasticbeanstalk.CreateApplicationInput{
 		ApplicationName: aws.String(name),
 		Description:     aws.String(d.Get("description").(string)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	_, err := conn.CreateApplicationWithContext(ctx, input)

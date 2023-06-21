@@ -138,7 +138,7 @@ func resourceLocationFSxOpenZFSFileSystemCreate(ctx context.Context, d *schema.R
 		FsxFilesystemArn:  aws.String(fsxArn),
 		Protocol:          expandProtocol(d.Get("protocol").([]interface{})),
 		SecurityGroupArns: flex.ExpandStringSet(d.Get("security_group_arns").(*schema.Set)),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("subdirectory"); ok {
@@ -172,7 +172,7 @@ func resourceLocationFSxOpenZFSFileSystemRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location Fsx OpenZfs (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
+	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location Fsx OpenZfs (%s): %s", d.Id(), err)

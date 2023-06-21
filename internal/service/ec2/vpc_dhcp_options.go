@@ -157,7 +157,7 @@ func resourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 DHCP Options (%s): %s", d.Id(), err)
 	}
 
-	SetTagsOut(ctx, opts.Tags)
+	setTagsOut(ctx, opts.Tags)
 
 	return diags
 }

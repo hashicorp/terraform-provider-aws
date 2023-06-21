@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 func FindAvailabilityZones(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeAvailabilityZonesInput) ([]*ec2.AvailabilityZone, error) {
@@ -2014,7 +2014,7 @@ func FindRouteByIPv4Destination(ctx context.Context, conn *ec2.EC2, routeTableID
 	}
 
 	for _, route := range routeTable.Routes {
-		if verify.CIDRBlocksEqual(aws.StringValue(route.DestinationCidrBlock), destinationCidr) {
+		if itypes.CIDRBlocksEqual(aws.StringValue(route.DestinationCidrBlock), destinationCidr) {
 			return route, nil
 		}
 	}
@@ -2034,7 +2034,7 @@ func FindRouteByIPv6Destination(ctx context.Context, conn *ec2.EC2, routeTableID
 	}
 
 	for _, route := range routeTable.Routes {
-		if verify.CIDRBlocksEqual(aws.StringValue(route.DestinationIpv6CidrBlock), destinationIpv6Cidr) {
+		if itypes.CIDRBlocksEqual(aws.StringValue(route.DestinationIpv6CidrBlock), destinationIpv6Cidr) {
 			return route, nil
 		}
 	}
@@ -4623,7 +4623,7 @@ func FindTransitGatewayRoute(ctx context.Context, conn *ec2.EC2, transitGatewayR
 			continue
 		}
 
-		if v := aws.StringValue(route.DestinationCidrBlock); verify.CIDRBlocksEqual(v, destination) {
+		if v := aws.StringValue(route.DestinationCidrBlock); itypes.CIDRBlocksEqual(v, destination) {
 			if state := aws.StringValue(route.State); state == ec2.TransitGatewayRouteStateDeleted {
 				return nil, &retry.NotFoundError{
 					Message:     state,
@@ -4631,7 +4631,7 @@ func FindTransitGatewayRoute(ctx context.Context, conn *ec2.EC2, transitGatewayR
 				}
 			}
 
-			route.DestinationCidrBlock = aws.String(verify.CanonicalCIDRBlock(v))
+			route.DestinationCidrBlock = aws.String(itypes.CanonicalCIDRBlock(v))
 
 			return route, nil
 		}

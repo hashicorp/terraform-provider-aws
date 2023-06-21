@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -34,11 +33,11 @@ func init() {
 
 func sweepContainerServices(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LightsailClient(ctx)
+	conn := client.LightsailClient(ctx)
 
 	input := &lightsail.GetContainerServicesInput{}
 	var sweeperErrs *multierror.Error
@@ -81,11 +80,11 @@ func sweepContainerServices(region string) error {
 
 func sweepInstances(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LightsailClient(ctx)
+	conn := client.LightsailClient(ctx)
 
 	input := &lightsail.GetInstancesInput{}
 	var sweeperErrs *multierror.Error
@@ -130,11 +129,11 @@ func sweepInstances(region string) error {
 
 func sweepStaticIPs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LightsailClient(ctx)
+	conn := client.LightsailClient(ctx)
 
 	input := &lightsail.GetStaticIpsInput{}
 

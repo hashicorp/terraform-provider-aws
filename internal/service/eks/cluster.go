@@ -298,7 +298,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Name:               aws.String(name),
 		ResourcesVpcConfig: expandVPCConfigRequestForCreate(d.Get("vpc_config").([]interface{})),
 		RoleArn:            aws.String(d.Get("role_arn").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if _, ok := d.GetOk("kubernetes_network_config"); ok {
@@ -408,7 +408,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("setting vpc_config: %s", err)
 	}
 
-	SetTagsOut(ctx, cluster.Tags)
+	setTagsOut(ctx, cluster.Tags)
 
 	return nil
 }

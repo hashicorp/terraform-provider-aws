@@ -108,7 +108,7 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 
 	input := &macie2.CreateCustomDataIdentifierInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("regex"); ok {
@@ -188,7 +188,7 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("description", resp.Description)
 	d.Set("maximum_match_distance", resp.MaximumMatchDistance)
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	if aws.BoolValue(resp.Deleted) {
 		log.Printf("[WARN] Macie CustomDataIdentifier (%s) is soft deleted, removing from state", d.Id())

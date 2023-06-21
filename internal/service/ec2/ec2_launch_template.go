@@ -1046,7 +1046,7 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	SetTagsOut(ctx, lt.Tags)
+	setTagsOut(ctx, lt.Tags)
 
 	return diags
 }

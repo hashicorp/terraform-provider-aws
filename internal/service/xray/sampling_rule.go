@@ -135,7 +135,7 @@ func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &xray.CreateSamplingRuleInput{
 		SamplingRule: samplingRule,
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateSamplingRule(ctx, input)

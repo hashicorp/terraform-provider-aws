@@ -84,7 +84,7 @@ func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.StringValue(resp.VoiceConnector.VoiceConnectorId))
 
 	tagsConn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
-	if err := createTags(ctx, tagsConn, aws.StringValue(resp.VoiceConnector.VoiceConnectorArn), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, tagsConn, aws.StringValue(resp.VoiceConnector.VoiceConnectorArn), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Chime Voice Connector (%s) tags: %s", d.Id(), err)
 	}
 

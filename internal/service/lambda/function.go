@@ -437,7 +437,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		PackageType:  packageType,
 		Publish:      d.Get("publish").(bool),
 		Role:         aws.String(d.Get("role").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		Timeout:      aws.Int32(int32(d.Get("timeout").(int))),
 	}
 
@@ -685,7 +685,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("qualified_invoke_arn", functionInvokeARN(qualifiedARN, meta))
 		d.Set("version", latest.Version)
 
-		SetTagsOut(ctx, output.Tags)
+		setTagsOut(ctx, output.Tags)
 	}
 
 	// Currently, this functionality is only enabled in AWS Commercial partition

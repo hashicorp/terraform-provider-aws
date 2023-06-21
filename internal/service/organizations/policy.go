@@ -80,7 +80,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Description: aws.String(d.Get("description").(string)),
 		Name:        aws.String(name),
 		Type:        aws.String(d.Get("type").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 4*time.Minute, func() (interface{}, error) {
@@ -169,12 +169,10 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil
 	}
 
-	input := &organizations.DeletePolicyInput{
-		PolicyId: aws.String(d.Id()),
-	}
-
 	log.Printf("[DEBUG] Deleting Organizations Policy: %s", d.Id())
-	_, err := conn.DeletePolicyWithContext(ctx, input)
+	_, err := conn.DeletePolicyWithContext(ctx, &organizations.DeletePolicyInput{
+		PolicyId: aws.String(d.Id()),
+	})
 
 	if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
 		return nil

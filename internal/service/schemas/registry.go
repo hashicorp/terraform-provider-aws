@@ -67,7 +67,7 @@ func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta in
 	name := d.Get("name").(string)
 	input := &schemas.CreateRegistryInput{
 		RegistryName: aws.String(name),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

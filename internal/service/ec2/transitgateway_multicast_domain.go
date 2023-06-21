@@ -130,7 +130,7 @@ func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.Re
 	d.Set("static_sources_support", multicastDomain.Options.StaticSourcesSupport)
 	d.Set("transit_gateway_id", multicastDomain.TransitGatewayId)
 
-	SetTagsOut(ctx, multicastDomain.Tags)
+	setTagsOut(ctx, multicastDomain.Tags)
 
 	return nil
 }

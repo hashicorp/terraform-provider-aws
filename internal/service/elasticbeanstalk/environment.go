@@ -1,6 +1,6 @@
 package elasticbeanstalk
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"log"
@@ -223,7 +223,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		ApplicationName: aws.String(d.Get("application").(string)),
 		EnvironmentName: aws.String(name),
 		OptionSettings:  extractOptionSettings(d.Get("setting").(*schema.Set)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v := d.Get("description"); v.(string) != "" {

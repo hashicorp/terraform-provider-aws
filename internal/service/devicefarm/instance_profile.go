@@ -101,7 +101,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(aws.StringValue(output.InstanceProfile.Arn))
 
-	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Instance Profile (%s) tags: %s", d.Id(), err)
 	}
 

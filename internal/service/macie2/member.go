@@ -102,7 +102,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			AccountId: aws.String(accountId),
 			Email:     aws.String(d.Get("email").(string)),
 		},
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	var err error
@@ -214,7 +214,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("updated_at", aws.TimeValue(resp.UpdatedAt).Format(time.RFC3339))
 	d.Set("arn", resp.Arn)
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	status := aws.StringValue(resp.RelationshipStatus)
 	log.Printf("[DEBUG] print resp.RelationshipStatus: %v", aws.StringValue(resp.RelationshipStatus))

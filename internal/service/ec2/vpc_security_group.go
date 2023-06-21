@@ -305,7 +305,7 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("setting egress: %s", err)
 	}
 
-	SetTagsOut(ctx, sg.Tags)
+	setTagsOut(ctx, sg.Tags)
 
 	return nil
 }

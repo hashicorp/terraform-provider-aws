@@ -1,6 +1,6 @@
 package autoscaling
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"log"
@@ -1305,7 +1305,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		oldTags := Tags(KeyValueTags(ctx, oTagRaw, d.Id(), TagResourceTypeGroup))
 		newTags := Tags(KeyValueTags(ctx, nTagRaw, d.Id(), TagResourceTypeGroup))
 
-		if err := UpdateTags(ctx, conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {
+		if err := updateTags(ctx, conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags for Auto Scaling Group (%s): %s", d.Id(), err)
 		}
 	}

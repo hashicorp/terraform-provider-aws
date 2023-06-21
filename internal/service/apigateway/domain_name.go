@@ -178,7 +178,7 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &apigateway.CreateDomainNameInput{
 		DomainName:              aws.String(domainName),
 		MutualTlsAuthentication: expandMutualTLSAuthentication(d.Get("mutual_tls_authentication").([]interface{})),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("certificate_arn"); ok {
@@ -278,7 +278,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("regional_zone_id", domainName.RegionalHostedZoneId)
 	d.Set("security_policy", domainName.SecurityPolicy)
 
-	SetTagsOut(ctx, domainName.Tags)
+	setTagsOut(ctx, domainName.Tags)
 
 	return diags
 }

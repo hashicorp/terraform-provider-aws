@@ -233,7 +233,7 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EC2 Default Route Table (%s) tags: %s", d.Id(), err)
 	}
 

@@ -107,7 +107,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic").(string)),
 		SubscriptionName: aws.String(name),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("event_categories"); ok && v.(*schema.Set).Len() > 0 {

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -51,12 +50,12 @@ func init() {
 
 func sweepResourceDefaultPatchBaselines(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).SSMClient(ctx)
+	conn := client.SSMClient(ctx)
 
 	var sweepables []sweep.Sweepable
 	var errs *multierror.Error
@@ -117,13 +116,13 @@ func (s defaultPatchBaselineSweeper) Delete(ctx context.Context, timeout time.Du
 
 func sweepMaintenanceWindows(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).SSMConn(ctx)
+	conn := client.SSMConn(ctx)
 
 	input := &ssm_sdkv1.DescribeMaintenanceWindowsInput{}
 	var sweeperErrs *multierror.Error
@@ -174,12 +173,12 @@ func sweepMaintenanceWindows(region string) error {
 
 func sweepResourcePatchBaselines(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).SSMClient(ctx)
+	conn := client.SSMClient(ctx)
 
 	var sweepables []sweep.Sweepable
 	var errs *multierror.Error
@@ -199,7 +198,7 @@ func sweepResourcePatchBaselines(region string) error {
 
 			d.SetId(baselineID)
 
-			sweepables = append(sweepables, sweep.NewSweepResource(r, d, conn))
+			sweepables = append(sweepables, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
@@ -217,13 +216,13 @@ func sweepResourcePatchBaselines(region string) error {
 
 func sweepResourceDataSyncs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).SSMConn(ctx)
+	conn := client.SSMConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error

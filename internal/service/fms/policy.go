@@ -167,7 +167,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	input := &fms.PutPolicyInput{
 		Policy:  resourcePolicyExpandPolicy(d),
-		TagList: GetTagsIn(ctx),
+		TagList: getTagsIn(ctx),
 	}
 
 	output, err := conn.PutPolicyWithContext(ctx, input)

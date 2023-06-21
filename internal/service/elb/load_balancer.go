@@ -1,6 +1,6 @@
 package elb
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"bytes"
 	"context"
 	"fmt"
@@ -289,7 +289,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	input := &elb.CreateLoadBalancerInput{
 		LoadBalancerName: aws.String(elbName),
 		Listeners:        listeners,
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
