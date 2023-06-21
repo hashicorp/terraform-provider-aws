@@ -31,11 +31,7 @@ var sweeperClients map[string]*conns.AWSClient = make(map[string]*conns.AWSClien
 
 // SharedRegionalSweepClient returns a common conns.AWSClient setup needed for the sweeper
 // functions for a given region
-func SharedRegionalSweepClient(region string) (*conns.AWSClient, error) {
-	return SharedRegionalSweepClientWithContext(Context(region), region)
-}
-
-func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (*conns.AWSClient, error) {
+func SharedRegionalSweepClient(ctx context.Context, region string) (*conns.AWSClient, error) {
 	if client, ok := sweeperClients[region]; ok {
 		return client, nil
 	}
