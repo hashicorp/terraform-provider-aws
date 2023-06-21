@@ -488,13 +488,11 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 		// Check if alias or valid ARN.
 		if strings.HasPrefix(v.(string), "alias/") {
 			log.Printf("[INFO] KMS Key alias given: %s", v.(string))
-			// Alias given, get associated ARN.
-			kmsClient := meta.(*conns.AWSClient).KMSConn()
-
+			kmsClient := meta.(*conns.AWSClient).KMSConn(ctx)
 			kmsKeyMetadata, err := kms.FindKeyByID(ctx, kmsClient, v.(string))
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "could not find KMS key based on key alias provided (%s): %s", v.(string), err)
+				return sdkdiag.AppendErrorf(diags, "could not find KMS key based on key alias %s. Error: %s", v.(string), err)
 			}
 
 			log.Printf("[INFO] KMS Key ARN returned: %s", *kmsKeyMetadata.Arn)
@@ -502,13 +500,11 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 		} else if strings.HasPrefix(v.(string), "arn:") {
 			log.Printf("[INFO] KMS Key ARN given: %s", v.(string))
 			ValidateARN := verify.ValidARNCheck()
-			warnings, errors := ValidateARN(v.(string), "arn")
+			_, errors := ValidateARN(v.(string), "arn")
+
 			if len(errors) != 0 {
 				return sdkdiag.AppendErrorf(diags, "%s", errors[0])
 			}
-
-			log.Printf("[INFO] KMS Key ARN compliance errors: %v", errors)
-			log.Printf("[INFO] KMS Key ARN compliance warnings: %v", warnings)
 
 			input.SSEKMSKeyId = aws.String(v.(string))
 		}
