@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -58,7 +57,7 @@ func sweepFramework(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).BackupConn(ctx)
+	conn := client.BackupConn(ctx)
 	input := &backup.ListFrameworksInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -101,7 +100,7 @@ func sweepReportPlan(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).BackupConn(ctx)
+	conn := client.BackupConn(ctx)
 	input := &backup.ListReportPlansInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -146,7 +145,7 @@ func sweepVaultLockConfiguration(region string) error {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).BackupConn(ctx)
+	conn := client.BackupConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -196,7 +195,7 @@ func sweepVaultNotifications(region string) error {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).BackupConn(ctx)
+	conn := client.BackupConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -244,7 +243,7 @@ func sweepVaultPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).BackupConn(ctx)
+	conn := client.BackupConn(ctx)
 	input := &backup.ListBackupVaultsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -288,7 +287,7 @@ func sweepVaults(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).BackupConn(ctx)
+	conn := client.BackupConn(ctx)
 	input := &backup.ListBackupVaultsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)

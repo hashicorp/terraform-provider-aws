@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -32,7 +31,7 @@ func sweepActivities(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SFNConn(ctx)
+	conn := client.SFNConn(ctx)
 	input := &sfn.ListActivitiesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -76,7 +75,7 @@ func sweepStateMachines(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SFNConn(ctx)
+	conn := client.SFNConn(ctx)
 	input := &sfn.ListStateMachinesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

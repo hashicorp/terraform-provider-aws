@@ -43,7 +43,7 @@ func ResourceDevEndpoint() *schema.Resource {
 			"arguments": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				Elem:     schema.TypeString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"arn": {
 				Type:     schema.TypeString,

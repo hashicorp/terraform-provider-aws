@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/timestreamwrite"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -34,7 +33,7 @@ func sweepDatabases(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &timestreamwrite.ListDatabasesInput{}
-	conn := client.(*conns.AWSClient).TimestreamWriteConn(ctx)
+	conn := client.TimestreamWriteConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListDatabasesPagesWithContext(ctx, input, func(page *timestreamwrite.ListDatabasesOutput, lastPage bool) bool {
@@ -78,7 +77,7 @@ func sweepTables(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &timestreamwrite.ListTablesInput{}
-	conn := client.(*conns.AWSClient).TimestreamWriteConn(ctx)
+	conn := client.TimestreamWriteConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListTablesPagesWithContext(ctx, input, func(page *timestreamwrite.ListTablesOutput, lastPage bool) bool {

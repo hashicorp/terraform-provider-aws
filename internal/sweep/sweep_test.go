@@ -153,6 +153,5 @@ import (
 
 func TestMain(m *testing.M) {
 	sweep.ServicePackages = servicePackages(context.Background())
-	sweep.SweeperClients = make(map[string]interface{})
 	resource.TestMain(m)
 }
