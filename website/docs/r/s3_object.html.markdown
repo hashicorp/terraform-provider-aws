@@ -27,8 +27,9 @@ resource "aws_s3_object" "object" {
 }
 ```
 
-### Encrypting with KMS Key
+### Server Side Encryption
 
+#### KMS Key
 ```terraform
 resource "aws_kms_key" "examplekms" {
   description             = "KMS key 1"
@@ -52,7 +53,22 @@ resource "aws_s3_object" "example" {
 }
 ```
 
-### Server Side Encryption with S3 Default Master Key
+#### KMS Key alias
+
+```terraform
+resource "aws_s3_bucket" "examplebucket" {
+  bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_object" "example" {
+  key                    = "someobject"
+  bucket                 = aws_s3_bucket.examplebucket.id
+  source                 = "index.html"
+  server_side_encryption = "alias/aws/s3"
+}
+```
+
+#### S3 Default Master Key
 
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
@@ -72,7 +88,7 @@ resource "aws_s3_object" "example" {
 }
 ```
 
-### Server Side Encryption with AWS-Managed Key
+#### AWS-Managed Key
 
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
@@ -126,21 +142,6 @@ resource "aws_s3_object" "examplebucket_object" {
   object_lock_retain_until_date = "2021-12-31T23:59:60Z"
 
   force_destroy = true
-}
-```
-
-### Server Side Encryption with KMS Key alias
-
-```terraform
-resource "aws_s3_bucket" "examplebucket" {
-  bucket = "examplebuckettftest"
-}
-
-resource "aws_s3_object" "example" {
-  key                    = "someobject"
-  bucket                 = aws_s3_bucket.examplebucket.id
-  source                 = "index.html"
-  server_side_encryption = "alias/aws/s3"
 }
 ```
 
