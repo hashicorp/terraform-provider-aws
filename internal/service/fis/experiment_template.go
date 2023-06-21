@@ -227,7 +227,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 				},
 			},
 			"log_configuration": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -237,7 +237,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 							Required: true,
 						},
 						"cloudwatch_logs_configuration": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -250,7 +250,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 							},
 						},
 						"s3_configuration": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -285,7 +285,7 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 		RoleArn:          aws.String(d.Get("role_arn").(string)),
 		StopConditions:   expandExperimentTemplateStopConditions(d.Get("stop_condition").(*schema.Set)),
 		Tags:             getTagsIn(ctx),
-		LogConfiguration: expandExperimentTemplateLogConfiguration(d.Get("log_configuration").(*schema.Set)),
+		LogConfiguration: expandExperimentTemplateLogConfiguration(d.Get("log_configuration").([]interface{})),
 	}
 
 	targets, err := expandExperimentTemplateTargets(d.Get("target").(*schema.Set))
@@ -389,7 +389,7 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if d.HasChange("log_configuration") {
-		config, err := expandExperimentTemplateLogConfigurationForUpdate(d.Get("log_configuration").(*schema.Set))
+		config, err := expandExperimentTemplateLogConfigurationForUpdate(d.Get("log_configuration").([]interface{}))
 		if err != nil {
 			return create.DiagError(names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
 		}
@@ -529,34 +529,34 @@ func expandExperimentTemplateStopConditions(l *schema.Set) []types.CreateExperim
 	return items
 }
 
-func expandExperimentTemplateLogConfiguration(l *schema.Set) *types.CreateExperimentTemplateLogConfigurationInput {
-	if l.Len() == 0 {
+func expandExperimentTemplateLogConfiguration(l []interface{}) *types.CreateExperimentTemplateLogConfigurationInput {
+	if len(l) == 0 {
 		return nil
 	}
 
-	raw := l.List()[0].(map[string]interface{})
+	raw := l[0].(map[string]interface{})
 
 	config := types.CreateExperimentTemplateLogConfigurationInput{
-		LogSchemaVersion: aws.Int32(raw["log_schema_version"].(int32)),
+		LogSchemaVersion: aws.Int32(int32(raw["log_schema_version"].(int))),
 	}
 
-	if v, ok := raw["cloudwatch_logs_configuration"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := raw["cloudwatch_logs_configuration"].([]interface{}); ok && len(v) > 0 {
 		config.CloudWatchLogsConfiguration = expandExperimentTemplateCloudWatchLogsConfiguration(v)
 	}
 
-	if v, ok := raw["s3_configuration"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := raw["s3_configuration"].([]interface{}); ok && len(v) > 0 {
 		config.S3Configuration = expandExperimentTemplateS3Configuration(v)
 	}
 
 	return &config
 }
 
-func expandExperimentTemplateCloudWatchLogsConfiguration(l *schema.Set) *types.ExperimentTemplateCloudWatchLogsLogConfigurationInput {
-	if l.Len() == 0 {
+func expandExperimentTemplateCloudWatchLogsConfiguration(l []interface{}) *types.ExperimentTemplateCloudWatchLogsLogConfigurationInput {
+	if len(l) == 0 {
 		return nil
 	}
 
-	raw := l.List()[0].(map[string]interface{})
+	raw := l[0].(map[string]interface{})
 
 	config := types.ExperimentTemplateCloudWatchLogsLogConfigurationInput{
 		LogGroupArn: aws.String(raw["log_group_arn"].(string)),
@@ -564,12 +564,12 @@ func expandExperimentTemplateCloudWatchLogsConfiguration(l *schema.Set) *types.E
 	return &config
 }
 
-func expandExperimentTemplateS3Configuration(l *schema.Set) *types.ExperimentTemplateS3LogConfigurationInput {
-	if l.Len() == 0 {
+func expandExperimentTemplateS3Configuration(l []interface{}) *types.ExperimentTemplateS3LogConfigurationInput {
+	if len(l) == 0 {
 		return nil
 	}
 
-	raw := l.List()[0].(map[string]interface{})
+	raw := l[0].(map[string]interface{})
 
 	config := types.ExperimentTemplateS3LogConfigurationInput{
 		BucketName: aws.String(raw["bucket_name"].(string)),
@@ -711,20 +711,20 @@ func expandExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]types.U
 	return attrs, nil
 }
 
-func expandExperimentTemplateLogConfigurationForUpdate(l *schema.Set) (*types.UpdateExperimentTemplateLogConfigurationInput, error) {
-	if l.Len() == 0 {
+func expandExperimentTemplateLogConfigurationForUpdate(l []interface{}) (*types.UpdateExperimentTemplateLogConfigurationInput, error) {
+	if len(l) == 0 {
 		return nil, nil
 	}
 
-	raw := l.List()[0].(map[string]interface{})
+	raw := l[0].(map[string]interface{})
 	config := types.UpdateExperimentTemplateLogConfigurationInput{
-		LogSchemaVersion: aws.Int32(raw["log_schema_version"].(int32)),
+		LogSchemaVersion: aws.Int32(int32(raw["log_schema_version"].(int))),
 	}
-	if v, ok := raw["cloudwatch_logs_configuration"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := raw["cloudwatch_logs_configuration"].([]interface{}); ok && len(v) > 0 {
 		config.CloudWatchLogsConfiguration = expandExperimentTemplateCloudWatchLogsConfiguration(v)
 	}
 
-	if v, ok := raw["s3_configuration"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := raw["s3_configuration"].([]interface{}); ok && len(v) > 0 {
 		config.S3Configuration = expandExperimentTemplateS3Configuration(v)
 	}
 
@@ -868,9 +868,9 @@ func flattenExperimentTemplateLogConfiguration(configured *types.ExperimentTempl
 	}
 
 	dataResources := make([]map[string]interface{}, 1)
-
+	dataResources[0] = make(map[string]interface{})
 	dataResources[0]["log_schema_version"] = configured.LogSchemaVersion
-	dataResources[0]["cloud_watch_logs_configuration"] = flattenCloudWatchLogsConfiguration(configured.CloudWatchLogsConfiguration)
+	dataResources[0]["cloudwatch_logs_configuration"] = flattenCloudWatchLogsConfiguration(configured.CloudWatchLogsConfiguration)
 	dataResources[0]["s3_configuration"] = flattenS3Configuration(configured.S3Configuration)
 
 	return dataResources
@@ -882,7 +882,7 @@ func flattenCloudWatchLogsConfiguration(configured *types.ExperimentTemplateClou
 	}
 
 	dataResources := make([]map[string]interface{}, 1)
-
+	dataResources[0] = make(map[string]interface{})
 	dataResources[0]["log_group_arn"] = configured.LogGroupArn
 
 	return dataResources
@@ -894,9 +894,9 @@ func flattenS3Configuration(configured *types.ExperimentTemplateS3LogConfigurati
 	}
 
 	dataResources := make([]map[string]interface{}, 1)
-
+	dataResources[0] = make(map[string]interface{})
 	dataResources[0]["bucket_name"] = configured.BucketName
-	if configured.Prefix != nil && *configured.Prefix != "" {
+	if aws.ToString(configured.Prefix) != "" {
 		dataResources[0]["prefix"] = configured.Prefix
 	}
 
