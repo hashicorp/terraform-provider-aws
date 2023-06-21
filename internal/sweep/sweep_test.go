@@ -3,6 +3,7 @@
 package sweep_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -147,8 +148,10 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestMain(m *testing.M) {
+	sweep.ServicePackages = servicePackages(context.Background())
 	resource.TestMain(m)
 }

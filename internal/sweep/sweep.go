@@ -25,6 +25,9 @@ const (
 
 const defaultSweeperAssumeRoleDurationSeconds = 3600
 
+// ServicePackages is set in TestMain in order to break an import cycle.
+var ServicePackages []conns.ServicePackage
+
 // sweeperClients is a shared cache of regional conns.AWSClient
 // This prevents client re-initialization for every resource with no benefit.
 var sweeperClients map[string]*conns.AWSClient = make(map[string]*conns.AWSClient)
@@ -51,6 +54,14 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (*
 			return nil, err
 		}
 	}
+
+	meta := new(conns.AWSClient)
+	servicePackageMap := make(map[string]conns.ServicePackage)
+	for _, sp := range ServicePackages {
+		servicePackageName := sp.ServicePackageName()
+		servicePackageMap[servicePackageName] = sp
+	}
+	meta.ServicePackages = servicePackageMap
 
 	conf := &conns.Config{
 		MaxRetries:       5,
@@ -80,7 +91,7 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (*
 	}
 
 	// configures a default client for the region, using the above env vars
-	client, diags := conf.ConfigureProvider(ctx, &conns.AWSClient{})
+	client, diags := conf.ConfigureProvider(ctx, meta)
 
 	if diags.HasError() {
 		return nil, fmt.Errorf("getting AWS client: %#v", diags)

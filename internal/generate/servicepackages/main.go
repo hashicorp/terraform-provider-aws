@@ -5,6 +5,7 @@ package main
 
 import (
 	_ "embed"
+	"flag"
 	"fmt"
 	"os"
 	"sort"
@@ -15,9 +16,16 @@ import (
 
 func main() {
 	const (
-		filename      = `service_packages_gen.go`
 		namesDataFile = `../../names/names_data.csv`
 	)
+	filename := `service_packages_gen.go`
+
+	flag.Parse()
+	args := flag.Args()
+	if len(args) > 0 {
+		filename = args[0]
+	}
+
 	g := common.NewGenerator()
 
 	packageName := os.Getenv("GOPACKAGE")
