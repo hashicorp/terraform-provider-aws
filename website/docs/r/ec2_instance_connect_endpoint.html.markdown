@@ -43,6 +43,7 @@ In addition to all arguments above, the following attributes are exported:
 * `dns_name` - The DNS name of the EC2 Instance Connect Endpoint.
 * `fips_dns_name` - The DNS name of the EC2 Instance Connect FIPS Endpoint.
 * `network_interface_ids` - The IDs of the ENIs that Amazon EC2 automatically created when creating the EC2 Instance Connect Endpoint.
+* `owner_id` - The ID of the AWS account that created the EC2 Instance Connect Endpoint.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_id` - The ID of the VPC in which the EC2 Instance Connect Endpoint was created.
 

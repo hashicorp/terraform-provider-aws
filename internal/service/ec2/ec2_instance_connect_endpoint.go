@@ -83,6 +83,12 @@ func (r *resourceInstanceConnectEndpoint) Schema(ctx context.Context, req resour
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"owner_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"preserve_client_ip": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -166,6 +172,7 @@ func (r *resourceInstanceConnectEndpoint) Create(ctx context.Context, request re
 	data.DNSName = types.StringPointerValue(instanceConnectEndpoint.DnsName)
 	data.FIPSDNSName = types.StringPointerValue(instanceConnectEndpoint.FipsDnsName)
 	data.NetworkInterfaceIDs = flex.FlattenFrameworkStringValueList(ctx, instanceConnectEndpoint.NetworkInterfaceIds)
+	data.OwnerID = types.StringPointerValue(instanceConnectEndpoint.OwnerId)
 	data.SecurityGroupIDs = flex.FlattenFrameworkStringValueSet(ctx, instanceConnectEndpoint.SecurityGroupIds)
 	data.VPCID = types.StringPointerValue(instanceConnectEndpoint.VpcId)
 
@@ -203,6 +210,7 @@ func (r *resourceInstanceConnectEndpoint) Read(ctx context.Context, request reso
 	data.DNSName = types.StringPointerValue(instanceConnectEndpoint.DnsName)
 	data.FIPSDNSName = types.StringPointerValue(instanceConnectEndpoint.FipsDnsName)
 	data.NetworkInterfaceIDs = flex.FlattenFrameworkStringValueList(ctx, instanceConnectEndpoint.NetworkInterfaceIds)
+	data.OwnerID = types.StringPointerValue(instanceConnectEndpoint.OwnerId)
 	data.PreserveClientIP = types.BoolPointerValue(instanceConnectEndpoint.PreserveClientIp)
 	data.SecurityGroupIDs = flex.FlattenFrameworkStringValueSet(ctx, instanceConnectEndpoint.SecurityGroupIds)
 	data.SubnetID = types.StringPointerValue(instanceConnectEndpoint.SubnetId)
@@ -265,6 +273,7 @@ type resourceInstanceConnectEndpointData struct {
 	FIPSDNSName         types.String   `tfsdk:"fips_dns_name"`
 	ID                  types.String   `tfsdk:"id"`
 	NetworkInterfaceIDs types.List     `tfsdk:"network_interface_ids"`
+	OwnerID             types.String   `tfsdk:"owner_id"`
 	PreserveClientIP    types.Bool     `tfsdk:"preserve_client_ip"`
 	SecurityGroupIDs    types.Set      `tfsdk:"security_group_ids"`
 	SubnetID            types.String   `tfsdk:"subnet_id"`
