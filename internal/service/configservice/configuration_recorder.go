@@ -209,7 +209,6 @@ func FindConfigurationRecorderByName(ctx context.Context, conn *configservice.Co
 
 func resourceConfigCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if diff.Id() == "" { // New resource.
-
 		if g, ok := diff.GetOk("recording_group"); ok {
 			group := g.([]interface{})[0].(map[string]interface{})
 
@@ -257,7 +256,6 @@ func resourceConfigCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v
 						}
 					}
 				}
-
 			}
 		}
 	}
