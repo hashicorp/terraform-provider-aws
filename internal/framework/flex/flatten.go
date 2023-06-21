@@ -119,6 +119,14 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 		switch tSliceElem := valFrom.Type().Elem(); tSliceElem.Kind() {
 		case reflect.String:
 			switch {
+			case tTo.TerraformType(ctx).Is(tftypes.List{}):
+				if vFrom != nil {
+					valTo.Set(reflect.ValueOf(FlattenFrameworkStringValueList(ctx, vFrom.([]string))))
+				} else {
+					valTo.Set(reflect.ValueOf(types.ListNull(types.StringType)))
+				}
+				return nil
+
 			case tTo.TerraformType(ctx).Is(tftypes.Set{}):
 				if vFrom != nil {
 					valTo.Set(reflect.ValueOf(FlattenFrameworkStringValueSet(ctx, vFrom.([]string))))
@@ -132,6 +140,14 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 			switch tSliceElem.Elem().Kind() {
 			case reflect.String:
 				switch {
+				case tTo.TerraformType(ctx).Is(tftypes.List{}):
+					if vFrom != nil {
+						valTo.Set(reflect.ValueOf(FlattenFrameworkStringList(ctx, vFrom.([]*string))))
+					} else {
+						valTo.Set(reflect.ValueOf(types.ListNull(types.StringType)))
+					}
+					return nil
+
 				case tTo.TerraformType(ctx).Is(tftypes.Set{}):
 					if vFrom != nil {
 						valTo.Set(reflect.ValueOf(FlattenFrameworkStringSet(ctx, vFrom.([]*string))))
