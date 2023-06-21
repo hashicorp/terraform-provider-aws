@@ -52,7 +52,7 @@ func walkStructFields(ctx context.Context, from any, to any, visitor fieldVisito
 		}
 		fieldName := field.Name
 		if fieldName == "Tags" {
-			continue // Resource tags are handled seperately.
+			continue // Resource tags are handled separately.
 		}
 		toFieldVal := valTo.FieldByName(fieldName)
 		if !toFieldVal.IsValid() {
