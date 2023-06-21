@@ -149,7 +149,6 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 		}
 
 		// Aggregate types.
-		//types.SetType{ElemType: types.StringType}
 	case tFrom.Equal(types.SetType{ElemType: types.StringType}):
 		vFrom := vFrom.(types.Set)
 		switch kTo {

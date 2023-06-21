@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
 // Flatten "flattens" an AWS SDK for Go v2 API data structure into
@@ -108,6 +109,21 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 					valTo.Set(reflect.ValueOf(types.StringValue(vFrom.String())))
 				} else {
 					valTo.Set(reflect.ValueOf(types.StringNull()))
+				}
+				return nil
+			}
+		}
+
+	case reflect.Slice:
+		vFrom := valFrom.Interface()
+		switch valFrom.Type().Elem().Kind() {
+		case reflect.String:
+			switch {
+			case tTo.TerraformType(ctx).Is(tftypes.Set{}):
+				if vFrom != nil {
+					valTo.Set(reflect.ValueOf(FlattenFrameworkStringValueSet(ctx, vFrom.([]string))))
+				} else {
+					valTo.Set(reflect.ValueOf(types.SetNull(types.StringType)))
 				}
 				return nil
 			}

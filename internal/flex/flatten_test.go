@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -73,6 +74,14 @@ type PTestFlatten struct {
 
 type QTestFlatten struct {
 	Name types.Bool
+}
+
+type RTestFlatten struct {
+	Names []string
+}
+
+type STestFlatten struct {
+	Names types.Set
 }
 
 func TestGenericFlatten(t *testing.T) {
@@ -234,6 +243,18 @@ func TestGenericFlatten(t *testing.T) {
 			Source:     &PTestFlatten{Name: aws.Bool(true)},
 			Target:     &QTestFlatten{},
 			WantTarget: &QTestFlatten{Name: types.BoolValue(true)},
+		},
+		{
+			TestName:   "single string slice Source and single set Target",
+			Source:     &RTestFlatten{Names: []string{"a"}},
+			Target:     &STestFlatten{},
+			WantTarget: &STestFlatten{Names: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a")})},
+		},
+		{
+			TestName:   "single nil string slice Source and single set Target",
+			Source:     &RTestFlatten{},
+			Target:     &STestFlatten{},
+			WantTarget: &STestFlatten{Names: types.SetNull(types.StringType)},
 		},
 	}
 
