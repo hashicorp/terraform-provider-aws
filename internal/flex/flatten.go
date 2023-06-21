@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // Flatten "flattens" an AWS SDK for Go v2 API data structure into
@@ -23,5 +26,33 @@ func Flatten(ctx context.Context, apiObject, tfObject any) error {
 type flattenVisitor struct{}
 
 func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, valTo reflect.Value) error {
-	return nil
+	vTo, ok := valTo.Interface().(attr.Value)
+	if !ok {
+		return fmt.Errorf("does not implement attr.Value: %s", valTo.Kind())
+	}
+
+	kFrom, tTo := valFrom.Kind(), vTo.Type(ctx)
+	switch kFrom {
+	case reflect.String:
+		vFrom := valFrom.String()
+		switch {
+		case tTo.Equal(types.StringType):
+			valTo.Set(reflect.ValueOf(types.StringValue(vFrom)))
+			return nil
+		}
+
+	case reflect.Ptr:
+		vFrom := valFrom.Elem()
+		switch valFrom.Type().Elem().Kind() {
+		case reflect.String:
+			if vFrom.IsValid() {
+				valTo.Set(reflect.ValueOf(types.StringValue(vFrom.String())))
+			} else {
+				valTo.Set(reflect.ValueOf(types.StringNull()))
+			}
+			return nil
+		}
+	}
+
+	return fmt.Errorf("incompatible (%s): %s", kFrom, tTo)
 }
