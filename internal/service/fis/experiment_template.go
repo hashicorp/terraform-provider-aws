@@ -713,7 +713,7 @@ func expandExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]types.U
 
 func expandExperimentTemplateLogConfigurationForUpdate(l []interface{}) (*types.UpdateExperimentTemplateLogConfigurationInput, error) {
 	if len(l) == 0 {
-		return nil, nil
+		return &types.UpdateExperimentTemplateLogConfigurationInput{}, nil
 	}
 
 	raw := l[0].(map[string]interface{})
