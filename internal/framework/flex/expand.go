@@ -153,10 +153,18 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 		vFrom := vFrom.(types.Set)
 		switch kTo {
 		case reflect.Slice:
-			switch valTo.Type().Elem().Kind() {
+			tSliceElem := valTo.Type().Elem()
+			switch tSliceElem.Kind() {
 			case reflect.String:
 				valTo.Set(reflect.ValueOf(ExpandFrameworkStringValueSet(ctx, vFrom)))
 				return nil
+
+			case reflect.Ptr:
+				switch tSliceElem.Elem().Kind() {
+				case reflect.String:
+					valTo.Set(reflect.ValueOf(ExpandFrameworkStringSet(ctx, vFrom)))
+					return nil
+				}
 			}
 		}
 	}

@@ -84,6 +84,10 @@ type STestExpand struct {
 	Names []string
 }
 
+type TTestExpand struct {
+	Names []*string
+}
+
 func TestGenericExpand(t *testing.T) {
 	t.Parallel()
 
@@ -237,6 +241,12 @@ func TestGenericExpand(t *testing.T) {
 			Source:     &RTestExpand{Names: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a")})},
 			Target:     &STestExpand{},
 			WantTarget: &STestExpand{Names: []string{"a"}},
+		},
+		{
+			TestName:   "single set Source and single *string slice Target",
+			Source:     &RTestExpand{Names: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a")})},
+			Target:     &TTestExpand{},
+			WantTarget: &TTestExpand{Names: aws.StringSlice([]string{"a"})},
 		},
 	}
 
