@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	ec2v2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/aws/aws-sdk-go/service/ec2"
-
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -78,22 +78,26 @@ func TestAccEC2InstanceConnectEndpoint_disappears(t *testing.T) {
 
 func testAccCheckInstanceConnectEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_instance_connect_endpoint" {
 				continue
 			}
-
-			_, err := tfec2.FindInstanceConnectEndpointByID(ctx, conn, rs.Primary.ID)
-
-			//fmt.Println("Error from Destroy: DescribeInstanceConnectEndpoints :", err)
+			input := &ec2v2.DescribeInstanceConnectEndpointsInput{
+				InstanceConnectEndpointIds: []string{rs.Primary.ID},
+			}
+			_, err := conn.DescribeInstanceConnectEndpoints(ctx, input)
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					return nil
+				}
 				return err
 			}
 
@@ -169,70 +173,3 @@ resource "aws_ec2_instance_connect_endpoint" "test" {
 }
 `, rName)
 }
-
-/* func findInstanceConnectEndpointByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Ec2InstanceConnectEndpoint, error) {
-	in := &ec2.DescribeInstanceConnectEndpointsInput{
-		InstanceConnectEndpointIds: aws.StringSlice([]string{id}),
-	}
-
-	out, err := findInstanceConnectEndpoint(ctx, conn, in)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if state := aws.StringValue(out.State); state == ec2.Ec2InstanceConnectEndpointStateDeleteComplete {
-		return nil, &retry.NotFoundError{
-			Message:     state,
-			LastRequest: in,
-		}
-	}
-
-	// Eventual consistency check.
-	if aws.StringValue(out.InstanceConnectEndpointId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: in,
-		}
-	}
-
-	return out, nil
-}
-
-func findInstanceConnectEndpoint(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeInstanceConnectEndpointsInput) (*ec2.Ec2InstanceConnectEndpoint, error) {
-	out, err := findInstanceConnectEndpoints(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(out) == 0 || out[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return out[0], nil
-}
-
-func findInstanceConnectEndpoints(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeInstanceConnectEndpointsInput) ([]*ec2.Ec2InstanceConnectEndpoint, error) {
-	var out []*ec2.Ec2InstanceConnectEndpoint
-
-	err := conn.DescribeInstanceConnectEndpointsPagesWithContext(ctx, input, func(page *ec2.DescribeInstanceConnectEndpointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.InstanceConnectEndpoints {
-			if v != nil {
-				out = append(out, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return out, nil
-}
-*/
