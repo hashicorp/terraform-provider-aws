@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -73,6 +74,14 @@ type PTestExpand struct {
 
 type QTestExpand struct {
 	Name *bool
+}
+
+type RTestExpand struct {
+	Names types.Set
+}
+
+type STestExpand struct {
+	Names []string
 }
 
 func TestGenericExpand(t *testing.T) {
@@ -222,6 +231,12 @@ func TestGenericExpand(t *testing.T) {
 			Source:     &OTestExpand{Name: types.BoolValue(true)},
 			Target:     &QTestExpand{},
 			WantTarget: &QTestExpand{Name: aws.Bool(true)},
+		},
+		{
+			TestName:   "single set Source and single string slice Target",
+			Source:     &RTestExpand{Names: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a")})},
+			Target:     &STestExpand{},
+			WantTarget: &STestExpand{Names: []string{"a"}},
 		},
 	}
 

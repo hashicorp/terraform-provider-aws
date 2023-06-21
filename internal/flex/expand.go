@@ -85,6 +85,7 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 
 	tFrom, kTo := vFrom.Type(ctx), valTo.Kind()
 	switch {
+	// Simple types.
 	case tFrom.Equal(types.BoolType):
 		vFrom := vFrom.(types.Bool).ValueBool()
 		switch kTo {
@@ -143,6 +144,19 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 			switch valTo.Type().Elem().Kind() {
 			case reflect.String:
 				valTo.Set(reflect.ValueOf(aws.String(vFrom)))
+				return nil
+			}
+		}
+
+		// Aggregate types.
+		//types.SetType{ElemType: types.StringType}
+	case tFrom.Equal(types.SetType{ElemType: types.StringType}):
+		vFrom := vFrom.(types.Set)
+		switch kTo {
+		case reflect.Slice:
+			switch valTo.Type().Elem().Kind() {
+			case reflect.String:
+				valTo.Set(reflect.ValueOf(ExpandFrameworkStringValueSet(ctx, vFrom)))
 				return nil
 			}
 		}
