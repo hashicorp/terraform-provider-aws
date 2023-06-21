@@ -82,13 +82,8 @@ data "aws_billing_service_account" "test" {}
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
-  bucket        = "%[2]s"
+  bucket        = %[2]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_policy" "test" {
@@ -128,11 +123,11 @@ POLICY
 resource "aws_cur_report_definition" "test" {
   depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
-  report_name                = "%[1]s"
+  report_name                = %[1]q
   time_unit                  = "DAILY"
   format                     = "textORcsv"
   compression                = "GZIP"
-  additional_schema_elements = ["RESOURCES","SPLIT_COST_ALLOCATION_DATA"]
+  additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = aws_s3_bucket.test.id
   s3_prefix                  = ""
   s3_region                  = aws_s3_bucket.test.region
@@ -152,13 +147,8 @@ data "aws_billing_service_account" "test" {}
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
-  bucket        = "%[2]s"
+  bucket        = %[2]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_policy" "test" {
@@ -198,11 +188,11 @@ POLICY
 resource "aws_cur_report_definition" "test" {
   depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
-  report_name                = "%[1]s"
+  report_name                = %[1]q
   time_unit                  = "DAILY"
   format                     = "textORcsv"
   compression                = "GZIP"
-  additional_schema_elements = ["RESOURCES","SPLIT_COST_ALLOCATION_DATA"]
+  additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = aws_s3_bucket.test.id
   s3_prefix                  = ""
   s3_region                  = aws_s3_bucket.test.region
