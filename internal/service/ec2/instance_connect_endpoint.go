@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -25,15 +24,14 @@ import (
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @SDKResource("aws_ec2_instance_connect_endpoint")
-// @Tags(identifierAttribute="arn")
+// @SDKResource("aws_ec2_instance_connect_endpoint", name="Instance Connect Endpoint")
+
 func ResourceInstanceConnectEndpoint() *schema.Resource {
 	return &schema.Resource{
 		// TIP: ==== ASSIGN CRUD FUNCTIONS ====
 		// These 4 functions handle CRUD responsibilities below.
 		CreateWithoutTimeout: resourceInstanceConnectEndpointCreate,
 		ReadWithoutTimeout:   resourceInstanceConnectEndpointRead,
-		UpdateWithoutTimeout: resourceInstanceConnectEndpointRead,
 		DeleteWithoutTimeout: resourceInstanceConnectEndpointDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -50,13 +48,11 @@ func ResourceInstanceConnectEndpoint() *schema.Resource {
 			"subnet_id": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				ForceNew: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -64,7 +60,6 @@ func ResourceInstanceConnectEndpoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
-				ForceNew: true,
 			},
 			"availability_zone": {
 				Type:     schema.TypeString,
@@ -128,10 +123,11 @@ func resourceInstanceConnectEndpointCreate(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	in := &ec2.CreateInstanceConnectEndpointInput{
-		ClientToken:       aws.String(id.UniqueId()),
-		SubnetId:          aws.String(d.Get("subnet_id").(string)),
-		PreserveClientIp:  aws.Bool(d.Get("preserve_client_ip").(bool)),
-		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeInstanceConnectEndpoint)}
+		ClientToken:      aws.String(id.UniqueId()),
+		SubnetId:         aws.String(d.Get("subnet_id").(string)),
+		PreserveClientIp: aws.Bool(d.Get("preserve_client_ip").(bool)),
+		//TagSpecifications: getTagSpecificationsIn(ctx, ec2.Create),
+	}
 
 	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
 		in.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
@@ -150,19 +146,6 @@ func resourceInstanceConnectEndpointCreate(ctx context.Context, d *schema.Resour
 
 	if _, err = waitInstanceConnectEndpointAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance Connect Endpoint create: %s", err)
-	}
-
-	if tags := GetTagsIn(ctx); in.TagSpecifications == nil && len(tags) > 0 {
-		err := createTags(ctx, conn, d.Id(), tags)
-
-		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			return append(diags, resourceInstanceConnectEndpointRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting EC2 Instance Connect Endpoint tags: %s", err)
-		}
 	}
 
 	return append(diags, resourceInstanceConnectEndpointRead(ctx, d, meta)...)
@@ -186,10 +169,14 @@ func resourceInstanceConnectEndpointRead(ctx context.Context, d *schema.Resource
 	}
 
 	d.Set("availability_zone", out.AvailabilityZone)
+	d.Set("created_at", out.CreatedAt)
 	d.Set("dns_name", out.DnsName)
 	d.Set("fips_dns_name", out.FipsDnsName)
 	d.Set("arn", out.InstanceConnectEndpointArn)
 	d.Set("endpoint_id", out.InstanceConnectEndpointId)
+	d.Set("network_interface_id", out.NetworkInterfaceIds)
+	d.Set("owner_id", out.OwnerId)
+	d.Set("preserve_client_ip", out.PreserveClientIp)
 	d.Set("security_group_ids", out.SecurityGroupIds)
 	d.Set("state", out.State)
 	d.Set("state_message", out.StateMessage)
