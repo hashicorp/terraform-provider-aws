@@ -33,7 +33,6 @@ const (
 	GlacierEndpointID                    = "glacier"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
-	InstanceConnectEndpointID            = "ins"
 	IVSChatEndpointID                    = "ivschat"
 	KendraEndpointID                     = "kendra"
 	LambdaEndpointID                     = "lambda"

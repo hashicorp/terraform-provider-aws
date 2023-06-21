@@ -3,21 +3,22 @@ package ec2
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,6 +33,7 @@ func ResourceInstanceConnectEndpoint() *schema.Resource {
 		// These 4 functions handle CRUD responsibilities below.
 		CreateWithoutTimeout: resourceInstanceConnectEndpointCreate,
 		ReadWithoutTimeout:   resourceInstanceConnectEndpointRead,
+		UpdateWithoutTimeout: resourceInstanceConnectEndpointUpdate,
 		DeleteWithoutTimeout: resourceInstanceConnectEndpointDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -56,56 +58,10 @@ func ResourceInstanceConnectEndpoint() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"preserve_client_ip": {
+			"prevent_client_ip": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
-			},
-			"availability_zone": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"dns_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"fips_dns_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"endpoint_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"network_interface_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"state": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"state_message": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
 			},
 		},
 
@@ -120,12 +76,12 @@ const (
 func resourceInstanceConnectEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	in := &ec2.CreateInstanceConnectEndpointInput{
 		ClientToken:      aws.String(id.UniqueId()),
 		SubnetId:         aws.String(d.Get("subnet_id").(string)),
-		PreserveClientIp: aws.Bool(d.Get("preserve_client_ip").(bool)),
+		PreserveClientIp: aws.Bool(d.Get("prevent_client_ip").(bool)),
 		//TagSpecifications: getTagSpecificationsIn(ctx, ec2.Create),
 	}
 
@@ -133,7 +89,7 @@ func resourceInstanceConnectEndpointCreate(ctx context.Context, d *schema.Resour
 		in.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	out, err := conn.CreateInstanceConnectEndpointWithContext(ctx, in)
+	out, err := conn.CreateInstanceConnectEndpoint(ctx, in)
 	if err != nil {
 		return append(diags, create.DiagError(names.EC2, create.ErrActionCreating, ResNameInstanceConnectEndpoint, d.Get("name").(string), err)...)
 	}
@@ -142,10 +98,10 @@ func resourceInstanceConnectEndpointCreate(ctx context.Context, d *schema.Resour
 		return append(diags, create.DiagError(names.EC2, create.ErrActionCreating, ResNameInstanceConnectEndpoint, d.Get("name").(string), errors.New("empty output"))...)
 	}
 
-	d.SetId(aws.StringValue(out.InstanceConnectEndpoint.InstanceConnectEndpointId))
+	d.SetId(aws.ToString(out.InstanceConnectEndpoint.InstanceConnectEndpointId))
 
-	if _, err = waitInstanceConnectEndpointAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance Connect Endpoint create: %s", err)
+	if _, err := waitInstanceConnectEndpointCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return append(diags, create.DiagError(names.EC2, create.ErrActionWaitingForCreation, ResNameInstanceConnectEndpoint, d.Id(), err)...)
 	}
 
 	return append(diags, resourceInstanceConnectEndpointRead(ctx, d, meta)...)
@@ -154,7 +110,7 @@ func resourceInstanceConnectEndpointCreate(ctx context.Context, d *schema.Resour
 func resourceInstanceConnectEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	out, err := findInstanceConnectEndpointByID(ctx, conn, d.Id())
 
@@ -168,38 +124,78 @@ func resourceInstanceConnectEndpointRead(ctx context.Context, d *schema.Resource
 		return append(diags, create.DiagError(names.EC2, create.ErrActionReading, ResNameInstanceConnectEndpoint, d.Id(), err)...)
 	}
 
-	d.Set("availability_zone", out.AvailabilityZone)
-	d.Set("created_at", out.CreatedAt)
-	d.Set("dns_name", out.DnsName)
-	d.Set("fips_dns_name", out.FipsDnsName)
-	d.Set("arn", out.InstanceConnectEndpointArn)
-	d.Set("endpoint_id", out.InstanceConnectEndpointId)
-	d.Set("network_interface_id", out.NetworkInterfaceIds)
-	d.Set("owner_id", out.OwnerId)
-	d.Set("preserve_client_ip", out.PreserveClientIp)
-	d.Set("security_group_ids", out.SecurityGroupIds)
-	d.Set("state", out.State)
-	d.Set("state_message", out.StateMessage)
-	d.Set("subnet_id", out.SubnetId)
+	d.Set("arn", out.Arn)
+	d.Set("name", out.Name)
 
+	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
+		return append(diags, create.DiagError(names.EC2, create.ErrActionSetting, ResNameInstanceConnectEndpoint, d.Id(), err)...)
+	}
+
+	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
 	if err != nil {
 		return append(diags, create.DiagError(names.EC2, create.ErrActionSetting, ResNameInstanceConnectEndpoint, d.Id(), err)...)
 	}
 
+	p, err = structure.NormalizeJsonString(p)
+	if err != nil {
+		return append(diags, create.DiagError(names.EC2, create.ErrActionSetting, ResNameInstanceConnectEndpoint, d.Id(), err)...)
+	}
+
+	d.Set("policy", p)
+
+	// TIP: -- 6. Return diags
 	return diags
+}
+
+func resourceInstanceConnectEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	update := false
+
+	in := &ec2.UpdateInstanceConnectEndpointInput{
+		Id: aws.String(d.Id()),
+	}
+
+	if d.HasChanges("an_argument") {
+		in.AnArgument = aws.String(d.Get("an_argument").(string))
+		update = true
+	}
+
+	if !update {
+		// TIP: If update doesn't do anything at all, which is rare, you can
+		// return diags. Otherwise, return a read call, as below.
+		return diags
+	}
+
+	log.Printf("[DEBUG] Updating EC2 InstanceConnectEndpoint (%s): %#v", d.Id(), in)
+	out, err := conn.UpdateInstanceConnectEndpoint(ctx, in)
+	if err != nil {
+		return append(diags, create.DiagError(names.EC2, create.ErrActionUpdating, ResNameInstanceConnectEndpoint, d.Id(), err)...)
+	}
+
+	if _, err := waitInstanceConnectEndpointUpdated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return append(diags, create.DiagError(names.EC2, create.ErrActionWaitingForUpdate, ResNameInstanceConnectEndpoint, d.Id(), err)...)
+	}
+
+	return append(diags, resourceInstanceConnectEndpointRead(ctx, d, meta)...)
 }
 
 func resourceInstanceConnectEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 InstanceConnectEndpoint %s", d.Id())
 
-	_, err := conn.DeleteInstanceConnectEndpointWithContext(ctx, &ec2.DeleteInstanceConnectEndpointInput{
-		InstanceConnectEndpointId: aws.String(d.Id()),
+	_, err := conn.DeleteInstanceConnectEndpoint(ctx, &ec2.DeleteInstanceConnectEndpointInput{
+		Id: aws.String(d.Id()),
 	})
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
 	if err != nil {
 		return append(diags, create.DiagError(names.EC2, create.ErrActionDeleting, ResNameInstanceConnectEndpoint, d.Id(), err)...)
 	}
@@ -218,48 +214,61 @@ const (
 	statusUpdated       = "Updated"
 )
 
-func waitInstanceConnectEndpointAvailable(ctx context.Context, conn *ec2.EC2, instanceConnectEndpointId string, timeout time.Duration) (*ec2.Ec2InstanceConnectEndpoint, error) {
+func waitInstanceConnectEndpointCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*ec2.InstanceConnectEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ec2ICECreateInProgress},
-		Target:     []string{ec2ICECreateComplete},
-		Timeout:    timeout,
-		Refresh:    statusInstanceConnectEndpoint(ctx, conn, instanceConnectEndpointId),
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
+		Pending:                   []string{},
+		Target:                    []string{statusNormal},
+		Refresh:                   statusInstanceConnectEndpoint(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.Ec2InstanceConnectEndpoint); ok {
-		if state, lastError := aws.StringValue(output.State), output.StateMessage; state == ec2ICECreateFailed && lastError != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s", aws.StringValue(output.StateMessage))) // Check here False negative
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitInstanceConnectEndpointDeleted(ctx context.Context, conn *ec2.EC2, instanceConnectEndpointId string, timeout time.Duration) (*ec2.Ec2InstanceConnectEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{ec2ICEDeleteInProgress, statusNormal},
-		Target:  []string{},
-		Refresh: statusInstanceConnectEndpoint(ctx, conn, instanceConnectEndpointId),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*ec2.Ec2InstanceConnectEndpoint); ok {
+	if out, ok := outputRaw.(*ec2.InstanceConnectEndpoint); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func statusInstanceConnectEndpoint(ctx context.Context, conn *ec2.EC2, instanceConnectEndpointId string) retry.StateRefreshFunc {
+func waitInstanceConnectEndpointUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*ec2.InstanceConnectEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{statusChangePending},
+		Target:                    []string{statusUpdated},
+		Refresh:                   statusInstanceConnectEndpoint(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*ec2.InstanceConnectEndpoint); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitInstanceConnectEndpointDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*ec2.InstanceConnectEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{statusDeleting, statusNormal},
+		Target:  []string{},
+		Refresh: statusInstanceConnectEndpoint(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*ec2.InstanceConnectEndpoint); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func statusInstanceConnectEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findInstanceConnectEndpointByID(ctx, conn, instanceConnectEndpointId)
+		out, err := findInstanceConnectEndpointByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -268,79 +277,113 @@ func statusInstanceConnectEndpoint(ctx context.Context, conn *ec2.EC2, instanceC
 			return nil, "", err
 		}
 
-		return out, aws.StringValue(out.State), nil
+		return out, aws.ToString(out.Status), nil
 	}
 }
 
-func findInstanceConnectEndpointByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Ec2InstanceConnectEndpoint, error) {
-	in := &ec2.DescribeInstanceConnectEndpointsInput{
-		InstanceConnectEndpointIds: aws.StringSlice([]string{id}),
+//func findInstanceConnectEndpointByID(ctx context.Context, conn *ec2.Client, id string) (*ec2.DescribeInstanceConnectEndpointsOutput, error) {
+//	in := ec2.DescribeInstanceConnectEndpointsInput{
+//		InstanceConnectEndpointIds: aws.StringSlice([]string{id}),
+//	}
+//	out, err := conn.DescribeInstanceConnectEndpoints(ctx, in)
+//	if errs.IsA[*types.ResourceNotFoundException](err) {
+//		return nil, &retry.NotFoundError{
+//			LastError:   err,
+//			LastRequest: in,
+//		}
+//	}
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	if out == nil || out.InstanceConnectEndpoint == nil {
+//		return nil, tfresource.NewEmptyResultError(in)
+//	}
+//
+//	return out.InstanceConnectEndpoint, nil
+//}
+
+func flattenComplexArgument(apiObject *ec2.ComplexArgument) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	out, err := findInstanceConnectEndpoint(ctx, conn, in)
+	m := map[string]interface{}{}
 
-	if err != nil {
-		return nil, err
+	if v := apiObject.SubFieldOne; v != nil {
+		m["sub_field_one"] = aws.ToString(v)
 	}
 
-	if state := aws.StringValue(out.State); state == ec2ICEDeleteComplete {
-		return nil, &retry.NotFoundError{
-			Message:     state,
-			LastRequest: in,
-		}
+	if v := apiObject.SubFieldTwo; v != nil {
+		m["sub_field_two"] = aws.ToString(v)
 	}
 
-	// Eventual consistency check.
-	if aws.StringValue(out.InstanceConnectEndpointId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: in,
-		}
-	}
-
-	return out, nil
+	return m
 }
 
-func findInstanceConnectEndpoint(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeInstanceConnectEndpointsInput) (*ec2.Ec2InstanceConnectEndpoint, error) {
-	out, err := findInstanceConnectEndpoints(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
+func flattenComplexArguments(apiObjects []*ec2.ComplexArgument) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
 	}
 
-	if len(out) == 0 || out[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	var l []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		l = append(l, flattenComplexArgument(apiObject))
 	}
 
-	return out[0], nil
+	return l
 }
 
-func findInstanceConnectEndpoints(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeInstanceConnectEndpointsInput) ([]*ec2.Ec2InstanceConnectEndpoint, error) {
-	var out []*ec2.Ec2InstanceConnectEndpoint
-
-	err := conn.DescribeInstanceConnectEndpointsPagesWithContext(ctx, input, func(page *ec2.DescribeInstanceConnectEndpointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.InstanceConnectEndpoints {
-			if v != nil {
-				out = append(out, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	//if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
-	//	return nil, &retry.NotFoundError{
-	//		LastError:   err,
-	//		LastRequest: input,
-	//	}
-	//}
-
-	if err != nil {
-		return nil, err
+func expandComplexArgument(tfMap map[string]interface{}) *ec2.ComplexArgument {
+	if tfMap == nil {
+		return nil
 	}
 
-	return out, nil
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &ec2.ComplexArgument{}
+
+	if v, ok := tfMap["sub_field_one"].(string); ok && v != "" {
+		a.SubFieldOne = aws.String(v)
+	}
+
+	if v, ok := tfMap["sub_field_two"].(string); ok && v != "" {
+		a.SubFieldTwo = aws.String(v)
+	}
+
+	return a
+}
+
+func expandComplexArguments(tfList []interface{}) []*ec2.ComplexArgument {
+
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var s []*ec2.ComplexArgument
+
+	for _, r := range tfList {
+		m, ok := r.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		a := expandComplexArgument(m)
+
+		if a == nil {
+			continue
+		}
+
+		s = append(s, a)
+	}
+
+	return s
 }
