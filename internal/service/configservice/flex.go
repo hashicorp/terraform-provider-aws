@@ -50,9 +50,8 @@ func expandOrganizationAggregationSource(configured map[string]interface{}) *con
 	return &source
 }
 
-func expandRecordingGroup(configured []interface{}) *configservice.RecordingGroup {
+func expandRecordingGroup(group map[string]interface{}) *configservice.RecordingGroup {
 	recordingGroup := configservice.RecordingGroup{}
-	group := configured[0].(map[string]interface{})
 
 	if v, ok := group["all_supported"]; ok {
 		recordingGroup.AllSupported = aws.Bool(v.(bool))
