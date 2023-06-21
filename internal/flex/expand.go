@@ -85,6 +85,20 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 
 	tFrom, kTo := vFrom.Type(ctx), valTo.Kind()
 	switch {
+	case tFrom.Equal(types.BoolType):
+		vFrom := vFrom.(types.Bool).ValueBool()
+		switch kTo {
+		case reflect.Bool:
+			valTo.SetBool(vFrom)
+			return nil
+		case reflect.Ptr:
+			switch valTo.Type().Elem().Kind() {
+			case reflect.Bool:
+				valTo.Set(reflect.ValueOf(aws.Bool(vFrom)))
+				return nil
+			}
+		}
+
 	case tFrom.Equal(types.Float64Type):
 		vFrom := vFrom.(types.Float64).ValueFloat64()
 		switch kTo {

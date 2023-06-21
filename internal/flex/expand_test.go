@@ -63,6 +63,18 @@ type NTest struct {
 	Name *float32
 }
 
+type OTest struct {
+	Name types.Bool
+}
+
+type PTest struct {
+	Name bool
+}
+
+type QTest struct {
+	Name *bool
+}
+
 func TestGenericExpand(t *testing.T) {
 	t.Parallel()
 
@@ -192,6 +204,24 @@ func TestGenericExpand(t *testing.T) {
 			Source:     &JTest{Name: types.Float64Value(4.2)},
 			Target:     &NTest{},
 			WantTarget: &NTest{Name: aws.Float32(4.2)},
+		},
+		{
+			TestName: "single float64 Source and single bool Target",
+			Source:   &JTest{Name: types.Float64Value(4.2)},
+			Target:   &PTest{},
+			WantErr:  true,
+		},
+		{
+			TestName:   "single bool Source and single bool Target",
+			Source:     &OTest{Name: types.BoolValue(true)},
+			Target:     &PTest{},
+			WantTarget: &PTest{Name: true},
+		},
+		{
+			TestName:   "single bool Source and single *bool Target",
+			Source:     &OTest{Name: types.BoolValue(true)},
+			Target:     &QTest{},
+			WantTarget: &QTest{Name: aws.Bool(true)},
 		},
 	}
 
