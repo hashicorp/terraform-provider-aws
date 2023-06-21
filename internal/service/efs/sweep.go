@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -42,7 +41,7 @@ func sweepAccessPoints(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EFSConn(ctx)
+	conn := client.EFSConn(ctx)
 	input := &efs.DescribeFileSystemsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -109,7 +108,7 @@ func sweepFileSystems(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EFSConn(ctx)
+	conn := client.EFSConn(ctx)
 	input := &efs.DescribeFileSystemsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -153,7 +152,7 @@ func sweepMountTargets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EFSConn(ctx)
+	conn := client.EFSConn(ctx)
 	input := &efs.DescribeFileSystemsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)

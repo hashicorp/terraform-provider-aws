@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -27,7 +26,7 @@ func sweepEnvironmentEC2s(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).Cloud9Conn(ctx)
+	conn := client.Cloud9Conn(ctx)
 	input := &cloud9.ListEnvironmentsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

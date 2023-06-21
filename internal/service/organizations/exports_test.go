@@ -2,5 +2,7 @@ package organizations
 
 // Exports for use in tests only.
 var (
-	FindPolicyByID = findPolicyByID
+	FindDelegatedAdministratorByTwoPartKey = findDelegatedAdministratorByTwoPartKey
+	FindPolicyByID                         = findPolicyByID
+	FindResourcePolicy                     = findResourcePolicy
 )

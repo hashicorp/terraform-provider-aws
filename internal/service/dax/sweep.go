@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -27,7 +26,7 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DAXConn(ctx)
+	conn := client.DAXConn(ctx)
 
 	resp, err := conn.DescribeClustersWithContext(ctx, &dax.DescribeClustersInput{})
 	if err != nil {

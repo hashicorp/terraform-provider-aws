@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -56,11 +55,11 @@ func sweepDashboards(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := client.QuickSightConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	awsAccountId := client.(*conns.AWSClient).AccountID
+	awsAccountId := client.AccountID
 
 	input := &quicksight.ListDashboardsInput{
 		AwsAccountId: aws.String(awsAccountId),
@@ -110,11 +109,11 @@ func sweepDataSets(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := client.QuickSightConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	awsAccountId := client.(*conns.AWSClient).AccountID
+	awsAccountId := client.AccountID
 
 	input := &quicksight.ListDataSetsInput{
 		AwsAccountId: aws.String(awsAccountId),
@@ -164,11 +163,11 @@ func sweepDataSources(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := client.QuickSightConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	awsAccountId := client.(*conns.AWSClient).AccountID
+	awsAccountId := client.AccountID
 
 	input := &quicksight.ListDataSourcesInput{
 		AwsAccountId: aws.String(awsAccountId),
@@ -218,8 +217,8 @@ func sweepFolders(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
-	awsAccountId := client.(*conns.AWSClient).AccountID
+	conn := client.QuickSightConn(ctx)
+	awsAccountId := client.AccountID
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -264,11 +263,11 @@ func sweepTemplates(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := client.QuickSightConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	awsAccountId := client.(*conns.AWSClient).AccountID
+	awsAccountId := client.AccountID
 
 	input := &quicksight.ListTemplatesInput{
 		AwsAccountId: aws.String(awsAccountId),
@@ -318,8 +317,8 @@ func sweepUsers(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn(ctx)
-	awsAccountId := client.(*conns.AWSClient).AccountID
+	conn := client.QuickSightConn(ctx)
+	awsAccountId := client.AccountID
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

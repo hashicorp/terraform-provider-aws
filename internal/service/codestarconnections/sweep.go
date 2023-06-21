@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -35,7 +34,7 @@ func sweepConnections(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).CodeStarConnectionsConn(ctx)
+	conn := client.CodeStarConnectionsConn(ctx)
 	input := &codestarconnections.ListConnectionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -79,7 +78,7 @@ func sweepHosts(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).CodeStarConnectionsConn(ctx)
+	conn := client.CodeStarConnectionsConn(ctx)
 	input := &codestarconnections.ListHostsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -73,7 +72,7 @@ func sweepAPIDestination(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn(ctx)
+	conn := client.EventsConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -124,7 +123,7 @@ func sweepArchives(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn(ctx)
+	conn := client.EventsConn(ctx)
 
 	input := &eventbridge.ListArchivesInput{}
 
@@ -175,7 +174,7 @@ func sweepBuses(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn(ctx)
+	conn := client.EventsConn(ctx)
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -222,7 +221,7 @@ func sweepConnection(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn(ctx)
+	conn := client.EventsConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -270,7 +269,7 @@ func sweepPermissions(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn(ctx)
+	conn := client.EventsConn(ctx)
 
 	output, err := conn.DescribeEventBusWithContext(ctx, &eventbridge.DescribeEventBusInput{})
 	if err != nil {
@@ -315,7 +314,7 @@ func sweepRules(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn(ctx)
+	conn := client.EventsConn(ctx)
 	input := &eventbridge.ListEventBusesInput{}
 	var sweeperErrs *multierror.Error
 
@@ -385,7 +384,7 @@ func sweepTargets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn(ctx)
+	conn := client.EventsConn(ctx)
 	input := &eventbridge.ListEventBusesInput{}
 	var sweeperErrs *multierror.Error
 

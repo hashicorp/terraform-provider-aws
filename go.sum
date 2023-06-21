@@ -15,8 +15,8 @@ github.com/apparentlymart/go-textseg/v13 v13.0.0 h1:Y+KvPE1NYz0xl601PVImeQfFyEy6
 github.com/apparentlymart/go-textseg/v13 v13.0.0/go.mod h1:ZK2fH7c4NqDTLtiYLvIkEghdlcqw7yxLeM89kiTRPUo=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 h1:BUAU3CGlLvorLI26FmByPp2eC2qla6E1Tw+scpcg/to=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.44.283 h1:ObMaIvdhHJM2sIrbcljd7muHBaFb+Kp/QsX6iflGDg4=
-github.com/aws/aws-sdk-go v1.44.283/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.285 h1:rgoWYl+NdmKzRgoi/fZLEtGXOjCkcWIa5jPH02Uahdo=
+github.com/aws/aws-sdk-go v1.44.285/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v1.18.0/go.mod h1:uzbQtefpm44goOPmdKyAlXSNcwlRgF3ePWVW6EtJvvw=
 github.com/aws/aws-sdk-go-v2 v1.18.1 h1:+tefE750oAb7ZQGzla6bLkOwfcQCEtC5y2RqoqCeqKo=
 github.com/aws/aws-sdk-go-v2 v1.18.1/go.mod h1:uzbQtefpm44goOPmdKyAlXSNcwlRgF3ePWVW6EtJvvw=
@@ -61,8 +61,8 @@ github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.3 h1:Ij9KqZAu7JM6H+1
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.3/go.mod h1:cFv2leRY0jEdFFXPC9iT4HSdYuC3LO3dhDEfMPkObtg=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.12 h1:p4VxoGiHg+nJHPAXIpTSuXF+1SoHmNPfplzkR3Fmi0k=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.12/go.mod h1:2UtZqzdVwPZMvQfbMXaiTFmqHzH0djspNEJWAmP6U9c=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.100.1 h1:AsLoN1zlf+PJ5DRzoegd8k/Zk9f/fBCMKxrZ4sXSE5k=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.100.1/go.mod h1:tIctCeX9IbzsUTKHt53SVEcgyfxV2ElxJeEB+QUbc4M=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.101.0 h1:mELn7pIvmCW/FESssXir+rNG201nkgcQtGN2iTEGu/g=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.101.0/go.mod h1:tIctCeX9IbzsUTKHt53SVEcgyfxV2ElxJeEB+QUbc4M=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.10.2 h1:SszO0FFI23oCM30QIJCJ1IKfl+FhCxoLuEwWSw5CkSg=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.10.2/go.mod h1:go0pcProAlBpDBh9g1l9h8XvOL8zfeBqA2tc2DvH9AM=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.12 h1:ePwiKxedbAePZLNza3Yb0C52dguII3gLEsxBg7D/3AI=
@@ -106,8 +106,8 @@ github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.15 h1:V9D5mkuxoHp0em
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.15/go.mod h1:JkXv1RqDLs6Bpgj2EtFpVW4J83lEewuTiQJwzj8dzvs=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.2.2 h1:Dc3UON/Ry+dcDbXNLsyi2JPlfhNbaBRXqYg7ItYvJF8=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.2.2/go.mod h1:PKn6HQ0RaVbZn+nPAl7UpxbVvDJv0JxWj7m+XTMzZZI=
-github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.12 h1:5NLFpHk55dzU3UfUD+NmrFeYOV/5nxBvQIBZ53PLc6I=
-github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.12/go.mod h1:k75fR3BhOo/0umex9ICEJ+CKTA55qxvFWAlyVHTS6Qg=
+github.com/aws/aws-sdk-go-v2/service/route53domains v1.15.0 h1:H7c53dt/1Wsp3fWbu5v5+XVNsThWzmxzYdyYLltWtec=
+github.com/aws/aws-sdk-go-v2/service/route53domains v1.15.0/go.mod h1:k75fR3BhOo/0umex9ICEJ+CKTA55qxvFWAlyVHTS6Qg=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.31.7 h1:dTPOxNtrOt1NU/3DstjpNOAT7qjnMcZ08ah4A3zuu2w=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.31.7/go.mod h1:mRBY8itC2zX/tZL7IzZBORR7fqCpFy6GCNWYVx9jE7o=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.13 h1:g3mR/LmI0SQILlRqWqENskXVaU1E6kbRzoWVkOJOAes=

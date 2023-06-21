@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -58,7 +57,7 @@ func sweepRateBasedRules(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn(ctx)
+	conn := client.WAFRegionalConn(ctx)
 
 	input := &waf.ListRateBasedRulesInput{}
 
@@ -152,7 +151,7 @@ func sweepRegexMatchSet(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn(ctx)
+	conn := client.WAFRegionalConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -199,7 +198,7 @@ func sweepRuleGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn(ctx)
+	conn := client.WAFRegionalConn(ctx)
 
 	req := &waf.ListRuleGroupsInput{}
 	resp, err := conn.ListRuleGroupsWithContext(ctx, req)
@@ -239,7 +238,7 @@ func sweepRules(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn(ctx)
+	conn := client.WAFRegionalConn(ctx)
 
 	input := &waf.ListRulesInput{}
 
@@ -332,7 +331,7 @@ func sweepWebACLs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn(ctx)
+	conn := client.WAFRegionalConn(ctx)
 
 	input := &waf.ListWebACLsInput{}
 

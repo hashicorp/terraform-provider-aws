@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codegurureviewer"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -28,7 +27,7 @@ func sweepAssociations(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &codegurureviewer.ListRepositoryAssociationsInput{}
-	conn := client.(*conns.AWSClient).CodeGuruReviewerConn(ctx)
+	conn := client.CodeGuruReviewerConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 

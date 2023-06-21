@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -42,7 +41,7 @@ func sweepAutoScalingConfigurationVersions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppRunnerConn(ctx)
+	conn := client.AppRunnerConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	var errs *multierror.Error
@@ -108,7 +107,7 @@ func sweepConnections(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppRunnerConn(ctx)
+	conn := client.AppRunnerConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	var errs *multierror.Error
@@ -169,7 +168,7 @@ func sweepServices(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppRunnerConn(ctx)
+	conn := client.AppRunnerConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	var errs *multierror.Error
