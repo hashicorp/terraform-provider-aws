@@ -1,7 +1,9 @@
 package events
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -65,7 +67,7 @@ func ResourceRule() *schema.Resource {
 				ValidateFunc: validateEventPatternValue(),
 				AtLeastOneOf: []string{"schedule_expression", "event_pattern"},
 				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v.(string))
+					json, _ := jsonMarshal(v.(string))
 					return json
 				},
 			},
@@ -107,6 +109,30 @@ func ResourceRule() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
+}
+
+func jsonMarshal(jsonString interface{}) (string, error) {
+	var j interface{}
+
+	if jsonString == nil || jsonString.(string) == "" {
+		return "", nil
+	}
+
+	s := jsonString.(string)
+
+	err := json.Unmarshal([]byte(s), &j)
+	if err != nil {
+		return s, err
+	}
+
+	b, _ := json.Marshal(j)
+
+	if bytes.Contains(b, []byte("\\u003c")) || bytes.Contains(b, []byte("\\u003e")) || bytes.Contains(b, []byte("\\u0026")) {
+		b = bytes.Replace(b, []byte("\\u003c"), []byte("<"), -1)
+		b = bytes.Replace(b, []byte("\\u003e"), []byte(">"), -1)
+		b = bytes.Replace(b, []byte("\\u0026"), []byte("&"), -1)
+	}
+	return string(b[:]), nil
 }
 
 func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
