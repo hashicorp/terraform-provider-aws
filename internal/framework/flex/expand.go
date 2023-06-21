@@ -51,6 +51,9 @@ func walkStructFields(ctx context.Context, from any, to any, visitor fieldVisito
 			continue // Skip unexported fields.
 		}
 		fieldName := field.Name
+		if fieldName == "Tags" {
+			continue // Resource tags are handled seperately.
+		}
 		toFieldVal := valTo.FieldByName(fieldName)
 		if !toFieldVal.IsValid() {
 			continue // Corresponding field not found in to.
