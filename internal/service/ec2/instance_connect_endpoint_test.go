@@ -148,27 +148,17 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
+resource "aws_subnet" "test" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.0.1.0/24"
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_subnet" "test" {
- vpc_id     = aws_vpc.test.id
- cidr_block = "10.0.1.0/24"
-
- tags = {
-   Name = %[1]q
- }
-}
-
 resource "aws_ec2_instance_connect_endpoint" "test" {
   subnet_id          = aws_subnet.test.id
-  security_group_ids = [aws_security_group.test.id]	
   preserve_client_ip = false
 }
 `, rName)
