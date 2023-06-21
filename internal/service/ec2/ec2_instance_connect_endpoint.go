@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -41,6 +40,7 @@ func newResourceInstanceConnectEndpoint(context.Context) (resource.ResourceWithC
 
 type resourceInstanceConnectEndpoint struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -75,7 +75,7 @@ func (r *resourceInstanceConnectEndpoint) Schema(ctx context.Context, req resour
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"network_interface_ids": schema.ListAttribute{
 				Computed:    true,
 				ElementType: types.StringType,
@@ -256,10 +256,6 @@ func (r *resourceInstanceConnectEndpoint) Delete(ctx context.Context, request re
 
 		return
 	}
-}
-
-func (r *resourceInstanceConnectEndpoint) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 }
 
 func (r *resourceInstanceConnectEndpoint) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
