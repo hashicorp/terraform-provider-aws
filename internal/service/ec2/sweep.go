@@ -386,7 +386,7 @@ func init() {
 
 func sweepCapacityReservations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -431,7 +431,7 @@ func sweepCapacityReservations(region string) error {
 
 func sweepCarrierGateways(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -475,7 +475,7 @@ func sweepCarrierGateways(region string) error {
 
 func sweepClientVPNEndpoints(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -519,7 +519,7 @@ func sweepClientVPNEndpoints(region string) error {
 
 func sweepClientVPNNetworkAssociations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -587,7 +587,7 @@ func sweepClientVPNNetworkAssociations(region string) error {
 
 func sweepFleets(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -634,7 +634,7 @@ func sweepFleets(region string) error {
 
 func sweepEBSVolumes(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -685,7 +685,7 @@ func sweepEBSVolumes(region string) error {
 
 func sweepEBSSnapshots(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -731,7 +731,7 @@ func sweepEBSSnapshots(region string) error {
 
 func sweepEgressOnlyInternetGateways(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -775,7 +775,7 @@ func sweepEgressOnlyInternetGateways(region string) error {
 
 func sweepEIPs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -838,7 +838,7 @@ func sweepEIPs(region string) error {
 
 func sweepFlowLogs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -882,7 +882,7 @@ func sweepFlowLogs(region string) error {
 
 func sweepHosts(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -926,7 +926,7 @@ func sweepHosts(region string) error {
 
 func sweepInstances(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -982,7 +982,7 @@ func sweepInstances(region string) error {
 
 func sweepInternetGateways(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -1065,7 +1065,7 @@ func sweepInternetGateways(region string) error {
 
 func sweepKeyPairs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -1103,7 +1103,7 @@ func sweepKeyPairs(region string) error {
 
 func sweepLaunchTemplates(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -1147,7 +1147,7 @@ func sweepLaunchTemplates(region string) error {
 
 func sweepNATGateways(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -1191,7 +1191,7 @@ func sweepNATGateways(region string) error {
 
 func sweepNetworkACLs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -1247,7 +1247,7 @@ func sweepNetworkACLs(region string) error {
 
 func sweepNetworkInterfaces(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -1298,7 +1298,7 @@ func sweepNetworkInterfaces(region string) error {
 
 func sweepNetworkInsightsPaths(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -1338,7 +1338,7 @@ func sweepNetworkInsightsPaths(region string) error {
 
 func sweepPlacementGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -1376,7 +1376,7 @@ func sweepPlacementGroups(region string) error {
 
 func sweepRouteTables(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -1496,7 +1496,7 @@ func sweepRouteTables(region string) error {
 
 func sweepSecurityGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -1588,7 +1588,7 @@ func sweepSecurityGroups(region string) error {
 
 func sweepSpotFleetRequests(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -1640,7 +1640,7 @@ func sweepSpotFleetRequests(region string) error {
 
 func sweepSpotInstanceRequests(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -1692,7 +1692,7 @@ func sweepSpotInstanceRequests(region string) error {
 
 func sweepSubnets(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -1741,7 +1741,7 @@ func sweepSubnets(region string) error {
 
 func sweepTransitGateways(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -1789,7 +1789,7 @@ func sweepTransitGateways(region string) error {
 
 func sweepTransitGatewayConnectPeers(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -1837,7 +1837,7 @@ func sweepTransitGatewayConnectPeers(region string) error {
 
 func sweepTransitGatewayConnects(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -1885,7 +1885,7 @@ func sweepTransitGatewayConnects(region string) error {
 
 func sweepTransitGatewayMulticastDomains(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -1933,7 +1933,7 @@ func sweepTransitGatewayMulticastDomains(region string) error {
 
 func sweepTransitGatewayPeeringAttachments(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -1981,7 +1981,7 @@ func sweepTransitGatewayPeeringAttachments(region string) error {
 
 func sweepTransitGatewayVPCAttachments(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -2029,7 +2029,7 @@ func sweepTransitGatewayVPCAttachments(region string) error {
 
 func sweepVPCDHCPOptions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -2100,7 +2100,7 @@ func sweepVPCDHCPOptions(region string) error {
 
 func sweepVPCEndpointServices(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -2148,7 +2148,7 @@ func sweepVPCEndpointServices(region string) error {
 
 func sweepVPCEndpoints(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -2196,7 +2196,7 @@ func sweepVPCEndpoints(region string) error {
 
 func sweepVPCPeeringConnections(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -2240,7 +2240,7 @@ func sweepVPCPeeringConnections(region string) error {
 
 func sweepVPCs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -2289,7 +2289,7 @@ func sweepVPCs(region string) error {
 
 func sweepVPNConnections(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -2331,7 +2331,7 @@ func sweepVPNConnections(region string) error {
 
 func sweepVPNGateways(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -2381,7 +2381,7 @@ func sweepVPNGateways(region string) error {
 
 func sweepCustomerGateways(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -2423,7 +2423,7 @@ func sweepCustomerGateways(region string) error {
 
 func sweepIPAMs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -2468,7 +2468,7 @@ func sweepIPAMs(region string) error {
 
 func sweepIPAMResourceDiscoveries(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -2515,7 +2515,7 @@ func sweepIPAMResourceDiscoveries(region string) error {
 
 func sweepAMIs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -2561,7 +2561,7 @@ func sweepAMIs(region string) error {
 
 func sweepNetworkPerformanceMetricSubscriptions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -2606,7 +2606,7 @@ func sweepNetworkPerformanceMetricSubscriptions(region string) error {
 
 func sweepInstanceConnectEndpoints(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}

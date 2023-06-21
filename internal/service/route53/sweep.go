@@ -63,7 +63,7 @@ func init() {
 
 func sweepHealthChecks(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
@@ -115,7 +115,7 @@ func sweepHealthChecks(region string) error {
 
 func sweepKeySigningKeys(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
@@ -195,7 +195,7 @@ func sweepKeySigningKeys(region string) error {
 
 func sweepQueryLogs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
@@ -240,7 +240,7 @@ func sweepQueryLogs(region string) error {
 
 func sweepTrafficPolicies(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
@@ -284,7 +284,7 @@ func sweepTrafficPolicies(region string) error {
 
 func sweepTrafficPolicyInstances(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
@@ -328,7 +328,7 @@ func sweepTrafficPolicyInstances(region string) error {
 
 func sweepZones(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)

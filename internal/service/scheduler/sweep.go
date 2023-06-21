@@ -31,7 +31,7 @@ func init() {
 
 func sweepScheduleGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
@@ -81,7 +81,7 @@ func sweepScheduleGroups(region string) error {
 
 func sweepSchedules(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClientWithContext(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
