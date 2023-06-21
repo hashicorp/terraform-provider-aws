@@ -439,7 +439,7 @@ func (r *resourceUserPoolClient) Read(ctx context.Context, request resource.Read
 	state.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
 	state.SupportedIdentityProviders = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.SupportedIdentityProviders)
 	if state.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
-		attributeTypes := framework.AttributeTypesMust[tokenValidityUnits](ctx)
+		attributeTypes := flex.AttributeTypesMust[tokenValidityUnits](ctx)
 		elemType := types.ObjectType{AttrTypes: attributeTypes}
 		state.TokenValidityUnits = types.ListNull(elemType)
 	} else {
@@ -521,7 +521,7 @@ func (r *resourceUserPoolClient) Update(ctx context.Context, request resource.Up
 	config.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
 	config.SupportedIdentityProviders = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.SupportedIdentityProviders)
 	if !state.TokenValidityUnits.IsNull() && plan.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
-		attributeTypes := framework.AttributeTypesMust[tokenValidityUnits](ctx)
+		attributeTypes := flex.AttributeTypesMust[tokenValidityUnits](ctx)
 		elemType := types.ObjectType{AttrTypes: attributeTypes}
 		config.TokenValidityUnits = types.ListNull(elemType)
 	} else {
@@ -733,7 +733,7 @@ func expandAnaylticsConfiguration(ctx context.Context, list types.List, diags *d
 }
 
 func flattenAnaylticsConfiguration(ctx context.Context, ac *cognitoidentityprovider.AnalyticsConfigurationType, diags *diag.Diagnostics) types.List {
-	attributeTypes := framework.AttributeTypesMust[analyticsConfiguration](ctx)
+	attributeTypes := flex.AttributeTypesMust[analyticsConfiguration](ctx)
 	elemType := types.ObjectType{AttrTypes: attributeTypes}
 
 	if ac == nil {
@@ -799,7 +799,7 @@ func expandTokenValidityUnits(ctx context.Context, list types.List, diags *diag.
 }
 
 func flattenTokenValidityUnits(ctx context.Context, tvu *cognitoidentityprovider.TokenValidityUnitsType) types.List {
-	attributeTypes := framework.AttributeTypesMust[tokenValidityUnits](ctx)
+	attributeTypes := flex.AttributeTypesMust[tokenValidityUnits](ctx)
 	elemType := types.ObjectType{AttrTypes: attributeTypes}
 
 	if tvu == nil || (tvu.AccessToken == nil && tvu.IdToken == nil && tvu.RefreshToken == nil) {

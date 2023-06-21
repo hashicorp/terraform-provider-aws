@@ -578,7 +578,7 @@ func (r *resourceManagedUserPoolClient) Read(ctx context.Context, request resour
 	state.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
 	state.SupportedIdentityProviders = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.SupportedIdentityProviders)
 	if state.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
-		attributeTypes := framework.AttributeTypesMust[tokenValidityUnits](ctx)
+		attributeTypes := flex.AttributeTypesMust[tokenValidityUnits](ctx)
 		elemType := types.ObjectType{AttrTypes: attributeTypes}
 		state.TokenValidityUnits = types.ListNull(elemType)
 	} else {
@@ -660,7 +660,7 @@ func (r *resourceManagedUserPoolClient) Update(ctx context.Context, request reso
 	config.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
 	config.SupportedIdentityProviders = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.SupportedIdentityProviders)
 	if !state.TokenValidityUnits.IsNull() && plan.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
-		attributeTypes := framework.AttributeTypesMust[tokenValidityUnits](ctx)
+		attributeTypes := flex.AttributeTypesMust[tokenValidityUnits](ctx)
 		elemType := types.ObjectType{AttrTypes: attributeTypes}
 		config.TokenValidityUnits = types.ListNull(elemType)
 	} else {

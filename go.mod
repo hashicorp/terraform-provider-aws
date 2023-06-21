@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8
-	github.com/aws/aws-sdk-go v1.44.285
+	github.com/aws/aws-sdk-go v1.44.286
 	github.com/aws/aws-sdk-go-v2 v1.18.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.4
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.19.14
@@ -19,7 +19,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.3
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.12
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.101.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.102.0
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.12
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.14.13
@@ -28,12 +28,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.7
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.40.4
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.35.2
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.31.6
 	github.com/aws/aws-sdk-go-v2/service/oam v1.1.13
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.6
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.8
+	github.com/aws/aws-sdk-go-v2/service/pricing v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.14
 	github.com/aws/aws-sdk-go-v2/service/rds v1.45.2
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.15

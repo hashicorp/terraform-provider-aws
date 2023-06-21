@@ -1,4 +1,4 @@
-package framework_test
+package flex_test
 
 import (
 	"context"
@@ -7,12 +7,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
-
-// TODO
-// TODO Deduplicate with 'internal/flex'.
-// TODO
 
 func TestAttributeTypes(t *testing.T) {
 	t.Parallel()
@@ -25,20 +21,20 @@ func TestAttributeTypes(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	got := framework.AttributeTypesMust[struct1](ctx)
+	got := flex.AttributeTypesMust[struct1](ctx)
 	wanted := map[string]attr.Type{}
 
 	if diff := cmp.Diff(got, wanted); diff != "" {
 		t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 	}
 
-	_, err := framework.AttributeTypes[int](ctx)
+	_, err := flex.AttributeTypes[int](ctx)
 
 	if err == nil {
 		t.Fatalf("expected error")
 	}
 
-	got, err = framework.AttributeTypes[struct2](ctx)
+	got, err = flex.AttributeTypes[struct2](ctx)
 
 	if err != nil {
 		t.Fatalf("unexpected error")
