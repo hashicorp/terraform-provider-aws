@@ -25,6 +25,10 @@ func DataSourceIPAMPools() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"address_family": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -58,19 +62,11 @@ func DataSourceIPAMPools() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
 						"ipam_scope_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"ipam_scope_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ipam_pool_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -140,6 +136,7 @@ func flattenIPAMPools(ctx context.Context, c []*ec2.IpamPool, ignoreTagsConfig *
 func flattenIPAMPool(ctx context.Context, p *ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
 	pool := make(map[string]interface{})
 
+	pool["id"] = aws.StringValue(p.IpamPoolId)
 	pool["address_family"] = aws.StringValue(p.AddressFamily)
 	pool["allocation_default_netmask_length"] = aws.Int64Value(p.AllocationDefaultNetmaskLength)
 	pool["allocation_max_netmask_length"] = aws.Int64Value(p.AllocationMaxNetmaskLength)
