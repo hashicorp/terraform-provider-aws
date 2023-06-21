@@ -9,69 +9,69 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-type ATest struct{}
+type ATestExpand struct{}
 
-type BTest struct {
+type BTestExpand struct {
 	Name types.String
 }
 
-type CTest struct {
+type CTestExpand struct {
 	Name string
 }
 
-type DTest struct {
+type DTestExpand struct {
 	Name *string
 }
 
-type ETest struct {
+type ETestExpand struct {
 	Name types.Int64
 }
 
-type FTest struct {
+type FTestExpand struct {
 	Name int64
 }
 
-type GTest struct {
+type GTestExpand struct {
 	Name *int64
 }
 
-type HTest struct {
+type HTestExpand struct {
 	Name int32
 }
 
-type ITest struct {
+type ITestExpand struct {
 	Name *int32
 }
 
-type JTest struct {
+type JTestExpand struct {
 	Name types.Float64
 }
 
-type KTest struct {
+type KTestExpand struct {
 	Name float64
 }
 
-type LTest struct {
+type LTestExpand struct {
 	Name *float64
 }
 
-type MTest struct {
+type MTestExpand struct {
 	Name float32
 }
 
-type NTest struct {
+type NTestExpand struct {
 	Name *float32
 }
 
-type OTest struct {
+type OTestExpand struct {
 	Name types.Bool
 }
 
-type PTest struct {
+type PTestExpand struct {
 	Name bool
 }
 
-type QTest struct {
+type QTestExpand struct {
 	Name *bool
 }
 
@@ -93,135 +93,135 @@ func TestGenericExpand(t *testing.T) {
 		},
 		{
 			TestName: "non-pointer Target",
-			Source:   ATest{},
+			Source:   ATestExpand{},
 			Target:   0,
 			WantErr:  true,
 		},
 		{
 			TestName: "non-struct Source",
 			Source:   testString,
-			Target:   &ATest{},
+			Target:   &ATestExpand{},
 			WantErr:  true,
 		},
 		{
 			TestName: "non-struct Target",
-			Source:   ATest{},
+			Source:   ATestExpand{},
 			Target:   &testString,
 			WantErr:  true,
 		},
 		{
 			TestName:   "empty struct Source and Target",
-			Source:     ATest{},
-			Target:     &ATest{},
-			WantTarget: &ATest{},
+			Source:     ATestExpand{},
+			Target:     &ATestExpand{},
+			WantTarget: &ATestExpand{},
 		},
 		{
 			TestName:   "empty struct pointer Source and Target",
-			Source:     &ATest{},
-			Target:     &ATest{},
-			WantTarget: &ATest{},
+			Source:     &ATestExpand{},
+			Target:     &ATestExpand{},
+			WantTarget: &ATestExpand{},
 		},
 		{
 			TestName:   "single string struct pointer Source and empty Target",
-			Source:     &BTest{Name: types.StringValue("a")},
-			Target:     &ATest{},
-			WantTarget: &ATest{},
+			Source:     &BTestExpand{Name: types.StringValue("a")},
+			Target:     &ATestExpand{},
+			WantTarget: &ATestExpand{},
 		},
 		{
 			TestName: "does not implement attr.Value Source",
-			Source:   &CTest{Name: "a"},
-			Target:   &CTest{},
+			Source:   &CTestExpand{Name: "a"},
+			Target:   &CTestExpand{},
 			WantErr:  true,
 		},
 		{
 			TestName:   "single string Source and single string Target",
-			Source:     &BTest{Name: types.StringValue("a")},
-			Target:     &CTest{},
-			WantTarget: &CTest{Name: "a"},
+			Source:     &BTestExpand{Name: types.StringValue("a")},
+			Target:     &CTestExpand{},
+			WantTarget: &CTestExpand{Name: "a"},
 		},
 		{
 			TestName:   "single string Source and single *string Target",
-			Source:     &BTest{Name: types.StringValue("a")},
-			Target:     &DTest{},
-			WantTarget: &DTest{Name: aws.String("a")},
+			Source:     &BTestExpand{Name: types.StringValue("a")},
+			Target:     &DTestExpand{},
+			WantTarget: &DTestExpand{Name: aws.String("a")},
 		},
 		{
 			TestName: "single string Source and single int64 Target",
-			Source:   &BTest{Name: types.StringValue("a")},
-			Target:   &FTest{},
+			Source:   &BTestExpand{Name: types.StringValue("a")},
+			Target:   &FTestExpand{},
 			WantErr:  true,
 		},
 		{
 			TestName:   "single int64 Source and single int64 Target",
-			Source:     &ETest{Name: types.Int64Value(42)},
-			Target:     &FTest{},
-			WantTarget: &FTest{Name: 42},
+			Source:     &ETestExpand{Name: types.Int64Value(42)},
+			Target:     &FTestExpand{},
+			WantTarget: &FTestExpand{Name: 42},
 		},
 		{
 			TestName:   "single int64 Source and single *int64 Target",
-			Source:     &ETest{Name: types.Int64Value(42)},
-			Target:     &GTest{},
-			WantTarget: &GTest{Name: aws.Int64(42)},
+			Source:     &ETestExpand{Name: types.Int64Value(42)},
+			Target:     &GTestExpand{},
+			WantTarget: &GTestExpand{Name: aws.Int64(42)},
 		},
 		{
 			TestName:   "single int64 Source and single int32 Target",
-			Source:     &ETest{Name: types.Int64Value(42)},
-			Target:     &HTest{},
-			WantTarget: &HTest{Name: 42},
+			Source:     &ETestExpand{Name: types.Int64Value(42)},
+			Target:     &HTestExpand{},
+			WantTarget: &HTestExpand{Name: 42},
 		},
 		{
 			TestName:   "single int64 Source and single *int32 Target",
-			Source:     &ETest{Name: types.Int64Value(42)},
-			Target:     &ITest{},
-			WantTarget: &ITest{Name: aws.Int32(42)},
+			Source:     &ETestExpand{Name: types.Int64Value(42)},
+			Target:     &ITestExpand{},
+			WantTarget: &ITestExpand{Name: aws.Int32(42)},
 		},
 		{
 			TestName: "single int64 Source and single float64 Target",
-			Source:   &ETest{Name: types.Int64Value(42)},
-			Target:   &KTest{},
+			Source:   &ETestExpand{Name: types.Int64Value(42)},
+			Target:   &KTestExpand{},
 			WantErr:  true,
 		},
 		{
 			TestName:   "single float64 Source and single float64 Target",
-			Source:     &JTest{Name: types.Float64Value(4.2)},
-			Target:     &KTest{},
-			WantTarget: &KTest{Name: 4.2},
+			Source:     &JTestExpand{Name: types.Float64Value(4.2)},
+			Target:     &KTestExpand{},
+			WantTarget: &KTestExpand{Name: 4.2},
 		},
 		{
 			TestName:   "single float64 Source and single *float64 Target",
-			Source:     &JTest{Name: types.Float64Value(4.2)},
-			Target:     &LTest{},
-			WantTarget: &LTest{Name: aws.Float64(4.2)},
+			Source:     &JTestExpand{Name: types.Float64Value(4.2)},
+			Target:     &LTestExpand{},
+			WantTarget: &LTestExpand{Name: aws.Float64(4.2)},
 		},
 		{
 			TestName:   "single float64 Source and single float32 Target",
-			Source:     &JTest{Name: types.Float64Value(4.2)},
-			Target:     &MTest{},
-			WantTarget: &MTest{Name: 4.2},
+			Source:     &JTestExpand{Name: types.Float64Value(4.2)},
+			Target:     &MTestExpand{},
+			WantTarget: &MTestExpand{Name: 4.2},
 		},
 		{
 			TestName:   "single float64 Source and single *float32 Target",
-			Source:     &JTest{Name: types.Float64Value(4.2)},
-			Target:     &NTest{},
-			WantTarget: &NTest{Name: aws.Float32(4.2)},
+			Source:     &JTestExpand{Name: types.Float64Value(4.2)},
+			Target:     &NTestExpand{},
+			WantTarget: &NTestExpand{Name: aws.Float32(4.2)},
 		},
 		{
 			TestName: "single float64 Source and single bool Target",
-			Source:   &JTest{Name: types.Float64Value(4.2)},
-			Target:   &PTest{},
+			Source:   &JTestExpand{Name: types.Float64Value(4.2)},
+			Target:   &PTestExpand{},
 			WantErr:  true,
 		},
 		{
 			TestName:   "single bool Source and single bool Target",
-			Source:     &OTest{Name: types.BoolValue(true)},
-			Target:     &PTest{},
-			WantTarget: &PTest{Name: true},
+			Source:     &OTestExpand{Name: types.BoolValue(true)},
+			Target:     &PTestExpand{},
+			WantTarget: &PTestExpand{Name: true},
 		},
 		{
 			TestName:   "single bool Source and single *bool Target",
-			Source:     &OTest{Name: types.BoolValue(true)},
-			Target:     &QTest{},
-			WantTarget: &QTest{Name: aws.Bool(true)},
+			Source:     &OTestExpand{Name: types.BoolValue(true)},
+			Target:     &QTestExpand{},
+			WantTarget: &QTestExpand{Name: aws.Bool(true)},
 		},
 	}
 
