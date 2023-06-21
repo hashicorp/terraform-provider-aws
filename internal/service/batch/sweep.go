@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -55,8 +54,8 @@ func sweepComputeEnvironments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).BatchConn(ctx)
-	iamconn := client.(*conns.AWSClient).IAMConn(ctx)
+	conn := client.BatchConn(ctx)
+	iamconn := client.IAMConn(ctx)
 
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -176,7 +175,7 @@ func sweepJobDefinitions(region string) error {
 	input := &batch.DescribeJobDefinitionsInput{
 		Status: aws.String("ACTIVE"),
 	}
-	conn := client.(*conns.AWSClient).BatchConn(ctx)
+	conn := client.BatchConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeJobDefinitionsPagesWithContext(ctx, input, func(page *batch.DescribeJobDefinitionsOutput, lastPage bool) bool {
@@ -220,7 +219,7 @@ func sweepJobQueues(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &batch.DescribeJobQueuesInput{}
-	conn := client.(*conns.AWSClient).BatchConn(ctx)
+	conn := client.BatchConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeJobQueuesPagesWithContext(ctx, input, func(page *batch.DescribeJobQueuesOutput, lastPage bool) bool {
@@ -265,7 +264,7 @@ func sweepSchedulingPolicies(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &batch.ListSchedulingPoliciesInput{}
-	conn := client.(*conns.AWSClient).BatchConn(ctx)
+	conn := client.BatchConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListSchedulingPoliciesPagesWithContext(ctx, input, func(page *batch.ListSchedulingPoliciesOutput, lastPage bool) bool {

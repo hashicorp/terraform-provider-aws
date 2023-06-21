@@ -9,10 +9,8 @@ import (
 {{- range .Services }}
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ProviderPackage }}"
 {{- end }}
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestMain(m *testing.M) {
-	sweep.SweeperClients = make(map[string]interface{})
 	resource.TestMain(m)
 }

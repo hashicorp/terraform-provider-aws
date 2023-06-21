@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -38,7 +37,7 @@ func sweepContainerServices(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LightsailClient(ctx)
+	conn := client.LightsailClient(ctx)
 
 	input := &lightsail.GetContainerServicesInput{}
 	var sweeperErrs *multierror.Error
@@ -85,7 +84,7 @@ func sweepInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LightsailClient(ctx)
+	conn := client.LightsailClient(ctx)
 
 	input := &lightsail.GetInstancesInput{}
 	var sweeperErrs *multierror.Error
@@ -134,7 +133,7 @@ func sweepStaticIPs(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LightsailClient(ctx)
+	conn := client.LightsailClient(ctx)
 
 	input := &lightsail.GetStaticIpsInput{}
 

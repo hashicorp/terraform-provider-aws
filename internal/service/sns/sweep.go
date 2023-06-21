@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -58,7 +57,7 @@ func sweepPlatformApplications(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &sns.ListPlatformApplicationsInput{}
-	conn := client.(*conns.AWSClient).SNSConn(ctx)
+	conn := client.SNSConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListPlatformApplicationsPagesWithContext(ctx, input, func(page *sns.ListPlatformApplicationsOutput, lastPage bool) bool {
@@ -102,7 +101,7 @@ func sweepTopics(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &sns.ListTopicsInput{}
-	conn := client.(*conns.AWSClient).SNSConn(ctx)
+	conn := client.SNSConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListTopicsPagesWithContext(ctx, input, func(page *sns.ListTopicsOutput, lastPage bool) bool {
@@ -146,7 +145,7 @@ func sweepTopicSubscriptions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &sns.ListSubscriptionsInput{}
-	conn := client.(*conns.AWSClient).SNSConn(ctx)
+	conn := client.SNSConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListSubscriptionsPagesWithContext(ctx, input, func(page *sns.ListSubscriptionsOutput, lastPage bool) bool {

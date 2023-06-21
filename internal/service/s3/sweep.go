@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -47,7 +46,7 @@ func sweepObjects(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).S3ConnURICleaningDisabled(ctx)
+	conn := client.S3ConnURICleaningDisabled(ctx)
 	input := &s3.ListBucketsInput{}
 
 	output, err := conn.ListBucketsWithContext(ctx, input)
@@ -122,7 +121,7 @@ func sweepBuckets(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).S3Conn(ctx)
+	conn := client.S3Conn(ctx)
 	input := &s3.ListBucketsInput{}
 
 	output, err := conn.ListBucketsWithContext(ctx, input)
