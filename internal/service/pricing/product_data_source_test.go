@@ -1,9 +1,6 @@
 package pricing_test
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -27,7 +24,7 @@ func TestAccPricingProductDataSource_ec2(t *testing.T) {
 			{
 				Config: testAccProductDataSourceConfig_ec2,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrWith(dataSourceName, "result", testAccCheckValueIsJSON),
+					acctest.CheckResourceAttrIsJSONString(dataSourceName, "result"),
 				),
 			},
 		},
@@ -49,7 +46,7 @@ func TestAccPricingProductDataSource_redshift(t *testing.T) {
 			{
 				Config: testAccProductDataSourceConfig_redshift,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrWith(dataSourceName, "result", testAccCheckValueIsJSON),
+					acctest.CheckResourceAttrIsJSONString(dataSourceName, "result"),
 				),
 			},
 		},
@@ -129,17 +126,3 @@ data "aws_pricing_product" "test" {
   }
 }
 `
-
-func testAccCheckValueIsJSON(v string) error {
-	var m map[string]*json.RawMessage
-
-	if err := json.Unmarshal([]byte(v), &m); err != nil {
-		return fmt.Errorf("parsing JSON: %s", err)
-	}
-
-	if len(m) == 0 {
-		return errors.New(`empty JSON`)
-	}
-
-	return nil
-}
