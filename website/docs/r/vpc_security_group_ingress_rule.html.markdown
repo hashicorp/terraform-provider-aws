@@ -34,8 +34,7 @@ resource "aws_vpc_security_group_ingress_rule" "example" {
 
 The following arguments are supported:
 
-~> **NOTE on optional/required attributes:** Although `cidr_ipv4`, `cidr_ipv6`, `prefix_list_id`, and `referenced_security_group_id` are all marked as optional, you *must* provide one of them in order to configure the source of the traffic.
-`from_port` and `to_port` are required, unless `ip_protocol` is set to `-1` or `icmpv6`.
+~> **Note** Although `cidr_ipv4`, `cidr_ipv6`, `prefix_list_id`, and `referenced_security_group_id` are all marked as optional, you *must* provide one of them in order to configure the destination of the traffic. The `from_port` and `to_port` arguments are required unless `ip_protocol` is set to `-1` or `icmpv6`.
 
 * `cidr_ipv4` - (Optional) The source IPv4 CIDR range.
 * `cidr_ipv6` - (Optional) The source IPv6 CIDR range.
