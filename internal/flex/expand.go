@@ -85,6 +85,23 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 
 	tFrom, kTo := vFrom.Type(ctx), valTo.Kind()
 	switch {
+	case tFrom.Equal(types.Float64Type):
+		vFrom := vFrom.(types.Float64).ValueFloat64()
+		switch kTo {
+		case reflect.Float32, reflect.Float64:
+			valTo.SetFloat(vFrom)
+			return nil
+		case reflect.Ptr:
+			switch valTo.Type().Elem().Kind() {
+			case reflect.Float32:
+				valTo.Set(reflect.ValueOf(aws.Float32(float32(vFrom))))
+				return nil
+			case reflect.Float64:
+				valTo.Set(reflect.ValueOf(aws.Float64(vFrom)))
+				return nil
+			}
+		}
+
 	case tFrom.Equal(types.Int64Type):
 		vFrom := vFrom.(types.Int64).ValueInt64()
 		switch kTo {

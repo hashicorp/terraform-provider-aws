@@ -43,6 +43,26 @@ type ITest struct {
 	Name *int32
 }
 
+type JTest struct {
+	Name types.Float64
+}
+
+type KTest struct {
+	Name float64
+}
+
+type LTest struct {
+	Name *float64
+}
+
+type MTest struct {
+	Name float32
+}
+
+type NTest struct {
+	Name *float32
+}
+
 func TestGenericExpand(t *testing.T) {
 	t.Parallel()
 
@@ -142,6 +162,36 @@ func TestGenericExpand(t *testing.T) {
 			Source:     &ETest{Name: types.Int64Value(42)},
 			Target:     &ITest{},
 			WantTarget: &ITest{Name: aws.Int32(42)},
+		},
+		{
+			TestName: "single int64 Source and single float64 Target",
+			Source:   &ETest{Name: types.Int64Value(42)},
+			Target:   &KTest{},
+			WantErr:  true,
+		},
+		{
+			TestName:   "single float64 Source and single float64 Target",
+			Source:     &JTest{Name: types.Float64Value(4.2)},
+			Target:     &KTest{},
+			WantTarget: &KTest{Name: 4.2},
+		},
+		{
+			TestName:   "single float64 Source and single *float64 Target",
+			Source:     &JTest{Name: types.Float64Value(4.2)},
+			Target:     &LTest{},
+			WantTarget: &LTest{Name: aws.Float64(4.2)},
+		},
+		{
+			TestName:   "single float64 Source and single float32 Target",
+			Source:     &JTest{Name: types.Float64Value(4.2)},
+			Target:     &MTest{},
+			WantTarget: &MTest{Name: 4.2},
+		},
+		{
+			TestName:   "single float64 Source and single *float32 Target",
+			Source:     &JTest{Name: types.Float64Value(4.2)},
+			Target:     &NTest{},
+			WantTarget: &NTest{Name: aws.Float32(4.2)},
 		},
 	}
 
