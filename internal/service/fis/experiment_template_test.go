@@ -327,7 +327,7 @@ func TestAccFISExperimentTemplate_loggingConfiguration(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Cloudwatch Logging
 			{
-				Config: testAccExperimentTemplateConfig_logConfigCloudwatch(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
+				Config: testAccExperimentTemplateConfig_logConfigCloudWatch(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.log_schema_version", "2"),
@@ -747,7 +747,7 @@ resource "aws_fis_experiment_template" "test" {
 `, rName+"-fis", desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, targetResType, targetSelectMode, targetResTagK, targetResTagV))
 }
 
-func testAccExperimentTemplateConfig_logConfigCloudwatch(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
+func testAccExperimentTemplateConfig_logConfigCloudWatch(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

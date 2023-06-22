@@ -389,10 +389,7 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if d.HasChange("log_configuration") {
-		config, err := expandExperimentTemplateLogConfigurationForUpdate(d.Get("log_configuration").([]interface{}))
-		if err != nil {
-			return create.DiagError(names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
-		}
+		config := expandExperimentTemplateLogConfigurationForUpdate(d.Get("log_configuration").([]interface{}))
 		input.LogConfiguration = config
 	}
 
@@ -711,9 +708,9 @@ func expandExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]types.U
 	return attrs, nil
 }
 
-func expandExperimentTemplateLogConfigurationForUpdate(l []interface{}) (*types.UpdateExperimentTemplateLogConfigurationInput, error) {
+func expandExperimentTemplateLogConfigurationForUpdate(l []interface{}) *types.UpdateExperimentTemplateLogConfigurationInput {
 	if len(l) == 0 {
-		return &types.UpdateExperimentTemplateLogConfigurationInput{}, nil
+		return &types.UpdateExperimentTemplateLogConfigurationInput{}
 	}
 
 	raw := l[0].(map[string]interface{})
@@ -728,7 +725,7 @@ func expandExperimentTemplateLogConfigurationForUpdate(l []interface{}) (*types.
 		config.S3Configuration = expandExperimentTemplateS3Configuration(v)
 	}
 
-	return &config, nil
+	return &config
 }
 
 func expandExperimentTemplateActionParameteres(l *schema.Set) map[string]string {
