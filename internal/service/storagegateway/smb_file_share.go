@@ -402,6 +402,8 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 		// This value can only be set when KMSEncrypted is true.
 		if d.HasChange("kms_key_arn") && d.Get("kms_encrypted").(bool) {
 			input.KMSKey = aws.String(d.Get("kms_key_arn").(string))
+		} else if d.Get("kms_encrypted").(bool) && d.Get("kms_key_arn").(string) != "" {
+			input.KMSKey = aws.String(d.Get("kms_key_arn").(string))
 		}
 
 		if d.HasChange("notification_policy") {
