@@ -112,7 +112,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 	input := &sagemaker.CreateProjectInput{
 		ProjectName:                       aws.String(name),
 		ServiceCatalogProvisioningDetails: expandProjectServiceCatalogProvisioningDetails(d.Get("service_catalog_provisioning_details").([]interface{})),
-		Tags:                              GetTagsIn(ctx),
+		Tags:                              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("project_description"); ok {

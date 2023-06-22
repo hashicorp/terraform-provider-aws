@@ -66,7 +66,7 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 
 	input := redshift.CreateSnapshotCopyGrantInput{
 		SnapshotCopyGrantName: aws.String(grantName),
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
@@ -126,7 +126,7 @@ func resourceSnapshotCopyGrantRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("kms_key_id", grant.KmsKeyId)
 	d.Set("snapshot_copy_grant_name", grant.SnapshotCopyGrantName)
 
-	SetTagsOut(ctx, grant.Tags)
+	setTagsOut(ctx, grant.Tags)
 
 	return diags
 }

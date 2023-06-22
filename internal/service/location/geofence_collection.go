@@ -87,7 +87,7 @@ func resourceGeofenceCollectionCreate(ctx context.Context, d *schema.ResourceDat
 
 	in := &locationservice.CreateGeofenceCollectionInput{
 		CollectionName: aws.String(d.Get("collection_name").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok && v != "" {

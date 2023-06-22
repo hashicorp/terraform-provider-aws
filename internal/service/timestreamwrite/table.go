@@ -145,7 +145,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &timestreamwrite.CreateTableInput{
 		DatabaseName: aws.String(d.Get("database_name").(string)),
 		TableName:    aws.String(tableName),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("retention_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {

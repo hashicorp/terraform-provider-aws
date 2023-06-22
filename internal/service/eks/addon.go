@@ -128,7 +128,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		AddonName:          aws.String(addonName),
 		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		ClusterName:        aws.String(clusterName),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("addon_version"); ok {
@@ -220,7 +220,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).Format(time.RFC3339))
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
-	SetTagsOut(ctx, addon.Tags)
+	setTagsOut(ctx, addon.Tags)
 
 	return diags
 }

@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -65,12 +64,12 @@ func init() {
 
 func sweepApplication(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := client.OpsWorksConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
@@ -117,12 +116,12 @@ func sweepApplication(region string) error {
 
 func sweepInstance(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := client.OpsWorksConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
@@ -170,12 +169,12 @@ func sweepInstance(region string) error {
 
 func sweepRDSDBInstance(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := client.OpsWorksConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
@@ -223,12 +222,12 @@ func sweepRDSDBInstance(region string) error {
 
 func sweepStacks(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := client.OpsWorksConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
@@ -266,12 +265,12 @@ func sweepStacks(region string) error {
 
 func sweepLayers(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := client.OpsWorksConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
@@ -328,12 +327,12 @@ func sweepLayers(region string) error {
 
 func sweepUserProfiles(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := client.OpsWorksConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeUserProfilesWithContext(ctx, &opsworks.DescribeUserProfilesInput{})

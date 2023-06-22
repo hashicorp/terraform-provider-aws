@@ -86,7 +86,7 @@ func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.Resou
 	name := d.Get("auto_scaling_configuration_name").(string)
 	input := &apprunner.CreateAutoScalingConfigurationInput{
 		AutoScalingConfigurationName: aws.String(name),
-		Tags:                         GetTagsIn(ctx),
+		Tags:                         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("max_concurrency"); ok {

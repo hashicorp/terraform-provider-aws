@@ -98,7 +98,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 			Passwords: flex.ExpandStringSet(d.Get("authentication_mode.0.passwords").(*schema.Set)),
 			Type:      aws.String(d.Get("authentication_mode.0.type").(string)),
 		},
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 		UserName: aws.String(userName),
 	}
 

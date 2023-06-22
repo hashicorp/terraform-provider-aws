@@ -108,7 +108,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	resp, err := conn.CreateApplicationWithContext(ctx, &codedeploy.CreateApplicationInput{
 		ApplicationName: aws.String(application),
 		ComputePlatform: aws.String(computePlatform),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy Application (%s): %s", application, err)

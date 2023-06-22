@@ -100,7 +100,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 		Description:          aws.String(d.Get("description").(string)),
 		ParameterGroupFamily: aws.String(d.Get("family").(string)),
 		ParameterGroupName:   aws.String(name),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	_, err := conn.CreateClusterParameterGroupWithContext(ctx, input)
@@ -155,7 +155,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("family", parameterGroup.ParameterGroupFamily)
 	d.Set("name", parameterGroup.ParameterGroupName)
 
-	SetTagsOut(ctx, parameterGroup.Tags)
+	setTagsOut(ctx, parameterGroup.Tags)
 
 	input := &redshift.DescribeClusterParametersInput{
 		ParameterGroupName: aws.String(d.Id()),

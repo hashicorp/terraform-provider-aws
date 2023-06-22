@@ -105,7 +105,7 @@ func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set("replication_task_settings", settings)
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(task.ReplicationTaskArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(task.ReplicationTaskArn))
 	if err != nil {
 		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationTask, d.Id(), err)
 	}

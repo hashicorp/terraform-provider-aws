@@ -60,7 +60,7 @@ The `monitor` block supports the following:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the AppConfig Environment.
-* `id` - AppConfig environment ID and application ID separated by a colon (`:`).
+* `id` - (**Deprecated**) AppConfig environment ID and application ID separated by a colon (`:`).
 * `environment_id` - AppConfig environment ID.
 * `state` - State of the environment. Possible values are `READY_FOR_DEPLOYMENT`, `DEPLOYING`, `ROLLING_BACK`
   or `ROLLED_BACK`.

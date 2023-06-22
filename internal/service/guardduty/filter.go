@@ -139,7 +139,7 @@ func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		DetectorId:  aws.String(d.Get("detector_id").(string)),
 		Name:        aws.String(d.Get("name").(string)),
 		Rank:        aws.Int64(int64(d.Get("rank").(int))),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	var err error
@@ -214,7 +214,7 @@ func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("detector_id", detectorID)
 	d.Set("rank", filter.Rank)
 
-	SetTagsOut(ctx, filter.Tags)
+	setTagsOut(ctx, filter.Tags)
 
 	d.SetId(filterCreateID(detectorID, name))
 

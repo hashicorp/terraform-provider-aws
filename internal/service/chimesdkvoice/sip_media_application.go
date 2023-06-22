@@ -74,7 +74,7 @@ func resourceSipMediaApplicationCreate(ctx context.Context, d *schema.ResourceDa
 		AwsRegion: aws.String(d.Get("aws_region").(string)),
 		Name:      aws.String(d.Get("name").(string)),
 		Endpoints: expandSipMediaApplicationEndpoints(d.Get("endpoints").([]interface{})),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateSipMediaApplicationWithContext(ctx, createInput)

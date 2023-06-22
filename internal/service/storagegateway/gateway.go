@@ -353,7 +353,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 		GatewayName:     aws.String(d.Get("gateway_name").(string)),
 		GatewayTimezone: aws.String(d.Get("gateway_timezone").(string)),
 		GatewayType:     aws.String(d.Get("gateway_type").(string)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("medium_changer_type"); ok {
@@ -498,7 +498,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Gateway (%s): %s", d.Id(), err)
 	}
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	smbSettingsInput := &storagegateway.DescribeSMBSettingsInput{
 		GatewayARN: aws.String(d.Id()),

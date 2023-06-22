@@ -163,7 +163,7 @@ func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("owner_id", pl.OwnerId)
 	d.Set("version", pl.Version)
 
-	SetTagsOut(ctx, pl.Tags)
+	setTagsOut(ctx, pl.Tags)
 
 	return nil
 }

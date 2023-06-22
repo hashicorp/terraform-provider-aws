@@ -76,7 +76,7 @@ func resourceResourceShareCreate(ctx context.Context, d *schema.ResourceData, me
 	input := &ram.CreateResourceShareInput{
 		AllowExternalPrincipals: aws.Bool(d.Get("allow_external_principals").(bool)),
 		Name:                    aws.String(name),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("permission_arns"); ok && v.(*schema.Set).Len() > 0 {
@@ -125,7 +125,7 @@ func resourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("arn", resourceShare.ResourceShareArn)
 	d.Set("name", resourceShare.Name)
 
-	SetTagsOut(ctx, resourceShare.Tags)
+	setTagsOut(ctx, resourceShare.Tags)
 
 	perms, err := conn.ListResourceSharePermissionsWithContext(ctx, &ram.ListResourceSharePermissionsInput{
 		ResourceShareArn: aws.String(d.Id()),

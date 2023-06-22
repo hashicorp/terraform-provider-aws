@@ -158,7 +158,7 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &networkmanager.CreateCoreNetworkInput{
 		ClientToken:     aws.String(id.UniqueId()),
 		GlobalNetworkId: aws.String(globalNetworkID),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -230,7 +230,7 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("state", coreNetwork.State)
 
-	SetTagsOut(ctx, coreNetwork.Tags)
+	setTagsOut(ctx, coreNetwork.Tags)
 
 	return nil
 }

@@ -79,7 +79,7 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 			MonitorName: aws.String(d.Get("name").(string)),
 			MonitorType: aws.String(d.Get("monitor_type").(string)),
 		},
-		ResourceTags: GetTagsIn(ctx),
+		ResourceTags: getTagsIn(ctx),
 	}
 	switch d.Get("monitor_type").(string) {
 	case costexplorer.MonitorTypeDimensional:

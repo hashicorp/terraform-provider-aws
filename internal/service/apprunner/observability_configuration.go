@@ -79,7 +79,7 @@ func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.Res
 	name := d.Get("observability_configuration_name").(string)
 	input := &apprunner.CreateObservabilityConfigurationInput{
 		ObservabilityConfigurationName: aws.String(name),
-		Tags:                           GetTagsIn(ctx),
+		Tags:                           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("trace_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {

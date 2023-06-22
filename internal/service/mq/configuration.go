@@ -107,7 +107,7 @@ func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, me
 		EngineType:    aws.String(d.Get("engine_type").(string)),
 		EngineVersion: aws.String(d.Get("engine_version").(string)),
 		Name:          aws.String(name),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("authentication_strategy"); ok {
@@ -183,7 +183,7 @@ func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("data", string(data))
 
-	SetTagsOut(ctx, configuration.Tags)
+	setTagsOut(ctx, configuration.Tags)
 
 	return nil
 }

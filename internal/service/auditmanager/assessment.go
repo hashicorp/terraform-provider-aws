@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -189,7 +189,7 @@ func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequ
 		Name:                         aws.String(plan.Name.ValueString()),
 		Roles:                        expandAssessmentRoles(roles),
 		Scope:                        scopeInput,
-		Tags:                         GetTagsIn(ctx),
+		Tags:                         getTagsIn(ctx),
 	}
 
 	if !plan.Description.IsNull() {
@@ -485,7 +485,7 @@ func (rd *resourceAssessmentData) refreshFromOutput(ctx context.Context, out *aw
 	diags.Append(d...)
 	rd.Scope = scope
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	return diags
 }

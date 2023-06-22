@@ -359,7 +359,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	input := &elbv2.CreateTargetGroupInput{
 		Name:       aws.String(groupName),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 		TargetType: aws.String(d.Get("target_type").(string)),
 	}
 
@@ -598,7 +598,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.

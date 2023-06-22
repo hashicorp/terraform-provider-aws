@@ -113,7 +113,7 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("share_status", shareStatus)
 
 	if shareStatus != route53resolver.ShareStatusSharedWithMe {
-		tags, err := ListTags(ctx, conn, arn)
+		tags, err := listTags(ctx, conn, arn)
 
 		if err != nil {
 			return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameQueryLogConfig, configID, err)

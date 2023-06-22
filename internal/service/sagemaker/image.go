@@ -78,7 +78,7 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &sagemaker.CreateImageInput{
 		ImageName: aws.String(name),
 		RoleArn:   aws.String(d.Get("role_arn").(string)),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("display_name"); ok {

@@ -42,7 +42,7 @@ func ResourceWorkflow() *schema.Resource {
 			"default_run_properties": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				Elem:     schema.TypeString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -71,7 +71,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 	name := d.Get("name").(string)
 	input := &glue.CreateWorkflowInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if kv, ok := d.GetOk("default_run_properties"); ok {

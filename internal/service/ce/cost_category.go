@@ -378,7 +378,7 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &costexplorer.CreateCostCategoryDefinitionInput{
 		Name:         aws.String(d.Get("name").(string)),
-		ResourceTags: GetTagsIn(ctx),
+		ResourceTags: getTagsIn(ctx),
 		Rules:        expandCostCategoryRules(d.Get("rule").(*schema.Set).List()),
 		RuleVersion:  aws.String(d.Get("rule_version").(string)),
 	}

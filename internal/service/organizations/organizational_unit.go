@@ -89,7 +89,7 @@ func resourceOrganizationalUnitCreate(ctx context.Context, d *schema.ResourceDat
 	createOpts := &organizations.CreateOrganizationalUnitInput{
 		Name:     aws.String(d.Get("name").(string)),
 		ParentId: aws.String(d.Get("parent_id").(string)),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 
 	var err error

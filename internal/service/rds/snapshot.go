@@ -137,7 +137,7 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &rds.CreateDBSnapshotInput{
 		DBInstanceIdentifier: aws.String(d.Get("db_instance_identifier").(string)),
 		DBSnapshotIdentifier: aws.String(dbSnapshotID),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateDBSnapshotWithContext(ctx, input)
@@ -215,7 +215,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("shared_accounts", flex.FlattenStringSet(output.DBSnapshotAttributesResult.DBSnapshotAttributes[0].AttributeValues))
 
-	SetTagsOut(ctx, snapshot.TagList)
+	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
 }

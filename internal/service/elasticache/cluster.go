@@ -346,7 +346,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	clusterID := d.Get("cluster_id").(string)
 	input := &elasticache.CreateCacheClusterInput{
 		CacheClusterId: aws.String(clusterID),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("replication_group_id"); ok {
@@ -467,7 +467,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, arn, tags)
 
 		// If default tags only, continue. Otherwise, error.

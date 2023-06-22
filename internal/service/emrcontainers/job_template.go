@@ -260,7 +260,7 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &emrcontainers.CreateJobTemplateInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(name),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("job_template_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -308,7 +308,7 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("name", vc.Name)
 	d.Set("kms_key_arn", vc.KmsKeyArn)
 
-	SetTagsOut(ctx, vc.Tags)
+	setTagsOut(ctx, vc.Tags)
 
 	return nil
 }

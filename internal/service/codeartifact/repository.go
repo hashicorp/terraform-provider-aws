@@ -111,7 +111,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &codeartifact.CreateRepositoryInput{
 		Repository: aws.String(d.Get("repository").(string)),
 		Domain:     aws.String(d.Get("domain").(string)),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

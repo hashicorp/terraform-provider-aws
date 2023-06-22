@@ -98,7 +98,7 @@ func resourceScheduleGroupCreate(ctx context.Context, d *schema.ResourceData, me
 
 	in := &scheduler.CreateScheduleGroupInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateScheduleGroup(ctx, in)

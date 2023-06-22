@@ -501,7 +501,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	listenerARN := d.Get("listener_arn").(string)
 	input := &elbv2.CreateRuleInput{
 		ListenerArn: aws.String(listenerARN),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	var err error
@@ -532,7 +532,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(aws.StringValue(output.Rules[0].RuleArn))
 
 	// Post-create tagging supported in some partitions
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.

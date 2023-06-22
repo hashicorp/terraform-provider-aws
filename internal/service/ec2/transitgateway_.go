@@ -211,7 +211,7 @@ func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("transit_gateway_cidr_blocks", aws.StringValueSlice(transitGateway.Options.TransitGatewayCidrBlocks))
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
-	SetTagsOut(ctx, transitGateway.Tags)
+	setTagsOut(ctx, transitGateway.Tags)
 
 	return diags
 }

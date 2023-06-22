@@ -138,7 +138,7 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 
 	in := &sesv2.CreateEmailIdentityInput{
 		EmailIdentity: aws.String(d.Get("email_identity").(string)),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("configuration_set_name"); ok {

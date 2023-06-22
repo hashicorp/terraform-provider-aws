@@ -150,7 +150,7 @@ func resourceOntapVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 			SizeInMegabytes:         aws.Int64(int64(d.Get("size_in_megabytes").(int))),
 			StorageVirtualMachineId: aws.String(d.Get("storage_virtual_machine_id").(string)),
 		},
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 		VolumeType: aws.String(d.Get("volume_type").(string)),
 	}
 

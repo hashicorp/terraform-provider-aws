@@ -152,7 +152,7 @@ func resourceIPAMResourceDiscoveryRead(ctx context.Context, d *schema.ResourceDa
 	}
 	d.Set("owner_id", rd.OwnerId)
 
-	SetTagsOut(ctx, rd.Tags)
+	setTagsOut(ctx, rd.Tags)
 
 	return diags
 }

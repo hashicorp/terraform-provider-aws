@@ -95,7 +95,7 @@ func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta
 		Enabled: aws.Bool(d.Get("enabled").(bool)),
 		Name:    aws.String(name),
 		Source:  expandSource(d.Get("source").([]interface{})),
-		Tags:    GetTagsIn(ctx),
+		Tags:    getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating RolesAnywhere Trust Anchor (%s): %#v", d.Id(), input)

@@ -3,6 +3,7 @@ package acctest
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -924,6 +925,24 @@ func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 
 	if aws.StringValue(organization.MasterAccountId) != aws.StringValue(callerIdentity.Account) {
 		t.Skip("this AWS account must be the management account of an AWS Organization")
+	}
+}
+
+func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
+	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
+
+	if err != nil {
+		t.Fatalf("describing AWS Organization: %s", err)
+	}
+
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSConn(ctx))
+
+	if err != nil {
+		t.Fatalf("getting current identity: %s", err)
+	}
+
+	if aws.StringValue(organization.MasterAccountId) == aws.StringValue(callerIdentity.Account) {
+		t.Skip("this AWS account must not be the management account of an AWS Organization")
 	}
 }
 
@@ -2255,7 +2274,7 @@ func CheckResourceAttrGreaterThanValue(n, key string, val int) resource.TestChec
 		}
 
 		if v <= val {
-			return fmt.Errorf("%s: Attribute %q is not greater than %d, got %d", n, key, val, v)
+			return fmt.Errorf("got %d, want > %d", v, val)
 		}
 
 		return nil
@@ -2271,7 +2290,23 @@ func CheckResourceAttrGreaterThanOrEqualValue(n, key string, val int) resource.T
 		}
 
 		if v < val {
-			return fmt.Errorf("%s: Attribute %q is not greater than or equal to %d, got %d", n, key, val, v)
+			return fmt.Errorf("got %d, want >= %d", v, val)
+		}
+
+		return nil
+	})
+}
+
+func CheckResourceAttrIsJSONString(n, key string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(n, key, func(value string) error {
+		var m map[string]*json.RawMessage
+
+		if err := json.Unmarshal([]byte(value), &m); err != nil {
+			return err
+		}
+
+		if len(m) == 0 {
+			return errors.New(`empty JSON string`)
 		}
 
 		return nil

@@ -257,7 +257,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.TagSpecifications == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.TagSpecifications == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -351,7 +351,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("policy", policyToSet)
 
-	SetTagsOut(ctx, vpce.Tags)
+	setTagsOut(ctx, vpce.Tags)
 
 	return diags
 }

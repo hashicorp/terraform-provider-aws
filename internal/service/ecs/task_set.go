@@ -278,7 +278,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ClientToken:    aws.String(id.UniqueId()),
 		Cluster:        aws.String(cluster),
 		Service:        aws.String(service),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 		TaskDefinition: aws.String(d.Get("task_definition").(string)),
 	}
 
@@ -339,7 +339,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(output.TaskSet.TaskSetArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -434,7 +434,7 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
 	}
 
-	SetTagsOut(ctx, taskSet.Tags)
+	setTagsOut(ctx, taskSet.Tags)
 
 	return diags
 }

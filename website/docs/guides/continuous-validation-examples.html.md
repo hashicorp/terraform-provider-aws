@@ -99,3 +99,33 @@ If findings are present, the check block assertion will return a warning similar
 │
 │ AWS GuardDuty detector 'abcdef123456' has 9 open findings!
 ```
+
+## Example - Check for unused IAM roles (aws_iam_role)
+
+AWS IAM tracks role usage, including the [last used date and region](https://docs.aws.amazon.com/IAM/latest/APIReference/API_RoleLastUsed.html). This information is returned  with the [`aws_iam_role`](../d/iam_role.html.markdown) data source, and can be used in continuous validation to check for unused roles. AWS reports activity for the trailing 400 days. If a role is unused within that period, the `last_used_date` will be an empty string (`""`).
+
+In the example below, the [`timecmp`](https://developer.hashicorp.com/terraform/language/functions/timecmp) function checks for a `last_used_date` more recent than the `unused_limit` local variable (30 days ago). The [`coalesce`](https://developer.hashicorp.com/terraform/language/functions/coalesce) function handles empty (`""`) `last_used_date` values safely, falling back to the `unused_limit` local, and automatically triggering a failed condition.
+
+```hcl
+locals {
+  unused_limit = timeadd(timestamp(), "-720h")
+}
+
+check "check_iam_role_unused" {
+  data "aws_iam_role" "example" {
+    name = aws_iam_role.example.name
+  }
+
+  assert {
+    condition = (
+      timecmp(
+        coalesce(data.aws_iam_role.example.role_last_used[0].last_used_date, local.unused_limit),
+        local.unused_limit,
+      ) > 0
+    )
+    error_message = format("AWS IAM role '%s' is unused in the last 30 days!",
+      data.aws_iam_role.example.name,
+    )
+  }
+}
+```

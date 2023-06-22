@@ -254,7 +254,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	name := d.Get("name").(string)
 	input := &appstream.CreateStackInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_endpoints"); ok {

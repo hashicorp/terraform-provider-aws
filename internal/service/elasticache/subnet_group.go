@@ -89,7 +89,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		CacheSubnetGroupDescription: aws.String(d.Get("description").(string)),
 		CacheSubnetGroupName:        aws.String(name),
 		SubnetIds:                   flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateCacheSubnetGroupWithContext(ctx, input)
@@ -112,7 +112,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(strings.ToLower(name))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(output.CacheSubnetGroup.ARN), tags)
 
 		// If default tags only, continue. Otherwise, error.

@@ -121,7 +121,7 @@ func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	input := &networkmanager.CreateLinkInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 		SiteId:          aws.String(d.Get("site_id").(string)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("bandwidth"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -186,7 +186,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("site_id", link.SiteId)
 	d.Set("type", link.Type)
 
-	SetTagsOut(ctx, link.Tags)
+	setTagsOut(ctx, link.Tags)
 
 	return nil
 }

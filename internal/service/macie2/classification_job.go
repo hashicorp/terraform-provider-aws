@@ -581,7 +581,7 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 		Name:            aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string))),
 		JobType:         aws.String(d.Get("job_type").(string)),
 		S3JobDefinition: expandS3JobDefinition(d.Get("s3_job_definition").([]interface{})),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("custom_data_identifier_ids"); ok {
@@ -665,7 +665,7 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("setting `%s` for Macie ClassificationJob (%s): %s", "s3_job_definition", d.Id(), err)
 	}
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	d.Set("job_id", resp.JobId)
 	d.Set("job_arn", resp.JobArn)

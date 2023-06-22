@@ -337,7 +337,7 @@ func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.StringValue(costCategory.CostCategoryArn))
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return create.DiagError(names.CE, "listing tags", ResNameCostCategory, d.Id(), err)

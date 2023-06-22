@@ -122,7 +122,7 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 	input := &kms.ReplicateKeyInput{
 		KeyId:         aws.String(strings.TrimPrefix(primaryKeyARN.Resource, "key/")),
 		ReplicaRegion: aws.String(meta.(*conns.AWSClient).Region),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("bypass_policy_lockout_safety_check"); ok {
@@ -191,7 +191,7 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
+	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
 		if err := WaitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica External Key (%s) tag propagation: %s", d.Id(), err)
 		}
@@ -251,7 +251,7 @@ func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("valid_to", nil)
 	}
 
-	SetTagsOut(ctx, key.tags)
+	setTagsOut(ctx, key.tags)
 
 	return diags
 }

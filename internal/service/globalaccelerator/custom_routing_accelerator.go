@@ -136,7 +136,7 @@ func resourceCustomRoutingAcceleratorCreate(ctx context.Context, d *schema.Resou
 		Name:             aws.String(name),
 		IdempotencyToken: aws.String(id.UniqueId()),
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {

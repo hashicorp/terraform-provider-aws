@@ -302,7 +302,7 @@ func resourceLaunchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Name:    aws.String(name),
 		Project: aws.String(project),
 		Groups:  expandGroups(d.Get("groups").([]interface{})),
-		Tags:    GetTagsIn(ctx),
+		Tags:    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -386,7 +386,7 @@ func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("status_reason", launch.StatusReason)
 	d.Set("type", launch.Type)
 
-	SetTagsOut(ctx, launch.Tags)
+	setTagsOut(ctx, launch.Tags)
 
 	return nil
 }

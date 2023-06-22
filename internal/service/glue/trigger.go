@@ -213,7 +213,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	input := &glue.CreateTriggerInput{
 		Actions:         expandActions(d.Get("actions").([]interface{})),
 		Name:            aws.String(name),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 		Type:            aws.String(triggerType),
 		StartOnCreation: aws.Bool(d.Get("start_on_creation").(bool)),
 	}

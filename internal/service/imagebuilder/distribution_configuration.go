@@ -295,7 +295,7 @@ func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.Reso
 
 	input := &imagebuilder.CreateDistributionConfigurationInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -358,7 +358,7 @@ func resourceDistributionConfigurationRead(ctx context.Context, d *schema.Resour
 	d.Set("distribution", flattenDistributions(distributionConfiguration.Distributions))
 	d.Set("name", distributionConfiguration.Name)
 
-	SetTagsOut(ctx, distributionConfiguration.Tags)
+	setTagsOut(ctx, distributionConfiguration.Tags)
 
 	return diags
 }
