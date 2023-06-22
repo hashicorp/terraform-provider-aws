@@ -115,7 +115,7 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 ### `log_configuration`
 
 * `log_schema_version` - (Required) The schema version. See [documentation](https://docs.aws.amazon.com/fis/latest/userguide/monitoring-logging.html#experiment-log-schema) for the list of schema versions.
-* `cloudwatch_logs_configuration` - (Optional) The configuration for experiment logging to Amazon CloudWatch Logs. See below. 
+* `cloudwatch_logs_configuration` - (Optional) The configuration for experiment logging to Amazon CloudWatch Logs. See below.
 * `s3_configuration` - (Optional) The configuration for experiment logging to Amazon S3. See below.
 
 #### `cloudwatch_logs_configuration`
