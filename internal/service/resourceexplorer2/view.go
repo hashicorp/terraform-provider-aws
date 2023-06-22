@@ -126,7 +126,7 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 		Filters:            flex.ExpandFrameworkListNestedBlockPtr(ctx, data.Filters, r.expandSearchFilter),
 		IncludedProperties: flex.ExpandFrameworkListNestedBlock(ctx, data.IncludedProperties, r.expandIncludedProperty),
 		Tags:               getTagsIn(ctx),
-		ViewName:           aws.String(data.Name.ValueString()),
+		ViewName:           aws.String(data.ViewName.ValueString()),
 	}
 
 	output, err := conn.CreateView(ctx, input)
@@ -154,7 +154,7 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 	}
 
 	// Set values for unknowns.
-	data.ARN = types.StringValue(arn)
+	data.ViewArn = types.StringValue(arn)
 	data.ID = types.StringValue(arn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -195,12 +195,12 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 	}
 
 	view := output.View
-	data.ARN = flex.StringToFramework(ctx, view.ViewArn)
-	data.DefaultView = types.BoolValue(defaultViewARN == data.ARN.ValueString())
+	data.ViewArn = flex.StringToFramework(ctx, view.ViewArn)
+	data.DefaultView = types.BoolValue(defaultViewARN == data.ViewArn.ValueString())
 	data.Filters = r.flattenSearchFilter(ctx, view.Filters)
 	data.IncludedProperties = flex.FlattenFrameworkListNestedBlock[viewIncludedPropertyData](ctx, view.IncludedProperties, r.flattenIncludedProperty)
 
-	arn, err := arn.Parse(data.ARN.ValueString())
+	arn, err := arn.Parse(data.ViewArn.ValueString())
 
 	if err != nil {
 		response.Diagnostics.AddError("parsing Resource Explorer View ARN", err.Error())
@@ -218,7 +218,7 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 	}
 
 	name := parts[1]
-	data.Name = types.StringValue(name)
+	data.ViewName = types.StringValue(name)
 
 	setTagsOut(ctx, output.Tags)
 
@@ -361,13 +361,14 @@ func (r *resourceView) flattenIncludedProperty(ctx context.Context, apiObject aw
 	}
 }
 
+// See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_View.html.
 type resourceViewData struct {
-	ARN                types.String `tfsdk:"arn"`
+	ViewArn            types.String `tfsdk:"arn"`
 	DefaultView        types.Bool   `tfsdk:"default_view"`
 	Filters            types.List   `tfsdk:"filters"`
 	ID                 types.String `tfsdk:"id"`
 	IncludedProperties types.List   `tfsdk:"included_property"`
-	Name               types.String `tfsdk:"name"`
+	ViewName           types.String `tfsdk:"name"`
 	Tags               types.Map    `tfsdk:"tags"`
 	TagsAll            types.Map    `tfsdk:"tags_all"`
 }
