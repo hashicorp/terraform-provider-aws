@@ -89,13 +89,14 @@ const (
 )
 
 func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	name := d.Get("email_identity").(string)
 
 	out, err := FindEmailIdentityByID(ctx, conn, name)
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, DSNameEmailIdentity, name, err)
+		return append(diags, create.DiagError(names.SESV2, create.ErrActionReading, DSNameEmailIdentity, name, err)...)
 	}
 
 	arn := emailIdentityNameToARN(meta, name)
@@ -111,7 +112,7 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 		tfMap["domain_signing_selector"] = d.Get("dkim_signing_attributes.0.domain_signing_selector").(string)
 
 		if err := d.Set("dkim_signing_attributes", []interface{}{tfMap}); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameEmailIdentity, name, err)
+			return append(diags, create.DiagError(names.SESV2, create.ErrActionSetting, ResNameEmailIdentity, name, err)...)
 		}
 	} else {
 		d.Set("dkim_signing_attributes", nil)
@@ -120,5 +121,5 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("identity_type", string(out.IdentityType))
 	d.Set("verified_for_sending_status", out.VerifiedForSendingStatus)
 
-	return nil
+	return diags
 }
