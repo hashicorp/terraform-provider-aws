@@ -801,15 +801,18 @@ func validExperimentTemplateStopConditionSource() schema.SchemaValidateFunc {
 }
 
 func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
+	// See https://docs.aws.amazon.com/fis/latest/userguide/actions.html#action-targets
 	allowedStopConditionSources := []string{
 		"Cluster",
 		"Clusters",
 		"DBInstances",
 		"Instances",
 		"Nodegroups",
+		"Pods",
 		"Roles",
 		"SpotInstances",
 		"Subnets",
+		"Tasks",
 		"Volumes",
 	}
 
