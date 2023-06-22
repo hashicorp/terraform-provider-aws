@@ -1164,7 +1164,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
   kms_key_arn    = aws_kms_key.test.arn
   location_arn   = aws_s3_bucket.test.arn
   role_arn       = aws_iam_role.test.arn
-  read_only      = %t
+  read_only      = %[1]t
 }
 `, readOnly))
 }
