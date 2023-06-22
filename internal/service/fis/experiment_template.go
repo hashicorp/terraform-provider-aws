@@ -226,6 +226,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 						"parameters": {
 							Type:     schema.TypeMap,
 							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
