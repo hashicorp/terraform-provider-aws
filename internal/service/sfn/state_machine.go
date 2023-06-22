@@ -56,6 +56,10 @@ func ResourceStateMachine() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024*1024), // 1048576
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"logging_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -102,12 +106,25 @@ func ResourceStateMachine() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
 				),
 			},
+			"publish": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"revision_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"state_machine_version_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -135,6 +152,10 @@ func ResourceStateMachine() *schema.Resource {
 				Default:      sfn.StateMachineTypeStandard,
 				ValidateFunc: validation.StringInSlice(sfn.StateMachineType_Values(), false),
 			},
+			"version_description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -148,6 +169,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 	input := &sfn.CreateStateMachineInput{
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
+		Publish:    aws.Bool(d.Get("publish").(bool)),
 		RoleArn:    aws.String(d.Get("role_arn").(string)),
 		Tags:       getTagsIn(ctx),
 		Type:       aws.String(d.Get("type").(string)),
@@ -174,7 +196,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineArn))
-
+	d.Set("state_machine_version_arn", aws.StringValue(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineVersionArn))
 	return resourceStateMachineRead(ctx, d, meta)
 }
 
@@ -200,6 +222,11 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("creation_date", nil)
 	}
 	d.Set("definition", output.Definition)
+
+	if output.Description != nil {
+		d.Set("description", output.Description)
+	}
+
 	if output.LoggingConfiguration != nil {
 		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
 			return diag.Errorf("setting logging_configuration: %s", err)
@@ -210,6 +237,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
 	d.Set("role_arn", output.RoleArn)
+	d.Set("revision_id", output.RevisionId)
 	d.Set("status", output.Status)
 	if output.TracingConfiguration != nil {
 		if err := d.Set("tracing_configuration", []interface{}{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
@@ -232,6 +260,12 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 			Definition:      aws.String(d.Get("definition").(string)),
 			RoleArn:         aws.String(d.Get("role_arn").(string)),
 			StateMachineArn: aws.String(d.Id()),
+			Publish:         aws.Bool(d.Get("publish").(bool)),
+		}
+
+		if v, ok := d.GetOk("publish"); ok && v == true {
+			input.VersionDescription = aws.String(d.Get("version_description").(string))
+
 		}
 
 		if d.HasChange("logging_configuration") {
@@ -246,7 +280,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 
-		_, err := conn.UpdateStateMachineWithContext(ctx, input)
+		out, err := conn.UpdateStateMachineWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating Step Functions State Machine (%s): %s", d.Id(), err)
@@ -262,6 +296,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 
 			if d.HasChange("definition") && !verify.JSONBytesEqual([]byte(aws.StringValue(output.Definition)), []byte(d.Get("definition").(string))) ||
 				d.HasChange("role_arn") && aws.StringValue(output.RoleArn) != d.Get("role_arn").(string) ||
+				//d.HasChange("publish") && aws.Bool(output.Publish) != d.Get("publish").(bool) ||
 				d.HasChange("tracing_configuration.0.enabled") && output.TracingConfiguration != nil && aws.BoolValue(output.TracingConfiguration.Enabled) != d.Get("tracing_configuration.0.enabled").(bool) ||
 				d.HasChange("logging_configuration.0.include_execution_data") && output.LoggingConfiguration != nil && aws.BoolValue(output.LoggingConfiguration.IncludeExecutionData) != d.Get("logging_configuration.0.include_execution_data").(bool) ||
 				d.HasChange("logging_configuration.0.level") && output.LoggingConfiguration != nil && aws.StringValue(output.LoggingConfiguration.Level) != d.Get("logging_configuration.0.level").(string) {
@@ -274,6 +309,8 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 		if err != nil {
 			return diag.Errorf("waiting for Step Functions State Machine (%s) update: %s", d.Id(), err)
 		}
+
+		d.Set("state_machine_version_arn", aws.StringValue(out.StateMachineVersionArn))
 	}
 
 	return resourceStateMachineRead(ctx, d, meta)

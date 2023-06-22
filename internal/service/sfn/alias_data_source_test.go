@@ -1,6 +1,7 @@
 package sfn_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/sfn"
@@ -9,11 +10,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccSFNStateMachineDataSource_basic(t *testing.T) {
+func TestAccSFNAliasDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_sfn_state_machine.test"
-	resourceName := "aws_sfn_state_machine.test"
+	dataSourceName := "data.aws_sfn_alias.test"
+	resourceName := "aws_sfn_alias.test"
+	rString := sdkacctest.RandString(8)
+	stateMachineName := fmt.Sprintf("tf_acc_state_machine_alias_basic_%s", rString)
+	aliasName := fmt.Sprintf("tf_acc_state_machine_alias_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -21,25 +24,23 @@ func TestAccSFNStateMachineDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStateMachineDataSourceConfig_basic(rName),
+				Config: testAccSFNAliasDataSourceConfig_basic(stateMachineName, aliasName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataSourceName, "creation_date"),
-					resource.TestCheckResourceAttrPair(resourceName, "definition", dataSourceName, "definition"),
+					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", dataSourceName, "role_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "revision_id", dataSourceName, "revision_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),
 				),
 			},
 		},
 	})
 }
 
-func testAccStateMachineDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccStateMachineConfig_basic(rName, 5), `
-data "aws_sfn_state_machine" "test" {
-  name = aws_sfn_state_machine.test.name
+func testAccSFNAliasDataSourceConfig_basic(statemachineName string, aliasName string, rMaxAttempts int) string {
+	return acctest.ConfigCompose(testAccStateMachineAliasConfig_basic(statemachineName, aliasName, rMaxAttempts), `
+data "aws_sfn_alias" "test" {
+  name = aws_sfn_alias.test.name
+  statemachine_arn = aws_sfn_state_machine.test.arn
 }
 `)
 }
