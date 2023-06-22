@@ -37,6 +37,7 @@ const (
 )
 
 func dataSourceEmailIdentityMailFromAttributesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	name := d.Get("email_identity").(string)
@@ -44,7 +45,7 @@ func dataSourceEmailIdentityMailFromAttributesRead(ctx context.Context, d *schem
 	out, err := FindEmailIdentityByID(ctx, conn, name)
 
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameEmailIdentityMailFromAttributes, name, err)
+		return append(diags, create.DiagError(names.SESV2, create.ErrActionReading, ResNameEmailIdentityMailFromAttributes, name, err)...)
 	}
 
 	d.SetId(name)
@@ -58,5 +59,5 @@ func dataSourceEmailIdentityMailFromAttributesRead(ctx context.Context, d *schem
 		d.Set("mail_from_domain", nil)
 	}
 
-	return nil
+	return diags
 }
