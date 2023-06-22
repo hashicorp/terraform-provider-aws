@@ -156,3 +156,5 @@ require (
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/hashicorp/aws-sdk-go-base/v2 => github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.29.0.20230622181216-1c3bdec608c2
