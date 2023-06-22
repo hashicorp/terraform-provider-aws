@@ -420,7 +420,7 @@ resource "aws_lakeformation_lf_tag" "test" {
   key    = %[1]q
   values = [%[2]s]
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
@@ -436,7 +436,7 @@ resource "aws_lakeformation_resource_lf_tags" "test" {
     value = %[3]q
   }
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `, rName, fmt.Sprintf(`"%s"`, strings.Join(values, `", "`)), value)
@@ -462,7 +462,7 @@ resource "aws_lakeformation_lf_tag" "test" {
   key    = %[1]q
   values = [%[2]s]
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
@@ -476,7 +476,7 @@ resource "aws_lakeformation_resource_lf_tags" "test" {
     value = %[3]q
   }
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `, rName, fmt.Sprintf(`"%s"`, strings.Join(values, `", "`)), value)
@@ -502,7 +502,7 @@ resource "aws_lakeformation_lf_tag" "test" {
   key    = %[1]q
   values = [%[2]s]
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
@@ -510,7 +510,7 @@ resource "aws_lakeformation_lf_tag" "test2" {
   key    = "%[1]s-2"
   values = [%[3]s]
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
@@ -529,7 +529,7 @@ resource "aws_lakeformation_resource_lf_tags" "test" {
     value = %[5]q
   }
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `, rName, fmt.Sprintf(`"%s"`, strings.Join(values1, `", "`)), fmt.Sprintf(`"%s"`, strings.Join(values2, `", "`)), value1, value2)
@@ -577,7 +577,7 @@ resource "aws_lakeformation_lf_tag" "test" {
   key    = %[1]q
   values = [%[2]s]
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
@@ -592,7 +592,7 @@ resource "aws_lakeformation_resource_lf_tags" "test" {
     value = %[3]q
   }
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `, rName, fmt.Sprintf(`"%s"`, strings.Join(values, `", "`)), value)
@@ -640,7 +640,7 @@ resource "aws_lakeformation_lf_tag" "test" {
   key    = %[1]q
   values = [%[2]s]
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
@@ -648,7 +648,7 @@ resource "aws_lakeformation_lf_tag" "test2" {
   key    = "%[1]s-2"
   values = [%[3]s]
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
@@ -669,7 +669,7 @@ resource "aws_lakeformation_resource_lf_tags" "test" {
     value = %[5]q
   }
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `, rName, fmt.Sprintf(`"%s"`, strings.Join(values1, `", "`)), fmt.Sprintf(`"%s"`, strings.Join(values2, `", "`)), value1, value2)
