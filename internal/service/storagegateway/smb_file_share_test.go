@@ -1152,7 +1152,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
 func testAccSMBFileShareConfig_encryptedUpdate(rName string, readOnly bool) string {
 	return acctest.ConfigCompose(testAcc_SMBFileShare_GuestAccessBase(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
- deletion_window_in_days = 7
+  deletion_window_in_days = 7
   description             = "Terraform Acceptance Testing"
 }
 
