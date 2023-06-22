@@ -2,17 +2,12 @@ package sesv2
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,15 +23,12 @@ func DataSourceEmailIdentity() *schema.Resource {
 				Computed: true,
 			},
 			"configuration_set_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"dkim_signing_attributes": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"current_signing_key_length": {
@@ -44,38 +36,20 @@ func DataSourceEmailIdentity() *schema.Resource {
 							Computed: true,
 						},
 						"domain_signing_private_key": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_selector"},
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 20480),
-								func(v interface{}, name string) (warns []string, errs []error) {
-									s := v.(string)
-									if !verify.IsBase64Encoded([]byte(s)) {
-										errs = append(errs, fmt.Errorf(
-											"%s: must be base64-encoded", name,
-										))
-									}
-									return
-								},
-							),
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"domain_signing_selector": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_private_key"},
-							ValidateFunc: validation.StringLenBetween(1, 63),
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"last_key_generation_timestamp": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"next_signing_key_length": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ConflictsWith:    []string{"dkim_signing_attributes.0.domain_signing_private_key", "dkim_signing_attributes.0.domain_signing_selector"},
-							ValidateDiagFunc: enum.Validate[types.DkimSigningKeyLength](),
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"signing_attributes_origin": {
 							Type:     schema.TypeString,
@@ -96,13 +70,12 @@ func DataSourceEmailIdentity() *schema.Resource {
 			"email_identity": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"identity_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"verified_for_sending_status": {
 				Type:     schema.TypeBool,
 				Computed: true,
