@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -308,10 +309,11 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.GetResourceLFTagsInput{
-		Resource:           &lakeformation.Resource{},
 		ShowAssignedLFTags: aws.Bool(true),
 	}
 
@@ -319,17 +321,24 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 		input.CatalogId = aws.String(v.(string))
 	}
 
+	var tagger tagger
 	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
+		tagger = &databaseTagger{}
+	} else if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tagger = &tableTagger{}
+	} else if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tagger = &columnTagger{}
+	} else {
+		return append(diags, errs.NewErrorDiagnostic(
+			"Invalid Lake Formation Resource Type",
+			"An unexpected error occurred while resolving the Lake Formation Resource type. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				"No Lake Formation Resource defined.",
+		))
 	}
 
-	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.TableWithColumns = expandTableColumnsResource(v.([]interface{})[0].(map[string]interface{}))
-	}
+	input.Resource = tagger.ExpandResource(d)
 
 	output, err := conn.GetResourceLFTagsWithContext(ctx, input)
 
@@ -337,28 +346,8 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.LakeFormation, create.ErrActionReading, ResNameLFTags, d.Id(), err)
 	}
 
-	if len(output.LFTagOnDatabase) > 0 {
-		if err := d.Set("lf_tag", flattenLFTagPairs(output.LFTagOnDatabase)); err != nil {
-			return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
-		}
-	}
-
-	if len(output.LFTagsOnColumns) > 0 {
-		for _, v := range output.LFTagsOnColumns {
-			if aws.StringValue(v.Name) != d.Get("table_with_columns.0.name").(string) {
-				continue
-			}
-
-			if err := d.Set("lf_tag", flattenLFTagPairs(v.LFTags)); err != nil {
-				return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
-			}
-		}
-	}
-
-	if len(output.LFTagsOnTable) > 0 {
-		if err := d.Set("lf_tag", flattenLFTagPairs(output.LFTagsOnTable)); err != nil {
-			return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
-		}
+	if err := d.Set("lf_tag", tagger.FlattenTags(output)); err != nil {
+		return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
 	}
 
 	return nil
@@ -408,7 +397,7 @@ func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, m
 				return retry.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(fmt.Errorf("unable to revoke Lake Formation Permissions: %w", err))
+			return retry.NonRetryableError(fmt.Errorf("removing Lake Formation LF-Tags: %w", err))
 		}
 		return nil
 	})
@@ -422,6 +411,59 @@ func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return nil
+}
+
+type tagger interface {
+	ExpandResource(*schema.ResourceData) *lakeformation.Resource
+	FlattenTags(*lakeformation.GetResourceLFTagsOutput) []any
+}
+
+type databaseTagger struct{}
+
+func (t *databaseTagger) ExpandResource(d *schema.ResourceData) *lakeformation.Resource {
+	v := d.Get("database").([]any)[0].(map[string]any)
+	return &lakeformation.Resource{
+		Database: ExpandDatabaseResource(v),
+	}
+}
+
+func (t *databaseTagger) FlattenTags(output *lakeformation.GetResourceLFTagsOutput) []any {
+	return flattenLFTagPairs(output.LFTagOnDatabase)
+}
+
+type tableTagger struct{}
+
+func (t *tableTagger) ExpandResource(d *schema.ResourceData) *lakeformation.Resource {
+	v := d.Get("table").([]any)[0].(map[string]any)
+	return &lakeformation.Resource{
+		Table: ExpandTableResource(v),
+	}
+}
+
+func (t *tableTagger) FlattenTags(output *lakeformation.GetResourceLFTagsOutput) []any {
+	return flattenLFTagPairs(output.LFTagsOnTable)
+}
+
+type columnTagger struct{}
+
+func (t *columnTagger) ExpandResource(d *schema.ResourceData) *lakeformation.Resource {
+	v := d.Get("table_with_columns").([]any)[0].(map[string]any)
+	return &lakeformation.Resource{
+		TableWithColumns: expandTableColumnsResource(v),
+	}
+}
+
+func (t *columnTagger) FlattenTags(output *lakeformation.GetResourceLFTagsOutput) []any {
+	if len(output.LFTagsOnColumns) == 0 {
+		return []any{}
+	}
+
+	tags := output.LFTagsOnColumns[0]
+	if tags == nil {
+		return []any{}
+	}
+
+	return flattenLFTagPairs(tags.LFTags)
 }
 
 func lfTagsHash(v interface{}) int {
