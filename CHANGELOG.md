@@ -1,4 +1,9 @@
 ## 5.6.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_ec2_instance_connect_endpoint` ([#31858](https://github.com/hashicorp/terraform-provider-aws/issues/31858))
+
 ## 5.5.0 (June 23, 2023)
 
 NOTES:
