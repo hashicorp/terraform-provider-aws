@@ -307,7 +307,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 			return diag.Errorf("waiting for Step Functions State Machine (%s) update: %s", d.Id(), err)
 		}
 
-		d.Set("state_machine_version_arn", aws.StringValue(out.StateMachineVersionArn))
+		d.Set("state_machine_version_arn", out.StateMachineVersionArn)
 	}
 
 	return resourceStateMachineRead(ctx, d, meta)
