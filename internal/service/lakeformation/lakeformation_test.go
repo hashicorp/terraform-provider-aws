@@ -65,7 +65,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"basic":                testAccResourceLFTags_basic,
 			"database":             testAccResourceLFTags_database,
 			"databaseMultipleTags": testAccResourceLFTags_databaseMultipleTags,
-			"disappears":           TestAccResourceLFTags_disappears,
+			"disappears":           testAccResourceLFTags_disappears,
 			"hierarchy":            testAccResourceLFTags_hierarchy,
 			"table":                testAccResourceLFTags_table,
 			"tableWithColumns":     testAccResourceLFTags_tableWithColumns,

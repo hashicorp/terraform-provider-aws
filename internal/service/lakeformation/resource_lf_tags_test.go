@@ -45,7 +45,7 @@ func testAccResourceLFTags_basic(t *testing.T) {
 	})
 }
 
-func TestAccResourceLFTags_disappears(t *testing.T) {
+func testAccResourceLFTags_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_resource_lf_tags.test"
