@@ -24,7 +24,7 @@ func TestAccSFNAliasDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSFNAliasDataSourceConfig_basic(stateMachineName, aliasName, 10),
+				Config: testAccAliasDataSourceConfig_basic(stateMachineName, aliasName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataSourceName, "creation_date"),
@@ -36,7 +36,7 @@ func TestAccSFNAliasDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccSFNAliasDataSourceConfig_basic(statemachineName string, aliasName string, rMaxAttempts int) string {
+func testAccAliasDataSourceConfig_basic(statemachineName string, aliasName string, rMaxAttempts int) string {
 	return acctest.ConfigCompose(testAccStateMachineAliasConfig_basic(statemachineName, aliasName, rMaxAttempts), `
 data "aws_sfn_alias" "test" {
   name             = aws_sfn_alias.test.name
