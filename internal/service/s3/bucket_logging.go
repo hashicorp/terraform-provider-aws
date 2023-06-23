@@ -135,8 +135,20 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhen(ctx, 2*time.Minute, func() (interface{}, error) {
-		return FindBucketLoggingByID(ctx, conn, d.Id(), expectedBucketOwner)
+	return resourceBucketLoggingRead(ctx, d, meta)
+}
+
+func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
+
+	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	outputRaw, err := tfresource.RetryWhen(ctx, 2*time.Minute, func() (interface{}, error) {
+		return FindBucketLoggingByID(ctx, conn, bucket, expectedBucketOwner)
 	},
 		func(err error) (bool, error) {
 			if tfresource.NotFound(err) {
@@ -150,24 +162,6 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 			return false, err
 		})
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket Logging (%s): %s", d.Id(), err)
-	}
-
-	return resourceBucketLoggingRead(ctx, d, meta)
-}
-
-func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
-
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	output, err := FindBucketLoggingByID(ctx, conn, bucket, expectedBucketOwner)
-
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Logging (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -178,7 +172,16 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket Logging for bucket (%s): %s", d.Id(), err)
 	}
 
-	loggingEnabled := output.LoggingEnabled
+	if errors.Is(err, tfresource.ErrEmptyResult) {
+		if d.IsNewResource() {
+			return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Logging: empty output", d.Id())
+		}
+		log.Printf("[WARN] S3 Bucket Logging (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	loggingEnabled := outputRaw.(*s3.GetBucketLoggingOutput).LoggingEnabled
 
 	d.Set("bucket", d.Id())
 	d.Set("expected_bucket_owner", expectedBucketOwner)
