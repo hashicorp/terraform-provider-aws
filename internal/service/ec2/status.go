@@ -347,7 +347,7 @@ func StatusNATGatewaySecondaryIPState(ctx context.Context, conn *ec2.EC2, id str
 		}
 
 		for _, addr := range output.NatGatewayAddresses {
-			if addr.PrivateIp != nil && *addr.PrivateIp == address {
+			if aws.StringValue(addr.PrivateIp) == address {
 				return addr, aws.StringValue(addr.Status), nil
 			}
 		}
