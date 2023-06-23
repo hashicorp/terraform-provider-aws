@@ -197,7 +197,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 
 	arn := aws.StringValue(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineArn)
 	d.SetId(arn)
-	d.Set("state_machine_version_arn", arn)
+	d.Set("state_machine_version_arn", outputRaw.(*sfn.CreateStateMachineOutput).StateMachineVersionArn)
 
 	return resourceStateMachineRead(ctx, d, meta)
 }
