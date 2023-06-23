@@ -1,0 +1,3 @@
+```release-note:enhancement
+`d/aws_vpclattice_servce`: Ability to find by service `name`
+```
