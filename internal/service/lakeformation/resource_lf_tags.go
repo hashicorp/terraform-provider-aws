@@ -380,7 +380,7 @@ func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, m
 		input.Resource.TableWithColumns = expandTableColumnsResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if input.Resource == nil || reflect.DeepEqual(input.Resource, &lakeformation.Resource{}) {
+	if input.Resource == nil || reflect.DeepEqual(input.Resource, &lakeformation.Resource{}) || len(input.LFTags) == 0 {
 		// if resource is empty, don't delete = it won't delete anything since this is the predicate
 		log.Printf("[WARN] No Lake Formation Resource LF Tags to remove")
 		return nil
