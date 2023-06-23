@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/vpc_nat_gateway: Add `secondary_private_ips` for specifying additional secondary private addresses.
+```
