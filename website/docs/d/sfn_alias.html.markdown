@@ -16,7 +16,7 @@ Terraform data source for managing an AWS SFN (Step Functions) State Machine Ali
 
 ```terraform
 data "aws_sfn_alias" "example" {
-  name = "my_sfn_alias"
+  name             = "my_sfn_alias"
   statemachine_arn = aws_sfn_state_machine.sfn_test.arn
 }
 ```
