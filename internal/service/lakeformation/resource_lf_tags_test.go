@@ -148,7 +148,7 @@ func testAccResourceLFTags_databaseMultipleTags(t *testing.T) {
 	})
 }
 
-func TestAccResourceLFTags_hierarchy(t *testing.T) {
+func testAccResourceLFTags_hierarchy(t *testing.T) {
 	ctx := acctest.Context(t)
 	databaseResourceName := "aws_lakeformation_resource_lf_tags.database_tags"
 	tableResourceName := "aws_lakeformation_resource_lf_tags.table_tags"
@@ -224,12 +224,6 @@ func TestAccResourceLFTags_hierarchy(t *testing.T) {
 		},
 	})
 }
-
-// TODO: test table columns with differences
-
-// TODO: test wildcard table
-
-// TODO: test wildcard table columns
 
 func testAccResourceLFTags_table(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -697,13 +691,13 @@ resource "aws_lakeformation_lf_tag" "test2" {
 }
 
 resource "aws_lakeformation_lf_tag" "column_tags" {
-	key    = "%[1]s-3"
-	values = [%[6]s]
-  
-	# for consistency, ensure that admins are set up before testing
-	depends_on = [aws_lakeformation_data_lake_settings.test]
-  }
-  
+  key    = "%[1]s-3"
+  values = [%[6]s]
+
+  # for consistency, ensure that admins are set up before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
 resource "aws_lakeformation_resource_lf_tags" "database_tags" {
   database {
     name = aws_glue_catalog_database.test.name
@@ -721,7 +715,7 @@ resource "aws_lakeformation_resource_lf_tags" "database_tags" {
 resource "aws_lakeformation_resource_lf_tags" "table_tags" {
   table {
     database_name = aws_glue_catalog_database.test.name
-	name = aws_glue_catalog_table.test.name
+    name          = aws_glue_catalog_table.test.name
   }
 
   lf_tag {
@@ -734,21 +728,21 @@ resource "aws_lakeformation_resource_lf_tags" "table_tags" {
 }
 
 resource "aws_lakeformation_resource_lf_tags" "column_tags" {
-	table_with_columns {
-	  database_name = aws_glue_catalog_database.test.name
-	  name = aws_glue_catalog_table.test.name
-	  column_names  = ["event", "timestamp"]
-	}
-  
-	lf_tag {
-	  key   = aws_lakeformation_lf_tag.column_tags.key
-	  value = %[7]q
-	}
-  
-	# for consistency, ensure that admins are set up before testing
-	depends_on = [aws_lakeformation_data_lake_settings.test]
+  table_with_columns {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
+    column_names  = ["event", "timestamp"]
   }
-  `, rName, fmt.Sprintf(`"%s"`, strings.Join(values1, `", "`)), fmt.Sprintf(`"%s"`, strings.Join(values2, `", "`)), value1, value2, fmt.Sprintf(`"%s"`, strings.Join(values3, `", "`)), value3)
+
+  lf_tag {
+    key   = aws_lakeformation_lf_tag.column_tags.key
+    value = %[7]q
+  }
+
+  # for consistency, ensure that admins are set up before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+`, rName, fmt.Sprintf(`"%s"`, strings.Join(values1, `", "`)), fmt.Sprintf(`"%s"`, strings.Join(values2, `", "`)), value1, value2, fmt.Sprintf(`"%s"`, strings.Join(values3, `", "`)), value3)
 }
 
 func testAccResourceLFTagsConfig_table(rName string, values []string, value string) string {
