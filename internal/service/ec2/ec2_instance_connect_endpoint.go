@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -234,7 +234,7 @@ func (r *resourceInstanceConnectEndpoint) Delete(ctx context.Context, request re
 		InstanceConnectEndpointId: flex.StringFromFramework(ctx, data.InstanceConnectEndpointId),
 	})
 
-	if awsbase.ErrCodeEquals(err, errCodeInvalidInstanceConnectEndpointIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceConnectEndpointIdNotFound) {
 		return
 	}
 
