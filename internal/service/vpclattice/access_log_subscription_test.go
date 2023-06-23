@@ -135,6 +135,54 @@ func TestAccVPCLatticeAccessLogSubscription_tags(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeAccessLogSubscription_cloudwatch_wildcard(t *testing.T) {
+	ctx := acctest.Context(t)
+	var accesslogsubscription vpclattice.GetAccessLogSubscriptionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_access_log_subscription.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessLogSubscriptionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessLogSubscriptionConfig_cloudwatch_wildcard(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCLatticeAccessLogSubscription_cloudwatch_fail_without_wildcard(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessLogSubscriptionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAccessLogSubscriptionConfig_cloudwatch_no_wildcard(rName),
+				ExpectError: regexp.MustCompile("destination_arn must be suffixed with wildcard"),
+			},
+		},
+	})
+}
+
 func testAccCheckAccessLogSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
@@ -249,4 +297,40 @@ resource "aws_vpclattice_access_log_subscription" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAccessLogSubscriptionConfig_cloudwatch_no_wildcard(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpclattice_service_network" "test" {
+  name = %[1]q
+  auth_type = "NONE"
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/aws/vpclattice/%[1]s"
+}
+
+resource "aws_vpclattice_access_log_subscription" "test" {
+  resource_identifier = aws_vpclattice_service_network.test.id
+  destination_arn     = aws_cloudwatch_log_group.test.arn
+}
+`, rName)
+}
+
+func testAccAccessLogSubscriptionConfig_cloudwatch_wildcard(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpclattice_service_network" "test" {
+  name = %[1]q
+  auth_type = "NONE"
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/aws/vpclattice/%[1]s"
+}
+
+resource "aws_vpclattice_access_log_subscription" "test" {
+  resource_identifier = aws_vpclattice_service_network.test.id
+  destination_arn     = "${aws_cloudwatch_log_group.test.arn}:*"
+}
+`, rName)
 }
