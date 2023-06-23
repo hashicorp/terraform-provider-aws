@@ -148,6 +148,8 @@ func TestAccResourceLFTags_hierarchy(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, databaseResourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, tableResourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, columnResourceName),
 					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(databaseResourceName, "lf_tag.*", map[string]string{
 						"key":   rName,
@@ -165,9 +167,45 @@ func TestAccResourceLFTags_hierarchy(t *testing.T) {
 					}),
 				),
 			},
+			{
+				Config: testAccResourceLFTagsConfig_hierarchy(rName,
+					[]string{"abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"},
+					[]string{"farm", "theloop", "aintree", "brooklands", "maggotts", "becketts", "vale"},
+					[]string{"one", "two", "three"},
+					"stowe",
+					"becketts",
+					"three",
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseLFTagsExists(ctx, databaseResourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, tableResourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, columnResourceName),
+					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(databaseResourceName, "lf_tag.*", map[string]string{
+						"key":   rName,
+						"value": "stowe",
+					}),
+					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(tableResourceName, "lf_tag.*", map[string]string{
+						"key":   fmt.Sprintf("%s-2", rName),
+						"value": "becketts",
+					}),
+					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(columnResourceName, "lf_tag.*", map[string]string{
+						"key":   fmt.Sprintf("%s-3", rName),
+						"value": "three",
+					}),
+				),
+			},
 		},
 	})
 }
+
+// TODO: test table columns with differences
+
+// TODO: test wildcard table
+
+// TODO: test wildcard table columns
 
 func testAccResourceLFTags_table(t *testing.T) {
 	ctx := acctest.Context(t)
