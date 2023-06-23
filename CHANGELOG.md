@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Resource:** `aws_ec2_instance_connect_endpoint` ([#31858](https://github.com/hashicorp/terraform-provider-aws/issues/31858))
 
+ENHANCEMENTS:
+
+* resource/aws_lambda_event_source_mapping: The `queues` argument has changed from a set to a list with a maximum of one element. ([#31931](https://github.com/hashicorp/terraform-provider-aws/issues/31931))
+
 ## 5.5.0 (June 23, 2023)
 
 NOTES:
