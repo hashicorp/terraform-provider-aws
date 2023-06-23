@@ -130,7 +130,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return diag.Errorf("putting S3 bucket (%s) logging: %s", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) Logging: %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
@@ -193,11 +193,12 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	loggingEnabled := &s3.LoggingEnabled{
@@ -225,18 +226,19 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return diag.Errorf("updating S3 bucket (%s) logging: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating S3 bucket (%s) logging: %s", d.Id(), err)
 	}
 
 	return resourceBucketLoggingRead(ctx, d, meta)
 }
 
 func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &s3.PutBucketLoggingInput{
@@ -255,7 +257,7 @@ func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 Bucket (%s) Logging: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s) Logging: %s", d.Id(), err)
 	}
 
 	return nil
