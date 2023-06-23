@@ -59,7 +59,6 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) identifying your state machine alias.
 * `creation_date` - The date the state machine alias was created.
 
-
 ## Import
 
 SFN (Step Functions) Alias can be imported using the `arn`, e.g.,
