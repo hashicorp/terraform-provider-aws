@@ -222,10 +222,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("creation_date", nil)
 	}
 	d.Set("definition", output.Definition)
-
-	if output.Description != nil {
-		d.Set("description", output.Description)
-	}
+	d.Set("description", output.Description)
 
 	if output.LoggingConfiguration != nil {
 		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
