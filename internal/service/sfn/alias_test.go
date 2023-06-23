@@ -148,31 +148,6 @@ func testAccCheckAliasExists(ctx context.Context, name string, v *sfn.DescribeSt
 	}
 }
 
-func testAccCheckExistsIn(ctx context.Context, n string, v *sfn.DescribeStateMachineOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Step Functions State Machine ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn(ctx)
-
-		output, err := tfsfn.FindStateMachineByARN(context.Background(), conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
 func testAccStateMachineAliasConfig_base(rName string, rMaxAttempts int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role_policy" "for_lambda" {
