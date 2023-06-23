@@ -169,7 +169,7 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket Logging for bucket (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Logging for bucket (%s): %s", d.Id(), err)
 	}
 
 	if errors.Is(err, tfresource.ErrEmptyResult) {
