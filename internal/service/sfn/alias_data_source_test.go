@@ -39,7 +39,7 @@ func TestAccSFNAliasDataSource_basic(t *testing.T) {
 func testAccSFNAliasDataSourceConfig_basic(statemachineName string, aliasName string, rMaxAttempts int) string {
 	return acctest.ConfigCompose(testAccStateMachineAliasConfig_basic(statemachineName, aliasName, rMaxAttempts), `
 data "aws_sfn_alias" "test" {
-  name = aws_sfn_alias.test.name
+  name             = aws_sfn_alias.test.name
   statemachine_arn = aws_sfn_state_machine.test.arn
 }
 `)

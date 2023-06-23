@@ -669,6 +669,7 @@ func testAccStateMachineConfig_publish(rName string) string {
 resource "aws_sfn_state_machine" "test" {
   role_arn = aws_iam_role.for_sfn.arn
   publish  = true
+
   definition = <<EOF
 {
   "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",

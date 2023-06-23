@@ -271,12 +271,13 @@ resource "aws_iam_role" "for_sfn" {
 }
 EOF
 }
+
 resource "aws_sfn_state_machine" "test" {
-	name     = %[1]q
-	publish  = true
-	role_arn = aws_iam_role.for_sfn.arn
+  name     = %[1]q
+  publish  = true
+  role_arn = aws_iam_role.for_sfn.arn
   
-	definition = <<EOF
+  definition = <<EOF
   {
 	"Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
 	"StartAt": "HelloWorld",
@@ -298,20 +299,20 @@ resource "aws_sfn_state_machine" "test" {
 	  }
 	}
   }
-  EOF
-  }
+EOF
+}
 `, rName, rMaxAttempts)
 }
 
 func testAccStateMachineAliasConfig_basic(statemachineName string, aliasName string, rMaxAttempts int) string {
 	return acctest.ConfigCompose(testAccStateMachineAliasConfig_base(statemachineName, rMaxAttempts), fmt.Sprintf(`
-	resource "aws_sfn_alias" "test" {
-		name             = %[1]q
-		routing_configuration {
-		  state_machine_version_arn = aws_sfn_state_machine.test.state_machine_version_arn
-		  weight = 100
-		}
-	  }
-`, aliasName))
+resource "aws_sfn_alias" "test" {
+  name = %[1]q
 
+  routing_configuration {
+    state_machine_version_arn = aws_sfn_state_machine.test.state_machine_version_arn
+    weight = 100
+  }
+}
+`, aliasName))
 }

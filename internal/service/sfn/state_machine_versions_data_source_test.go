@@ -34,8 +34,9 @@ func TestAccSFNStateMachineVersionsDataSource_basic(t *testing.T) {
 func testAccStateMachineVersionsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccStateMachineAliasConfig_base(rName, 5), `
 data "aws_sfn_state_machine_versions" "test" {
-	statemachine_arn = aws_sfn_state_machine.test.arn
-	depends_on = [aws_sfn_state_machine.test]
+  statemachine_arn = aws_sfn_state_machine.test.arn
+
+  depends_on = [aws_sfn_state_machine.test]
 }
 `)
 }
