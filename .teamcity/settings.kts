@@ -137,10 +137,7 @@ object PullRequest : BuildType({
 
     val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
     steps {
-        script {
-            name = "Setup GOENV"
-            scriptContent = File("./scripts/setup_goenv.sh").readText()
-        }
+        configureGoEnv()
         script {
             name = "Run Tests"
             scriptContent = File("./scripts/pullrequest_tests/tests.sh").readText()
@@ -298,10 +295,7 @@ object SetUp : BuildType({
     }
 
     steps {
-        script {
-            name = "Setup GOENV"
-            scriptContent = File("./scripts/setup_goenv.sh").readText()
-        }
+        configureGoEnv()
         script {
             name = "Run provider unit tests"
             scriptContent = File("./scripts/provider_tests/unit_tests.sh").readText()
@@ -394,11 +388,7 @@ object CleanUp : BuildType({
     }
 
     steps {
-        script {
-            name = "Setup GOENV"
-            enabled = false
-            scriptContent = File("./scripts/setup_goenv.sh").readText()
-        }
+        configureGoEnv()
         script {
             name = "Post-Sweeper"
             enabled = false
@@ -417,10 +407,7 @@ object Sweeper : BuildType({
     }
 
     steps {
-        script {
-            name = "Setup GOENV"
-            scriptContent = File("./scripts/setup_goenv.sh").readText()
-        }
+        configureGoEnv()
         script {
             name = "Sweeper"
             scriptContent = File("./scripts/sweeper.sh").readText()
