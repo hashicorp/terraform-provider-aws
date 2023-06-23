@@ -689,6 +689,10 @@ func WaitRouteReady(ctx context.Context, conn *ec2.EC2, routeFinder RouteFinder,
 }
 
 const (
+	RoutePropagationTimeout = 5 & time.Minute
+)
+
+const (
 	RouteTableAssociationPropagationTimeout = 5 * time.Minute
 
 	RouteTableAssociationCreatedTimeout = 5 * time.Minute

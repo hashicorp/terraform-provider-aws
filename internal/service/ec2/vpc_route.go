@@ -265,7 +265,12 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+
 	var diags diag.Diagnostics
+	var routeFinder RouteFinder
+
+	routeTableID := d.Get("route_table_id").(string)
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
@@ -273,8 +278,6 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Route: %s", err)
 	}
-
-	var routeFinder RouteFinder
 
 	switch destinationAttributeKey {
 	case routeDestinationCIDRBlock:
@@ -287,9 +290,9 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
 
-	routeTableID := d.Get("route_table_id").(string)
-
-	route, err := routeFinder(ctx, conn, routeTableID, destination)
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, RoutePropagationTimeout, func() (interface{}, error) {
+		return routeFinder(ctx, conn, routeTableID, destination)
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route in Route Table (%s) with destination (%s) not found, removing from state", routeTableID, destination)
@@ -300,6 +303,8 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
+
+	route := outputRaw.(*ec2.Route)
 
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
 	d.Set("core_network_arn", route.CoreNetworkArn)
