@@ -758,8 +758,6 @@ func ChangeResourceRecordSets(ctx context.Context, conn *route53.Route53, input 
 }
 
 func WaitForRecordSetToSync(ctx context.Context, conn *route53.Route53, requestId string) error {
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	wait := retry.StateChangeConf{
 		Pending:      []string{route53.ChangeStatusPending},
 		Target:       []string{route53.ChangeStatusInsync},

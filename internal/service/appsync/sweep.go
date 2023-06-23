@@ -36,7 +36,7 @@ func init() {
 
 func sweepGraphQLAPIs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
@@ -92,7 +92,7 @@ func sweepGraphQLAPIs(region string) error {
 
 func sweepDomainNames(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
@@ -148,7 +148,7 @@ func sweepDomainNames(region string) error {
 
 func sweepDomainNameAssociations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
