@@ -6,7 +6,6 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* resource/aws_batch_compute_environment: Support placement_group in compute_resource ([#31457](https://github.com/hashicorp/terraform-provider-aws/issues/31457))
 * resource/aws_lambda_event_source_mapping: The `queues` argument has changed from a set to a list with a maximum of one element. ([#31931](https://github.com/hashicorp/terraform-provider-aws/issues/31931))
 
 ## 5.5.0 (June 23, 2023)
