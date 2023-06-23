@@ -250,7 +250,7 @@ resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   publish  = true
   role_arn = aws_iam_role.for_sfn.arn
-  
+
   definition = <<EOF
   {
 	"Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
@@ -285,7 +285,7 @@ resource "aws_sfn_alias" "test" {
 
   routing_configuration {
     state_machine_version_arn = aws_sfn_state_machine.test.state_machine_version_arn
-    weight = 100
+    weight                    = 100
   }
 }
 `, aliasName))
