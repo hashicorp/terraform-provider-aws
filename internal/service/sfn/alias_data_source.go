@@ -83,8 +83,8 @@ func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	for _, in := range out.StateMachineAliases {
-		if strings.HasSuffix(*in.StateMachineAliasArn, d.Get("name").(string)) {
-			aliasArn = *in.StateMachineAliasArn
+		if v := aws.StringValue(in.StateMachineAliasArn); strings.HasSuffix(v, d.Get("name").(string)) {
+			aliasArn = v
 		}
 	}
 
