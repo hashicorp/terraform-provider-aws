@@ -4,6 +4,7 @@ package sfn
 
 import (
 	"context"
+
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	sfn_sdkv1 "github.com/aws/aws-sdk-go/service/sfn"
@@ -29,12 +30,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_sfn_activity",
 		},
 		{
-			Factory:  DataSourceStateMachine,
-			TypeName: "aws_sfn_state_machine",
-		},
-		{
 			Factory:  DataSourceAlias,
 			TypeName: "aws_sfn_alias",
+		},
+		{
+			Factory:  DataSourceStateMachine,
+			TypeName: "aws_sfn_state_machine",
 		},
 		{
 			Factory:  DataSourceStateMachineVersions,
@@ -54,16 +55,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceAlias,
+			TypeName: "aws_sfn_alias",
+		},
+		{
 			Factory:  ResourceStateMachine,
 			TypeName: "aws_sfn_state_machine",
 			Name:     "State Machine",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
-		},
-		{
-			Factory:  ResourceAlias,
-			TypeName: "aws_sfn_alias",
 		},
 	}
 }
