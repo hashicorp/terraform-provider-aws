@@ -104,7 +104,7 @@ func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("description", output.Description)
 	d.Set("creation_date", aws.TimeValue(output.CreationDate).Format(time.RFC3339))
 
-	if err := d.Set("routing_configuration", flattenAliasRoutingConfiguration(d, output.RoutingConfiguration)); err != nil {
+	if err := d.Set("routing_configuration", flattenAliasRoutingConfiguration(output.RoutingConfiguration)); err != nil {
 		return create.DiagError(names.SFN, create.ErrActionSetting, ResNameAlias, d.Id(), err)
 	}
 

@@ -125,7 +125,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("creation_date", aws.TimeValue(out.CreationDate).Format(time.RFC3339))
 	d.SetId(aws.StringValue(out.StateMachineAliasArn))
 
-	if err := d.Set("routing_configuration", flattenAliasRoutingConfiguration(d, out.RoutingConfiguration)); err != nil {
+	if err := d.Set("routing_configuration", flattenAliasRoutingConfiguration(out.RoutingConfiguration)); err != nil {
 		return create.DiagError(names.SFN, create.ErrActionSetting, ResNameAlias, d.Id(), err)
 	}
 	return nil
@@ -201,7 +201,7 @@ func FindAliasByARN(ctx context.Context, conn *sfn.SFN, arn string) (*sfn.Descri
 	return out, nil
 }
 
-func flattenAliasRoutingConfigurationItem(d *schema.ResourceData, i int, apiObject *sfn.RoutingConfigurationListItem) map[string]interface{} {
+func flattenAliasRoutingConfigurationItem(apiObject *sfn.RoutingConfigurationListItem) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -219,19 +219,19 @@ func flattenAliasRoutingConfigurationItem(d *schema.ResourceData, i int, apiObje
 	return tfMap
 }
 
-func flattenAliasRoutingConfiguration(d *schema.ResourceData, apiObjects []*sfn.RoutingConfigurationListItem) []interface{} {
+func flattenAliasRoutingConfiguration(apiObjects []*sfn.RoutingConfigurationListItem) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 
-	for i, apiObject := range apiObjects {
+	for _, apiObject := range apiObjects {
 		if apiObject == nil {
 			continue
 		}
 
-		tfList = append(tfList, flattenAliasRoutingConfigurationItem(d, i, apiObject))
+		tfList = append(tfList, flattenAliasRoutingConfigurationItem(apiObject))
 	}
 
 	return tfList
