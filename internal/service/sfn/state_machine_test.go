@@ -428,7 +428,7 @@ func testAccCheckExists(ctx context.Context, n string, v *sfn.DescribeStateMachi
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn(ctx)
 
-		output, err := tfsfn.FindStateMachineByARN(context.Background(), conn, rs.Primary.ID)
+		output, err := tfsfn.FindStateMachineByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
