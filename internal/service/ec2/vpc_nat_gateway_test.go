@@ -383,8 +383,9 @@ resource "aws_nat_gateway" "test" {
   connectivity_type = "private"
   private_ip        = "10.0.0.8"
   subnet_id         = aws_subnet.test[0].id
-
-  secondary_private_ips = [ %[2]q ]
+  secondary_private_ips = [ 
+    %[2]q
+  ]
 
   tags = {
     Name = %[1]q
