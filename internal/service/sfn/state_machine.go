@@ -262,7 +262,6 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if v, ok := d.GetOk("publish"); ok && v == true {
 			input.VersionDescription = aws.String(d.Get("version_description").(string))
-
 		}
 
 		if d.HasChange("logging_configuration") {
