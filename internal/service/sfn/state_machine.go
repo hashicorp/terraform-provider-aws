@@ -195,8 +195,10 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("creating Step Functions State Machine (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineArn))
-	d.Set("state_machine_version_arn", aws.StringValue(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineVersionArn))
+	arn := aws.StringValue(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineArn)
+	d.SetId(arn)
+	d.Set("state_machine_version_arn", arn)
+
 	return resourceStateMachineRead(ctx, d, meta)
 }
 
