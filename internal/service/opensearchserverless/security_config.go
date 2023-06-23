@@ -316,7 +316,7 @@ func expandSAMLOptions(ctx context.Context, object types.Object, diags *diag.Dia
 }
 
 func flattenSAMLOptions(ctx context.Context, so *awstypes.SamlConfigOptions) types.Object {
-	attributeTypes := framework.AttributeTypesMust[samlOptions](ctx)
+	attributeTypes := flex.AttributeTypesMust[samlOptions](ctx)
 
 	if so == nil {
 		return types.ObjectNull(attributeTypes)

@@ -41,6 +41,7 @@ const (
 	errCodeInvalidGroupInUse                                 = "InvalidGroup.InUse"
 	errCodeInvalidGroupNotFound                              = "InvalidGroup.NotFound"
 	errCodeInvalidHostIDNotFound                             = "InvalidHostID.NotFound"
+	errCodeInvalidInstanceConnectEndpointIdNotFound          = "InvalidInstanceConnectEndpointId.NotFound"
 	errCodeInvalidInstanceID                                 = "InvalidInstanceID"
 	errCodeInvalidInstanceIDNotFound                         = "InvalidInstanceID.NotFound"
 	errCodeInvalidInternetGatewayIDNotFound                  = "InvalidInternetGatewayID.NotFound"
