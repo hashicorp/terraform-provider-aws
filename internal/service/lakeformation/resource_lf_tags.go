@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log"
 	"reflect"
 	"time"
 
@@ -224,31 +223,27 @@ func ResourceResourceLFTags() *schema.Resource {
 }
 
 func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
-	input := &lakeformation.AddLFTagsToResourceInput{
-		Resource: &lakeformation.Resource{},
-	}
+	input := &lakeformation.AddLFTagsToResourceInput{}
 
 	if v, ok := d.GetOk("catalog_id"); ok {
 		input.CatalogId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("lf_tag"); ok && v.(*schema.Set).Len() > 0 {
 		input.LFTags = expandLFTagPairs(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
+	tagger, ds := lfTagsTagger(d)
+	diags = append(diags, ds...)
+	if diags.HasError() {
+		return diags
 	}
 
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.TableWithColumns = expandTableColumnsResource(v.([]interface{})[0].(map[string]interface{}))
-	}
+	input.Resource = tagger.ExpandResource(d)
 
 	var output *lakeformation.AddLFTagsToResourceOutput
 	err := retry.RetryContext(ctx, IAMPropagationTimeout, func() *retry.RetryError {
@@ -272,10 +267,8 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return create.DiagError(names.LakeFormation, create.ErrActionCreating, ResNameLFTags, input.String(), err)
+		return create.AddError(diags, names.LakeFormation, create.ErrActionCreating, ResNameLFTags, input.String(), err)
 	}
-
-	diags := diag.Diagnostics{}
 
 	if output != nil && len(output.Failures) > 0 {
 		for _, v := range output.Failures {
@@ -283,8 +276,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 				continue
 			}
 
-			diags = create.AddWarning(
-				diags,
+			diags = create.AddError(diags,
 				names.LakeFormation,
 				create.ErrActionCreating,
 				ResNameLFTags,
@@ -292,20 +284,14 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 				awserr.New(aws.StringValue(v.Error.ErrorCode), aws.StringValue(v.Error.ErrorMessage), nil),
 			)
 		}
-
-		if len(diags) == len(input.LFTags) {
-			return append(diags,
-				diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameLFTags, "", fmt.Errorf("attempted to add %d tags, %d failures", len(input.LFTags), len(diags))),
-				},
-			)
-		}
+	}
+	if diags.HasError() {
+		return diags
 	}
 
 	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
 
-	return append(resourceResourceLFTagsRead(ctx, d, meta), diags...)
+	return append(diags, resourceResourceLFTagsRead(ctx, d, meta)...)
 }
 
 func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -321,21 +307,10 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 		input.CatalogId = aws.String(v.(string))
 	}
 
-	var tagger tagger
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tagger = &databaseTagger{}
-	} else if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tagger = &tableTagger{}
-	} else if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tagger = &columnTagger{}
-	} else {
-		return append(diags, errs.NewErrorDiagnostic(
-			"Invalid Lake Formation Resource Type",
-			"An unexpected error occurred while resolving the Lake Formation Resource type. "+
-				"This is always an error in the provider. "+
-				"Please report the following to the provider developer:\n\n"+
-				"No Lake Formation Resource defined.",
-		))
+	tagger, ds := lfTagsTagger(d)
+	diags = append(diags, ds...)
+	if diags.HasError() {
+		return diags
 	}
 
 	input.Resource = tagger.ExpandResource(d)
@@ -343,47 +318,42 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.GetResourceLFTagsWithContext(ctx, input)
 
 	if err != nil {
-		return create.DiagError(names.LakeFormation, create.ErrActionReading, ResNameLFTags, d.Id(), err)
+		return create.AddError(diags, names.LakeFormation, create.ErrActionReading, ResNameLFTags, d.Id(), err)
 	}
 
 	if err := d.Set("lf_tag", tagger.FlattenTags(output)); err != nil {
-		return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
+		return create.AddError(diags, names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
-	input := &lakeformation.RemoveLFTagsFromResourceInput{
-		Resource: &lakeformation.Resource{},
-	}
+	input := &lakeformation.RemoveLFTagsFromResourceInput{}
 
 	if v, ok := d.GetOk("catalog_id"); ok {
 		input.CatalogId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("lf_tag"); ok && v.(*schema.Set).Len() > 0 {
 		input.LFTags = expandLFTagPairs(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
+	tagger, ds := lfTagsTagger(d)
+	diags = append(diags, ds...)
+	if diags.HasError() {
+		return diags
 	}
 
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.TableWithColumns = expandTableColumnsResource(v.([]interface{})[0].(map[string]interface{}))
-	}
+	input.Resource = tagger.ExpandResource(d)
 
 	if input.Resource == nil || reflect.DeepEqual(input.Resource, &lakeformation.Resource{}) || len(input.LFTags) == 0 {
 		// if resource is empty, don't delete = it won't delete anything since this is the predicate
-		log.Printf("[WARN] No Lake Formation Resource LF Tags to remove")
-		return nil
+		return create.AddWarningMessage(diags, names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), "no LF-Tags to remove")
 	}
 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
@@ -407,10 +377,30 @@ func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return create.DiagError(names.LakeFormation, create.ErrActionDeleting, ResNameLFTags, d.Id(), err)
+		return create.AddError(diags, names.LakeFormation, create.ErrActionDeleting, ResNameLFTags, d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func lfTagsTagger(d *schema.ResourceData) (tagger, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		return &databaseTagger{}, diags
+	} else if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		return &tableTagger{}, diags
+	} else if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		return &columnTagger{}, diags
+	} else {
+		diags = append(diags, errs.NewErrorDiagnostic(
+			"Invalid Lake Formation Resource Type",
+			"An unexpected error occurred while resolving the Lake Formation Resource type. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				"No Lake Formation Resource defined.",
+		))
+		return nil, diags
+	}
 }
 
 type tagger interface {
