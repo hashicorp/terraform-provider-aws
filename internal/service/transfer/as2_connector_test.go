@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccConnector_basic(t *testing.T) {
+func TestAccTransferConnector_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedConnector
 	resourceName := "aws_transfer_as2_connector.test"
@@ -29,7 +29,7 @@ func TestAccConnector_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testConnector_basic(rName),
+				Config: testTransferConnector_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "access_role"),
@@ -50,7 +50,7 @@ func TestAccConnector_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testConnector_updated(rName),
+				Config: testTransferConnector_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "access_role"),
@@ -69,7 +69,7 @@ func TestAccConnector_basic(t *testing.T) {
 	})
 }
 
-func TestAccConnector_disappears(t *testing.T) {
+func TestAccTransferConnector_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedConnector
 	resourceName := "aws_transfer_as2_connector.test"
@@ -87,7 +87,7 @@ func TestAccConnector_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testConnector_basic(rName),
+				Config: testTransferConnector_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceConnector(), resourceName),
@@ -98,7 +98,7 @@ func TestAccConnector_disappears(t *testing.T) {
 	})
 }
 
-func testConnector_basic(rName string) string {
+func testTransferConnector_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -164,7 +164,7 @@ resource "aws_transfer_as2_connector" "test" {
 `, rName)
 }
 
-func testConnector_updated(rName string) string {
+func testTransferConnector_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -241,7 +241,7 @@ func testAccCheckConnectorExists(ctx context.Context, n string, v *transfer.Desc
 			return fmt.Errorf("No Connector ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		output, err := tftransfer.FindConnectorByID(ctx, conn, rs.Primary.ID)
 
@@ -257,7 +257,7 @@ func testAccCheckConnectorExists(ctx context.Context, n string, v *transfer.Desc
 
 func testAccCheckConnectorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_as2_connector" {

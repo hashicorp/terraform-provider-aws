@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccProfile_basic(t *testing.T) {
+func TestAccTransferProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedProfile
 	resourceName := "aws_transfer_as2_profile.test"
@@ -31,7 +31,7 @@ func TestAccProfile_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testProfile_basic(rName, certificate, key),
+				Config: testTransferProfile_basic(rName, certificate, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "as2_id", rName),
@@ -48,7 +48,7 @@ func TestAccProfile_basic(t *testing.T) {
 				//ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testProfile_updated(rName, certificate, key),
+				Config: testTransferProfile_updated(rName, certificate, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "as2_id", rName),
@@ -62,7 +62,7 @@ func TestAccProfile_basic(t *testing.T) {
 	})
 }
 
-func TestAccProfile_disappears(t *testing.T) {
+func TestAccTransferProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedProfile
 	resourceName := "aws_transfer_as2_profile.test"
@@ -82,7 +82,7 @@ func TestAccProfile_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testProfile_basic(rName, certificate, key),
+				Config: testTransferProfile_basic(rName, certificate, key),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceProfile(), resourceName),
@@ -93,7 +93,7 @@ func TestAccProfile_disappears(t *testing.T) {
 	})
 }
 
-func testProfile_basic(rName string, certificate string, key string) string {
+func testTransferProfile_basic(rName string, certificate string, key string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_as2_certificate" "test" {
   certificate = %[2]q
@@ -108,7 +108,7 @@ resource "aws_transfer_as2_profile" "test" {
 `, rName, certificate, key)
 }
 
-func testProfile_updated(rName string, certificate string, key string) string {
+func testTransferProfile_updated(rName string, certificate string, key string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_as2_certificate" "test" {
   certificate = %[2]q
@@ -134,7 +134,7 @@ func testAccCheckProfileExists(ctx context.Context, n string, v *transfer.Descri
 			return fmt.Errorf("No Profile ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		output, err := tftransfer.FindProfileByID(ctx, conn, rs.Primary.ID)
 
@@ -150,7 +150,7 @@ func testAccCheckProfileExists(ctx context.Context, n string, v *transfer.Descri
 
 func testAccCheckProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_as2_profile" {

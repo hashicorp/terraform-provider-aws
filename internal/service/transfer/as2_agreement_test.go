@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAgreement_basic(t *testing.T) {
+func TestAccTransferAgreement_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedAgreement
 	baseDirectory := "/DOC-EXAMPLE-BUCKET/home/mydirectory"
@@ -30,7 +30,7 @@ func TestAccAgreement_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAgreementDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAgreement_basic(rName, baseDirectory),
+				Config: testTransferAgreement_basic(rName, baseDirectory),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "agreement_id"),
@@ -50,7 +50,7 @@ func TestAccAgreement_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
-				Config: testAgreement_updated(rName, baseDirectory),
+				Config: testTransferAgreement_updated(rName, baseDirectory),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "agreement_id"),
@@ -67,7 +67,7 @@ func TestAccAgreement_basic(t *testing.T) {
 	})
 }
 
-func TestAccAgreement_disappears(t *testing.T) {
+func TestAccTransferAgreement_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedAgreement
 	resourceName := "aws_transfer_as2_agreement.test"
@@ -86,7 +86,7 @@ func TestAccAgreement_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAgreementDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAgreement_basic(rName, baseDirectory),
+				Config: testTransferAgreement_basic(rName, baseDirectory),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceAgreement(), resourceName),
@@ -97,7 +97,7 @@ func TestAccAgreement_disappears(t *testing.T) {
 	})
 }
 
-func testAgreement_basic(rName string, baseDirectory string) string {
+func testTransferAgreement_basic(rName string, baseDirectory string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -155,7 +155,7 @@ resource "aws_transfer_as2_agreement" "test" {
 `, rName, baseDirectory)
 }
 
-func testAgreement_updated(rName string, baseDirectory string) string {
+func testTransferAgreement_updated(rName string, baseDirectory string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -230,7 +230,7 @@ func testAccCheckAgreementExists(ctx context.Context, n string, v *transfer.Desc
 			return fmt.Errorf("error parsing Transfer Agreement ID: %w", err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		output, err := tftransfer.FindAgreementByID(ctx, conn, agreementID, serverID)
 
@@ -246,7 +246,7 @@ func testAccCheckAgreementExists(ctx context.Context, n string, v *transfer.Desc
 
 func testAccCheckAgreementDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_as2_agreement" {

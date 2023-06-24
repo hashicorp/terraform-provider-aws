@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccCertificate_basic(t *testing.T) {
+func TestAccTransferCertificate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedCertificate
 	resourceName := "aws_transfer_as2_certificate.test"
@@ -38,7 +38,7 @@ func TestAccCertificate_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testCertificate_basic(rName, certificate, key, caCertificate),
+				Config: testTransferCertificate_basic(rName, certificate, key, caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
@@ -57,7 +57,7 @@ func TestAccCertificate_basic(t *testing.T) {
 	})
 }
 
-func TestAccCertificate_certificate(t *testing.T) {
+func TestAccTransferCertificate_certificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedCertificate
 	resourceName := "aws_transfer_as2_certificate.test"
@@ -71,7 +71,7 @@ func TestAccCertificate_certificate(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testCertificate_certificate(caCertificate),
+				Config: testTransferCertificate_certificate(caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
@@ -90,7 +90,7 @@ func TestAccCertificate_certificate(t *testing.T) {
 	})
 }
 
-func TestAccCertificate_certificateChain(t *testing.T) {
+func TestAccTransferCertificate_certificateChain(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedCertificate
 	resourceName := "aws_transfer_as2_certificate.test"
@@ -108,7 +108,7 @@ func TestAccCertificate_certificateChain(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testCertificate_certificatechain(certificate, caCertificate),
+				Config: testTransferCertificate_certificatechain(certificate, caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
@@ -127,7 +127,7 @@ func TestAccCertificate_certificateChain(t *testing.T) {
 	})
 }
 
-func TestAccCertificate_certificateKey(t *testing.T) {
+func TestAccTransferCertificate_certificateKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedCertificate
 	resourceName := "aws_transfer_as2_certificate.test"
@@ -141,7 +141,7 @@ func TestAccCertificate_certificateKey(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testCertificate_certificatekey(certificate, key),
+				Config: testTransferCertificate_certificatekey(certificate, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
@@ -160,7 +160,7 @@ func TestAccCertificate_certificateKey(t *testing.T) {
 	})
 }
 
-func TestAccCertificate_disappears(t *testing.T) {
+func TestAccTransferCertificate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedCertificate
 	resourceName := "aws_transfer_as2_certificate.test"
@@ -179,7 +179,7 @@ func TestAccCertificate_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testCertificate_certificate(certificate),
+				Config: testTransferCertificate_certificate(certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceCertificate(), resourceName),
@@ -190,7 +190,7 @@ func TestAccCertificate_disappears(t *testing.T) {
 	})
 }
 
-func testCertificate_basic(rName string, certificate string, key string, caCertificate string) string {
+func testTransferCertificate_basic(rName string, certificate string, key string, caCertificate string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_as2_certificate" "test" {
   certificate       = %[2]q
@@ -201,7 +201,7 @@ resource "aws_transfer_as2_certificate" "test" {
 `, rName, certificate, key, caCertificate)
 }
 
-func testCertificate_certificate(certificate string) string {
+func testTransferCertificate_certificate(certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_as2_certificate" "test" {
   certificate = %[1]q
@@ -210,7 +210,7 @@ resource "aws_transfer_as2_certificate" "test" {
 `, certificate)
 }
 
-func testCertificate_certificatechain(certificate string, caCertificate string) string {
+func testTransferCertificate_certificatechain(certificate string, caCertificate string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_as2_certificate" "test" {
   certificate       = %[1]q
@@ -220,7 +220,7 @@ resource "aws_transfer_as2_certificate" "test" {
 `, certificate, caCertificate)
 }
 
-func testCertificate_certificatekey(certificate string, key string) string {
+func testTransferCertificate_certificatekey(certificate string, key string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_as2_certificate" "test" {
   certificate = %[1]q
@@ -241,7 +241,7 @@ func testAccCheckCertificateExists(ctx context.Context, n string, v *transfer.De
 			return fmt.Errorf("No Certificate ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		output, err := tftransfer.FindCertificateByID(ctx, conn, rs.Primary.ID)
 
@@ -257,7 +257,7 @@ func testAccCheckCertificateExists(ctx context.Context, n string, v *transfer.De
 
 func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_as2_certificate" {
