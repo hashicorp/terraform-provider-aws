@@ -30,7 +30,7 @@ func TestAccTransferAgreement_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAgreementDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testTransferAgreement_basic(rName, baseDirectory),
+				Config: testAgreement_basic(rName, baseDirectory),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "agreement_id"),
@@ -50,7 +50,7 @@ func TestAccTransferAgreement_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
-				Config: testTransferAgreement_updated(rName, baseDirectory),
+				Config: testAgreement_updated(rName, baseDirectory),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "agreement_id"),
@@ -86,7 +86,7 @@ func TestAccTransferAgreement_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAgreementDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testTransferAgreement_basic(rName, baseDirectory),
+				Config: testAgreement_basic(rName, baseDirectory),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceAgreement(), resourceName),
@@ -97,7 +97,7 @@ func TestAccTransferAgreement_disappears(t *testing.T) {
 	})
 }
 
-func testTransferAgreement_basic(rName string, baseDirectory string) string {
+func testAgreement_basic(rName string, baseDirectory string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -155,7 +155,7 @@ resource "aws_transfer_as2_agreement" "test" {
 `, rName, baseDirectory)
 }
 
-func testTransferAgreement_updated(rName string, baseDirectory string) string {
+func testAgreement_updated(rName string, baseDirectory string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q

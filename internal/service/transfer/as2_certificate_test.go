@@ -38,7 +38,7 @@ func TestAccTransferCertificate_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testTransferCertificate_basic(rName, certificate, key, caCertificate),
+				Config: testCertificate_basic(rName, certificate, key, caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
@@ -71,7 +71,7 @@ func TestAccTransferCertificate_certificate(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testTransferCertificate_certificate(caCertificate),
+				Config: testCertificate_certificate(caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
@@ -108,7 +108,7 @@ func TestAccTransferCertificate_certificateChain(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testTransferCertificate_certificatechain(certificate, caCertificate),
+				Config: testCertificate_certificatechain(certificate, caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
@@ -141,7 +141,7 @@ func TestAccTransferCertificate_certificateKey(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testTransferCertificate_certificatekey(certificate, key),
+				Config: testCertificate_certificatekey(certificate, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
@@ -179,7 +179,7 @@ func TestAccTransferCertificate_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testTransferCertificate_certificate(certificate),
+				Config: testCertificate_certificate(certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceCertificate(), resourceName),
@@ -190,7 +190,7 @@ func TestAccTransferCertificate_disappears(t *testing.T) {
 	})
 }
 
-func testTransferCertificate_basic(rName string, certificate string, key string, caCertificate string) string {
+func testCertificate_basic(rName string, certificate string, key string, caCertificate string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_as2_certificate" "test" {
   certificate       = %[2]q
@@ -201,7 +201,7 @@ resource "aws_transfer_as2_certificate" "test" {
 `, rName, certificate, key, caCertificate)
 }
 
-func testTransferCertificate_certificate(certificate string) string {
+func testCertificate_certificate(certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_as2_certificate" "test" {
   certificate = %[1]q
@@ -210,7 +210,7 @@ resource "aws_transfer_as2_certificate" "test" {
 `, certificate)
 }
 
-func testTransferCertificate_certificatechain(certificate string, caCertificate string) string {
+func testCertificate_certificatechain(certificate string, caCertificate string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_as2_certificate" "test" {
   certificate       = %[1]q
@@ -220,7 +220,7 @@ resource "aws_transfer_as2_certificate" "test" {
 `, certificate, caCertificate)
 }
 
-func testTransferCertificate_certificatekey(certificate string, key string) string {
+func testCertificate_certificatekey(certificate string, key string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_as2_certificate" "test" {
   certificate = %[1]q

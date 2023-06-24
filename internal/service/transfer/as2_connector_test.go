@@ -29,7 +29,7 @@ func TestAccTransferConnector_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testTransferConnector_basic(rName),
+				Config: testConnector_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "access_role"),
@@ -50,7 +50,7 @@ func TestAccTransferConnector_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testTransferConnector_updated(rName),
+				Config: testConnector_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "access_role"),
@@ -87,7 +87,7 @@ func TestAccTransferConnector_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testTransferConnector_basic(rName),
+				Config: testConnector_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceConnector(), resourceName),
@@ -98,7 +98,7 @@ func TestAccTransferConnector_disappears(t *testing.T) {
 	})
 }
 
-func testTransferConnector_basic(rName string) string {
+func testConnector_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -164,7 +164,7 @@ resource "aws_transfer_as2_connector" "test" {
 `, rName)
 }
 
-func testTransferConnector_updated(rName string) string {
+func testConnector_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q

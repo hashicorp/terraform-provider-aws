@@ -31,7 +31,7 @@ func TestAccTransferProfile_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testTransferProfile_basic(rName, certificate, key),
+				Config: testProfile_basic(rName, certificate, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "as2_id", rName),
@@ -48,7 +48,7 @@ func TestAccTransferProfile_basic(t *testing.T) {
 				//ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testTransferProfile_updated(rName, certificate, key),
+				Config: testProfile_updated(rName, certificate, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "as2_id", rName),
@@ -82,7 +82,7 @@ func TestAccTransferProfile_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testTransferProfile_basic(rName, certificate, key),
+				Config: testProfile_basic(rName, certificate, key),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceProfile(), resourceName),
@@ -93,7 +93,7 @@ func TestAccTransferProfile_disappears(t *testing.T) {
 	})
 }
 
-func testTransferProfile_basic(rName string, certificate string, key string) string {
+func testProfile_basic(rName string, certificate string, key string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_as2_certificate" "test" {
   certificate = %[2]q
@@ -108,7 +108,7 @@ resource "aws_transfer_as2_profile" "test" {
 `, rName, certificate, key)
 }
 
-func testTransferProfile_updated(rName string, certificate string, key string) string {
+func testProfile_updated(rName string, certificate string, key string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_as2_certificate" "test" {
   certificate = %[2]q
