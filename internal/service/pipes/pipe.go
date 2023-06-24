@@ -4,13 +4,12 @@ import (
 	"context"
 	"errors"
 	"log"
-	"reflect"
 	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
-	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -60,8 +60,8 @@ func resourcePipe() *schema.Resource {
 			"desired_state": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Default:          string(types.RequestedPipeStateRunning),
-				ValidateDiagFunc: enum.Validate[types.RequestedPipeState](),
+				Default:          string(awstypes.RequestedPipeStateRunning),
+				ValidateDiagFunc: enum.Validate[awstypes.RequestedPipeState](),
 			},
 			"enrichment": {
 				Type:         schema.TypeString,
@@ -127,7 +127,7 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &pipes.CreatePipeInput{
-		DesiredState: types.RequestedPipeState(d.Get("desired_state").(string)),
+		DesiredState: awstypes.RequestedPipeState(d.Get("desired_state").(string)),
 		Name:         aws.String(name),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
 		Source:       aws.String(d.Get("source").(string)),
@@ -189,7 +189,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("description", output.Description)
 	d.Set("desired_state", output.DesiredState)
 	d.Set("enrichment", output.Enrichment)
-	if v := output.EnrichmentParameters; v != nil && !reflect.ValueOf(*v).IsZero() {
+	if v := output.EnrichmentParameters; !types.IsZero(v) {
 		if err := d.Set("enrichment_parameters", []interface{}{flattenPipeEnrichmentParameters(v)}); err != nil {
 			return diag.Errorf("setting enrichment_parameters: %s", err)
 		}
@@ -200,7 +200,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set("role_arn", output.RoleArn)
 	d.Set("source", output.Source)
-	if v := output.SourceParameters; v != nil && !reflect.ValueOf(*v).IsZero() {
+	if v := output.SourceParameters; !types.IsZero(v) {
 		if err := d.Set("source_parameters", []interface{}{flattenPipeSourceParameters(v)}); err != nil {
 			return diag.Errorf("setting source_parameters: %s", err)
 		}
@@ -208,7 +208,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		d.Set("source_parameters", nil)
 	}
 	d.Set("target", output.Target)
-	if v := output.TargetParameters; v != nil && !reflect.ValueOf(*v).IsZero() {
+	if v := output.TargetParameters; !types.IsZero(v) {
 		if err := d.Set("target_parameters", []interface{}{flattenPipeTargetParameters(v)}); err != nil {
 			return diag.Errorf("setting target_parameters: %s", err)
 		}
@@ -225,12 +225,12 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &pipes.UpdatePipeInput{
 			Description:  aws.String(d.Get("description").(string)),
-			DesiredState: types.RequestedPipeState(d.Get("desired_state").(string)),
+			DesiredState: awstypes.RequestedPipeState(d.Get("desired_state").(string)),
 			Name:         aws.String(d.Id()),
 			RoleArn:      aws.String(d.Get("role_arn").(string)),
 			Target:       aws.String(d.Get("target").(string)),
 			// Reset state in case it's a deletion, have to set the input to an empty string otherwise it doesn't get overwritten.
-			TargetParameters: &types.PipeTargetParameters{
+			TargetParameters: &awstypes.PipeTargetParameters{
 				InputTemplate: aws.String(""),
 			},
 		}
@@ -273,7 +273,7 @@ func resourcePipeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		Name: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*types.NotFoundException](err) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil
 	}
 
@@ -295,7 +295,7 @@ func findPipeByName(ctx context.Context, conn *pipes.Client, name string) (*pipe
 
 	output, err := conn.DescribePipe(ctx, input)
 
-	if errs.IsA[*types.NotFoundException](err) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -331,8 +331,8 @@ func statusPipe(ctx context.Context, conn *pipes.Client, name string) retry.Stat
 
 func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.PipeStateCreating),
-		Target:                    enum.Slice(types.PipeStateRunning, types.PipeStateStopped),
+		Pending:                   enum.Slice(awstypes.PipeStateCreating),
+		Target:                    enum.Slice(awstypes.PipeStateRunning, awstypes.PipeStateStopped),
 		Refresh:                   statusPipe(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -351,8 +351,8 @@ func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout
 
 func waitPipeUpdated(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.PipeStateUpdating),
-		Target:                    enum.Slice(types.PipeStateRunning, types.PipeStateStopped),
+		Pending:                   enum.Slice(awstypes.PipeStateUpdating),
+		Target:                    enum.Slice(awstypes.PipeStateRunning, awstypes.PipeStateStopped),
 		Refresh:                   statusPipe(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -371,7 +371,7 @@ func waitPipeUpdated(ctx context.Context, conn *pipes.Client, id string, timeout
 
 func waitPipeDeleted(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.PipeStateDeleting),
+		Pending: enum.Slice(awstypes.PipeStateDeleting),
 		Target:  []string{},
 		Refresh: statusPipe(ctx, conn, id),
 		Timeout: timeout,
