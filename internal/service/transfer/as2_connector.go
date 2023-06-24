@@ -106,7 +106,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.CreateConnectorInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_role"); ok {
@@ -159,7 +159,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("connector_id", output.ConnectorId)
 	d.Set("logging_role", output.LoggingRole)
 	d.Set("url", output.Url)
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

@@ -87,7 +87,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.ImportCertificateInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("certificate"); ok {
@@ -144,7 +144,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("description", output.Description)
 	d.Set("inactive_date", aws.ToTime(output.InactiveDate).Format(time.RFC3339))
 	d.Set("usage", output.Usage)
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

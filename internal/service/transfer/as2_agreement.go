@@ -77,7 +77,7 @@ func resourceAgreementCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.CreateAgreementInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_role"); ok {
@@ -149,7 +149,7 @@ func resourceAgreementRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("serverid", output.ServerId)
 	d.Set("status", output.Status)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

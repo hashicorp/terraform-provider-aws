@@ -64,7 +64,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.CreateProfileInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("as2_id"); ok {
@@ -110,7 +110,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("certificate_ids", output.CertificateIds)
 	d.Set("profile_id", output.ProfileId)
 	d.Set("profile_type", output.ProfileType)
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
