@@ -84,7 +84,7 @@ func ResourceCertificate() *schema.Resource {
 
 func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.ImportCertificateInput{
 		Tags: GetTagsIn(ctx),
@@ -123,7 +123,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	output, err := FindCertificateByID(ctx, conn, d.Id())
 
@@ -140,12 +140,8 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("active_date", aws.ToTime(output.ActiveDate).Format(time.RFC3339))
 	d.Set("certificate", output.Certificate)
 	d.Set("certificate_id", output.CertificateId)
-	if output.CertificateChain != nil {
-		d.Set("certificate_chain", output.CertificateChain)
-	}
-	if output.Description != nil {
-		d.Set("description", output.Description)
-	}
+	d.Set("certificate_chain", output.CertificateChain)
+	d.Set("description", output.Description)
 	d.Set("inactive_date", aws.ToTime(output.InactiveDate).Format(time.RFC3339))
 	d.Set("usage", output.Usage)
 	SetTagsOut(ctx, output.Tags)
@@ -160,7 +156,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Certificate: (%s)", d.Id())
 	_, err := conn.DeleteCertificateWithContext(ctx, &transfer.DeleteCertificateInput{

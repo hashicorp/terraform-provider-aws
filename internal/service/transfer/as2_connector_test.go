@@ -150,14 +150,14 @@ resource "aws_transfer_as2_profile" "partner" {
 resource "aws_transfer_as2_connector" "test" {
   access_role = aws_iam_role.test.arn
   as2_config {
-	compression           = "DISABLED"
-	encryption_algorithm  = "AES128_CBC"
+    compression           = "DISABLED"
+    encryption_algorithm  = "AES128_CBC"
     message_subject       = %[1]q
     local_profile_id      = aws_transfer_as2_profile.local.profile_id
-	mdn_response          = "NONE"
-	mdn_signing_algorithm = "NONE"
+    mdn_response          = "NONE"
+    mdn_signing_algorithm = "NONE"
     partner_profile_id    = aws_transfer_as2_profile.partner.profile_id
-	signing_algorithm     = "NONE"
+    signing_algorithm     = "NONE"
   }
   url = "http://www.test.com"
 }
@@ -216,14 +216,14 @@ resource "aws_transfer_as2_profile" "partner" {
 resource "aws_transfer_as2_connector" "test" {
   access_role = aws_iam_role.test.arn
   as2_config {
-	compression           = "DISABLED"
-	encryption_algorithm  = "AES128_CBC"
+    compression           = "DISABLED"
+    encryption_algorithm  = "AES128_CBC"
     message_subject       = %[1]q
     local_profile_id      = aws_transfer_as2_profile.local.profile_id
-	mdn_response          = "NONE"
-	mdn_signing_algorithm = "NONE"
+    mdn_response          = "NONE"
+    mdn_signing_algorithm = "NONE"
     partner_profile_id    = aws_transfer_as2_profile.partner.profile_id
-	signing_algorithm     = "NONE"
+    signing_algorithm     = "NONE"
   }
   url = "http://www.test.com"
 }

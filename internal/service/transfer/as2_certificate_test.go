@@ -193,10 +193,10 @@ func TestAccCertificate_disappears(t *testing.T) {
 func testCertificate_basic(rName string, certificate string, key string, caCertificate string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_as2_certificate" "test" {
-  certificate = %[2]q
-  private_key = %[3]q
+  certificate       = %[2]q
+  private_key       = %[3]q
   certificate_chain = %[4]q
-  usage       = "SIGNING"
+  usage             = "SIGNING"
 }
 `, rName, certificate, key, caCertificate)
 }

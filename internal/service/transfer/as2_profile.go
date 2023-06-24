@@ -61,7 +61,7 @@ func ResourceProfile() *schema.Resource {
 
 func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.CreateProfileInput{
 		Tags: GetTagsIn(ctx),
@@ -92,7 +92,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	output, err := FindProfileByID(ctx, conn, d.Id())
 
@@ -107,10 +107,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("as2_id", output.As2Id)
-	if output.CertificateIds != nil {
-		d.Set("certificate_ids", output.CertificateIds)
-	}
-
+	d.Set("certificate_ids", output.CertificateIds)
 	d.Set("profile_id", output.ProfileId)
 	d.Set("profile_type", output.ProfileType)
 	SetTagsOut(ctx, output.Tags)
@@ -120,7 +117,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 
@@ -146,7 +143,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	log.Printf("[DEBUG] Deleting AS2 Profile: (%s)", d.Id())
 	_, err := conn.DeleteProfileWithContext(ctx, &transfer.DeleteProfileInput{

@@ -74,7 +74,7 @@ func ResourceAgreement() *schema.Resource {
 
 func resourceAgreementCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.CreateAgreementInput{
 		Tags: GetTagsIn(ctx),
@@ -121,7 +121,7 @@ func resourceAgreementCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceAgreementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 	agreementID, serverID, err := AccessParseResourceID(d.Id())
 
 	if err != nil {
@@ -143,16 +143,11 @@ func resourceAgreementRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("access_role", output.AccessRole)
 	d.Set("agreement_id", output.AgreementId)
 	d.Set("base_directory", output.BaseDirectory)
-	if output.Description != nil {
-		d.Set("description", output.Description)
-	}
-
+	d.Set("description", output.Description)
 	d.Set("local_profile_id", output.LocalProfileId)
 	d.Set("partner_profile_id", output.PartnerProfileId)
 	d.Set("serverid", output.ServerId)
-	if output.Status != nil {
-		d.Set("status", output.Status)
-	}
+	d.Set("status", output.Status)
 
 	SetTagsOut(ctx, output.Tags)
 
@@ -161,7 +156,7 @@ func resourceAgreementRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceAgreementUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	agreementID, serverID, err := AccessParseResourceID(d.Id())
 	if err != nil {
@@ -209,7 +204,7 @@ func resourceAgreementUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceAgreementDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 	agreementID, serverID, err := AccessParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing Transfer Agreement ID: %s", err)

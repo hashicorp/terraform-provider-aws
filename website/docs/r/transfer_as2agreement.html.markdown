@@ -30,7 +30,7 @@ resource "aws_transfer_as2_agreement" "example" {
 The following arguments are supported:
 
 * `access_role` - (Required) The IAM Role which provides read and write access to the parent directory of the file location mentioned in the StartFileTransfer request.
-* `base_directory` - (Required) The landing directory for the files transfered by using the AS2 protocol.
+* `base_directory` - (Required) The landing directory for the files transferred by using the AS2 protocol.
 * `description` - (Optional) The Optional description of the transdfer.
 * `local_profile_id` - (Required) The unique identifier for the AS2 local profile.
 * `partner_profile_id` - (Required) The unique identifier for the AS2 partner profile.

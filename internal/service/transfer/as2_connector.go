@@ -103,7 +103,7 @@ func ResourceConnector() *schema.Resource {
 
 func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.CreateConnectorInput{
 		Tags: GetTagsIn(ctx),
@@ -138,7 +138,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	output, err := FindConnectorByID(ctx, conn, d.Id())
 
@@ -157,9 +157,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting As2 Config: %s", err)
 	}
 	d.Set("connector_id", output.ConnectorId)
-	if output.LoggingRole != nil {
-		d.Set("logging_role", output.LoggingRole)
-	}
+	d.Set("logging_role", output.LoggingRole)
 	d.Set("url", output.Url)
 	SetTagsOut(ctx, output.Tags)
 
@@ -168,7 +166,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 
@@ -208,7 +206,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	log.Printf("[DEBUG] Deleting AS2 Connector: (%s)", d.Id())
 	_, err := conn.DeleteConnectorWithContext(ctx, &transfer.DeleteConnectorInput{
