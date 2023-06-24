@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccPipesPipe_basic(t *testing.T) {
+func TestAccPipesPipe_basicSQS(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipe pipes.DescribePipeOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -37,7 +37,7 @@ func TestAccPipesPipe_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipeConfig_basic(rName),
+				Config: testAccPipeConfig_basicSQS(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexp.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
@@ -49,6 +49,16 @@ func TestAccPipesPipe_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_sqs_queue.source", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.kinesis_stream_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.managed_streaming_kafka_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.0.batch_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.0.maximum_batching_window_in_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_sqs_queue.target", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "0"),
@@ -80,7 +90,7 @@ func TestAccPipesPipe_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipeConfig_basic(rName),
+				Config: testAccPipeConfig_basicSQS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpipes.ResourcePipe(), resourceName),
@@ -134,7 +144,7 @@ func TestAccPipesPipe_description(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPipeConfig_basic(rName),
+				Config: testAccPipeConfig_basicSQS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
@@ -187,7 +197,7 @@ func TestAccPipesPipe_desiredState(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPipeConfig_basic(rName),
+				Config: testAccPipeConfig_basicSQS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
@@ -233,7 +243,7 @@ func TestAccPipesPipe_enrichment(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPipeConfig_basic(rName),
+				Config: testAccPipeConfig_basicSQS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
@@ -319,7 +329,7 @@ func TestAccPipesPipe_sourceParameters_filterCriteria(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPipeConfig_basic(rName),
+				Config: testAccPipeConfig_basicSQS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
@@ -413,7 +423,7 @@ func TestAccPipesPipe_roleARN(t *testing.T) {
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipeConfig_basic(rName),
+				Config: testAccPipeConfig_basicSQS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
@@ -502,7 +512,7 @@ func TestAccPipesPipe_targetUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipeConfig_basic(rName),
+				Config: testAccPipeConfig_basicSQS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_sqs_queue.target", "arn"),
@@ -560,11 +570,84 @@ func TestAccPipesPipe_targetParameters_inputTemplate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPipeConfig_basic(rName),
+				Config: testAccPipeConfig_basicSQS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					resource.TestCheckNoResourceAttr(resourceName, "target_parameters.0.input_template"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccPipesPipe_basicKinesis(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_basicKinesis(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexp.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_kinesis_stream.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.kinesis_stream_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.kinesis_stream_parameters.0.batch_size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.kinesis_stream_parameters.0.dead_letter_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.kinesis_stream_parameters.0.maximum_batching_window_in_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.kinesis_stream_parameters.0.maximum_record_age_in_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.kinesis_stream_parameters.0.maximum_retry_attempts", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.kinesis_stream_parameters.0.on_partial_batch_item_failure", ""),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.kinesis_stream_parameters.0.parallelization_factor", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.kinesis_stream_parameters.0.starting_position", "LATEST"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.kinesis_stream_parameters.0.starting_position_timestamp", ""),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.managed_streaming_kafka_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_kinesis_stream.target", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.cloudwatch_logs_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.eventbridge_event_bus_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.http_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.input_template", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.kinesis_stream_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.kinesis_stream_parameters.0.partition_key", "test"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.lambda_function_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.redshift_data_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sagemaker_pipeline_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sqs_queue_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.step_function_state_machine_parameters.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -721,7 +804,105 @@ resource "aws_sqs_queue" "target" {
 `, rName)
 }
 
-func testAccPipeConfig_basic(rName string) string {
+func testAccPipeConfig_baseSQSDeadLetter(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role_policy" "deadletter" {
+  role = aws_iam_role.test.id
+  name = "%[1]s-deadletter"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:*",
+        ],
+        Resource = [
+          aws_sqs_queue.deadletter.arn,
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_sqs_queue" "deadletter" {
+  name = "%[1]s-deadletter"
+}
+`, rName)
+}
+
+func testAccPipeConfig_baseKinesisSource(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role_policy" "source" {
+  role = aws_iam_role.test.id
+  name = "%[1]s-source"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "kinesis:DescribeStream",
+          "kinesis:DescribeStreamSummary",
+          "kinesis:GetRecords",
+          "kinesis:GetShardIterator",
+          "kinesis:ListShards",
+          "kinesis:ListStreams",
+          "kinesis:SubscribeToShard",
+        ],
+        Resource = [
+          aws_kinesis_stream.source.arn,
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_kinesis_stream" "source" {
+  name = "%[1]s-source"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
+}
+`, rName)
+}
+
+func testAccPipeConfig_baseKinesisTarget(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role_policy" "target" {
+  role = aws_iam_role.test.id
+  name = "%[1]s-target"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "kinesis:PutRecord",
+        ],
+        Resource = [
+          aws_kinesis_stream.target.arn,
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_kinesis_stream" "target" {
+  name = "%[1]s-target"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
+}
+`, rName)
+}
+
+func testAccPipeConfig_basicSQS(rName string) string {
 	return acctest.ConfigCompose(
 		testAccPipeConfig_base(rName),
 		testAccPipeConfig_baseSQSSource(rName),
@@ -1091,4 +1272,33 @@ resource "aws_pipes_pipe" "test" {
   }
 }
 `, rName, template))
+}
+
+func testAccPipeConfig_basicKinesis(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseKinesisSource(rName),
+		testAccPipeConfig_baseKinesisTarget(rName),
+		fmt.Sprintf(`
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  source   = aws_kinesis_stream.source.arn
+  target   = aws_kinesis_stream.target.arn
+
+  source_parameters {
+    kinesis_stream_parameters {
+      starting_position = "LATEST"
+    }
+  }
+
+  target_parameters {
+    kinesis_stream_parameters {
+      partition_key = "test"
+    }
+  }
+}
+`, rName))
 }
