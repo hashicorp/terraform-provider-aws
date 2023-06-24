@@ -3,7 +3,6 @@ package transfer_test
 import (
 	"context"
 	"fmt"
-
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/transfer"
