@@ -46,6 +46,7 @@ import (
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
 	transcribe_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transcribe"
+	verifiedpermissions_sdkv2 "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	vpclattice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	acmpca_sdkv1 "github.com/aws/aws-sdk-go/service/acmpca"
@@ -1574,6 +1575,10 @@ func (c *AWSClient) TranslateConn(ctx context.Context) *translate_sdkv1.Translat
 
 func (c *AWSClient) VPCLatticeClient(ctx context.Context) *vpclattice_sdkv2.Client {
 	return errs.Must(client[*vpclattice_sdkv2.Client](ctx, c, names.VPCLattice))
+}
+
+func (c *AWSClient) VerifiedPermissionsClient(ctx context.Context) *verifiedpermissions_sdkv2.Client {
+	return errs.Must(client[*verifiedpermissions_sdkv2.Client](ctx, c, names.VerifiedPermissions))
 }
 
 func (c *AWSClient) VoiceIDConn(ctx context.Context) *voiceid_sdkv1.VoiceID {

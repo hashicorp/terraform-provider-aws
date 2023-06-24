@@ -137,6 +137,8 @@ github.com/aws/aws-sdk-go-v2/service/swf v1.15.2 h1:2ozdtzVA8NpZZZrE1BwYbWVbtA0u
 github.com/aws/aws-sdk-go-v2/service/swf v1.15.2/go.mod h1:Jj8X0ex+9XIXgNI/zD/g0jvv2wd5LHEZq29FlJj1RUc=
 github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.8 h1:KfCL992IXYjCPT62KGBMCOxf4cvu5OwwqcJZRBORL+U=
 github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.8/go.mod h1:F8gPtIYU0JYmVyPeQI0zf8geCpbupPJfo3wPoIV6wy0=
+github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.0.2 h1:TOKE2XWYUF9WpGpn3rw1f8SGQHKU4S6zpSyIA2VX/rQ=
+github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.0.2/go.mod h1:DcBzv8o6EYm1gQf/qJo+PE81VlrXEvIa4nUVwVOD1VU=
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.7 h1:SovLGhSpSnv9AQyW2ANCxzc1X4ri1ptsLM5nIR0rTFs=
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.7/go.mod h1:ZYUcLmMNXSVsWPC8r2d6DXhAlu5uqdU6u2lxLDOvf/8=
 github.com/aws/aws-sdk-go-v2/service/xray v1.16.13 h1:I1j641YyiML0WBbTYkitzVkO7rwhTtUdhACrwEirCBg=
