@@ -75,7 +75,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	input := &prometheusservice.CreateWorkspaceInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("alias"); ok {

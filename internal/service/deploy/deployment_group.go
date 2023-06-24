@@ -501,7 +501,7 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		ApplicationName:     aws.String(applicationName),
 		DeploymentGroupName: aws.String(deploymentGroupName),
 		ServiceRoleArn:      aws.String(serviceRoleArn),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if attr, ok := d.GetOk("deployment_style"); ok {

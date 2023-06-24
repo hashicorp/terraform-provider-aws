@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -42,12 +41,12 @@ func init() {
 
 func sweepChannels(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).MediaLiveClient(ctx)
+	conn := client.MediaLiveClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListChannelsInput{}
 	var errs *multierror.Error
@@ -92,12 +91,12 @@ func sweepChannels(region string) error {
 
 func sweepInputs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).MediaLiveClient(ctx)
+	conn := client.MediaLiveClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListInputsInput{}
 	var errs *multierror.Error
@@ -142,12 +141,12 @@ func sweepInputs(region string) error {
 
 func sweepInputSecurityGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).MediaLiveClient(ctx)
+	conn := client.MediaLiveClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListInputSecurityGroupsInput{}
 	var errs *multierror.Error
@@ -192,12 +191,12 @@ func sweepInputSecurityGroups(region string) error {
 
 func sweepMultiplexes(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).MediaLiveClient(ctx)
+	conn := client.MediaLiveClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListMultiplexesInput{}
 	var errs *multierror.Error

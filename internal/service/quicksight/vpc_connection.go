@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -172,7 +172,7 @@ func (r *resourceVPCConnection) Create(ctx context.Context, req resource.CreateR
 		RoleArn:          aws.String(plan.RoleArn.ValueString()),
 		SecurityGroupIds: flex.ExpandFrameworkStringSet(ctx, plan.SecurityGroupIds),
 		SubnetIds:        flex.ExpandFrameworkStringSet(ctx, plan.SubnetIds),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if !plan.DnsResolvers.IsNull() {

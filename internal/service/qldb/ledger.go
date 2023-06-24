@@ -89,7 +89,7 @@ func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
 		Name:               aws.String(name),
 		PermissionsMode:    aws.String(d.Get("permissions_mode").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key"); ok {

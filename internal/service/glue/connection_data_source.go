@@ -129,7 +129,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("setting match_criteria: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, connectionArn)
+	tags, err := listTags(ctx, conn, connectionArn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Glue Connection (%s): %s", connectionArn, err)

@@ -48,6 +48,11 @@ func ValidateTypeStringNullableBool(v interface{}, k string) (ws []string, es []
 
 	if _, err := strconv.ParseBool(value); err != nil {
 		es = append(es, fmt.Errorf("%s: cannot parse '%s' as boolean: %w", k, value, err))
+		return
+	}
+
+	if value != "true" && value != "false" {
+		ws = append(ws, fmt.Sprintf(`%s: the use of values other than "true" and "false" is deprecated and will be removed in a future version of the provider`, k))
 	}
 
 	return

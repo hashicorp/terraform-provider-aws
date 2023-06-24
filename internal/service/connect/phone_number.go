@@ -131,7 +131,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 	input2 := &connect.ClaimPhoneNumberInput{
 		ClientToken: aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
 		PhoneNumber: phoneNumber,
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 		TargetArn:   aws.String(targetArn),
 	}
 
@@ -196,7 +196,7 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("setting status: %s", err)
 	}
 
-	SetTagsOut(ctx, resp.ClaimedPhoneNumberSummary.Tags)
+	setTagsOut(ctx, resp.ClaimedPhoneNumberSummary.Tags)
 
 	return nil
 }

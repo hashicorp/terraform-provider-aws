@@ -112,7 +112,7 @@ func resourceSiteCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	globalNetworkID := d.Get("global_network_id").(string)
 	input := &networkmanager.CreateSiteInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -166,7 +166,7 @@ func resourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		d.Set("location", nil)
 	}
 
-	SetTagsOut(ctx, site.Tags)
+	setTagsOut(ctx, site.Tags)
 
 	return nil
 }

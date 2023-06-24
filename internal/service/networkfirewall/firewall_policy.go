@@ -169,7 +169,7 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &networkfirewall.CreateFirewallPolicyInput{
 		FirewallPolicy:     expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
 		FirewallPolicyName: aws.String(d.Get("name").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -215,7 +215,7 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("name", response.FirewallPolicyName)
 	d.Set("update_token", output.UpdateToken)
 
-	SetTagsOut(ctx, response.Tags)
+	setTagsOut(ctx, response.Tags)
 
 	return nil
 }

@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -59,12 +58,12 @@ func init() {
 
 func sweepConnections(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := client.DirectConnectConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -114,11 +113,11 @@ func sweepConnections(region string) error {
 
 func sweepGatewayAssociationProposals(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := client.DirectConnectConn(ctx)
 	input := &directconnect.DescribeDirectConnectGatewayAssociationProposalsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -171,11 +170,11 @@ func sweepGatewayAssociationProposals(region string) error {
 
 func sweepGatewayAssociations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := client.DirectConnectConn(ctx)
 	input := &directconnect.DescribeDirectConnectGatewaysInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -243,7 +242,7 @@ func sweepGatewayAssociations(region string) error {
 	// these within the service itself so they can only be found
 	// via AssociatedGatewayId of the EC2 Transit Gateway since the
 	// DirectConnectGatewayId lives in the other account.
-	ec2conn := client.(*conns.AWSClient).EC2Conn(ctx)
+	ec2conn := client.EC2Conn(ctx)
 
 	err = ec2conn.DescribeTransitGatewaysPagesWithContext(ctx, &ec2.DescribeTransitGatewaysInput{}, func(page *ec2.DescribeTransitGatewaysOutput, lastPage bool) bool {
 		if page == nil {
@@ -308,11 +307,11 @@ func sweepGatewayAssociations(region string) error {
 
 func sweepGateways(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := client.DirectConnectConn(ctx)
 	input := &directconnect.DescribeDirectConnectGatewaysInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -393,12 +392,12 @@ func sweepGateways(region string) error {
 
 func sweepLags(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := client.DirectConnectConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -448,19 +447,19 @@ func sweepLags(region string) error {
 
 func sweepMacSecKeys(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	dxConn := client.(*conns.AWSClient).DirectConnectConn(ctx)
+	dxConn := client.DirectConnectConn(ctx)
 
 	// Clean up leaked Secrets Manager resources created by Direct Connect.
 	// Direct Connect does not remove the corresponding Secrets Manager
 	// key when deleting the MACsec key association. The only option to
 	// clean up the dangling resource is to use Secrets Manager to delete
 	// the MACsec key secret.
-	smConn := client.(*conns.AWSClient).SecretsManagerConn(ctx)
+	smConn := client.SecretsManagerConn(ctx)
 	dxInput := &directconnect.DescribeConnectionsInput{}
 	var sweeperErrs *multierror.Error
 

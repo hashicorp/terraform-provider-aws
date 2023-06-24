@@ -109,7 +109,7 @@ func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceDat
 	input := &glue.CreateDataQualityRulesetInput{
 		Name:    aws.String(name),
 		Ruleset: aws.String(d.Get("ruleset").(string)),
-		Tags:    GetTagsIn(ctx),
+		Tags:    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

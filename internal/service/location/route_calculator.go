@@ -81,7 +81,7 @@ func resourceRouteCalculatorCreate(ctx context.Context, d *schema.ResourceData, 
 	in := &locationservice.CreateRouteCalculatorInput{
 		CalculatorName: aws.String(d.Get("calculator_name").(string)),
 		DataSource:     aws.String(d.Get("data_source").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

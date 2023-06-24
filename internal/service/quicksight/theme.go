@@ -359,7 +359,7 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		ThemeId:      aws.String(themeId),
 		Name:         aws.String(d.Get("name").(string)),
 		BaseThemeId:  aws.String(d.Get("base_theme_id").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("version_description"); ok {

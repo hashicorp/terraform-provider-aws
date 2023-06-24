@@ -150,7 +150,7 @@ func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("ip_address", customerGateway.IpAddress)
 	d.Set("type", customerGateway.Type)
 
-	SetTagsOut(ctx, customerGateway.Tags)
+	setTagsOut(ctx, customerGateway.Tags)
 
 	return nil
 }

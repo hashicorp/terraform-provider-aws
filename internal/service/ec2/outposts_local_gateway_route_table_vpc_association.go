@@ -102,7 +102,7 @@ func resourceLocalGatewayRouteTableVPCAssociationRead(ctx context.Context, d *sc
 	d.Set("local_gateway_id", association.LocalGatewayId)
 	d.Set("local_gateway_route_table_id", association.LocalGatewayRouteTableId)
 
-	SetTagsOut(ctx, association.Tags)
+	setTagsOut(ctx, association.Tags)
 
 	d.Set("vpc_id", association.VpcId)
 

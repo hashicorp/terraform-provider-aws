@@ -138,7 +138,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string))),
 		Action:      aws.String(d.Get("action").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	var err error
@@ -211,7 +211,7 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("action", resp.Action)
 	d.Set("position", resp.Position)
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	d.Set("arn", resp.Arn)
 

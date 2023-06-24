@@ -153,7 +153,7 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 		FirewallName:      aws.String(name),
 		FirewallPolicyArn: aws.String(d.Get("firewall_policy_arn").(string)),
 		SubnetMappings:    expandSubnetMappings(d.Get("subnet_mapping").(*schema.Set).List()),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
@@ -227,7 +227,7 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("update_token", output.UpdateToken)
 	d.Set("vpc_id", firewall.VpcId)
 
-	SetTagsOut(ctx, firewall.Tags)
+	setTagsOut(ctx, firewall.Tags)
 
 	return nil
 }

@@ -130,7 +130,7 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 	input := &networkmanager.CreateVpcAttachmentInput{
 		CoreNetworkId: aws.String(coreNetworkID),
 		SubnetArns:    flex.ExpandStringSet(d.Get("subnet_arns").(*schema.Set)),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 		VpcArn:        aws.String(vpcARN),
 	}
 
@@ -196,7 +196,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("subnet_arns", aws.StringValueSlice(vpcAttachment.SubnetArns))
 	d.Set("vpc_arn", a.ResourceArn)
 
-	SetTagsOut(ctx, a.Tags)
+	setTagsOut(ctx, a.Tags)
 
 	return nil
 }

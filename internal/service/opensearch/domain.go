@@ -610,7 +610,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	input := &opensearchservice.CreateDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
-		TagList:    GetTagsIn(ctx),
+		TagList:    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("engine_version"); ok {

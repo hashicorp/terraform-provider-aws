@@ -149,7 +149,7 @@ func resourceReportPlanCreate(ctx context.Context, d *schema.ResourceData, meta 
 		IdempotencyToken:      aws.String(id.UniqueId()),
 		ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]interface{})),
 		ReportPlanName:        aws.String(name),
-		ReportPlanTags:        GetTagsIn(ctx),
+		ReportPlanTags:        getTagsIn(ctx),
 		ReportSetting:         expandReportSetting(d.Get("report_setting").([]interface{})),
 	}
 

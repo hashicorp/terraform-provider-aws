@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -177,7 +177,7 @@ func (r *resourceSecurityGroupRule) Create(ctx context.Context, request resource
 	data.ID = types.StringValue(securityGroupRuleID)
 
 	conn := r.Meta().EC2Conn(ctx)
-	if err := UpdateTags(ctx, conn, data.ID.ValueString(), nil, KeyValueTags(ctx, GetTagsIn(ctx))); err != nil {
+	if err := updateTags(ctx, conn, data.ID.ValueString(), nil, KeyValueTags(ctx, getTagsIn(ctx))); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("adding VPC Security Group Rule (%s) tags", data.ID.ValueString()), err.Error())
 
 		return
@@ -238,7 +238,7 @@ func (r *resourceSecurityGroupRule) Read(ctx context.Context, request resource.R
 		data.ToPort = flex.Int64ToFramework(ctx, output.ToPort)
 	}
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

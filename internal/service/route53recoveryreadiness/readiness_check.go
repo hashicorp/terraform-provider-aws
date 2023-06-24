@@ -76,7 +76,7 @@ func resourceReadinessCheckCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(output.ReadinessCheckName))
 
-	if err := createTags(ctx, conn, aws.StringValue(output.ReadinessCheckArn), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, aws.StringValue(output.ReadinessCheckArn), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Recovery Readiness Readiness Check (%s) tags: %s", d.Id(), err)
 	}
 

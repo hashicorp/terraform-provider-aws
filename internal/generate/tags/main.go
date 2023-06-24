@@ -21,6 +21,11 @@ const (
 	sdkV2 = 2
 )
 
+const (
+	defaultListTagsFunc   = "listTags"
+	defaultUpdateTagsFunc = "updateTags"
+)
+
 var (
 	createTags               = flag.Bool("CreateTags", false, "whether to generate CreateTags")
 	getTag                   = flag.Bool("GetTag", false, "whether to generate GetTag")
@@ -33,7 +38,7 @@ var (
 
 	createTagsFunc        = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
 	getTagFunc            = flag.String("GetTagFunc", "GetTag", "getTagFunc")
-	listTagsFunc          = flag.String("ListTagsFunc", "ListTags", "listTagsFunc")
+	listTagsFunc          = flag.String("ListTagsFunc", defaultListTagsFunc, "listTagsFunc")
 	listTagsInFiltIDName  = flag.String("ListTagsInFiltIDName", "", "listTagsInFiltIDName")
 	listTagsInIDElem      = flag.String("ListTagsInIDElem", "ResourceArn", "listTagsInIDElem")
 	listTagsInIDNeedSlice = flag.String("ListTagsInIDNeedSlice", "", "listTagsInIDNeedSlice")
@@ -57,7 +62,7 @@ var (
 	untagInNeedTagKeyType = flag.String("UntagInNeedTagKeyType", "", "untagInNeedTagKeyType")
 	untagInTagsElem       = flag.String("UntagInTagsElem", "TagKeys", "untagInTagsElem")
 	untagOp               = flag.String("UntagOp", "UntagResource", "untagOp")
-	updateTagsFunc        = flag.String("UpdateTagsFunc", "UpdateTags", "updateTagsFunc")
+	updateTagsFunc        = flag.String("UpdateTagsFunc", defaultUpdateTagsFunc, "updateTagsFunc")
 
 	parentNotFoundErrCode = flag.String("ParentNotFoundErrCode", "", "Parent 'NotFound' Error Code")
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
@@ -171,6 +176,9 @@ type TemplateData struct {
 	NamesPkg         bool
 	SkipTypesImp     bool
 	TfResourcePkg    bool
+
+	IsDefaultListTags   bool
+	IsDefaultUpdateTags bool
 }
 
 func main() {
@@ -192,6 +200,8 @@ func main() {
 	if *sdkServicePackage == "" {
 		sdkServicePackage = &servicePackage
 	}
+
+	g.Infof("Generating internal/service/%s/%s", servicePackage, filename)
 
 	awsPkg, err := names.AWSGoPackage(*sdkServicePackage, *sdkVersion)
 	if err != nil {
@@ -246,10 +256,10 @@ func main() {
 		ProviderNameUpper:      providerNameUpper,
 		ServicePackage:         servicePackage,
 
-		ConnsPkg:         *listTags || *updateTags,
+		ConnsPkg:         (*listTags && *listTagsFunc == defaultListTagsFunc) || (*updateTags && *updateTagsFunc == defaultUpdateTagsFunc),
 		FmtPkg:           *updateTags,
 		HelperSchemaPkg:  awsPkg == "autoscaling",
-		InternalTypesPkg: *listTags || *serviceTagsMap || *serviceTagsSlice,
+		InternalTypesPkg: (*listTags && *listTagsFunc == defaultListTagsFunc) || *serviceTagsMap || *serviceTagsSlice,
 		NamesPkg:         *updateTags && !*skipNamesImp,
 		SkipTypesImp:     *skipTypesImp,
 		TfResourcePkg:    *getTag,
@@ -287,6 +297,9 @@ func main() {
 		UntagOp:                 *untagOp,
 		UpdateTagsFunc:          *updateTagsFunc,
 		UpdateTagsIgnoreSystem:  !*updateTagsNoIgnoreSystem,
+
+		IsDefaultListTags:   *listTagsFunc == defaultListTagsFunc,
+		IsDefaultUpdateTags: *updateTagsFunc == defaultUpdateTagsFunc,
 	}
 
 	templateBody := newTemplateBody(*sdkVersion, *kvtValues)

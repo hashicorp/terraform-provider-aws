@@ -135,7 +135,7 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 	fsId := d.Get("file_system_id").(string)
 	input := efs.CreateAccessPointInput{
 		FileSystemId: aws.String(fsId),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("posix_user"); ok {
@@ -215,7 +215,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting root directory: %s", err)
 	}
 
-	SetTagsOut(ctx, ap.Tags)
+	setTagsOut(ctx, ap.Tags)
 
 	return diags
 }

@@ -277,7 +277,7 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		ExecutionRoleArn:   aws.String(d.Get("execution_role_arn").(string)),
 		Name:               aws.String(name),
 		RuntimeVersion:     aws.String(d.Get("runtime_version").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if code, err := expandCanaryCode(d); err != nil {
@@ -414,7 +414,7 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting artifact_config: %s", err)
 	}
 
-	SetTagsOut(ctx, canary.Tags)
+	setTagsOut(ctx, canary.Tags)
 
 	return diags
 }

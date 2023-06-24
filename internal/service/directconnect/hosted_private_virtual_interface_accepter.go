@@ -106,7 +106,7 @@ func resourceHostedPrivateVirtualInterfaceAccepterCreate(ctx context.Context, d 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := createTags(ctx, conn, arn, GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, arn, getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Direct Connect hosted private virtual interface (%s) tags: %s", arn, err)
 	}
 

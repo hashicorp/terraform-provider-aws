@@ -134,7 +134,7 @@ func resourceVirtualRouterCreate(ctx context.Context, d *schema.ResourceData, me
 	input := &appmesh.CreateVirtualRouterInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		Spec:              expandVirtualRouterSpec(d.Get("spec").([]interface{})),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 		VirtualRouterName: aws.String(name),
 	}
 

@@ -119,7 +119,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		AppName:  aws.String(d.Get("app_name").(string)),
 		AppType:  aws.String(d.Get("app_type").(string)),
 		DomainId: aws.String(d.Get("domain_id").(string)),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("user_profile_name"); ok {

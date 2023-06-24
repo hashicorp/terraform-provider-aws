@@ -108,7 +108,7 @@ func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(aws.StringValue(output.AssessmentTemplateArn))
 
-	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Inspector Classic Assessment Template (%s) tags: %s", d.Id(), err)
 	}
 

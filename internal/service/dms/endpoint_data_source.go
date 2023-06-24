@@ -524,7 +524,7 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 		create.DiagError(names.DMS, create.ErrActionReading, DSNameEndpoint, d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(out.EndpointArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(out.EndpointArn))
 	if err != nil {
 		return create.DiagError(names.DMS, create.ErrActionReading, DSNameEndpoint, d.Id(), err)
 	}

@@ -92,7 +92,7 @@ func resourceEgressOnlyInternetGatewayRead(ctx context.Context, d *schema.Resour
 		d.Set("vpc_id", nil)
 	}
 
-	SetTagsOut(ctx, ig.Tags)
+	setTagsOut(ctx, ig.Tags)
 
 	return diags
 }

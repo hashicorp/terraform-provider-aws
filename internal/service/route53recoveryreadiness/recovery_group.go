@@ -80,7 +80,7 @@ func resourceRecoveryGroupCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(aws.StringValue(output.RecoveryGroupName))
 
-	if err := createTags(ctx, conn, aws.StringValue(output.RecoveryGroupArn), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, aws.StringValue(output.RecoveryGroupArn), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Recovery Readiness Recovery Group (%s) tags: %s", d.Id(), err)
 	}
 

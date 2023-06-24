@@ -129,7 +129,7 @@ func dataSourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting control: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(resp.FrameworkArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(resp.FrameworkArn))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Framework (%s): %s", d.Id(), err)

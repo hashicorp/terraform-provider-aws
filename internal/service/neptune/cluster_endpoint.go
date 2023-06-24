@@ -86,7 +86,7 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 		DBClusterEndpointIdentifier: aws.String(d.Get("cluster_endpoint_identifier").(string)),
 		DBClusterIdentifier:         aws.String(d.Get("cluster_identifier").(string)),
 		EndpointType:                aws.String(d.Get("endpoint_type").(string)),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if attr := d.Get("static_members").(*schema.Set); attr.Len() > 0 {

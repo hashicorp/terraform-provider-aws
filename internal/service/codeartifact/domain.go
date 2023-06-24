@@ -80,7 +80,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	input := &codeartifact.CreateDomainInput{
 		Domain: aws.String(d.Get("domain").(string)),
-		Tags:   GetTagsIn(ctx),
+		Tags:   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("encryption_key"); ok {

@@ -83,7 +83,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 		EventBridgeBus: aws.String(d.Get("eventbridge_bus").(string)),
 		EventFilter:    expandEventFilter(d.Get("event_filter").([]interface{})),
 		Name:           aws.String(name),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -139,7 +139,7 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("setting event_filter: %s", err)
 	}
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	return nil
 }

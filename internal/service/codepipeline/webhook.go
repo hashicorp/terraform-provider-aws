@@ -138,7 +138,7 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 			TargetPipeline:              aws.String(d.Get("target_pipeline").(string)),
 			AuthenticationConfiguration: extractWebhookAuthConfig(authType, authConfig),
 		},
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	webhook, err := conn.PutWebhookWithContext(ctx, request)
@@ -190,7 +190,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
 
-	SetTagsOut(ctx, webhook.Tags)
+	setTagsOut(ctx, webhook.Tags)
 
 	return diags
 }

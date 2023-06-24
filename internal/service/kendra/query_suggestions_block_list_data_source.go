@@ -134,7 +134,7 @@ func dataSourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.Reso
 		return diag.Errorf("setting source_s3_path: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
+	tags, err := listTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Kendra QuerySuggestionsBlockList (%s): %s", arn, err)

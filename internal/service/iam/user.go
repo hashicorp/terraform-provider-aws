@@ -93,7 +93,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	path := d.Get("path").(string)
 	input := &iam.CreateUserInput{
 		Path:     aws.String(path),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 		UserName: aws.String(name),
 	}
 
@@ -117,7 +117,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	d.SetId(aws.StringValue(output.User.UserName))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := userCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -161,7 +161,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set("unique_id", user.UserId)
 
-	SetTagsOut(ctx, user.Tags)
+	setTagsOut(ctx, user.Tags)
 
 	return diags
 }

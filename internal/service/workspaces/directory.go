@@ -220,7 +220,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 		EnableSelfService: aws.Bool(false), // this is handled separately below
 		EnableWorkDocs:    aws.Bool(false),
 		Tenancy:           aws.String(workspaces.TenancyShared),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("subnet_ids"); ok {

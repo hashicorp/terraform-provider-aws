@@ -201,7 +201,7 @@ func resourceOpenzfsVolumeCreate(ctx context.Context, d *schema.ResourceData, me
 		OpenZFSConfiguration: &fsx.CreateOpenZFSVolumeConfiguration{
 			ParentVolumeId: aws.String(d.Get("parent_volume_id").(string)),
 		},
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("copy_tags_to_snapshots"); ok {

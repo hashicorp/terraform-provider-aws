@@ -120,7 +120,7 @@ func resourceReportGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		Name:         aws.String(d.Get("name").(string)),
 		Type:         aws.String(d.Get("type").(string)),
 		ExportConfig: expandReportGroupExportConfig(d.Get("export_config").([]interface{})),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateReportGroupWithContext(ctx, input)
@@ -170,7 +170,7 @@ func resourceReportGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting export config: %s", err)
 	}
 
-	SetTagsOut(ctx, reportGroup.Tags)
+	setTagsOut(ctx, reportGroup.Tags)
 
 	return diags
 }
@@ -188,7 +188,7 @@ func resourceReportGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("tags_all") {
-		input.Tags = GetTagsIn(ctx)
+		input.Tags = getTagsIn(ctx)
 	}
 
 	_, err := conn.UpdateReportGroupWithContext(ctx, input)

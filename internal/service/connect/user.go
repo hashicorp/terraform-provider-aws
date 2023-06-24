@@ -153,7 +153,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		PhoneConfig:        expandPhoneConfig(d.Get("phone_config").([]interface{})),
 		RoutingProfileId:   aws.String(d.Get("routing_profile_id").(string)),
 		SecurityProfileIds: flex.ExpandStringSet(d.Get("security_profile_ids").(*schema.Set)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		Username:           aws.String(name),
 	}
 
@@ -235,7 +235,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("setting phone_config: %s", err)
 	}
 
-	SetTagsOut(ctx, resp.User.Tags)
+	setTagsOut(ctx, resp.User.Tags)
 
 	return nil
 }

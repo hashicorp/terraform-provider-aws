@@ -155,7 +155,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("outpost_arn", host.OutpostArn)
 	d.Set("owner_id", host.OwnerId)
 
-	SetTagsOut(ctx, host.Tags)
+	setTagsOut(ctx, host.Tags)
 
 	return diags
 }

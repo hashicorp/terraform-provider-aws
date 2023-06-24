@@ -63,7 +63,7 @@ func resourceDiscovererCreate(ctx context.Context, d *schema.ResourceData, meta 
 	sourceARN := d.Get("source_arn").(string)
 	input := &schemas.CreateDiscovererInput{
 		SourceArn: aws.String(sourceARN),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

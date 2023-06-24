@@ -113,7 +113,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Direction:        aws.String(d.Get("direction").(string)),
 		IpAddresses:      expandEndpointIPAddresses(d.Get("ip_address").(*schema.Set)),
 		SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("name"); ok {

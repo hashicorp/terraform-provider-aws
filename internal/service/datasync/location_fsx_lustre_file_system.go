@@ -100,7 +100,7 @@ func resourceLocationFSxLustreFileSystemCreate(ctx context.Context, d *schema.Re
 	input := &datasync.CreateLocationFsxLustreInput{
 		FsxFilesystemArn:  aws.String(fsxArn),
 		SecurityGroupArns: flex.ExpandStringSet(d.Get("security_group_arns").(*schema.Set)),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("subdirectory"); ok {
@@ -134,7 +134,7 @@ func resourceLocationFSxLustreFileSystemRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location Fsx Lustre (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
+	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location Fsx Lustre (%s): %s", d.Id(), err)

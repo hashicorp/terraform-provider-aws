@@ -454,7 +454,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: definitions,
 		Family:               aws.String(d.Get("family").(string)),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cpu"); ok {
@@ -531,14 +531,14 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get("family").(string), err)
 	}
 
-	taskDefinition := *output.TaskDefinition // nosemgrep:ci.prefer-aws-go-sdk-pointer-conversion-assignment // false positive
+	taskDefinition := *output.TaskDefinition // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment // false positive
 
 	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
 	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(taskDefinition.TaskDefinitionArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -644,7 +644,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
 	}
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	return diags
 }

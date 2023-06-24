@@ -188,7 +188,7 @@ func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &glue.CreateMLTransformInput{
 		Name:              aws.String(d.Get("name").(string)),
 		Role:              aws.String(d.Get("role_arn").(string)),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 		Timeout:           aws.Int64(int64(d.Get("timeout").(int))),
 		InputRecordTables: expandMLTransformInputRecordTables(d.Get("input_record_tables").([]interface{})),
 		Parameters:        expandMLTransformParameters(d.Get("parameters").([]interface{})),

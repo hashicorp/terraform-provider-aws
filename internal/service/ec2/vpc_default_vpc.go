@@ -269,11 +269,11 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	// Configure tags.
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := KeyValueTags(ctx, GetTagsIn(ctx))
+	newTags := KeyValueTags(ctx, getTagsIn(ctx))
 	oldTags := KeyValueTags(ctx, vpc.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
-		if err := UpdateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
+		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Default VPC (%s) tags: %s", d.Id(), err)
 		}
 	}

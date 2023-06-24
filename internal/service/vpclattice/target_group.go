@@ -225,7 +225,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	in := &vpclattice.CreateTargetGroupInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(name),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 		Type:        types.TargetGroupType(d.Get("type").(string)),
 	}
 

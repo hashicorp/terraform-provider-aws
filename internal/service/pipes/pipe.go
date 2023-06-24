@@ -131,7 +131,7 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		Name:         aws.String(name),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
 		Source:       aws.String(d.Get("source").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		Target:       aws.String(d.Get("target").(string)),
 	}
 

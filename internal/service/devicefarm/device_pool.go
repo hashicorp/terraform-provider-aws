@@ -118,7 +118,7 @@ func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(output.DevicePool.Arn))
 
-	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Device Pool (%s) tags: %s", d.Id(), err)
 	}
 

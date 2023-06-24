@@ -82,7 +82,7 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &accessanalyzer.CreateAnalyzerInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(id.UniqueId()),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		Type:         types.Type(d.Get("type").(string)),
 	}
 
@@ -129,7 +129,7 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", analyzer.Arn)
 	d.Set("type", analyzer.Type)
 
-	SetTagsOut(ctx, analyzer.Tags)
+	setTagsOut(ctx, analyzer.Tags)
 
 	return diags
 }

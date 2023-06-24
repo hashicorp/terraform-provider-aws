@@ -108,7 +108,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ConnectedDeviceId: aws.String(d.Get("connected_device_id").(string)),
 		DeviceId:          aws.String(d.Get("device_id").(string)),
 		GlobalNetworkId:   aws.String(globalNetworkID),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("connected_link_id"); ok {
@@ -163,7 +163,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("global_network_id", connection.GlobalNetworkId)
 	d.Set("link_id", connection.LinkId)
 
-	SetTagsOut(ctx, connection.Tags)
+	setTagsOut(ctx, connection.Tags)
 
 	return nil
 }

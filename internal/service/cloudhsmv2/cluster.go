@@ -116,7 +116,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	input := &cloudhsmv2.CreateClusterInput{
 		HsmType:   aws.String(d.Get("hsm_type").(string)),
 		SubnetIds: flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		TagList:   GetTagsIn(ctx),
+		TagList:   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("source_backup_identifier"); ok {
@@ -174,7 +174,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("subnet_ids", subnetIDs)
 	d.Set("vpc_id", cluster.VpcId)
 
-	SetTagsOut(ctx, cluster.TagList)
+	setTagsOut(ctx, cluster.TagList)
 
 	return diags
 }

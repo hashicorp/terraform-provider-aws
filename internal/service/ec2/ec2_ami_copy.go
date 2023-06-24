@@ -298,7 +298,7 @@ func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(aws.StringValue(output.ImageId))
 	d.Set("manage_ebs_snapshots", true)
 
-	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EC2 AMI (%s) tags: %s", d.Id(), err)
 	}
 

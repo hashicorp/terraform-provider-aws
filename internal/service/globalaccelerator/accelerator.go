@@ -138,7 +138,7 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
 		IdempotencyToken: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {

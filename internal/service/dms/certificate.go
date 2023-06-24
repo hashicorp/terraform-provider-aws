@@ -75,7 +75,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	certificateID := d.Get("certificate_id").(string)
 	request := &dms.ImportCertificateInput{
 		CertificateIdentifier: aws.String(certificateID),
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	pem, pemSet := d.GetOk("certificate_pem")

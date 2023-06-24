@@ -15,7 +15,7 @@ apigatewayv2,apigatewayv2,apigatewayv2,apigatewayv2,,apigatewayv2,,,APIGatewayV2
 appmesh,appmesh,appmesh,appmesh,,appmesh,,,AppMesh,AppMesh,,1,,,aws_appmesh_,,appmesh_,App Mesh,AWS,,,,,
 apprunner,apprunner,apprunner,apprunner,,apprunner,,,AppRunner,AppRunner,,1,,,aws_apprunner_,,apprunner_,App Runner,AWS,,,,,
 ,,,,,,,,,,,,,,,,,App2Container,AWS,x,,,,No SDK support
-appconfig,appconfig,appconfig,appconfig,,appconfig,,,AppConfig,AppConfig,,1,,,aws_appconfig_,,appconfig_,AppConfig,AWS,,,,,
+appconfig,appconfig,appconfig,appconfig,,appconfig,,,AppConfig,AppConfig,,1,2,,aws_appconfig_,,appconfig_,AppConfig,AWS,,,,,
 appconfigdata,appconfigdata,appconfigdata,appconfigdata,,appconfigdata,,,AppConfigData,AppConfigData,,1,,,aws_appconfigdata_,,appconfigdata_,AppConfig Data,AWS,,,,,
 appflow,appflow,appflow,appflow,,appflow,,,AppFlow,Appflow,,1,,,aws_appflow_,,appflow_,AppFlow,Amazon,,,,,
 appintegrations,appintegrations,appintegrationsservice,appintegrations,,appintegrations,,appintegrationsservice,AppIntegrations,AppIntegrationsService,,1,,,aws_appintegrations_,,appintegrations_,AppIntegrations,Amazon,,,,,
@@ -275,7 +275,7 @@ pinpoint-sms-voice,pinpointsmsvoice,pinpointsmsvoice,pinpointsmsvoice,,pinpoints
 pipes,pipes,pipes,pipes,,pipes,,,Pipes,Pipes,,,2,,aws_pipes_,,pipes_,EventBridge Pipes,Amazon,,,,,
 polly,polly,polly,polly,,polly,,,Polly,Polly,,1,,,aws_polly_,,polly_,Polly,Amazon,,,,,
 ,,,,,,,,,,,,,,,,,Porting Assistant for .NET,,x,,,,No SDK support
-pricing,pricing,pricing,pricing,,pricing,,,Pricing,Pricing,,1,,,aws_pricing_,,pricing_,Pricing Calculator,AWS,,,,,
+pricing,pricing,pricing,pricing,,pricing,,,Pricing,Pricing,,,2,,aws_pricing_,,pricing_,Pricing Calculator,AWS,,,,,
 proton,proton,proton,proton,,proton,,,Proton,Proton,,1,,,aws_proton_,,proton_,Proton,AWS,,,,,
 qldb,qldb,qldb,qldb,,qldb,,,QLDB,QLDB,,1,,,aws_qldb_,,qldb_,QLDB (Quantum Ledger Database),Amazon,,,,,
 qldb-session,qldbsession,qldbsession,qldbsession,,qldbsession,,,QLDBSession,QLDBSession,,1,,,aws_qldbsession_,,qldbsession_,QLDB Session,Amazon,,,,,
