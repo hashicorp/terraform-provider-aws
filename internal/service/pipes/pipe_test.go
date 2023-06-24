@@ -793,6 +793,62 @@ func TestAccPipesPipe_activeMQSourceStepFunctionTarget(t *testing.T) {
 	})
 }
 
+func TestAccPipesPipe_rabbitMQSourceEventBusTarget(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_basicRabbitMQSourceEventBusTarget(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexp.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_mq_broker.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.managed_streaming_kafka_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.0.batch_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.0.credentials.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "source_parameters.0.rabbitmq_broker_parameters.0.credentials.0.basic_auth"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.0.maximum_batching_window_in_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.0.queue_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.0.virtual_host", ""),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_cloudwatch_event_bus.target", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPipeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).PipesClient(ctx)
@@ -1680,6 +1736,113 @@ resource "aws_pipes_pipe" "test" {
   target_parameters {
     step_function_state_machine_parameters {
       invocation_type = "REQUEST_RESPONSE"
+    }
+  }
+}
+`, rName))
+}
+
+func testAccPipeConfig_basicRabbitMQSourceEventBusTarget(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_iam_role_policy" "source" {
+  role = aws_iam_role.test.id
+  name = "%[1]s-source"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "mq:DescribeBroker",
+          "secretsmanager:GetSecretValue",
+          "ec2:CreateNetworkInterface",
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:DescribeVpcs",
+          "ec2:DeleteNetworkInterface",
+          "ec2:DescribeSubnets",
+          "ec2:DescribeSecurityGroups",
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = [
+          "*"
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_mq_broker" "source" {
+  broker_name             = "%[1]s-source"
+  engine_type             = "RabbitMQ"
+  engine_version          = "3.8.11"
+  host_instance_type      = "mq.t3.micro"
+  authentication_strategy = "simple"
+
+  logs {
+    general = true
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+
+  publicly_accessible = true
+}
+
+resource "aws_secretsmanager_secret" "source" {
+  name = "%[1]s-source"
+}
+
+resource "aws_secretsmanager_secret_version" "source" {
+  secret_id     = aws_secretsmanager_secret.source.id
+  secret_string = jsonencode({ username = "Test", password = "TestTest1234" })
+}
+
+resource "aws_iam_role_policy" "target" {
+  role = aws_iam_role.test.id
+  name = "%[1]s-target"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "events:PutEvent",
+        ],
+        Resource = [
+          aws_cloudwatch_event_bus.target.arn,
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_cloudwatch_event_bus" "target" {
+  name     = "%[1]s-target"
+}
+
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  source   = aws_mq_broker.source.arn
+  target   = aws_cloudwatch_event_bus.target.arn
+
+  source_parameters {
+    rabbitmq_broker_parameters {
+      queue_name = "test"
+
+      credentials {
+        basic_auth = aws_secretsmanager_secret_version.source.arn
+      }
     }
   }
 }
