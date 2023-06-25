@@ -39,6 +39,7 @@ var (
 	createTagsFunc        = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
 	getTagFunc            = flag.String("GetTagFunc", "GetTag", "getTagFunc")
 	getTagsInFunc         = flag.String("GetTagsInFunc", "getTagsIn", "getTagsInFunc")
+	keyValueTagsFunc      = flag.String("KeyValueTagsFunc", "KeyValueTags", "keyValueTagsFunc")
 	listTagsFunc          = flag.String("ListTagsFunc", defaultListTagsFunc, "listTagsFunc")
 	listTagsInFiltIDName  = flag.String("ListTagsInFiltIDName", "", "listTagsInFiltIDName")
 	listTagsInIDElem      = flag.String("ListTagsInIDElem", "ResourceArn", "listTagsInIDElem")
@@ -138,6 +139,7 @@ type TemplateData struct {
 	CreateTagsFunc          string
 	GetTagFunc              string
 	GetTagsInFunc           string
+	KeyValueTagsFunc        string
 	ListTagsFunc            string
 	ListTagsInFiltIDName    string
 	ListTagsInIDElem        string
@@ -273,6 +275,7 @@ func main() {
 		CreateTagsFunc:          createTagsFunc,
 		GetTagFunc:              *getTagFunc,
 		GetTagsInFunc:           *getTagsInFunc,
+		KeyValueTagsFunc:        *keyValueTagsFunc,
 		ListTagsFunc:            *listTagsFunc,
 		ListTagsInFiltIDName:    *listTagsInFiltIDName,
 		ListTagsInIDElem:        *listTagsInIDElem,

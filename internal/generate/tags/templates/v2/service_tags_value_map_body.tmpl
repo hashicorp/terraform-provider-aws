@@ -5,8 +5,8 @@ func {{ .TagsFunc }}(tags tftags.KeyValueTags) map[string]string {
 	return tags.Map()
 }
 
-// KeyValueTags creates KeyValueTags from {{ .ServicePackage }} service tags.
-func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
+// {{ .KeyValueTagsFunc }} creates tftags.KeyValueTags from {{ .ServicePackage }} service tags.
+func {{ .KeyValueTagsFunc }}(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
@@ -25,7 +25,7 @@ func {{ .GetTagsInFunc }}(ctx context.Context) map[string]string {
 // {{ .SetTagsOutFunc }} sets {{ .ServicePackage }} service tags in Context.
 func {{ .SetTagsOutFunc }}(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = types.Some({{ .KeyValueTagsFunc }}(ctx, tags))
 	}
 }
 
