@@ -27,7 +27,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{}
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourcePolicyStore,
+			TypeName: "aws_verifiedpermissions_policy_store",
+			Name:     "Policy Store",
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
