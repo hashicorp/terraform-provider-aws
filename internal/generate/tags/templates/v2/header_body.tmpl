@@ -10,7 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	{{- if .AWSService }}
+	{{- if not .SkipAWSServiceImp }}
 	"github.com/aws/aws-sdk-go-v2/service/{{ .AWSService }}"
+	{{- end }}
 	{{- if not .SkipTypesImp }}
 	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .AWSService }}/types"
 	{{- end }}
