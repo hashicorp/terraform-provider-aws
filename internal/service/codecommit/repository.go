@@ -38,7 +38,6 @@ func ResourceRepository() *schema.Resource {
 			"repository_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
 
@@ -146,6 +145,12 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
+	
+	if d.HasChange("repository_name") {
+		if err := resourceUpdateRepositoryName(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CodeCommit Repository (%s) name: %s", d.Id(), err)
+		}
+	}
 
 	if d.HasChange("default_branch") {
 		if err := resourceUpdateDefaultBranch(ctx, conn, d); err != nil {
@@ -175,6 +180,20 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return diags
+}
+
+func resourceUpdateRepositoryName(ctx context.Context, conn *codecommit.CodeCommit, d *schema.ResourceData) error {
+	branchInput := &codecommit.UpdateRepositoryNameInput{
+		OldName: aws.String(d.Id()),
+		NewName: aws.String(d.Get("repository_name").(string)),
+	}
+
+	_, err := conn.UpdateRepositoryNameWithContext(ctx, branchInput)
+	if err != nil {
+		return fmt.Errorf("Updating Repository Name for CodeCommit Repository: %s", err.Error())
+	}
+
+	return nil
 }
 
 func resourceUpdateDescription(ctx context.Context, conn *codecommit.CodeCommit, d *schema.ResourceData) error {

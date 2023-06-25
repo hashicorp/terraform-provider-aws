@@ -74,7 +74,9 @@ func TestAccCodeCommitRepository_withChanges(t *testing.T) {
 					testAccCheckRepositoryExists(ctx, "aws_codecommit_repository.test"),
 					resource.TestCheckResourceAttr(
 						"aws_codecommit_repository.test", "description", "This is a test description - with changes"),
-				),
+					resource.TestCheckResourceAttr(
+						"aws_codecommit_repository.test", "repository_name", "renamed_test_repository"),
+					),
 			},
 		},
 	})
@@ -262,7 +264,7 @@ resource "aws_codecommit_repository" "test" {
 func testAccRepositoryConfig_changes(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_codecommit_repository" "test" {
-  repository_name = "test_repository_%d"
+  repository_name = "renamed_test_repository_%d"
   description     = "This is a test description - with changes"
 }
 `, rInt)
