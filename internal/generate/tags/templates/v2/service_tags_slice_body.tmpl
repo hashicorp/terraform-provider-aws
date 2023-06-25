@@ -44,8 +44,8 @@ func TagKeys(tags tftags.KeyValueTags) []*{{ .AWSService }}.{{ .TagKeyType }} {
 }
 {{- end }}
 
-// Tags returns {{ .ServicePackage }} service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.{{ .TagType }} {
+// {{ .TagsFunc }} returns {{ .ServicePackage }} service tags.
+func {{ .TagsFunc }}(tags tftags.KeyValueTags) []awstypes.{{ .TagType }} {
 	{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
 	var result []awstypes.{{ .TagType }}
 
@@ -229,7 +229,7 @@ func KeyValueTags(ctx context.Context, tags []awstypes.{{ .TagType }}) tftags.Ke
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.{{ .TagType }} {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := {{ .TagsFunc }}(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}

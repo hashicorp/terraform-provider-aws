@@ -39,12 +39,12 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 	}
 
 	if len(updatedTags) > 0 {
-		input.{{ .TagInTagsElem }} = Tags(updatedTags)
+		input.{{ .TagInTagsElem }} = {{ .TagsFunc }}(updatedTags)
 	}
 
 	if len(removedTags) > 0 {
 		{{- if .UntagInNeedTagType }}
-		input.{{ .UntagInTagsElem }} = Tags(removedTags)
+		input.{{ .UntagInTagsElem }} = {{ .TagsFunc }}(removedTags)
 		{{- else if .UntagInNeedTagKeyType }}
 		input.{{ .UntagInTagsElem }} = TagKeys(removedTags)
 		{{- else if .UntagInCustomVal }}
@@ -82,7 +82,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- end }}
 			{{- end }}
 			{{- if .UntagInNeedTagType }}
-			{{ .UntagInTagsElem }}:       Tags(removedTags),
+			{{ .UntagInTagsElem }}:       {{ .TagsFunc }}(removedTags),
 			{{- else if .UntagInNeedTagKeyType }}
 			{{ .UntagInTagsElem }}:       TagKeys(removedTags),
 			{{- else if .UntagInCustomVal }}
@@ -124,7 +124,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- if .TagInCustomVal }}
 			{{ .TagInTagsElem }}:       {{ .TagInCustomVal }},
 			{{- else }}
-			{{ .TagInTagsElem }}:       Tags(updatedTags),
+			{{ .TagInTagsElem }}:       {{ .TagsFunc }}(updatedTags),
 			{{- end }}
 		}
 

@@ -58,6 +58,7 @@ var (
 	tagTypeIDElem         = flag.String("TagTypeIDElem", "", "tagTypeIDElem")
 	tagTypeKeyElem        = flag.String("TagTypeKeyElem", "Key", "tagTypeKeyElem")
 	tagTypeValElem        = flag.String("TagTypeValElem", "Value", "tagTypeValElem")
+	tagsFunc              = flag.String("TagsFunc", "Tags", "tagsFunc")
 	untagInCustomVal      = flag.String("UntagInCustomVal", "", "untagInCustomVal")
 	untagInNeedTagKeyType = flag.String("UntagInNeedTagKeyType", "", "untagInNeedTagKeyType")
 	untagInTagsElem       = flag.String("UntagInTagsElem", "TagKeys", "untagInTagsElem")
@@ -159,6 +160,7 @@ type TemplateData struct {
 	TagTypeIDElem           string
 	TagTypeKeyElem          string
 	TagTypeValElem          string
+	TagsFunc                string
 	UntagInCustomVal        string
 	UntagInNeedTagKeyType   string
 	UntagInNeedTagType      bool
@@ -290,6 +292,7 @@ func main() {
 		TagTypeIDElem:           *tagTypeIDElem,
 		TagTypeKeyElem:          *tagTypeKeyElem,
 		TagTypeValElem:          *tagTypeValElem,
+		TagsFunc:                *tagsFunc,
 		UntagInCustomVal:        *untagInCustomVal,
 		UntagInNeedTagKeyType:   *untagInNeedTagKeyType,
 		UntagInNeedTagType:      *untagInNeedTagType,
