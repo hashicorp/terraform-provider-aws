@@ -38,12 +38,14 @@ var (
 
 	createTagsFunc        = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
 	getTagFunc            = flag.String("GetTagFunc", "GetTag", "getTagFunc")
+	getTagsInFunc         = flag.String("GetTagsInFunc", "getTagsIn", "getTagsInFunc")
 	listTagsFunc          = flag.String("ListTagsFunc", defaultListTagsFunc, "listTagsFunc")
 	listTagsInFiltIDName  = flag.String("ListTagsInFiltIDName", "", "listTagsInFiltIDName")
 	listTagsInIDElem      = flag.String("ListTagsInIDElem", "ResourceArn", "listTagsInIDElem")
 	listTagsInIDNeedSlice = flag.String("ListTagsInIDNeedSlice", "", "listTagsInIDNeedSlice")
 	listTagsOp            = flag.String("ListTagsOp", "ListTagsForResource", "listTagsOp")
 	listTagsOutTagsElem   = flag.String("ListTagsOutTagsElem", "Tags", "listTagsOutTagsElem")
+	setTagsOutFunc        = flag.String("SetTagsOutFunc", "setTagsOut", "setTagsOutFunc")
 	tagInCustomVal        = flag.String("TagInCustomVal", "", "tagInCustomVal")
 	tagInIDElem           = flag.String("TagInIDElem", "ResourceArn", "tagInIDElem")
 	tagInIDNeedSlice      = flag.String("TagInIDNeedSlice", "", "tagInIDNeedSlice")
@@ -135,6 +137,7 @@ type TemplateData struct {
 
 	CreateTagsFunc          string
 	GetTagFunc              string
+	GetTagsInFunc           string
 	ListTagsFunc            string
 	ListTagsInFiltIDName    string
 	ListTagsInIDElem        string
@@ -144,6 +147,7 @@ type TemplateData struct {
 	ParentNotFoundErrCode   string
 	ParentNotFoundErrMsg    string
 	RetryCreateOnNotFound   string
+	SetTagsOutFunc          string
 	TagInCustomVal          string
 	TagInIDElem             string
 	TagInIDNeedSlice        string
@@ -268,6 +272,7 @@ func main() {
 
 		CreateTagsFunc:          createTagsFunc,
 		GetTagFunc:              *getTagFunc,
+		GetTagsInFunc:           *getTagsInFunc,
 		ListTagsFunc:            *listTagsFunc,
 		ListTagsInFiltIDName:    *listTagsInFiltIDName,
 		ListTagsInIDElem:        *listTagsInIDElem,
@@ -276,6 +281,7 @@ func main() {
 		ListTagsOutTagsElem:     *listTagsOutTagsElem,
 		ParentNotFoundErrCode:   *parentNotFoundErrCode,
 		ParentNotFoundErrMsg:    *parentNotFoundErrMsg,
+		SetTagsOutFunc:          *setTagsOutFunc,
 		TagInCustomVal:          *tagInCustomVal,
 		TagInIDElem:             *tagInIDElem,
 		TagInIDNeedSlice:        *tagInIDNeedSlice,
