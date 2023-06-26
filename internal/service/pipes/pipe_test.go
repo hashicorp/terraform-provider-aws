@@ -1223,6 +1223,112 @@ func TestAccPipesPipe_sqsSourceBatchJobTarget(t *testing.T) {
 	})
 }
 
+func TestAccPipesPipe_sqsSourceECSTaskTarget(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	acctest.Skip(t, "ValidationException: [numeric instance is lower than the required minimum (minimum: 1, found: 0)]")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_basicSQSSourceECSTaskTarget(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexp.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_sqs_queue.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.managed_streaming_kafka_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_ecs_cluster.target", "id"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.cloudwatch_logs_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.capacity_provider_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.enable_ecs_managed_tags", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.enable_execute_command", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.group", "g1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.launch_type", "FARGATE"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.network_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.network_configuration.0.aws_vpc_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.network_configuration.0.aws_vpc_configuration.0.assign_public_ip", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.network_configuration.0.aws_vpc_configuration.0.security_groups.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.network_configuration.0.aws_vpc_configuration.0.subnets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.container_override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.container_override.0.command.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.container_override.0.cpu", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.container_override.0.environment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.container_override.0.environment.0.name", "TMP"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.container_override.0.environment.0.value", "/tmp2"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.container_override.0.environment_file.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.container_override.0.memory", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.container_override.0.memory_reservation", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.container_override.0.name", "first"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.container_override.0.resource_requirement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.container_override.0.resource_requirement.0.type", "GPU"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.container_override.0.resource_requirement.0.value", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.cpu", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.ephemeral_storage.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.ephemeral_storage.0.size_in_gib", "32"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.execution_role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.inference_accelerator_override.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.memory", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.overrides.0.task_role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.placement_constraint.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.placement_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.placement_strategy.0.field", "cpu"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.placement_strategy.0.type", "binpack"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.platform_version", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.propagate_tags", "TASK_DEFINITION"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.reference_id", "refid"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.0.task_count", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "target_parameters.0.ecs_task_parameters.0.task_definition_arn"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.eventbridge_event_bus_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.http_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.input_template", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.kinesis_stream_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.lambda_function_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.redshift_data_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sagemaker_pipeline_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sqs_queue_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.step_function_state_machine_parameters.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPipeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).PipesClient(ctx)
@@ -1370,34 +1476,6 @@ resource "aws_iam_role_policy" "target" {
 
 resource "aws_sqs_queue" "target" {
   name = "%[1]s-target"
-}
-`, rName)
-}
-
-func testAccPipeConfig_baseSQSDeadLetter(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role_policy" "deadletter" {
-  role = aws_iam_role.test.id
-  name = "%[1]s-deadletter"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "sqs:*",
-        ],
-        Resource = [
-          aws_sqs_queue.deadletter.arn,
-        ]
-      },
-    ]
-  })
-}
-
-resource "aws_sqs_queue" "deadletter" {
-  name = "%[1]s-deadletter"
 }
 `, rName)
 }
@@ -2684,6 +2762,123 @@ resource "aws_pipes_pipe" "test" {
 `, rName))
 }
 
+func testAccPipeConfig_basicSQSSourceECSTaskTarget(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_iam_role_policy" "target" {
+  role = aws_iam_role.test.id
+  name = "%[1]s-target"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": ["ecs:RunTask"],
+    "Resource": ["*"]
+  }]
+}
+EOF
+}
+
+resource "aws_ecs_cluster" "target" {
+  name = "%[1]s-target"
+}
+
+resource "aws_ecs_cluster_capacity_providers" "target" {
+  cluster_name       = aws_ecs_cluster.target.name
+  capacity_providers = ["FARGATE"]
+}
+
+resource "aws_ecs_task_definition" "target" {
+  family                   = "%[1]s-target"
+  cpu                      = 256
+  memory                   = 512
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+
+  container_definitions = jsonencode([
+    {
+      name      = "sleep"
+      image     = "busybox"
+      cpu       = 10
+      command   = ["sleep", "300"]
+      memory    = 10
+      essential = true
+      portMappings = [
+        {
+          protocol      = "tcp"
+          containerPort = 8000
+        }
+      ]
+    }
+  ])
+
+  depends_on = [aws_ecs_cluster_capacity_providers.target]
+}
+
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  source   = aws_sqs_queue.source.arn
+  target   = aws_ecs_cluster.target.id
+
+  target_parameters {
+    ecs_task_parameters {
+      task_definition_arn = aws_ecs_task_definition.target.arn
+
+      enable_ecs_managed_tags = true
+      group                   = "g1"
+      launch_type             = "FARGATE"
+
+      network_configuration {
+        aws_vpc_configuration {
+          subnets = aws_subnet.test[*].id
+        }
+      }
+
+      overrides {
+        container_override {
+          environment {
+            name  = "TMP"
+            value = "/tmp2"
+          }
+
+          memory_reservation = 1024
+          name               = "first"
+
+          resource_requirement {
+            type  = "GPU"
+            value = 2
+          }
+        }
+
+        ephemeral_storage {
+          size_in_gib = 32
+        }
+      }
+
+      placement_strategy {
+        field = "cpu"
+        type  = "binpack"
+      }
+
+      propagate_tags = "TASK_DEFINITION"
+      reference_id   = "refid"
+
+      tags = {
+        Name = %[1]q
+      }
+    }
+  }
+}
+`, rName))
+}
+
 // TODO
 // Enrichment: HTTP
-// Targets: ecs_task_parameters
