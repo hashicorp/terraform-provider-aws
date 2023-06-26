@@ -25,7 +25,7 @@ resource "aws_vpclattice_access_log_subscription" "example" {
 
 The following arguments are required:
 
-* `destination_arn` - (Required) Amazon Resource Name (ARN) of the log destination.
+* `destination_arn` - (Required) Amazon Resource Name (ARN) of the log destination. It must end with `:*` if the destination is CloudWatch Logs.
 * `resource_identifier` - (Required) The ID or Amazon Resource Identifier (ARN) of the service network or service. You must use the ARN if the resources specified in the operation are in different accounts.
 
 ## Attributes Reference
