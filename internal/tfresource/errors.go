@@ -14,6 +14,14 @@ func NotFound(err error) bool {
 	return errors.As(err, &e)
 }
 
+// EmptyResult returns true if the error represents an "empty result" condition.
+// Specifically, EmptyResult returns true if the error or a wrapped error is of type
+// EmptyResultError.
+func EmptyResult(err error) bool {
+	var e *EmptyResultError
+	return errors.As(err, &e)
+}
+
 // TimedOut returns true if the error represents a "wait timed out" condition.
 // Specifically, TimedOut returns true if the error matches all these conditions:
 //   - err is of type retry.TimeoutError

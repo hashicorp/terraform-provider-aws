@@ -98,9 +98,15 @@ func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindRouteTableAssociationByID(ctx, conn, d.Id())
-	}, d.IsNewResource())
+	}, func(err error) (bool, error) {
+		if d.IsNewResource() && (tfresource.NotFound(err) || tfresource.EmptyResult(err)) {
+			return true, err
+		}
+
+		return false, err
+	})
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table Association (%s) not found, removing from state", d.Id())
