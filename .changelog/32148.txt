@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_vpc_security_group_egress_rule: Make `security_group_id` a required argument
+resource/aws_vpc_security_group_ingress_rule: Make `security_group_id` a required argument
+```
