@@ -1109,7 +1109,7 @@ func TestAccPipesPipe_sqsSourceSagemakerTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.managed_streaming_kafka_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_sagemaker_pipeline.target", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
@@ -1128,6 +1128,88 @@ func TestAccPipesPipe_sqsSourceSagemakerTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sagemaker_pipeline_parameters.0.pipeline_parameter.0.value", "v1"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sagemaker_pipeline_parameters.0.pipeline_parameter.1.name", "p2"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sagemaker_pipeline_parameters.0.pipeline_parameter.1.value", "v2"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sqs_queue_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.step_function_state_machine_parameters.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccPipesPipe_sqsSourceBatchJobTarget(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_basicSQSSourceBatchJobTarget(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexp.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_sqs_queue.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.managed_streaming_kafka_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_batch_job_queue.target", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.array_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.array_properties.0.size", "512"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.0.command.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.0.command.0", "rm"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.0.command.1", "-fr"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.0.command.2", "/"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.0.environment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.0.environment.0.name", "TMP"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.0.environment.0.value", "/tmp2"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.0.instance_type", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.0.resource_requirement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.0.resource_requirement.0.type", "GPU"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.0.resource_requirement.0.value", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.depends_on.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "target_parameters.0.batch_job_parameters.0.job_definition"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.job_name", "testing"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.parameters.Key1", "Value1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.retry_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.cloudwatch_logs_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.eventbridge_event_bus_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.http_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.input_template", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.kinesis_stream_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.lambda_function_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.redshift_data_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sagemaker_pipeline_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sqs_queue_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.step_function_state_machine_parameters.#", "0"),
 				),
@@ -2459,6 +2541,149 @@ resource "aws_pipes_pipe" "test" {
 `, rName))
 }
 
+func testAccPipeConfig_basicSQSSourceBatchJobTarget(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_iam_role" "target" {
+  name               = "%[1]s-target"
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+    {
+        "Action": "sts:AssumeRole",
+        "Effect": "Allow",
+        "Principal": {
+        "Service": "batch.${data.aws_partition.main.dns_suffix}"
+        }
+    }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "target" {
+  role       = aws_iam_role.target.name
+  policy_arn = "arn:${data.aws_partition.main.partition}:iam::aws:policy/service-role/AWSBatchServiceRole"
+}
+
+resource "aws_iam_role" "ecs_instance_role" {
+  name = "%[1]s-ecs"
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+    {
+        "Action": "sts:AssumeRole",
+        "Effect": "Allow",
+        "Principal": {
+        "Service": "ec2.${data.aws_partition.main.dns_suffix}"
+        }
+    }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_instance_role" {
+  role       = aws_iam_role.ecs_instance_role.name
+  policy_arn = "arn:${data.aws_partition.main.partition}:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
+
+resource "aws_iam_instance_profile" "ecs_instance_role" {
+  name = aws_iam_role.ecs_instance_role.name
+  role = aws_iam_role_policy_attachment.ecs_instance_role.role
+}
+
+resource "aws_security_group" "target" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_batch_compute_environment" "target" {
+  compute_environment_name = "%[1]s-target"
+  service_role             = aws_iam_role.target.arn
+  type                     = "MANAGED"
+
+  compute_resources {
+    instance_role      = aws_iam_instance_profile.ecs_instance_role.arn
+    instance_type      = ["c5", "m5", "r5"]
+    max_vcpus          = 1
+    min_vcpus          = 0
+    security_group_ids = [aws_security_group.target.id]
+    subnets            = aws_subnet.test[*].id
+    type               = "EC2"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.target]
+}
+
+resource "aws_batch_job_queue" "target" {
+  compute_environments = [aws_batch_compute_environment.target.arn]
+  name                 = "%[1]s-target"
+  priority             = 1
+  state                = "ENABLED"
+}
+
+resource "aws_batch_job_definition" "target" {
+  container_properties = jsonencode({
+    command = ["echo", "test"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+  })
+  name = "%[1]s-target"
+  type = "container"
+}
+
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  source   = aws_sqs_queue.source.arn
+  target   = aws_batch_job_queue.target.arn
+
+  target_parameters {
+    batch_job_parameters {
+      array_properties {
+        size = 512
+      }
+
+      container_overrides {
+        command = ["rm", "-fr", "/"]
+
+        environment {
+          name  = "TMP"
+          value = "/tmp2"
+        }
+
+        resource_requirement {
+          type = "GPU"
+          value = "1"
+        }
+      }
+
+      job_definition = aws_batch_job_definition.target.arn
+      job_name       = "testing"
+
+      parameters = {
+        "Key1" = "Value1" 
+      }
+    }
+  }
+}
+`, rName))
+}
+
 // TODO
 // Enrichment: HTTP
-// Targets: batch_job_parameters, ecs_task_parameters
+// Targets: ecs_task_parameters
