@@ -49,8 +49,8 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_opensearchserverless_access_policy" "test" {
-  name = %[1]q
-  type = %[2]q
+  name        = %[1]q
+  type        = %[2]q
   description = %[1]q
   policy = jsonencode([
     {

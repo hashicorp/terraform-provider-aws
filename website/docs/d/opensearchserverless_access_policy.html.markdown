@@ -16,6 +16,8 @@ Terraform data source for managing an AWS OpenSearch Serverless Access Policy.
 
 ```terraform
 data "aws_opensearchserverless_access_policy" "example" {
+  name = aws_opensearchserverless_access_policy.example.name
+  type = aws_opensearchserverless_access_policy.example.type
 }
 ```
 
@@ -23,15 +25,13 @@ data "aws_opensearchserverless_access_policy" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `name` - (Required) Name of the policy.
+* `type` - (Required) Type of access policy. Must be `data`.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the Access Policy. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `description` - Description of the policy. Typically used to store information about the permissions defined in the policy.
+* `policy` - JSON policy document to use as the content for the new policy.
+* `policy_version` - Version of the policy.
