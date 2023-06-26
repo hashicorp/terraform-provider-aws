@@ -74,7 +74,7 @@ var (
 	sdkServicePackage = flag.String("AWSSDKServicePackage", "", "AWS Go SDK package to use. Defaults to the provider service package name.")
 	sdkVersion        = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
 	kvtValues         = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
-	skipAWSServiceImp = flag.Bool("SkipAWSServiceImp", false, "Whether to skip importing the AWS service package")
+	skipServiceImp    = flag.Bool("SkipAWSServiceImp", false, "Whether to skip importing the AWS service package")
 	skipNamesImp      = flag.Bool("SkipNamesImp", false, "Whether to skip importing names")
 	skipTypesImp      = flag.Bool("SkipTypesImp", false, "Whether to skip importing types")
 )
@@ -178,14 +178,14 @@ type TemplateData struct {
 
 	// The following are specific to writing import paths in the `headerBody`;
 	// to include the package, set the corresponding field's value to true
-	ConnsPkg          bool
-	FmtPkg            bool
-	HelperSchemaPkg   bool
-	InternalTypesPkg  bool
-	NamesPkg          bool
-	SkipAWSServiceImp bool
-	SkipTypesImp      bool
-	TfResourcePkg     bool
+	ConnsPkg         bool
+	FmtPkg           bool
+	HelperSchemaPkg  bool
+	InternalTypesPkg bool
+	NamesPkg         bool
+	SkipServiceImp   bool
+	SkipTypesImp     bool
+	TfResourcePkg    bool
 
 	IsDefaultListTags   bool
 	IsDefaultUpdateTags bool
@@ -266,14 +266,14 @@ func main() {
 		ProviderNameUpper:      providerNameUpper,
 		ServicePackage:         servicePackage,
 
-		ConnsPkg:          (*listTags && *listTagsFunc == defaultListTagsFunc) || (*updateTags && *updateTagsFunc == defaultUpdateTagsFunc),
-		FmtPkg:            *updateTags,
-		HelperSchemaPkg:   awsPkg == "autoscaling",
-		InternalTypesPkg:  (*listTags && *listTagsFunc == defaultListTagsFunc) || *serviceTagsMap || *serviceTagsSlice,
-		NamesPkg:          *updateTags && !*skipNamesImp,
-		SkipAWSServiceImp: *skipAWSServiceImp,
-		SkipTypesImp:      *skipTypesImp,
-		TfResourcePkg:     *getTag,
+		ConnsPkg:         (*listTags && *listTagsFunc == defaultListTagsFunc) || (*updateTags && *updateTagsFunc == defaultUpdateTagsFunc),
+		FmtPkg:           *updateTags,
+		HelperSchemaPkg:  awsPkg == "autoscaling",
+		InternalTypesPkg: (*listTags && *listTagsFunc == defaultListTagsFunc) || *serviceTagsMap || *serviceTagsSlice,
+		NamesPkg:         *updateTags && !*skipNamesImp,
+		SkipServiceImp:   *skipServiceImp,
+		SkipTypesImp:     *skipTypesImp,
+		TfResourcePkg:    *getTag,
 
 		CreateTagsFunc:          createTagsFunc,
 		GetTagFunc:              *getTagFunc,
