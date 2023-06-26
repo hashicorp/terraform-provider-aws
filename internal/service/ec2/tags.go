@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -14,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 const eventualConsistencyTimeout = 5 * time.Minute
@@ -75,47 +73,6 @@ func getTagSpecificationsIn(ctx context.Context, resourceType string) []*ec2.Tag
 			Tags:         tags,
 		},
 	}
-}
-
-// setTagsOutV2 sets AWS SDK for Go v2 ec2 service tags in Context.
-func setTagsOutV2(ctx context.Context, tags []awstypes.Tag) {
-	if inContext, ok := tftags.FromContext(ctx); ok {
-		m := make(map[string]*string, len(tags))
-
-		for _, tag := range tags {
-			m[aws_sdkv2.ToString(tag.Key)] = tag.Value
-		}
-
-		inContext.TagsOut = types.Some(tftags.New(ctx, m))
-	}
-}
-
-// TagsV2 returns AWS SDK for Go v2 ec2 service tags.
-func TagsV2(tags tftags.KeyValueTags) []awstypes.Tag {
-	result := make([]awstypes.Tag, 0, len(tags))
-
-	for k, v := range tags.Map() {
-		tag := awstypes.Tag{
-			Key:   aws_sdkv2.String(k),
-			Value: aws_sdkv2.String(v),
-		}
-
-		result = append(result, tag)
-	}
-
-	return result
-}
-
-// getTagsInV2 returns AWS SDK for Go v2 ec2 service tags from Context.
-// nil is returned if there are no input tags.
-func getTagsInV2(ctx context.Context) []awstypes.Tag {
-	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := TagsV2(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
-			return tags
-		}
-	}
-
-	return nil
 }
 
 // getTagSpecificationsInV2 returns AWS SDK for Go v2 EC2 service tags from Context.
