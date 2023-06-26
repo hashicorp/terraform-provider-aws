@@ -221,7 +221,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 		input.RoleName = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.ImportSnapshotWithContext(ctx, input)
 		},

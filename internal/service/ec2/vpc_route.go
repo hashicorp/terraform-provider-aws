@@ -287,7 +287,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	routeTableID := d.Get("route_table_id").(string)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, RoutePropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return routeFinder(ctx, conn, routeTableID, destination)
 	}, d.IsNewResource())
 

@@ -993,7 +993,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Spot Fleet Request: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.RequestSpotFleetWithContext(ctx, input)
 		},

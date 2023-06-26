@@ -104,7 +104,7 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(output.AssociationId))
 
-	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
+	_, err = tfresource.RetryWhen(ctx, ec2PropagationTimeout,
 		func() (interface{}, error) {
 			return FindEIPByAssociationID(ctx, conn, d.Id())
 		},

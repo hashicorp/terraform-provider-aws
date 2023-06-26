@@ -24,9 +24,14 @@ const (
 	InstanceStartTimeout = 10 * time.Minute
 	InstanceStopTimeout  = 10 * time.Minute
 
-	// General timeout for EC2 resource creations to propagate.
+	// General timeout for IAM resource change to propagate.
+	// See https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_general.html#troubleshoot_general_eventual-consistency.
+	// We have settled on 2 minutes as the best timeout value.
+	iamPropagationTimeout = 2 * time.Minute
+
+	// General timeout for EC2 resource changes to propagate.
 	// See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/query-api-troubleshooting.html#eventual-consistency.
-	propagationTimeout = 2 * time.Minute
+	ec2PropagationTimeout = 5 * time.Minute
 
 	RouteNotFoundChecks                        = 1000 // Should exceed any reasonable custom timeout value.
 	RouteTableNotFoundChecks                   = 1000 // Should exceed any reasonable custom timeout value.
@@ -440,7 +445,7 @@ func WaitInstanceIAMInstanceProfileUpdated(ctx context.Context, conn *ec2.EC2, i
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{expectedValue},
 		Refresh:    StatusInstanceIAMInstanceProfile(ctx, conn, instanceID),
-		Timeout:    propagationTimeout,
+		Timeout:    ec2PropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -584,7 +589,7 @@ func WaitInstanceCapacityReservationSpecificationUpdated(ctx context.Context, co
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{strconv.FormatBool(true)},
 		Refresh:    StatusInstanceCapacityReservationSpecificationEquals(ctx, conn, instanceID, expectedValue),
-		Timeout:    propagationTimeout,
+		Timeout:    ec2PropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -693,12 +698,6 @@ func WaitRouteReady(ctx context.Context, conn *ec2.EC2, routeFinder RouteFinder,
 }
 
 const (
-	RoutePropagationTimeout = 5 & time.Minute
-)
-
-const (
-	RouteTableAssociationPropagationTimeout = 5 * time.Minute
-
 	RouteTableAssociationCreatedTimeout = 5 * time.Minute
 	RouteTableAssociationUpdatedTimeout = 5 * time.Minute
 	RouteTableAssociationDeletedTimeout = 5 * time.Minute
@@ -825,8 +824,6 @@ func WaitSecurityGroupCreated(ctx context.Context, conn *ec2.EC2, id string, tim
 }
 
 const (
-	SubnetPropagationTimeout                     = 2 * time.Minute
-	SubnetAttributePropagationTimeout            = 5 * time.Minute
 	SubnetIPv6CIDRBlockAssociationCreatedTimeout = 3 * time.Minute
 	SubnetIPv6CIDRBlockAssociationDeletedTimeout = 3 * time.Minute
 )
@@ -894,7 +891,7 @@ func waitSubnetAssignIPv6AddressOnCreationUpdated(ctx context.Context, conn *ec2
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
 		Refresh:    StatusSubnetAssignIPv6AddressOnCreation(ctx, conn, subnetID),
-		Timeout:    SubnetAttributePropagationTimeout,
+		Timeout:    ec2PropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -912,7 +909,7 @@ func waitSubnetEnableLniAtDeviceIndexUpdated(ctx context.Context, conn *ec2.EC2,
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{strconv.FormatInt(expectedValue, 10)},
 		Refresh:    StatusSubnetEnableLniAtDeviceIndex(ctx, conn, subnetID),
-		Timeout:    SubnetAttributePropagationTimeout,
+		Timeout:    ec2PropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -930,7 +927,7 @@ func waitSubnetEnableDNS64Updated(ctx context.Context, conn *ec2.EC2, subnetID s
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
 		Refresh:    StatusSubnetEnableDNS64(ctx, conn, subnetID),
-		Timeout:    SubnetAttributePropagationTimeout,
+		Timeout:    ec2PropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -948,7 +945,7 @@ func waitSubnetEnableResourceNameDNSAAAARecordOnLaunchUpdated(ctx context.Contex
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
 		Refresh:    StatusSubnetEnableResourceNameDNSAAAARecordOnLaunch(ctx, conn, subnetID),
-		Timeout:    SubnetAttributePropagationTimeout,
+		Timeout:    ec2PropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -966,7 +963,7 @@ func waitSubnetEnableResourceNameDNSARecordOnLaunchUpdated(ctx context.Context, 
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
 		Refresh:    StatusSubnetEnableResourceNameDNSARecordOnLaunch(ctx, conn, subnetID),
-		Timeout:    SubnetAttributePropagationTimeout,
+		Timeout:    ec2PropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -984,7 +981,7 @@ func WaitSubnetMapCustomerOwnedIPOnLaunchUpdated(ctx context.Context, conn *ec2.
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
 		Refresh:    StatusSubnetMapCustomerOwnedIPOnLaunch(ctx, conn, subnetID),
-		Timeout:    SubnetAttributePropagationTimeout,
+		Timeout:    ec2PropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -1002,7 +999,7 @@ func WaitSubnetMapPublicIPOnLaunchUpdated(ctx context.Context, conn *ec2.EC2, su
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
 		Refresh:    StatusSubnetMapPublicIPOnLaunch(ctx, conn, subnetID),
-		Timeout:    SubnetAttributePropagationTimeout,
+		Timeout:    ec2PropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -1020,7 +1017,7 @@ func WaitSubnetPrivateDNSHostnameTypeOnLaunchUpdated(ctx context.Context, conn *
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{expectedValue},
 		Refresh:    StatusSubnetPrivateDNSHostnameTypeOnLaunch(ctx, conn, subnetID),
-		Timeout:    SubnetAttributePropagationTimeout,
+		Timeout:    ec2PropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -1789,9 +1786,8 @@ func WaitVolumeModificationComplete(ctx context.Context, conn *ec2.EC2, id strin
 }
 
 const (
-	vpcAttributePropagationTimeout = 5 * time.Minute
-	vpcCreatedTimeout              = 10 * time.Minute
-	vpcDeletedTimeout              = 5 * time.Minute
+	vpcCreatedTimeout = 10 * time.Minute
+	vpcDeletedTimeout = 5 * time.Minute
 )
 
 func WaitVPCCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Vpc, error) {
@@ -1815,7 +1811,7 @@ func WaitVPCAttributeUpdated(ctx context.Context, conn *ec2.EC2, vpcID string, a
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
 		Refresh:    StatusVPCAttributeValue(ctx, conn, vpcID, attribute),
-		Timeout:    vpcAttributePropagationTimeout,
+		Timeout:    ec2PropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -1925,10 +1921,6 @@ func WaitVPCIPv6CIDRBlockAssociationDeleted(ctx context.Context, conn *ec2.EC2, 
 
 	return nil, err
 }
-
-const (
-	VPCPeeringConnectionOptionsPropagationTimeout = 3 * time.Minute
-)
 
 func WaitVPCPeeringConnectionActive(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VpcPeeringConnection, error) {
 	stateConf := &retry.StateChangeConf{
@@ -2718,7 +2710,7 @@ func WaitVPCEndpointRouteTableAssociationDeleted(ctx context.Context, conn *ec2.
 		Pending:                   []string{VPCEndpointRouteTableAssociationStatusReady},
 		Target:                    []string{},
 		Refresh:                   StatusVPCEndpointRouteTableAssociation(ctx, conn, vpcEndpointID, routeTableID),
-		Timeout:                   propagationTimeout,
+		Timeout:                   ec2PropagationTimeout,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -2732,7 +2724,7 @@ func WaitVPCEndpointRouteTableAssociationReady(ctx context.Context, conn *ec2.EC
 		Pending:                   []string{},
 		Target:                    []string{VPCEndpointRouteTableAssociationStatusReady},
 		Refresh:                   StatusVPCEndpointRouteTableAssociation(ctx, conn, vpcEndpointID, routeTableID),
-		Timeout:                   propagationTimeout,
+		Timeout:                   ec2PropagationTimeout,
 		ContinuousTargetOccurence: 2,
 	}
 
