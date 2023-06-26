@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8
-	github.com/aws/aws-sdk-go v1.44.288
+	github.com/aws/aws-sdk-go v1.44.289
 	github.com/aws/aws-sdk-go-v2 v1.18.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.4
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.19.14
@@ -36,7 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.8
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.14
-	github.com/aws/aws-sdk-go-v2/service/rds v1.45.2
+	github.com/aws/aws-sdk-go-v2/service/rds v1.45.3
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.15
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.2.2
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.15.0
@@ -54,7 +54,7 @@ require (
 	github.com/aws/smithy-go v1.13.5
 	github.com/beevik/etree v1.2.0
 	github.com/google/go-cmp v0.5.9
-	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.20.0
+	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.21.0
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.30
 	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.31
 	github.com/hashicorp/awspolicyequivalence v1.6.0

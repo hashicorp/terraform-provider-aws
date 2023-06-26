@@ -53,7 +53,7 @@ func Tags(tags tftags.KeyValueTags) map[string]string {
 	return tags.Map()
 }
 
-// KeyValueTags creates KeyValueTags from pipes service tags.
+// KeyValueTags creates tftags.KeyValueTags from pipes service tags.
 func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
