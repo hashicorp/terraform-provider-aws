@@ -23,6 +23,7 @@ func TestAccOpenSearchServerlessSecurityPolicyDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityPolicyDataSourceConfig_basic(rName),
@@ -31,6 +32,7 @@ func TestAccOpenSearchServerlessSecurityPolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "type", resourceName, "type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "policy", resourceName, "policy"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "policy_version", resourceName, "policy_version"),
 				),
 			},
 		},
@@ -41,20 +43,20 @@ func testAccSecurityPolicyDataSourceConfig_basic(rName string) string {
 	collection := fmt.Sprintf("collection/%s", rName)
 	return fmt.Sprintf(`
 resource "aws_opensearchserverless_security_policy" "test" {
-	name = %[1]q
-	type = "encryption"
-	description = %[1]q
-	policy = jsonencode({
-		"Rules" = [
-		{
-			"Resource" = [
-				%[2]q
-			],
-			"ResourceType" = "collection"
-		}
-		],
-		"AWSOwnedKey" = true
-	})
+  name        = %[1]q
+  type        = "encryption"
+  description = %[1]q
+  policy = jsonencode({
+    "Rules" = [
+      {
+        "Resource" = [
+          %[2]q
+        ],
+        "ResourceType" = "collection"
+      }
+    ],
+    "AWSOwnedKey" = true
+  })
 }
 
 data "aws_opensearchserverless_security_policy" "test" {

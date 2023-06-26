@@ -2,11 +2,15 @@ package opensearchserverless
 
 import (
 	"context"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -27,6 +31,10 @@ func DataSourceSecurityPolicy() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(3, 32),
+					validation.StringMatch(regexp.MustCompile(`^[a-z][a-z0-9-]+$`), `must start with any lower case letter and can include any lower case letter, number, or "-"`),
+				),
 			},
 			"policy": {
 				Type:     schema.TypeString,
@@ -37,8 +45,9 @@ func DataSourceSecurityPolicy() *schema.Resource {
 				Computed: true,
 			},
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.SecurityPolicyType](),
 			},
 		},
 	}
