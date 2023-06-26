@@ -1127,7 +1127,7 @@ func TestAccPipesPipe_sqsSourceRedshiftTarget(t *testing.T) {
 	})
 }
 
-func TestAccPipesPipe_sqsSourceSagemakerTarget(t *testing.T) {
+func TestAccPipesPipe_SourceSageMakerTarget(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipe pipes.DescribePipeOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1146,7 +1146,7 @@ func TestAccPipesPipe_sqsSourceSagemakerTarget(t *testing.T) {
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipeConfig_basicSQSSourceSagemakerTarget(rName),
+				Config: testAccPipeConfig_basicSQSSourceSageMakerTarget(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexp.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
@@ -2743,7 +2743,7 @@ resource "aws_pipes_pipe" "test" {
 `, rName))
 }
 
-func testAccPipeConfig_basicSQSSourceSagemakerTarget(rName string) string {
+func testAccPipeConfig_basicSQSSourceSageMakerTarget(rName string) string {
 	return acctest.ConfigCompose(
 		testAccPipeConfig_base(rName),
 		testAccPipeConfig_baseSQSSource(rName),

@@ -60,7 +60,7 @@ func expandPipeEnrichmentParameters(tfMap map[string]interface{}) *types.PipeEnr
 	apiObject := &types.PipeEnrichmentParameters{}
 
 	if v, ok := tfMap["http_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.HttpParameters = expandPipeEnrichmentHttpParameters(v[0].(map[string]interface{}))
+		apiObject.HttpParameters = expandPipeEnrichmentHTTPParameters(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["input_template"].(string); ok && v != "" {
@@ -70,7 +70,7 @@ func expandPipeEnrichmentParameters(tfMap map[string]interface{}) *types.PipeEnr
 	return apiObject
 }
 
-func expandPipeEnrichmentHttpParameters(tfMap map[string]interface{}) *types.PipeEnrichmentHttpParameters {
+func expandPipeEnrichmentHTTPParameters(tfMap map[string]interface{}) *types.PipeEnrichmentHttpParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -100,7 +100,7 @@ func flattenPipeEnrichmentParameters(apiObject *types.PipeEnrichmentParameters) 
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.HttpParameters; v != nil {
-		tfMap["http_parameters"] = []interface{}{flattenPipeEnrichmentHttpParameters(v)}
+		tfMap["http_parameters"] = []interface{}{flattenPipeEnrichmentHTTPParameters(v)}
 	}
 
 	if v := apiObject.InputTemplate; v != nil {
@@ -110,7 +110,7 @@ func flattenPipeEnrichmentParameters(apiObject *types.PipeEnrichmentParameters) 
 	return tfMap
 }
 
-func flattenPipeEnrichmentHttpParameters(apiObject *types.PipeEnrichmentHttpParameters) map[string]interface{} {
+func flattenPipeEnrichmentHTTPParameters(apiObject *types.PipeEnrichmentHttpParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

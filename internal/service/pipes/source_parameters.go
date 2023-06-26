@@ -595,7 +595,7 @@ func expandPipeSourceParameters(tfMap map[string]interface{}) *types.PipeSourceP
 	}
 
 	if v, ok := tfMap["sqs_queue_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.SqsQueueParameters = expandPipeSourceSqsQueueParameters(v[0].(map[string]interface{}))
+		apiObject.SqsQueueParameters = expandPipeSourceSQSQueueParameters(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -639,7 +639,7 @@ func expandUpdatePipeSourceParameters(tfMap map[string]interface{}) *types.Updat
 	}
 
 	if v, ok := tfMap["sqs_queue_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.SqsQueueParameters = expandUpdatePipeSourceSqsQueueParameters(v[0].(map[string]interface{}))
+		apiObject.SqsQueueParameters = expandUpdatePipeSourceSQSQueueParameters(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -1119,7 +1119,7 @@ func expandPipeSourceSelfManagedKafkaParameters(tfMap map[string]interface{}) *t
 	}
 
 	if v, ok := tfMap["vpc"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Vpc = expandSelfManagedKafkaAccessConfigurationVpc(v[0].(map[string]interface{}))
+		apiObject.Vpc = expandSelfManagedKafkaAccessConfigurationVPC(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -1149,7 +1149,7 @@ func expandUpdatePipeSourceSelfManagedKafkaParameters(tfMap map[string]interface
 	}
 
 	if v, ok := tfMap["vpc"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Vpc = expandSelfManagedKafkaAccessConfigurationVpc(v[0].(map[string]interface{}))
+		apiObject.Vpc = expandSelfManagedKafkaAccessConfigurationVPC(v[0].(map[string]interface{}))
 	} else {
 		apiObject.Vpc = &types.SelfManagedKafkaAccessConfigurationVpc{}
 	}
@@ -1197,7 +1197,7 @@ func expandSelfManagedKafkaAccessConfigurationCredentials(tfMap map[string]inter
 	return nil
 }
 
-func expandSelfManagedKafkaAccessConfigurationVpc(tfMap map[string]interface{}) *types.SelfManagedKafkaAccessConfigurationVpc {
+func expandSelfManagedKafkaAccessConfigurationVPC(tfMap map[string]interface{}) *types.SelfManagedKafkaAccessConfigurationVpc {
 	if tfMap == nil {
 		return nil
 	}
@@ -1215,7 +1215,7 @@ func expandSelfManagedKafkaAccessConfigurationVpc(tfMap map[string]interface{}) 
 	return apiObject
 }
 
-func expandPipeSourceSqsQueueParameters(tfMap map[string]interface{}) *types.PipeSourceSqsQueueParameters {
+func expandPipeSourceSQSQueueParameters(tfMap map[string]interface{}) *types.PipeSourceSqsQueueParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -1233,7 +1233,7 @@ func expandPipeSourceSqsQueueParameters(tfMap map[string]interface{}) *types.Pip
 	return apiObject
 }
 
-func expandUpdatePipeSourceSqsQueueParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceSqsQueueParameters {
+func expandUpdatePipeSourceSQSQueueParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceSqsQueueParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -1287,7 +1287,7 @@ func flattenPipeSourceParameters(apiObject *types.PipeSourceParameters) map[stri
 	}
 
 	if v := apiObject.SqsQueueParameters; v != nil {
-		tfMap["sqs_queue_parameters"] = []interface{}{flattenPipeSourceSqsQueueParameters(v)}
+		tfMap["sqs_queue_parameters"] = []interface{}{flattenPipeSourceSQSQueueParameters(v)}
 	}
 
 	return tfMap
@@ -1587,7 +1587,7 @@ func flattenPipeSourceSelfManagedKafkaParameters(apiObject *types.PipeSourceSelf
 	}
 
 	if v := apiObject.Vpc; v != nil {
-		tfMap["vpc"] = []interface{}{flattenSelfManagedKafkaAccessConfigurationVpc(v)}
+		tfMap["vpc"] = []interface{}{flattenSelfManagedKafkaAccessConfigurationVPC(v)}
 	}
 
 	return tfMap
@@ -1627,7 +1627,7 @@ func flattenSelfManagedKafkaAccessConfigurationCredentials(apiObject types.SelfM
 	return tfMap
 }
 
-func flattenSelfManagedKafkaAccessConfigurationVpc(apiObject *types.SelfManagedKafkaAccessConfigurationVpc) map[string]interface{} {
+func flattenSelfManagedKafkaAccessConfigurationVPC(apiObject *types.SelfManagedKafkaAccessConfigurationVpc) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1645,7 +1645,7 @@ func flattenSelfManagedKafkaAccessConfigurationVpc(apiObject *types.SelfManagedK
 	return tfMap
 }
 
-func flattenPipeSourceSqsQueueParameters(apiObject *types.PipeSourceSqsQueueParameters) map[string]interface{} {
+func flattenPipeSourceSQSQueueParameters(apiObject *types.PipeSourceSqsQueueParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

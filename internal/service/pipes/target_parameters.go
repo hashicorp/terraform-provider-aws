@@ -827,7 +827,7 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 	}
 
 	if v, ok := tfMap["ecs_task_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.EcsTaskParameters = expandPipeTargetEcsTaskParameters(v[0].(map[string]interface{}))
+		apiObject.EcsTaskParameters = expandPipeTargetECSTaskParameters(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["eventbridge_event_bus_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -835,7 +835,7 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 	}
 
 	if v, ok := tfMap["http_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.HttpParameters = expandPipeTargetHttpParameters(v[0].(map[string]interface{}))
+		apiObject.HttpParameters = expandPipeTargetHTTPParameters(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["input_template"].(string); ok && v != "" {
@@ -859,7 +859,7 @@ func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetP
 	}
 
 	if v, ok := tfMap["sqs_queue_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.SqsQueueParameters = expandPipeTargetSqsQueueParameters(v[0].(map[string]interface{}))
+		apiObject.SqsQueueParameters = expandPipeTargetSQSQueueParameters(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["step_function_state_machine_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -1111,7 +1111,7 @@ func expandPipeTargetCloudWatchLogsParameters(tfMap map[string]interface{}) *typ
 	return apiObject
 }
 
-func expandPipeTargetEcsTaskParameters(tfMap map[string]interface{}) *types.PipeTargetEcsTaskParameters {
+func expandPipeTargetECSTaskParameters(tfMap map[string]interface{}) *types.PipeTargetEcsTaskParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -1143,7 +1143,7 @@ func expandPipeTargetEcsTaskParameters(tfMap map[string]interface{}) *types.Pipe
 	}
 
 	if v, ok := tfMap["overrides"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Overrides = expandEcsTaskOverride(v[0].(map[string]interface{}))
+		apiObject.Overrides = expandECSTaskOverride(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["placement_constraint"].([]interface{}); ok && len(v) > 0 {
@@ -1239,13 +1239,13 @@ func expandNetworkConfiguration(tfMap map[string]interface{}) *types.NetworkConf
 	apiObject := &types.NetworkConfiguration{}
 
 	if v, ok := tfMap["aws_vpc_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AwsvpcConfiguration = expandAWSVPCConfiguration(v[0].(map[string]interface{}))
+		apiObject.AwsvpcConfiguration = expandVPCConfiguration(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandAWSVPCConfiguration(tfMap map[string]interface{}) *types.AwsVpcConfiguration {
+func expandVPCConfiguration(tfMap map[string]interface{}) *types.AwsVpcConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -1267,7 +1267,7 @@ func expandAWSVPCConfiguration(tfMap map[string]interface{}) *types.AwsVpcConfig
 	return apiObject
 }
 
-func expandEcsTaskOverride(tfMap map[string]interface{}) *types.EcsTaskOverride {
+func expandECSTaskOverride(tfMap map[string]interface{}) *types.EcsTaskOverride {
 	if tfMap == nil {
 		return nil
 	}
@@ -1275,7 +1275,7 @@ func expandEcsTaskOverride(tfMap map[string]interface{}) *types.EcsTaskOverride 
 	apiObject := &types.EcsTaskOverride{}
 
 	if v, ok := tfMap["container_override"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ContainerOverrides = expandEcsContainerOverrides(v)
+		apiObject.ContainerOverrides = expandECSContainerOverrides(v)
 	}
 
 	if v, ok := tfMap["cpu"].(string); ok && v != "" {
@@ -1283,7 +1283,7 @@ func expandEcsTaskOverride(tfMap map[string]interface{}) *types.EcsTaskOverride 
 	}
 
 	if v, ok := tfMap["ephemeral_storage"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.EphemeralStorage = expandEcsEphemeralStorage(v[0].(map[string]interface{}))
+		apiObject.EphemeralStorage = expandECSEphemeralStorage(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["execution_role_arn"].(string); ok && v != "" {
@@ -1291,7 +1291,7 @@ func expandEcsTaskOverride(tfMap map[string]interface{}) *types.EcsTaskOverride 
 	}
 
 	if v, ok := tfMap["inference_accelerator_override"].([]interface{}); ok && len(v) > 0 {
-		apiObject.InferenceAcceleratorOverrides = expandEcsInferenceAcceleratorOverrides(v)
+		apiObject.InferenceAcceleratorOverrides = expandECSInferenceAcceleratorOverrides(v)
 	}
 
 	if v, ok := tfMap["memory"].(string); ok && v != "" {
@@ -1305,7 +1305,7 @@ func expandEcsTaskOverride(tfMap map[string]interface{}) *types.EcsTaskOverride 
 	return apiObject
 }
 
-func expandEcsContainerOverride(tfMap map[string]interface{}) *types.EcsContainerOverride {
+func expandECSContainerOverride(tfMap map[string]interface{}) *types.EcsContainerOverride {
 	if tfMap == nil {
 		return nil
 	}
@@ -1321,11 +1321,11 @@ func expandEcsContainerOverride(tfMap map[string]interface{}) *types.EcsContaine
 	}
 
 	if v, ok := tfMap["environment"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Environment = expandEcsEnvironmentVariables(v)
+		apiObject.Environment = expandECSEnvironmentVariables(v)
 	}
 
 	if v, ok := tfMap["environment_file"].([]interface{}); ok && len(v) > 0 {
-		apiObject.EnvironmentFiles = expandEcsEnvironmentFiles(v)
+		apiObject.EnvironmentFiles = expandECSEnvironmentFiles(v)
 	}
 
 	if v, ok := tfMap["memory"].(int); ok {
@@ -1341,13 +1341,13 @@ func expandEcsContainerOverride(tfMap map[string]interface{}) *types.EcsContaine
 	}
 
 	if v, ok := tfMap["resource_requirement"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ResourceRequirements = expandEcsResourceRequirements(v)
+		apiObject.ResourceRequirements = expandECSResourceRequirements(v)
 	}
 
 	return apiObject
 }
 
-func expandEcsContainerOverrides(tfList []interface{}) []types.EcsContainerOverride {
+func expandECSContainerOverrides(tfList []interface{}) []types.EcsContainerOverride {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1361,7 +1361,7 @@ func expandEcsContainerOverrides(tfList []interface{}) []types.EcsContainerOverr
 			continue
 		}
 
-		apiObject := expandEcsContainerOverride(tfMap)
+		apiObject := expandECSContainerOverride(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -1373,7 +1373,7 @@ func expandEcsContainerOverrides(tfList []interface{}) []types.EcsContainerOverr
 	return apiObjects
 }
 
-func expandEcsEnvironmentVariable(tfMap map[string]interface{}) *types.EcsEnvironmentVariable {
+func expandECSEnvironmentVariable(tfMap map[string]interface{}) *types.EcsEnvironmentVariable {
 	if tfMap == nil {
 		return nil
 	}
@@ -1391,7 +1391,7 @@ func expandEcsEnvironmentVariable(tfMap map[string]interface{}) *types.EcsEnviro
 	return apiObject
 }
 
-func expandEcsEnvironmentVariables(tfList []interface{}) []types.EcsEnvironmentVariable {
+func expandECSEnvironmentVariables(tfList []interface{}) []types.EcsEnvironmentVariable {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1405,7 +1405,7 @@ func expandEcsEnvironmentVariables(tfList []interface{}) []types.EcsEnvironmentV
 			continue
 		}
 
-		apiObject := expandEcsEnvironmentVariable(tfMap)
+		apiObject := expandECSEnvironmentVariable(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -1417,7 +1417,7 @@ func expandEcsEnvironmentVariables(tfList []interface{}) []types.EcsEnvironmentV
 	return apiObjects
 }
 
-func expandEcsEnvironmentFile(tfMap map[string]interface{}) *types.EcsEnvironmentFile {
+func expandECSEnvironmentFile(tfMap map[string]interface{}) *types.EcsEnvironmentFile {
 	if tfMap == nil {
 		return nil
 	}
@@ -1435,7 +1435,7 @@ func expandEcsEnvironmentFile(tfMap map[string]interface{}) *types.EcsEnvironmen
 	return apiObject
 }
 
-func expandEcsEnvironmentFiles(tfList []interface{}) []types.EcsEnvironmentFile {
+func expandECSEnvironmentFiles(tfList []interface{}) []types.EcsEnvironmentFile {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1449,7 +1449,7 @@ func expandEcsEnvironmentFiles(tfList []interface{}) []types.EcsEnvironmentFile 
 			continue
 		}
 
-		apiObject := expandEcsEnvironmentFile(tfMap)
+		apiObject := expandECSEnvironmentFile(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -1461,7 +1461,7 @@ func expandEcsEnvironmentFiles(tfList []interface{}) []types.EcsEnvironmentFile 
 	return apiObjects
 }
 
-func expandEcsResourceRequirement(tfMap map[string]interface{}) *types.EcsResourceRequirement {
+func expandECSResourceRequirement(tfMap map[string]interface{}) *types.EcsResourceRequirement {
 	if tfMap == nil {
 		return nil
 	}
@@ -1479,7 +1479,7 @@ func expandEcsResourceRequirement(tfMap map[string]interface{}) *types.EcsResour
 	return apiObject
 }
 
-func expandEcsResourceRequirements(tfList []interface{}) []types.EcsResourceRequirement {
+func expandECSResourceRequirements(tfList []interface{}) []types.EcsResourceRequirement {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1493,7 +1493,7 @@ func expandEcsResourceRequirements(tfList []interface{}) []types.EcsResourceRequ
 			continue
 		}
 
-		apiObject := expandEcsResourceRequirement(tfMap)
+		apiObject := expandECSResourceRequirement(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -1505,7 +1505,7 @@ func expandEcsResourceRequirements(tfList []interface{}) []types.EcsResourceRequ
 	return apiObjects
 }
 
-func expandEcsEphemeralStorage(tfMap map[string]interface{}) *types.EcsEphemeralStorage {
+func expandECSEphemeralStorage(tfMap map[string]interface{}) *types.EcsEphemeralStorage {
 	if tfMap == nil {
 		return nil
 	}
@@ -1519,7 +1519,7 @@ func expandEcsEphemeralStorage(tfMap map[string]interface{}) *types.EcsEphemeral
 	return apiObject
 }
 
-func expandEcsInferenceAcceleratorOverride(tfMap map[string]interface{}) *types.EcsInferenceAcceleratorOverride {
+func expandECSInferenceAcceleratorOverride(tfMap map[string]interface{}) *types.EcsInferenceAcceleratorOverride {
 	if tfMap == nil {
 		return nil
 	}
@@ -1537,7 +1537,7 @@ func expandEcsInferenceAcceleratorOverride(tfMap map[string]interface{}) *types.
 	return apiObject
 }
 
-func expandEcsInferenceAcceleratorOverrides(tfList []interface{}) []types.EcsInferenceAcceleratorOverride {
+func expandECSInferenceAcceleratorOverrides(tfList []interface{}) []types.EcsInferenceAcceleratorOverride {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1551,7 +1551,7 @@ func expandEcsInferenceAcceleratorOverrides(tfList []interface{}) []types.EcsInf
 			continue
 		}
 
-		apiObject := expandEcsInferenceAcceleratorOverride(tfMap)
+		apiObject := expandECSInferenceAcceleratorOverride(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -1681,7 +1681,7 @@ func expandPipeTargetEventBridgeEventBusParameters(tfMap map[string]interface{})
 	return apiObject
 }
 
-func expandPipeTargetHttpParameters(tfMap map[string]interface{}) *types.PipeTargetHttpParameters {
+func expandPipeTargetHTTPParameters(tfMap map[string]interface{}) *types.PipeTargetHttpParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -1823,7 +1823,7 @@ func expandSageMakerPipelineParameters(tfList []interface{}) []types.SageMakerPi
 	return apiObjects
 }
 
-func expandPipeTargetSqsQueueParameters(tfMap map[string]interface{}) *types.PipeTargetSqsQueueParameters {
+func expandPipeTargetSQSQueueParameters(tfMap map[string]interface{}) *types.PipeTargetSqsQueueParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -1871,7 +1871,7 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 	}
 
 	if v := apiObject.EcsTaskParameters; v != nil {
-		tfMap["cloudwatch_logs_parameters"] = []interface{}{flattenPipeTargetEcsTaskParameters(v)}
+		tfMap["cloudwatch_logs_parameters"] = []interface{}{flattenPipeTargetECSTaskParameters(v)}
 	}
 
 	if v := apiObject.EventBridgeEventBusParameters; v != nil {
@@ -1879,7 +1879,7 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 	}
 
 	if v := apiObject.HttpParameters; v != nil {
-		tfMap["http_parameters"] = []interface{}{flattenPipeTargetHttpParameters(v)}
+		tfMap["http_parameters"] = []interface{}{flattenPipeTargetHTTPParameters(v)}
 	}
 
 	if v := apiObject.InputTemplate; v != nil {
@@ -1903,7 +1903,7 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 	}
 
 	if v := apiObject.SqsQueueParameters; v != nil {
-		tfMap["sqs_queue_parameters"] = []interface{}{flattenPipeTargetSqsQueueParameters(v)}
+		tfMap["sqs_queue_parameters"] = []interface{}{flattenPipeTargetSQSQueueParameters(v)}
 	}
 
 	if v := apiObject.StepFunctionStateMachineParameters; v != nil {
@@ -2107,7 +2107,7 @@ func flattenPipeTargetCloudWatchLogsParameters(apiObject *types.PipeTargetCloudW
 	return tfMap
 }
 
-func flattenPipeTargetEcsTaskParameters(apiObject *types.PipeTargetEcsTaskParameters) map[string]interface{} {
+func flattenPipeTargetECSTaskParameters(apiObject *types.PipeTargetEcsTaskParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2134,7 +2134,7 @@ func flattenPipeTargetEcsTaskParameters(apiObject *types.PipeTargetEcsTaskParame
 	}
 
 	if v := apiObject.Overrides; v != nil {
-		tfMap["overrides"] = []interface{}{flattenEcsTaskOverride(v)}
+		tfMap["overrides"] = []interface{}{flattenECSTaskOverride(v)}
 	}
 
 	if v := apiObject.PlacementConstraints; v != nil {
@@ -2205,7 +2205,7 @@ func flattenCapacityProviderStrategyItems(apiObjects []types.CapacityProviderStr
 	return tfList
 }
 
-func flattenEcsTaskOverride(apiObject *types.EcsTaskOverride) map[string]interface{} {
+func flattenECSTaskOverride(apiObject *types.EcsTaskOverride) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2213,7 +2213,7 @@ func flattenEcsTaskOverride(apiObject *types.EcsTaskOverride) map[string]interfa
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ContainerOverrides; v != nil {
-		tfMap["container_override"] = flattenEcsContainerOverrides(v)
+		tfMap["container_override"] = flattenECSContainerOverrides(v)
 	}
 
 	if v := apiObject.Cpu; v != nil {
@@ -2221,7 +2221,7 @@ func flattenEcsTaskOverride(apiObject *types.EcsTaskOverride) map[string]interfa
 	}
 
 	if v := apiObject.EphemeralStorage; v != nil {
-		tfMap["ephemeral_storage"] = []interface{}{flattenEcsEphemeralStorage(v)}
+		tfMap["ephemeral_storage"] = []interface{}{flattenECSEphemeralStorage(v)}
 	}
 
 	if v := apiObject.ExecutionRoleArn; v != nil {
@@ -2229,7 +2229,7 @@ func flattenEcsTaskOverride(apiObject *types.EcsTaskOverride) map[string]interfa
 	}
 
 	if v := apiObject.InferenceAcceleratorOverrides; v != nil {
-		tfMap["inference_accelerator_override"] = flattenEcsInferenceAcceleratorOverrides(v)
+		tfMap["inference_accelerator_override"] = flattenECSInferenceAcceleratorOverrides(v)
 	}
 
 	if v := apiObject.Memory; v != nil {
@@ -2243,7 +2243,7 @@ func flattenEcsTaskOverride(apiObject *types.EcsTaskOverride) map[string]interfa
 	return tfMap
 }
 
-func flattenEcsContainerOverride(apiObject types.EcsContainerOverride) map[string]interface{} {
+func flattenECSContainerOverride(apiObject types.EcsContainerOverride) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Command; v != nil {
@@ -2255,11 +2255,11 @@ func flattenEcsContainerOverride(apiObject types.EcsContainerOverride) map[strin
 	}
 
 	if v := apiObject.Environment; v != nil {
-		tfMap["environment"] = flattenEcsEnvironmentVariables(v)
+		tfMap["environment"] = flattenECSEnvironmentVariables(v)
 	}
 
 	if v := apiObject.EnvironmentFiles; v != nil {
-		tfMap["environment_file"] = flattenEcsEnvironmentFiles(v)
+		tfMap["environment_file"] = flattenECSEnvironmentFiles(v)
 	}
 
 	if v := apiObject.Memory; v != nil {
@@ -2275,13 +2275,13 @@ func flattenEcsContainerOverride(apiObject types.EcsContainerOverride) map[strin
 	}
 
 	if v := apiObject.ResourceRequirements; v != nil {
-		tfMap["resource_requirement"] = flattenEcsResourceRequirements(v)
+		tfMap["resource_requirement"] = flattenECSResourceRequirements(v)
 	}
 
 	return tfMap
 }
 
-func flattenEcsContainerOverrides(apiObjects []types.EcsContainerOverride) []interface{} {
+func flattenECSContainerOverrides(apiObjects []types.EcsContainerOverride) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -2289,13 +2289,13 @@ func flattenEcsContainerOverrides(apiObjects []types.EcsContainerOverride) []int
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenEcsContainerOverride(apiObject))
+		tfList = append(tfList, flattenECSContainerOverride(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenEcsResourceRequirement(apiObject types.EcsResourceRequirement) map[string]interface{} {
+func flattenECSResourceRequirement(apiObject types.EcsResourceRequirement) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Type; v != "" {
@@ -2309,7 +2309,7 @@ func flattenEcsResourceRequirement(apiObject types.EcsResourceRequirement) map[s
 	return tfMap
 }
 
-func flattenEcsResourceRequirements(apiObjects []types.EcsResourceRequirement) []interface{} {
+func flattenECSResourceRequirements(apiObjects []types.EcsResourceRequirement) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -2317,13 +2317,13 @@ func flattenEcsResourceRequirements(apiObjects []types.EcsResourceRequirement) [
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenEcsResourceRequirement(apiObject))
+		tfList = append(tfList, flattenECSResourceRequirement(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenEcsEnvironmentFile(apiObject types.EcsEnvironmentFile) map[string]interface{} {
+func flattenECSEnvironmentFile(apiObject types.EcsEnvironmentFile) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Type; v != "" {
@@ -2337,7 +2337,7 @@ func flattenEcsEnvironmentFile(apiObject types.EcsEnvironmentFile) map[string]in
 	return tfMap
 }
 
-func flattenEcsEnvironmentVariable(apiObject types.EcsEnvironmentVariable) map[string]interface{} {
+func flattenECSEnvironmentVariable(apiObject types.EcsEnvironmentVariable) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
@@ -2351,7 +2351,7 @@ func flattenEcsEnvironmentVariable(apiObject types.EcsEnvironmentVariable) map[s
 	return tfMap
 }
 
-func flattenEcsEnvironmentVariables(apiObjects []types.EcsEnvironmentVariable) []interface{} {
+func flattenECSEnvironmentVariables(apiObjects []types.EcsEnvironmentVariable) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -2359,13 +2359,13 @@ func flattenEcsEnvironmentVariables(apiObjects []types.EcsEnvironmentVariable) [
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenEcsEnvironmentVariable(apiObject))
+		tfList = append(tfList, flattenECSEnvironmentVariable(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenEcsEnvironmentFiles(apiObjects []types.EcsEnvironmentFile) []interface{} {
+func flattenECSEnvironmentFiles(apiObjects []types.EcsEnvironmentFile) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -2373,13 +2373,13 @@ func flattenEcsEnvironmentFiles(apiObjects []types.EcsEnvironmentFile) []interfa
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenEcsEnvironmentFile(apiObject))
+		tfList = append(tfList, flattenECSEnvironmentFile(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenEcsEphemeralStorage(apiObject *types.EcsEphemeralStorage) map[string]interface{} {
+func flattenECSEphemeralStorage(apiObject *types.EcsEphemeralStorage) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2391,7 +2391,7 @@ func flattenEcsEphemeralStorage(apiObject *types.EcsEphemeralStorage) map[string
 	return tfMap
 }
 
-func flattenEcsInferenceAcceleratorOverride(apiObject types.EcsInferenceAcceleratorOverride) map[string]interface{} {
+func flattenECSInferenceAcceleratorOverride(apiObject types.EcsInferenceAcceleratorOverride) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeviceName; v != nil {
@@ -2405,7 +2405,7 @@ func flattenEcsInferenceAcceleratorOverride(apiObject types.EcsInferenceAccelera
 	return tfMap
 }
 
-func flattenEcsInferenceAcceleratorOverrides(apiObjects []types.EcsInferenceAcceleratorOverride) []interface{} {
+func flattenECSInferenceAcceleratorOverrides(apiObjects []types.EcsInferenceAcceleratorOverride) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -2413,7 +2413,7 @@ func flattenEcsInferenceAcceleratorOverrides(apiObjects []types.EcsInferenceAcce
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenEcsInferenceAcceleratorOverride(apiObject))
+		tfList = append(tfList, flattenECSInferenceAcceleratorOverride(apiObject))
 	}
 
 	return tfList
@@ -2427,13 +2427,13 @@ func flattenNetworkConfiguration(apiObject *types.NetworkConfiguration) map[stri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AwsvpcConfiguration; v != nil {
-		tfMap["aws_vpc_configuration"] = []interface{}{flattenAWSVPCConfiguration(v)}
+		tfMap["aws_vpc_configuration"] = []interface{}{flattenVPCConfiguration(v)}
 	}
 
 	return tfMap
 }
 
-func flattenAWSVPCConfiguration(apiObject *types.AwsVpcConfiguration) map[string]interface{} {
+func flattenVPCConfiguration(apiObject *types.AwsVpcConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2541,7 +2541,7 @@ func flattenPipeTargetEventBridgeEventBusParameters(apiObject *types.PipeTargetE
 	return tfMap
 }
 
-func flattenPipeTargetHttpParameters(apiObject *types.PipeTargetHttpParameters) map[string]interface{} {
+func flattenPipeTargetHTTPParameters(apiObject *types.PipeTargetHttpParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2665,7 +2665,7 @@ func flattenSageMakerPipelineParameters(apiObjects []types.SageMakerPipelinePara
 	return tfList
 }
 
-func flattenPipeTargetSqsQueueParameters(apiObject *types.PipeTargetSqsQueueParameters) map[string]interface{} {
+func flattenPipeTargetSQSQueueParameters(apiObject *types.PipeTargetSqsQueueParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
