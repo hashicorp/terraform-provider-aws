@@ -16,6 +16,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_route: Fix `reading Route in Route Table (rtb-1234abcd) with destination (1.2.3.4/5): couldn't find resource` errors when reading new resource ([#32196](https://github.com/hashicorp/terraform-provider-aws/issues/32196))
+* resource/aws_vpc_security_group_egress_rule: Make `security_group_id` a required argument
+resource/aws_vpc_security_group_ingress_rule: Make `security_group_id` a required argument ([#32148](https://github.com/hashicorp/terraform-provider-aws/issues/32148))
 
 ## 5.5.0 (June 23, 2023)
 
