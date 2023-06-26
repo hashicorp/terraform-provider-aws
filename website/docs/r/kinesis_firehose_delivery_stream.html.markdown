@@ -161,8 +161,8 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
   name        = "terraform-kinesis-firehose-extended-s3-test-stream"
   destination = "extended_s3"
   extended_s3_configuration {
-    role_arn   = aws_iam_role.firehose_role.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
+    role_arn    = aws_iam_role.firehose_role.arn
+    bucket_arn  = aws_s3_bucket.bucket.arn
     buffer_size = 64
     # https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html
     dynamic_partitioning_configuration {
