@@ -1072,6 +1072,75 @@ func TestAccPipesPipe_sqsSourceRedshiftTarget(t *testing.T) {
 	})
 }
 
+func TestAccPipesPipe_sqsSourceSagemakerTarget(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	acctest.Skip(t, "aws_sagemaker_pipeline resource not yet implemented")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_basicSQSSourceSagemakerTarget(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexp.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_sqs_queue.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.managed_streaming_kafka_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_sagemaker_pipeline.target", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.cloudwatch_logs_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.eventbridge_event_bus_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.http_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.input_template", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.kinesis_stream_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.lambda_function_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.redshift_data_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sagemaker_pipeline_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sagemaker_pipeline_parameters.0.pipeline_parameter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sagemaker_pipeline_parameters.0.pipeline_parameter.0.name", "p1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sagemaker_pipeline_parameters.0.pipeline_parameter.0.value", "v1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sagemaker_pipeline_parameters.0.pipeline_parameter.1.name", "p2"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sagemaker_pipeline_parameters.0.pipeline_parameter.1.value", "v2"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sqs_queue_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.step_function_state_machine_parameters.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPipeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).PipesClient(ctx)
@@ -2358,6 +2427,38 @@ resource "aws_pipes_pipe" "test" {
 `, rName))
 }
 
+func testAccPipeConfig_basicSQSSourceSagemakerTarget(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		fmt.Sprintf(`
+# TODO Add aws_sagemaker_pipeline resource.
+
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  source   = aws_sqs_queue.source.arn
+  target   = aws_sagemaker_pipeline.target.arn
+
+  target_parameters {
+    sagemaker_pipeline_parameters {
+      pipeline_parameter {
+        name  = "p1"
+        value = "v1"
+      }
+
+      pipeline_parameter {
+        name  = "p2"
+        value = "v2"
+      }
+    }
+  }
+}
+`, rName))
+}
+
 // TODO
 // Enrichment: HTTP
-// Targets: batch_job_parameters, ecs_task_parameters, sagemaker_pipeline_parameters
+// Targets: batch_job_parameters, ecs_task_parameters
