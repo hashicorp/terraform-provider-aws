@@ -40,6 +40,8 @@ func TestIsZero(t *testing.T) {
 		testCase := testCase
 
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			got := IsZero(testCase.Ptr)
 
 			if got != testCase.Expected {
