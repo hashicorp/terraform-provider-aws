@@ -1904,7 +1904,7 @@ func testAccPipeConfig_namePrefix(rName, namePrefix string) string {
 		testAccPipeConfig_baseSQSTarget(rName),
 		fmt.Sprintf(`
 resource "aws_pipes_pipe" "test" {
-  depends_on  = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
 
   name_prefix = %[1]q
   role_arn    = aws_iam_role.test.arn
@@ -2437,7 +2437,7 @@ resource "aws_iam_role_policy" "target" {
 }
 
 resource "aws_cloudwatch_event_bus" "target" {
-  name     = "%[1]s-target"
+  name = "%[1]s-target"
 }
 
 resource "aws_pipes_pipe" "test" {
@@ -2901,7 +2901,7 @@ resource "aws_pipes_pipe" "test" {
         }
 
         resource_requirement {
-          type = "GPU"
+          type  = "GPU"
           value = "1"
         }
       }
@@ -2910,7 +2910,7 @@ resource "aws_pipes_pipe" "test" {
       job_name       = "testing"
 
       parameters = {
-        "Key1" = "Value1" 
+        "Key1" = "Value1"
       }
     }
   }
