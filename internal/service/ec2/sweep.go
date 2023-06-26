@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func init() {
@@ -220,6 +222,7 @@ func init() {
 			"aws_dms_replication_instance",
 			"aws_docdb_subnet_group",
 			"aws_ec2_client_vpn_endpoint",
+			"aws_ec2_instance_connect_endpoint",
 			"aws_ec2_transit_gateway_vpc_attachment",
 			"aws_efs_file_system",
 			"aws_eks_cluster",
@@ -370,10 +373,14 @@ func init() {
 		F:    sweepAMIs,
 	})
 
-	// aws_vpc_network_performance_metric_subscription
 	resource.AddTestSweepers("aws_vpc_network_performance_metric_subscription", &resource.Sweeper{
 		Name: "aws_vpc_network_performance_metric_subscription",
 		F:    sweepNetworkPerformanceMetricSubscriptions,
+	})
+
+	resource.AddTestSweepers("aws_ec2_instance_connect_endpoint", &resource.Sweeper{
+		Name: "aws_ec2_instance_connect_endpoint",
+		F:    sweepInstanceConnectEndpoints,
 	})
 }
 
@@ -2592,6 +2599,52 @@ func sweepNetworkPerformanceMetricSubscriptions(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EC2 AWS Network Performance Metric Subscriptions (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepInstanceConnectEndpoints(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeInstanceConnectEndpointsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeInstanceConnectEndpointsPagesWithContext(ctx, input, func(page *ec2.DescribeInstanceConnectEndpointsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.InstanceConnectEndpoints {
+			if aws.StringValue(v.State) == ec2.Ec2InstanceConnectEndpointStateDeleteComplete {
+				continue
+			}
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceInstanceConnectEndpoint, client,
+				framework.NewAttribute("id", aws_sdkv2.ToString(v.InstanceConnectEndpointId)),
+			))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Instance Connect Endpoint sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Instance Connect Endpoints (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Instance Connect Endpoints (%s): %w", region, err)
 	}
 
 	return nil

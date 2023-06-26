@@ -1123,7 +1123,7 @@ Then add the actual implementation. Preferably, if a paginated SDK call is avail
 ```go
 func sweepThings(region string) error {
   ctx := sweep.Context(region)
-  client, err := sweep.SharedRegionalSweepClient(region)
+  client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
   if err != nil {
     return fmt.Errorf("getting client: %w", err)
@@ -1190,7 +1190,7 @@ Otherwise, if no paginated SDK call is available:
 ```go
 func sweepThings(region string) error {
   ctx := sweep.Context(region)
-  client, err := sweep.SharedRegionalSweepClient(region)
+  client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
   if err != nil {
     return fmt.Errorf("getting client: %w", err)
