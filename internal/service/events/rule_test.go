@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
+	"github.com/google/go-cmp/cmp"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,6 +28,41 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 		"Operation is disabled in this region",
 		"not a supported service for a target",
 	)
+}
+
+func TestRuleEventPatternJSONDecoder(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    string
+		expected string
+	}
+	tests := map[string]testCase{
+		"lessThanGreaterThan": {
+			input:    `{"detail": {"count": [ { "numeric": [ "\u003e", 0, "\u003c", 5 ] } ]}}`,
+			expected: `{"detail": {"count": [ { "numeric": [ ">", 0, "<", 5 ] } ]}}`,
+		},
+		"ampersand": {
+			input:    `{"detail": {"count": [ { "numeric": [ "\u0026", 0, "\u0026", 5 ] } ]}}`,
+			expected: `{"detail": {"count": [ { "numeric": [ "&", 0, "&", 5 ] } ]}}`,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := tfevents.RuleEventPatternJSONDecoder(test.input)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
 }
 
 func TestAccEventsRule_basic(t *testing.T) {

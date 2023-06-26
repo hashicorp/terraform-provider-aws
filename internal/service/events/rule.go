@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -67,7 +66,7 @@ func ResourceRule() *schema.Resource {
 				ValidateFunc: validateEventPatternValue(),
 				AtLeastOneOf: []string{"schedule_expression", "event_pattern"},
 				StateFunc: func(v interface{}) string {
-					json, _ := jsonMarshal(v.(string))
+					json, _ := RuleEventPatternJSONDecoder(v.(string))
 					return json
 				},
 			},
@@ -109,30 +108,6 @@ func ResourceRule() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
-}
-
-func jsonMarshal(jsonString interface{}) (string, error) {
-	var j interface{}
-
-	if jsonString == nil || jsonString.(string) == "" {
-		return "", nil
-	}
-
-	s := jsonString.(string)
-
-	err := json.Unmarshal([]byte(s), &j)
-	if err != nil {
-		return s, err
-	}
-
-	b, _ := json.Marshal(j)
-
-	if bytes.Contains(b, []byte("\\u003c")) || bytes.Contains(b, []byte("\\u003e")) || bytes.Contains(b, []byte("\\u0026")) {
-		b = bytes.Replace(b, []byte("\\u003c"), []byte("<"), -1)
-		b = bytes.Replace(b, []byte("\\u003e"), []byte(">"), -1)
-		b = bytes.Replace(b, []byte("\\u0026"), []byte("&"), -1)
-	}
-	return string(b[:]), nil
 }
 
 func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -211,7 +186,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("description", output.Description)
 	d.Set("event_bus_name", eventBusName) // Use event bus name from resource ID as API response may collapse any ARN.
 	if output.EventPattern != nil {
-		pattern, err := structure.NormalizeJsonString(aws.StringValue(output.EventPattern))
+		pattern, err := RuleEventPatternJSONDecoder(aws.StringValue(output.EventPattern))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "event pattern contains an invalid JSON: %s", err)
 		}
@@ -321,6 +296,34 @@ func FindRuleByTwoPartKey(ctx context.Context, conn *eventbridge.EventBridge, ev
 	return output, nil
 }
 
+// Decodes unicode translation of <,>,&
+func RuleEventPatternJSONDecoder(jsonString interface{}) (string, error) {
+	var j interface{}
+
+	if jsonString == nil || jsonString.(string) == "" {
+		return "", nil
+	}
+
+	s := jsonString.(string)
+
+	err := json.Unmarshal([]byte(s), &j)
+	if err != nil {
+		return s, err
+	}
+
+	b, err := json.Marshal(j)
+	if err != nil {
+		return "", err
+	}
+
+	if bytes.Contains(b, []byte("\\u003c")) || bytes.Contains(b, []byte("\\u003e")) || bytes.Contains(b, []byte("\\u0026")) {
+		b = bytes.Replace(b, []byte("\\u003c"), []byte("<"), -1)
+		b = bytes.Replace(b, []byte("\\u003e"), []byte(">"), -1)
+		b = bytes.Replace(b, []byte("\\u0026"), []byte("&"), -1)
+	}
+	return string(b[:]), nil
+}
+
 func expandPutRuleInput(d *schema.ResourceData, name string) *eventbridge.PutRuleInput {
 	apiObject := &eventbridge.PutRuleInput{
 		Name: aws.String(name),
@@ -335,7 +338,7 @@ func expandPutRuleInput(d *schema.ResourceData, name string) *eventbridge.PutRul
 	}
 
 	if v, ok := d.GetOk("event_pattern"); ok {
-		json, _ := structure.NormalizeJsonString(v)
+		json, _ := RuleEventPatternJSONDecoder(v.(string))
 		apiObject.EventPattern = aws.String(json)
 	}
 
@@ -358,7 +361,7 @@ func expandPutRuleInput(d *schema.ResourceData, name string) *eventbridge.PutRul
 
 func validateEventPatternValue() schema.SchemaValidateFunc {
 	return func(v interface{}, k string) (ws []string, errors []error) {
-		json, err := structure.NormalizeJsonString(v)
+		json, err := RuleEventPatternJSONDecoder(v.(string))
 		if err != nil {
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %w", k, err))
 
