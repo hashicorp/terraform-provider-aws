@@ -183,13 +183,13 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Route: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	targetAttributeKey, target, err := routeTargetAttribute(d)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Route: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	routeTableID := d.Get("route_table_id").(string)
@@ -265,20 +265,16 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	var diags diag.Diagnostics
-	var routeFinder RouteFinder
-
-	routeTableID := d.Get("route_table_id").(string)
-
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Route: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	var routeFinder RouteFinder
 	switch destinationAttributeKey {
 	case routeDestinationCIDRBlock:
 		routeFinder = FindRouteByIPv4Destination
@@ -290,6 +286,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
 
+	routeTableID := d.Get("route_table_id").(string)
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, RoutePropagationTimeout, func() (interface{}, error) {
 		return routeFinder(ctx, conn, routeTableID, destination)
 	}, d.IsNewResource())
@@ -305,7 +302,6 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	route := outputRaw.(*ec2.Route)
-
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
 	d.Set("core_network_arn", route.CoreNetworkArn)
 	d.Set(routeDestinationCIDRBlock, route.DestinationCidrBlock)
@@ -340,13 +336,13 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Route: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	targetAttributeKey, target, err := routeTargetAttribute(d)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Route: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	routeTableID := d.Get("route_table_id").(string)
@@ -421,7 +417,7 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Route: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	routeTableID := d.Get("route_table_id").(string)
