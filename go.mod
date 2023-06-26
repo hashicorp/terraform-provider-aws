@@ -36,7 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.8
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.14
-	github.com/aws/aws-sdk-go-v2/service/rds v1.45.2
+	github.com/aws/aws-sdk-go-v2/service/rds v1.45.3
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.15
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.2.2
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.15.0
