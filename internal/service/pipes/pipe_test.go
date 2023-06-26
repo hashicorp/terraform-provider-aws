@@ -1002,6 +1002,76 @@ func TestAccPipesPipe_selfManagedKafkaSourceLambdaFunctionTarget(t *testing.T) {
 	})
 }
 
+func TestAccPipesPipe_sqsSourceRedshiftTarget(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_basicSQSSourceRedshiftTarget(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexp.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_sqs_queue.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.managed_streaming_kafka_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.rabbitmq_broker_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.self_managed_kafka_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.0.batch_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.sqs_queue_parameters.0.maximum_batching_window_in_seconds", "90"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_redshift_cluster.target", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.cloudwatch_logs_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.ecs_task_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.eventbridge_event_bus_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.http_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.input_template", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.kinesis_stream_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.lambda_function_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.redshift_data_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.redshift_data_parameters.0.database", "db1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.redshift_data_parameters.0.db_user", "user1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.redshift_data_parameters.0.secret_manager_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.redshift_data_parameters.0.sqls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.redshift_data_parameters.0.statement_name", "SelectAll"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.redshift_data_parameters.0.with_event", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sagemaker_pipeline_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.sqs_queue_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.step_function_state_machine_parameters.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPipeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).PipesClient(ctx)
@@ -2243,6 +2313,51 @@ resource "aws_pipes_pipe" "test" {
 `, rName))
 }
 
+func testAccPipeConfig_basicSQSSourceRedshiftTarget(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
+		fmt.Sprintf(`
+resource "aws_redshift_cluster" "target" {
+  cluster_identifier                  = "%[1]s-target"
+  availability_zone                   = data.aws_availability_zones.available.names[0]
+  database_name                       = "test"
+  master_username                     = "tfacctest"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc2.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+}
+
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  source   = aws_sqs_queue.source.arn
+  target   = aws_redshift_cluster.target.arn
+
+  source_parameters {
+    sqs_queue_parameters {
+      batch_size                         = 1
+      maximum_batching_window_in_seconds = 90
+    }
+  }
+
+  target_parameters {
+    redshift_data_parameters {
+      database       = "db1"
+      db_user        = "user1"
+      sqls           = ["SELECT * FROM table"]
+      statement_name = "SelectAll"
+    }
+  }
+}
+`, rName))
+}
+
 // TODO
 // Enrichment: HTTP
-// Targets: batch_job_parameters, ecs_task_parameters, redshift_data_parameters, sagemaker_pipeline_parameters
+// Targets: batch_job_parameters, ecs_task_parameters, sagemaker_pipeline_parameters
