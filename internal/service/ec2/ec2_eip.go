@@ -202,7 +202,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, ec2.DomainTypeStandard)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindEIPByAllocationID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -339,7 +339,7 @@ func associateEIP(ctx context.Context, conn *ec2.EC2, allocationID, instanceID, 
 		return fmt.Errorf("associating EC2 EIP (%s): %w", allocationID, err)
 	}
 
-	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
+	_, err = tfresource.RetryWhen(ctx, ec2PropagationTimeout,
 		func() (interface{}, error) {
 			return FindEIPByAssociationID(ctx, conn, aws.StringValue(output.AssociationId))
 		},
