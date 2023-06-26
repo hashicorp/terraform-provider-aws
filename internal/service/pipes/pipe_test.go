@@ -905,12 +905,12 @@ func TestAccPipesPipe_rabbitMQSourceEventBusTarget(t *testing.T) {
 }
 
 func TestAccPipesPipe_mskSourceHTTPTarget(t *testing.T) {
+	acctest.Skip(t, "DependencyViolation errors deleting subnets and security group")
+
 	ctx := acctest.Context(t)
 	var pipe pipes.DescribePipeOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pipes_pipe.test"
-
-	acctest.Skip(t, "DependencyViolation errors deleting subnets and security group")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -981,12 +981,12 @@ func TestAccPipesPipe_mskSourceHTTPTarget(t *testing.T) {
 }
 
 func TestAccPipesPipe_selfManagedKafkaSourceLambdaFunctionTarget(t *testing.T) {
+	acctest.Skip(t, "DependencyViolation errors deleting subnets and security group")
+
 	ctx := acctest.Context(t)
 	var pipe pipes.DescribePipeOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pipes_pipe.test"
-
-	acctest.Skip(t, "DependencyViolation errors deleting subnets and security group")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -1128,12 +1128,12 @@ func TestAccPipesPipe_sqsSourceRedshiftTarget(t *testing.T) {
 }
 
 func TestAccPipesPipe_SourceSageMakerTarget(t *testing.T) {
+	acctest.Skip(t, "aws_sagemaker_pipeline resource not yet implemented")
+
 	ctx := acctest.Context(t)
 	var pipe pipes.DescribePipeOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pipes_pipe.test"
-
-	acctest.Skip(t, "aws_sagemaker_pipeline resource not yet implemented")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -1279,12 +1279,12 @@ func TestAccPipesPipe_sqsSourceBatchJobTarget(t *testing.T) {
 }
 
 func TestAccPipesPipe_sqsSourceECSTaskTarget(t *testing.T) {
+	acctest.Skip(t, "ValidationException: [numeric instance is lower than the required minimum (minimum: 1, found: 0)]")
+
 	ctx := acctest.Context(t)
 	var pipe pipes.DescribePipeOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_pipes_pipe.test"
-
-	acctest.Skip(t, "ValidationException: [numeric instance is lower than the required minimum (minimum: 1, found: 0)]")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
