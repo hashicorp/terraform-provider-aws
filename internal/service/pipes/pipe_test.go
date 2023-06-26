@@ -253,6 +253,61 @@ func TestAccPipesPipe_enrichment(t *testing.T) {
 	})
 }
 
+func TestAccPipesPipe_enrichmentParameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_enrichmentParameters(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttrPair(resourceName, "enrichment", "aws_cloudwatch_event_api_destination.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.header_parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.header_parameters.X-Test-1", "Val1"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.path_parameter_values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.path_parameter_values.0", "p1"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.query_string_parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.query_string_parameters.q1", "abc"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_enrichmentParametersUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttrPair(resourceName, "enrichment", "aws_cloudwatch_event_api_destination.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.header_parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.header_parameters.X-Test-1", "Val1"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.header_parameters.X-Test-2", "Val2"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.path_parameter_values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.path_parameter_values.0", "p2"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.0.http_parameters.0.query_string_parameters.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccPipesPipe_sourceParameters_filterCriteria(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipe pipes.DescribePipeOutput
@@ -1644,6 +1699,107 @@ resource "aws_pipes_pipe" "test" {
 `, rName, i))
 }
 
+func testAccPipeConfig_enrichmentParameters(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		testAccPipeConfig_baseSQSTarget(rName),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_event_connection" "test" {
+  name               = %[1]q
+  authorization_type = "API_KEY"
+
+  auth_parameters {
+    api_key {
+      key   = "testKey"
+      value = "testValue"
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_api_destination" "test" {
+  name                = %[1]q
+  invocation_endpoint = "https://example.com/"
+  http_method         = "POST"
+  connection_arn      = aws_cloudwatch_event_connection.test.arn
+}
+
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  source   = aws_sqs_queue.source.arn
+  target   = aws_sqs_queue.target.arn
+
+  enrichment = aws_cloudwatch_event_api_destination.test.arn
+
+  enrichment_parameters {
+    http_parameters {
+      header_parameters = {
+        "X-Test-1" = "Val1"
+      }
+
+      path_parameter_values = ["p1"]
+
+      query_string_parameters = {
+        "q1" = "abc"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccPipeConfig_enrichmentParametersUpdated(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		testAccPipeConfig_baseSQSTarget(rName),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_event_connection" "test" {
+  name               = %[1]q
+  authorization_type = "API_KEY"
+
+  auth_parameters {
+    api_key {
+      key   = "testKey"
+      value = "testValue"
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_api_destination" "test" {
+  name                = %[1]q
+  invocation_endpoint = "https://example.com/"
+  http_method         = "POST"
+  connection_arn      = aws_cloudwatch_event_connection.test.arn
+}
+
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  source   = aws_sqs_queue.source.arn
+  target   = aws_sqs_queue.target.arn
+
+  enrichment = aws_cloudwatch_event_api_destination.test.arn
+
+  enrichment_parameters {
+    http_parameters {
+      header_parameters = {
+        "X-Test-1" = "Val1"
+        "X-Test-2" = "Val2"
+      }
+
+      path_parameter_values = ["p2"]
+    }
+  }
+}
+`, rName))
+}
+
 func testAccPipeConfig_sourceParameters_filterCriteria1(rName, criteria1 string) string {
 	return acctest.ConfigCompose(
 		testAccPipeConfig_base(rName),
@@ -2879,6 +3035,3 @@ resource "aws_pipes_pipe" "test" {
 }
 `, rName))
 }
-
-// TODO
-// Enrichment: HTTP

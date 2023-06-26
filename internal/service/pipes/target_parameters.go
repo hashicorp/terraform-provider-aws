@@ -583,6 +583,7 @@ func targetParametersSchema() *schema.Schema {
 							"path_parameter_values": {
 								Type:     schema.TypeList,
 								Optional: true,
+								MaxItems: 1,
 								Elem: &schema.Schema{
 									Type: schema.TypeString,
 								},
