@@ -699,7 +699,7 @@ The `request_configuration` object supports the following:
 The `common_attributes` array objects support the following:
 
 * `name` - (Required) The name of the HTTP endpoint common attribute.
-* `value` - (Optional) The value of the HTTP endpoint common attribute.
+* `value` - (Required) The value of the HTTP endpoint common attribute.
 
 The `vpc_config` object supports the following:
 
