@@ -147,7 +147,7 @@ func FindTagOptionResourceAssociation(ctx context.Context, conn *servicecatalog.
 	return result, err
 }
 
-func FindPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string) (*servicecatalog.Principal, error) {
+func FindPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string, principalType string) (*servicecatalog.Principal, error) {
 	input := &servicecatalog.ListPrincipalsForPortfolioInput{
 		PortfolioId: aws.String(portfolioID),
 	}

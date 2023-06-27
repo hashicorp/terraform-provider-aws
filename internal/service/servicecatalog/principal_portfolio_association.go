@@ -66,8 +66,9 @@ func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.AssociatePrincipalWithPortfolioInput{
-		PortfolioId:  aws.String(d.Get("portfolio_id").(string)),
-		PrincipalARN: aws.String(d.Get("principal_arn").(string)),
+		PortfolioId:   aws.String(d.Get("portfolio_id").(string)),
+		PrincipalARN:  aws.String(d.Get("principal_arn").(string)),
+		PrincipalType: aws.String(d.Get("principal_type").(string)),
 	}
 
 	if v, ok := d.GetOk("accept_language"); ok {
@@ -107,7 +108,7 @@ func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Principal Portfolio Association: empty response")
 	}
 
-	d.SetId(PrincipalPortfolioAssociationID(d.Get("accept_language").(string), d.Get("principal_arn").(string), d.Get("portfolio_id").(string)))
+	d.SetId(PrincipalPortfolioAssociationID(d.Get("accept_language").(string), d.Get("principal_arn").(string), d.Get("portfolio_id").(string), d.Get("principal_type").(string)))
 
 	return append(diags, resourcePrincipalPortfolioAssociationRead(ctx, d, meta)...)
 }
@@ -116,7 +117,7 @@ func resourcePrincipalPortfolioAssociationRead(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-	acceptLanguage, principalARN, portfolioID, err := PrincipalPortfolioAssociationParseID(d.Id())
+	acceptLanguage, principalARN, portfolioID, principalType, err := PrincipalPortfolioAssociationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
@@ -126,7 +127,7 @@ func resourcePrincipalPortfolioAssociationRead(ctx context.Context, d *schema.Re
 		acceptLanguage = AcceptLanguageEnglish
 	}
 
-	output, err := WaitPrincipalPortfolioAssociationReady(ctx, conn, acceptLanguage, principalARN, portfolioID, d.Timeout(schema.TimeoutRead))
+	output, err := WaitPrincipalPortfolioAssociationReady(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException)) {
 		log.Printf("[WARN] Service Catalog Principal Portfolio Association (%s) not found, removing from state", d.Id())
@@ -154,7 +155,7 @@ func resourcePrincipalPortfolioAssociationDelete(ctx context.Context, d *schema.
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-	acceptLanguage, principalARN, portfolioID, err := PrincipalPortfolioAssociationParseID(d.Id())
+	acceptLanguage, principalARN, portfolioID, principalType, err := PrincipalPortfolioAssociationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
@@ -168,6 +169,7 @@ func resourcePrincipalPortfolioAssociationDelete(ctx context.Context, d *schema.
 		PortfolioId:    aws.String(portfolioID),
 		PrincipalARN:   aws.String(principalARN),
 		AcceptLanguage: aws.String(acceptLanguage),
+		PrincipalType:  aws.String(principalType),
 	}
 
 	_, err = conn.DisassociatePrincipalFromPortfolioWithContext(ctx, input)
@@ -180,7 +182,7 @@ func resourcePrincipalPortfolioAssociationDelete(ctx context.Context, d *schema.
 		return sdkdiag.AppendErrorf(diags, "disassociating Service Catalog Principal from Portfolio (%s): %s", d.Id(), err)
 	}
 
-	err = WaitPrincipalPortfolioAssociationDeleted(ctx, conn, acceptLanguage, principalARN, portfolioID, d.Timeout(schema.TimeoutDelete))
+	err = WaitPrincipalPortfolioAssociationDeleted(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType, d.Timeout(schema.TimeoutDelete))
 
 	if tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		return diags

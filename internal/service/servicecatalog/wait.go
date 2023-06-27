@@ -438,11 +438,11 @@ func WaitProvisioningArtifactDeleted(ctx context.Context, conn *servicecatalog.S
 	return err
 }
 
-func WaitPrincipalPortfolioAssociationReady(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string, timeout time.Duration) (*servicecatalog.Principal, error) {
+func WaitPrincipalPortfolioAssociationReady(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string, principalType string, timeout time.Duration) (*servicecatalog.Principal, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{StatusNotFound, StatusUnavailable},
 		Target:                    []string{servicecatalog.StatusAvailable},
-		Refresh:                   StatusPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID),
+		Refresh:                   StatusPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: ContinuousTargetOccurrence,
 		NotFoundChecks:            NotFoundChecks,
@@ -458,11 +458,11 @@ func WaitPrincipalPortfolioAssociationReady(ctx context.Context, conn *serviceca
 	return nil, err
 }
 
-func WaitPrincipalPortfolioAssociationDeleted(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string, timeout time.Duration) error {
+func WaitPrincipalPortfolioAssociationDeleted(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string, principalType string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:        []string{servicecatalog.StatusAvailable},
 		Target:         []string{StatusNotFound, StatusUnavailable},
-		Refresh:        StatusPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID),
+		Refresh:        StatusPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType),
 		Timeout:        timeout,
 		NotFoundChecks: 1,
 	}

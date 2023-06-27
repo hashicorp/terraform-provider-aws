@@ -74,18 +74,18 @@ func ProvisioningArtifactParseID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func PrincipalPortfolioAssociationParseID(id string) (string, string, string, error) {
-	parts := strings.SplitN(id, ",", 3)
+func PrincipalPortfolioAssociationParseID(id string) (string, string, string, string, error) {
+	parts := strings.SplitN(id, ",", 4)
 
-	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-		return "", "", "", fmt.Errorf("unexpected format of ID (%s), expected acceptLanguage,principalARN,portfolioID", id)
+	if len(parts) != 4 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" {
+		return "", "", "", "", fmt.Errorf("unexpected format of ID (%s), expected acceptLanguage,principalARN,portfolioID,principalType", id)
 	}
 
-	return parts[0], parts[1], parts[2], nil
+	return parts[0], parts[1], parts[2], parts[3], nil
 }
 
-func PrincipalPortfolioAssociationID(acceptLanguage, principalARN, portfolioID string) string {
-	return strings.Join([]string{acceptLanguage, principalARN, portfolioID}, ",")
+func PrincipalPortfolioAssociationID(acceptLanguage, principalARN, portfolioID string, principalType string) string {
+	return strings.Join([]string{acceptLanguage, principalARN, portfolioID, principalType}, ",")
 }
 
 func PortfolioConstraintsID(acceptLanguage, portfolioID, productID string) string {

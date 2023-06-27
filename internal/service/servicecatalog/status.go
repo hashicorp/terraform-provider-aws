@@ -293,9 +293,9 @@ func StatusProvisioningArtifact(ctx context.Context, conn *servicecatalog.Servic
 	}
 }
 
-func StatusPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string) retry.StateRefreshFunc {
+func StatusPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string, principalType string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID)
+		output, err := FindPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			return nil, StatusNotFound, err

@@ -46,6 +46,33 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
 	})
 }
 
+func TestAccServiceCatalogPrincipalPortfolioAssociation_iam_pattern(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_servicecatalog_principal_portfolio_association.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPrincipalPortfolioAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPrincipalPortfolioAssociationConfig_iam_pattern(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPrincipalPortfolioAssociationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "principal_type", "IAM_PATTERN"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 func TestAccServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_principal_portfolio_association.test"
@@ -78,13 +105,13 @@ func testAccCheckPrincipalPortfolioAssociationDestroy(ctx context.Context) resou
 				continue
 			}
 
-			acceptLanguage, principalARN, portfolioID, err := tfservicecatalog.PrincipalPortfolioAssociationParseID(rs.Primary.ID)
+			acceptLanguage, principalARN, portfolioID, principalType, err := tfservicecatalog.PrincipalPortfolioAssociationParseID(rs.Primary.ID)
 
 			if err != nil {
 				return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 			}
 
-			err = tfservicecatalog.WaitPrincipalPortfolioAssociationDeleted(ctx, conn, acceptLanguage, principalARN, portfolioID, tfservicecatalog.PrincipalPortfolioAssociationDeleteTimeout)
+			err = tfservicecatalog.WaitPrincipalPortfolioAssociationDeleted(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType, tfservicecatalog.PrincipalPortfolioAssociationDeleteTimeout)
 
 			if tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 				continue
@@ -107,7 +134,7 @@ func testAccCheckPrincipalPortfolioAssociationExists(ctx context.Context, resour
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		acceptLanguage, principalARN, portfolioID, err := tfservicecatalog.PrincipalPortfolioAssociationParseID(rs.Primary.ID)
+		acceptLanguage, principalARN, portfolioID, principalType, err := tfservicecatalog.PrincipalPortfolioAssociationParseID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
@@ -115,7 +142,7 @@ func testAccCheckPrincipalPortfolioAssociationExists(ctx context.Context, resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-		_, err = tfservicecatalog.WaitPrincipalPortfolioAssociationReady(ctx, conn, acceptLanguage, principalARN, portfolioID, tfservicecatalog.PrincipalPortfolioAssociationReadyTimeout)
+		_, err = tfservicecatalog.WaitPrincipalPortfolioAssociationReady(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType, tfservicecatalog.PrincipalPortfolioAssociationReadyTimeout)
 
 		if err != nil {
 			return fmt.Errorf("waiting for Service Catalog Principal Portfolio Association existence (%s): %w", rs.Primary.ID, err)
@@ -157,6 +184,16 @@ func testAccPrincipalPortfolioAssociationConfig_basic(rName string) string {
 resource "aws_servicecatalog_principal_portfolio_association" "test" {
   portfolio_id  = aws_servicecatalog_portfolio.test.id
   principal_arn = aws_iam_role.test.arn
+}
+`)
+}
+
+func testAccPrincipalPortfolioAssociationConfig_iam_pattern(rName string) string {
+	return acctest.ConfigCompose(testAccPrincipalPortfolioAssociationConfig_base(rName), `
+resource "aws_servicecatalog_principal_portfolio_association" "test" {
+  portfolio_id   = aws_servicecatalog_portfolio.test.id
+  principal_arn  = "arn:aws:iam:::role/${aws_iam_role.test.name}"
+  principal_type = "IAM_PATTERN"
 }
 `)
 }
