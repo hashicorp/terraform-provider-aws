@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
@@ -205,9 +204,8 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 		if err := fwdiag.DiagnosticsError(diags); err != nil {
 			return err
 		}
-		tListElem := v.ElementType(ctx)
-		switch {
-		case tListElem.Equal(types.StringType):
+		switch v.ElementType(ctx).(type) {
+		case basetypes.StringTypable:
 			switch kTo {
 			case reflect.Slice:
 				switch tSliceElem := valTo.Type().Elem(); tSliceElem.Kind() {
@@ -229,6 +227,12 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 					}
 				}
 			}
+
+		case basetypes.ObjectTypable:
+			//
+			// types.List(OfObject) -> ???.
+			//
+			return nil
 		}
 
 	case basetypes.MapValuable:
@@ -236,9 +240,8 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 		if err := fwdiag.DiagnosticsError(diags); err != nil {
 			return err
 		}
-		tListElem := v.ElementType(ctx)
-		switch {
-		case tListElem.Equal(types.StringType):
+		switch v.ElementType(ctx).(type) {
+		case basetypes.StringTypable:
 			switch kTo {
 			case reflect.Map:
 				switch tMapKey := valTo.Type().Key(); tMapKey.Kind() {
@@ -270,9 +273,8 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 		if err := fwdiag.DiagnosticsError(diags); err != nil {
 			return err
 		}
-		tListElem := v.ElementType(ctx)
-		switch {
-		case tListElem.Equal(types.StringType):
+		switch v.ElementType(ctx).(type) {
+		case basetypes.StringTypable:
 			switch kTo {
 			case reflect.Slice:
 				switch tSliceElem := valTo.Type().Elem(); tSliceElem.Kind() {
@@ -294,6 +296,12 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 					}
 				}
 			}
+
+		case basetypes.ObjectTypable:
+			//
+			// types.Set(OfObject) -> ???.
+			//
+			return nil
 		}
 	}
 

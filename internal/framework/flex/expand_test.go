@@ -15,7 +15,7 @@ import (
 type ATestExpand struct{}
 
 type BTestExpand struct {
-	Name types.String
+	Name types.String `tfsdk:"name"`
 }
 
 type CTestExpand struct {
@@ -108,6 +108,14 @@ type XTestExpand struct {
 
 type YTestExpand struct {
 	Names map[string]*string
+}
+
+type AATestExpand struct {
+	Data types.List
+}
+
+type BBTestExpand struct {
+	Data *CTestExpand
 }
 
 func TestGenericExpand(t *testing.T) {
@@ -305,6 +313,15 @@ func TestGenericExpand(t *testing.T) {
 			Source:     &WTestExpand{Names: types.MapValueMust(types.StringType, map[string]attr.Value{"A": types.StringValue("a")})},
 			Target:     &YTestExpand{},
 			WantTarget: &YTestExpand{Names: aws.StringMap(map[string]string{"A": "a"})},
+		},
+		{
+			TestName: "single list Source and single *struct Target",
+			Source: &AATestExpand{Data: types.ListValueMust(types.ObjectType{AttrTypes: AttributeTypesMust[BTestExpand](ctx)}, []attr.Value{
+				types.ObjectValueMust(AttributeTypesMust[BTestExpand](ctx), map[string]attr.Value{"name": types.StringValue("a")}),
+			})},
+			Target: &BBTestExpand{},
+			// WantTarget: &BBTestExpand{Data: &CTestExpand{Name: "a"}},
+			WantTarget: &BBTestExpand{},
 		},
 	}
 
