@@ -20,7 +20,7 @@ func TestAccOpenSearchServerlessCollectionDataSource_basic(t *testing.T) {
 	var collection types.CollectionDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_opensearchserverless_collection.test"
-	resourceName := ".aws_opensearchserverless_collection.test"
+	resourceName := "aws_opensearchserverless_collection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -45,10 +45,6 @@ func TestAccOpenSearchServerlessCollectionDataSource_basic(t *testing.T) {
 
 func testAccCollectionDataSourceConfig_basic(rName, policyType string) string {
 	return fmt.Sprintf(`
-resource "aws_opensearchserverless_collection" "test" {
-  name       = %[1]q
-  depends_on = [aws_opensearchserverless_security_policy.test]
-}
 resource "aws_opensearchserverless_security_policy" "test" {
   name = %[1]q
   type = %[2]q
@@ -63,6 +59,11 @@ resource "aws_opensearchserverless_security_policy" "test" {
     ],
     AWSOwnedKey = true
   })
+}
+
+resource "aws_opensearchserverless_collection" "test" {
+  name       = %[1]q
+  depends_on = [aws_opensearchserverless_security_policy.test]
 }
 
 data "aws_opensearchserverless_collection" "test" {

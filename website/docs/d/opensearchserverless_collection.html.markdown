@@ -16,6 +16,7 @@ Terraform data source for managing an AWS OpenSearch Serverless Collection.
 
 ```terraform
 data "aws_opensearchserverless_collection" "example" {
+  name = "example"
 }
 ```
 
@@ -23,15 +24,17 @@ data "aws_opensearchserverless_collection" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `id` - (Required) ID of the collection. Either `id` or `name` must be provided.
+* `name` - (Required) Name of the collection. Either `name` or `id` must be provided.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the Collection. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - Amazon Resource Name (ARN) of the collection.
+* `collection_endpoint` - Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.
+* `dashboard_endpont` - Collection-specific endpoint used to access OpenSearch Dashboards.
+* `description` - (Optional) Description of the collection.
+* `kms_key_arn` - The ARN of the Amazon Web Services KMS key used to encrypt the collection.
+* `tags` - A map of tags to assign to the collection.
+* `type` - Type of collection.

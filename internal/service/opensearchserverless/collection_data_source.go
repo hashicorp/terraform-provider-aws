@@ -52,8 +52,7 @@ func (d *dataSourceCollection) Schema(ctx context.Context, req datasource.Schema
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
-					stringvalidator.ExactlyOneOf(
-						path.MatchRelative().AtParent().AtName("id"),
+					stringvalidator.ConflictsWith(
 						path.MatchRelative().AtParent().AtName("name"),
 					),
 				},
@@ -64,6 +63,11 @@ func (d *dataSourceCollection) Schema(ctx context.Context, req datasource.Schema
 			"name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(
+						path.MatchRelative().AtParent().AtName("id"),
+					),
+				},
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"type": schema.StringAttribute{
