@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
 // Expand "expands" a resource's "business logic" data structure,
@@ -185,6 +187,25 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 					valTo.Set(reflect.ValueOf(ExpandFrameworkStringSet(ctx, vFrom)))
 					return nil
 				}
+			}
+		}
+	}
+
+	switch vFrom := vFrom.(type) {
+	case basetypes.StringValuable:
+		v, diags := vFrom.ToStringValue(ctx)
+		if err := fwdiag.DiagnosticsError(diags); err != nil {
+			return err
+		}
+		switch kTo {
+		case reflect.String:
+			valTo.SetString(v.ValueString())
+			return nil
+		case reflect.Ptr:
+			switch valTo.Type().Elem().Kind() {
+			case reflect.String:
+				valTo.Set(reflect.ValueOf(aws.String(v.ValueString())))
+				return nil
 			}
 		}
 	}
