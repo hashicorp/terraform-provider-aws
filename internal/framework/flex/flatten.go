@@ -13,6 +13,7 @@ import (
 
 // TODO
 // TODO Return Diagnostics, not error.
+// TODO Handle maps of strings.
 // TODO
 
 // Flatten "flattens" an AWS SDK for Go v2 API data structure into
@@ -43,6 +44,9 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 	case reflect.Bool:
 		switch tTo := tTo.(type) {
 		case basetypes.BoolTypable:
+			//
+			// bool -> types.Bool.
+			//
 			v, diags := tTo.ValueFromBool(ctx, types.BoolValue(valFrom.Bool()))
 			if err := fwdiag.DiagnosticsError(diags); err != nil {
 				return err
@@ -54,6 +58,9 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 	case reflect.Float32, reflect.Float64:
 		switch tTo := tTo.(type) {
 		case basetypes.Float64Typable:
+			//
+			// float32/float64 -> types.Float64.
+			//
 			v, diags := tTo.ValueFromFloat64(ctx, types.Float64Value(valFrom.Float()))
 			if err := fwdiag.DiagnosticsError(diags); err != nil {
 				return err
@@ -65,6 +72,9 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 	case reflect.Int32, reflect.Int64:
 		switch tTo := tTo.(type) {
 		case basetypes.Int64Typable:
+			//
+			// int32/int64 -> types.Int64.
+			//
 			v, diags := tTo.ValueFromInt64(ctx, types.Int64Value(valFrom.Int()))
 			if err := fwdiag.DiagnosticsError(diags); err != nil {
 				return err
@@ -76,6 +86,9 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 	case reflect.String:
 		switch tTo := tTo.(type) {
 		case basetypes.StringTypable:
+			//
+			// string -> types.String.
+			//
 			v, diags := tTo.ValueFromString(ctx, types.StringValue(valFrom.String()))
 			if err := fwdiag.DiagnosticsError(diags); err != nil {
 				return err
@@ -91,6 +104,9 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 		case reflect.Bool:
 			switch tTo := tTo.(type) {
 			case basetypes.BoolTypable:
+				//
+				// *bool -> types.Bool.
+				//
 				if valElem.IsValid() {
 					v, diags := tTo.ValueFromBool(ctx, types.BoolValue(valElem.Bool()))
 					if err := fwdiag.DiagnosticsError(diags); err != nil {
@@ -107,6 +123,9 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 			switch tTo := tTo.(type) {
 			case basetypes.Float64Typable:
 				if valElem.IsValid() {
+					//
+					// *float32/*float64 -> types.Float64.
+					//
 					v, diags := tTo.ValueFromFloat64(ctx, types.Float64Value(valElem.Float()))
 					if err := fwdiag.DiagnosticsError(diags); err != nil {
 						return err
@@ -121,6 +140,9 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 		case reflect.Int32, reflect.Int64:
 			switch tTo := tTo.(type) {
 			case basetypes.Int64Typable:
+				//
+				// *int32/*int64 -> types.Int64.
+				//
 				if valElem.IsValid() {
 					v, diags := tTo.ValueFromInt64(ctx, types.Int64Value(valElem.Int()))
 					if err := fwdiag.DiagnosticsError(diags); err != nil {
@@ -136,6 +158,9 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 		case reflect.String:
 			switch tTo := tTo.(type) {
 			case basetypes.StringTypable:
+				//
+				// *string -> types.String.
+				//
 				if valElem.IsValid() {
 					v, diags := tTo.ValueFromString(ctx, types.StringValue(valElem.String()))
 					if err := fwdiag.DiagnosticsError(diags); err != nil {
@@ -156,6 +181,9 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 		case reflect.String:
 			switch tTo := tTo.(type) {
 			case basetypes.ListTypable:
+				//
+				// []string -> types.List(OfString).
+				//
 				if vFrom != nil {
 					v, diags := tTo.ValueFromList(ctx, FlattenFrameworkStringValueList(ctx, vFrom.([]string)))
 					if err := fwdiag.DiagnosticsError(diags); err != nil {
@@ -168,6 +196,9 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 				return nil
 
 			case basetypes.SetTypable:
+				//
+				// []string -> types.Set(OfString).
+				//
 				if vFrom != nil {
 					v, diags := tTo.ValueFromSet(ctx, FlattenFrameworkStringValueSet(ctx, vFrom.([]string)))
 					if err := fwdiag.DiagnosticsError(diags); err != nil {
@@ -185,6 +216,9 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 			case reflect.String:
 				switch tTo := tTo.(type) {
 				case basetypes.ListTypable:
+					//
+					// []*string -> types.List(OfString).
+					//
 					if vFrom != nil {
 						v, diags := tTo.ValueFromList(ctx, FlattenFrameworkStringList(ctx, vFrom.([]*string)))
 						if err := fwdiag.DiagnosticsError(diags); err != nil {
@@ -197,6 +231,9 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 					return nil
 
 				case basetypes.SetTypable:
+					//
+					// []*string -> types.Set(OfString).
+					//
 					if vFrom != nil {
 						v, diags := tTo.ValueFromSet(ctx, FlattenFrameworkStringSet(ctx, vFrom.([]*string)))
 						if err := fwdiag.DiagnosticsError(diags); err != nil {

@@ -14,6 +14,7 @@ import (
 
 // TODO
 // TODO Return Diagnostics, not error.
+// TODO Handle maps of strings.
 // TODO
 
 // Expand "expands" a resource's "business logic" data structure,
@@ -102,11 +103,17 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 		}
 		switch vFrom := v.ValueBool(); kTo {
 		case reflect.Bool:
+			//
+			// types.Bool -> bool.
+			//
 			valTo.SetBool(vFrom)
 			return nil
 		case reflect.Ptr:
 			switch valTo.Type().Elem().Kind() {
 			case reflect.Bool:
+				//
+				// types.Bool -> *bool.
+				//
 				valTo.Set(reflect.ValueOf(aws.Bool(vFrom)))
 				return nil
 			}
@@ -119,14 +126,23 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 		}
 		switch vFrom := v.ValueFloat64(); kTo {
 		case reflect.Float32, reflect.Float64:
+			//
+			// types.Float32/types.Float64 -> float32/float64.
+			//
 			valTo.SetFloat(vFrom)
 			return nil
 		case reflect.Ptr:
 			switch valTo.Type().Elem().Kind() {
 			case reflect.Float32:
+				//
+				// types.Float32/types.Float64 -> *float32.
+				//
 				valTo.Set(reflect.ValueOf(aws.Float32(float32(vFrom))))
 				return nil
 			case reflect.Float64:
+				//
+				// types.Float32/types.Float64 -> *float64.
+				//
 				valTo.Set(reflect.ValueOf(aws.Float64(vFrom)))
 				return nil
 			}
@@ -139,14 +155,23 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 		}
 		switch vFrom := v.ValueInt64(); kTo {
 		case reflect.Int32, reflect.Int64:
+			//
+			// types.Int32/types.Int64 -> int32/int64.
+			//
 			valTo.SetInt(vFrom)
 			return nil
 		case reflect.Ptr:
 			switch valTo.Type().Elem().Kind() {
 			case reflect.Int32:
+				//
+				// types.Int32/types.Int64 -> *int32.
+				//
 				valTo.Set(reflect.ValueOf(aws.Int32(int32(vFrom))))
 				return nil
 			case reflect.Int64:
+				//
+				// types.Int32/types.Int64 -> *int64.
+				//
 				valTo.Set(reflect.ValueOf(aws.Int64(vFrom)))
 				return nil
 			}
@@ -159,11 +184,17 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 		}
 		switch vFrom := v.ValueString(); kTo {
 		case reflect.String:
+			//
+			// types.String -> string.
+			//
 			valTo.SetString(vFrom)
 			return nil
 		case reflect.Ptr:
 			switch valTo.Type().Elem().Kind() {
 			case reflect.String:
+				//
+				// types.String -> *string.
+				//
 				valTo.Set(reflect.ValueOf(aws.String(vFrom)))
 				return nil
 			}
@@ -182,12 +213,18 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 			case reflect.Slice:
 				switch tSliceElem := valTo.Type().Elem(); tSliceElem.Kind() {
 				case reflect.String:
+					//
+					// types.List(OfString) -> []string.
+					//
 					valTo.Set(reflect.ValueOf(ExpandFrameworkStringValueList(ctx, v)))
 					return nil
 
 				case reflect.Ptr:
 					switch tSliceElem.Elem().Kind() {
 					case reflect.String:
+						//
+						// types.List(OfString) -> []*string.
+						//
 						valTo.Set(reflect.ValueOf(ExpandFrameworkStringList(ctx, v)))
 						return nil
 					}
@@ -207,12 +244,18 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 			case reflect.Slice:
 				switch tSliceElem := valTo.Type().Elem(); tSliceElem.Kind() {
 				case reflect.String:
+					//
+					// types.Set(OfString) -> []string.
+					//
 					valTo.Set(reflect.ValueOf(ExpandFrameworkStringValueSet(ctx, v)))
 					return nil
 
 				case reflect.Ptr:
 					switch tSliceElem.Elem().Kind() {
 					case reflect.String:
+						//
+						// types.Set(OfString) -> []*string.
+						//
 						valTo.Set(reflect.ValueOf(ExpandFrameworkStringSet(ctx, v)))
 						return nil
 					}
