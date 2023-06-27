@@ -10,6 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
+// TODO
+// TODO Return Diagnostics, not error.
+// TODO
+
 // Flatten "flattens" an AWS SDK for Go v2 API data structure into
 // a resource's "business logic" data structure, implemented using
 // Terraform Plugin Framework data types.

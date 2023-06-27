@@ -12,6 +12,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
+// TODO
+// TODO Return Diagnostics, not error.
+// TODO
+
 // Expand "expands" a resource's "business logic" data structure,
 // implemented using Terraform Plugin Framework data types, into
 // an AWS SDK for Go v2 API data structure.
@@ -89,11 +93,14 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 	}
 
 	tFrom, kTo := vFrom.Type(ctx), valTo.Kind()
-	switch {
+	switch vFrom := vFrom.(type) {
 	// Simple types.
-	case tFrom.Equal(types.BoolType):
-		vFrom := vFrom.(types.Bool).ValueBool()
-		switch kTo {
+	case basetypes.BoolValuable:
+		v, diags := vFrom.ToBoolValue(ctx)
+		if err := fwdiag.DiagnosticsError(diags); err != nil {
+			return err
+		}
+		switch vFrom := v.ValueBool(); kTo {
 		case reflect.Bool:
 			valTo.SetBool(vFrom)
 			return nil
@@ -105,9 +112,12 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 			}
 		}
 
-	case tFrom.Equal(types.Float64Type):
-		vFrom := vFrom.(types.Float64).ValueFloat64()
-		switch kTo {
+	case basetypes.Float64Valuable:
+		v, diags := vFrom.ToFloat64Value(ctx)
+		if err := fwdiag.DiagnosticsError(diags); err != nil {
+			return err
+		}
+		switch vFrom := v.ValueFloat64(); kTo {
 		case reflect.Float32, reflect.Float64:
 			valTo.SetFloat(vFrom)
 			return nil
@@ -122,9 +132,12 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 			}
 		}
 
-	case tFrom.Equal(types.Int64Type):
-		vFrom := vFrom.(types.Int64).ValueInt64()
-		switch kTo {
+	case basetypes.Int64Valuable:
+		v, diags := vFrom.ToInt64Value(ctx)
+		if err := fwdiag.DiagnosticsError(diags); err != nil {
+			return err
+		}
+		switch vFrom := v.ValueInt64(); kTo {
 		case reflect.Int32, reflect.Int64:
 			valTo.SetInt(vFrom)
 			return nil
@@ -139,9 +152,12 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 			}
 		}
 
-	case tFrom.Equal(types.StringType):
-		vFrom := vFrom.(types.String).ValueString()
-		switch kTo {
+	case basetypes.StringValuable:
+		v, diags := vFrom.ToStringValue(ctx)
+		if err := fwdiag.DiagnosticsError(diags); err != nil {
+			return err
+		}
+		switch vFrom := v.ValueString(); kTo {
 		case reflect.String:
 			valTo.SetString(vFrom)
 			return nil
@@ -154,58 +170,53 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 		}
 
 		// Aggregate types.
-	case tFrom.Equal(types.ListType{ElemType: types.StringType}):
-		vFrom := vFrom.(types.List)
-		switch kTo {
-		case reflect.Slice:
-			switch tSliceElem := valTo.Type().Elem(); tSliceElem.Kind() {
-			case reflect.String:
-				valTo.Set(reflect.ValueOf(ExpandFrameworkStringValueList(ctx, vFrom)))
-				return nil
-
-			case reflect.Ptr:
-				switch tSliceElem.Elem().Kind() {
-				case reflect.String:
-					valTo.Set(reflect.ValueOf(ExpandFrameworkStringList(ctx, vFrom)))
-					return nil
-				}
-			}
-		}
-
-	case tFrom.Equal(types.SetType{ElemType: types.StringType}):
-		vFrom := vFrom.(types.Set)
-		switch kTo {
-		case reflect.Slice:
-			switch tSliceElem := valTo.Type().Elem(); tSliceElem.Kind() {
-			case reflect.String:
-				valTo.Set(reflect.ValueOf(ExpandFrameworkStringValueSet(ctx, vFrom)))
-				return nil
-
-			case reflect.Ptr:
-				switch tSliceElem.Elem().Kind() {
-				case reflect.String:
-					valTo.Set(reflect.ValueOf(ExpandFrameworkStringSet(ctx, vFrom)))
-					return nil
-				}
-			}
-		}
-	}
-
-	switch vFrom := vFrom.(type) {
-	case basetypes.StringValuable:
-		v, diags := vFrom.ToStringValue(ctx)
+	case basetypes.ListValuable:
+		v, diags := vFrom.ToListValue(ctx)
 		if err := fwdiag.DiagnosticsError(diags); err != nil {
 			return err
 		}
-		switch kTo {
-		case reflect.String:
-			valTo.SetString(v.ValueString())
-			return nil
-		case reflect.Ptr:
-			switch valTo.Type().Elem().Kind() {
-			case reflect.String:
-				valTo.Set(reflect.ValueOf(aws.String(v.ValueString())))
-				return nil
+		tListElem := v.ElementType(ctx)
+		switch {
+		case tListElem.Equal(types.StringType):
+			switch kTo {
+			case reflect.Slice:
+				switch tSliceElem := valTo.Type().Elem(); tSliceElem.Kind() {
+				case reflect.String:
+					valTo.Set(reflect.ValueOf(ExpandFrameworkStringValueList(ctx, v)))
+					return nil
+
+				case reflect.Ptr:
+					switch tSliceElem.Elem().Kind() {
+					case reflect.String:
+						valTo.Set(reflect.ValueOf(ExpandFrameworkStringList(ctx, v)))
+						return nil
+					}
+				}
+			}
+		}
+
+	case basetypes.SetValuable:
+		v, diags := vFrom.ToSetValue(ctx)
+		if err := fwdiag.DiagnosticsError(diags); err != nil {
+			return err
+		}
+		tListElem := v.ElementType(ctx)
+		switch {
+		case tListElem.Equal(types.StringType):
+			switch kTo {
+			case reflect.Slice:
+				switch tSliceElem := valTo.Type().Elem(); tSliceElem.Kind() {
+				case reflect.String:
+					valTo.Set(reflect.ValueOf(ExpandFrameworkStringValueSet(ctx, v)))
+					return nil
+
+				case reflect.Ptr:
+					switch tSliceElem.Elem().Kind() {
+					case reflect.String:
+						valTo.Set(reflect.ValueOf(ExpandFrameworkStringSet(ctx, v)))
+						return nil
+					}
+				}
 			}
 		}
 	}
