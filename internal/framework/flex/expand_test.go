@@ -276,6 +276,12 @@ func TestGenericExpand(t *testing.T) {
 			Target:     &CTestExpand{},
 			WantTarget: &CTestExpand{Name: "10m0s"},
 		},
+		{
+			TestName:   "single Duration Source and single *string Target",
+			Source:     &VTestExpand{Name: fwtypes.DurationValue(10 * time.Minute)},
+			Target:     &DTestExpand{},
+			WantTarget: &DTestExpand{Name: aws.String("10m0s")},
+		},
 	}
 
 	for _, testCase := range testCases {

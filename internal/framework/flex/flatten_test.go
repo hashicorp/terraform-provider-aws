@@ -294,6 +294,12 @@ func TestGenericFlatten(t *testing.T) {
 			Target:     &VTestFlatten{},
 			WantTarget: &VTestFlatten{Name: fwtypes.DurationValue(10 * time.Minute)},
 		},
+		{
+			TestName:   "single *string Source and single Duration Target",
+			Source:     &CTestFlatten{Name: aws.String("10m0s")},
+			Target:     &VTestFlatten{},
+			WantTarget: &VTestFlatten{Name: fwtypes.DurationValue(10 * time.Minute)},
+		},
 	}
 
 	for _, testCase := range testCases {
