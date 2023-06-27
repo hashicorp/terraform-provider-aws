@@ -3,11 +3,13 @@ package flex
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 type ATestFlatten struct{}
@@ -90,6 +92,10 @@ type TTestFlatten struct {
 
 type UTestFlatten struct {
 	Names types.List
+}
+
+type VTestFlatten struct {
+	Name fwtypes.Duration
 }
 
 func TestGenericFlatten(t *testing.T) {
@@ -281,6 +287,12 @@ func TestGenericFlatten(t *testing.T) {
 			Source:     &STestFlatten{Names: aws.StringSlice([]string{"a"})},
 			Target:     &UTestFlatten{},
 			WantTarget: &UTestFlatten{Names: types.ListValueMust(types.StringType, []attr.Value{types.StringValue("a")})},
+		},
+		{
+			TestName:   "single string Source and single Duration Target",
+			Source:     &BTestFlatten{Name: "10m0s"},
+			Target:     &VTestFlatten{},
+			WantTarget: &VTestFlatten{Name: fwtypes.DurationValue(10 * time.Minute)},
 		},
 	}
 

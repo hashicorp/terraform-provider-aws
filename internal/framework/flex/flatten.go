@@ -7,7 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
 // TODO
@@ -64,9 +66,14 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 
 	case reflect.String:
 		vFrom := valFrom.String()
-		switch {
-		case tTo.Equal(types.StringType):
-			valTo.Set(reflect.ValueOf(types.StringValue(vFrom)))
+
+		switch tTo := tTo.(type) {
+		case basetypes.StringTypable:
+			v, diags := tTo.ValueFromString(ctx, types.StringValue(vFrom))
+			if err := fwdiag.DiagnosticsError(diags); err != nil {
+				return err
+			}
+			valTo.Set(reflect.ValueOf(v))
 			return nil
 		}
 
