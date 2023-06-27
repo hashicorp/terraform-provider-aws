@@ -496,7 +496,7 @@ const (
 )
 
 func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -524,7 +524,7 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 		create.DiagError(names.DMS, create.ErrActionReading, DSNameEndpoint, d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(out.EndpointArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(out.EndpointArn))
 	if err != nil {
 		return create.DiagError(names.DMS, create.ErrActionReading, DSNameEndpoint, d.Id(), err)
 	}

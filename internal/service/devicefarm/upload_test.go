@@ -141,7 +141,7 @@ func testAccCheckUploadExists(ctx context.Context, n string, v *devicefarm.Uploa
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn(ctx)
 		resp, err := tfdevicefarm.FindUploadByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -158,7 +158,7 @@ func testAccCheckUploadExists(ctx context.Context, n string, v *devicefarm.Uploa
 
 func testAccCheckUploadDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_devicefarm_upload" {

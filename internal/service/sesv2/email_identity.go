@@ -134,11 +134,11 @@ const (
 )
 
 func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.CreateEmailIdentityInput{
 		EmailIdentity: aws.String(d.Get("email_identity").(string)),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("configuration_set_name"); ok {
@@ -163,8 +163,18 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 	return resourceEmailIdentityRead(ctx, d, meta)
 }
 
+func emailIdentityNameToARN(meta interface{}, emailIdentityName string) string {
+	return arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "ses",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("identity/%s", emailIdentityName),
+	}.String()
+}
+
 func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	out, err := FindEmailIdentityByID(ctx, conn, d.Id())
 
@@ -178,13 +188,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameEmailIdentity, d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("identity/%s", d.Id()),
-	}.String()
+	arn := emailIdentityNameToARN(meta, d.Id())
 
 	d.Set("arn", arn)
 	d.Set("configuration_set_name", out.ConfigurationSetName)
@@ -209,7 +213,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceEmailIdentityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	if d.HasChanges("configuration_set_name") {
 		in := &sesv2.PutEmailIdentityConfigurationSetAttributesInput{
@@ -249,7 +253,7 @@ func resourceEmailIdentityUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	log.Printf("[INFO] Deleting SESV2 EmailIdentity %s", d.Id())
 

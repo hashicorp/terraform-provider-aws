@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -80,13 +79,13 @@ func init() {
 
 func sweepCertifcates(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IoTConn()
+	conn := client.IoTConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -127,13 +126,13 @@ func sweepCertifcates(region string) error {
 
 func sweepPolicyAttachments(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IoTConn()
+	conn := client.IoTConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -194,13 +193,13 @@ func sweepPolicyAttachments(region string) error {
 
 func sweepPolicies(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IoTConn()
+	conn := client.IoTConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -241,13 +240,13 @@ func sweepPolicies(region string) error {
 
 func sweepRoleAliases(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IoTConn()
+	conn := client.IoTConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -288,13 +287,13 @@ func sweepRoleAliases(region string) error {
 
 func sweepThingPrincipalAttachments(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IoTConn()
+	conn := client.IoTConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -355,13 +354,13 @@ func sweepThingPrincipalAttachments(region string) error {
 
 func sweepThings(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IoTConn()
+	conn := client.IoTConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -402,13 +401,13 @@ func sweepThings(region string) error {
 
 func sweepThingTypes(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IoTConn()
+	conn := client.IoTConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -449,11 +448,11 @@ func sweepThingTypes(region string) error {
 
 func sweepTopicRules(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IoTConn()
+	conn := client.IoTConn(ctx)
 	input := &iot.ListTopicRulesInput{}
 	var sweeperErrs *multierror.Error
 
@@ -497,11 +496,11 @@ func sweepTopicRules(region string) error {
 
 func sweepThingGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).IoTConn()
+	conn := client.IoTConn(ctx)
 	input := &iot.ListThingGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -541,11 +540,11 @@ func sweepThingGroups(region string) error {
 
 func sweepTopicRuleDestinations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IoTConn()
+	conn := client.IoTConn(ctx)
 	input := &iot.ListTopicRuleDestinationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

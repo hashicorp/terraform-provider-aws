@@ -45,7 +45,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 
 				applicationName := idParts[0]
 				deploymentGroupName := idParts[1]
-				conn := meta.(*conns.AWSClient).DeployConn()
+				conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
 				input := &codedeploy.GetDeploymentGroupInput{
 					ApplicationName:     aws.String(applicationName),
@@ -492,7 +492,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 
 func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn()
+	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
 	applicationName := d.Get("app_name").(string)
 	deploymentGroupName := d.Get("deployment_group_name").(string)
@@ -501,7 +501,7 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		ApplicationName:     aws.String(applicationName),
 		DeploymentGroupName: aws.String(deploymentGroupName),
 		ServiceRoleArn:      aws.String(serviceRoleArn),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if attr, ok := d.GetOk("deployment_style"); ok {
@@ -590,7 +590,7 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn()
+	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
 	deploymentGroupName := d.Get("deployment_group_name").(string)
 	resp, err := conn.GetDeploymentGroupWithContext(ctx, &codedeploy.GetDeploymentGroupInput{
@@ -680,7 +680,7 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn()
+	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		// required fields
@@ -799,7 +799,7 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceDeploymentGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn()
+	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CodeDeploy DeploymentGroup %s", d.Id())
 	_, err := conn.DeleteDeploymentGroupWithContext(ctx, &codedeploy.DeleteDeploymentGroupInput{

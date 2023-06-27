@@ -45,7 +45,7 @@ func ResourceInvitationAccepter() *schema.Resource {
 }
 
 func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	adminAccountID := d.Get("administrator_account_id").(string)
 	var invitationID string
@@ -106,7 +106,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	var err error
 
@@ -135,7 +135,7 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DisassociateFromAdministratorAccountInput{}
 

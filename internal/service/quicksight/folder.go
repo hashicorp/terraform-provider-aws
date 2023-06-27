@@ -134,7 +134,7 @@ const (
 )
 
 func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -149,7 +149,7 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		AwsAccountId: aws.String(awsAccountId),
 		FolderId:     aws.String(folderId),
 		Name:         aws.String(d.Get("name").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("folder_type"); ok {
@@ -177,7 +177,7 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, folderId, err := ParseFolderId(d.Id())
 	if err != nil {
@@ -227,7 +227,7 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, folderId, err := ParseFolderId(d.Id())
 	if err != nil {
@@ -279,7 +279,7 @@ func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceFolderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	log.Printf("[INFO] Deleting QuickSight Folder %s", d.Id())
 

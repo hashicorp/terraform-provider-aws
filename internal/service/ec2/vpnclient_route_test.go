@@ -104,7 +104,7 @@ func testAccClientVPNRoute_description(t *testing.T) {
 
 func testAccCheckClientVPNRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_client_vpn_route" {
@@ -151,7 +151,7 @@ func testAccCheckClientVPNRouteExists(ctx context.Context, name string, v *ec2.C
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
 

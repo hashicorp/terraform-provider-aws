@@ -240,7 +240,7 @@ func testAccApp_disappears(t *testing.T) {
 
 func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_app" {
@@ -287,7 +287,7 @@ func testAccCheckAppExists(ctx context.Context, n string, v *sagemaker.DescribeA
 			return fmt.Errorf("No sagmaker domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		domainID := rs.Primary.Attributes["domain_id"]
 		appType := rs.Primary.Attributes["app_type"]

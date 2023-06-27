@@ -60,12 +60,12 @@ func ResourceKeyspace() *schema.Resource {
 }
 
 func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn()
+	conn := meta.(*conns.AWSClient).KeyspacesConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &keyspaces.CreateKeyspaceInput{
 		KeyspaceName: aws.String(name),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	_, err := conn.CreateKeyspaceWithContext(ctx, input)
@@ -88,7 +88,7 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceKeyspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn()
+	conn := meta.(*conns.AWSClient).KeyspacesConn(ctx)
 
 	keyspace, err := FindKeyspaceByName(ctx, conn, d.Id())
 
@@ -114,7 +114,7 @@ func resourceKeyspaceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceKeyspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn()
+	conn := meta.(*conns.AWSClient).KeyspacesConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Keyspaces Keyspace: (%s)", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutDelete),

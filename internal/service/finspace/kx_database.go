@@ -88,13 +88,13 @@ const (
 
 func resourceKxDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	in := &finspace.CreateKxDatabaseInput{
 		DatabaseName:  aws.String(d.Get("name").(string)),
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
 		ClientToken:   aws.String(id.UniqueId()),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -126,7 +126,7 @@ func resourceKxDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceKxDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	out, err := findKxDatabaseByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -151,7 +151,7 @@ func resourceKxDatabaseRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceKxDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	if d.HasChanges("description") {
 		in := &finspace.UpdateKxDatabaseInput{
@@ -171,7 +171,7 @@ func resourceKxDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceKxDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	log.Printf("[INFO] Deleting FinSpace KxDatabase %s", d.Id())
 

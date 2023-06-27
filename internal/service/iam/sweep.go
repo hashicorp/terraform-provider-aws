@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
 func init() {
@@ -122,13 +122,13 @@ func init() {
 
 func sweepGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.IAMConn(ctx)
 	input := &iam.ListGroupsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -238,11 +238,11 @@ func sweepGroups(region string) error {
 
 func sweepInstanceProfile(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.IAMConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -271,7 +271,7 @@ func sweepInstanceProfile(region string) error {
 			}
 
 			log.Printf("[INFO] Sweeping IAM Instance Profile %q", name)
-			err := sweep.DeleteResource(ctx, r, d, client)
+			err := sdk.DeleteResource(ctx, r, d, client)
 
 			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting IAM Instance Profile (%s): %w", name, err))
@@ -296,11 +296,11 @@ func sweepInstanceProfile(region string) error {
 
 func sweepOpenIDConnectProvider(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.IAMConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -312,7 +312,7 @@ func sweepOpenIDConnectProvider(region string) error {
 		r := ResourceOpenIDConnectProvider()
 		d := r.Data(nil)
 		d.SetId(arn)
-		err := sweep.DeleteResource(ctx, r, d, client)
+		err := sdk.DeleteResource(ctx, r, d, client)
 
 		if err != nil {
 			sweeperErr := fmt.Errorf("error deleting IAM OIDC Provider (%s): %w", arn, err)
@@ -336,11 +336,11 @@ func sweepOpenIDConnectProvider(region string) error {
 
 func sweepServiceSpecificCredentials(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.IAMConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -378,7 +378,7 @@ func sweepServiceSpecificCredentials(region string) error {
 			r := ResourceServiceSpecificCredential()
 			d := r.Data(nil)
 			d.SetId(id)
-			err := sweep.DeleteResource(ctx, r, d, client)
+			err := sdk.DeleteResource(ctx, r, d, client)
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Service Specific Credential (%s): %w", id, err)
@@ -403,11 +403,11 @@ func sweepServiceSpecificCredentials(region string) error {
 
 func sweepPolicies(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.IAMConn(ctx)
 	input := &iam.ListPoliciesInput{
 		Scope: aws.String(iam.PolicyScopeTypeLocal),
 	}
@@ -462,11 +462,11 @@ func sweepPolicies(region string) error {
 
 func sweepRoles(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.IAMConn(ctx)
 
 	roles := make([]string, 0)
 	err = conn.ListRolesPagesWithContext(ctx, &iam.ListRolesInput{}, func(page *iam.ListRolesOutput, lastPage bool) bool {
@@ -522,11 +522,11 @@ func sweepRoles(region string) error {
 
 func sweepSAMLProvider(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.IAMConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -538,7 +538,7 @@ func sweepSAMLProvider(region string) error {
 		r := ResourceSAMLProvider()
 		d := r.Data(nil)
 		d.SetId(arn)
-		err := sweep.DeleteResource(ctx, r, d, client)
+		err := sdk.DeleteResource(ctx, r, d, client)
 
 		if err != nil {
 			sweeperErr := fmt.Errorf("error deleting IAM SAML Provider (%s): %w", arn, err)
@@ -562,11 +562,11 @@ func sweepSAMLProvider(region string) error {
 
 func sweepServerCertificates(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.IAMConn(ctx)
 
 	err = conn.ListServerCertificatesPagesWithContext(ctx, &iam.ListServerCertificatesInput{}, func(out *iam.ListServerCertificatesOutput, lastPage bool) bool {
 		for _, sc := range out.ServerCertificateMetadataList {
@@ -596,11 +596,11 @@ func sweepServerCertificates(region string) error {
 
 func sweepServiceLinkedRoles(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.IAMConn(ctx)
 	var sweeperErrs *multierror.Error
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String("/aws-service-role/"),
@@ -626,7 +626,7 @@ func sweepServiceLinkedRoles(region string) error {
 			r := ResourceServiceLinkedRole()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(role.Arn))
-			err := sweep.DeleteResource(ctx, r, d, client)
+			err := sdk.DeleteResource(ctx, r, d, client)
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Service Linked Role (%s): %w", roleName, err)
 				log.Printf("[ERROR] %s", sweeperErr)
@@ -651,11 +651,11 @@ func sweepServiceLinkedRoles(region string) error {
 
 func sweepUsers(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.IAMConn(ctx)
 	prefixes := []string{
 		"test-user",
 		"test_user",
@@ -889,11 +889,11 @@ func roleNameFilter(name string) bool {
 
 func sweepVirtualMFADevice(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.IAMConn(ctx)
 	var sweeperErrs *multierror.Error
 	input := &iam.ListVirtualMFADevicesInput{}
 
@@ -913,7 +913,7 @@ func sweepVirtualMFADevice(region string) error {
 			r := ResourceVirtualMFADevice()
 			d := r.Data(nil)
 			d.SetId(serialNum)
-			err := sweep.DeleteResource(ctx, r, d, client)
+			err := sdk.DeleteResource(ctx, r, d, client)
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Virtual MFA Device (%s): %w", device, err)
 				log.Printf("[ERROR] %s", sweeperErr)
@@ -938,11 +938,11 @@ func sweepVirtualMFADevice(region string) error {
 
 func sweepSigningCertificates(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn()
+	conn := client.IAMConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -980,7 +980,7 @@ func sweepSigningCertificates(region string) error {
 			r := ResourceSigningCertificate()
 			d := r.Data(nil)
 			d.SetId(id)
-			err := sweep.DeleteResource(ctx, r, d, client)
+			err := sdk.DeleteResource(ctx, r, d, client)
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Signing Certificate (%s): %w", id, err)

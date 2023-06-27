@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -64,13 +63,13 @@ func init() {
 
 func sweepHealthChecks(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).Route53Conn()
+	conn := client.Route53Conn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -116,13 +115,13 @@ func sweepHealthChecks(region string) error {
 
 func sweepKeySigningKeys(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).Route53Conn()
+	conn := client.Route53Conn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -196,11 +195,11 @@ func sweepKeySigningKeys(region string) error {
 
 func sweepQueryLogs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).Route53Conn()
+	conn := client.Route53Conn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -241,11 +240,11 @@ func sweepQueryLogs(region string) error {
 
 func sweepTrafficPolicies(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).Route53Conn()
+	conn := client.Route53Conn(ctx)
 	input := &route53.ListTrafficPoliciesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -285,11 +284,11 @@ func sweepTrafficPolicies(region string) error {
 
 func sweepTrafficPolicyInstances(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).Route53Conn()
+	conn := client.Route53Conn(ctx)
 	input := &route53.ListTrafficPolicyInstancesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -329,13 +328,13 @@ func sweepTrafficPolicyInstances(region string) error {
 
 func sweepZones(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).Route53Conn()
+	conn := client.Route53Conn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

@@ -70,12 +70,12 @@ func ResourceCertificate() *schema.Resource {
 
 func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	certificateID := d.Get("certificate_id").(string)
 	request := &dms.ImportCertificateInput{
 		CertificateIdentifier: aws.String(certificateID),
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	pem, pemSet := d.GetOk("certificate_pem")
@@ -110,7 +110,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	response, err := conn.DescribeCertificatesWithContext(ctx, &dms.DescribeCertificatesInput{
 		Filters: []*dms.Filter{
@@ -155,7 +155,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	request := &dms.DeleteCertificateInput{
 		CertificateArn: aws.String(d.Get("certificate_arn").(string)),

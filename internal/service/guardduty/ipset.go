@@ -73,7 +73,7 @@ func ResourceIPSet() *schema.Resource {
 
 func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	detectorID := d.Get("detector_id").(string)
 	input := &guardduty.CreateIPSetInput{
@@ -82,7 +82,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Format:     aws.String(d.Get("format").(string)),
 		Location:   aws.String(d.Get("location").(string)),
 		Activate:   aws.Bool(d.Get("activate").(bool)),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateIPSetWithContext(ctx, input)
@@ -110,7 +110,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
 	if err != nil {
@@ -146,14 +146,14 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("name", resp.Name)
 	d.Set("activate", aws.StringValue(resp.Status) == guardduty.IpSetStatusActive)
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	return diags
 }
 
 func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
 	if err != nil {
@@ -187,7 +187,7 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
 	if err != nil {

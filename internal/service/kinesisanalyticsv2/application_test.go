@@ -4151,7 +4151,7 @@ func TestAccKinesisAnalyticsV2Application_RunConfiguration_Update(t *testing.T) 
 
 func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kinesisanalyticsv2_application" {
@@ -4185,7 +4185,7 @@ func testAccCheckApplicationExists(ctx context.Context, n string, v *kinesisanal
 			return fmt.Errorf("No Kinesis Analytics v2 Application ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
 
 		application, err := tfkinesisanalyticsv2.FindApplicationDetailByName(ctx, conn, rs.Primary.Attributes["name"])
 
@@ -4200,7 +4200,7 @@ func testAccCheckApplicationExists(ctx context.Context, n string, v *kinesisanal
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
 
 	input := &kinesisanalyticsv2.ListApplicationsInput{}
 

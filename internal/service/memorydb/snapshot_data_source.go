@@ -103,7 +103,7 @@ func DataSourceSnapshot() *schema.Resource {
 }
 
 func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -125,7 +125,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("name", snapshot.Name)
 	d.Set("source", snapshot.Source)
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for MemoryDB Snapshot (%s): %s", d.Id(), err)

@@ -102,7 +102,7 @@ func DataSourceAccessPoint() *schema.Resource {
 
 func dataSourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeAccessPointsWithContext(ctx, &efs.DescribeAccessPointsInput{

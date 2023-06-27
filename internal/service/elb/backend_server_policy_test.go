@@ -112,7 +112,7 @@ func TestAccELBBackendServerPolicy_update(t *testing.T) {
 
 func testAccCheckBackendServerPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_load_balancer_backend_policy" {
@@ -159,7 +159,7 @@ func testAccCheckBackendServerPolicyExists(ctx context.Context, n string) resour
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
 
 		_, err = tfelb.FindLoadBalancerBackendServerPolicyByTwoPartKey(ctx, conn, lbName, instancePort)
 

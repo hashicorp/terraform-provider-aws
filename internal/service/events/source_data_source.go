@@ -44,7 +44,7 @@ func DataSourceSource() *schema.Resource {
 
 func dataSourceSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.ListEventSourcesInput{}
 	if v, ok := d.GetOk("name_prefix"); ok {

@@ -268,7 +268,7 @@ func endpointSchema() *schema.Schema {
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &memorydb.CreateClusterInput{
@@ -278,7 +278,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		NodeType:                aws.String(d.Get("node_type").(string)),
 		NumReplicasPerShard:     aws.Int64(int64(d.Get("num_replicas_per_shard").(int))),
 		NumShards:               aws.Int64(int64(d.Get("num_shards").(int))),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 		TLSEnabled:              aws.Bool(d.Get("tls_enabled").(bool)),
 	}
 
@@ -358,7 +358,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	if d.HasChangesExcept("final_snapshot_name", "tags", "tags_all") {
 		waitParameterGroupInSync := false
@@ -468,7 +468,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	cluster, err := FindClusterByName(ctx, conn, d.Id())
 
@@ -544,7 +544,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	input := &memorydb.DeleteClusterInput{
 		ClusterName: aws.String(d.Id()),

@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -40,11 +39,11 @@ func init() {
 
 func sweepConfigurationSets(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SESConn()
+	conn := client.SESConn(ctx)
 	input := &ses.ListConfigurationSetsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -88,11 +87,11 @@ func sweepConfigurationSets(region string) error {
 
 func sweepIdentities(region, identityType string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SESConn()
+	conn := client.SESConn(ctx)
 	input := &ses.ListIdentitiesInput{
 		IdentityType: aws.String(identityType),
 	}
@@ -133,11 +132,11 @@ func sweepIdentities(region, identityType string) error {
 
 func sweepReceiptRuleSets(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SESConn()
+	conn := client.SESConn(ctx)
 
 	// You cannot delete the receipt rule set that is currently active.
 	// Setting the name of the receipt rule set to make active to null disables all email receiving.

@@ -78,7 +78,7 @@ func ResourceApplication() *schema.Resource {
 
 func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ApplicationInsightsConn()
+	conn := meta.(*conns.AWSClient).ApplicationInsightsConn(ctx)
 
 	input := &applicationinsights.CreateApplicationInput{
 		AutoConfigEnabled: aws.Bool(d.Get("auto_config_enabled").(bool)),
@@ -86,7 +86,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		CWEMonitorEnabled: aws.Bool(d.Get("cwe_monitor_enabled").(bool)),
 		OpsCenterEnabled:  aws.Bool(d.Get("ops_center_enabled").(bool)),
 		ResourceGroupName: aws.String(d.Get("resource_group_name").(string)),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("grouping_type"); ok {
@@ -113,7 +113,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ApplicationInsightsConn()
+	conn := meta.(*conns.AWSClient).ApplicationInsightsConn(ctx)
 
 	application, err := FindApplicationByName(ctx, conn, d.Id())
 
@@ -147,7 +147,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ApplicationInsightsConn()
+	conn := meta.(*conns.AWSClient).ApplicationInsightsConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &applicationinsights.UpdateApplicationInput{
@@ -187,7 +187,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ApplicationInsightsConn()
+	conn := meta.(*conns.AWSClient).ApplicationInsightsConn(ctx)
 
 	input := &applicationinsights.DeleteApplicationInput{
 		ResourceGroupName: aws.String(d.Id()),

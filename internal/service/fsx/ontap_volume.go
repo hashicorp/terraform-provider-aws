@@ -141,7 +141,7 @@ func ResourceOntapVolume() *schema.Resource {
 
 func resourceOntapVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &fsx.CreateVolumeInput{
@@ -150,7 +150,7 @@ func resourceOntapVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 			SizeInMegabytes:         aws.Int64(int64(d.Get("size_in_megabytes").(int))),
 			StorageVirtualMachineId: aws.String(d.Get("storage_virtual_machine_id").(string)),
 		},
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 		VolumeType: aws.String(d.Get("volume_type").(string)),
 	}
 
@@ -191,7 +191,7 @@ func resourceOntapVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceOntapVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	volume, err := FindVolumeByID(ctx, conn, d.Id())
 
@@ -230,7 +230,7 @@ func resourceOntapVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceOntapVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateVolumeInput{
@@ -275,7 +275,7 @@ func resourceOntapVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceOntapVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	log.Printf("[DEBUG] Deleting FSx ONTAP Volume: %s", d.Id())
 	_, err := conn.DeleteVolumeWithContext(ctx, &fsx.DeleteVolumeInput{

@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -56,11 +55,11 @@ func init() {
 
 func sweepAliases(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn()
+	conn := client.GameLiftConn(ctx)
 
 	err = listAliases(ctx, &gamelift.ListAliasesInput{}, conn, func(resp *gamelift.ListAliasesOutput) error {
 		if len(resp.Aliases) == 0 {
@@ -95,11 +94,11 @@ func sweepAliases(region string) error {
 
 func sweepBuilds(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn()
+	conn := client.GameLiftConn(ctx)
 
 	resp, err := conn.ListBuildsWithContext(ctx, &gamelift.ListBuildsInput{})
 	if err != nil {
@@ -133,11 +132,11 @@ func sweepBuilds(region string) error {
 
 func sweepScripts(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn()
+	conn := client.GameLiftConn(ctx)
 
 	resp, err := conn.ListScriptsWithContext(ctx, &gamelift.ListScriptsInput{})
 	if err != nil {
@@ -171,11 +170,11 @@ func sweepScripts(region string) error {
 
 func sweepFleets(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn()
+	conn := client.GameLiftConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -226,11 +225,11 @@ func sweepFleets(region string) error {
 
 func sweepGameServerGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn()
+	conn := client.GameLiftConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -281,11 +280,11 @@ func sweepGameServerGroups(region string) error {
 
 func sweepGameSessionQueue(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn()
+	conn := client.GameLiftConn(ctx)
 
 	out, err := conn.DescribeGameSessionQueuesWithContext(ctx, &gamelift.DescribeGameSessionQueuesInput{})
 

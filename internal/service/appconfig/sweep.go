@@ -12,8 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func init() {
@@ -52,13 +52,13 @@ func init() {
 
 func sweepApplications(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppConfigConn()
+	conn := client.AppConfigConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -105,13 +105,13 @@ func sweepApplications(region string) error {
 
 func sweepConfigurationProfiles(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppConfigConn()
+	conn := client.AppConfigConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -182,13 +182,13 @@ func sweepConfigurationProfiles(region string) error {
 
 func sweepDeploymentStrategies(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppConfigConn()
+	conn := client.AppConfigConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -241,13 +241,13 @@ func sweepDeploymentStrategies(region string) error {
 
 func sweepEnvironments(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppConfigConn()
+	conn := client.AppConfigConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -279,14 +279,10 @@ func sweepEnvironments(region string) error {
 						continue
 					}
 
-					id := fmt.Sprintf("%s:%s", aws.StringValue(item.Id), appId)
-
-					log.Printf("[INFO] Deleting AppConfig Environment (%s)", id)
-					r := ResourceEnvironment()
-					d := r.Data(nil)
-					d.SetId(id)
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+					sweepResources = append(sweepResources, framework.NewSweepResource(newResourceEnvironment, client,
+						framework.NewAttribute("application_id", aws.StringValue(item.ApplicationId)),
+						framework.NewAttribute("environment_id", aws.StringValue(item.Id)),
+					))
 				}
 
 				return !lastPage
@@ -318,13 +314,13 @@ func sweepEnvironments(region string) error {
 
 func sweepHostedConfigurationVersions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppConfigConn()
+	conn := client.AppConfigConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

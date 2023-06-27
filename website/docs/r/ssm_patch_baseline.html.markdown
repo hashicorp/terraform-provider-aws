@@ -164,9 +164,11 @@ The following arguments are supported:
 * `description` - (Optional) The description of the patch baseline.
 * `operating_system` - (Optional) The operating system the patch baseline applies to.
   Valid values are
+  `ALMA_LINUX`,
   `AMAZON_LINUX`,
   `AMAZON_LINUX_2`,
   `AMAZON_LINUX_2022`,
+  `AMAZON_LINUX_2023`,
   `CENTOS`,
   `DEBIAN`,
   `MACOS`,

@@ -89,7 +89,7 @@ func testAccCheckMemberAssociationExists(ctx context.Context, n string) resource
 			return fmt.Errorf("No Inspector2 Member Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
 
 		_, err := tfinspector2.FindMemberByAccountID(ctx, conn, rs.Primary.ID)
 
@@ -99,7 +99,7 @@ func testAccCheckMemberAssociationExists(ctx context.Context, n string) resource
 
 func testAccCheckMemberAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_inspector2_member_association" {

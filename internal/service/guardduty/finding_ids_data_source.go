@@ -11,8 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -52,7 +52,7 @@ func (d *dataSourceFindingIds) Schema(ctx context.Context, req datasource.Schema
 }
 
 func (d *dataSourceFindingIds) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().GuardDutyConn()
+	conn := d.Meta().GuardDutyConn(ctx)
 
 	var data dataSourceFindingIdsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)

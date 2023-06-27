@@ -197,7 +197,7 @@ func resourceObjectCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -271,7 +271,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): unable to convert tags", bucket, key)
 	}
 
-	SetTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
@@ -282,7 +282,7 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		return append(diags, resourceObjectUpload(ctx, d, meta)...)
 	}
 
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -350,7 +350,7 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -394,7 +394,7 @@ func resourceObjectImport(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 	uploader := s3manager.NewUploaderWithClient(conn)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
@@ -523,7 +523,7 @@ func resourceObjectSetKMS(ctx context.Context, d *schema.ResourceData, meta inte
 	// Only set non-default KMS key ID (one that doesn't match default)
 	if sseKMSKeyId != nil {
 		// retrieve S3 KMS Default Master Key
-		conn := meta.(*conns.AWSClient).KMSConn()
+		conn := meta.(*conns.AWSClient).KMSConn(ctx)
 		keyMetadata, err := kms.FindKeyByID(ctx, conn, DefaultKMSKeyAlias)
 		if err != nil {
 			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", DefaultKMSKeyAlias, err)

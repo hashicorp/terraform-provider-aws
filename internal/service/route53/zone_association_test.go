@@ -208,7 +208,7 @@ func TestAccRoute53ZoneAssociation_crossAccountAndRegion(t *testing.T) {
 
 func testAccCheckZoneAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_zone_association" {
 				continue
@@ -255,7 +255,7 @@ func testAccCheckZoneAssociationExists(ctx context.Context, resourceName string)
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		hostedZoneSummary, err := tfroute53.GetZoneAssociation(ctx, conn, zoneID, vpcID, vpcRegion)
 

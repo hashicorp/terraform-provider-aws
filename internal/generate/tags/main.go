@@ -21,6 +21,11 @@ const (
 	sdkV2 = 2
 )
 
+const (
+	defaultListTagsFunc   = "listTags"
+	defaultUpdateTagsFunc = "updateTags"
+)
+
 var (
 	createTags               = flag.Bool("CreateTags", false, "whether to generate CreateTags")
 	getTag                   = flag.Bool("GetTag", false, "whether to generate GetTag")
@@ -33,12 +38,15 @@ var (
 
 	createTagsFunc        = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
 	getTagFunc            = flag.String("GetTagFunc", "GetTag", "getTagFunc")
-	listTagsFunc          = flag.String("ListTagsFunc", "ListTags", "listTagsFunc")
+	getTagsInFunc         = flag.String("GetTagsInFunc", "getTagsIn", "getTagsInFunc")
+	keyValueTagsFunc      = flag.String("KeyValueTagsFunc", "KeyValueTags", "keyValueTagsFunc")
+	listTagsFunc          = flag.String("ListTagsFunc", defaultListTagsFunc, "listTagsFunc")
 	listTagsInFiltIDName  = flag.String("ListTagsInFiltIDName", "", "listTagsInFiltIDName")
 	listTagsInIDElem      = flag.String("ListTagsInIDElem", "ResourceArn", "listTagsInIDElem")
 	listTagsInIDNeedSlice = flag.String("ListTagsInIDNeedSlice", "", "listTagsInIDNeedSlice")
 	listTagsOp            = flag.String("ListTagsOp", "ListTagsForResource", "listTagsOp")
 	listTagsOutTagsElem   = flag.String("ListTagsOutTagsElem", "Tags", "listTagsOutTagsElem")
+	setTagsOutFunc        = flag.String("SetTagsOutFunc", "setTagsOut", "setTagsOutFunc")
 	tagInCustomVal        = flag.String("TagInCustomVal", "", "tagInCustomVal")
 	tagInIDElem           = flag.String("TagInIDElem", "ResourceArn", "tagInIDElem")
 	tagInIDNeedSlice      = flag.String("TagInIDNeedSlice", "", "tagInIDNeedSlice")
@@ -53,11 +61,12 @@ var (
 	tagTypeIDElem         = flag.String("TagTypeIDElem", "", "tagTypeIDElem")
 	tagTypeKeyElem        = flag.String("TagTypeKeyElem", "Key", "tagTypeKeyElem")
 	tagTypeValElem        = flag.String("TagTypeValElem", "Value", "tagTypeValElem")
+	tagsFunc              = flag.String("TagsFunc", "Tags", "tagsFunc")
 	untagInCustomVal      = flag.String("UntagInCustomVal", "", "untagInCustomVal")
 	untagInNeedTagKeyType = flag.String("UntagInNeedTagKeyType", "", "untagInNeedTagKeyType")
 	untagInTagsElem       = flag.String("UntagInTagsElem", "TagKeys", "untagInTagsElem")
 	untagOp               = flag.String("UntagOp", "UntagResource", "untagOp")
-	updateTagsFunc        = flag.String("UpdateTagsFunc", "UpdateTags", "updateTagsFunc")
+	updateTagsFunc        = flag.String("UpdateTagsFunc", defaultUpdateTagsFunc, "updateTagsFunc")
 
 	parentNotFoundErrCode = flag.String("ParentNotFoundErrCode", "", "Parent 'NotFound' Error Code")
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
@@ -65,6 +74,7 @@ var (
 	sdkServicePackage = flag.String("AWSSDKServicePackage", "", "AWS Go SDK package to use. Defaults to the provider service package name.")
 	sdkVersion        = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
 	kvtValues         = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
+	skipServiceImp    = flag.Bool("SkipAWSServiceImp", false, "Whether to skip importing the AWS service package")
 	skipNamesImp      = flag.Bool("SkipNamesImp", false, "Whether to skip importing names")
 	skipTypesImp      = flag.Bool("SkipTypesImp", false, "Whether to skip importing types")
 )
@@ -129,6 +139,8 @@ type TemplateData struct {
 
 	CreateTagsFunc          string
 	GetTagFunc              string
+	GetTagsInFunc           string
+	KeyValueTagsFunc        string
 	ListTagsFunc            string
 	ListTagsInFiltIDName    string
 	ListTagsInIDElem        string
@@ -138,6 +150,7 @@ type TemplateData struct {
 	ParentNotFoundErrCode   string
 	ParentNotFoundErrMsg    string
 	RetryCreateOnNotFound   string
+	SetTagsOutFunc          string
 	TagInCustomVal          string
 	TagInIDElem             string
 	TagInIDNeedSlice        string
@@ -154,6 +167,7 @@ type TemplateData struct {
 	TagTypeIDElem           string
 	TagTypeKeyElem          string
 	TagTypeValElem          string
+	TagsFunc                string
 	UntagInCustomVal        string
 	UntagInNeedTagKeyType   string
 	UntagInNeedTagType      bool
@@ -169,8 +183,12 @@ type TemplateData struct {
 	HelperSchemaPkg  bool
 	InternalTypesPkg bool
 	NamesPkg         bool
+	SkipServiceImp   bool
 	SkipTypesImp     bool
 	TfResourcePkg    bool
+
+	IsDefaultListTags   bool
+	IsDefaultUpdateTags bool
 }
 
 func main() {
@@ -192,6 +210,8 @@ func main() {
 	if *sdkServicePackage == "" {
 		sdkServicePackage = &servicePackage
 	}
+
+	g.Infof("Generating internal/service/%s/%s", servicePackage, filename)
 
 	awsPkg, err := names.AWSGoPackage(*sdkServicePackage, *sdkVersion)
 	if err != nil {
@@ -246,16 +266,19 @@ func main() {
 		ProviderNameUpper:      providerNameUpper,
 		ServicePackage:         servicePackage,
 
-		ConnsPkg:         *listTags || *updateTags,
+		ConnsPkg:         (*listTags && *listTagsFunc == defaultListTagsFunc) || (*updateTags && *updateTagsFunc == defaultUpdateTagsFunc),
 		FmtPkg:           *updateTags,
 		HelperSchemaPkg:  awsPkg == "autoscaling",
-		InternalTypesPkg: *listTags || *serviceTagsMap || *serviceTagsSlice,
+		InternalTypesPkg: (*listTags && *listTagsFunc == defaultListTagsFunc) || *serviceTagsMap || *serviceTagsSlice,
 		NamesPkg:         *updateTags && !*skipNamesImp,
+		SkipServiceImp:   *skipServiceImp,
 		SkipTypesImp:     *skipTypesImp,
 		TfResourcePkg:    *getTag,
 
 		CreateTagsFunc:          createTagsFunc,
 		GetTagFunc:              *getTagFunc,
+		GetTagsInFunc:           *getTagsInFunc,
+		KeyValueTagsFunc:        *keyValueTagsFunc,
 		ListTagsFunc:            *listTagsFunc,
 		ListTagsInFiltIDName:    *listTagsInFiltIDName,
 		ListTagsInIDElem:        *listTagsInIDElem,
@@ -264,6 +287,7 @@ func main() {
 		ListTagsOutTagsElem:     *listTagsOutTagsElem,
 		ParentNotFoundErrCode:   *parentNotFoundErrCode,
 		ParentNotFoundErrMsg:    *parentNotFoundErrMsg,
+		SetTagsOutFunc:          *setTagsOutFunc,
 		TagInCustomVal:          *tagInCustomVal,
 		TagInIDElem:             *tagInIDElem,
 		TagInIDNeedSlice:        *tagInIDNeedSlice,
@@ -280,6 +304,7 @@ func main() {
 		TagTypeIDElem:           *tagTypeIDElem,
 		TagTypeKeyElem:          *tagTypeKeyElem,
 		TagTypeValElem:          *tagTypeValElem,
+		TagsFunc:                *tagsFunc,
 		UntagInCustomVal:        *untagInCustomVal,
 		UntagInNeedTagKeyType:   *untagInNeedTagKeyType,
 		UntagInNeedTagType:      *untagInNeedTagType,
@@ -287,6 +312,9 @@ func main() {
 		UntagOp:                 *untagOp,
 		UpdateTagsFunc:          *updateTagsFunc,
 		UpdateTagsIgnoreSystem:  !*updateTagsNoIgnoreSystem,
+
+		IsDefaultListTags:   *listTagsFunc == defaultListTagsFunc,
+		IsDefaultUpdateTags: *updateTagsFunc == defaultUpdateTagsFunc,
 	}
 
 	templateBody := newTemplateBody(*sdkVersion, *kvtValues)

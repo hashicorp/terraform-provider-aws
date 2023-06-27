@@ -262,7 +262,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 
 func testAccCheck{{ .Resource }}Destroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}" {
@@ -313,7 +313,7 @@ func testAccCheck{{ .Resource }}Exists(ctx context.Context, name string, {{ .Res
 			return create.Error(names.{{ .Service }}, create.ErrActionCheckingExistence, tf{{ .ServicePackage }}.ResName{{ .Resource }}, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 
 		{{- if .AWSGoSDKV2 }}
 		resp, err := conn.Describe{{ .Resource }}(ctx, &{{ .ServicePackage }}.Describe{{ .Resource }}Input{
@@ -336,7 +336,7 @@ func testAccCheck{{ .Resource }}Exists(ctx context.Context, name string, {{ .Res
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+	conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 
 	input := &{{ .ServicePackage }}.List{{ .Resource }}sInput{}
 

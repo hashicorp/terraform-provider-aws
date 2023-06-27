@@ -17,7 +17,7 @@ Terraform data source for managing an AWS Organizations Policy.
 ```terraform
 data "aws_organizations_organization" "current" {}
 
-data "aws_organizations_oorganizational_policies" "current" {
+data "aws_organizations_policies_for_target" "current" {
   target_id = data.aws_organizations_organization.current.roots[0].id
   filter    = "SERVICE_CONTROL_POLICY"
 }

@@ -390,7 +390,7 @@ func testAccCheckSlotTypeExistsWithVersion(ctx context.Context, rName, slotTypeV
 			return fmt.Errorf("No Lex Slot Type ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
 
 		output, err := tflexmodels.FindSlotTypeVersionByName(ctx, conn, rs.Primary.ID, slotTypeVersion)
 
@@ -410,7 +410,7 @@ func testAccCheckSlotTypeExists(ctx context.Context, rName string, output *lexmo
 
 func testAccCheckSlotTypeNotExists(ctx context.Context, slotTypeName, slotTypeVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
 
 		_, err := tflexmodels.FindSlotTypeVersionByName(ctx, conn, slotTypeName, slotTypeVersion)
 
@@ -428,7 +428,7 @@ func testAccCheckSlotTypeNotExists(ctx context.Context, slotTypeName, slotTypeVe
 
 func testAccCheckSlotTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lex_slot_type" {

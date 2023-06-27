@@ -132,13 +132,13 @@ func ResourceFindingsFilter() *schema.Resource {
 }
 
 func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.CreateFindingsFilterInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string))),
 		Action:      aws.String(d.Get("action").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	var err error
@@ -183,7 +183,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.GetFindingsFilterInput{
 		Id: aws.String(d.Id()),
@@ -211,7 +211,7 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("action", resp.Action)
 	d.Set("position", resp.Position)
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	d.Set("arn", resp.Arn)
 
@@ -219,7 +219,7 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.UpdateFindingsFilterInput{
 		Id: aws.String(d.Id()),
@@ -257,7 +257,7 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceFindingsFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DeleteFindingsFilterInput{
 		Id: aws.String(d.Id()),

@@ -61,7 +61,7 @@ func ResourceCustomerGatewayAssociation() *schema.Resource {
 }
 
 func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	customerGatewayARN := d.Get("customer_gateway_arn").(string)
@@ -116,7 +116,7 @@ func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, customerGatewayARN, err := CustomerGatewayAssociationParseResourceID(d.Id())
 
@@ -145,7 +145,7 @@ func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.Resou
 }
 
 func resourceCustomerGatewayAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, customerGatewayARN, err := CustomerGatewayAssociationParseResourceID(d.Id())
 

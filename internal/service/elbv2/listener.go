@@ -394,12 +394,12 @@ func suppressIfDefaultActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 
 func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	lbARN := d.Get("load_balancer_arn").(string)
 	input := &elbv2.CreateListenerInput{
 		LoadBalancerArn: aws.String(lbARN),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if alpnPolicy, ok := d.GetOk("alpn_policy"); ok {
@@ -461,7 +461,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(aws.StringValue(output.Listeners[0].ListenerArn))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -482,7 +482,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	const (
 		loadBalancerListenerReadTimeout = 2 * time.Minute
 	)
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	var listener *elbv2.Listener
 
@@ -554,7 +554,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	const (
 		loadBalancerListenerUpdateTimeout = 5 * time.Minute
 	)
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &elbv2.ModifyListenerInput{
@@ -620,7 +620,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	_, err := conn.DeleteListenerWithContext(ctx, &elbv2.DeleteListenerInput{
 		ListenerArn: aws.String(d.Id()),

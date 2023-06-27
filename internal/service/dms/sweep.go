@@ -11,7 +11,6 @@ import (
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -37,13 +36,13 @@ func init() {
 
 func sweepReplicationInstances(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).DMSConn()
+	conn := client.DMSConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -78,13 +77,13 @@ func sweepReplicationInstances(region string) error {
 
 func sweepReplicationTasks(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).DMSConn()
+	conn := client.DMSConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -122,13 +121,13 @@ func sweepReplicationTasks(region string) error {
 
 func sweepEndpoints(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).DMSConn()
+	conn := client.DMSConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

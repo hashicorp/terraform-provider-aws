@@ -65,7 +65,7 @@ func DataSourcePublicKey() *schema.Resource {
 
 func dataSourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 	keyId := d.Get("key_id").(string)
 
 	input := &kms.GetPublicKeyInput{

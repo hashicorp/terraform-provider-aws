@@ -47,7 +47,7 @@ func DataSourceOrganizationalUnits() *schema.Resource {
 
 func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	parentID := d.Get("parent_id").(string)
 	children, err := findOUsForParent(ctx, conn, parentID)

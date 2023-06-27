@@ -52,7 +52,7 @@ func DataSourceOpenIDConnectProvider() *schema.Resource {
 }
 
 func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &iam.GetOpenIDConnectProviderInput{}

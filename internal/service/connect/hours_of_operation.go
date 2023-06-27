@@ -125,7 +125,7 @@ func ResourceHoursOfOperation() *schema.Resource {
 }
 
 func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -134,7 +134,7 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 		Config:     config,
 		InstanceId: aws.String(instanceID),
 		Name:       aws.String(name),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 		TimeZone:   aws.String(d.Get("time_zone").(string)),
 	}
 
@@ -159,7 +159,7 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
 
@@ -197,13 +197,13 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("name", resp.HoursOfOperation.Name)
 	d.Set("time_zone", resp.HoursOfOperation.TimeZone)
 
-	SetTagsOut(ctx, resp.HoursOfOperation.Tags)
+	setTagsOut(ctx, resp.HoursOfOperation.Tags)
 
 	return nil
 }
 
 func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
 
@@ -229,7 +229,7 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
 

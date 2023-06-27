@@ -470,7 +470,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_full(t *test
 
 func testAccCheckBucketAnalyticsConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_analytics_configuration" {
@@ -495,7 +495,7 @@ func testAccCheckBucketAnalyticsConfigurationExists(ctx context.Context, n strin
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 		output, err := conn.GetBucketAnalyticsConfigurationWithContext(ctx, &s3.GetBucketAnalyticsConfigurationInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
 			Id:     aws.String(rs.Primary.Attributes["name"]),
@@ -517,7 +517,7 @@ func testAccCheckBucketAnalyticsConfigurationExists(ctx context.Context, n strin
 
 func testAccCheckBucketAnalyticsConfigurationRemoved(ctx context.Context, name, bucket string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 		return tfs3.WaitForDeleteBucketAnalyticsConfiguration(ctx, conn, bucket, name, 1*time.Minute)
 	}
 }

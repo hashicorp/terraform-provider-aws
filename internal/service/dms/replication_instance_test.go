@@ -508,7 +508,7 @@ func testAccCheckReplicationInstanceExists(ctx context.Context, n string) resour
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 		resp, err := conn.DescribeReplicationInstancesWithContext(ctx, &dms.DescribeReplicationInstancesInput{
 			Filters: []*dms.Filter{
 				{
@@ -536,7 +536,7 @@ func testAccCheckReplicationInstanceDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 
 			resp, err := conn.DescribeReplicationInstancesWithContext(ctx, &dms.DescribeReplicationInstancesInput{
 				Filters: []*dms.Filter{
@@ -573,7 +573,7 @@ func testAccCheckReplicationInstanceDestroy(ctx context.Context) resource.TestCh
 
 // Ensure at least two engine versions of the replication instance class are available
 func testAccReplicationInstanceEngineVersionsPreCheck(t *testing.T) []string {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 
 	// Gather all orderable DMS replication instances of the instance class
 	// used in the acceptance testing. Not currently available as an input

@@ -1,6 +1,6 @@
 package elbv2
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"bytes"
 	"context"
 	"errors"
@@ -303,7 +303,7 @@ func suppressIfLBTypeNot(t string) schema.SchemaDiffSuppressFunc {
 
 func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -318,7 +318,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	lbType := d.Get("load_balancer_type").(string)
 	input := &elbv2.CreateLoadBalancerInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 		Type: aws.String(lbType),
 	}
 
@@ -366,7 +366,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -384,7 +384,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	lb, err := FindLoadBalancerByARN(ctx, conn, d.Id())
 
@@ -406,7 +406,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	attributes := make([]*elbv2.LoadBalancerAttribute, 0)
 
@@ -612,7 +612,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	log.Printf("[INFO] Deleting LB: %s", d.Id())
 
@@ -624,7 +624,7 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting LB: %s", err)
 	}
 
-	ec2conn := meta.(*conns.AWSClient).EC2Conn()
+	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	err := cleanupALBNetworkInterfaces(ctx, ec2conn, d.Id())
 	if err != nil {
@@ -897,7 +897,7 @@ func SuffixFromARN(arn *string) string {
 
 // flattenResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
 func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBalancer) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	d.Set("arn", lb.LoadBalancerArn)
 	d.Set("arn_suffix", SuffixFromARN(lb.LoadBalancerArn))

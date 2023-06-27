@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -51,12 +50,12 @@ func init() {
 
 func sweepAddons(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).EKSConn()
+	conn := client.EKSConn(ctx)
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -126,11 +125,11 @@ func sweepAddons(region string) error {
 
 func sweepClusters(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).EKSConn()
+	conn := client.EKSConn(ctx)
 	input := &eks.ListClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -170,11 +169,11 @@ func sweepClusters(region string) error {
 
 func sweepFargateProfiles(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EKSConn()
+	conn := client.EKSConn(ctx)
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -243,12 +242,12 @@ func sweepFargateProfiles(region string) error {
 
 func sweepIdentityProvidersConfig(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).EKSConn()
+	conn := client.EKSConn(ctx)
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -317,11 +316,11 @@ func sweepIdentityProvidersConfig(region string) error {
 
 func sweepNodeGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EKSConn()
+	conn := client.EKSConn(ctx)
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)

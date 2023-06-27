@@ -189,7 +189,7 @@ func ResourceBranch() *schema.Resource {
 
 func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	appID := d.Get("app_id").(string)
 	branchName := d.Get("branch_name").(string)
@@ -199,7 +199,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		AppId:           aws.String(appID),
 		BranchName:      aws.String(branchName),
 		EnableAutoBuild: aws.Bool(d.Get("enable_auto_build").(bool)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("backend_environment_arn"); ok {
@@ -268,7 +268,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	appID, branchName, err := BranchParseResourceID(d.Id())
 
@@ -310,14 +310,14 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("stage", branch.Stage)
 	d.Set("ttl", branch.Ttl)
 
-	SetTagsOut(ctx, branch.Tags)
+	setTagsOut(ctx, branch.Tags)
 
 	return diags
 }
 
 func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		appID, branchName, err := BranchParseResourceID(d.Id())
@@ -403,7 +403,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	appID, branchName, err := BranchParseResourceID(d.Id())
 

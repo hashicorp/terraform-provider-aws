@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -67,11 +66,11 @@ func init() {
 
 func sweepClusters(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn()
+	conn := client.ElastiCacheConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -114,11 +113,11 @@ func sweepClusters(region string) error {
 
 func sweepGlobalReplicationGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn()
+	conn := client.ElastiCacheConn(ctx)
 
 	var grgGroup multierror.Group
 
@@ -169,11 +168,11 @@ func sweepGlobalReplicationGroups(region string) error {
 
 func sweepParameterGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn()
+	conn := client.ElastiCacheConn(ctx)
 
 	err = conn.DescribeCacheParameterGroupsPagesWithContext(ctx, &elasticache.DescribeCacheParameterGroupsInput{}, func(page *elasticache.DescribeCacheParameterGroupsOutput, lastPage bool) bool {
 		if len(page.CacheParameterGroups) == 0 {
@@ -211,13 +210,13 @@ func sweepParameterGroups(region string) error {
 
 func sweepReplicationGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ElastiCacheConn()
+	conn := client.ElastiCacheConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -263,11 +262,11 @@ func sweepReplicationGroups(region string) error {
 
 func sweepSubnetGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn()
+	conn := client.ElastiCacheConn(ctx)
 
 	err = conn.DescribeCacheSubnetGroupsPagesWithContext(ctx, &elasticache.DescribeCacheSubnetGroupsInput{}, func(page *elasticache.DescribeCacheSubnetGroupsOutput, lastPage bool) bool {
 		if len(page.CacheSubnetGroups) == 0 {
