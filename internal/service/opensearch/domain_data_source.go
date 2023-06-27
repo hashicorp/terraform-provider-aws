@@ -2,6 +2,7 @@ package opensearch
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
@@ -355,6 +356,21 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"software_update_options": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auto_software_update_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+			},
 			"tags": tftags.TagsSchemaComputed(),
 			"vpc_options": {
 				Type:     schema.TypeList,
@@ -460,6 +476,10 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if err := d.Set("snapshot_options", flattenSnapshotOptions(ds.SnapshotOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting snapshot_options: %s", err)
+	}
+
+	if err := d.Set("software_update_options", flattenSoftwareUpdateOptions(ds.SoftwareUpdateOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting software_update_options: %s", err)
 	}
 
 	if ds.VPCOptions != nil {

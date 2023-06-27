@@ -213,6 +213,16 @@ func flattenSnapshotOptions(snapshotOptions *opensearchservice.SnapshotOptions) 
 	return []map[string]interface{}{m}
 }
 
+func flattenSoftwareUpdateOptions(softwareUpdateOptions *opensearchservice.SoftwareUpdateOptions) map[string]interface{} {
+	if softwareUpdateOptions == nil {
+		return map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	return m
+}
+
 func flattenVPCDerivedInfo(o *opensearchservice.VPCDerivedInfo) []map[string]interface{} {
 	m := map[string]interface{}{}
 
