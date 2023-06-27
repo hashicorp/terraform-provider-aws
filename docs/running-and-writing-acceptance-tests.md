@@ -1164,7 +1164,7 @@ func sweepThings(region string) error {
     return !lastPage
   })
 
-  if sweep.SkipSweepError(err) {
+  if awsv1.SkipSweepError(err) {
     log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
   }
@@ -1201,7 +1201,7 @@ func sweepThings(region string) error {
 
   for {
     output, err := conn.ListThings(input)
-    if sweep.SkipSweepError(err) {
+    if awsv1.SkipSweepError(err) {
       log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
       return nil
     }

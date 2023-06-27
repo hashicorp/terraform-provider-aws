@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -96,7 +97,7 @@ func sweepTables(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DynamoDB Tables for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping DynamoDB Tables sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -152,7 +153,7 @@ func sweepBackups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping DynamoDB Backups for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping DynamoDB Backups sweep for %s: %s", region, errs)
 		return nil
 	}

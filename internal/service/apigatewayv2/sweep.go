@@ -12,6 +12,7 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -68,7 +69,7 @@ func sweepAPIs(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping API Gateway v2 API sweep for %s: %s", region, err)
 		return nil
 	}
@@ -125,7 +126,7 @@ func sweepAPIMappings(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -137,7 +138,7 @@ func sweepAPIMappings(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping API Gateway v2 API Mapping sweep for %s: %s", region, err)
 		return nil
 	}
@@ -181,7 +182,7 @@ func sweepDomainNames(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping API Gateway v2 Domain Name sweep for %s: %s", region, err)
 		return nil
 	}
@@ -225,7 +226,7 @@ func sweepVPCLinks(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping API Gateway v2 VPC Link sweep for %s: %s", region, err)
 		return nil
 	}

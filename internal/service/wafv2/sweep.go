@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -78,7 +79,7 @@ func sweepIPSets(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WAFv2 IPSet sweep for %s: %s", region, err)
 		return nil
 	}
@@ -127,7 +128,7 @@ func sweepRegexPatternSets(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WAFv2 RegexPatternSet sweep for %s: %s", region, err)
 		return nil
 	}
@@ -176,7 +177,7 @@ func sweepRuleGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WAFv2 RuleGroup sweep for %s: %s", region, err)
 		return nil
 	}
@@ -235,7 +236,7 @@ func sweepWebACLs(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WAFv2 WebACL sweep for %s: %s", region, err)
 		return nil
 	}

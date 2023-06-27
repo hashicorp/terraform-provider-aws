@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -33,7 +34,7 @@ func sweepApps(region string) error {
 	for {
 		output, err := conn.GetAppsWithContext(ctx, input)
 		if err != nil {
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				log.Printf("[WARN] Skipping Pinpoint app sweep for %s: %s", region, err)
 				return nil
 			}

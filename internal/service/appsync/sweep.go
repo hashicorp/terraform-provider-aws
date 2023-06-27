@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -48,7 +49,7 @@ func sweepGraphQLAPIs(region string) error {
 
 	for {
 		output, err := conn.ListGraphqlApisWithContext(ctx, input)
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping AppSync GraphQL API sweep for %s: %s", region, err)
 			return nil
 		}
@@ -61,7 +62,6 @@ func sweepGraphQLAPIs(region string) error {
 		}
 
 		for _, graphAPI := range output.GraphqlApis {
-
 			r := ResourceGraphQLAPI()
 			d := r.Data(nil)
 
@@ -82,7 +82,7 @@ func sweepGraphQLAPIs(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppSync GraphQL API %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping AppSync GraphQL API sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -104,7 +104,7 @@ func sweepDomainNames(region string) error {
 
 	for {
 		output, err := conn.ListDomainNamesWithContext(ctx, input)
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping AppSync Domain Name sweep for %s: %s", region, err)
 			return nil
 		}
@@ -117,7 +117,6 @@ func sweepDomainNames(region string) error {
 		}
 
 		for _, dm := range output.DomainNameConfigs {
-
 			r := ResourceDomainName()
 			d := r.Data(nil)
 
@@ -138,7 +137,7 @@ func sweepDomainNames(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppSync Domain Name %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping AppSync Domain Name sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -160,7 +159,7 @@ func sweepDomainNameAssociations(region string) error {
 
 	for {
 		output, err := conn.ListDomainNamesWithContext(ctx, input)
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping AppSync Domain Name Association sweep for %s: %s", region, err)
 			return nil
 		}
@@ -173,7 +172,6 @@ func sweepDomainNameAssociations(region string) error {
 		}
 
 		for _, dm := range output.DomainNameConfigs {
-
 			r := ResourceDomainNameAPIAssociation()
 			d := r.Data(nil)
 
@@ -194,7 +192,7 @@ func sweepDomainNameAssociations(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppSync Domain Name Association %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping AppSync Domain Name Association sweep for %s: %s", region, errs)
 		return nil
 	}

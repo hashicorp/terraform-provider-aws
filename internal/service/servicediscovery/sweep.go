@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -55,7 +56,7 @@ func sweepHTTPNamespaces(region string) error {
 
 	namespaces, err := findNamespacesByType(ctx, conn, servicediscovery.NamespaceTypeHttp)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Service Discovery HTTP Namespace sweep for %s: %s", region, err)
 		return nil
 	}
@@ -92,7 +93,7 @@ func sweepPrivateDNSNamespaces(region string) error {
 
 	namespaces, err := findNamespacesByType(ctx, conn, servicediscovery.NamespaceTypeDnsPrivate)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Service Discovery Private DNS Namespace sweep for %s: %s", region, err)
 		return nil
 	}
@@ -129,7 +130,7 @@ func sweepPublicDNSNamespaces(region string) error {
 
 	namespaces, err := findNamespacesByType(ctx, conn, servicediscovery.NamespaceTypeDnsPublic)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Service Discovery Public DNS Namespace sweep for %s: %s", region, err)
 		return nil
 	}
@@ -167,7 +168,7 @@ func sweepServices(region string) error {
 
 	services, err := findServices(ctx, conn, input)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Service Discovery Service sweep for %s: %s", region, err)
 		return nil
 	}

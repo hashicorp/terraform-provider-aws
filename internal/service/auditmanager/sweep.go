@@ -57,10 +57,7 @@ func RegisterSweepers() {
 // AccessDeniedException: Please complete AWS Audit Manager setup from home page to enable this action in this account.
 func isCompleteSetupError(err error) bool {
 	var ade *types.AccessDeniedException
-	if errors.As(err, &ade) {
-		return true
-	}
-	return false
+	return errors.As(err, &ade)
 }
 
 func sweepAssessments(region string) error {

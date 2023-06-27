@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -59,7 +60,7 @@ func sweepGateways(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Storage Gateway Gateway sweep for %s: %s", region, err)
 		return nil
 	}
@@ -103,7 +104,7 @@ func sweepTapePools(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Storage Gateway Tape Pool sweep for %s: %s", region, err)
 		return nil
 	}
@@ -147,7 +148,7 @@ func sweepFileSystemAssociations(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Storage Gateway File System Association sweep for %s: %s", region, err)
 		return nil
 	}

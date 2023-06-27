@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -95,7 +96,7 @@ func sweepHealthChecks(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Route 53 Health Check sweep for %s: %s", region, err)
 		return nil
 	}
@@ -171,7 +172,6 @@ func sweepKeySigningKeys(region string) error {
 
 				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 			}
-
 		}
 
 		return !lastPage
@@ -185,7 +185,7 @@ func sweepKeySigningKeys(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Route53 Key-Signing Keys for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Route53 Key-Signing Keys sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -223,7 +223,7 @@ func sweepQueryLogs(region string) error {
 	})
 	// In unsupported AWS partitions, the API may return an error even the SDK cannot handle.
 	// Reference: https://github.com/aws/aws-sdk-go/issues/3313
-	if sweep.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "SerializationError", "failed to unmarshal error message") || tfawserr.ErrMessageContains(err, "AccessDeniedException", "Unable to determine service/operation name to be authorized") {
+	if awsv1.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "SerializationError", "failed to unmarshal error message") || tfawserr.ErrMessageContains(err, "AccessDeniedException", "Unable to determine service/operation name to be authorized") {
 		log.Printf("[WARN] Skipping Route53 query logging configurations sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -268,7 +268,7 @@ func sweepTrafficPolicies(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Route 53 Traffic Policy sweep for %s: %s", region, err)
 		return nil
 	}
@@ -316,7 +316,7 @@ func sweepTrafficPolicyInstances(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Route 53 Traffic Policy Instance sweep for %s: %s", region, err)
 		return nil
 	}
@@ -377,7 +377,7 @@ func sweepZones(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Route 53 Hosted Zone sweep for %s: %s", region, err)
 		return nil
 	}

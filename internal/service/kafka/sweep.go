@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -64,7 +65,7 @@ func sweepClusters(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MSK Cluster sweep for %s: %s", region, err)
 		return nil
 	}
@@ -115,7 +116,7 @@ func sweepConfigurations(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MSK Configuration sweep for %s: %s", region, err)
 		return nil
 	}

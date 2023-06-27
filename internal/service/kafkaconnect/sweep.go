@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -54,7 +55,7 @@ func sweepConnectors(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MSK Connect Connector sweep for %s: %s", region, err)
 		return nil
 	}
@@ -98,7 +99,7 @@ func sweepCustomPlugins(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MSK Connect Custom Plugin sweep for %s: %s", region, err)
 		return nil
 	}

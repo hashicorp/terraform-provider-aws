@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -97,7 +98,7 @@ func sweepDBClusters(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DocumentDB Cluster sweep for %s: %s", region, err)
 		return nil
 	}
@@ -149,7 +150,7 @@ func sweepDBClusterSnapshots(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DocumentDB Cluster Snapshot sweep for %s: %s", region, err)
 		return nil
 	}
@@ -196,7 +197,7 @@ func sweepDBClusterParameterGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DocumentDB Cluster Parameter Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -234,19 +235,19 @@ func sweepDBInstances(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DocumentDB Cluster Instance sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing DocumentDB Cluster Instances (%s): %w", region, err)
+		return fmt.Errorf("listing DocumentDB Cluster Instances (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error sweeping DocumentDB Cluster Instances (%s): %w", region, err)
+		return fmt.Errorf("sweeping DocumentDB Cluster Instances (%s): %w", region, err)
 	}
 
 	return nil
@@ -286,7 +287,7 @@ func sweepGlobalClusters(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DocumentDB Global Cluster sweep for %s: %s", region, err)
 		return nil
 	}
@@ -332,7 +333,7 @@ func sweepDBSubnetGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DocumentDB Subnet Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -378,7 +379,7 @@ func sweepEventSubscriptions(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DocumentDB Event Subscription sweep for %s: %s", region, err)
 		return nil
 	}

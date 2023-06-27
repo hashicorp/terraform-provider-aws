@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -35,7 +36,7 @@ func sweepEnvironment(region string) error {
 
 	listOutput, err := conn.ListEnvironmentsWithContext(ctx, &mwaa.ListEnvironmentsInput{})
 	if err != nil {
-		if sweep.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
+		if awsv1.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 			log.Printf("[WARN] Skipping MWAA Environment sweep for %s: %s", region, err)
 			return nil
 		}

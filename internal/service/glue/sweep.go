@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -111,7 +112,7 @@ func sweepCatalogDatabases(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Glue Catalog Database sweep for %s: %s", region, err)
 			return nil
 		}
@@ -168,7 +169,7 @@ func sweepClassifiers(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Glue Classifier sweep for %s: %s", region, err)
 			return nil
 		}
@@ -215,7 +216,7 @@ func sweepConnections(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Glue Connection sweep for %s: %s", region, err)
 			return nil
 		}
@@ -258,7 +259,7 @@ func sweepCrawlers(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Glue Crawler sweep for %s: %s", region, err)
 			return nil
 		}
@@ -304,7 +305,7 @@ func sweepDevEndpoints(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Glue Dev Endpoint sweep for %s: %s", region, err)
 		return nil
 	}
@@ -348,7 +349,7 @@ func sweepJobs(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Glue Job sweep for %s: %s", region, err)
 		return nil
 	}
@@ -395,7 +396,7 @@ func sweepMLTransforms(region string) error {
 		}
 		return !lastPage
 	})
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Glue ML Transforms sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -424,7 +425,7 @@ func sweepRegistry(region string) error {
 	listOutput, err := conn.ListRegistriesWithContext(ctx, &glue.ListRegistriesInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Registrys return InternalFailure
-		if sweep.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
+		if awsv1.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 			log.Printf("[WARN] Skipping Glue Registry sweep for %s: %s", region, err)
 			return nil
 		}
@@ -460,7 +461,7 @@ func sweepSchema(region string) error {
 	listOutput, err := conn.ListSchemasWithContext(ctx, &glue.ListSchemasInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Schemas return InternalFailure
-		if sweep.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
+		if awsv1.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 			log.Printf("[WARN] Skipping Glue Schema sweep for %s: %s", region, err)
 			return nil
 		}
@@ -495,7 +496,7 @@ func sweepSecurityConfigurations(region string) error {
 	for {
 		output, err := conn.GetSecurityConfigurationsWithContext(ctx, input)
 
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Glue Security Configuration sweep for %s: %s", region, err)
 			return nil
 		}
@@ -554,7 +555,7 @@ func sweepTriggers(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Glue Trigger sweep for %s: %s", region, err)
 			return nil
 		}
@@ -579,7 +580,7 @@ func sweepWorkflow(region string) error {
 	listOutput, err := conn.ListWorkflowsWithContext(ctx, &glue.ListWorkflowsInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Workflows return InternalFailure
-		if sweep.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
+		if awsv1.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 			log.Printf("[WARN] Skipping Glue Workflow sweep for %s: %s", region, err)
 			return nil
 		}

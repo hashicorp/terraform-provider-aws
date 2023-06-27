@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudsearch"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -44,7 +45,7 @@ func sweepDomains(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudSearch Domain sweep for %s: %s", region, err)
 		return nil
 	}

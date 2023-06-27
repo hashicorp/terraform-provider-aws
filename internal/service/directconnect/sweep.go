@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -73,7 +74,7 @@ func sweepConnections(region string) error {
 	// DescribeConnections has no pagination support
 	output, err := conn.DescribeConnectionsWithContext(ctx, input)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Direct Connect Connection sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -150,7 +151,7 @@ func sweepGatewayAssociationProposals(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Print(fmt.Errorf("[WARN] Skipping Direct Connect Gateway Association Proposal sweep for %s: %w", region, err))
 		return sweeperErrs // In case we have completed some pages, but had errors
 	}
@@ -228,7 +229,7 @@ func sweepGatewayAssociations(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Print(fmt.Errorf("[WARN] Skipping Direct Connect Gateway Association sweep for %s: %w", region, err))
 		return sweeperErrs // In case we have completed some pages, but had errors
 	}
@@ -372,7 +373,7 @@ func sweepGateways(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Print(fmt.Errorf("[WARN] Skipping Direct Connect Gateway sweep for %s: %w", region, err))
 		return sweeperErrs // In case we have completed some pages, but had errors
 	}
@@ -407,7 +408,7 @@ func sweepLags(region string) error {
 	// DescribeLags has no pagination support
 	output, err := conn.DescribeLagsWithContext(ctx, input)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Direct Connect LAG sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}

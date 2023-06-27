@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -68,7 +69,7 @@ func sweepLoadBalancers(region string) error {
 		}
 		return !lastPage
 	})
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping LB sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -107,7 +108,7 @@ func sweepTargetGroups(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping LB Target Group sweep for %s: %s", region, err)
 			return nil
 		}
@@ -172,7 +173,7 @@ func sweepListeners(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping ELBv2 Listeners for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping ELBv2 Listener sweep for %s: %s", region, errs)
 		return nil
 	}

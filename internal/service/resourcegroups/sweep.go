@@ -60,6 +60,4 @@ func sweepGroups(region string) error {
 	}
 
 	return nil
-
-	return nil
 }

@@ -15,6 +15,7 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
@@ -146,7 +147,7 @@ func sweepComputeEnvironments(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Batch Compute Environment sweep for %s: %s", region, err)
 		return nil
 	}
@@ -192,7 +193,7 @@ func sweepJobDefinitions(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Batch Job Definition sweep for %s: %s", region, err)
 		return nil
 	}
@@ -236,7 +237,7 @@ func sweepJobQueues(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Batch Job Queue sweep for %s: %s", region, err)
 		return nil
 	}
@@ -280,7 +281,7 @@ func sweepSchedulingPolicies(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Batch Scheduling Policy sweep for %s: %s", region, err)
 		return nil
 	}

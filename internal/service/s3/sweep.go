@@ -75,11 +75,11 @@ func sweepObjects(region string) error {
 
 		var objectLockEnabled bool
 
-		if tfresource.NotFound(err) {
-		} else if err != nil {
-			log.Printf("[WARN] Reading S3 Bucket Object Lock Configuration (%s): %s", bucket, err)
-			continue
-		} else {
+		if !tfresource.NotFound(err) {
+			if err != nil {
+				log.Printf("[WARN] Reading S3 Bucket Object Lock Configuration (%s): %s", bucket, err)
+				continue
+			}
 			objectLockEnabled = objLockConfig.ObjectLockEnabled == types.ObjectLockEnabledEnabled
 		}
 

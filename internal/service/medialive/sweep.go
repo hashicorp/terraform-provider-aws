@@ -56,7 +56,7 @@ func sweepChannels(region string) error {
 		page, err := pages.NextPage(ctx)
 
 		if awsv2.SkipSweepError(err) {
-			log.Println("[WARN] Skipping MediaLive Channels sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping MediaLive Channels sweep for %s: %s", region, err)
 			return nil
 		}
 
@@ -100,7 +100,7 @@ func sweepInputs(region string) error {
 		page, err := pages.NextPage(ctx)
 
 		if awsv2.SkipSweepError(err) {
-			log.Println("[WARN] Skipping MediaLive Inputs sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping MediaLive Inputs sweep for %s: %s", region, err)
 			return nil
 		}
 
@@ -144,7 +144,7 @@ func sweepInputSecurityGroups(region string) error {
 		page, err := pages.NextPage(ctx)
 
 		if awsv2.SkipSweepError(err) {
-			log.Println("[WARN] Skipping MediaLive Input Security Groups sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping MediaLive Input Security Groups sweep for %s: %s", region, err)
 			return nil
 		}
 
@@ -188,7 +188,7 @@ func sweepMultiplexes(region string) error {
 		page, err := pages.NextPage(ctx)
 
 		if awsv2.SkipSweepError(err) {
-			log.Println("[WARN] Skipping MediaLive Multiplexes sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping MediaLive Multiplexes sweep for %s: %s", region, err)
 			return nil
 		}
 

@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -51,7 +52,7 @@ func sweepActivities(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Step Functions Activity sweep for %s: %s", region, err)
 		return nil
 	}
@@ -95,7 +96,7 @@ func sweepStateMachines(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Step Functions State Machine sweep for %s: %s", region, err)
 		return nil
 	}

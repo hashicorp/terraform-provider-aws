@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
@@ -95,7 +96,7 @@ func sweepApplications(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Applications for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping AppConfig Applications sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -172,7 +173,7 @@ func sweepConfigurationProfiles(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Configuration Profiles for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping AppConfig Configuration Profiles sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -231,7 +232,7 @@ func sweepDeploymentStrategies(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Deployment Strategies for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping AppConfig Deployment Strategies sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -304,7 +305,7 @@ func sweepEnvironments(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Environments for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping AppConfig Environments sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -406,7 +407,7 @@ func sweepHostedConfigurationVersions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Hosted Configuration Versions for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping AppConfig Hosted Configuration Versions sweep for %s: %s", region, errs)
 		return nil
 	}

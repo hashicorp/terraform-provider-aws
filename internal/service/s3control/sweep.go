@@ -71,12 +71,12 @@ func sweepAccessPoints(region string) error {
 		for _, v := range page.AccessPointList {
 			r := resourceAccessPoint()
 			d := r.Data(nil)
-			if id, err := AccessPointCreateResourceID(aws.ToString(v.AccessPointArn)); err != nil {
+			id, err := AccessPointCreateResourceID(aws.ToString(v.AccessPointArn))
+			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
-			} else {
-				d.SetId(id)
 			}
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

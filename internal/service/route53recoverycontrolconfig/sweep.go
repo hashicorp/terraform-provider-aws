@@ -12,6 +12,7 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -69,7 +70,7 @@ func sweepClusters(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Route53 Recovery Control Config Cluster sweep for %s: %s", region, err)
 		return nil
 	}
@@ -128,7 +129,7 @@ func sweepControlPanels(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -140,7 +141,7 @@ func sweepControlPanels(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Route53 Recovery Control Config Control Panel sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -205,7 +206,7 @@ func sweepRoutingControls(region string) error {
 						return !lastPage
 					})
 
-					if sweep.SkipSweepError(err) {
+					if awsv1.SkipSweepError(err) {
 						continue
 					}
 
@@ -217,7 +218,7 @@ func sweepRoutingControls(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -229,7 +230,7 @@ func sweepRoutingControls(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Route53 Recovery Control Config Routing Control sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -300,7 +301,7 @@ func sweepSafetyRules(region string) error {
 						return !lastPage
 					})
 
-					if sweep.SkipSweepError(err) {
+					if awsv1.SkipSweepError(err) {
 						continue
 					}
 
@@ -312,7 +313,7 @@ func sweepSafetyRules(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -324,7 +325,7 @@ func sweepSafetyRules(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Route53 Recovery Control Config Safety Rule sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}

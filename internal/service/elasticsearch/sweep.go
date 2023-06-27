@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -38,7 +39,7 @@ func sweepDomains(region string) error {
 	// ListDomainNames has no pagination support whatsoever
 	output, err := conn.ListDomainNamesWithContext(ctx, input)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, err)
 		return errs.ErrorOrNil()
 	}
@@ -96,7 +97,7 @@ func sweepDomains(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Elasticsearch Domains for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, errs)
 		return nil
 	}

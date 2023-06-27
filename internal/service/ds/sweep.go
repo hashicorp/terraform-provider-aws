@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -65,7 +66,7 @@ func sweepDirectories(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Directory Service Directory sweep for %s: %s", region, err)
 		return nil
 	}
@@ -150,7 +151,7 @@ func sweepRegions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Directory Service Regions for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Directory Service Regions sweep for %s: %s", region, errs)
 		return nil
 	}

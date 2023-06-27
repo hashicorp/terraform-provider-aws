@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/memorydb"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -93,7 +94,7 @@ func sweepACLs(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MemoryDB ACL sweep for %s: %s", region, err)
 		return nil
 	}
@@ -137,7 +138,7 @@ func sweepClusters(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MemoryDB Cluster sweep for %s: %s", region, err)
 		return nil
 	}
@@ -187,7 +188,7 @@ func sweepParameterGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MemoryDB Parameter Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -231,7 +232,7 @@ func sweepSnapshots(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MemoryDB Snapshot sweep for %s: %s", region, err)
 		return nil
 	}
@@ -281,7 +282,7 @@ func sweepSubnetGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MemoryDB Subnet Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -331,7 +332,7 @@ func sweepUsers(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MemoryDB User sweep for %s: %s", region, err)
 		return nil
 	}

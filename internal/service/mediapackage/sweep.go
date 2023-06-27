@@ -38,7 +38,7 @@ func sweepChannels(region string) error {
 		page, err := pages.NextPage(ctx)
 
 		if awsv2.SkipSweepError(err) {
-			log.Println("[WARN] Skipping MediaPackage Channels sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping MediaPackage Channels sweep for %s: %s", region, err)
 			return nil
 		}
 

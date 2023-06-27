@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -139,7 +140,7 @@ func sweepClusterParameterGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping RDS Cluster Parameter Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -189,7 +190,7 @@ func sweepClusterSnapshots(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping RDS DB Cluster Snapshot sweep for %s: %s", region, err)
 		return nil
 	}
@@ -254,7 +255,7 @@ func sweepClusters(region string) error {
 
 		return !lastPage
 	})
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping RDS Cluster sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -296,7 +297,7 @@ func sweepEventSubscriptions(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping RDS Event Subscription sweep for %s: %s", region, err)
 		return nil
 	}
@@ -342,7 +343,7 @@ func sweepGlobalClusters(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping RDS Global Cluster sweep for %s: %s", region, err)
 		return nil
 	}
@@ -391,7 +392,7 @@ func sweepInstances(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping RDS DB Instance sweep for %s: %s", region, err)
 		return nil
 	}
@@ -441,7 +442,7 @@ func sweepOptionGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping RDS Option Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -491,7 +492,7 @@ func sweepParameterGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping RDS DB Parameter Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -535,7 +536,7 @@ func sweepProxies(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping RDS DB Proxy sweep for %s: %s", region, err)
 		return nil
 	}
@@ -585,7 +586,7 @@ func sweepSnapshots(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping RDS DB Snapshot sweep for %s: %s", region, err)
 		return nil
 	}
@@ -629,7 +630,7 @@ func sweepSubnetGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping RDS DB Subnet Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -677,7 +678,7 @@ func sweepInstanceAutomatedBackups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping RDS Instance Automated Backup sweep for %s: %s", region, err)
 		return nil
 	}

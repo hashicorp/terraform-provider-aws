@@ -11,6 +11,7 @@ import (
 	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -51,7 +52,7 @@ func sweepReportDefinitions(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Cost And Usage Report Definition sweep for %s: %s", region, err)
 		return nil
 	}
