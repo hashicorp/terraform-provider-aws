@@ -98,6 +98,18 @@ type VTestExpand struct {
 	Name fwtypes.Duration
 }
 
+type WTestExpand struct {
+	Names types.Map
+}
+
+type XTestExpand struct {
+	Names map[string]string
+}
+
+type YTestExpand struct {
+	Names map[string]*string
+}
+
 func TestGenericExpand(t *testing.T) {
 	t.Parallel()
 
@@ -281,6 +293,18 @@ func TestGenericExpand(t *testing.T) {
 			Source:     &VTestExpand{Name: fwtypes.DurationValue(10 * time.Minute)},
 			Target:     &DTestExpand{},
 			WantTarget: &DTestExpand{Name: aws.String("10m0s")},
+		},
+		{
+			TestName:   "single map Source and single map[string]string slice Target",
+			Source:     &WTestExpand{Names: types.MapValueMust(types.StringType, map[string]attr.Value{"A": types.StringValue("a")})},
+			Target:     &XTestExpand{},
+			WantTarget: &XTestExpand{Names: map[string]string{"A": "a"}},
+		},
+		{
+			TestName:   "single map Source and single map[string]*string slice Target",
+			Source:     &WTestExpand{Names: types.MapValueMust(types.StringType, map[string]attr.Value{"A": types.StringValue("a")})},
+			Target:     &YTestExpand{},
+			WantTarget: &YTestExpand{Names: aws.StringMap(map[string]string{"A": "a"})},
 		},
 	}
 

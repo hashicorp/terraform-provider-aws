@@ -14,7 +14,6 @@ import (
 
 // TODO
 // TODO Return Diagnostics, not error.
-// TODO Handle maps of strings.
 // TODO
 
 // Expand "expands" a resource's "business logic" data structure,
@@ -227,6 +226,40 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 						//
 						valTo.Set(reflect.ValueOf(ExpandFrameworkStringList(ctx, v)))
 						return nil
+					}
+				}
+			}
+		}
+
+	case basetypes.MapValuable:
+		v, diags := vFrom.ToMapValue(ctx)
+		if err := fwdiag.DiagnosticsError(diags); err != nil {
+			return err
+		}
+		tListElem := v.ElementType(ctx)
+		switch {
+		case tListElem.Equal(types.StringType):
+			switch kTo {
+			case reflect.Map:
+				switch tMapKey := valTo.Type().Key(); tMapKey.Kind() {
+				case reflect.String:
+					switch tMapElem := valTo.Type().Elem(); tMapElem.Kind() {
+					case reflect.String:
+						//
+						// types.Map(OfString) -> map[string]string.
+						//
+						valTo.Set(reflect.ValueOf(ExpandFrameworkStringValueMap(ctx, v)))
+						return nil
+
+					case reflect.Ptr:
+						switch tMapElem.Elem().Kind() {
+						case reflect.String:
+							//
+							// types.Map(OfString) -> map[string]*string.
+							//
+							valTo.Set(reflect.ValueOf(ExpandFrameworkStringMap(ctx, v)))
+							return nil
+						}
 					}
 				}
 			}
