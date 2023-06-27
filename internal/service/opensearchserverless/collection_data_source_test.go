@@ -37,6 +37,13 @@ func TestAccOpenSearchServerlessCollectionDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, dataSourceName, &collection),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "collection_endpoint", resourceName, "collection_endpoint"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "dashboard_endpoint", resourceName, "dashboard_endpoint"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_arn", resourceName, "kms_key_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "type", resourceName, "type"),
 				),
 			},
 		},

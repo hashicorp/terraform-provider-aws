@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -17,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource(name="Collection")
 func newDataSourceCollection(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceCollection{}, nil
@@ -55,6 +55,9 @@ func (d *dataSourceCollection) Schema(ctx context.Context, req datasource.Schema
 					stringvalidator.ConflictsWith(
 						path.MatchRelative().AtParent().AtName("name"),
 					),
+					stringvalidator.ExactlyOneOf(
+						path.MatchRelative().AtParent().AtName("name"),
+					),
 				},
 			},
 			"kms_key_arn": schema.StringAttribute{
@@ -85,13 +88,32 @@ func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	out, err := FindCollectionByID(ctx, conn, data.ID.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameCollection, data.ID.String(), err),
-			err.Error(),
-		)
-		return
+	var out *awstypes.CollectionDetail
+
+	if !data.ID.IsNull() && !data.ID.IsUnknown() {
+		output, err := FindCollectionByID(ctx, conn, data.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameCollection, data.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		out = output
+	}
+
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		output, err := FindCollectionByName(ctx, conn, data.Name.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameCollection, data.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		out = output
 	}
 
 	data.ARN = flex.StringToFramework(ctx, out.Arn)
