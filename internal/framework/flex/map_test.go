@@ -115,6 +115,90 @@ func TestExpandFrameworkStringValueMap(t *testing.T) {
 	}
 }
 
+func TestFlattenFrameworkStringMap(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    map[string]*string
+		expected types.Map
+	}
+	tests := map[string]testCase{
+		"two elements": {
+			input: aws.StringMap(map[string]string{
+				"one": "GET",
+				"two": "HEAD",
+			}),
+			expected: types.MapValueMust(types.StringType, map[string]attr.Value{
+				"one": types.StringValue("GET"),
+				"two": types.StringValue("HEAD"),
+			}),
+		},
+		"zero elements": {
+			input:    aws.StringMap(map[string]string{}),
+			expected: types.MapNull(types.StringType),
+		},
+		"nil map": {
+			input:    nil,
+			expected: types.MapNull(types.StringType),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.FlattenFrameworkStringMap(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestFlattenFrameworkStringValueMap(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    map[string]string
+		expected types.Map
+	}
+	tests := map[string]testCase{
+		"two elements": {
+			input: map[string]string{
+				"one": "GET",
+				"two": "HEAD",
+			},
+			expected: types.MapValueMust(types.StringType, map[string]attr.Value{
+				"one": types.StringValue("GET"),
+				"two": types.StringValue("HEAD"),
+			}),
+		},
+		"zero elements": {
+			input:    map[string]string{},
+			expected: types.MapNull(types.StringType),
+		},
+		"nil map": {
+			input:    nil,
+			expected: types.MapNull(types.StringType),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.FlattenFrameworkStringValueMap(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestFlattenFrameworkStringValueMapLegacy(t *testing.T) {
 	t.Parallel()
 
