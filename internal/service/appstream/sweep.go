@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package appstream
 
 import (
@@ -17,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_appstream_directory_config", &resource.Sweeper{
 		Name: "aws_appstream_directory_config",
 		F:    sweepDirectoryConfigs,

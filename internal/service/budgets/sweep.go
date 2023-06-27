@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package budgets
 
 import (
@@ -17,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_budgets_budget_action", &resource.Sweeper{
 		Name: "aws_budgets_budget_action",
 		F:    sweepBudgetActions,

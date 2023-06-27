@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package appsync
 
 import (
@@ -17,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_appsync_graphql_api", &resource.Sweeper{
 		Name: "aws_appsync_graphql_api",
 		F:    sweepGraphQLAPIs,

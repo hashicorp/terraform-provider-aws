@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package cloudfront
 
 import (
@@ -18,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_cloudfront_cache_policy", &resource.Sweeper{
 		Name: "aws_cloudfront_cache_policy",
 		F:    sweepCachePolicies,
@@ -191,9 +188,9 @@ func sweepDistributionsByProductionStaging(region string, staging bool) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	if staging {
-		log.Printf("[INFO] Sweeping staging distributions")
+		log.Print("[INFO] Sweeping staging distributions")
 	} else {
-		log.Printf("[INFO] Sweeping production distributions")
+		log.Print("[INFO] Sweeping production distributions")
 	}
 
 	err = conn.ListDistributionsPagesWithContext(ctx, input, func(page *cloudfront.ListDistributionsOutput, lastPage bool) bool {

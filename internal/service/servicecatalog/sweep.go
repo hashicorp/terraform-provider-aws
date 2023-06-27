@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package servicecatalog
 
 import (
@@ -20,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_servicecatalog_budget_resource_association", &resource.Sweeper{
 		Name:         "aws_servicecatalog_budget_resource_association",
 		Dependencies: []string{},

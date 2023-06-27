@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package cloudformation
 
 import (
@@ -18,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_cloudformation_stack_set_instance", &resource.Sweeper{
 		Name: "aws_cloudformation_stack_set_instance",
 		F:    sweepStackSetInstances,

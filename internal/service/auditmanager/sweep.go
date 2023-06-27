@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package auditmanager
 
 import (
@@ -20,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_auditmanager_assessment", &resource.Sweeper{
 		Name: "aws_auditmanager_assessment",
 		F:    sweepAssessments,

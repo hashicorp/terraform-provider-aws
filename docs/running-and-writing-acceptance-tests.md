@@ -1097,16 +1097,13 @@ To run sweepers with an assumed role, use the following additional environment v
 Sweeper logic should be written to a file called `sweep.go` in the appropriate service subdirectory (`internal/service/{serviceName}`). This file should include the following build tags above the package declaration:
 
 ```go
-//go:build sweep
-// +build sweep
-
 package example
 ```
 
-Next, initialize the resource into the test sweeper framework:
+Next, register the resource into the test sweeper framework:
 
 ```go
-func init() {
+func RegisterSweepers() {
   resource.AddTestSweepers("aws_example_thing", &resource.Sweeper{
     Name: "aws_example_thing",
     F:    sweepThings,

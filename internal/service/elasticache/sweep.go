@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package elasticache
 
 import (
@@ -26,7 +23,7 @@ const (
 	sweeperGlobalReplicationGroupDefaultUpdatedTimeout      = 10 * time.Minute
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_elasticache_cluster", &resource.Sweeper{
 		Name: "aws_elasticache_cluster",
 		F:    sweepClusters,

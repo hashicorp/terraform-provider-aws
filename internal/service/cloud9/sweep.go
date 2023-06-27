@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package cloud9
 
 import (
@@ -16,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_cloud9_environment_ec2", &resource.Sweeper{
 		Name: "aws_cloud9_environment_ec2",
 		F:    sweepEnvironmentEC2s,

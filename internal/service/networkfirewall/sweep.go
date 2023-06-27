@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package networkfirewall
 
 import (
@@ -16,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_networkfirewall_firewall_policy", &resource.Sweeper{
 		Name: "aws_networkfirewall_firewall_policy",
 		F:    sweepFirewallPolicies,

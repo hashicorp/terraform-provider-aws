@@ -29,7 +29,7 @@ type TemplateData struct {
 
 func main() {
 	const (
-		filename      = `sweep_test.go`
+		filename      = `register_gen_test.go`
 		namesDataFile = "../../names/names_data.csv"
 	)
 	g := common.NewGenerator()
@@ -72,6 +72,7 @@ func main() {
 		}
 
 		if _, err := os.Stat(fmt.Sprintf("../service/%s/sweep.go", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
+			g.Infof("No sweepers for %q", p)
 			continue
 		}
 
@@ -88,7 +89,7 @@ func main() {
 
 	d := g.NewGoFileDestination(filename)
 
-	if err := d.WriteTemplate("sweepimport", tmpl, td); err != nil {
+	if err := d.WriteTemplate("sweeperregistration", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 

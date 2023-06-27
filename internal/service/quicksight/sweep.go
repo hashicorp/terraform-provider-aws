@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package quicksight
 
 import (
@@ -19,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_quicksight_dashboard", &resource.Sweeper{
 		Name: "aws_quicksight_dashboard",
 		F:    sweepDashboards,

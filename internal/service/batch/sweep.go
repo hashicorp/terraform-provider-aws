@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package batch
 
 import (
@@ -22,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_batch_compute_environment", &resource.Sweeper{
 		Name: "aws_batch_compute_environment",
 		Dependencies: []string{
