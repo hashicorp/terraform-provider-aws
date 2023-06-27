@@ -98,6 +98,18 @@ type VTestFlatten struct {
 	Name fwtypes.Duration
 }
 
+type WTestFlatten struct {
+	Names map[string]string
+}
+
+type XTestFlatten struct {
+	Names map[string]*string
+}
+
+type YTestFlatten struct {
+	Names types.Map
+}
+
 func TestGenericFlatten(t *testing.T) {
 	t.Parallel()
 
@@ -299,6 +311,24 @@ func TestGenericFlatten(t *testing.T) {
 			Source:     &CTestFlatten{Name: aws.String("10m0s")},
 			Target:     &VTestFlatten{},
 			WantTarget: &VTestFlatten{Name: fwtypes.DurationValue(10 * time.Minute)},
+		},
+		{
+			TestName:   "single map[string]string slice Source and single map Target",
+			Source:     &WTestFlatten{Names: map[string]string{"A": "a"}},
+			Target:     &YTestFlatten{},
+			WantTarget: &YTestFlatten{Names: types.MapValueMust(types.StringType, map[string]attr.Value{"A": types.StringValue("a")})},
+		},
+		{
+			TestName:   "single nil map[string]string slice Source and single map Target",
+			Source:     &WTestFlatten{},
+			Target:     &YTestFlatten{},
+			WantTarget: &YTestFlatten{Names: types.MapNull(types.StringType)},
+		},
+		{
+			TestName:   "single map[string]*string slice Source and single map Target",
+			Source:     &XTestFlatten{Names: aws.StringMap(map[string]string{"A": "a"})},
+			Target:     &YTestFlatten{},
+			WantTarget: &YTestFlatten{Names: types.MapValueMust(types.StringType, map[string]attr.Value{"A": types.StringValue("a")})},
 		},
 	}
 

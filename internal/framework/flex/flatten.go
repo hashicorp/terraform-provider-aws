@@ -13,7 +13,6 @@ import (
 
 // TODO
 // TODO Return Diagnostics, not error.
-// TODO Handle maps of strings.
 // TODO
 
 // Flatten "flattens" an AWS SDK for Go v2 API data structure into
@@ -244,6 +243,53 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 						valTo.Set(reflect.ValueOf(types.SetNull(types.StringType)))
 					}
 					return nil
+				}
+			}
+		}
+
+		// Map of simple types or pointer to simple types.
+	case reflect.Map:
+		switch tMapKey := valFrom.Type().Key(); tMapKey.Kind() {
+		case reflect.String:
+			vFrom := valFrom.Interface()
+			switch tMapElem := valFrom.Type().Elem(); tMapElem.Kind() {
+			case reflect.String:
+				switch tTo := tTo.(type) {
+				case basetypes.MapTypable:
+					//
+					// map[string]string -> types.Map(OfString).
+					//
+					if vFrom != nil {
+						v, diags := tTo.ValueFromMap(ctx, FlattenFrameworkStringValueMap(ctx, vFrom.(map[string]string)))
+						if err := fwdiag.DiagnosticsError(diags); err != nil {
+							return err
+						}
+						valTo.Set(reflect.ValueOf(v))
+					} else {
+						valTo.Set(reflect.ValueOf(types.MapNull(types.StringType)))
+					}
+					return nil
+				}
+
+			case reflect.Ptr:
+				switch tMapElem.Elem().Kind() {
+				case reflect.String:
+					switch tTo := tTo.(type) {
+					case basetypes.MapTypable:
+						//
+						// map[string]*string -> types.Map(OfString).
+						//
+						if vFrom != nil {
+							v, diags := tTo.ValueFromMap(ctx, FlattenFrameworkStringMap(ctx, vFrom.(map[string]*string)))
+							if err := fwdiag.DiagnosticsError(diags); err != nil {
+								return err
+							}
+							valTo.Set(reflect.ValueOf(v))
+						} else {
+							valTo.Set(reflect.ValueOf(types.MapNull(types.StringType)))
+						}
+						return nil
+					}
 				}
 			}
 		}
