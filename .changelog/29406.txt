@@ -3,7 +3,7 @@ aws_transfer_as2_profile
 ```
 
 ```release-note:new-resource
-aws_transfer_as2_certtificate
+aws_transfer_as2_certificate
 ```
 
 ```release-note:new-resource
