@@ -2,6 +2,7 @@ package opensearchserverless
 
 import (
 	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
@@ -42,6 +43,9 @@ func (d *dataSourceCollection) Schema(ctx context.Context, req datasource.Schema
 			"collection_endpoint": schema.StringAttribute{
 				Computed: true,
 			},
+			"created_date": schema.StringAttribute{
+				Computed: true,
+			},
 			"dashboard_endpoint": schema.StringAttribute{
 				Computed: true,
 			},
@@ -61,6 +65,9 @@ func (d *dataSourceCollection) Schema(ctx context.Context, req datasource.Schema
 				},
 			},
 			"kms_key_arn": schema.StringAttribute{
+				Computed: true,
+			},
+			"last_modified_date": schema.StringAttribute{
 				Computed: true,
 			},
 			"name": schema.StringAttribute{
@@ -125,6 +132,12 @@ func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequ
 	data.Name = flex.StringToFramework(ctx, out.Name)
 	data.Type = flex.StringValueToFramework(ctx, out.Type)
 
+	createdDate := time.UnixMilli(aws.ToInt64(out.CreatedDate))
+	data.CreatedDate = flex.StringValueToFramework(ctx, createdDate.Format(time.RFC3339))
+
+	lastModifiedDate := time.UnixMilli(aws.ToInt64(out.LastModifiedDate))
+	data.LastModifiedDate = flex.StringValueToFramework(ctx, lastModifiedDate.Format(time.RFC3339))
+
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 	tags, err := listTags(ctx, conn, aws.ToString(out.Arn))
 
@@ -145,10 +158,12 @@ func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequ
 type dataSourceCollectionData struct {
 	ARN                types.String `tfsdk:"arn"`
 	CollectionEndpoint types.String `tfsdk:"collection_endpoint"`
+	CreatedDate        types.String `tfsdk:"created_date"`
 	DashboardEndpoint  types.String `tfsdk:"dashboard_endpoint"`
 	Description        types.String `tfsdk:"description"`
 	ID                 types.String `tfsdk:"id"`
 	KmsKeyARN          types.String `tfsdk:"kms_key_arn"`
+	LastModifiedDate   types.String `tfsdk:"last_modified_date"`
 	Name               types.String `tfsdk:"name"`
 	Tags               types.Map    `tfsdk:"tags"`
 	Type               types.String `tfsdk:"type"`
