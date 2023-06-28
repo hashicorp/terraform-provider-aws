@@ -61,6 +61,7 @@ The following arguments are optional:
 
 * `tags` - (Optional) Key-value mapping of tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target` - (Optional) Target of an action. See below.
+* `log_configuration` - (Optional) The configuration for experiment logging. See below.
 
 ### `action`
 
@@ -110,6 +111,21 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 
 * `key` - (Required) Tag key.
 * `value` - (Required) Tag value.
+
+### `log_configuration`
+
+* `log_schema_version` - (Required) The schema version. See [documentation](https://docs.aws.amazon.com/fis/latest/userguide/monitoring-logging.html#experiment-log-schema) for the list of schema versions.
+* `cloudwatch_logs_configuration` - (Optional) The configuration for experiment logging to Amazon CloudWatch Logs. See below.
+* `s3_configuration` - (Optional) The configuration for experiment logging to Amazon S3. See below.
+
+#### `cloudwatch_logs_configuration`
+
+* `log_group_arn` - (Required) The Amazon Resource Name (ARN) of the destination Amazon CloudWatch Logs log group.
+
+#### `s3_configuration`
+
+* `bucket_name` - (Required) The name of the destination bucket.
+* `prefix` - (Optional) The bucket prefix.
 
 ## Attributes Reference
 
