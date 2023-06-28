@@ -1,10 +1,10 @@
 module github.com/hashicorp/terraform-provider-aws
 
-go 1.19
+go 1.20
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8
-	github.com/aws/aws-sdk-go v1.44.286
+	github.com/aws/aws-sdk-go v1.44.291
 	github.com/aws/aws-sdk-go-v2 v1.18.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.4
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.19.14
@@ -25,9 +25,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.14.13
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.16.2
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.13
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.14.2
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.7
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.40.4
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.31.6
@@ -36,7 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.8
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.14
-	github.com/aws/aws-sdk-go-v2/service/rds v1.45.2
+	github.com/aws/aws-sdk-go-v2/service/rds v1.45.3
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.15
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.2.2
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.15.0
@@ -44,7 +44,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.13
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.4.3
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.18.2
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.36.6
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.36.7
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.15.6
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/swf v1.15.2
@@ -54,9 +54,9 @@ require (
 	github.com/aws/smithy-go v1.13.5
 	github.com/beevik/etree v1.2.0
 	github.com/google/go-cmp v0.5.9
-	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.20.0
-	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.29
-	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.30
+	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.21.0
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.30
+	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.31
 	github.com/hashicorp/awspolicyequivalence v1.6.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
@@ -65,7 +65,7 @@ require (
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/hcl/v2 v2.17.0
 	github.com/hashicorp/terraform-plugin-framework v1.3.1
-	github.com/hashicorp/terraform-plugin-framework-timeouts v0.3.1
+	github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.10.0
 	github.com/hashicorp/terraform-plugin-go v0.16.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
@@ -156,7 +156,5 @@ require (
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/hashicorp/aws-sdk-go-base/v2 => github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.29.0.20230622181216-1c3bdec608c2
 
 replace github.com/hashicorp/terraform-plugin-sdk/v2 => github.com/hashicorp/terraform-plugin-sdk/v2 v2.26.2-0.20230623145513-b742d27834e1

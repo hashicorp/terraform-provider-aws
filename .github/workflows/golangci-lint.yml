@@ -60,3 +60,8 @@ jobs:
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci2.yml
+        env:
+          # Trigger garbage collection more frequently to reduce the likelihood
+          # of OOM errors.
+          # ref: https://golangci-lint.run/usage/performance/#memory-usage
+          GOGC: "50"

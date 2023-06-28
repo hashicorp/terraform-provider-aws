@@ -10,8 +10,8 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -6932,7 +6932,7 @@ func FindInstanceConnectEndpoints(ctx context.Context, conn *ec2_sdkv2.Client, i
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 
-		if awsbase.ErrCodeEquals(err, errCodeInvalidInstanceConnectEndpointIdNotFound) {
+		if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidInstanceConnectEndpointIdNotFound) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,

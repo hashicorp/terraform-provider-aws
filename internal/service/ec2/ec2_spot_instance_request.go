@@ -49,7 +49,7 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 				if v.Computed && !v.Optional {
 					continue
 				}
-				if k == names.AttrTags {
+				if k == names.AttrTags || k == "volume_tags" {
 					continue
 				}
 				v.ForceNew = true
@@ -200,7 +200,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 		input.LaunchSpecification.Placement = instanceOpts.SpotPlacement
 	}
 
-	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.RequestSpotInstancesWithContext(ctx, input)
 		},
@@ -239,7 +239,7 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindSpotInstanceRequestByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
