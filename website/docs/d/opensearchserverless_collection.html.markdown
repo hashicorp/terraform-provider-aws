@@ -35,7 +35,7 @@ In addition to all arguments above, the following attributes are exported:
 * `collection_endpoint` - Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.
 * `created_date` - Date the Collection was created.
 * `dashboard_endpont` - Collection-specific endpoint used to access OpenSearch Dashboards.
-* `description` - (Optional) Description of the collection.
+* `description` - Description of the collection.
 * `kms_key_arn` - The ARN of the Amazon Web Services KMS key used to encrypt the collection.
 * `last_modified_date` - Date the Collection was last modified.
 * `tags` - A map of tags to assign to the collection.
