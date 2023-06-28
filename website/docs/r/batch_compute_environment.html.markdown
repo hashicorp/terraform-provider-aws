@@ -93,7 +93,7 @@ resource "aws_subnet" "sample" {
 }
 
 resource "aws_placement_group" "sample" {
-  name = "hunky-dory-pg"
+  name     = "sample"
   strategy = "cluster"
 }
 
