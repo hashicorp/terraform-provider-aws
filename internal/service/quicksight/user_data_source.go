@@ -20,51 +20,49 @@ func DataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
-		SchemaFunc: func() map[string]*schema.Schema {
-			return map[string]*schema.Schema{
-				"active": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
-				"arn": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"aws_account_id": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
-				"email": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"identity_type": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"namespace": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Default:  DefaultUserNamespace,
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 63),
-						validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
-					),
-				},
-				"principal_id": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"user_name": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				"user_role": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-			}
+		Schema: map[string]*schema.Schema{
+			"active": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"aws_account_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"email": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"identity_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  DefaultUserNamespace,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 63),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+				),
+			},
+			"principal_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"user_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"user_role": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
