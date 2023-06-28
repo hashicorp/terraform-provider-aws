@@ -202,6 +202,7 @@ func TestAccBatchComputeEnvironment_createEC2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.placement_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.security_group_ids.*", securityGroupResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.spot_iam_fleet_role", ""),
@@ -1108,7 +1109,7 @@ func TestAccBatchComputeEnvironment_ec2ConfigurationPlacementGroup(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.1.image_type", "ECS_AL2_NVIDIA"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
-					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.placement_group", "hunky-dory-pg"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.placement_group", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.security_group_ids.*", securityGroupResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.spot_iam_fleet_role", spotFleetRoleResourceName, "arn"),
@@ -2563,7 +2564,7 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentConfig_ec2ConfigurationPlacementGroup(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_placement_group" "test" {
-  name = "hunky-dory-pg"
+  name     = %[1]q
   strategy = "cluster"
 }
 
