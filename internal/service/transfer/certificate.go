@@ -91,11 +91,9 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.ImportCertificateInput{
-		Tags: getTagsIn(ctx),
-	}
-
-	if v, ok := d.GetOk("certificate"); ok {
-		input.Certificate = aws.String(v.(string))
+		Certificate: aws.String(d.Get("certificate").(string)),
+		Tags:        getTagsIn(ctx),
+		Usage:       aws.String(d.Get("usage").(string)),
 	}
 
 	if v, ok := d.GetOk("certificate_chain"); ok {
@@ -108,10 +106,6 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("private_key"); ok {
 		input.PrivateKey = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("usage"); ok {
-		input.Usage = aws.String(v.(string))
 	}
 
 	output, err := conn.ImportCertificateWithContext(ctx, input)
