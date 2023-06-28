@@ -1,12 +1,12 @@
 ---
 subcategory: "Transfer Family"
 layout: "aws"
-page_title: "AWS: aws_transfer_as2_agreement"
+page_title: "AWS: aws_transfer_agreement"
 description: |-
   Provides a AWS Transfer AS2 Agreement Resource
 ---
 
-# Resource: aws_transfer_as2_agreement
+# Resource: aws_transfer_agreement
 
 Provides a AWS Transfer AS2 Agreement resource.
 
@@ -15,7 +15,7 @@ Provides a AWS Transfer AS2 Agreement resource.
 ### Basic
 
 ```terraform
-resource "aws_transfer_as2_agreement" "example" {
+resource "aws_transfer_agreement" "example" {
   access_role        = aws_iam_role.test.arn
   base_directory     = "/DOC-EXAMPLE-BUCKET/home/mydirectory"
   description        = "example"
@@ -49,5 +49,5 @@ In addition to all arguments above, the following attributes are exported:
 Transfer AS2 Agreement can be imported using the `agreement_id/serverid`, e.g.,
 
 ```
-$ terraform import aws_transfer_as2_agreement.example a-4221a88afd5f4362a/s-4221a88afd5f4362a
+$ terraform import aws_transfer_agreement.example a-4221a88afd5f4362a/s-4221a88afd5f4362a
 ```

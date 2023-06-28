@@ -19,7 +19,7 @@ func TestAccTransferAgreement_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedAgreement
 	baseDirectory := "/DOC-EXAMPLE-BUCKET/home/mydirectory"
-	resourceName := "aws_transfer_as2_agreement.test"
+	resourceName := "aws_transfer_agreement.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
@@ -69,7 +69,7 @@ func TestAccTransferAgreement_basic(t *testing.T) {
 func TestAccTransferAgreement_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedAgreement
-	resourceName := "aws_transfer_as2_agreement.test"
+	resourceName := "aws_transfer_agreement.test"
 	baseDirectory := "/DOC-EXAMPLE-BUCKET/home/mydirectory"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -144,7 +144,7 @@ resource "aws_transfer_profile" "partner" {
   profile_type = "PARTNER"
 }
 resource "aws_transfer_server" "test" {}
-resource "aws_transfer_as2_agreement" "test" {
+resource "aws_transfer_agreement" "test" {
   access_role        = aws_iam_role.test.arn
   base_directory     = %[2]q
   local_profile_id   = aws_transfer_profile.local.profile_id
@@ -202,7 +202,7 @@ resource "aws_transfer_profile" "partner" {
   profile_type = "PARTNER"
 }
 resource "aws_transfer_server" "test" {}
-resource "aws_transfer_as2_agreement" "test" {
+resource "aws_transfer_agreement" "test" {
   access_role        = aws_iam_role.test.arn
   base_directory     = %[2]q
   local_profile_id   = aws_transfer_profile.local.profile_id
@@ -248,7 +248,7 @@ func testAccCheckAgreementDestroy(ctx context.Context) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_transfer_as2_agreement" {
+			if rs.Type != "aws_transfer_agreement" {
 				continue
 			}
 			agreementID, serverID, err := tftransfer.AccessParseResourceID(rs.Primary.ID)

@@ -7,7 +7,7 @@ aws_transfer_certificate
 ```
 
 ```release-note:new-resource
-aws_transfer_as2_agreement
+aws_transfer_agreement
 ```
 
 ```release-note:new-resource

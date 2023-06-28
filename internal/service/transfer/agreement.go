@@ -17,7 +17,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_transfer_as2_agreement", name="Agreement")
+// @SDKResource("aws_transfer_agreement", name="Agreement")
 // @Tags(identifierAttribute="agreement_id")
 func ResourceAgreement() *schema.Resource {
 	return &schema.Resource{
