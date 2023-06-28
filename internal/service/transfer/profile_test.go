@@ -19,22 +19,20 @@ func TestAccTransferProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedProfile
 	resourceName := "aws_transfer_profile.test"
-	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testProfile_basic(rName, certificate, key),
+				Config: testAccProfile_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "as2_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "certificate_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "profile_id"),
 					resource.TestCheckResourceAttr(resourceName, "profile_type", "LOCAL"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -44,18 +42,36 @@ func TestAccTransferProfile_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				//ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
+		},
+	})
+}
+
+func TestAccTransferProfile_certificateIDs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf transfer.DescribedProfile
+	resourceName := "aws_transfer_profile.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProfileDestroy(ctx),
+		Steps: []resource.TestStep{
 			{
-				Config: testProfile_updated(rName, certificate, key),
+				Config: testAccProfile_certificateIDs(rName, certificate, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "as2_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "certificate_ids.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "profile_id"),
-					resource.TestCheckResourceAttr(resourceName, "profile_type", "LOCAL"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -65,23 +81,16 @@ func TestAccTransferProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedProfile
 	resourceName := "aws_transfer_profile.test"
-	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-			acctest.PreCheckDirectoryService(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
-		},
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testProfile_basic(rName, certificate, key),
+				Config: testAccProfile_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceProfile(), resourceName),
@@ -92,34 +101,50 @@ func TestAccTransferProfile_disappears(t *testing.T) {
 	})
 }
 
-func testProfile_basic(rName string, certificate string, key string) string {
-	return fmt.Sprintf(`
-resource "aws_transfer_certificate" "test" {
-  certificate = %[2]q
-  private_key = %[3]q
-  usage       = "SIGNING"
-}
-resource "aws_transfer_profile" "test" {
-  as2_id          = %[1]q
-  certificate_ids = [aws_transfer_certificate.test.certificate_id]
-  profile_type    = "LOCAL"
-}
-`, rName, certificate, key)
-}
+func TestAccTransferProfile_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf transfer.DescribedProfile
+	resourceName := "aws_transfer_profile.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-func testProfile_updated(rName string, certificate string, key string) string {
-	return fmt.Sprintf(`
-resource "aws_transfer_certificate" "test" {
-  certificate = %[2]q
-  private_key = %[3]q
-  usage       = "SIGNING"
-}
-resource "aws_transfer_profile" "test" {
-  as2_id          = %[1]q
-  certificate_ids = [aws_transfer_certificate.test.certificate_id]
-  profile_type    = "LOCAL"
-}
-`, rName, certificate, key)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProfile_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProfile_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccProfile_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
 }
 
 func testAccCheckProfileExists(ctx context.Context, n string, v *transfer.DescribedProfile) resource.TestCheckFunc {
@@ -130,7 +155,7 @@ func testAccCheckProfileExists(ctx context.Context, n string, v *transfer.Descri
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Profile ID is set")
+			return fmt.Errorf("No Transfer Profile ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
@@ -166,9 +191,61 @@ func testAccCheckProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("AS2 Profile %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Transfer Profile %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
+}
+
+func testAccProfile_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_profile" "test" {
+  as2_id       = %[1]q
+  profile_type = "LOCAL"
+}
+`, rName)
+}
+
+func testAccProfile_certificateIDs(rName, certificate, privateKey string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_certificate" "test" {
+  certificate = %[2]q
+  private_key = %[3]q
+  usage       = "SIGNING"
+}
+
+resource "aws_transfer_profile" "test" {
+  as2_id          = %[1]q
+  certificate_ids = [aws_transfer_certificate.test.certificate_id]
+  profile_type    = "LOCAL"
+}
+`, rName, certificate, privateKey)
+}
+
+func testAccProfile_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_profile" "test" {
+  as2_id       = %[1]q
+  profile_type = "LOCAL"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccProfile_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_profile" "test" {
+  as2_id       = %[1]q
+  profile_type = "LOCAL"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

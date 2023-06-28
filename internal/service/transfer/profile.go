@@ -36,11 +36,11 @@ func ResourceProfile() *schema.Resource {
 			"as2_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"certificate_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"profile_id": {
@@ -50,11 +50,13 @@ func ResourceProfile() *schema.Resource {
 			"profile_type": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(transfer.ProfileType_Values(), false),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -82,7 +84,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := conn.CreateProfileWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Transfer AS2 Profile: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Transfer Profile: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.ProfileId))
@@ -97,17 +99,17 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 	output, err := FindProfileByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] AS2 Profile (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Transfer Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading AS2 Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Transfer Profile (%s): %s", d.Id(), err)
 	}
 
 	d.Set("as2_id", output.As2Id)
-	d.Set("certificate_ids", output.CertificateIds)
+	d.Set("certificate_ids", aws.StringValueSlice(output.CertificateIds))
 	d.Set("profile_id", output.ProfileId)
 	d.Set("profile_type", output.ProfileType)
 	setTagsOut(ctx, output.Tags)
@@ -120,7 +122,6 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-
 		input := &transfer.UpdateProfileInput{
 			ProfileId: aws.String(d.Id()),
 		}
@@ -129,12 +130,10 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.CertificateIds = flex.ExpandStringSet(d.Get("certificate_ids").(*schema.Set))
 		}
 
-		if _, err := conn.UpdateProfileWithContext(ctx, input); err != nil {
-			return sdkdiag.AppendErrorf(diags, "removing AS2 Profile IDs: %s", err)
-		}
+		_, err := conn.UpdateProfileWithContext(ctx, input)
 
-		if _, err := conn.UpdateProfileWithContext(ctx, input); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Transfer Profile (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -145,7 +144,7 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	log.Printf("[DEBUG] Deleting AS2 Profile: (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting Transfer Profile: %s", d.Id())
 	_, err := conn.DeleteProfileWithContext(ctx, &transfer.DeleteProfileInput{
 		ProfileId: aws.String(d.Id()),
 	})
@@ -155,7 +154,7 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting AS2 Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Transfer Profile (%s): %s", d.Id(), err)
 	}
 
 	return diags
