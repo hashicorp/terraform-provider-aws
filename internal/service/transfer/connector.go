@@ -1,6 +1,6 @@
 package transfer
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import (
 	"context"
 	"log"
 
@@ -90,13 +90,14 @@ func ResourceConnector() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"url": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -106,29 +107,20 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.CreateConnectorInput{
-		Tags: getTagsIn(ctx),
-	}
-
-	if v, ok := d.GetOk("access_role"); ok {
-		input.AccessRole = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("as2_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.As2Config = ExpandAs2Config(v.([]interface{})[0].(map[string]interface{}))
+		AccessRole: aws.String(d.Get("access_role").(string)),
+		As2Config:  expandAs2Config(d.Get("as2_config").([]interface{})[0].(map[string]interface{})),
+		Tags:       getTagsIn(ctx),
+		Url:        aws.String(d.Get("url").(string)),
 	}
 
 	if v, ok := d.GetOk("logging_role"); ok {
 		input.LoggingRole = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("url"); ok {
-		input.Url = aws.String(v.(string))
-	}
-
 	output, err := conn.CreateConnectorWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Transfer AS2 Connector: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Transfer Connector: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.ConnectorId))
@@ -143,18 +135,18 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := FindConnectorByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] AS2 Connector (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Transfer Connector (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading AS2 Connector (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Transfer Connector (%s): %s", d.Id(), err)
 	}
 
 	d.Set("access_role", output.AccessRole)
 	if err := d.Set("as2_config", flattenAs2Config(output.As2Config)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting As2 Config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting as2_config: %s", err)
 	}
 	d.Set("connector_id", output.ConnectorId)
 	d.Set("logging_role", output.LoggingRole)
@@ -169,7 +161,6 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-
 		input := &transfer.UpdateConnectorInput{
 			ConnectorId: aws.String(d.Id()),
 		}
@@ -180,7 +171,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		if d.HasChange("as2_config") {
 			if v, ok := d.GetOk("as2_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.As2Config = ExpandAs2Config(v.([]interface{})[0].(map[string]interface{}))
+				input.As2Config = expandAs2Config(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
@@ -192,12 +183,10 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.Url = aws.String(d.Get("url").(string))
 		}
 
-		if _, err := conn.UpdateConnectorWithContext(ctx, input); err != nil {
-			return sdkdiag.AppendErrorf(diags, "removing Connector IDs: %s", err)
-		}
+		_, err := conn.UpdateConnectorWithContext(ctx, input)
 
-		if _, err := conn.UpdateConnectorWithContext(ctx, input); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Transfer Connector (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -208,7 +197,7 @@ func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	log.Printf("[DEBUG] Deleting AS2 Connector: (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting Transfer Connector: %s", d.Id())
 	_, err := conn.DeleteConnectorWithContext(ctx, &transfer.DeleteConnectorInput{
 		ConnectorId: aws.String(d.Id()),
 	})
@@ -218,13 +207,13 @@ func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting AS2 Connector (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Transfer Connector (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func ExpandAs2Config(tfMap map[string]interface{}) *transfer.As2ConnectorConfig {
+func expandAs2Config(tfMap map[string]interface{}) *transfer.As2ConnectorConfig {
 	if tfMap == nil {
 		return nil
 	}
