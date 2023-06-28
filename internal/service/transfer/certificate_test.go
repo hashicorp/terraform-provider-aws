@@ -18,7 +18,7 @@ import (
 func TestAccTransferCertificate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedCertificate
-	resourceName := "aws_transfer_as2_certificate.test"
+	resourceName := "aws_transfer_certificate.test"
 	//commonName := "example.com"
 	domain := acctest.RandomDomainName()
 	domainWildcard := fmt.Sprintf("*.%s", domain)
@@ -59,7 +59,7 @@ func TestAccTransferCertificate_basic(t *testing.T) {
 func TestAccTransferCertificate_certificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedCertificate
-	resourceName := "aws_transfer_as2_certificate.test"
+	resourceName := "aws_transfer_certificate.test"
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 
@@ -92,7 +92,7 @@ func TestAccTransferCertificate_certificate(t *testing.T) {
 func TestAccTransferCertificate_certificateChain(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedCertificate
-	resourceName := "aws_transfer_as2_certificate.test"
+	resourceName := "aws_transfer_certificate.test"
 	domain := acctest.RandomDomainName()
 	domainWildcard := fmt.Sprintf("*.%s", domain)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
@@ -129,7 +129,7 @@ func TestAccTransferCertificate_certificateChain(t *testing.T) {
 func TestAccTransferCertificate_certificateKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedCertificate
-	resourceName := "aws_transfer_as2_certificate.test"
+	resourceName := "aws_transfer_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
 
@@ -162,7 +162,7 @@ func TestAccTransferCertificate_certificateKey(t *testing.T) {
 func TestAccTransferCertificate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedCertificate
-	resourceName := "aws_transfer_as2_certificate.test"
+	resourceName := "aws_transfer_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
 
@@ -191,7 +191,7 @@ func TestAccTransferCertificate_disappears(t *testing.T) {
 
 func testCertificate_basic(rName string, certificate string, key string, caCertificate string) string {
 	return fmt.Sprintf(`
-resource "aws_transfer_as2_certificate" "test" {
+resource "aws_transfer_certificate" "test" {
   certificate       = %[2]q
   private_key       = %[3]q
   certificate_chain = %[4]q
@@ -202,7 +202,7 @@ resource "aws_transfer_as2_certificate" "test" {
 
 func testCertificate_certificate(certificate string) string {
 	return fmt.Sprintf(`
-resource "aws_transfer_as2_certificate" "test" {
+resource "aws_transfer_certificate" "test" {
   certificate = %[1]q
   usage       = "SIGNING"
 }
@@ -211,7 +211,7 @@ resource "aws_transfer_as2_certificate" "test" {
 
 func testCertificate_certificatechain(certificate string, caCertificate string) string {
 	return fmt.Sprintf(`
-resource "aws_transfer_as2_certificate" "test" {
+resource "aws_transfer_certificate" "test" {
   certificate       = %[1]q
   certificate_chain = %[2]q
   usage             = "SIGNING"
@@ -221,7 +221,7 @@ resource "aws_transfer_as2_certificate" "test" {
 
 func testCertificate_certificatekey(certificate string, key string) string {
 	return fmt.Sprintf(`
-resource "aws_transfer_as2_certificate" "test" {
+resource "aws_transfer_certificate" "test" {
   certificate = %[1]q
   private_key = %[2]q
   usage       = "SIGNING"
@@ -259,7 +259,7 @@ func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_transfer_as2_certificate" {
+			if rs.Type != "aws_transfer_certificate" {
 				continue
 			}
 

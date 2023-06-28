@@ -17,7 +17,7 @@ Provides a AWS Transfer AS2 Profile resource.
 ```terraform
 resource "aws_transfer_as2_profile" "example" {
   as2_id          = "example"
-  certificate_ids = [aws_transfer_as2_certificate.example.certificate_id]
+  certificate_ids = [aws_transfer_certificate.example.certificate_id]
   usage           = "LOCAL"
 }
 ```

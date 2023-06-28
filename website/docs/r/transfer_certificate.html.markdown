@@ -1,12 +1,12 @@
 ---
 subcategory: "Transfer Family"
 layout: "aws"
-page_title: "AWS: aws_transfer_as2_certificate"
+page_title: "AWS: aws_transfer_certificate"
 description: |-
   Provides a AWS Transfer AS2 Certificate Resource
 ---
 
-# Resource: aws_transfer_as2_certificate
+# Resource: aws_transfer_certificate
 
 Provides a AWS Transfer AS2 Certificate resource.
 
@@ -15,7 +15,7 @@ Provides a AWS Transfer AS2 Certificate resource.
 ### Basic
 
 ```terraform
-resource "aws_transfer_as2_certificate" "example" {
+resource "aws_transfer_certificate" "example" {
   certificate       = file("${path.module}/example.com/example.crt")
   certificate_chain = file("${path.module}/example.com/ca.crt")
   private_key       = file("${path.module}/example.com/example.key")
@@ -48,5 +48,5 @@ In addition to all arguments above, the following attributes are exported:
 Transfer AS2 Certificate can be imported using the `certificate_id`, e.g.,
 
 ```
-$ terraform import aws_transfer_as2_certificate.example c-4221a88afd5f4362a
+$ terraform import aws_transfer_certificate.example c-4221a88afd5f4362a
 ```

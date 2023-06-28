@@ -94,14 +94,14 @@ func TestAccTransferProfile_disappears(t *testing.T) {
 
 func testProfile_basic(rName string, certificate string, key string) string {
 	return fmt.Sprintf(`
-resource "aws_transfer_as2_certificate" "test" {
+resource "aws_transfer_certificate" "test" {
   certificate = %[2]q
   private_key = %[3]q
   usage       = "SIGNING"
 }
 resource "aws_transfer_as2_profile" "test" {
   as2_id          = %[1]q
-  certificate_ids = [aws_transfer_as2_certificate.test.certificate_id]
+  certificate_ids = [aws_transfer_certificate.test.certificate_id]
   profile_type    = "LOCAL"
 }
 `, rName, certificate, key)
@@ -109,14 +109,14 @@ resource "aws_transfer_as2_profile" "test" {
 
 func testProfile_updated(rName string, certificate string, key string) string {
 	return fmt.Sprintf(`
-resource "aws_transfer_as2_certificate" "test" {
+resource "aws_transfer_certificate" "test" {
   certificate = %[2]q
   private_key = %[3]q
   usage       = "SIGNING"
 }
 resource "aws_transfer_as2_profile" "test" {
   as2_id          = %[1]q
-  certificate_ids = [aws_transfer_as2_certificate.test.certificate_id]
+  certificate_ids = [aws_transfer_certificate.test.certificate_id]
   profile_type    = "LOCAL"
 }
 `, rName, certificate, key)

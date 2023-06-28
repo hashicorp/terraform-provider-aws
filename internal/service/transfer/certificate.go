@@ -19,7 +19,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_transfer_as2_certificate", name="Certificate")
+// @SDKResource("aws_transfer_certificate", name="Certificate")
 // @Tags(identifierAttribute="certificate_id")
 func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
