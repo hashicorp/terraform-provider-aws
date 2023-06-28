@@ -192,7 +192,7 @@ func testAccPrincipalPortfolioAssociationConfig_iam_pattern(rName string) string
 	return acctest.ConfigCompose(testAccPrincipalPortfolioAssociationConfig_base(rName), `
 resource "aws_servicecatalog_principal_portfolio_association" "test" {
   portfolio_id   = aws_servicecatalog_portfolio.test.id
-  principal_arn  = "arn:aws:iam:::role/${aws_iam_role.test.name}"
+  principal_arn  = "arn:${data.aws_partition.current.partition}:iam:::role/${aws_iam_role.test.name}"
   principal_type = "IAM_PATTERN"
 }
 `)
