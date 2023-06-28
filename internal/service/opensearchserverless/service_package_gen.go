@@ -20,6 +20,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory: newDataSourceAccessPolicy,
 			Name:    "Access Policy",
 		},
+		{
+			Factory: newDataSourceCollection,
+			Name:    "Collection",
+		},
 	}
 }
 
