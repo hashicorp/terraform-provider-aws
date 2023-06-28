@@ -1,6 +1,6 @@
 package transfer
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import (
 	"context"
 	"log"
 	"time"
@@ -40,18 +40,20 @@ func ResourceCertificate() *schema.Resource {
 			"certificate": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(0, 16384),
-			},
-			"certificate_id": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"certificate_chain": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(0, 2097152),
+			},
+			"certificate_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -65,19 +67,21 @@ func ResourceCertificate() *schema.Resource {
 			"private_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(0, 16384),
 				//ExactlyOneOf: []string{"certificate_chain", "private_key"},
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"usage": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(transfer.CertificateUsageType_Values(), false),
 			},
-
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -113,7 +117,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	output, err := conn.ImportCertificateWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "importing Certificates: %s", err)
+		return sdkdiag.AppendErrorf(diags, "importing Transfer Certificate: %s", err)
 	}
 
 	d.SetId(aws.ToString(output.CertificateId))
@@ -128,19 +132,19 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	output, err := FindCertificateByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Certificate Id (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Transfer Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Certificate Id (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Transfer Certificate (%s): %s", d.Id(), err)
 	}
 
 	d.Set("active_date", aws.ToTime(output.ActiveDate).Format(time.RFC3339))
 	d.Set("certificate", output.Certificate)
-	d.Set("certificate_id", output.CertificateId)
 	d.Set("certificate_chain", output.CertificateChain)
+	d.Set("certificate_id", output.CertificateId)
 	d.Set("description", output.Description)
 	d.Set("inactive_date", aws.ToTime(output.InactiveDate).Format(time.RFC3339))
 	d.Set("usage", output.Usage)
@@ -150,15 +154,30 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Tags only.
-	return resourceCertificateRead(ctx, d, meta)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+
+	if d.HasChange("description") {
+		input := &transfer.UpdateCertificateInput{
+			CertificateId: aws.String(d.Id()),
+			Description:   aws.String(d.Get("description").(string)),
+		}
+
+		_, err := conn.UpdateCertificateWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Transfer Certificate (%s): %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
 func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	log.Printf("[DEBUG] Deleting Certificate: (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting Transfer Certificate: %s", d.Id())
 	_, err := conn.DeleteCertificateWithContext(ctx, &transfer.DeleteCertificateInput{
 		CertificateId: aws.String(d.Id()),
 	})
@@ -168,7 +187,7 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Certificate (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Transfer Certificate (%s): %s", d.Id(), err)
 	}
 
 	return diags
