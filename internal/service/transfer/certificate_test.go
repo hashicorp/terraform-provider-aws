@@ -32,7 +32,7 @@ func TestAccTransferCertificate_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testCertificate_basic(certificate, key, caCertificate),
+				Config: testAccCertificate_basic(certificate, key, caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
@@ -65,7 +65,7 @@ func TestAccTransferCertificate_certificate(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testCertificate_certificate(caCertificate),
+				Config: testAccCertificate_certificate(caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
@@ -102,7 +102,7 @@ func TestAccTransferCertificate_certificateChain(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testCertificate_certificateChain(certificate, caCertificate),
+				Config: testAccCertificate_certificateChain(certificate, caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
@@ -135,7 +135,7 @@ func TestAccTransferCertificate_certificateKey(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testCertificate_certificatePrivateKey(certificate, key),
+				Config: testAccCertificate_certificatePrivateKey(certificate, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
@@ -168,7 +168,7 @@ func TestAccTransferCertificate_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testCertificate_certificate(certificate),
+				Config: testAccCertificate_certificate(certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceCertificate(), resourceName),
@@ -193,7 +193,7 @@ func TestAccTransferCertificate_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testCertificate_tags1(certificate, "key1", "value1"),
+				Config: testAccCertificate_tags1(certificate, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -207,7 +207,7 @@ func TestAccTransferCertificate_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"private_key", "certificate", "certificate_chain"},
 			},
 			{
-				Config: testCertificate_tags2(certificate, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCertificate_tags2(certificate, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -216,7 +216,7 @@ func TestAccTransferCertificate_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testCertificate_tags1(certificate, "key2", "value2"),
+				Config: testAccCertificate_tags1(certificate, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -241,7 +241,7 @@ func TestAccTransferCertificate_description(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testCertificate_description(certificate, "desc1"),
+				Config: testAccCertificate_description(certificate, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", "desc1"),
@@ -254,7 +254,7 @@ func TestAccTransferCertificate_description(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"private_key", "certificate", "certificate_chain"},
 			},
 			{
-				Config: testCertificate_description(certificate, "desc2"),
+				Config: testAccCertificate_description(certificate, "desc2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", "desc2"),
@@ -315,7 +315,7 @@ func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testCertificate_basic(certificate, privateKey, caCertificate string) string {
+func testAccCertificate_basic(certificate, privateKey, caCertificate string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_certificate" "test" {
   certificate       = %[1]q
@@ -326,7 +326,7 @@ resource "aws_transfer_certificate" "test" {
 `, certificate, privateKey, caCertificate)
 }
 
-func testCertificate_certificate(certificate string) string {
+func testAccCertificate_certificate(certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_certificate" "test" {
   certificate = %[1]q
@@ -335,7 +335,7 @@ resource "aws_transfer_certificate" "test" {
 `, certificate)
 }
 
-func testCertificate_certificateChain(certificate, caCertificate string) string {
+func testAccCertificate_certificateChain(certificate, caCertificate string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_certificate" "test" {
   certificate       = %[1]q
@@ -345,7 +345,7 @@ resource "aws_transfer_certificate" "test" {
 `, certificate, caCertificate)
 }
 
-func testCertificate_certificatePrivateKey(certificate, privateKey string) string {
+func testAccCertificate_certificatePrivateKey(certificate, privateKey string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_certificate" "test" {
   certificate = %[1]q
@@ -355,7 +355,7 @@ resource "aws_transfer_certificate" "test" {
 `, certificate, privateKey)
 }
 
-func testCertificate_tags1(certificate, tagKey1, tagValue1 string) string {
+func testAccCertificate_tags1(certificate, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_certificate" "test" {
   certificate = %[1]q
@@ -368,7 +368,7 @@ resource "aws_transfer_certificate" "test" {
 `, certificate, tagKey1, tagValue1)
 }
 
-func testCertificate_tags2(certificate, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccCertificate_tags2(certificate, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_certificate" "test" {
   certificate = %[1]q
@@ -382,7 +382,7 @@ resource "aws_transfer_certificate" "test" {
 `, certificate, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testCertificate_description(certificate, description string) string {
+func testAccCertificate_description(certificate, description string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_certificate" "test" {
   certificate = %[1]q
