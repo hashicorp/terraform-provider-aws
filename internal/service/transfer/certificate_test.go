@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/transfer"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -19,16 +18,12 @@ func TestAccTransferCertificate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
-	//commonName := "example.com"
 	domain := acctest.RandomDomainName()
 	domainWildcard := fmt.Sprintf("*.%s", domain)
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	//certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, commonName)
-	//certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
 	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, domainWildcard)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -37,13 +32,13 @@ func TestAccTransferCertificate_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testCertificate_basic(rName, certificate, key, caCertificate),
+				Config: testCertificate_basic(certificate, key, caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "inactive_date"),
-					resource.TestCheckResourceAttr(resourceName, "usage", "SIGNING"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "usage", "SIGNING"),
 				),
 			},
 			{
@@ -75,8 +70,8 @@ func TestAccTransferCertificate_certificate(t *testing.T) {
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "inactive_date"),
-					resource.TestCheckResourceAttr(resourceName, "usage", "SIGNING"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "usage", "SIGNING"),
 				),
 			},
 			{
@@ -107,13 +102,13 @@ func TestAccTransferCertificate_certificateChain(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testCertificate_certificatechain(certificate, caCertificate),
+				Config: testCertificate_certificateChain(certificate, caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "inactive_date"),
-					resource.TestCheckResourceAttr(resourceName, "usage", "SIGNING"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "usage", "SIGNING"),
 				),
 			},
 			{
@@ -140,13 +135,13 @@ func TestAccTransferCertificate_certificateKey(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testCertificate_certificatekey(certificate, key),
+				Config: testCertificate_certificatePrivateKey(certificate, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "inactive_date"),
-					resource.TestCheckResourceAttr(resourceName, "usage", "SIGNING"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "usage", "SIGNING"),
 				),
 			},
 			{
@@ -167,12 +162,7 @@ func TestAccTransferCertificate_disappears(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-			acctest.PreCheckDirectoryService(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
@@ -189,44 +179,89 @@ func TestAccTransferCertificate_disappears(t *testing.T) {
 	})
 }
 
-func testCertificate_basic(rName string, certificate string, key string, caCertificate string) string {
-	return fmt.Sprintf(`
-resource "aws_transfer_certificate" "test" {
-  certificate       = %[2]q
-  private_key       = %[3]q
-  certificate_chain = %[4]q
-  usage             = "SIGNING"
-}
-`, rName, certificate, key, caCertificate)
+func TestAccTransferCertificate_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf transfer.DescribedCertificate
+	resourceName := "aws_transfer_certificate.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testCertificate_tags1(certificate, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"private_key", "certificate", "certificate_chain"},
+			},
+			{
+				Config: testCertificate_tags2(certificate, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testCertificate_tags1(certificate, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
 }
 
-func testCertificate_certificate(certificate string) string {
-	return fmt.Sprintf(`
-resource "aws_transfer_certificate" "test" {
-  certificate = %[1]q
-  usage       = "SIGNING"
-}
-`, certificate)
-}
+func TestAccTransferCertificate_description(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf transfer.DescribedCertificate
+	resourceName := "aws_transfer_certificate.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
 
-func testCertificate_certificatechain(certificate string, caCertificate string) string {
-	return fmt.Sprintf(`
-resource "aws_transfer_certificate" "test" {
-  certificate       = %[1]q
-  certificate_chain = %[2]q
-  usage             = "SIGNING"
-}
-`, certificate, caCertificate)
-}
-
-func testCertificate_certificatekey(certificate string, key string) string {
-	return fmt.Sprintf(`
-resource "aws_transfer_certificate" "test" {
-  certificate = %[1]q
-  private_key = %[2]q
-  usage       = "SIGNING"
-}
-`, certificate, key)
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testCertificate_description(certificate, "desc1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"private_key", "certificate", "certificate_chain"},
+			},
+			{
+				Config: testCertificate_description(certificate, "desc2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc2"),
+				),
+			},
+		},
+	})
 }
 
 func testAccCheckCertificateExists(ctx context.Context, n string, v *transfer.DescribedCertificate) resource.TestCheckFunc {
@@ -237,7 +272,7 @@ func testAccCheckCertificateExists(ctx context.Context, n string, v *transfer.De
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Certificate ID is set")
+			return fmt.Errorf("No Transfer Certificate ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
@@ -273,9 +308,86 @@ func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc 
 				return err
 			}
 
-			return fmt.Errorf("Certificate %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Transfer Certificate %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
+}
+
+func testCertificate_basic(certificate, privateKey, caCertificate string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_certificate" "test" {
+  certificate       = %[1]q
+  private_key       = %[2]q
+  certificate_chain = %[3]q
+  usage             = "SIGNING"
+}
+`, certificate, privateKey, caCertificate)
+}
+
+func testCertificate_certificate(certificate string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_certificate" "test" {
+  certificate = %[1]q
+  usage       = "SIGNING"
+}
+`, certificate)
+}
+
+func testCertificate_certificateChain(certificate, caCertificate string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_certificate" "test" {
+  certificate       = %[1]q
+  certificate_chain = %[2]q
+  usage             = "SIGNING"
+}
+`, certificate, caCertificate)
+}
+
+func testCertificate_certificatePrivateKey(certificate, privateKey string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_certificate" "test" {
+  certificate = %[1]q
+  private_key = %[2]q
+  usage       = "SIGNING"
+}
+`, certificate, privateKey)
+}
+
+func testCertificate_tags1(certificate, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_certificate" "test" {
+  certificate = %[1]q
+  usage       = "SIGNING"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, certificate, tagKey1, tagValue1)
+}
+
+func testCertificate_tags2(certificate, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_certificate" "test" {
+  certificate = %[1]q
+  usage       = "SIGNING"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, certificate, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testCertificate_description(certificate, description string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_certificate" "test" {
+  certificate = %[1]q
+  usage       = "SIGNING"
+  description = %[2]q
+}
+`, certificate, description)
 }

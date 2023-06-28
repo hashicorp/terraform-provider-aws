@@ -61,6 +61,7 @@ func FindAgreementByID(ctx context.Context, conn *transfer.Transfer, agreementID
 
 	return output.Agreement, nil
 }
+
 func FindCertificateByID(ctx context.Context, conn *transfer.Transfer, id string) (*transfer.DescribedCertificate, error) {
 	input := &transfer.DescribeCertificateInput{
 		CertificateId: aws.String(id),
@@ -85,6 +86,7 @@ func FindCertificateByID(ctx context.Context, conn *transfer.Transfer, id string
 
 	return output.Certificate, nil
 }
+
 func FindConnectorByID(ctx context.Context, conn *transfer.Transfer, id string) (*transfer.DescribedConnector, error) {
 	input := &transfer.DescribeConnectorInput{
 		ConnectorId: aws.String(id),
@@ -109,6 +111,7 @@ func FindConnectorByID(ctx context.Context, conn *transfer.Transfer, id string) 
 
 	return output.Connector, nil
 }
+
 func FindProfileByID(ctx context.Context, conn *transfer.Transfer, id string) (*transfer.DescribedProfile, error) {
 	input := &transfer.DescribeProfileInput{
 		ProfileId: aws.String(id),
@@ -133,6 +136,7 @@ func FindProfileByID(ctx context.Context, conn *transfer.Transfer, id string) (*
 
 	return output.Profile, nil
 }
+
 func FindServerByID(ctx context.Context, conn *transfer.Transfer, id string) (*transfer.DescribedServer, error) {
 	input := &transfer.DescribeServerInput{
 		ServerId: aws.String(id),
