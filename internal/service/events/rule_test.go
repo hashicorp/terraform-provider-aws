@@ -39,12 +39,12 @@ func TestRuleEventPatternJSONDecoder(t *testing.T) {
 	}
 	tests := map[string]testCase{
 		"lessThanGreaterThan": {
-			input:    `{"detail": {"count": [ { "numeric": [ "\u003e", 0, "\u003c", 5 ] } ]}}`,
-			expected: `{"detail": {"count": [ { "numeric": [ ">", 0, "<", 5 ] } ]}}`,
+			input:    `{"detail":{"count":[{"numeric":["\u003e",0,"\u003c",5]}]}}`,
+			expected: `{"detail":{"count":[{"numeric":[">",0,"<",5]}]}}`,
 		},
 		"ampersand": {
-			input:    `{"detail": {"count": [ { "numeric": [ "\u0026", 0, "\u0026", 5 ] } ]}}`,
-			expected: `{"detail": {"count": [ { "numeric": [ "&", 0, "&", 5 ] } ]}}`,
+			input:    `{"detail":{"count":[{"numeric":["\u0026",0,"\u0026",5]}]}}`,
+			expected: `{"detail":{"count":[{"numeric":["&",0,"&",5]}]}}`,
 		},
 	}
 
@@ -286,6 +286,31 @@ func TestAccEventsRule_pattern(t *testing.T) {
 					testAccCheckRuleExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.lambda\"]}"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEventsRule_patternJSONEncoder(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1 eventbridge.DescribeRuleOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleConfig_patternJSONEncoder(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "schedule_expression", ""),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", `{"detail":{"count":[{"numeric":[">",0,"<",5]}]}}`),
 				),
 			},
 		},
@@ -719,6 +744,15 @@ resource "aws_cloudwatch_event_rule" "test" {
 PATTERN
 }
 `, rName, pattern)
+}
+
+func testAccRuleConfig_patternJSONEncoder(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_rule" "test" {
+  name          = %[1]q
+  event_pattern = jsonencode({ "detail" : { "count" : [{ "numeric" : [">", 0, "<", 5] }] } })
+}
+`, rName)
 }
 
 func testAccRuleConfig_scheduleAndPattern(rName, pattern string) string {

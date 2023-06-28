@@ -296,7 +296,7 @@ func FindRuleByTwoPartKey(ctx context.Context, conn *eventbridge.EventBridge, ev
 	return output, nil
 }
 
-// Decodes unicode translation of <,>,&
+// RuleEventPatternJSONDecoder decodes unicode translation of <,>,&
 func RuleEventPatternJSONDecoder(jsonString interface{}) (string, error) {
 	var j interface{}
 
