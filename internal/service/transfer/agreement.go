@@ -1,6 +1,6 @@
 package transfer
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import (
 	"context"
 	"log"
 
@@ -56,14 +56,13 @@ func ResourceAgreement() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"serverid": {
+			"server_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
-				//ValidateFunc: validation.StringInSlice(transfer.AgreementStatusType_Values(), false),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -76,32 +75,18 @@ func resourceAgreementCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
+	serverID := d.Get("server_id").(string)
 	input := &transfer.CreateAgreementInput{
-		Tags: getTagsIn(ctx),
-	}
-
-	if v, ok := d.GetOk("access_role"); ok {
-		input.AccessRole = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("base_directory"); ok {
-		input.BaseDirectory = aws.String(v.(string))
+		AccessRole:       aws.String(d.Get("access_role").(string)),
+		BaseDirectory:    aws.String(d.Get("base_directory").(string)),
+		LocalProfileId:   aws.String(d.Get("local_profile_id").(string)),
+		PartnerProfileId: aws.String(d.Get("partner_profile_id").(string)),
+		ServerId:         aws.String(serverID),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("local_profile_id"); ok {
-		input.LocalProfileId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("partner_profile_id"); ok {
-		input.PartnerProfileId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("serverid"); ok {
-		input.ServerId = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateAgreementWithContext(ctx, input)
@@ -110,11 +95,7 @@ func resourceAgreementCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "creating Transfer Agreement: %s", err)
 	}
 
-	agreementID := aws.StringValue(output.AgreementId)
-	serverID := d.Get("serverid").(string)
-	id := AccessCreateResourceID(agreementID, serverID)
-	d.SetId(id)
-	//d.SetId(aws.StringValue(output.AgreementId))
+	d.SetId(AgreementCreateResourceID(serverID, aws.StringValue(output.AgreementId)))
 
 	return append(diags, resourceAgreementRead(ctx, d, meta)...)
 }
@@ -122,22 +103,22 @@ func resourceAgreementCreate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceAgreementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
-	agreementID, serverID, err := AccessParseResourceID(d.Id())
 
+	serverID, agreementID, err := AgreementParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing Transfer Agreement ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := FindAgreementByID(ctx, conn, agreementID, serverID)
+	output, err := FindAgreementByTwoPartKey(ctx, conn, serverID, agreementID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] AS2 Agreement (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Transfer Agreement (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading AS2 Agreement (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Transfer Agreement (%s): %s", d.Id(), err)
 	}
 
 	d.Set("access_role", output.AccessRole)
@@ -146,9 +127,8 @@ func resourceAgreementRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("description", output.Description)
 	d.Set("local_profile_id", output.LocalProfileId)
 	d.Set("partner_profile_id", output.PartnerProfileId)
-	d.Set("serverid", output.ServerId)
+	d.Set("server_id", output.ServerId)
 	d.Set("status", output.Status)
-
 	setTagsOut(ctx, output.Tags)
 
 	return diags
@@ -158,13 +138,12 @@ func resourceAgreementUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	agreementID, serverID, err := AccessParseResourceID(d.Id())
+	serverID, agreementID, err := AgreementParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing Transfer Agreement ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if d.HasChangesExcept("tags", "tags_all") {
-
 		input := &transfer.UpdateAgreementInput{
 			AgreementId: aws.String(agreementID),
 			ServerId:    aws.String(serverID),
@@ -190,12 +169,10 @@ func resourceAgreementUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.PartnerProfileId = aws.String(d.Get("partner_profile_id").(string))
 		}
 
-		if _, err := conn.UpdateAgreementWithContext(ctx, input); err != nil {
-			return sdkdiag.AppendErrorf(diags, "removing AS2 Agreement IDs: %s", err)
-		}
+		_, err := conn.UpdateAgreementWithContext(ctx, input)
 
-		if _, err := conn.UpdateAgreementWithContext(ctx, input); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Transfer Agreement (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -205,12 +182,14 @@ func resourceAgreementUpdate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceAgreementDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
-	agreementID, serverID, err := AccessParseResourceID(d.Id())
+
+	serverID, agreementID, err := AgreementParseResourceID(d.Id())
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing Transfer Agreement ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[DEBUG] Deleting AS2 Agreement: (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting Transfer Agreement: %s", d.Id())
 	_, err = conn.DeleteAgreementWithContext(ctx, &transfer.DeleteAgreementInput{
 		AgreementId: aws.String(agreementID),
 		ServerId:    aws.String(serverID),
@@ -221,7 +200,7 @@ func resourceAgreementDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting AS2 Agreement (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Transfer Agreement (%s): %s", d.Id(), err)
 	}
 
 	return diags

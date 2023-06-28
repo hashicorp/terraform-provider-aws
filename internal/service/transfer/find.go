@@ -36,7 +36,7 @@ func FindAccessByTwoPartKey(ctx context.Context, conn *transfer.Transfer, server
 	return output.Access, nil
 }
 
-func FindAgreementByID(ctx context.Context, conn *transfer.Transfer, agreementID, serverID string) (*transfer.DescribedAgreement, error) {
+func FindAgreementByTwoPartKey(ctx context.Context, conn *transfer.Transfer, serverID, agreementID string) (*transfer.DescribedAgreement, error) {
 	input := &transfer.DescribeAgreementInput{
 		AgreementId: aws.String(agreementID),
 		ServerId:    aws.String(serverID),

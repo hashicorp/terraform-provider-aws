@@ -21,7 +21,7 @@ resource "aws_transfer_agreement" "example" {
   description        = "example"
   local_profile_id   = aws_transfer_profile.local.profile_id
   partner_profile_id = aws_transfer_profile.partner.profile_id
-  serverid           = aws_transfer_server.test.id
+  server_id          = aws_transfer_server.test.id
 }
 ```
 
@@ -34,7 +34,7 @@ The following arguments are supported:
 * `description` - (Optional) The Optional description of the transdfer.
 * `local_profile_id` - (Required) The unique identifier for the AS2 local profile.
 * `partner_profile_id` - (Required) The unique identifier for the AS2 partner profile.
-* `serverid` - (Required) The unique server identifier for the server instance. This is the specific server the agreement uses.
+* `server_id` - (Required) The unique server identifier for the server instance. This is the specific server the agreement uses.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
@@ -46,8 +46,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Transfer AS2 Agreement can be imported using the `agreement_id/serverid`, e.g.,
+Transfer AS2 Agreement can be imported using the `server_id/agreement_id`, e.g.,
 
 ```
-$ terraform import aws_transfer_agreement.example a-4221a88afd5f4362a/s-4221a88afd5f4362a
+$ terraform import aws_transfer_agreement.example s-4221a88afd5f4362a/a-4221a88afd5f4362a
 ```
