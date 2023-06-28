@@ -1,12 +1,12 @@
 ---
 subcategory: "Transfer Family"
 layout: "aws"
-page_title: "AWS: aws_transfer_as2_connector"
+page_title: "AWS: aws_transfer_connector"
 description: |-
   Provides a AWS Transfer AS2 Connector Resource
 ---
 
-# Resource: aws_transfer_as2_connector
+# Resource: aws_transfer_connector
 
 Provides a AWS Transfer AS2 Connector resource.
 
@@ -15,7 +15,7 @@ Provides a AWS Transfer AS2 Connector resource.
 ### Basic
 
 ```terraform
-resource "aws_transfer_as2_connector" "example" {
+resource "aws_transfer_connector" "example" {
   access_role = aws_iam_role.test.arn
   as2_config {
     compression           = "DISABLED"
@@ -63,5 +63,5 @@ In addition to all arguments above, the following attributes are exported:
 Transfer AS2 Connector can be imported using the `connector_id`, e.g.,
 
 ```
-$ terraform import aws_transfer_as2_connector.example c-4221a88afd5f4362a
+$ terraform import aws_transfer_connector.example c-4221a88afd5f4362a
 ```

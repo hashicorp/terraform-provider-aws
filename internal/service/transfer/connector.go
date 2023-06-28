@@ -18,7 +18,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_transfer_as2_connector", name="Connector")
+// @SDKResource("aws_transfer_connector", name="Connector")
 // @Tags(identifierAttribute="connector_id")
 func ResourceConnector() *schema.Resource {
 	return &schema.Resource{

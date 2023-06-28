@@ -18,7 +18,7 @@ import (
 func TestAccTransferConnector_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedConnector
-	resourceName := "aws_transfer_as2_connector.test"
+	resourceName := "aws_transfer_connector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
@@ -71,7 +71,7 @@ func TestAccTransferConnector_basic(t *testing.T) {
 func TestAccTransferConnector_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedConnector
-	resourceName := "aws_transfer_as2_connector.test"
+	resourceName := "aws_transfer_connector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
@@ -146,7 +146,7 @@ resource "aws_transfer_profile" "partner" {
   profile_type = "PARTNER"
 }
 
-resource "aws_transfer_as2_connector" "test" {
+resource "aws_transfer_connector" "test" {
   access_role = aws_iam_role.test.arn
   as2_config {
     compression           = "DISABLED"
@@ -212,7 +212,7 @@ resource "aws_transfer_profile" "partner" {
   profile_type = "PARTNER"
 }
 
-resource "aws_transfer_as2_connector" "test" {
+resource "aws_transfer_connector" "test" {
   access_role = aws_iam_role.test.arn
   as2_config {
     compression           = "DISABLED"
@@ -259,7 +259,7 @@ func testAccCheckConnectorDestroy(ctx context.Context) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_transfer_as2_connector" {
+			if rs.Type != "aws_transfer_connector" {
 				continue
 			}
 
