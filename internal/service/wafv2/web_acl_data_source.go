@@ -17,26 +17,24 @@ func DataSourceWebACL() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWebACLRead,
 
-		SchemaFunc: func() map[string]*schema.Schema {
-			return map[string]*schema.Schema{
-				"arn": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"description": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"name": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				"scope": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
-				},
-			}
+		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"scope": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
+			},
 		},
 	}
 }

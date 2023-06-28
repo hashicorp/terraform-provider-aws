@@ -18,35 +18,33 @@ func DataSourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIPSetRead,
 
-		SchemaFunc: func() map[string]*schema.Schema {
-			return map[string]*schema.Schema{
-				"addresses": {
-					Type:     schema.TypeSet,
-					Computed: true,
-					Elem:     &schema.Schema{Type: schema.TypeString},
-				},
-				"arn": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"description": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"ip_address_version": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"name": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				"scope": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
-				},
-			}
+		Schema: map[string]*schema.Schema{
+			"addresses": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ip_address_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"scope": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
+			},
 		},
 	}
 }

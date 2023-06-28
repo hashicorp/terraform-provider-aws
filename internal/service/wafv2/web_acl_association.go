@@ -33,21 +33,19 @@ func ResourceWebACLAssociation() *schema.Resource {
 			Create: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		SchemaFunc: func() map[string]*schema.Schema {
-			return map[string]*schema.Schema{
-				"resource_arn": {
-					Type:         schema.TypeString,
-					ForceNew:     true,
-					Required:     true,
-					ValidateFunc: verify.ValidARN,
-				},
-				"web_acl_arn": {
-					Type:         schema.TypeString,
-					ForceNew:     true,
-					Required:     true,
-					ValidateFunc: verify.ValidARN,
-				},
-			}
+		Schema: map[string]*schema.Schema{
+			"resource_arn": {
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"web_acl_arn": {
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 		},
 	}
 }
