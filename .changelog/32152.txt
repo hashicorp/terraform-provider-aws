@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_fis_experiment_template: Add new valid values for `action.*.target.key`
+resource/aws_fis_experiment_template: Add support for `Pods` and `Tasks` to `action.*.target`
 ```
