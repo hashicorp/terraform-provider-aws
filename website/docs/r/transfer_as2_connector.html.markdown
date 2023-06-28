@@ -21,10 +21,10 @@ resource "aws_transfer_as2_connector" "example" {
     compression           = "DISABLED"
     encryption_algorithm  = "AWS128_CBC"
     message_subject       = "For Connector"
-    local_profile_id      = aws_transfer_as2_profile.local.profile_id
+    local_profile_id      = aws_transfer_profile.local.profile_id
     mdn_response          = "NONE"
     mdn_signing_algorithm = "NONE"
-    partner_profile_id    = aws_transfer_as2_profile.partner.profile_id
+    partner_profile_id    = aws_transfer_profile.partner.profile_id
     signing_algorithm     = "NONE"
   }
   url = "http://www.test.com"

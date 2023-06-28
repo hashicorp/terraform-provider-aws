@@ -19,7 +19,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_transfer_as2_profile", name="Profile")
+// @SDKResource("aws_transfer_profile", name="Profile")
 // @Tags(identifierAttribute="profile_id")
 func ResourceProfile() *schema.Resource {
 	return &schema.Resource{

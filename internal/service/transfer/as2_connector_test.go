@@ -135,12 +135,12 @@ resource "aws_iam_role_policy" "test" {
 POLICY
 }
 
-resource "aws_transfer_as2_profile" "local" {
+resource "aws_transfer_profile" "local" {
   as2_id = %[1]q
   #certificate_ids = ["xxx"]
   profile_type = "LOCAL"
 }
-resource "aws_transfer_as2_profile" "partner" {
+resource "aws_transfer_profile" "partner" {
   as2_id = %[1]q
   #certificate_ids = ["xxx"]
   profile_type = "PARTNER"
@@ -152,10 +152,10 @@ resource "aws_transfer_as2_connector" "test" {
     compression           = "DISABLED"
     encryption_algorithm  = "AES128_CBC"
     message_subject       = %[1]q
-    local_profile_id      = aws_transfer_as2_profile.local.profile_id
+    local_profile_id      = aws_transfer_profile.local.profile_id
     mdn_response          = "NONE"
     mdn_signing_algorithm = "NONE"
-    partner_profile_id    = aws_transfer_as2_profile.partner.profile_id
+    partner_profile_id    = aws_transfer_profile.partner.profile_id
     signing_algorithm     = "NONE"
   }
   url = "http://www.test.com"
@@ -201,12 +201,12 @@ resource "aws_iam_role_policy" "test" {
 POLICY
 }
 
-resource "aws_transfer_as2_profile" "local" {
+resource "aws_transfer_profile" "local" {
   as2_id = %[1]q
   #certificate_ids = ["xxx"]
   profile_type = "LOCAL"
 }
-resource "aws_transfer_as2_profile" "partner" {
+resource "aws_transfer_profile" "partner" {
   as2_id = %[1]q
   #certificate_ids = ["xxx"]
   profile_type = "PARTNER"
@@ -218,10 +218,10 @@ resource "aws_transfer_as2_connector" "test" {
     compression           = "DISABLED"
     encryption_algorithm  = "AES128_CBC"
     message_subject       = %[1]q
-    local_profile_id      = aws_transfer_as2_profile.local.profile_id
+    local_profile_id      = aws_transfer_profile.local.profile_id
     mdn_response          = "NONE"
     mdn_signing_algorithm = "NONE"
-    partner_profile_id    = aws_transfer_as2_profile.partner.profile_id
+    partner_profile_id    = aws_transfer_profile.partner.profile_id
     signing_algorithm     = "NONE"
   }
   url = "http://www.test.com"

@@ -19,8 +19,8 @@ resource "aws_transfer_as2_agreement" "example" {
   access_role        = aws_iam_role.test.arn
   base_directory     = "/DOC-EXAMPLE-BUCKET/home/mydirectory"
   description        = "example"
-  local_profile_id   = aws_transfer_as2_profile.local.profile_id
-  partner_profile_id = aws_transfer_as2_profile.partner.profile_id
+  local_profile_id   = aws_transfer_profile.local.profile_id
+  partner_profile_id = aws_transfer_profile.partner.profile_id
   serverid           = aws_transfer_server.test.id
 }
 ```

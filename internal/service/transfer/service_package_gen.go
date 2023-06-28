@@ -55,19 +55,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceProfile,
-			TypeName: "aws_transfer_as2_profile",
-			Name:     "Profile",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "profile_id",
-			},
-		},
-		{
 			Factory:  ResourceCertificate,
 			TypeName: "aws_transfer_certificate",
 			Name:     "Certificate",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "certificate_id",
+			},
+		},
+		{
+			Factory:  ResourceProfile,
+			TypeName: "aws_transfer_profile",
+			Name:     "Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "profile_id",
 			},
 		},
 		{

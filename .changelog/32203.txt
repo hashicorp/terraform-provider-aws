@@ -1,5 +1,5 @@
 ```release-note:new-resource
-aws_transfer_as2_profile
+aws_transfer_profile
 ```
 
 ```release-note:new-resource

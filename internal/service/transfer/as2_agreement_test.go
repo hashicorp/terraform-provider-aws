@@ -133,12 +133,12 @@ resource "aws_iam_role_policy" "test" {
 }
 POLICY
 }
-resource "aws_transfer_as2_profile" "local" {
+resource "aws_transfer_profile" "local" {
   as2_id = %[1]q
   #certificate_ids = ["xxx"]
   profile_type = "LOCAL"
 }
-resource "aws_transfer_as2_profile" "partner" {
+resource "aws_transfer_profile" "partner" {
   as2_id = %[1]q
   #certificate_ids = ["xxx"]
   profile_type = "PARTNER"
@@ -147,8 +147,8 @@ resource "aws_transfer_server" "test" {}
 resource "aws_transfer_as2_agreement" "test" {
   access_role        = aws_iam_role.test.arn
   base_directory     = %[2]q
-  local_profile_id   = aws_transfer_as2_profile.local.profile_id
-  partner_profile_id = aws_transfer_as2_profile.partner.profile_id
+  local_profile_id   = aws_transfer_profile.local.profile_id
+  partner_profile_id = aws_transfer_profile.partner.profile_id
   serverid           = aws_transfer_server.test.id
 }
 `, rName, baseDirectory)
@@ -191,12 +191,12 @@ resource "aws_iam_role_policy" "test" {
 }
 POLICY
 }
-resource "aws_transfer_as2_profile" "local" {
+resource "aws_transfer_profile" "local" {
   as2_id = %[1]q
   #certificate_ids = ["xxx"]
   profile_type = "LOCAL"
 }
-resource "aws_transfer_as2_profile" "partner" {
+resource "aws_transfer_profile" "partner" {
   as2_id = %[1]q
   #certificate_ids = ["xxx"]
   profile_type = "PARTNER"
@@ -205,8 +205,8 @@ resource "aws_transfer_server" "test" {}
 resource "aws_transfer_as2_agreement" "test" {
   access_role        = aws_iam_role.test.arn
   base_directory     = %[2]q
-  local_profile_id   = aws_transfer_as2_profile.local.profile_id
-  partner_profile_id = aws_transfer_as2_profile.partner.profile_id
+  local_profile_id   = aws_transfer_profile.local.profile_id
+  partner_profile_id = aws_transfer_profile.partner.profile_id
   serverid           = aws_transfer_server.test.id
 }
 `, rName, baseDirectory)

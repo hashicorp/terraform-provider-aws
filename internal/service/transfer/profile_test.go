@@ -18,7 +18,7 @@ import (
 func TestAccTransferProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedProfile
-	resourceName := "aws_transfer_as2_profile.test"
+	resourceName := "aws_transfer_profile.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -64,7 +64,7 @@ func TestAccTransferProfile_basic(t *testing.T) {
 func TestAccTransferProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedProfile
-	resourceName := "aws_transfer_as2_profile.test"
+	resourceName := "aws_transfer_profile.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -99,7 +99,7 @@ resource "aws_transfer_certificate" "test" {
   private_key = %[3]q
   usage       = "SIGNING"
 }
-resource "aws_transfer_as2_profile" "test" {
+resource "aws_transfer_profile" "test" {
   as2_id          = %[1]q
   certificate_ids = [aws_transfer_certificate.test.certificate_id]
   profile_type    = "LOCAL"
@@ -114,7 +114,7 @@ resource "aws_transfer_certificate" "test" {
   private_key = %[3]q
   usage       = "SIGNING"
 }
-resource "aws_transfer_as2_profile" "test" {
+resource "aws_transfer_profile" "test" {
   as2_id          = %[1]q
   certificate_ids = [aws_transfer_certificate.test.certificate_id]
   profile_type    = "LOCAL"
@@ -152,7 +152,7 @@ func testAccCheckProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_transfer_as2_profile" {
+			if rs.Type != "aws_transfer_profile" {
 				continue
 			}
 

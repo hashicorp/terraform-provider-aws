@@ -1,12 +1,12 @@
 ---
 subcategory: "Transfer Family"
 layout: "aws"
-page_title: "AWS: aws_transfer_as2_profile"
+page_title: "AWS: aws_transfer_profile"
 description: |-
   Provides a AWS Transfer AS2 Profile Resource
 ---
 
-# Resource: aws_transfer_as2_profile
+# Resource: aws_transfer_profile
 
 Provides a AWS Transfer AS2 Profile resource.
 
@@ -15,7 +15,7 @@ Provides a AWS Transfer AS2 Profile resource.
 ### Basic
 
 ```terraform
-resource "aws_transfer_as2_profile" "example" {
+resource "aws_transfer_profile" "example" {
   as2_id          = "example"
   certificate_ids = [aws_transfer_certificate.example.certificate_id]
   usage           = "LOCAL"
@@ -42,5 +42,5 @@ In addition to all arguments above, the following attributes are exported:
 Transfer AS2 Profile can be imported using the `profile_id`, e.g.,
 
 ```
-$ terraform import aws_transfer_as2_profile.example p-4221a88afd5f4362a
+$ terraform import aws_transfer_profile.example p-4221a88afd5f4362a
 ```
