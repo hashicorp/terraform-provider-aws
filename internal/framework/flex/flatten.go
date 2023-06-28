@@ -171,6 +171,21 @@ func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, va
 				}
 				return nil
 			}
+
+		case reflect.Struct:
+			switch tTo.(type) {
+			case basetypes.ListTypable:
+				//
+				// *struct -> types.List(OfObject).
+				//
+				return nil
+
+			case basetypes.SetTypable:
+				//
+				// *struct -> types.Set(OfObject).
+				//
+				return nil
+			}
 		}
 
 	// Slice of simple types or pointer to simple types.

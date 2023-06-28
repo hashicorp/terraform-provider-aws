@@ -23,7 +23,7 @@ type CTestFlatten struct {
 }
 
 type DTestFlatten struct {
-	Name types.String
+	Name types.String `tfsdk:"name"`
 }
 
 type ETestFlatten struct {
@@ -108,6 +108,14 @@ type XTestFlatten struct {
 
 type YTestFlatten struct {
 	Names types.Map
+}
+
+type AATestFlatten struct {
+	Data *BTestFlatten
+}
+
+type BBTestFlatten struct {
+	Data types.List
 }
 
 func TestGenericFlatten(t *testing.T) {
@@ -330,6 +338,15 @@ func TestGenericFlatten(t *testing.T) {
 			Target:     &YTestFlatten{},
 			WantTarget: &YTestFlatten{Names: types.MapValueMust(types.StringType, map[string]attr.Value{"A": types.StringValue("a")})},
 		},
+		// {
+		// 	TestName:   "single *struct Source and single list Target",
+		// 	Source:     &AATestFlatten{Data: &BTestFlatten{Name: "a"}},
+		// 	Target:     &BBTestFlatten{},
+		// 	WantTarget: &BBTestFlatten{},
+		// 	// WantTarget: &BBTestFlatten{Data: types.ListValueMust(types.ObjectType{AttrTypes: AttributeTypesMust[BTestExpand](ctx)}, []attr.Value{
+		// 	// 	types.ObjectValueMust(AttributeTypesMust[BTestExpand](ctx), map[string]attr.Value{"name": types.StringValue("a")}),
+		// 	// })},
+		// },
 	}
 
 	for _, testCase := range testCases {
