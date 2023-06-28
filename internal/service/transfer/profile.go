@@ -1,6 +1,6 @@
 package transfer
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import (
 	"context"
 	"log"
 
@@ -66,19 +66,13 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.CreateProfileInput{
-		Tags: getTagsIn(ctx),
-	}
-
-	if v, ok := d.GetOk("as2_id"); ok {
-		input.As2Id = aws.String(v.(string))
+		As2Id:       aws.String(d.Get("as2_id").(string)),
+		ProfileType: aws.String(d.Get("profile_type").(string)),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("certificate_ids"); ok && v.(*schema.Set).Len() > 0 {
 		input.CertificateIds = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("profile_type"); ok {
-		input.ProfileType = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateProfileWithContext(ctx, input)
