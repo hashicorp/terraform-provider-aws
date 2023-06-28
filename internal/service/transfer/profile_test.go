@@ -28,7 +28,7 @@ func TestAccTransferProfile_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProfile_basic(rName),
+				Config: testAccProfileConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "as2_id", rName),
@@ -62,7 +62,7 @@ func TestAccTransferProfile_certificateIDs(t *testing.T) {
 		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProfile_certificateIDs(rName, certificate, key),
+				Config: testAccProfileConfig_certificateIDs(rName, certificate, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "certificate_ids.#", "1"),
@@ -90,7 +90,7 @@ func TestAccTransferProfile_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProfile_basic(rName),
+				Config: testAccProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceProfile(), resourceName),
@@ -114,7 +114,7 @@ func TestAccTransferProfile_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProfile_tags1(rName, "key1", "value1"),
+				Config: testAccProfileConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -127,7 +127,7 @@ func TestAccTransferProfile_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProfile_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -136,7 +136,7 @@ func TestAccTransferProfile_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProfile_tags1(rName, "key2", "value2"),
+				Config: testAccProfileConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -198,7 +198,7 @@ func testAccCheckProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccProfile_basic(rName string) string {
+func testAccProfileConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_profile" "test" {
   as2_id       = %[1]q
@@ -207,7 +207,7 @@ resource "aws_transfer_profile" "test" {
 `, rName)
 }
 
-func testAccProfile_certificateIDs(rName, certificate, privateKey string) string {
+func testAccProfileConfig_certificateIDs(rName, certificate, privateKey string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_certificate" "test" {
   certificate = %[2]q
@@ -223,7 +223,7 @@ resource "aws_transfer_profile" "test" {
 `, rName, certificate, privateKey)
 }
 
-func testAccProfile_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccProfileConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_profile" "test" {
   as2_id       = %[1]q
@@ -236,7 +236,7 @@ resource "aws_transfer_profile" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccProfile_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccProfileConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_profile" "test" {
   as2_id       = %[1]q
