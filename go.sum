@@ -102,8 +102,8 @@ github.com/aws/aws-sdk-go-v2/service/pricing v1.20.0 h1:x5gKeerbKIQ/tdhmaAGNpivS
 github.com/aws/aws-sdk-go-v2/service/pricing v1.20.0/go.mod h1:JjpnqJdEW/5An429Ou+5Kb3UkwjXv16gRD2ZdGA2Gw8=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.8.14 h1:oEeNqSze4JYbhsDg7udtz+AtLwrIXlvjItAd09Z2zTw=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.8.14/go.mod h1:JehbzDgwXYQi1wqKKFLstaNqsRPgPu9Kd6DiwhtFxoA=
-github.com/aws/aws-sdk-go-v2/service/rds v1.45.3 h1:fVA8BNXjjNIhw2VmqV9eqg4dC/KjSK6X+fi0XQejrmU=
-github.com/aws/aws-sdk-go-v2/service/rds v1.45.3/go.mod h1:goBDR4OPrsnKpYyU0GHGcEnlTmL8O+eKGsWeyOAFJ5M=
+github.com/aws/aws-sdk-go-v2/service/rds v1.46.0 h1:uv2LAciZRd5lEXzJo2u92tdZh/JxcVL7YLC51D4NLG4=
+github.com/aws/aws-sdk-go-v2/service/rds v1.46.0/go.mod h1:goBDR4OPrsnKpYyU0GHGcEnlTmL8O+eKGsWeyOAFJ5M=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.15 h1:V9D5mkuxoHp0emavQh6YDRZgh++sI+Yhl0jWcXmGyzU=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.15/go.mod h1:JkXv1RqDLs6Bpgj2EtFpVW4J83lEewuTiQJwzj8dzvs=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.2.2 h1:Dc3UON/Ry+dcDbXNLsyi2JPlfhNbaBRXqYg7ItYvJF8=
