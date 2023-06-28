@@ -97,6 +97,7 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 * `filter` - (Optional) Filter(s) for the target. Filters can be used to select resources based on specific attributes returned by the respective describe action of the resource type. For more information, see [Targets for AWS FIS](https://docs.aws.amazon.com/fis/latest/userguide/targets.html#target-filters). See below.
 * `resource_arns` - (Optional) Set of ARNs of the resources to target with an action. Conflicts with `resource_tag`.
 * `resource_tag` - (Optional) Tag(s) the resources need to have to be considered a valid target for an action. Conflicts with `resource_arns`. See below.
+* `parameters` - (Optional) The resource type parameters.
 
 ~> **NOTE:** The `target` configuration block requires either `resource_arns` or `resource_tag`.
 
