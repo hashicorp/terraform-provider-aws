@@ -3,6 +3,7 @@
 package sweep_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -151,6 +152,6 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	sweep.SweeperClients = make(map[string]interface{})
+	sweep.ServicePackages = servicePackages(context.Background())
 	resource.TestMain(m)
 }

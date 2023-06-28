@@ -236,6 +236,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+~> **Note** Although `cidr_blocks`, `ipv6_cidr_blocks`, `prefix_list_ids`, and `security_groups` are all marked as optional, you _must_ provide one of them in order to configure the source of the traffic.
+
 * `cidr_blocks` - (Optional) List of CIDR blocks.
 * `description` - (Optional) Description of this ingress rule.
 * `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
@@ -253,6 +255,8 @@ The following arguments are required:
 * `to_port` - (Required) End range port (or ICMP code if protocol is `icmp`).
 
 The following arguments are optional:
+
+~> **Note** Although `cidr_blocks`, `ipv6_cidr_blocks`, `prefix_list_ids`, and `security_groups` are all marked as optional, you _must_ provide one of them in order to configure the destination of the traffic.
 
 * `cidr_blocks` - (Optional) List of CIDR blocks.
 * `description` - (Optional) Description of this egress rule.

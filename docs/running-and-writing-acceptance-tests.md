@@ -1123,13 +1123,13 @@ Then add the actual implementation. Preferably, if a paginated SDK call is avail
 ```go
 func sweepThings(region string) error {
   ctx := sweep.Context(region)
-  client, err := sweep.SharedRegionalSweepClient(region)
+  client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
   if err != nil {
     return fmt.Errorf("getting client: %w", err)
   }
 
-  conn := client.(*conns.AWSClient).ExampleConn(ctx)
+  conn := client.ExampleConn(ctx)
   sweepResources := make([]sweep.Sweepable, 0)
   var errs *multierror.Error
 
@@ -1150,7 +1150,7 @@ func sweepThings(region string) error {
       // Perform resource specific pre-sweep setup.
       // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
       //
-      // err := sweep.ReadResource(ctx, r, d, client) // fill in data
+      // err := sdk.ReadResource(ctx, r, d, client) // fill in data
       // d.Set("skip_final_snapshot", true)           // set an argument in order to delete
 
       // This "if" is only needed if the pre-sweep setup can produce errors.
@@ -1190,13 +1190,13 @@ Otherwise, if no paginated SDK call is available:
 ```go
 func sweepThings(region string) error {
   ctx := sweep.Context(region)
-  client, err := sweep.SharedRegionalSweepClient(region)
+  client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
   if err != nil {
     return fmt.Errorf("getting client: %w", err)
   }
 
-  conn := client.(*conns.AWSClient).ExampleConn(ctx)
+  conn := client.ExampleConn(ctx)
   sweepResources := make([]sweep.Sweepable, 0)
   var errs *multierror.Error
 
@@ -1215,7 +1215,7 @@ func sweepThings(region string) error {
       // Perform resource specific pre-sweep setup.
       // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
       //
-      // err := sweep.ReadResource(ctx, r, d, client) // fill in data
+      // err := sdk.ReadResource(ctx, r, d, client) // fill in data
       // d.Set("skip_final_snapshot", true)           // set an argument in order to delete
 
       // This "if" is only needed if the pre-sweep setup can produce errors.

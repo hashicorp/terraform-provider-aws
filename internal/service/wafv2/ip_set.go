@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -66,7 +67,7 @@ func ResourceIPSet() *schema.Resource {
 							for _, ov := range oldAddresses {
 								hasAddress := false
 								for _, nv := range newAddresses {
-									if verify.CIDRBlocksEqual(ov.(string), nv.(string)) {
+									if itypes.CIDRBlocksEqual(ov.(string), nv.(string)) {
 										hasAddress = true
 										break
 									}

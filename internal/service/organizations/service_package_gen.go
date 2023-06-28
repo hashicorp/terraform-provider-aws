@@ -8,6 +8,7 @@ import (
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	organizations_sdkv1 "github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -105,6 +106,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourcePolicyAttachment,
 			TypeName: "aws_organizations_policy_attachment",
 		},
+		{
+			Factory:  ResourceResourcePolicy,
+			TypeName: "aws_organizations_resource_policy",
+			Name:     "Resource Policy",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
 	}
 }
 
@@ -119,4 +128,6 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*o
 	return organizations_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

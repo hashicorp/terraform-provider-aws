@@ -189,7 +189,7 @@ func testAccCheckSipMediaApplicationExists(ctx context.Context, name string, vc 
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no Chime voice connector ID is set")
+			return fmt.Errorf("no ChimeSdkVoice Sip Media Application ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
@@ -210,7 +210,7 @@ func testAccCheckSipMediaApplicationExists(ctx context.Context, name string, vc 
 func testAccCheckSipMediaApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_chimesdkvoice_chime_sip_media_application" {
+			if rs.Type != "aws_chimesdkvoice_sip_media_application" {
 				continue
 			}
 			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)

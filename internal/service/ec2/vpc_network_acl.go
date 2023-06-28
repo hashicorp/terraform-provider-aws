@@ -182,7 +182,7 @@ func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindNetworkACLByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -281,7 +281,7 @@ func resourceNetworkACLDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[INFO] Deleting EC2 Network ACL: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return conn.DeleteNetworkAclWithContext(ctx, input)
 	}, errCodeDependencyViolation)
 
