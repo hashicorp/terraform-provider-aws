@@ -4,8 +4,6 @@ import (
 	"context"
 	"flag"
 	"log"
-	"net/http"
-	_ "net/http/pprof"
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
@@ -20,10 +18,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	go func() {
-		http.ListenAndServe("localhost:8080", nil)
-	}()
 
 	var serveOpts []tf5server.ServeOpt
 
