@@ -81,6 +81,10 @@ func FindCollectionByName(ctx context.Context, conn *opensearchserverless.Client
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
+	if len(out.CollectionDetails) > 1 {
+		return nil, tfresource.NewTooManyResultsError(len(out.CollectionDetails), in)
+	}
+
 	return &out.CollectionDetails[0], nil
 }
 
