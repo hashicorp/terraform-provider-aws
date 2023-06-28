@@ -10,7 +10,7 @@ description: |-
 
 Creates a WAFv2 Web ACL resource.
 
-~> **Note:** In `field_to_match` blocks, _e.g._, in `byte_match_statement`, the `body` block includes an optional argument `oversize_handling`. AWS indicates this argument will be required starting February 2023. To avoid configurations breaking when that change happens, treat the `oversize_handling` argument as **required** as soon as possible.
+~> **Note** In `field_to_match` blocks, _e.g._, in `byte_match_statement`, the `body` block includes an optional argument `oversize_handling`. AWS indicates this argument will be required starting February 2023. To avoid configurations breaking when that change happens, treat the `oversize_handling` argument as **required** as soon as possible.
 
 ## Example Usage
 
@@ -371,20 +371,20 @@ Each `custom_response_body` block supports the following arguments:
 
 The `default_action` block supports the following arguments:
 
-~> **NOTE:** One of `allow` or `block`, expressed as an empty configuration block `{}`, is required when specifying a `default_action`
+~> **Note** One of `allow` or `block`, expressed as an empty configuration block `{}`, is required when specifying a `default_action`
 
 * `allow` - (Optional) Specifies that AWS WAF should allow requests by default. See [`allow`](#allow-block) below for details.
 * `block` - (Optional) Specifies that AWS WAF should block requests by default. See [`block`](#block-block) below for details.
 
 ### `rule` Block
 
-~> **NOTE:** One of `action` or `override_action` is required when specifying a rule
+~> **Note** One of `action` or `override_action` is required when specifying a rule
 
 Each `rule` supports the following arguments:
 
 * `action` - (Optional) Action that AWS WAF should take on a web request when it matches the rule's statement. This is used only for rules whose **statements do not reference a rule group**. See [`action`](#action-block) for details.
 * `captcha_config` - (Optional) Specifies how AWS WAF should handle CAPTCHA evaluations. See [`captcha_config`](#captcha_config-block) below for details.
-* `name` - (Required) Friendly name of the rule. **NOTE:** The provider assumes that rules with names matching this pattern, `^ShieldMitigationRuleGroup_<account-id>_<web-acl-guid>_.*`, are AWS-added for [automatic application layer DDoS mitigation activities](https://docs.aws.amazon.com/waf/latest/developerguide/ddos-automatic-app-layer-response-rg.html). Such rules will be ignored by the provider unless you explicitly include them in your configuration (for example, by using the AWS CLI to discover their properties and creating matching configuration). However, since these rules are owned and managed by AWS, you may get permission errors.
+* `name` - (Required) Friendly name of the rule. Note that the provider assumes that rules with names matching this pattern, `^ShieldMitigationRuleGroup_<account-id>_<web-acl-guid>_.*`, are AWS-added for [automatic application layer DDoS mitigation activities](https://docs.aws.amazon.com/waf/latest/developerguide/ddos-automatic-app-layer-response-rg.html). Such rules will be ignored by the provider unless you explicitly include them in your configuration (for example, by using the AWS CLI to discover their properties and creating matching configuration). However, since these rules are owned and managed by AWS, you may get permission errors.
 * `override_action` - (Optional) Override action to apply to the rules in a rule group. Used only for rule **statements that reference a rule group**, like `rule_group_reference_statement` and `managed_rule_group_statement`. See [`override_action`](#override_action-block) below for details.
 * `priority` - (Required) If you define more than one Rule in a WebACL, AWS WAF evaluates each request against the `rules` in order based on the value of `priority`. AWS WAF processes rules with lower priority first.
 * `rule_label` - (Optional) Labels to apply to web requests that match the rule match statement. See [`rule_label`](#rule_label-block) below for details.
@@ -395,7 +395,7 @@ Each `rule` supports the following arguments:
 
 The `action` block supports the following arguments:
 
-~> **NOTE:** One of `allow`, `block`, or `count`, is required when specifying an `action`.
+~> **Note** One of `allow`, `block`, or `count`, is required when specifying an `action`.
 
 * `allow` - (Optional) Instructs AWS WAF to allow the web request. See [`allow`](#allow-block) below for details.
 * `block` - (Optional) Instructs AWS WAF to block the web request. See [`block`](#block-block) below for details.
@@ -407,7 +407,7 @@ The `action` block supports the following arguments:
 
 The `override_action` block supports the following arguments:
 
-~> **NOTE:** One of `count` or `none`, expressed as an empty configuration block `{}`, is required when specifying an `override_action`
+~> **Note** One of `count` or `none`, expressed as an empty configuration block `{}`, is required when specifying an `override_action`
 
 * `count` - (Optional) Override the rule action setting to count (i.e., only count matches). Configured as an empty block `{}`.
 * `none` - (Optional) Don't override the rule action setting. Configured as an empty block `{}`.
@@ -480,7 +480,7 @@ Each block supports the following arguments:
 
 The processing guidance for a Rule, used by AWS WAF to determine whether a web request matches the rule. See the [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statements-list.html) for more information.
 
--> **NOTE:** Although the `statement` block is recursive, currently only 3 levels are supported.
+-> **Note** Although the `statement` block is recursive, currently only 3 levels are supported.
 
 The `statement` block supports the following arguments:
 
@@ -724,7 +724,7 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `field_to_match` block supports the following arguments:
 
-~> **NOTE:** Only one of `all_query_arguments`, `body`, `cookies`, `headers`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified. An empty configuration block `{}` should be used when specifying `all_query_arguments`, `method`, or `query_string` attributes.
+~> **Note** Only one of `all_query_arguments`, `body`, `cookies`, `headers`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified. An empty configuration block `{}` should be used when specifying `all_query_arguments`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers. See [`body`](#body-block) below for details.
