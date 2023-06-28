@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAccessByServerIDAndExternalID(ctx context.Context, conn *transfer.Transfer, serverID, externalID string) (*transfer.DescribedAccess, error) {
+func FindAccessByTwoPartKey(ctx context.Context, conn *transfer.Transfer, serverID, externalID string) (*transfer.DescribedAccess, error) {
 	input := &transfer.DescribeAccessInput{
 		ExternalId: aws.String(externalID),
 		ServerId:   aws.String(serverID),
