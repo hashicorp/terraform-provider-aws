@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccTransferAgreement_basic(t *testing.T) {
+func testAccAgreement_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedAgreement
 	baseDirectory1 := "/DOC-EXAMPLE-BUCKET/home/mydirectory1"
@@ -57,7 +57,7 @@ func TestAccTransferAgreement_basic(t *testing.T) {
 	})
 }
 
-func TestAccTransferAgreement_disappears(t *testing.T) {
+func testAccAgreement_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedAgreement
 	resourceName := "aws_transfer_agreement.test"
@@ -82,7 +82,7 @@ func TestAccTransferAgreement_disappears(t *testing.T) {
 	})
 }
 
-func TestAccTransferAgreement_tags(t *testing.T) {
+func testAccAgreement_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedAgreement
 	baseDirectory := "/DOC-EXAMPLE-BUCKET/home/mydirectory"
