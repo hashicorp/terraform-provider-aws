@@ -825,7 +825,7 @@ The `visibility_config` block supports the following arguments:
 * `metric_name` - (Required) A friendly name of the CloudWatch metric. The name can contain only alphanumeric characters (A-Z, a-z, 0-9) hyphen(-) and underscore (\_), with length from one to 128 characters. It can't contain whitespace or metric names reserved for AWS WAF, for example `All` and `Default_Action`.
 * `sampled_requests_enabled` - (Required) Whether AWS WAF should store a sampling of the web requests that match the rules. You can view the sampled requests through the AWS WAF console.
 
-### `captcha_config` Blocks
+### `captcha_config` Block
 
 The `captcha_config` block supports the following arguments:
 
