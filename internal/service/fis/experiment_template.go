@@ -224,6 +224,11 @@ func ResourceExperimentTemplate() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 64),
 						},
+						"parameters": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"resource_arns": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -265,11 +270,6 @@ func ResourceExperimentTemplate() *schema.Resource {
 								validation.StringLenBetween(0, 64),
 								validation.StringMatch(regexp.MustCompile(`^(ALL|COUNT\(\d+\)|PERCENT\(\d+\))$`), "must be one of ALL, COUNT(number), PERCENT(number)"),
 							),
-						},
-						"parameters": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
