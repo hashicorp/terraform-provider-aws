@@ -126,6 +126,49 @@ func ResourceExperimentTemplate() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
+			"log_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloudwatch_logs_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"log_group_arn": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"log_schema_version": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"s3_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"bucket_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"prefix": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -226,49 +269,6 @@ func ResourceExperimentTemplate() *schema.Resource {
 					},
 				},
 			},
-			"log_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"log_schema_version": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"cloudwatch_logs_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"log_group_arn": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
-						"s3_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bucket_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"prefix": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			names.AttrTags:    tftags.TagsSchemaForceNew(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -282,10 +282,10 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 		Actions:          expandExperimentTemplateActions(d.Get("action").(*schema.Set)),
 		ClientToken:      aws.String(id.UniqueId()),
 		Description:      aws.String(d.Get("description").(string)),
+		LogConfiguration: expandExperimentTemplateLogConfiguration(d.Get("log_configuration").([]interface{})),
 		RoleArn:          aws.String(d.Get("role_arn").(string)),
 		StopConditions:   expandExperimentTemplateStopConditions(d.Get("stop_condition").(*schema.Set)),
 		Tags:             getTagsIn(ctx),
-		LogConfiguration: expandExperimentTemplateLogConfiguration(d.Get("log_configuration").([]interface{})),
 	}
 
 	targets, err := expandExperimentTemplateTargets(d.Get("target").(*schema.Set))
@@ -340,16 +340,16 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "action", err)
 	}
 
+	if err := d.Set("log_configuration", flattenExperimentTemplateLogConfiguration(experimentTemplate.LogConfiguration)); err != nil {
+		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "log_configuration", err)
+	}
+
 	if err := d.Set("stop_condition", flattenExperimentTemplateStopConditions(experimentTemplate.StopConditions)); err != nil {
 		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "stop_condition", err)
 	}
 
 	if err := d.Set("target", flattenExperimentTemplateTargets(experimentTemplate.Targets)); err != nil {
 		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "target", err)
-	}
-
-	if err := d.Set("log_configuration", flattenExperimentTemplateLogConfiguration(experimentTemplate.LogConfiguration)); err != nil {
-		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "log_configuration", err)
 	}
 
 	setTagsOut(ctx, experimentTemplate.Tags)
@@ -360,42 +360,44 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
-	input := &fis.UpdateExperimentTemplateInput{
-		Id: aws.String(d.Id()),
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &fis.UpdateExperimentTemplateInput{
+			Id: aws.String(d.Id()),
+		}
 
-	if d.HasChange("action") {
-		input.Actions = expandExperimentTemplateActionsForUpdate(d.Get("action").(*schema.Set))
-	}
+		if d.HasChange("action") {
+			input.Actions = expandExperimentTemplateActionsForUpdate(d.Get("action").(*schema.Set))
+		}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
-	}
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
 
-	if d.HasChange("role_arn") {
-		input.RoleArn = aws.String(d.Get("role_arn").(string))
-	}
+		if d.HasChange("log_configuration") {
+			config := expandExperimentTemplateLogConfigurationForUpdate(d.Get("log_configuration").([]interface{}))
+			input.LogConfiguration = config
+		}
 
-	if d.HasChange("stop_condition") {
-		input.StopConditions = expandExperimentTemplateStopConditionsForUpdate(d.Get("stop_condition").(*schema.Set))
-	}
+		if d.HasChange("role_arn") {
+			input.RoleArn = aws.String(d.Get("role_arn").(string))
+		}
 
-	if d.HasChange("target") {
-		targets, err := expandExperimentTemplateTargetsForUpdate(d.Get("target").(*schema.Set))
+		if d.HasChange("stop_condition") {
+			input.StopConditions = expandExperimentTemplateStopConditionsForUpdate(d.Get("stop_condition").(*schema.Set))
+		}
+
+		if d.HasChange("target") {
+			targets, err := expandExperimentTemplateTargetsForUpdate(d.Get("target").(*schema.Set))
+			if err != nil {
+				return create.DiagError(names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
+			}
+			input.Targets = targets
+		}
+
+		_, err := conn.UpdateExperimentTemplate(ctx, input)
 		if err != nil {
 			return create.DiagError(names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
 		}
-		input.Targets = targets
-	}
-
-	if d.HasChange("log_configuration") {
-		config := expandExperimentTemplateLogConfigurationForUpdate(d.Get("log_configuration").([]interface{}))
-		input.LogConfiguration = config
-	}
-
-	_, err := conn.UpdateExperimentTemplate(ctx, input)
-	if err != nil {
-		return create.DiagError(names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
 	}
 
 	return resourceExperimentTemplateRead(ctx, d, meta)
