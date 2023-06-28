@@ -120,7 +120,6 @@ func sweepGatewayAssociationProposals(region string) error {
 	}
 	conn := client.DirectConnectConn(ctx)
 	input := &directconnect.DescribeDirectConnectGatewayAssociationProposalsInput{}
-	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeGatewayAssociationProposalsPages(ctx, conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, lastPage bool) bool {
@@ -153,20 +152,20 @@ func sweepGatewayAssociationProposals(region string) error {
 
 	if awsv1.SkipSweepError(err) {
 		log.Print(fmt.Errorf("[WARN] Skipping Direct Connect Gateway Association Proposal sweep for %s: %w", region, err))
-		return sweeperErrs // In case we have completed some pages, but had errors
+		return nil
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Direct Connect Gateway Association Proposals (%s): %w", region, err))
+		return fmt.Errorf("listing Direct Connect Gateway Association Proposals (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Direct Connect Gateway Association Proposals (%s): %w", region, err))
+		return fmt.Errorf("sweeping Direct Connect Gateway Association Proposals (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
 
 func sweepGatewayAssociations(region string) error {
@@ -466,8 +465,13 @@ func sweepMacSecKeys(region string) error {
 
 	output, err := dxConn.DescribeConnectionsWithContext(ctx, dxInput)
 
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Direct Connect MACsec Keys sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
 	if err != nil {
-		sweeperErr := fmt.Errorf("error listing Direct Connect Connections for %s: %w", region, err)
+		sweeperErr := fmt.Errorf(" listing Direct Connect Connections for %s: %w", region, err)
 		log.Printf("[ERROR] %s", sweeperErr)
 		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 		return sweeperErrs.ErrorOrNil()

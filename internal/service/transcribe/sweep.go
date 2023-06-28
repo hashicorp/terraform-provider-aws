@@ -204,7 +204,6 @@ func sweepVocabularyFilters(region string) error {
 			return fmt.Errorf("error retrieving Transcribe Vocabulary Filters: %w", err)
 		}
 
-		log.Println(out)
 		for _, filter := range out.VocabularyFilters {
 			name := aws.ToString(filter.VocabularyFilterName)
 			log.Printf("[INFO] Deleting Transcribe Vocabulary Filter: %s", name)
