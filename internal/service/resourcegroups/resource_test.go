@@ -16,7 +16,7 @@ import (
 )
 
 func testAccResource_basic(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	var r resourcegroups.ListGroupResourcesItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_resourcegroups_resource.test"
@@ -41,7 +41,7 @@ func testAccResource_basic(t *testing.T) {
 }
 
 func testAccResource_disappears(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	var r resourcegroups.ListGroupResourcesItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_resourcegroups_resource.test"
