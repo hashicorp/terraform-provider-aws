@@ -153,9 +153,6 @@ service "redshift" {
 
 service "route53" {
   vpc_lock = true
-
-  # Needed for Route 53 DNSSEC tests
-  region = "us-east-1"
 }
 
 service "route53resolver" {

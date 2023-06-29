@@ -32,4 +32,4 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `availability_zones` - List of Availability Zone names where the Redshit Cluster is available.
+* `availability_zones` - List of Availability Zone names where the Redshift Cluster is available.

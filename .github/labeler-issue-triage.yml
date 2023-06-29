@@ -307,6 +307,8 @@ service/inspector:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_inspector_'
 service/inspector2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_inspector2_'
+service/internetmonitor:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_internetmonitor_'
 service/iot:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_iot_'
 service/iot1clickdevices:

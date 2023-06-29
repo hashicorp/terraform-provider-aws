@@ -21,7 +21,7 @@ resource "aws_vpc_endpoint_service" "example" {
 }
 
 resource "aws_vpc_endpoint" "example" {
-  provider = "aws.alternate"
+  provider = aws.alternate
 
   vpc_id              = aws_vpc.test_alternate.id
   service_name        = aws_vpc_endpoint_service.test.service_name

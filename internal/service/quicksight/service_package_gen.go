@@ -5,6 +5,10 @@ package quicksight
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -18,6 +22,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newResourceFolderMembership,
+			Name:    "Folder Membership",
+		},
+		{
 			Factory: newResourceIAMPolicyAssignment,
 			Name:    "IAM Policy Assignment",
 		},
@@ -28,6 +36,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceNamespace,
 			Name:    "Namespace",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory: newResourceRefreshSchedule,
+			Name:    "Refresh Schedule",
+		},
+		{
+			Factory: newResourceTemplateAlias,
+			Name:    "Template Alias",
+		},
+		{
+			Factory: newResourceVPCConnection,
+			Name:    "VPC Connection",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
@@ -48,6 +71,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Group",
 		},
 		{
+			Factory:  DataSourceTheme,
+			TypeName: "aws_quicksight_theme",
+			Name:     "Theme",
+		},
+		{
 			Factory:  DataSourceUser,
 			TypeName: "aws_quicksight_user",
 			Name:     "User",
@@ -61,6 +89,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceAccountSubscription,
 			TypeName: "aws_quicksight_account_subscription",
 			Name:     "Account Subscription",
+		},
+		{
+			Factory:  ResourceAnalysis,
+			TypeName: "aws_quicksight_analysis",
+			Name:     "Analysis",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceDashboard,
+			TypeName: "aws_quicksight_dashboard",
+			Name:     "Dashboard",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceDataSet,
@@ -97,6 +141,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Group Membership",
 		},
 		{
+			Factory:  ResourceTemplate,
+			TypeName: "aws_quicksight_template",
+			Name:     "Template",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceTheme,
+			TypeName: "aws_quicksight_theme",
+			Name:     "Theme",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceUser,
 			TypeName: "aws_quicksight_user",
 			Name:     "User",
@@ -108,4 +168,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.QuickSight
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*quicksight_sdkv1.QuickSight, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return quicksight_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

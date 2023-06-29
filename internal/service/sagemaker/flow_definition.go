@@ -246,7 +246,7 @@ func ResourceFlowDefinition() *schema.Resource {
 
 func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("flow_definition_name").(string)
 	input := &sagemaker.CreateFlowDefinitionInput{
@@ -254,7 +254,7 @@ func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		HumanLoopConfig:    expandFlowDefinitionHumanLoopConfig(d.Get("human_loop_config").([]interface{})),
 		RoleArn:            aws.String(d.Get("role_arn").(string)),
 		OutputConfig:       expandFlowDefinitionOutputConfig(d.Get("output_config").([]interface{})),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("human_loop_activation_config"); ok && (len(v.([]interface{})) > 0) {
@@ -289,7 +289,7 @@ func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceFlowDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	flowDefinition, err := FindFlowDefinitionByName(ctx, conn, d.Id())
 
@@ -337,7 +337,7 @@ func resourceFlowDefinitionUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceFlowDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SageMaker Flow Definition: %s", d.Id())
 	_, err := conn.DeleteFlowDefinitionWithContext(ctx, &sagemaker.DeleteFlowDefinitionInput{

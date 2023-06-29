@@ -131,7 +131,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 
 func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.PutDataLakeSettingsInput{}
 
@@ -183,7 +183,7 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 				return retry.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(fmt.Errorf("error creating Lake Formation data lake settings: %w", err))
+			return retry.NonRetryableError(fmt.Errorf("creating Lake Formation data lake settings: %w", err))
 		}
 		return nil
 	})
@@ -207,7 +207,7 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.GetDataLakeSettingsInput{}
 
@@ -246,7 +246,7 @@ func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceDataLakeSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.PutDataLakeSettingsInput{
 		DataLakeSettings: &lakeformation.DataLakeSettings{

@@ -1,0 +1,8 @@
+
+```release-note:enhancement
+resource/aws_opensearch_domain: Removed `engine_version` default value
+```
+
+```release-note:note
+resource/aws_opensearch_domain: The `engine_version` attribute no longer has a default value. When omitted, the underlying AWS API will use the latest OpenSearch engine version.
+```

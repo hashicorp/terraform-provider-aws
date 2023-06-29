@@ -178,7 +178,7 @@ func ResourceCustomActionType() *schema.Resource {
 }
 
 func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	category := d.Get("category").(string)
 	provider := d.Get("provider_name").(string)
@@ -187,7 +187,7 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 	input := &codepipeline.CreateCustomActionTypeInput{
 		Category: aws.String(category),
 		Provider: aws.String(provider),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 		Version:  aws.String(version),
 	}
 
@@ -219,7 +219,7 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	category, provider, version, err := CustomActionTypeParseResourceID(d.Id())
 
@@ -287,7 +287,7 @@ func resourceCustomActionTypeUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceCustomActionTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	category, provider, version, err := CustomActionTypeParseResourceID(d.Id())
 

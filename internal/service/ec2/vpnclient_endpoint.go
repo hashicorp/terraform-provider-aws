@@ -192,11 +192,6 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"status": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: `This attribute has been deprecated.`,
-			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transport_protocol": {
@@ -226,7 +221,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 
 func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateClientVpnEndpointInput{
 		ClientCidrBlock:      aws.String(d.Get("client_cidr_block").(string)),
@@ -291,7 +286,7 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	ep, err := FindClientVPNEndpointByID(ctx, conn, d.Id())
 
@@ -350,19 +345,18 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("server_certificate_arn", ep.ServerCertificateArn)
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)
-	d.Set("status", ep.Status.Code)
 	d.Set("transport_protocol", ep.TransportProtocol)
 	d.Set("vpc_id", ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
 
-	SetTagsOut(ctx, ep.Tags)
+	setTagsOut(ctx, ep.Tags)
 
 	return diags
 }
 
 func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		var waitForClientConnectResponseOptionsUpdate bool
@@ -452,7 +446,7 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceClientVPNEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Client VPN Endpoint: %s", d.Id())
 	_, err := conn.DeleteClientVpnEndpointWithContext(ctx, &ec2.DeleteClientVpnEndpointInput{

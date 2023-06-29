@@ -2,7 +2,6 @@ package appintegrations
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 
@@ -76,7 +75,7 @@ func ResourceEventIntegration() *schema.Resource {
 }
 
 func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &appintegrationsservice.CreateEventIntegrationInput{
@@ -84,7 +83,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 		EventBridgeBus: aws.String(d.Get("eventbridge_bus").(string)),
 		EventFilter:    expandEventFilter(d.Get("event_filter").([]interface{})),
 		Name:           aws.String(name),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -95,11 +94,11 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 	output, err := conn.CreateEventIntegrationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating AppIntegrations Event Integration (%s): %w", name, err))
+		return diag.Errorf("creating AppIntegrations Event Integration (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating AppIntegrations Event Integration (%s): empty output", name))
+		return diag.Errorf("creating AppIntegrations Event Integration (%s): empty output", name)
 	}
 
 	// Name is unique
@@ -109,7 +108,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
 
@@ -124,11 +123,11 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting AppIntegrations Event Integration (%s): %w", d.Id(), err))
+		return diag.Errorf("getting AppIntegrations Event Integration (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil {
-		return diag.FromErr(fmt.Errorf("error getting AppIntegrations Event Integration (%s): empty response", d.Id()))
+		return diag.Errorf("getting AppIntegrations Event Integration (%s): empty response", d.Id())
 	}
 
 	d.Set("arn", resp.EventIntegrationArn)
@@ -137,16 +136,16 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("name", resp.Name)
 
 	if err := d.Set("event_filter", flattenEventFilter(resp.EventFilter)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting event_filter: %w", err))
+		return diag.Errorf("setting event_filter: %s", err)
 	}
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	return nil
 }
 
 func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
 
@@ -157,7 +156,7 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 		})
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating EventIntegration (%s): %w", d.Id(), err))
+			return diag.Errorf("updating EventIntegration (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -165,7 +164,7 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
 
@@ -174,7 +173,7 @@ func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData,
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting EventIntegration (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting EventIntegration (%s): %s", d.Id(), err)
 	}
 
 	return nil

@@ -11,6 +11,7 @@ description: |-
 Provides a Step Function State Machine resource
 
 ## Example Usage
+
 ### Basic (Standard Workflow)
 
 ```terraform
@@ -44,6 +45,33 @@ EOF
 resource "aws_sfn_state_machine" "sfn_state_machine" {
   name     = "my-state-machine"
   role_arn = aws_iam_role.iam_for_sfn.arn
+  type     = "EXPRESS"
+
+  definition = <<EOF
+{
+  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
+  "StartAt": "HelloWorld",
+  "States": {
+    "HelloWorld": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.lambda.arn}",
+      "End": true
+    }
+  }
+}
+EOF
+}
+```
+
+### Publish (Publish SFN version)
+
+```terraform
+# ...
+
+resource "aws_sfn_state_machine" "sfn_state_machine" {
+  name     = "my-state-machine"
+  role_arn = aws_iam_role.iam_for_sfn.arn
+  publish  = true
   type     = "EXPRESS"
 
   definition = <<EOF
@@ -103,6 +131,7 @@ The following arguments are supported:
 * `logging_configuration` - (Optional) Defines what execution history events are logged and where they are logged. The `logging_configuration` parameter is only valid when `type` is set to `EXPRESS`. Defaults to `OFF`. For more information see [Logging Express Workflows](https://docs.aws.amazon.com/step-functions/latest/dg/cw-logs.html) and [Log Levels](https://docs.aws.amazon.com/step-functions/latest/dg/cloudwatch-log-level.html) in the AWS Step Functions User Guide.
 * `name` - (Optional) The name of the state machine. The name should only contain `0`-`9`, `A`-`Z`, `a`-`z`, `-` and `_`. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
+* `publish` - (Optional) Set to true to publish a version of the state machine during creation. Default: false.
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role to use for this state machine.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tracing_configuration` - (Optional) Selects whether AWS X-Ray tracing is enabled.
@@ -127,6 +156,14 @@ In addition to all arguments above, the following attributes are exported:
 * `creation_date` - The date the state machine was created.
 * `status` - The current status of the state machine. Either `ACTIVE` or `DELETING`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

@@ -44,7 +44,7 @@ func ResourceUserInGroup() *schema.Resource {
 
 func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	input := &cognitoidentityprovider.AdminAddUserToGroupInput{}
 
@@ -74,7 +74,7 @@ func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceUserInGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	groupName := d.Get("group_name").(string)
 	userPoolId := d.Get("user_pool_id").(string)
@@ -95,7 +95,7 @@ func resourceUserInGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceUserInGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	groupName := d.Get("group_name").(string)
 	userPoolID := d.Get("user_pool_id").(string)

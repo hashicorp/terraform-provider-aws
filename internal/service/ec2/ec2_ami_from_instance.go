@@ -249,7 +249,7 @@ func ResourceAMIFromInstance() *schema.Resource {
 
 func resourceAMIFromInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instanceID := d.Get("source_instance_id").(string)
 	name := d.Get("name").(string)

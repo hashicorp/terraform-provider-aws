@@ -22,10 +22,15 @@ import (
 
 // This "should" be defined by the AWS Go SDK v2, but currently isn't.
 const (
+	AccessAnalyzerEndpointID             = "access-analyzer"
+	AccountEndpointID                    = "account"
+	ACMEndpointID                        = "acm"
 	AuditManagerEndpointID               = "auditmanager"
 	CloudWatchLogsEndpointID             = "logs"
 	ComprehendEndpointID                 = "comprehend"
 	ComputeOptimizerEndpointID           = "computeoptimizer"
+	DSEndpointID                         = "ds"
+	GlacierEndpointID                    = "glacier"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
 	IVSChatEndpointID                    = "ivschat"
@@ -35,16 +40,19 @@ const (
 	ObservabilityAccessManagerEndpointID = "oam"
 	OpenSearchServerlessEndpointID       = "aoss"
 	PipesEndpointID                      = "pipes"
+	PricingEndpointID                    = "pricing"
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
 	RolesAnywhereEndpointID              = "rolesanywhere"
 	Route53DomainsEndpointID             = "route53domains"
 	SchedulerEndpointID                  = "scheduler"
 	SESV2EndpointID                      = "sesv2"
 	SSMEndpointID                        = "ssm"
-	SSMContactsEndpointId                = "ssm-contacts"
+	SSMContactsEndpointID                = "ssm-contacts"
 	SSMIncidentsEndpointID               = "ssm-incidents"
+	SWFEndpointID                        = "swf"
 	TranscribeEndpointID                 = "transcribe"
 	VPCLatticeEndpointID                 = "vpc-lattice"
+	XRayEndpointID                       = "xray"
 )
 
 // Type ServiceDatum corresponds closely to columns in `names_data.csv` and are

@@ -60,7 +60,7 @@ const (
 )
 
 func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	linkIdentifier := d.Get("link_identifier").(string)
 
@@ -78,7 +78,7 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("resource_types", flex.FlattenStringValueList(out.ResourceTypes))
 	d.Set("sink_arn", out.SinkArn)
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 	if err != nil {
 		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, DSNameLink, d.Id(), err)
 	}

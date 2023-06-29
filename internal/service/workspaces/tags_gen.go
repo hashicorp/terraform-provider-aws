@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists workspaces service tags.
+// listTags lists workspaces service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn workspacesiface.WorkSpacesAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn workspacesiface.WorkSpacesAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &workspaces.DescribeTagsInput{
 		ResourceId: aws.String(identifier),
 	}
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn workspacesiface.WorkSpacesAPI, identifie
 // ListTags lists workspaces service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).WorkSpacesConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).WorkSpacesConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -76,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*workspaces.Tag) tftags.KeyValueTa
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns workspaces service tags from Context.
+// getTagsIn returns workspaces service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*workspaces.Tag {
+func getTagsIn(ctx context.Context) []*workspaces.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,25 +88,26 @@ func GetTagsIn(ctx context.Context) []*workspaces.Tag {
 	return nil
 }
 
-// SetTagsOut sets workspaces service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*workspaces.Tag) {
+// setTagsOut sets workspaces service tags in Context.
+func setTagsOut(ctx context.Context, tags []*workspaces.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates workspaces service tags.
+// updateTags updates workspaces service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
-func UpdateTags(ctx context.Context, conn workspacesiface.WorkSpacesAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn workspacesiface.WorkSpacesAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.WorkSpaces)
+	if len(removedTags) > 0 {
 		input := &workspaces.DeleteTagsInput{
 			ResourceId: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.IgnoreSystem(names.WorkSpaces).Keys()),
+			TagKeys:    aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.DeleteTagsWithContext(ctx, input)
@@ -116,10 +117,12 @@ func UpdateTags(ctx context.Context, conn workspacesiface.WorkSpacesAPI, identif
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.WorkSpaces)
+	if len(updatedTags) > 0 {
 		input := &workspaces.CreateTagsInput{
 			ResourceId: aws.String(identifier),
-			Tags:       Tags(updatedTags.IgnoreSystem(names.WorkSpaces)),
+			Tags:       Tags(updatedTags),
 		}
 
 		_, err := conn.CreateTagsWithContext(ctx, input)
@@ -135,5 +138,5 @@ func UpdateTags(ctx context.Context, conn workspacesiface.WorkSpacesAPI, identif
 // UpdateTags updates workspaces service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).WorkSpacesConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).WorkSpacesConn(ctx), identifier, oldTags, newTags)
 }

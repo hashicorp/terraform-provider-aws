@@ -45,7 +45,6 @@ The following arguments are supported:
   Note that this may show up in logs, and it will be stored in the state file. Password must contain at least 8 chars and
   contain at least one uppercase letter, one lowercase letter, and one number.
 * `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user.
-* `cluster_security_groups` - (Optional) A list of security groups to be associated with this cluster.
 * `vpc_security_group_ids` - (Optional) A list of Virtual Private Cloud (VPC) security groups to be associated with the cluster.
 * `cluster_subnet_group_name` - (Optional) The name of a cluster subnet group to be associated with this cluster. If this parameter is not provided the resulting cluster will be deployed outside virtual private cloud (VPC).
 * `availability_zone` - (Optional) The EC2 Availability Zone (AZ) in which you want Amazon Redshift to provision the cluster. For example, if you have several EC2 instances running in a specific Availability Zone, then you might want the cluster to be provisioned in the same zone in order to decrease network latency. Can only be changed if `availability_zone_relocation_enabled` is `true`.
@@ -62,7 +61,9 @@ The following arguments are supported:
   The version selected runs on all the nodes in the cluster.
 * `allow_version_upgrade` - (Optional) If true , major version upgrades can be applied during the maintenance window to the Amazon Redshift engine that is running on the cluster. Default is `true`.
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications are applied immediately, or during the next maintenance window. Default is `false`.
-* `aqua_configuration_status` - (Optional) The value represents how the cluster is configured to use AQUA (Advanced Query Accelerator) after the cluster is restored. Possible values are `enabled`, `disabled`, and `auto`. Requires Cluster reboot.
+* `aqua_configuration_status` - (Optional, **Deprecated**) The value represents how the cluster is configured to use AQUA (Advanced Query Accelerator) after the cluster is restored.
+  No longer supported by the AWS API.
+  Always returns `auto`.
 * `number_of_nodes` - (Optional) The number of compute nodes in the cluster. This parameter is required when the ClusterType parameter is specified as multi-node. Default is 1.
 * `publicly_accessible` - (Optional) If true, the cluster can be accessed from a public network. Default is `true`.
 * `encrypted` - (Optional) If true , the data in the cluster is encrypted at rest.
@@ -113,7 +114,6 @@ In addition to all arguments above, the following attributes are exported:
 * `preferred_maintenance_window` - The backup window
 * `endpoint` - The connection endpoint
 * `encrypted` - Whether the data in the cluster is encrypted
-* `cluster_security_groups` - The security groups associated with the cluster
 * `vpc_security_group_ids` - The VPC security group Ids associated with the cluster
 * `dns_name` - The DNS name of the cluster
 * `port` - The Port the cluster responds on
@@ -123,6 +123,7 @@ In addition to all arguments above, the following attributes are exported:
 * `cluster_public_key` - The public key for the cluster
 * `cluster_revision_number` - The specific revision number of the database in the cluster
 * `cluster_nodes` - The nodes in the cluster. Cluster node blocks are documented below
+* `cluster_namespace_arn` - The namespace Amazon Resource Name (ARN) of the cluster
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 Cluster nodes (for `cluster_nodes`) support the following attributes:

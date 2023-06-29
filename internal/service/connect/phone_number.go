@@ -95,7 +95,7 @@ func ResourcePhoneNumber() *schema.Resource {
 }
 
 func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	targetArn := d.Get("target_arn").(string)
 	phoneNumberType := d.Get("type").(string)
@@ -131,7 +131,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 	input2 := &connect.ClaimPhoneNumberInput{
 		ClientToken: aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
 		PhoneNumber: phoneNumber,
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 		TargetArn:   aws.String(targetArn),
 	}
 
@@ -161,7 +161,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	phoneNumberId := d.Id()
 
@@ -196,13 +196,13 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("setting status: %s", err)
 	}
 
-	SetTagsOut(ctx, resp.ClaimedPhoneNumberSummary.Tags)
+	setTagsOut(ctx, resp.ClaimedPhoneNumberSummary.Tags)
 
 	return nil
 }
 
 func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	phoneNumberId := d.Id()
 
@@ -231,7 +231,7 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	phoneNumberId := d.Id()
 

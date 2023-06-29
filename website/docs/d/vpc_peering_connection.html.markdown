@@ -91,12 +91,6 @@ All of the argument attributes except `filter` are also exported as result attri
 * `allow_remote_vpc_dns_resolution` - Indicates whether a local VPC can resolve public DNS hostnames to
 private IP addresses when queried from instances in a peer VPC.
 
-* `allow_classic_link_to_remote_vpc` - Indicates whether a local ClassicLink connection can communicate
-with the peer VPC over the VPC peering connection.
-
-* `allow_vpc_to_remote_classic_link` - Indicates whether a local VPC can communicate with a ClassicLink
-connection in the peer VPC over the VPC peering connection.
-
 #### CIDR block set Attributes Reference
 
 * `cidr_block` - CIDR block associated to the VPC of the specific VPC Peering Connection.

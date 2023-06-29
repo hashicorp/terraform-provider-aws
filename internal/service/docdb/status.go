@@ -20,7 +20,7 @@ func statusGlobalClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, glob
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error reading DocDB Global Cluster (%s): %w", globalClusterID, err)
+			return nil, "", fmt.Errorf("reading DocumentDB Global Cluster (%s): %w", globalClusterID, err)
 		}
 
 		return globalCluster, aws.StringValue(globalCluster.Status), nil
@@ -36,7 +36,7 @@ func statusDBClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBCluste
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error reading DocDB Cluster (%s): %w", dBClusterID, err)
+			return nil, "", fmt.Errorf("reading DocumentDB Cluster (%s): %w", dBClusterID, err)
 		}
 
 		return dBCluster, aws.StringValue(dBCluster.Status), nil
@@ -52,7 +52,7 @@ func statusDBClusterSnapshotRefreshFunc(ctx context.Context, conn *docdb.DocDB, 
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error reading DocDB Cluster Snapshot (%s): %w", dBClusterSnapshotID, err)
+			return nil, "", fmt.Errorf("reading DocumentDB Cluster Snapshot (%s): %w", dBClusterSnapshotID, err)
 		}
 
 		return dBClusterSnapshot, aws.StringValue(dBClusterSnapshot.Status), nil
@@ -68,7 +68,7 @@ func statusDBInstanceRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBInsta
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error reading DocDB Instance (%s): %w", dBInstanceID, err)
+			return nil, "", fmt.Errorf("reading DocumentDB Instance (%s): %w", dBInstanceID, err)
 		}
 
 		return dBInstance, aws.StringValue(dBInstance.DBInstanceStatus), nil
@@ -84,7 +84,7 @@ func statusDBSubnetGroupRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBSu
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error reading DocDB Subnet Group (%s): %w", dBSubnetGroupName, err)
+			return nil, "", fmt.Errorf("reading DocumentDB Subnet Group (%s): %w", dBSubnetGroupName, err)
 		}
 
 		return dBSubnetGroup, aws.StringValue(dBSubnetGroup.SubnetGroupStatus), nil

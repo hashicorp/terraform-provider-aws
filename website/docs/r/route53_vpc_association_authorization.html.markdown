@@ -42,7 +42,7 @@ resource "aws_route53_zone" "example" {
 }
 
 resource "aws_vpc" "alternate" {
-  provider = "aws.alternate"
+  provider = aws.alternate
 
   cidr_block           = "10.7.0.0/16"
   enable_dns_hostnames = true
@@ -55,7 +55,7 @@ resource "aws_route53_vpc_association_authorization" "example" {
 }
 
 resource "aws_route53_zone_association" "example" {
-  provider = "aws.alternate"
+  provider = aws.alternate
 
   vpc_id  = aws_route53_vpc_association_authorization.example.vpc_id
   zone_id = aws_route53_vpc_association_authorization.example.zone_id
