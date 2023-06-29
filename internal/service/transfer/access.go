@@ -185,7 +185,7 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "parsing Transfer Access ID: %s", err)
 	}
 
-	access, err := FindAccessByServerIDAndExternalID(ctx, conn, serverID, externalID)
+	access, err := FindAccessByTwoPartKey(ctx, conn, serverID, externalID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer Access (%s) not found, removing from state", d.Id())

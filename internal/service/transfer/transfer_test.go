@@ -16,6 +16,11 @@ func TestAccTransfer_serial(t *testing.T) {
 			"S3Basic":    testAccAccess_s3_basic,
 			"S3Policy":   testAccAccess_s3_policy,
 		},
+		"Agreement": {
+			"basic":      testAccAgreement_basic,
+			"disappears": testAccAgreement_disappears,
+			"tags":       testAccAgreement_tags,
+		},
 		"Server": {
 			"basic":                         testAccServer_basic,
 			"disappears":                    testAccServer_disappears,
