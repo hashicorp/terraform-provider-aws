@@ -225,6 +225,8 @@ github.com/fatih/color v1.15.0 h1:kOqh6YHBtK8aywxGerMG2Eq3H6Qgoqeo13Bk2Mv/nBs=
 github.com/fatih/color v1.15.0/go.mod h1:0h5ZqXfHYED7Bhv2ZJamyIOUej9KtShiJESRwBDUSsw=
 github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHkI4W8=
 github.com/frankban/quicktest v1.14.6/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=
+github.com/gdavison/terraform-plugin-log v0.0.0-20230928191232-6c653d8ef8fb h1:HM67IMNxlkqGxAM5ymxMg2ANCcbL4oEr5cy+tGZ6fNo=
+github.com/gdavison/terraform-plugin-log v0.0.0-20230928191232-6c653d8ef8fb/go.mod h1:rKL8egZQ/eXSyDqzLUuwUYLVdlYeamldAHSxjUFADow=
 github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 h1:+zs/tPmkDkHx3U66DAb0lQFJrpS6731Oaa12ikc+DiI=
 github.com/go-git/go-billy/v5 v5.4.1 h1:Uwp5tDRkPr+l/TnbHOQzp+tmJfLceOlbVucgpTz8ix4=
 github.com/go-git/go-git/v5 v5.8.1 h1:Zo79E4p7TRk0xoRgMq0RShiTHGKcKI4+DI6BfJc/Q+A=
@@ -299,8 +301,6 @@ github.com/hashicorp/terraform-plugin-framework-validators v0.12.0 h1:HOjBuMbOEz
 github.com/hashicorp/terraform-plugin-framework-validators v0.12.0/go.mod h1:jfHGE/gzjxYz6XoUwi/aYiiKrJDeutQNUtGQXkaHklg=
 github.com/hashicorp/terraform-plugin-go v0.19.0 h1:BuZx/6Cp+lkmiG0cOBk6Zps0Cb2tmqQpDM3iAtnhDQU=
 github.com/hashicorp/terraform-plugin-go v0.19.0/go.mod h1:EhRSkEPNoylLQntYsk5KrDHTZJh9HQoumZXbOGOXmec=
-github.com/hashicorp/terraform-plugin-log v0.9.0 h1:i7hOA+vdAItN1/7UrfBqBwvYPQ9TFvymaRGZED3FCV0=
-github.com/hashicorp/terraform-plugin-log v0.9.0/go.mod h1:rKL8egZQ/eXSyDqzLUuwUYLVdlYeamldAHSxjUFADow=
 github.com/hashicorp/terraform-plugin-mux v0.12.0 h1:TJlmeslQ11WlQtIFAfth0vXx+gSNgvMEng2Rn9z3WZY=
 github.com/hashicorp/terraform-plugin-mux v0.12.0/go.mod h1:8MR0AgmV+Q03DIjyrAKxXyYlq2EUnYBQP8gxAAA0zeM=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0 h1:wcOKYwPI9IorAJEBLzgclh3xVolO7ZorYd6U1vnok14=
