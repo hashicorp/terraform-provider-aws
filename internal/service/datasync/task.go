@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_datasync_task")
+// @SDKResource("aws_datasync_task", name="Task")
+// @Tags(identifierAttribute="id")
 func ResourceTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTaskCreate,
@@ -128,6 +130,12 @@ func ResourceTask() *schema.Resource {
 							Default:      datasync.MtimePreserve,
 							ValidateFunc: validation.StringInSlice(datasync.Mtime_Values(), false),
 						},
+						"object_tags": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.ObjectTagsPreserve,
+							ValidateFunc: validation.StringInSlice(datasync.ObjectTags_Values(), false),
+						},
 						"overwrite_mode": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -209,8 +217,8 @@ func ResourceTask() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -219,15 +227,13 @@ func ResourceTask() *schema.Resource {
 
 func resourceTaskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.CreateTaskInput{
 		DestinationLocationArn: aws.String(d.Get("destination_location_arn").(string)),
 		Options:                expandOptions(d.Get("options").([]interface{})),
 		SourceLocationArn:      aws.String(d.Get("source_location_arn").(string)),
-		Tags:                   Tags(tags.IgnoreAWS()),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cloudwatch_log_group_arn"); ok {
@@ -267,9 +273,7 @@ func resourceTaskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	output, err := FindTaskByARN(ctx, conn, d.Id())
 
@@ -301,29 +305,12 @@ func resourceTaskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set("source_location_arn", output.SourceLocationArn)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DataSync Task (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &datasync.UpdateTaskInput{
@@ -359,20 +346,12 @@ func resourceTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DataSync Task (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceTaskRead(ctx, d, meta)...)
 }
 
 func resourceTaskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.DeleteTaskInput{
 		TaskArn: aws.String(d.Id()),
@@ -392,7 +371,7 @@ func resourceTaskDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func statusTask(ctx context.Context, conn *datasync.DataSync, arn string) resource.StateRefreshFunc {
+func statusTask(ctx context.Context, conn *datasync.DataSync, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTaskByARN(ctx, conn, arn)
 
@@ -409,7 +388,7 @@ func statusTask(ctx context.Context, conn *datasync.DataSync, arn string) resour
 }
 
 func waitTaskAvailable(ctx context.Context, conn *datasync.DataSync, arn string, timeout time.Duration) (*datasync.DescribeTaskOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{datasync.TaskStatusCreating, datasync.TaskStatusUnavailable},
 		Target:  []string{datasync.TaskStatusAvailable, datasync.TaskStatusRunning},
 		Refresh: statusTask(ctx, conn, arn),
@@ -440,6 +419,7 @@ func flattenOptions(options *datasync.Options) []interface{} {
 		"gid":                            aws.StringValue(options.Gid),
 		"log_level":                      aws.StringValue(options.LogLevel),
 		"mtime":                          aws.StringValue(options.Mtime),
+		"object_tags":                    aws.StringValue(options.ObjectTags),
 		"overwrite_mode":                 aws.StringValue(options.OverwriteMode),
 		"posix_permissions":              aws.StringValue(options.PosixPermissions),
 		"preserve_deleted_files":         aws.StringValue(options.PreserveDeletedFiles),
@@ -466,6 +446,7 @@ func expandOptions(l []interface{}) *datasync.Options {
 		Gid:                  aws.String(m["gid"].(string)),
 		LogLevel:             aws.String(m["log_level"].(string)),
 		Mtime:                aws.String(m["mtime"].(string)),
+		ObjectTags:           aws.String(m["object_tags"].(string)),
 		OverwriteMode:        aws.String(m["overwrite_mode"].(string)),
 		PreserveDeletedFiles: aws.String(m["preserve_deleted_files"].(string)),
 		PreserveDevices:      aws.String(m["preserve_devices"].(string)),

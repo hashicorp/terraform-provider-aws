@@ -5,6 +5,10 @@ package sns
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	sns_sdkv1 "github.com/aws/aws-sdk-go/service/sns"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -47,6 +51,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceTopicDataProtectionPolicy,
+			TypeName: "aws_sns_topic_data_protection_policy",
+		},
+		{
 			Factory:  ResourceTopicPolicy,
 			TypeName: "aws_sns_topic_policy",
 		},
@@ -61,4 +69,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.SNS
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*sns_sdkv1.SNS, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return sns_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

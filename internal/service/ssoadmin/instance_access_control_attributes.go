@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -77,7 +77,7 @@ func ResourceAccessControlAttributes() *schema.Resource {
 
 func resourceAccessControlAttributesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	instanceARN := d.Get("instance_arn").(string)
 	input := &ssoadmin.CreateInstanceAccessControlAttributeConfigurationInput{
@@ -100,7 +100,7 @@ func resourceAccessControlAttributesCreate(ctx context.Context, d *schema.Resour
 
 func resourceAccessControlAttributesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	output, err := FindInstanceAttributeControlAttributesByARN(ctx, conn, d.Id())
 
@@ -126,7 +126,7 @@ func resourceAccessControlAttributesRead(ctx context.Context, d *schema.Resource
 
 func resourceAccessControlAttributesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	input := &ssoadmin.UpdateInstanceAccessControlAttributeConfigurationInput{
 		InstanceArn: aws.String(d.Id()),
@@ -146,7 +146,7 @@ func resourceAccessControlAttributesUpdate(ctx context.Context, d *schema.Resour
 
 func resourceAccessControlAttributesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	_, err := conn.DeleteInstanceAccessControlAttributeConfigurationWithContext(ctx, &ssoadmin.DeleteInstanceAccessControlAttributeConfigurationInput{
 		InstanceArn: aws.String(d.Id()),
@@ -167,7 +167,7 @@ func FindInstanceAttributeControlAttributesByARN(ctx context.Context, conn *ssoa
 	output, err := conn.DescribeInstanceAccessControlAttributeConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

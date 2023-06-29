@@ -5,6 +5,10 @@ package events
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	eventbridge_sdkv1 "github.com/aws/aws-sdk-go/service/eventbridge"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -49,6 +53,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceBus,
 			TypeName: "aws_cloudwatch_event_bus",
+			Name:     "Event Bus",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceBusPolicy,
@@ -59,12 +67,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_cloudwatch_event_connection",
 		},
 		{
+			Factory:  ResourceEndpoint,
+			TypeName: "aws_cloudwatch_event_endpoint",
+			Name:     "Global Endpoint",
+		},
+		{
 			Factory:  ResourcePermission,
 			TypeName: "aws_cloudwatch_event_permission",
 		},
 		{
 			Factory:  ResourceRule,
 			TypeName: "aws_cloudwatch_event_rule",
+			Name:     "Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceTarget,
@@ -77,4 +94,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Events
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*eventbridge_sdkv1.EventBridge, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return eventbridge_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

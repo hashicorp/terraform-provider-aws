@@ -5,6 +5,10 @@ package codegurureviewer
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	codegurureviewer_sdkv1 "github.com/aws/aws-sdk-go/service/codegurureviewer"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,6 +32,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceRepositoryAssociation,
 			TypeName: "aws_codegurureviewer_repository_association",
+			Name:     "Repository Association",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }
@@ -36,4 +44,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.CodeGuruReviewer
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*codegurureviewer_sdkv1.CodeGuruReviewer, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return codegurureviewer_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

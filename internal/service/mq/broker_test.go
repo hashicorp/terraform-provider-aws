@@ -9,10 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
@@ -1311,7 +1311,7 @@ func TestAccMQBroker_ldap(t *testing.T) {
 
 func testAccCheckBrokerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_mq_broker" {
@@ -1346,7 +1346,7 @@ func testAccCheckBrokerExists(ctx context.Context, n string, v *mq.DescribeBroke
 			return fmt.Errorf("No MQ Broker ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn(ctx)
 
 		output, err := tfmq.FindBrokerByID(ctx, conn, rs.Primary.ID)
 
@@ -1361,7 +1361,7 @@ func testAccCheckBrokerExists(ctx context.Context, n string, v *mq.DescribeBroke
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn(ctx)
 
 	input := &mq.ListBrokersInput{}
 

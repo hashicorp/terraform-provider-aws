@@ -5,6 +5,7 @@ package route53
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -52,6 +53,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceHealthCheck,
 			TypeName: "aws_route53_health_check",
+			Name:     "Health Check",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "healthcheck",
+			},
 		},
 		{
 			Factory:  ResourceHostedZoneDNSSEC,
@@ -84,6 +90,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceZone,
 			TypeName: "aws_route53_zone",
+			Name:     "Hosted Zone",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "hostedzone",
+			},
 		},
 		{
 			Factory:  ResourceZoneAssociation,
@@ -96,4 +107,6 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Route53
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

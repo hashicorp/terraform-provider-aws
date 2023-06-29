@@ -5,6 +5,10 @@ package location
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	locationservice_sdkv1 "github.com/aws/aws-sdk-go/service/locationservice"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -57,22 +61,42 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceGeofenceCollection,
 			TypeName: "aws_location_geofence_collection",
+			Name:     "Geofence Collection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "collection_arn",
+			},
 		},
 		{
 			Factory:  ResourceMap,
 			TypeName: "aws_location_map",
+			Name:     "Map",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "map_arn",
+			},
 		},
 		{
 			Factory:  ResourcePlaceIndex,
 			TypeName: "aws_location_place_index",
+			Name:     "Map",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "index_arn",
+			},
 		},
 		{
 			Factory:  ResourceRouteCalculator,
 			TypeName: "aws_location_route_calculator",
+			Name:     "Route Calculator",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "calculator_arn",
+			},
 		},
 		{
 			Factory:  ResourceTracker,
 			TypeName: "aws_location_tracker",
+			Name:     "Route Calculator",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "tracker_arn",
+			},
 		},
 		{
 			Factory:  ResourceTrackerAssociation,
@@ -85,4 +109,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Location
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*locationservice_sdkv1.LocationService, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return locationservice_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

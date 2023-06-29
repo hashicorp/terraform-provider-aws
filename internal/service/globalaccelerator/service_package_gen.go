@@ -5,6 +5,7 @@ package globalaccelerator
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,7 +25,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{}
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceCustomRoutingAccelerator,
+			TypeName: "aws_globalaccelerator_custom_routing_accelerator",
+		},
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
@@ -32,6 +38,26 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAccelerator,
 			TypeName: "aws_globalaccelerator_accelerator",
+			Name:     "Accelerator",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceCustomRoutingAccelerator,
+			TypeName: "aws_globalaccelerator_custom_routing_accelerator",
+			Name:     "Custom Routing Accelerator",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceCustomRoutingEndpointGroup,
+			TypeName: "aws_globalaccelerator_custom_routing_endpoint_group",
+		},
+		{
+			Factory:  ResourceCustomRoutingListener,
+			TypeName: "aws_globalaccelerator_custom_routing_listener",
 		},
 		{
 			Factory:  ResourceEndpointGroup,
@@ -48,4 +74,6 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.GlobalAccelerator
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

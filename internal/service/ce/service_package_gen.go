@@ -5,6 +5,10 @@ package ce
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	costexplorer_sdkv1 "github.com/aws/aws-sdk-go/service/costexplorer"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,10 +41,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAnomalyMonitor,
 			TypeName: "aws_ce_anomaly_monitor",
+			Name:     "Anomaly Monitor",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceAnomalySubscription,
 			TypeName: "aws_ce_anomaly_subscription",
+			Name:     "Anomaly Subscription",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceCostAllocationTag,
@@ -49,6 +61,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCostCategory,
 			TypeName: "aws_ce_cost_category",
+			Name:     "Cost Category",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }
@@ -57,4 +73,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.CE
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*costexplorer_sdkv1.CostExplorer, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return costexplorer_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

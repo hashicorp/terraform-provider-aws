@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
 func ExpandReplicationRuleDestinationAccessControlTranslation(l []interface{}) *s3.AccessControlTranslation {
@@ -203,7 +203,7 @@ func ExpandLifecycleRuleExpiration(l []interface{}) (*s3.LifecycleExpiration, er
 	if v, ok := m["date"].(string); ok && v != "" {
 		t, err := time.Parse(time.RFC3339, v)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing S3 Bucket Lifecycle Rule Expiration date: %w", err)
+			return nil, fmt.Errorf("parsing S3 Bucket Lifecycle Rule Expiration date: %w", err)
 		}
 		result.Date = aws.Time(t)
 	}
@@ -238,7 +238,7 @@ func ExpandLifecycleRuleFilter(ctx context.Context, l []interface{}) *s3.Lifecyc
 		result.And = ExpandLifecycleRuleFilterAndOperator(ctx, v[0].(map[string]interface{}))
 	}
 
-	if v, null, _ := nullable.Int(m["object_size_greater_than"].(string)).Value(); !null && v > 0 {
+	if v, null, _ := nullable.Int(m["object_size_greater_than"].(string)).Value(); !null && v >= 0 {
 		result.ObjectSizeGreaterThan = aws.Int64(v)
 	}
 
@@ -378,7 +378,7 @@ func ExpandLifecycleRuleTransitions(l []interface{}) ([]*s3.Transition, error) {
 		if v, ok := tfMap["date"].(string); ok && v != "" {
 			t, err := time.Parse(time.RFC3339, v)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing S3 Bucket Lifecycle Rule Transition date: %w", err)
+				return nil, fmt.Errorf("parsing S3 Bucket Lifecycle Rule Transition date: %w", err)
 			}
 			transition.Date = aws.Time(t)
 		}

@@ -103,7 +103,7 @@ func expandECSParameters(ctx context.Context, tfMap map[string]interface{}) *typ
 		a.LaunchType = types.LaunchType(v)
 	}
 
-	if v, ok := tfMap["network_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["network_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.NetworkConfiguration = expandNetworkConfiguration(v[0].(map[string]interface{}))
 	}
 
@@ -611,15 +611,15 @@ func expandTarget(ctx context.Context, tfMap map[string]interface{}) *types.Targ
 		a.Arn = aws.String(v)
 	}
 
-	if v, ok := tfMap["dead_letter_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["dead_letter_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.DeadLetterConfig = expandDeadLetterConfig(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["ecs_parameters"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["ecs_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.EcsParameters = expandECSParameters(ctx, v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["eventbridge_parameters"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["eventbridge_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.EventBridgeParameters = expandEventBridgeParameters(v[0].(map[string]interface{}))
 	}
 
@@ -627,7 +627,7 @@ func expandTarget(ctx context.Context, tfMap map[string]interface{}) *types.Targ
 		a.Input = aws.String(v)
 	}
 
-	if v, ok := tfMap["kinesis_parameters"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["kinesis_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.KinesisParameters = expandKinesisParameters(v[0].(map[string]interface{}))
 	}
 
@@ -635,15 +635,15 @@ func expandTarget(ctx context.Context, tfMap map[string]interface{}) *types.Targ
 		a.RoleArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["retry_policy"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["retry_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.RetryPolicy = expandRetryPolicy(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["sagemaker_pipeline_parameters"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sagemaker_pipeline_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.SageMakerPipelineParameters = expandSageMakerPipelineParameters(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["sqs_parameters"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sqs_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.SqsParameters = expandSQSParameters(v[0].(map[string]interface{}))
 	}
 

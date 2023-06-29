@@ -5,6 +5,10 @@ package iam
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	iam_sdkv1 "github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -21,6 +25,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceAccessKeys,
+			TypeName: "aws_iam_access_keys",
+		},
 		{
 			Factory:  DataSourceAccountAlias,
 			TypeName: "aws_iam_account_alias",
@@ -48,6 +56,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourcePolicyDocument,
 			TypeName: "aws_iam_policy_document",
+		},
+		{
+			Factory:  DataSourcePrincipalPolicySimulation,
+			TypeName: "aws_iam_principal_policy_simulation",
 		},
 		{
 			Factory:  DataSourceRole,
@@ -117,14 +129,20 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceInstanceProfile,
 			TypeName: "aws_iam_instance_profile",
+			Name:     "Instance Profile",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceOpenIDConnectProvider,
 			TypeName: "aws_iam_openid_connect_provider",
+			Name:     "OIDC Provider",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourcePolicy,
 			TypeName: "aws_iam_policy",
+			Name:     "Policy",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourcePolicyAttachment,
@@ -133,6 +151,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceRole,
 			TypeName: "aws_iam_role",
+			Name:     "Role",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceRolePolicy,
@@ -145,14 +165,20 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
+			Name:     "SAML Provider",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceServerCertificate,
 			TypeName: "aws_iam_server_certificate",
+			Name:     "Server Certificate",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceServiceLinkedRole,
 			TypeName: "aws_iam_service_linked_role",
+			Name:     "Service Linked Role",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceServiceSpecificCredential,
@@ -165,6 +191,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceUser,
 			TypeName: "aws_iam_user",
+			Name:     "User",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceUserGroupMembership,
@@ -189,6 +217,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceVirtualMFADevice,
 			TypeName: "aws_iam_virtual_mfa_device",
+			Name:     "Virtual MFA Device",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
@@ -197,4 +227,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.IAM
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*iam_sdkv1.IAM, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return iam_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

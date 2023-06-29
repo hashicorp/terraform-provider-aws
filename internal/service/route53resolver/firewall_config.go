@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -47,7 +47,7 @@ func ResourceFirewallConfig() *schema.Resource {
 }
 
 func resourceFirewallConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	input := &route53resolver.UpdateFirewallConfigInput{
 		ResourceId: aws.String(d.Get("resource_id").(string)),
@@ -69,7 +69,7 @@ func resourceFirewallConfigCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceFirewallConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	firewallConfig, err := FindFirewallConfigByID(ctx, conn, d.Id())
 
@@ -91,7 +91,7 @@ func resourceFirewallConfigRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceFirewallConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	input := &route53resolver.UpdateFirewallConfigInput{
 		ResourceId: aws.String(d.Get("resource_id").(string)),
@@ -111,7 +111,7 @@ func resourceFirewallConfigUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceFirewallConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Config: %s", d.Id())
 	_, err := conn.UpdateFirewallConfigWithContext(ctx, &route53resolver.UpdateFirewallConfigInput{
@@ -152,7 +152,7 @@ func FindFirewallConfigByID(ctx context.Context, conn *route53resolver.Route53Re
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{LastRequest: input}
+		return nil, &retry.NotFoundError{LastRequest: input}
 	}
 
 	return output, nil

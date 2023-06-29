@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/detective"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -84,7 +84,7 @@ func ResourceMember() *schema.Resource {
 }
 
 func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	accountId := d.Get("account_id").(string)
 	graphArn := d.Get("graph_arn").(string)
@@ -108,15 +108,15 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	var err error
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		_, err := conn.CreateMembersWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, detective.ErrCodeInternalServerException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -127,11 +127,11 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.Errorf("error creating Detective Member: %s", err)
+		return diag.Errorf("creating Detective Member: %s", err)
 	}
 
 	if _, err = MemberStatusUpdated(ctx, conn, graphArn, accountId, detective.MemberStatusInvited); err != nil {
-		return diag.Errorf("error waiting for Detective Member (%s) to be invited: %s", d.Id(), err)
+		return diag.Errorf("waiting for Detective Member (%s) to be invited: %s", d.Id(), err)
 	}
 
 	d.SetId(EncodeMemberID(graphArn, accountId))
@@ -140,11 +140,11 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	graphArn, accountId, err := DecodeMemberID(d.Id())
 	if err != nil {
-		return diag.Errorf("error decoding ID Detective Member (%s): %s", d.Id(), err)
+		return diag.Errorf("decoding ID Detective Member (%s): %s", d.Id(), err)
 	}
 
 	resp, err := FindMemberByGraphARNAndAccountID(ctx, conn, graphArn, accountId)
@@ -156,7 +156,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("error reading Detective Member (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Detective Member (%s): %s", d.Id(), err)
 	}
 
 	if !d.IsNewResource() && resp == nil {
@@ -178,11 +178,11 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return nil
 }
 func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	graphArn, accountId, err := DecodeMemberID(d.Id())
 	if err != nil {
-		return diag.Errorf("error decoding ID Detective Member (%s): %s", d.Id(), err)
+		return diag.Errorf("decoding ID Detective Member (%s): %s", d.Id(), err)
 	}
 
 	input := &detective.DeleteMembersInput{
@@ -195,7 +195,7 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.Errorf("error deleting Detective Member (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Detective Member (%s): %s", d.Id(), err)
 	}
 	return nil
 }

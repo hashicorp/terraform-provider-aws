@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -65,7 +65,7 @@ func (r *resourceDomain) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	conn := r.Meta().SimpleDBConn()
+	conn := r.Meta().SimpleDBConn(ctx)
 
 	name := data.Name.ValueString()
 	input := &simpledb.CreateDomainInput{
@@ -96,7 +96,7 @@ func (r *resourceDomain) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 
-	conn := r.Meta().SimpleDBConn()
+	conn := r.Meta().SimpleDBConn(ctx)
 
 	_, err := FindDomainByName(ctx, conn, data.ID.ValueString())
 
@@ -136,7 +136,7 @@ func (r *resourceDomain) Delete(ctx context.Context, request resource.DeleteRequ
 		return
 	}
 
-	conn := r.Meta().SimpleDBConn()
+	conn := r.Meta().SimpleDBConn(ctx)
 
 	tflog.Debug(ctx, "deleting SimpleDB Domain", map[string]interface{}{
 		"id": data.ID.ValueString(),
@@ -175,7 +175,7 @@ func FindDomainByName(ctx context.Context, conn *simpledb.SimpleDB, name string)
 	output, err := conn.DomainMetadataWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, simpledb.ErrCodeNoSuchDomain) {
-		return nil, &sdkresource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

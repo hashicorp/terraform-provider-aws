@@ -6,10 +6,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
-// @FrameworkResource
+// @FrameworkResource(name="Security Group Egress Rule")
+// @Tags(identifierAttribute="id")
 func newResourceSecurityGroupEgressRule(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceSecurityGroupEgressRule{}
 	r.create = r.createSecurityGroupRule
@@ -28,7 +29,7 @@ func (r *resourceSecurityGroupEgressRule) Metadata(_ context.Context, request re
 }
 
 func (r *resourceSecurityGroupEgressRule) createSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) (string, error) {
-	conn := r.Meta().EC2Conn()
+	conn := r.Meta().EC2Conn(ctx)
 
 	input := &ec2.AuthorizeSecurityGroupEgressInput{
 		GroupId:       flex.StringFromFramework(ctx, data.SecurityGroupID),
@@ -45,7 +46,7 @@ func (r *resourceSecurityGroupEgressRule) createSecurityGroupRule(ctx context.Co
 }
 
 func (r *resourceSecurityGroupEgressRule) deleteSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) error {
-	conn := r.Meta().EC2Conn()
+	conn := r.Meta().EC2Conn(ctx)
 
 	_, err := conn.RevokeSecurityGroupEgressWithContext(ctx, &ec2.RevokeSecurityGroupEgressInput{
 		GroupId:              flex.StringFromFramework(ctx, data.SecurityGroupID),
@@ -56,7 +57,7 @@ func (r *resourceSecurityGroupEgressRule) deleteSecurityGroupRule(ctx context.Co
 }
 
 func (r *resourceSecurityGroupEgressRule) findSecurityGroupRuleByID(ctx context.Context, id string) (*ec2.SecurityGroupRule, error) {
-	conn := r.Meta().EC2Conn()
+	conn := r.Meta().EC2Conn(ctx)
 
 	return FindSecurityGroupEgressRuleByID(ctx, conn, id)
 }

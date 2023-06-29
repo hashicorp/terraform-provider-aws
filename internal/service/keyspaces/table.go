@@ -13,16 +13,18 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_keyspaces_table")
+// @SDKResource("aws_keyspaces_table", name="Table")
+// @Tags(identifierAttribute="arn")
 func ResourceTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTableCreate,
@@ -134,12 +136,9 @@ func ResourceTable() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 48),
-					validation.StringMatch(
-						regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_]{1,47}$`),
-						"The name must consist of alphanumerics and underscores.",
-					),
+				ValidateFunc: validation.StringMatch(
+					regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_]{0,47}$`),
+					"The keyspace name can have up to 48 characters. It must begin with an alpha-numeric character and can only contain alpha-numeric characters and underscores.",
 				),
 			},
 			"point_in_time_recovery": {
@@ -174,12 +173,9 @@ func ResourceTable() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 48),
-											validation.StringMatch(
-												regexp.MustCompile(`^[a-z0-9][a-z0-9_]{1,47}$`),
-												"The name must consist of lower case alphanumerics and underscores.",
-											),
+										ValidateFunc: validation.StringMatch(
+											regexp.MustCompile(`^[a-z0-9_]{1,48}$`),
+											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
 									"order_by": {
@@ -199,12 +195,9 @@ func ResourceTable() *schema.Resource {
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 48),
-											validation.StringMatch(
-												regexp.MustCompile(`^[a-z0-9][a-z0-9_]{1,47}$`),
-												"The name must consist of lower case alphanumerics and underscores.",
-											),
+										ValidateFunc: validation.StringMatch(
+											regexp.MustCompile(`^[a-z0-9_]{1,48}$`),
+											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
 									"type": {
@@ -228,12 +221,9 @@ func ResourceTable() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 48),
-											validation.StringMatch(
-												regexp.MustCompile(`^[a-z0-9][a-z0-9_]{1,47}$`),
-												"The name must consist of lower case alphanumerics and underscores.",
-											),
+										ValidateFunc: validation.StringMatch(
+											regexp.MustCompile(`^[a-z0-9_]{1,48}$`),
+											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
 								},
@@ -249,12 +239,9 @@ func ResourceTable() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 48),
-											validation.StringMatch(
-												regexp.MustCompile(`^[a-z0-9][a-z0-9_]{1,47}$`),
-												"The name must consist of lower case alphanumerics and underscores.",
-											),
+										ValidateFunc: validation.StringMatch(
+											regexp.MustCompile(`^[a-z0-9_]{1,48}$`),
+											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
 								},
@@ -267,16 +254,13 @@ func ResourceTable() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 48),
-					validation.StringMatch(
-						regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_]{1,47}$`),
-						"The name must consist of alphanumerics and underscores.",
-					),
+				ValidateFunc: validation.StringMatch(
+					regexp.MustCompile(`^[a-zA-Z0-9_]{1,48}$`),
+					"The table name can have up to 48 characters. It can only contain alpha-numeric characters and underscores.",
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"ttl": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -296,9 +280,7 @@ func ResourceTable() *schema.Resource {
 }
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).KeyspacesConn(ctx)
 
 	keyspaceName := d.Get("keyspace_name").(string)
 	tableName := d.Get("table_name").(string)
@@ -306,6 +288,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &keyspaces.CreateTableInput{
 		KeyspaceName: aws.String(keyspaceName),
 		TableName:    aws.String(tableName),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("capacity_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -336,12 +319,6 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Ttl = expandTimeToLive(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if tags := Tags(tags.IgnoreAWS()); len(tags) > 0 {
-		// The Keyspaces API requires that when Tags is set, it's non-empty.
-		input.Tags = tags
-	}
-
-	log.Printf("[DEBUG] Creating Keyspaces Table: %s", input)
 	_, err := conn.CreateTableWithContext(ctx, input)
 
 	if err != nil {
@@ -358,9 +335,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).KeyspacesConn(ctx)
 
 	keyspaceName, tableName, err := TableParseResourceID(d.Id())
 
@@ -427,28 +402,11 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("ttl", nil)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return diag.Errorf("listing tags for Keyspaces Table (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn()
+	conn := meta.(*conns.AWSClient).KeyspacesConn(ctx)
 
 	keyspaceName, tableName, err := TableParseResourceID(d.Id())
 
@@ -600,19 +558,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating Keyspaces Table (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceTableRead(ctx, d, meta)
 }
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn()
+	conn := meta.(*conns.AWSClient).KeyspacesConn(ctx)
 
 	keyspaceName, tableName, err := TableParseResourceID(d.Id())
 
@@ -660,7 +610,7 @@ func TableParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected KEYSPACE-NAME%[2]sTABLE-NAME", id, tableIDSeparator)
 }
 
-func statusTable(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string) resource.StateRefreshFunc {
+func statusTable(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTableByTwoPartKey(ctx, conn, keyspaceName, tableName)
 
@@ -677,7 +627,7 @@ func statusTable(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, t
 }
 
 func waitTableCreated(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string, timeout time.Duration) (*keyspaces.GetTableOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{keyspaces.TableStatusCreating},
 		Target:  []string{keyspaces.TableStatusActive},
 		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
@@ -694,7 +644,7 @@ func waitTableCreated(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceNa
 }
 
 func waitTableDeleted(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string, timeout time.Duration) (*keyspaces.GetTableOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{keyspaces.TableStatusActive, keyspaces.TableStatusDeleting},
 		Target:  []string{},
 		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
@@ -711,7 +661,7 @@ func waitTableDeleted(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceNa
 }
 
 func waitTableUpdated(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string, timeout time.Duration) (*keyspaces.GetTableOutput, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{keyspaces.TableStatusUpdating},
 		Target:  []string{keyspaces.TableStatusActive},
 		Refresh: statusTable(ctx, conn, keyspaceName, tableName),

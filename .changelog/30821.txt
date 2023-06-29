@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_networkfirewall_firewall_policy: Fix unexpected `encryption_configuration.type` updates from `Customer_KMS` to `AWS_KMS`
+```
+
+```release-note:bug
+resource/aws_networkfirewall_rule_group: Fix unexpected `encryption_configuration.type` updates from `Customer_KMS` to `AWS_KMS`
+```

@@ -31,18 +31,19 @@ Typically you will add arguments to represent the values that are under control 
 Attribute names are to specified in `camel_case` as opposed to the AWS API which is `CamelCase`
 
 ### Implement CRUD handlers
+
 These will map planned Terraform state to the AWS API call, or an AWS API response to an applied Terraform state. You will also need to handle different response types (including errors correctly). For complex attributes you will need to implement Flattener or Expander functions. The [Data Handling and Conversion Guide](data-handling-and-conversion.md) covers everything you need to know for mapping AWS API responses to Terraform State and vice-versa. The [Error Handling Guide](error-handling.md) covers everything you need to know about handling AWS API responses consistently.
 
 ### Register Resource to the provider
 
-Resources use a self registration process that adds them to the provider using the `@SDKResource()` annotation in the resource's comments. Run `make servicepackages` to register the resource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+Resources use a self registration process that adds them to the provider using the `@SDKResource()` annotation in the resource's comments. Run `make gen` to register the resource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
 
 ```
 package something
 
 import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-// @SDKResource("aws_something_example")
+// @SDKResource("aws_something_example", name="Example)
 func ResourceExample() *schema.Resource {
 	return &schema.Resource{
 	    // some configuration
@@ -51,6 +52,7 @@ func ResourceExample() *schema.Resource {
 ```
 
 ### Write passing Acceptance Tests
+
 In order to adequately test the resource we will need to write a complete set of Acceptance Tests. You will need an AWS account for this which allows the creation of that resource. See [Writing Acceptance Tests](running-and-writing-acceptance-tests.md) for a detailed guide on how to approach these.
 
 You will need at minimum:

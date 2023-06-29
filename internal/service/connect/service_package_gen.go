@@ -5,6 +5,10 @@ package connect
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -70,12 +74,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_connect_security_profile",
 		},
 		{
+			Factory:  DataSourceUser,
+			TypeName: "aws_connect_user",
+		},
+		{
 			Factory:  DataSourceUserHierarchyGroup,
 			TypeName: "aws_connect_user_hierarchy_group",
 		},
 		{
 			Factory:  DataSourceUserHierarchyStructure,
 			TypeName: "aws_connect_user_hierarchy_structure",
+		},
+		{
+			Factory:  DataSourceVocabulary,
+			TypeName: "aws_connect_vocabulary",
 		},
 	}
 }
@@ -89,14 +101,26 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceContactFlow,
 			TypeName: "aws_connect_contact_flow",
+			Name:     "Contact Flow",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceContactFlowModule,
 			TypeName: "aws_connect_contact_flow_module",
+			Name:     "Contact Flow Module",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceHoursOfOperation,
 			TypeName: "aws_connect_hours_of_operation",
+			Name:     "Hours Of Operation",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceInstance,
@@ -113,30 +137,58 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePhoneNumber,
 			TypeName: "aws_connect_phone_number",
+			Name:     "Phone Number",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceQueue,
 			TypeName: "aws_connect_queue",
+			Name:     "Queue",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceQuickConnect,
 			TypeName: "aws_connect_quick_connect",
+			Name:     "Quick Connect",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceRoutingProfile,
 			TypeName: "aws_connect_routing_profile",
+			Name:     "Routing Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceSecurityProfile,
 			TypeName: "aws_connect_security_profile",
+			Name:     "Security Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUser,
 			TypeName: "aws_connect_user",
+			Name:     "User",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUserHierarchyGroup,
 			TypeName: "aws_connect_user_hierarchy_group",
+			Name:     "User Hierarchy Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUserHierarchyStructure,
@@ -145,6 +197,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceVocabulary,
 			TypeName: "aws_connect_vocabulary",
+			Name:     "Vocabulary",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }
@@ -153,4 +209,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Connect
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*connect_sdkv1.Connect, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return connect_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

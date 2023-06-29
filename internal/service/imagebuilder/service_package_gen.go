@@ -5,6 +5,10 @@ package imagebuilder
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -81,30 +85,58 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceComponent,
 			TypeName: "aws_imagebuilder_component",
+			Name:     "Component",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceContainerRecipe,
 			TypeName: "aws_imagebuilder_container_recipe",
+			Name:     "Container Recipe",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceDistributionConfiguration,
 			TypeName: "aws_imagebuilder_distribution_configuration",
+			Name:     "Distribution Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceImage,
 			TypeName: "aws_imagebuilder_image",
+			Name:     "Image",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceImagePipeline,
 			TypeName: "aws_imagebuilder_image_pipeline",
+			Name:     "Image Pipeline",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceImageRecipe,
 			TypeName: "aws_imagebuilder_image_recipe",
+			Name:     "Image Recipe",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceInfrastructureConfiguration,
 			TypeName: "aws_imagebuilder_infrastructure_configuration",
+			Name:     "Infrastructure Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }
@@ -113,4 +145,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.ImageBuilder
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*imagebuilder_sdkv1.Imagebuilder, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return imagebuilder_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

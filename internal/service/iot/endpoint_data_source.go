@@ -37,7 +37,7 @@ func DataSourceEndpoint() *schema.Resource {
 
 func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 	input := &iot.DescribeEndpointInput{}
 
 	if v, ok := d.GetOk("endpoint_type"); ok {

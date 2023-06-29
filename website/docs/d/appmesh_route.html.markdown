@@ -3,7 +3,7 @@ subcategory: "App Mesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_route"
 description: |-
-    Provides an AWS App Mesh route resource.
+    Terraform data source for managing an AWS App Mesh Route.
 ---
 
 # Data Source: aws_appmesh_route
@@ -37,32 +37,5 @@ In addition to all arguments above, the following attributes are exported:
 * `created_date` - Creation date of the route.
 * `last_updated_date` - Last update date of the route.
 * `resource_owner` - Resource owner's AWS account ID.
-* `spec` - Route specification
+* `spec` - Route specification. See the [`aws_appmesh_route`](/docs/providers/aws/r/appmesh_route.html#spec) resource for details.
 * `tags` - Map of tags.
-
-### Spec
-
-* `grpc_route` - GRPC routing information for the route.
-* `http2_route` - HTTP/2 routing information for the route.
-* `http_route` - HTTP routing information for the route.
-* `tcp_route` - TCP routing information for the route.
-* `priority` - Priority for the route, between `0` and `1000`.
-
-### grpc_route
-
-* `action` - Action to take if a match is determined.
-* `match` - Criteria for determining an gRPC request match.
-* `retry_policy` - Retry policy.
-* `timeout` - Types of timeouts.
-
-### http2_route and http_route
-
-* `action` - Action to take if a match is determined.
-* `match` - Criteria for determining an HTTP request match.
-* `retry_policy` - Retry policy.
-* `timeout` - Types of timeouts.
-
-### tcp_route
-
-* `action` - Action to take if a match is determined.
-* `timeout` - Types of timeouts.

@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -27,11 +27,9 @@ const (
 )
 
 func waitChangeInfoStatusInsync(ctx context.Context, conn *route53.Route53, changeID string) (*route53.ChangeInfo, error) { //nolint:unparam
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	// Route53 is vulnerable to throttling so longer delays, poll intervals helps significantly to avoid
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      []string{route53.ChangeStatusPending},
 		Target:       []string{route53.ChangeStatusInsync},
 		Delay:        time.Duration(rand.Int63n(changeMaxDelay-changeMinDelay)+changeMinDelay) * time.Second,
@@ -51,7 +49,7 @@ func waitChangeInfoStatusInsync(ctx context.Context, conn *route53.Route53, chan
 }
 
 func waitHostedZoneDNSSECStatusUpdated(ctx context.Context, conn *route53.Route53, hostedZoneID string, status string) (*route53.DNSSECStatus, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:     []string{status},
 		Refresh:    statusHostedZoneDNSSEC(ctx, conn, hostedZoneID),
 		MinTimeout: 5 * time.Second,
@@ -72,7 +70,7 @@ func waitHostedZoneDNSSECStatusUpdated(ctx context.Context, conn *route53.Route5
 }
 
 func waitKeySigningKeyStatusUpdated(ctx context.Context, conn *route53.Route53, hostedZoneID string, name string, status string) (*route53.KeySigningKey, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:     []string{status},
 		Refresh:    statusKeySigningKey(ctx, conn, hostedZoneID, name),
 		MinTimeout: 5 * time.Second,
@@ -93,7 +91,7 @@ func waitKeySigningKeyStatusUpdated(ctx context.Context, conn *route53.Route53, 
 }
 
 func waitTrafficPolicyInstanceStateCreated(ctx context.Context, conn *route53.Route53, id string) (*route53.TrafficPolicyInstance, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{TrafficPolicyInstanceStateCreating},
 		Target:  []string{TrafficPolicyInstanceStateApplied},
 		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
@@ -114,7 +112,7 @@ func waitTrafficPolicyInstanceStateCreated(ctx context.Context, conn *route53.Ro
 }
 
 func waitTrafficPolicyInstanceStateDeleted(ctx context.Context, conn *route53.Route53, id string) (*route53.TrafficPolicyInstance, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{TrafficPolicyInstanceStateDeleting},
 		Target:  []string{},
 		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
@@ -135,7 +133,7 @@ func waitTrafficPolicyInstanceStateDeleted(ctx context.Context, conn *route53.Ro
 }
 
 func waitTrafficPolicyInstanceStateUpdated(ctx context.Context, conn *route53.Route53, id string) (*route53.TrafficPolicyInstance, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{TrafficPolicyInstanceStateUpdating},
 		Target:  []string{TrafficPolicyInstanceStateApplied},
 		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),

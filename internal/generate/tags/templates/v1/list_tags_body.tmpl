@@ -26,14 +26,14 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 
 	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
 			if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
-				return nil, &resource.NotFoundError{
+				return nil, &retry.NotFoundError{
 					LastError:   err,
 					LastRequest: input,
 				}
 			}
 	{{- else if ( .ParentNotFoundErrCode ) }}
 			if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
-				return nil, &resource.NotFoundError{
+				return nil, &retry.NotFoundError{
 					LastError:   err,
 					LastRequest: input,
 				}
@@ -44,11 +44,14 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
+	return {{ .KeyValueTagsFunc }}(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
 }
 
-func (p *servicePackage) {{ .ListTagsFunc }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) error {
-	tags, err :=  {{ .ListTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Conn(), identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+{{- if .IsDefaultListTags }}
+// {{ .ListTagsFunc | Title }} lists {{ .ServicePackage }} service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) {{ .ListTagsFunc | Title }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) error {
+	tags, err :=  {{ .ListTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Conn(ctx), identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 
 	if err != nil {
 		return err
@@ -60,3 +63,4 @@ func (p *servicePackage) {{ .ListTagsFunc }}(ctx context.Context, meta any, iden
 
 	return nil
 }
+{{- end }}

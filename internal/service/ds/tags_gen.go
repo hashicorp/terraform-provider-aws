@@ -11,12 +11,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists ds service tags.
+// listTags lists ds service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn directoryserviceiface.DirectoryServiceAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn directoryserviceiface.DirectoryServiceAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &directoryservice.ListTagsForResourceInput{
 		ResourceId: aws.String(identifier),
 	}
@@ -30,8 +31,10 @@ func ListTags(ctx context.Context, conn directoryserviceiface.DirectoryServiceAP
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
+// ListTags lists ds service tags and set them in Context.
+// It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).DSConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).DSConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -73,11 +76,11 @@ func KeyValueTags(ctx context.Context, tags []*directoryservice.Tag) tftags.KeyV
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns ds service tags from Context.
+// getTagsIn returns ds service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*directoryservice.Tag {
+func getTagsIn(ctx context.Context) []*directoryservice.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -85,25 +88,35 @@ func GetTagsIn(ctx context.Context) []*directoryservice.Tag {
 	return nil
 }
 
-// SetTagsOut sets ds service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*directoryservice.Tag) {
+// setTagsOut sets ds service tags in Context.
+func setTagsOut(ctx context.Context, tags []*directoryservice.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates ds service tags.
+// createTags creates ds service tags for new resources.
+func createTags(ctx context.Context, conn directoryserviceiface.DirectoryServiceAPI, identifier string, tags []*directoryservice.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
+// updateTags updates ds service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
-func UpdateTags(ctx context.Context, conn directoryserviceiface.DirectoryServiceAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn directoryserviceiface.DirectoryServiceAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.DS)
+	if len(removedTags) > 0 {
 		input := &directoryservice.RemoveTagsFromResourceInput{
 			ResourceId: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:    aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromResourceWithContext(ctx, input)
@@ -113,10 +126,12 @@ func UpdateTags(ctx context.Context, conn directoryserviceiface.DirectoryService
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.DS)
+	if len(updatedTags) > 0 {
 		input := &directoryservice.AddTagsToResourceInput{
 			ResourceId: aws.String(identifier),
-			Tags:       Tags(updatedTags.IgnoreAWS()),
+			Tags:       Tags(updatedTags),
 		}
 
 		_, err := conn.AddTagsToResourceWithContext(ctx, input)
@@ -129,6 +144,8 @@ func UpdateTags(ctx context.Context, conn directoryserviceiface.DirectoryService
 	return nil
 }
 
+// UpdateTags updates ds service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).DSConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).DSConn(ctx), identifier, oldTags, newTags)
 }
