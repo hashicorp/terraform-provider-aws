@@ -153,7 +153,7 @@ const (
 )
 
 func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CleanRoomsClient()
+	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
 	creatorAbilities := d.Get("creator_member_abilities").([]interface{})
 
@@ -162,7 +162,7 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 		CreatorDisplayName:     aws.String(d.Get("creator_display_name").(string)),
 		CreatorMemberAbilities: expandMemberAbilities(creatorAbilities),
 		Members:                *expandMembers(d.Get("member").(*schema.Set).List()),
-		Tags:                   GetTagsIn(ctx),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	queryLogStatus, err := expandQueryLogStatus(d.Get("query_log_status").(string))
@@ -193,7 +193,7 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CleanRoomsClient()
+	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
 	out, err := findCollaborationByID(ctx, conn, d.Id())
 
@@ -231,7 +231,7 @@ func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CleanRoomsClient()
+	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cleanrooms.UpdateCollaborationInput{
@@ -257,7 +257,7 @@ func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceCollaborationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CleanRoomsClient()
+	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 	log.Printf("[INFO] Deleting CleanRooms Collaboration %s", d.Id())
 
 	_, err := conn.DeleteCollaboration(ctx, &cleanrooms.DeleteCollaborationInput{

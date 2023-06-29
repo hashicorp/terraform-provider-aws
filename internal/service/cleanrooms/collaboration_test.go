@@ -284,7 +284,7 @@ func TestAccCleanRoomsCollaboration_updateMemberAbilities(t *testing.T) {
 
 func testAccCheckCollaborationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cleanrooms_collaboration" {
@@ -321,7 +321,7 @@ func testAccCheckCollaborationExists(ctx context.Context, name string, collabora
 			return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameCollaboration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
 		resp, err := conn.GetCollaboration(ctx, &cleanrooms.GetCollaborationInput{
 			CollaborationIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -368,7 +368,7 @@ func checkCollaborationIsSame(name string, collaboration *cleanrooms.GetCollabor
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
 
 	input := &cleanrooms.ListCollaborationsInput{}
 	_, err := conn.ListCollaborations(ctx, input)
@@ -384,7 +384,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 func testCheckCreatorMember(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
 		collaboration, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Collaboration: %s not found in resources", name)
@@ -419,7 +419,7 @@ func testCheckCreatorMember(ctx context.Context, name string) resource.TestCheck
 
 func testAccCollaborationTags(ctx context.Context, name string, expectedTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
 		collaboration, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Collaboration: %s not found in resources", name)
