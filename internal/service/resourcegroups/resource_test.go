@@ -15,13 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccResourceGroupsResource_basic(t *testing.T) {
+func testAccResource_basic(t *testing.T) {
 	ctx := context.Background()
 	var r resourcegroups.ListGroupResourcesItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_resourcegroups_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -40,13 +40,13 @@ func TestAccResourceGroupsResource_basic(t *testing.T) {
 	})
 }
 
-func TestAccResourceGroupsResource_disappears(t *testing.T) {
+func testAccResource_disappears(t *testing.T) {
 	ctx := context.Background()
 	var r resourcegroups.ListGroupResourcesItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_resourcegroups_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -142,29 +142,32 @@ resource "aws_resourcegroups_group" "test" {
         "false"
       ]
     }
+
     parameters {
       name = "auto-host-recovery"
       values = [
         "false"
       ]
     }
+
     parameters {
       name = "auto-release-host"
       values = [
         "false"
       ]
     }
-
   }
 
   configuration {
     type = "AWS::ResourceGroups::Generic"
+
     parameters {
       name = "allowed-resource-types"
       values = [
         "AWS::EC2::Host"
       ]
     }
+
     parameters {
       name = "deletion-protection"
       values = [
@@ -173,8 +176,6 @@ resource "aws_resourcegroups_group" "test" {
     }
   }
 }
-
-
 `, rName))
 }
 
