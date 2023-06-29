@@ -1,0 +1,3 @@
+```release-note:bug
+resource/rds: Fix create returns unready instances
+```
