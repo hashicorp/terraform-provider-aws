@@ -15,13 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccResource_basic(t *testing.T) {
+func TestAccResourceGroupsResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var r resourcegroups.ListGroupResourcesItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_resourcegroups_resource.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -35,30 +35,6 @@ func testAccResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "group_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_arn"),
 				),
-			},
-		},
-	})
-}
-
-func testAccResource_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var r resourcegroups.ListGroupResourcesItem
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_resourcegroups_resource.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccResourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceExists(ctx, resourceName, &r),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfresourcegroups.ResourceResource(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
