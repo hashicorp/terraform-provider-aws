@@ -1,7 +1,6 @@
 package ssmincidents_test
 
 import (
-	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,8 +15,7 @@ func testReplicationSetDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssmincidents_replication_set.test"
 	resourceName := "aws_ssmincidents_replication_set.test"
 
