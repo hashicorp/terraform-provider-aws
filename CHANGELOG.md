@@ -1,4 +1,9 @@
 ## 5.6.1 (Unreleased)
+
+BUG FIXES:
+
+* provider: Prevent resource recreation if `tags` or `tags_all` are updated ([#32297](https://github.com/hashicorp/terraform-provider-aws/issues/32297))
+
 ## 5.6.0 (June 29, 2023)
 
 FEATURES:
