@@ -49,7 +49,7 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 				if v.Computed && !v.Optional {
 					continue
 				}
-				if k == names.AttrTags || k == "volume_tags" {
+				if k == names.AttrTags {
 					continue
 				}
 				v.ForceNew = true
