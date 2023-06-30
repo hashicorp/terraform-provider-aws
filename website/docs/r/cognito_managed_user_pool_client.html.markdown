@@ -14,7 +14,7 @@ Use the `aws_cognito_user_pool_client` resource to manage a Cognito User Pool Cl
 
 Use the `aws_cognito_managed_user_pool_client` resource to manage a Cognito User Pool Client that is automatically created by an AWS service. For instance, when [configuring an OpenSearch Domain to use Cognito authentication](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/cognito-auth.html), the OpenSearch service creates the User Pool Client during setup and removes it when it is no longer required. As a result, the `aws_cognito_managed_user_pool_client` resource does not create or delete this resource, but instead assumes management of it.
 
-Use the `aws_cognito_managed_user_pool_client` resource to manage Cognito User Pool Clients for normal use cases.
+Use the [`aws_cognito_user_pool_client`](cognito_user_pool_client.html) resource to manage Cognito User Pool Clients for normal use cases.
 
 ## Example Usage
 
@@ -114,7 +114,7 @@ The following arguments are optional:
 * `generate_secret` - (Optional) Boolean flag indicating whether an application secret should be generated.
 * `id_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the ID token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `token_validity_units.id_token`.
 * `logout_urls` - (Optional) List of allowed logout URLs for the identity providers.
-* `prevent_user_existence_errors` - (Optional) Setting determines the errors and responses returned by Cognito APIs when a user does not exist in the user pool during authentication, account confirmation, and password recovery. 
+* `prevent_user_existence_errors` - (Optional) Setting determines the errors and responses returned by Cognito APIs when a user does not exist in the user pool during authentication, account confirmation, and password recovery.
 * `read_attributes` - (Optional) List of user pool attributes that the application client can read from.
 * `refresh_token_validity` - (Optional) Time limit, between 60 minutes and 10 years, after which the refresh token is no longer valid and cannot be used. By default, the unit is days. The unit can be overridden by a value in `token_validity_units.refresh_token`.
 * `supported_identity_providers` - (Optional) List of provider names for the identity providers that are supported on this client. It uses the `provider_name` attribute of the `aws_cognito_identity_provider` resource(s), or the equivalent string(s).
