@@ -46,7 +46,7 @@ func TestAccOpenSearchServerlessSecurityConfigDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccSecurityConfigDataSourceConfig_basic(rName string, description string, samlOptions string) string {
+func testAccSecurityConfigDataSourceConfig_basic(rName, description, samlOptions string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearchserverless_security_config" "test" {
   name        = %[1]q
@@ -54,12 +54,12 @@ resource "aws_opensearchserverless_security_config" "test" {
   type        = "saml"
 
   saml_options {
-    metadata = file("%[2]s")
+    metadata = file("%[3]s")
   }
 }
 
 data "aws_opensearchserverless_security_config" "test" {
   id = aws_opensearchserverless_security_config.test.id
 }
-`, rName, samlOptions)
+`, rName, description, samlOptions)
 }
