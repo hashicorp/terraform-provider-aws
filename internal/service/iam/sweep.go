@@ -846,9 +846,11 @@ func roleNameFilter(name string) bool {
 	// exhaustive list.
 	prefixes := []string{
 		"another_rds",
+		"AmazonComprehendServiceRole-",
 		"aws_batch_service_role",
 		"aws_elastictranscoder_pipeline_tf_test",
 		"batch_tf_batch_target-",
+		"codebuild-",
 		"codepipeline-",
 		"cognito_authenticated_",
 		"cognito_unauthenticated_",
