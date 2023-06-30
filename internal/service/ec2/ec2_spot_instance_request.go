@@ -42,7 +42,7 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 
 		Schema: func() map[string]*schema.Schema {
 			// The Spot Instance Request Schema is based on the AWS Instance schema.
-			s := ResourceInstance().Schema
+			s := ResourceInstance().SchemaMap()
 
 			// Everything on a spot instance is ForceNew (except tags).
 			for k, v := range s {
