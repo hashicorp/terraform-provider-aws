@@ -111,10 +111,8 @@ func tagsFromTagDescriptions(tds []*ec2.TagDescription) []*ec2.Tag {
 }
 
 func tagsSchemaConflictsWith(conflictsWith []string) *schema.Schema {
-	return &schema.Schema{
-		Type:          schema.TypeMap,
-		Optional:      true,
-		Elem:          &schema.Schema{Type: schema.TypeString},
-		ConflictsWith: conflictsWith,
-	}
+	v := tftags.TagsSchema()
+	v.ConflictsWith = conflictsWith
+
+	return v
 }
