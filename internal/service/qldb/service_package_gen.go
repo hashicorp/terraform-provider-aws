@@ -42,7 +42,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceStream,
+			Factory:  resourceStream,
 			TypeName: "aws_qldb_stream",
 			Name:     "Stream",
 			Tags: &types.ServicePackageResourceTags{
