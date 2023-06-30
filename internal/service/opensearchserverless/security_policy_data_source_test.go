@@ -33,6 +33,8 @@ func TestAccOpenSearchServerlessSecurityPolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "policy", resourceName, "policy"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "policy_version", resourceName, "policy_version"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "last_modified_date"),
 				),
 			},
 		},
