@@ -25,7 +25,7 @@ resource "aws_pinpoint_app" "app" {}
 This resource supports the following arguments:
 
 * `application_id` - (Required) ID of the application.
-* `enabled` - (Optional) Parameter that determines whether the channel is enabled or disabled. By default, it is set to `true`.
+* `enabled` - (Optional) Whether the channel is enabled or disabled. By default, it is set to `true`.
 * `sender_id` - (Optional) Identifier of the sender for your messages.
 * `short_code` - (Optional) Short Code registered with the phone provider.
 
