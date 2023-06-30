@@ -24,8 +24,7 @@ func testReplicationSet_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 	region1 := acctest.Region()
 	region2 := acctest.AlternateRegion()
@@ -70,8 +69,7 @@ func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 	region1 := acctest.Region()
 	region2 := acctest.AlternateRegion()
@@ -156,8 +154,7 @@ func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 
 	resource.Test(t, resource.TestCase{
@@ -233,8 +230,7 @@ func testReplicationSet_updateTags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 
 	rKey1 := sdkacctest.RandString(26)
@@ -330,8 +326,7 @@ func testReplicationSet_updateEmptyTags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 
 	rKey1 := sdkacctest.RandString(26)
@@ -393,8 +388,7 @@ func testReplicationSet_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 	region1 := acctest.Region()
 	region2 := acctest.AlternateRegion()

@@ -662,7 +662,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
 			SourceDBInstanceIdentifier: aws.String(sourceDBInstanceID),
-			Tags:                       GetTagsIn(ctx),
+			Tags:                       getTagsIn(ctx),
 		}
 
 		if _, ok := d.GetOk("allocated_storage"); ok {
@@ -873,7 +873,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			SourceEngine:            aws.String(tfMap["source_engine"].(string)),
 			SourceEngineVersion:     aws.String(tfMap["source_engine_version"].(string)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
-			Tags:                    GetTagsIn(ctx),
+			Tags:                    getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("availability_zone"); ok {
@@ -1011,7 +1011,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBSnapshotIdentifier:    aws.String(v.(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-			Tags:                    GetTagsIn(ctx),
+			Tags:                    getTagsIn(ctx),
 		}
 
 		engine := strings.ToLower(d.Get("engine").(string))
@@ -1229,7 +1229,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
 			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
-			Tags:                       GetTagsIn(ctx),
+			Tags:                       getTagsIn(ctx),
 			TargetDBInstanceIdentifier: aws.String(identifier),
 		}
 
@@ -1397,7 +1397,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			MasterUsername:          aws.String(d.Get("username").(string)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
-			Tags:                    GetTagsIn(ctx),
+			Tags:                    getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("availability_zone"); ok {
@@ -1563,7 +1563,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	var instance *rds.DBInstance
 	var err error
-	if instance, err = waitDBInstanceAvailableSDKv1(ctx, conn, d.Get("identifier").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if instance, err = waitDBInstanceAvailableSDKv1(ctx, conn, identifier, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) create: %s", identifier, err)
 	}
 
@@ -1727,7 +1727,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	dbSetResourceDataEngineVersionFromInstance(d, v)
 
-	SetTagsOut(ctx, v.TagList)
+	setTagsOut(ctx, v.TagList)
 
 	return diags
 }
@@ -2373,17 +2373,16 @@ func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rd
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.DBInstances) == 0 || output.DBInstances[0] == nil {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	dbInstance := output.DBInstances[0]
-
-	return dbInstance, nil
+	return tfresource.AssertSinglePtrResult(output.DBInstances)
 }
 
 // findDBInstanceByIDSDKv2 in general should be called with a DbiResourceId of the form
@@ -2419,15 +2418,16 @@ func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id str
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.DBInstances) == 0 {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return &output.DBInstances[0], nil
+	return tfresource.AssertSingleValueResult(output.DBInstances)
 }
 
 func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {

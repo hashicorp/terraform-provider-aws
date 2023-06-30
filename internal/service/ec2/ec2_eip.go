@@ -202,7 +202,9 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, ec2.DomainTypeStandard)
 	}
 
-	address, err := FindEIPByAllocationID(ctx, conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+		return FindEIPByAllocationID(ctx, conn, d.Id())
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 EIP (%s) not found, removing from state", d.Id())
@@ -214,6 +216,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s): %s", d.Id(), err)
 	}
 
+	address := outputRaw.(*ec2.Address)
 	d.Set("allocation_id", address.AllocationId)
 	d.Set("association_id", address.AssociationId)
 	d.Set("carrier_ip", address.CarrierIp)
@@ -224,17 +227,15 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("network_border_group", address.NetworkBorderGroup)
 	d.Set("network_interface", address.NetworkInterfaceId)
 	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
-	d.Set("vpc", aws.StringValue(address.Domain) == ec2.DomainTypeVpc)
-
 	d.Set("private_ip", address.PrivateIpAddress)
 	if v := aws.StringValue(address.PrivateIpAddress); v != "" {
 		d.Set("private_dns", PrivateDNSNameForIP(meta.(*conns.AWSClient), v))
 	}
-
 	d.Set("public_ip", address.PublicIp)
 	if v := aws.StringValue(address.PublicIp); v != "" {
 		d.Set("public_dns", PublicDNSNameForIP(meta.(*conns.AWSClient), v))
 	}
+	d.Set("vpc", aws.StringValue(address.Domain) == ec2.DomainTypeVpc)
 
 	// Force ID to be an Allocation ID if we're on a VPC.
 	// This allows users to import the EIP based on the IP if they are in a VPC.
@@ -242,7 +243,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.SetId(aws.StringValue(address.AllocationId))
 	}
 
-	SetTagsOut(ctx, address.Tags)
+	setTagsOut(ctx, address.Tags)
 
 	return diags
 }
@@ -338,7 +339,7 @@ func associateEIP(ctx context.Context, conn *ec2.EC2, allocationID, instanceID, 
 		return fmt.Errorf("associating EC2 EIP (%s): %w", allocationID, err)
 	}
 
-	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
+	_, err = tfresource.RetryWhen(ctx, ec2PropagationTimeout,
 		func() (interface{}, error) {
 			return FindEIPByAssociationID(ctx, conn, aws.StringValue(output.AssociationId))
 		},

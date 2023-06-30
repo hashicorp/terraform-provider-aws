@@ -84,7 +84,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		Description:     aws.String(d.Get("description").(string)),
 		SubnetGroupName: aws.String(name),
 		SubnetIds:       flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating MemoryDB Subnet Group: %s", input)

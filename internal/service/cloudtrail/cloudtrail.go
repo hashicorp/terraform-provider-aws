@@ -259,7 +259,7 @@ func resourceCloudTrailCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := cloudtrail.CreateTrailInput{
 		Name:         aws.String(d.Get("name").(string)),
 		S3BucketName: aws.String(d.Get("s3_bucket_name").(string)),
-		TagsList:     GetTagsIn(ctx),
+		TagsList:     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cloud_watch_logs_group_arn"); ok {

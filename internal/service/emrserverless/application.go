@@ -201,7 +201,6 @@ func ResourceApplication() *schema.Resource {
 			"release_label": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -226,7 +225,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		ClientToken:  aws.String(id.UniqueId()),
 		ReleaseLabel: aws.String(d.Get("release_label").(string)),
 		Name:         aws.String(name),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		Type:         aws.String(d.Get("type").(string)),
 	}
 
@@ -319,7 +318,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
-	SetTagsOut(ctx, application.Tags)
+	setTagsOut(ctx, application.Tags)
 
 	return diags
 }
@@ -332,6 +331,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &emrserverless.UpdateApplicationInput{
 			ApplicationId: aws.String(d.Id()),
 			ClientToken:   aws.String(id.UniqueId()),
+		}
+
+		if v, ok := d.GetOk("release_label"); ok {
+			input.ReleaseLabel = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("architecture"); ok {

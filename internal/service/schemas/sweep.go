@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -38,11 +37,11 @@ func init() {
 
 func sweepDiscoverers(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SchemasConn(ctx)
+	conn := client.SchemasConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -81,11 +80,11 @@ func sweepDiscoverers(region string) error {
 
 func sweepRegistries(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SchemasConn(ctx)
+	conn := client.SchemasConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -129,11 +128,11 @@ func sweepRegistries(region string) error {
 
 func sweepSchemas(region string) error { // nosemgrep:ci.schemas-in-func-name
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SchemasConn(ctx)
+	conn := client.SchemasConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error

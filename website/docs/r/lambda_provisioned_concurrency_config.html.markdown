@@ -50,7 +50,7 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Lambda Function name and qualifier separated by a colon (`:`).
+* `id` - Lambda Function name and qualifier separated by a comma (`,`).
 
 ## Timeouts
 
@@ -61,8 +61,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lambda Provisioned Concurrency Configs can be imported using the `function_name` and `qualifier` separated by a colon (`:`), e.g.,
+A Lambda Provisioned Concurrency Configuration can be imported using the `function_name` and `qualifier` separated by a comma (`,`), e.g.,
 
 ```
-$ terraform import aws_lambda_provisioned_concurrency_config.example my_function:production
+$ terraform import aws_lambda_provisioned_concurrency_config.example my_function,production
 ```

@@ -269,7 +269,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	createOpts := &sagemaker.CreateModelInput{
 		ModelName: aws.String(name),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("primary_container"); ok {

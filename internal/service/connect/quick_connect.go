@@ -145,7 +145,7 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 		QuickConnectConfig: quickConnectConfig,
 		InstanceId:         aws.String(instanceID),
 		Name:               aws.String(name),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -206,7 +206,7 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("arn", resp.QuickConnect.QuickConnectARN)
 	d.Set("quick_connect_id", resp.QuickConnect.QuickConnectId)
 
-	SetTagsOut(ctx, resp.QuickConnect.Tags)
+	setTagsOut(ctx, resp.QuickConnect.Tags)
 
 	return nil
 }

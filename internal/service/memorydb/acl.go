@@ -80,7 +80,7 @@ func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &memorydb.CreateACLInput{
 		ACLName: aws.String(name),
-		Tags:    GetTagsIn(ctx),
+		Tags:    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("user_names"); ok && v.(*schema.Set).Len() > 0 {

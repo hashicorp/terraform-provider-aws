@@ -124,7 +124,7 @@ func resourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindDHCPOptionsByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -157,7 +157,7 @@ func resourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 DHCP Options (%s): %s", d.Id(), err)
 	}
 
-	SetTagsOut(ctx, opts.Tags)
+	setTagsOut(ctx, opts.Tags)
 
 	return diags
 }
@@ -270,7 +270,7 @@ func (m *dhcpOptionsMap) dhcpConfigurationsToResourceData(dhcpConfigurations []*
 	return nil
 }
 
-// resourceDataToNewDhcpConfigurations returns a list of AWS API DHCP configurations from Terraform ResourceData.
+// resourceDataToDHCPConfigurations returns a list of AWS API DHCP configurations from Terraform ResourceData.
 func (m *dhcpOptionsMap) resourceDataToDHCPConfigurations(d *schema.ResourceData) ([]*ec2.NewDhcpConfiguration, error) {
 	var output []*ec2.NewDhcpConfiguration
 

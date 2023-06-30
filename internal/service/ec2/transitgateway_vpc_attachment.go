@@ -204,7 +204,7 @@ func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Reso
 	d.Set("vpc_id", transitGatewayVPCAttachment.VpcId)
 	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)
 
-	SetTagsOut(ctx, transitGatewayVPCAttachment.Tags)
+	setTagsOut(ctx, transitGatewayVPCAttachment.Tags)
 
 	return diags
 }

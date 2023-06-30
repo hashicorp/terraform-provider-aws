@@ -134,7 +134,7 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 		Config:     config,
 		InstanceId: aws.String(instanceID),
 		Name:       aws.String(name),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 		TimeZone:   aws.String(d.Get("time_zone").(string)),
 	}
 
@@ -197,7 +197,7 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("name", resp.HoursOfOperation.Name)
 	d.Set("time_zone", resp.HoursOfOperation.TimeZone)
 
-	SetTagsOut(ctx, resp.HoursOfOperation.Tags)
+	setTagsOut(ctx, resp.HoursOfOperation.Tags)
 
 	return nil
 }

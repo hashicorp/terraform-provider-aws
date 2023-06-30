@@ -81,7 +81,7 @@ func resourceFirewallRuleGroupAssociationCreate(ctx context.Context, d *schema.R
 		FirewallRuleGroupId: aws.String(d.Get("firewall_rule_group_id").(string)),
 		Name:                aws.String(name),
 		Priority:            aws.Int64(int64(d.Get("priority").(int))),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 		VpcId:               aws.String(d.Get("vpc_id").(string)),
 	}
 

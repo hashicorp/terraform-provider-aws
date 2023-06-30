@@ -21,9 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -359,7 +359,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	input := &elbv2.CreateTargetGroupInput{
 		Name:       aws.String(groupName),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 		TargetType: aws.String(d.Get("target_type").(string)),
 	}
 
@@ -598,7 +598,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.

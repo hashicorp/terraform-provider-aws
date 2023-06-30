@@ -85,7 +85,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("minimum_engine_version", user.MinimumEngineVersion)
 	d.Set("user_name", user.Name)
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for MemoryDB User (%s): %s", d.Id(), err)

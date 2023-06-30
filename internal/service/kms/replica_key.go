@@ -110,7 +110,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &kms.ReplicateKeyInput{
 		KeyId:         aws.String(strings.TrimPrefix(primaryKeyARN.Resource, "key/")),
 		ReplicaRegion: aws.String(meta.(*conns.AWSClient).Region),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("bypass_policy_lockout_safety_check"); ok {
@@ -163,7 +163,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
+	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
 		if err := WaitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica Key (%s) tag propagation: %s", d.Id(), err)
 		}
@@ -217,7 +217,7 @@ func resourceReplicaKeyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("policy", policyToSet)
 	d.Set("primary_key_arn", key.metadata.MultiRegionConfiguration.PrimaryKey.Arn)
 
-	SetTagsOut(ctx, key.tags)
+	setTagsOut(ctx, key.tags)
 
 	return diags
 }

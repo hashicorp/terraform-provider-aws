@@ -1,6 +1,6 @@
 package autoscaling
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"log"
@@ -25,11 +25,11 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -1305,7 +1305,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		oldTags := Tags(KeyValueTags(ctx, oTagRaw, d.Id(), TagResourceTypeGroup))
 		newTags := Tags(KeyValueTags(ctx, nTagRaw, d.Id(), TagResourceTypeGroup))
 
-		if err := UpdateTags(ctx, conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {
+		if err := updateTags(ctx, conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags for Auto Scaling Group (%s): %s", d.Id(), err)
 		}
 	}
@@ -3882,7 +3882,7 @@ func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) dia
 		}
 	}
 
-	schema := ResourceGroup().Schema
+	schema := ResourceGroup().SchemaMap()
 	for attr, attrSchema := range schema {
 		if v == attr {
 			if attrSchema.Computed && !attrSchema.Optional {

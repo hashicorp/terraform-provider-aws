@@ -91,7 +91,7 @@ func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	input := &iot.CreateThingTypeInput{
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 		ThingTypeName: aws.String(d.Get("name").(string)),
 	}
 

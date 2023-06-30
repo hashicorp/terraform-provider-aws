@@ -20,10 +20,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -360,7 +360,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 	replicationGroupID := d.Get("replication_group_id").(string)
 	input := &elasticache.CreateReplicationGroupInput{
 		ReplicationGroupId: aws.String(replicationGroupID),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -517,7 +517,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(output.ReplicationGroup.ARN), tags)
 
 		// If default tags only, continue. Otherwise, error.

@@ -326,13 +326,13 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 		d.Set("point_in_time_recovery", false)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get(names.AttrARN).(string))
+	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
 	if err != nil && !(tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
 		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), fmt.Errorf("tags: %w", err))
 	}
 
-	SetTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
@@ -428,7 +428,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChanges("point_in_time_recovery", names.AttrTagsAll) {
 		if d.HasChange(names.AttrTagsAll) {
 			o, n := d.GetChange(names.AttrTagsAll)
-			if err := UpdateTags(ctx, repConn, d.Get(names.AttrARN).(string), o, n); err != nil {
+			if err := updateTags(ctx, repConn, d.Get(names.AttrARN).(string), o, n); err != nil {
 				return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), err)
 			}
 		}

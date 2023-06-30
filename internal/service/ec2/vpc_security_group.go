@@ -305,7 +305,7 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("setting egress: %s", err)
 	}
 
-	SetTagsOut(ctx, sg.Tags)
+	setTagsOut(ctx, sg.Tags)
 
 	return nil
 }
@@ -397,7 +397,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("deleting Security Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindSecurityGroupByID(ctx, conn, d.Id())
 	})
 

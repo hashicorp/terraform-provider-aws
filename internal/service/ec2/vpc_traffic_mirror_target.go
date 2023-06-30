@@ -150,7 +150,7 @@ func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData
 	d.Set("network_load_balancer_arn", target.NetworkLoadBalancerArn)
 	d.Set("owner_id", ownerID)
 
-	SetTagsOut(ctx, target.Tags)
+	setTagsOut(ctx, target.Tags)
 
 	return diags
 }

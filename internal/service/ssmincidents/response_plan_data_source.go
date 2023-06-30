@@ -184,7 +184,7 @@ func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.SSMIncidents, create.ErrActionReading, DSNameResponsePlan, d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, client, d.Id())
+	tags, err := listTags(ctx, client, d.Id())
 	if err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionReading, DSNameResponsePlan, d.Id(), err)
 	}

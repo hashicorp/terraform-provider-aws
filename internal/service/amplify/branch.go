@@ -199,7 +199,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		AppId:           aws.String(appID),
 		BranchName:      aws.String(branchName),
 		EnableAutoBuild: aws.Bool(d.Get("enable_auto_build").(bool)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("backend_environment_arn"); ok {
@@ -310,7 +310,7 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("stage", branch.Stage)
 	d.Set("ttl", branch.Ttl)
 
-	SetTagsOut(ctx, branch.Tags)
+	setTagsOut(ctx, branch.Tags)
 
 	return diags
 }

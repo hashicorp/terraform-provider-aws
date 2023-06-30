@@ -172,6 +172,11 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
+						"placement_group": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -274,7 +279,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	input := &batch.CreateComputeEnvironmentInput{
 		ComputeEnvironmentName: aws.String(computeEnvironmentName),
 		ServiceRole:            aws.String(d.Get("service_role").(string)),
-		Tags:                   GetTagsIn(ctx),
+		Tags:                   getTagsIn(ctx),
 		Type:                   aws.String(computeEnvironmentType),
 	}
 
@@ -349,7 +354,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("eks_configuration", nil)
 	}
 
-	SetTagsOut(ctx, computeEnvironment.Tags)
+	setTagsOut(ctx, computeEnvironment.Tags)
 
 	return diags
 }
@@ -674,6 +679,10 @@ func expandComputeResource(ctx context.Context, tfMap map[string]interface{}) *b
 		apiObject.MinvCpus = aws.Int64(0)
 	}
 
+	if v, ok := tfMap["placement_group"].(string); ok && v != "" {
+		apiObject.PlacementGroup = aws.String(v)
+	}
+
 	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
@@ -830,6 +839,10 @@ func flattenComputeResource(ctx context.Context, apiObject *batch.ComputeResourc
 
 	if v := apiObject.MinvCpus; v != nil {
 		tfMap["min_vcpus"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.PlacementGroup; v != nil {
+		tfMap["placement_group"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SecurityGroupIds; v != nil {

@@ -241,7 +241,7 @@ func resourceOntapStorageVirtualMachineCreate(ctx context.Context, d *schema.Res
 	input := &fsx.CreateStorageVirtualMachineInput{
 		FileSystemId: aws.String(d.Get("file_system_id").(string)),
 		Name:         aws.String(d.Get("name").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("active_directory_configuration"); ok {

@@ -2857,7 +2857,7 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).FirehoseConn(ctx)
 	input := &firehose.CreateDeliveryStreamInput{
 		DeliveryStreamName: aws.String(sn),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kinesis_source_configuration"); ok {

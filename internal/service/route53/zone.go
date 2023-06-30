@@ -162,7 +162,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if err := createTags(ctx, conn, d.Id(), route53.TagResourceTypeHostedzone, GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), route53.TagResourceTypeHostedzone, getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Zone (%s) tags: %s", d.Id(), err)
 	}
 
@@ -680,8 +680,6 @@ func hostedZoneVPCHash(v interface{}) int {
 }
 
 func waitForChangeSynchronization(ctx context.Context, conn *route53.Route53, changeID string) error {
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	conf := retry.StateChangeConf{
 		Pending:      []string{route53.ChangeStatusPending},
 		Target:       []string{route53.ChangeStatusInsync},

@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -35,11 +34,11 @@ func init() {
 
 func sweepDirectories(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WorkSpacesConn(ctx)
+	conn := client.WorkSpacesConn(ctx)
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -79,11 +78,11 @@ func sweepDirectories(region string) error {
 
 func sweepIPGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WorkSpacesConn(ctx)
+	conn := client.WorkSpacesConn(ctx)
 	input := &workspaces.DescribeIpGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -123,11 +122,11 @@ func sweepIPGroups(region string) error {
 
 func sweepWorkspace(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).WorkSpacesConn(ctx)
+	conn := client.WorkSpacesConn(ctx)
 
 	var errors error
 	input := &workspaces.DescribeWorkspacesInput{}

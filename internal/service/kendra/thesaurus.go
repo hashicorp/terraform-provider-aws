@@ -108,7 +108,7 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta i
 		Name:         aws.String(d.Get("name").(string)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
 		SourceS3Path: expandSourceS3Path(d.Get("source_s3_path").([]interface{})),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

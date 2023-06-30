@@ -71,7 +71,7 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 	input := &iam.CreateSAMLProviderInput{
 		Name:                 aws.String(name),
 		SAMLMetadataDocument: aws.String(d.Get("saml_metadata_document").(string)),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateSAMLProviderWithContext(ctx, input)
@@ -90,7 +90,7 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(aws.StringValue(output.SAMLProviderArn))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := samlProviderCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -136,7 +136,7 @@ func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("valid_until", nil)
 	}
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return nil
 }

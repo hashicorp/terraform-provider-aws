@@ -161,7 +161,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	in := &rbin.CreateRuleInput{
 		ResourceType:    types.ResourceType(d.Get("resource_type").(string)),
 		RetentionPeriod: expandRetentionPeriod(d.Get("retention_period").([]interface{})),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if _, ok := d.GetOk("description"); ok {

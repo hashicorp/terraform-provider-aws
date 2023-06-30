@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -32,12 +31,12 @@ func init() {
 
 func sweepBudgetActions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).BudgetsConn(ctx)
-	accountID := client.(*conns.AWSClient).AccountID
+	conn := client.BudgetsConn(ctx)
+	accountID := client.AccountID
 	input := &budgets.DescribeBudgetActionsForAccountInput{
 		AccountId: aws.String(accountID),
 	}
@@ -79,12 +78,12 @@ func sweepBudgetActions(region string) error {
 
 func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).BudgetsConn(ctx)
-	accountID := client.(*conns.AWSClient).AccountID
+	conn := client.BudgetsConn(ctx)
+	accountID := client.AccountID
 	input := &budgets.DescribeBudgetsInput{
 		AccountId: aws.String(accountID),
 	}

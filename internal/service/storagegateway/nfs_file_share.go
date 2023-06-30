@@ -238,7 +238,7 @@ func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 		RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
 		Role:                 aws.String(d.Get("role_arn").(string)),
 		Squash:               aws.String(d.Get("squash").(string)),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("audit_destination_arn"); ok {
@@ -330,7 +330,7 @@ func resourceNFSFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("squash", fileshare.Squash)
 	d.Set("vpc_endpoint_dns_name", fileshare.VPCEndpointDNSName)
 
-	SetTagsOut(ctx, fileshare.Tags)
+	setTagsOut(ctx, fileshare.Tags)
 
 	return diags
 }

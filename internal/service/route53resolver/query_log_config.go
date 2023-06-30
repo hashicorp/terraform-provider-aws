@@ -73,7 +73,7 @@ func resourceQueryLogConfigCreate(ctx context.Context, d *schema.ResourceData, m
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-query-log-config-")),
 		DestinationArn:   aws.String(d.Get("destination_arn").(string)),
 		Name:             aws.String(name),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateResolverQueryLogConfigWithContext(ctx, input)

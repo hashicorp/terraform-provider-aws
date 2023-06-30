@@ -478,7 +478,7 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 		MediaInsightsPipelineConfigurationName: aws.String(d.Get("name").(string)),
 		ResourceAccessRoleArn:                  aws.String(d.Get("resource_access_role_arn").(string)),
 		Elements:                               elements,
-		Tags:                                   GetTagsIn(ctx),
+		Tags:                                   getTagsIn(ctx),
 	}
 
 	if realTimeAlertConfiguration, ok := d.GetOk("real_time_alert_configuration"); ok && len(realTimeAlertConfiguration.([]interface{})) > 0 {

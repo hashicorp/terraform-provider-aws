@@ -110,7 +110,7 @@ func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	name := d.Get("namespace_name").(string)
 	input := &redshiftserverless.CreateNamespaceInput{
 		NamespaceName: aws.String(name),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("admin_user_password"); ok {

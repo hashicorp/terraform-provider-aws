@@ -74,7 +74,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(output.Project.Arn))
 
-	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Project (%s) tags: %s", d.Id(), err)
 	}
 

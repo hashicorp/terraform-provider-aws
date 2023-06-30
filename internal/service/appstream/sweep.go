@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -38,11 +37,11 @@ func init() {
 
 func sweepDirectoryConfigs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppStreamConn(ctx)
+	conn := client.AppStreamConn(ctx)
 	input := &appstream.DescribeDirectoryConfigsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -82,11 +81,11 @@ func sweepDirectoryConfigs(region string) error {
 
 func sweepFleets(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppStreamConn(ctx)
+	conn := client.AppStreamConn(ctx)
 	input := &appstream.DescribeFleetsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -126,11 +125,11 @@ func sweepFleets(region string) error {
 
 func sweepImageBuilders(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppStreamConn(ctx)
+	conn := client.AppStreamConn(ctx)
 	input := &appstream.DescribeImageBuildersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -170,11 +169,11 @@ func sweepImageBuilders(region string) error {
 
 func sweepStacks(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppStreamConn(ctx)
+	conn := client.AppStreamConn(ctx)
 	input := &appstream.DescribeStacksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

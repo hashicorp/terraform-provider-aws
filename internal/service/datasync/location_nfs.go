@@ -112,7 +112,7 @@ func resourceLocationNFSCreate(ctx context.Context, d *schema.ResourceData, meta
 		OnPremConfig:   expandOnPremConfig(d.Get("on_prem_config").([]interface{})),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("mount_options"); ok {
@@ -151,7 +151,7 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location NFS (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
+	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location NFS (%s): %s", d.Id(), err)

@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -61,11 +60,11 @@ func init() {
 
 func sweepAccelerators(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := client.GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListAcceleratorsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -105,11 +104,11 @@ func sweepAccelerators(region string) error {
 
 func sweepEndpointGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := client.GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListAcceleratorsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -194,11 +193,11 @@ func sweepEndpointGroups(region string) error {
 
 func sweepListeners(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := client.GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListAcceleratorsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -261,11 +260,11 @@ func sweepListeners(region string) error {
 
 func sweepCustomRoutingAccelerators(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := client.GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListCustomRoutingAcceleratorsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -305,11 +304,11 @@ func sweepCustomRoutingAccelerators(region string) error {
 
 func sweepCustomRoutingEndpointGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := client.GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListCustomRoutingAcceleratorsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -394,11 +393,11 @@ func sweepCustomRoutingEndpointGroups(region string) error {
 
 func sweepCustomRoutingListeners(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := client.GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListCustomRoutingAcceleratorsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)

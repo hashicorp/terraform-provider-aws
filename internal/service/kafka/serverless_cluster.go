@@ -127,7 +127,7 @@ func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData
 			ClientAuthentication: expandServerlessClientAuthentication(d.Get("client_authentication").([]interface{})[0].(map[string]interface{})),
 			VpcConfigs:           expandVpcConfigs(d.Get("vpc_config").([]interface{})),
 		},
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating MSK Serverless Cluster: %s", input)
@@ -176,7 +176,7 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("setting vpc_config: %s", err)
 	}
 
-	SetTagsOut(ctx, cluster.Tags)
+	setTagsOut(ctx, cluster.Tags)
 
 	return nil
 }

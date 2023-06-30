@@ -127,7 +127,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := ecrpublic.CreateRepositoryInput{
 		RepositoryName: aws.String(d.Get("repository_name").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("catalog_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {

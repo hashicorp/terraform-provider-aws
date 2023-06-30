@@ -462,7 +462,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	input := &networkfirewall.CreateRuleGroupInput{
 		Capacity:      aws.Int64(int64(d.Get("capacity").(int))),
 		RuleGroupName: aws.String(name),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 		Type:          aws.String(d.Get("type").(string)),
 	}
 
@@ -524,7 +524,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("type", response.Type)
 	d.Set("update_token", output.UpdateToken)
 
-	SetTagsOut(ctx, response.Tags)
+	setTagsOut(ctx, response.Tags)
 
 	return nil
 }

@@ -123,7 +123,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
 		CustomerMasterKeySpec:          aws.String(d.Get("customer_master_key_spec").(string)),
 		KeyUsage:                       aws.String(d.Get("key_usage").(string)),
-		Tags:                           GetTagsIn(ctx),
+		Tags:                           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -181,7 +181,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
+	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
 		if err := WaitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Key (%s) tag propagation: %s", d.Id(), err)
 		}
@@ -227,7 +227,7 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set("policy", policyToSet)
 
-	SetTagsOut(ctx, key.tags)
+	setTagsOut(ctx, key.tags)
 
 	return diags
 }
@@ -350,7 +350,7 @@ func findKey(ctx context.Context, conn *kms.KMS, keyID string, isNewResource boo
 			}
 		}
 
-		tags, err := ListTags(ctx, conn, keyID)
+		tags, err := listTags(ctx, conn, keyID)
 
 		if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
 			return nil, &retry.NotFoundError{LastError: err}

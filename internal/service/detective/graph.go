@@ -48,7 +48,7 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	input := &detective.CreateGraphInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	var output *detective.CreateGraphOutput

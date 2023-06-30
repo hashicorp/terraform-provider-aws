@@ -191,7 +191,7 @@ func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("transit_gateway_id", transitGatewayConnect.TransitGatewayId)
 	d.Set("transport_attachment_id", transitGatewayConnect.TransportTransitGatewayAttachmentId)
 
-	SetTagsOut(ctx, transitGatewayConnect.Tags)
+	setTagsOut(ctx, transitGatewayConnect.Tags)
 
 	return nil
 }

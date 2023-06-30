@@ -656,7 +656,7 @@ func resourceVirtualGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &appmesh.CreateVirtualGatewayInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandVirtualGatewaySpec(d.Get("spec").([]interface{})),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		VirtualGatewayName: aws.String(name),
 	}
 

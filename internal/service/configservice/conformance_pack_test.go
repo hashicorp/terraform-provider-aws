@@ -642,11 +642,6 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_config_conformance_pack" "test" {
   depends_on             = [aws_config_configuration_recorder.test]
   name                   = %[2]q
@@ -672,11 +667,6 @@ func testAccConformancePackConfig_s3Template(rName, bucketName string) string {
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {
@@ -708,11 +698,6 @@ func testAccConformancePackConfig_s3TemplateAndTemplateBody(rName string) string
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {

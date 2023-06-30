@@ -91,7 +91,7 @@ func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindInternetGatewayByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -124,7 +124,7 @@ func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("vpc_id", ig.Attachments[0].VpcId)
 	}
 
-	SetTagsOut(ctx, ig.Tags)
+	setTagsOut(ctx, ig.Tags)
 
 	return diags
 }

@@ -114,7 +114,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 		DBClusterParameterGroupName: aws.String(groupName),
 		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
 		Description:                 aws.String(d.Get("description").(string)),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	_, err := conn.CreateDBClusterParameterGroupWithContext(ctx, &createOpts)

@@ -133,7 +133,7 @@ func resourceIPAMResourceDiscoveryAssociationRead(ctx context.Context, d *schema
 	d.Set("owner_id", rda.OwnerId)
 	d.Set("state", rda.State)
 
-	SetTagsOut(ctx, rda.Tags)
+	setTagsOut(ctx, rda.Tags)
 
 	return nil
 }

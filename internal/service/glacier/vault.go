@@ -117,7 +117,7 @@ func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(name)
 
-	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Glacier Vault (%s) tags: %s", d.Id(), err)
 	}
 

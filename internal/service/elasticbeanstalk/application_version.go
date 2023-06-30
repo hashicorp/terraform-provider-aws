@@ -87,7 +87,7 @@ func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceDat
 		ApplicationName: aws.String(application),
 		Description:     aws.String(description),
 		SourceBundle:    &s3Location,
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 		VersionLabel:    aws.String(name),
 	}
 

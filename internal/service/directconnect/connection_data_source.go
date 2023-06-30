@@ -112,7 +112,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("provider_name", connection.ProviderName)
 	d.Set("vlan_id", connection.Vlan)
 
-	tags, err := ListTags(ctx, conn, arn)
+	tags, err := listTags(ctx, conn, arn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Direct Connect Connection (%s): %s", arn, err)

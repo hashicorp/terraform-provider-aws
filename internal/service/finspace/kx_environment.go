@@ -176,7 +176,7 @@ func resourceKxEnvironmentCreate(ctx context.Context, d *schema.ResourceData, me
 
 	// The CreateKxEnvironment API currently fails to tag the environment when the
 	// Tags field is set. Until the API is fixed, tag after creation instead.
-	if err := createTags(ctx, conn, aws.ToString(out.EnvironmentArn), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, aws.ToString(out.EnvironmentArn), getTagsIn(ctx)); err != nil {
 		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Id(), err)...)
 	}
 

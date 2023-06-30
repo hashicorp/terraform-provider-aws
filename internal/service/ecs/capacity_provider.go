@@ -122,7 +122,7 @@ func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData,
 	input := ecs.CreateCapacityProviderInput{
 		Name:                     aws.String(name),
 		AutoScalingGroupProvider: expandAutoScalingGroupProviderCreate(d.Get("auto_scaling_group_provider")),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateCapacityProviderWithContext(ctx, &input)
@@ -141,7 +141,7 @@ func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData,
 	d.SetId(aws.StringValue(output.CapacityProvider.CapacityProviderArn))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -181,7 +181,7 @@ func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("name", output.Name)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

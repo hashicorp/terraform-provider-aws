@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -64,13 +63,13 @@ func init() {
 
 func sweepBackups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).FSxConn(ctx)
+	conn := client.FSxConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeBackupsInput{}
@@ -109,13 +108,13 @@ func sweepBackups(region string) error {
 
 func sweepLustreFileSystems(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).FSxConn(ctx)
+	conn := client.FSxConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
@@ -158,13 +157,13 @@ func sweepLustreFileSystems(region string) error {
 
 func sweepOntapFileSystems(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).FSxConn(ctx)
+	conn := client.FSxConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
@@ -207,13 +206,13 @@ func sweepOntapFileSystems(region string) error {
 
 func sweepOntapStorageVirtualMachine(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).FSxConn(ctx)
+	conn := client.FSxConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeStorageVirtualMachinesInput{}
@@ -252,13 +251,13 @@ func sweepOntapStorageVirtualMachine(region string) error {
 
 func sweepOntapVolume(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).FSxConn(ctx)
+	conn := client.FSxConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeVolumesInput{}
@@ -304,13 +303,13 @@ func sweepOntapVolume(region string) error {
 
 func sweepOpenZFSFileSystems(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).FSxConn(ctx)
+	conn := client.FSxConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
@@ -353,13 +352,13 @@ func sweepOpenZFSFileSystems(region string) error {
 
 func sweepOpenZFSVolume(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).FSxConn(ctx)
+	conn := client.FSxConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeVolumesInput{}
@@ -405,13 +404,13 @@ func sweepOpenZFSVolume(region string) error {
 
 func sweepWindowsFileSystems(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).FSxConn(ctx)
+	conn := client.FSxConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}

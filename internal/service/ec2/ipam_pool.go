@@ -246,7 +246,7 @@ func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
 	d.Set("state", pool.State)
 
-	SetTagsOut(ctx, pool.Tags)
+	setTagsOut(ctx, pool.Tags)
 
 	return diags
 }

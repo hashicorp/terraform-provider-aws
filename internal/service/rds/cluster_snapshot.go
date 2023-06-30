@@ -127,7 +127,7 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 	input := &rds.CreateDBClusterSnapshotInput{
 		DBClusterIdentifier:         aws.String(d.Get("db_cluster_identifier").(string)),
 		DBClusterSnapshotIdentifier: aws.String(id),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, clusterSnapshotCreateTimeout, func() (interface{}, error) {
@@ -179,7 +179,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	SetTagsOut(ctx, snapshot.TagList)
+	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
 }

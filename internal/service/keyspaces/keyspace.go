@@ -65,7 +65,7 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	name := d.Get("name").(string)
 	input := &keyspaces.CreateKeyspaceInput{
 		KeyspaceName: aws.String(name),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	_, err := conn.CreateKeyspaceWithContext(ctx, input)

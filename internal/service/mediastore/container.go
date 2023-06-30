@@ -62,7 +62,7 @@ func resourceContainerCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	input := &mediastore.CreateContainerInput{
 		ContainerName: aws.String(d.Get("name").(string)),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateContainerWithContext(ctx, input)

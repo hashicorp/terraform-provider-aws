@@ -151,7 +151,7 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 		MultiAZ:                       aws.Bool(d.Get("multi_az").(bool)),
 		ReplicationInstanceClass:      aws.String(d.Get("replication_instance_class").(string)),
 		ReplicationInstanceIdentifier: aws.String(d.Get("replication_instance_id").(string)),
-		Tags:                          GetTagsIn(ctx),
+		Tags:                          getTagsIn(ctx),
 	}
 
 	// WARNING: GetOk returns the zero value for the type if the key is omitted in config. This means for optional

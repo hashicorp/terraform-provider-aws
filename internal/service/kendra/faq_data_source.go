@@ -142,7 +142,7 @@ func dataSourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
+	tags, err := listTags(ctx, conn, arn)
 	if err != nil {
 		return diag.Errorf("listing tags for resource (%s): %s", arn, err)
 	}

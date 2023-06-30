@@ -126,7 +126,7 @@ func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	in := appconfig.CreateExtensionInput{
 		Actions: expandExtensionActionPoints(d.Get("action_point").(*schema.Set).List()),
 		Name:    aws.String(d.Get("name").(string)),
-		Tags:    GetTagsIn(ctx),
+		Tags:    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

@@ -146,7 +146,7 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("key_type", keyPair.KeyType)
 	d.Set("key_pair_id", keyPair.KeyPairId)
 
-	SetTagsOut(ctx, keyPair.Tags)
+	setTagsOut(ctx, keyPair.Tags)
 
 	return diags
 }

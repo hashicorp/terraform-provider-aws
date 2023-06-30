@@ -87,7 +87,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &swf.RegisterDomainInput{
 		Name:                                   aws.String(name),
-		Tags:                                   GetTagsIn(ctx),
+		Tags:                                   getTagsIn(ctx),
 		WorkflowExecutionRetentionPeriodInDays: aws.String(d.Get("workflow_execution_retention_period_in_days").(string)),
 	}
 
