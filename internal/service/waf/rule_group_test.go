@@ -205,7 +205,7 @@ func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 // which isn't static because ruleId is generated as part of the test
 func computeActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priority int, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		ruleResource := tfwaf.ResourceRuleGroup().Schema["activated_rule"].Elem.(*schema.Resource)
+		ruleResource := tfwaf.ResourceRuleGroup().SchemaMap()["activated_rule"].Elem.(*schema.Resource)
 
 		m := map[string]interface{}{
 			"action": []interface{}{
