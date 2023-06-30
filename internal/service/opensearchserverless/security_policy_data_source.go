@@ -24,10 +24,6 @@ func DataSourceSecurityPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -62,12 +58,12 @@ func dataSourceSecurityPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	securityPolicy, err := FindSecurityPolicyByNameAndType(ctx, conn, securityPolicyName, securityPolicyType)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SecurityPolicy with name (%s) and type (%s): %s", securityPolicyName, securityPolicyType, err)
+		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Security Policy with name (%s) and type (%s): %s", securityPolicyName, securityPolicyType, err)
 	}
 
 	policyBytes, err := securityPolicy.Policy.MarshalSmithyDocument()
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading JSON policy document for SecurityPolicy with name %s and type %s: %s", securityPolicyName, securityPolicyType, err)
+		return sdkdiag.AppendErrorf(diags, "reading JSON policy document for OpenSearch Security Policy with name %s and type %s: %s", securityPolicyName, securityPolicyType, err)
 	}
 
 	d.SetId(aws.ToString(securityPolicy.Name))
