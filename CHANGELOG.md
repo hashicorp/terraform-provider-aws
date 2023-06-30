@@ -1,4 +1,14 @@
 ## 5.7.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_opensearchserverless_security_config` ([#32321](https://github.com/hashicorp/terraform-provider-aws/issues/32321))
+* **New Data Source:** `aws_opensearchserverless_security_policy` ([#32226](https://github.com/hashicorp/terraform-provider-aws/issues/32226))
+
+ENHANCEMENTS:
+
+* resource/aws_glue_catalog_database: Add `target_database.region` argument ([#32283](https://github.com/hashicorp/terraform-provider-aws/issues/32283))
+
 ## 5.6.2 (June 30, 2023)
 
 BUG FIXES:
