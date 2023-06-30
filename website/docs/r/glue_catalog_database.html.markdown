@@ -51,6 +51,7 @@ The following arguments are supported:
 
 * `catalog_id` - (Required) ID of the Data Catalog in which the database resides.
 * `database_name` - (Required) Name of the catalog database.
+* `region` - (Optional) Region of the target database.
 
 ### create_table_default_permission
 
