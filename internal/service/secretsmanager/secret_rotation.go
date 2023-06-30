@@ -223,11 +223,9 @@ func flattenRotationRules(rules *secretsmanager.RotationRulesType) []interface{}
 
 	m := map[string]interface{}{}
 
-	if v := rules.AutomaticallyAfterDays; v != nil {
-		if iv := rules.ScheduleExpression; iv == nil {
-			// Only populate automatically_after_days if schedule_expression is not set, otherwise we won't be able to update the resource
-			m["automatically_after_days"] = int(aws.Int64Value(v))
-		}
+	if v := rules.AutomaticallyAfterDays; v != nil && rules.ScheduleExpression == nil {
+		// Only populate automatically_after_days if schedule_expression is not set, otherwise we won't be able to update the resource
+		m["automatically_after_days"] = int(aws.Int64Value(v))
 	}
 
 	if v := rules.Duration; v != nil {
