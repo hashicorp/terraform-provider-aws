@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8
-	github.com/aws/aws-sdk-go v1.44.292
+	github.com/aws/aws-sdk-go v1.44.293
 	github.com/aws/aws-sdk-go-v2 v1.18.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.4
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.19.14
@@ -69,7 +69,7 @@ require (
 	github.com/hashicorp/terraform-plugin-framework-validators v0.10.0
 	github.com/hashicorp/terraform-plugin-go v0.17.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
-	github.com/hashicorp/terraform-plugin-mux v0.11.0
+	github.com/hashicorp/terraform-plugin-mux v0.11.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.27.0
 	github.com/hashicorp/terraform-plugin-testing v1.3.0
 	github.com/jmespath/go-jmespath v0.4.0

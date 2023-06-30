@@ -323,9 +323,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			interceptors := interceptorItems{}
 
 			if v.Tags != nil {
+				schema := r.SchemaMap()
+
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
-				if v, ok := r.Schema[names.AttrTags]; ok {
+				if v, ok := schema[names.AttrTags]; ok {
 					if v.Computed {
 						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
 						continue
@@ -334,7 +336,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
 					continue
 				}
-				if v, ok := r.Schema[names.AttrTagsAll]; ok {
+				if v, ok := schema[names.AttrTagsAll]; ok {
 					if !v.Computed {
 						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
 						continue
