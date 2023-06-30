@@ -44,12 +44,13 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 			// The Spot Instance Request Schema is based on the AWS Instance schema.
 			s := ResourceInstance().SchemaMap()
 
-			// Everything on a spot instance is ForceNew (except tags).
+			// Everything on a spot instance is ForceNew (except tags/tags_all).
 			for k, v := range s {
 				if v.Computed && !v.Optional {
 					continue
 				}
-				if k == names.AttrTags {
+				// tags_all is Optional+Computed.
+				if k == names.AttrTags || k == names.AttrTagsAll {
 					continue
 				}
 				v.ForceNew = true
