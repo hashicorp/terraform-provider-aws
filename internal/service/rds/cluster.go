@@ -147,6 +147,12 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
+			"db_system_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
 			"deletion_protection": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -937,6 +943,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("db_system_id"); ok {
+			input.DBSystemId = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("enable_global_write_forwarding"); ok {
 			input.EnableGlobalWriteForwarding = aws.Bool(v.(bool))
 		}
@@ -1112,6 +1122,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("db_cluster_instance_class", dbc.DBClusterInstanceClass)
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
+	d.Set("db_system_id", dbc.DBSystemId)
 	d.Set("deletion_protection", dbc.DeletionProtection)
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
 	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
