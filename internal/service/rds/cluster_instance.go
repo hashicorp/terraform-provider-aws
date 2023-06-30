@@ -105,10 +105,13 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 			"engine": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validClusterEngine(),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					validation.StringMatch(regexp.MustCompile(`^custom.*$`), "must begin with custom"),
+					validation.StringInSlice(ClusterEngine_Values(), false),
+				),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,

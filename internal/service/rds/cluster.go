@@ -183,6 +183,10 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.Any(
+					validation.StringMatch(regexp.MustCompile(`^custom.*$`), "must begin with custom"),
+					validation.StringInSlice(ClusterEngine_Values(), false),
+				),
 			},
 			"engine_mode": {
 				Type:         schema.TypeString,
