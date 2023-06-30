@@ -82,7 +82,7 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports additional attributes along with the arguments mentioned above.
+This resource exports the following attributes in addition to the arguments above:
 
 * `etag` - Current version of the cache policy.
 * `id` - Identifier for the cache policy.
