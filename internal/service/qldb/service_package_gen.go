@@ -34,7 +34,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceLedger,
+			Factory:  resourceLedger,
 			TypeName: "aws_qldb_ledger",
 			Name:     "Ledger",
 			Tags: &types.ServicePackageResourceTags{
