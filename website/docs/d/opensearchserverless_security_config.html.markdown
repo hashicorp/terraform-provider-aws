@@ -16,7 +16,7 @@ Terraform data source for managing an AWS OpenSearch Serverless Security Config.
 
 ```terraform
 data "aws_opensearchserverless_security_config" "example" {
-  id = saml/12345678912/example
+  id = "saml/12345678912/example"
 }
 ```
 
