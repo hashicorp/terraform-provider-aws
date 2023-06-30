@@ -40,6 +40,10 @@ issues:
       text: "SA1019: apiObject.ImageId is deprecated: This field is deprecated"
     - linters:
         - staticcheck
+      path: internal/service/chime/
+      text: "SA1019: conn.\\w+ is deprecated: Replaced by \\w+ in the Amazon Chime SDK Voice Namespace"
+    - linters:
+        - staticcheck
       path: "internal/service/cloudfront"
       text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
     - linters:

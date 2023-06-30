@@ -458,7 +458,9 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: resourceSchema,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return resourceSchema
+		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}

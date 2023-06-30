@@ -91,6 +91,41 @@ func TestAccEMRServerlessApplication_arch(t *testing.T) {
 	})
 }
 
+func TestAccEMRServerlessApplication_releaseLabel(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application emrserverless.Application
+	resourceName := "aws_emrserverless_application.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, emrserverless.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_releaseLabel(rName, "emr-6.10.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-6.10.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccApplicationConfig_releaseLabel(rName, "emr-6.11.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-6.11.0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEMRServerlessApplication_initialCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application emrserverless.Application
@@ -386,6 +421,16 @@ resource "aws_emrserverless_application" "test" {
   type          = "hive"
 }
 `, rName)
+}
+
+func testAccApplicationConfig_releaseLabel(rName string, rl string) string {
+	return fmt.Sprintf(`
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = %[2]q
+  type          = "spark"
+}
+`, rName, rl)
 }
 
 func testAccApplicationConfig_initialCapacity(rName, cpu string) string {
