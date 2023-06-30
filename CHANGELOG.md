@@ -1,4 +1,5 @@
-## 5.6.2 (Unreleased)
+## 5.7.0 (Unreleased)
+## 5.6.2 (June 30, 2023)
 
 BUG FIXES:
 
