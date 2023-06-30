@@ -41,6 +41,7 @@ const (
 	OpenSearchServerlessEndpointID       = "aoss"
 	PipesEndpointID                      = "pipes"
 	PricingEndpointID                    = "pricing"
+	QLDBEndpointID                       = "qldb"
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
 	RolesAnywhereEndpointID              = "rolesanywhere"
 	Route53DomainsEndpointID             = "route53domains"
