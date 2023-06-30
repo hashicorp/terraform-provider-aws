@@ -3,6 +3,7 @@ package rds
 import (
 	"context"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -77,6 +78,12 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"custom_iam_instance_profile": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^AWSRDSCustom.*$`), "must begin with AWSRDSCustom"),
 			},
 			"db_parameter_group_name": {
 				Type:     schema.TypeString,
@@ -262,6 +269,10 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		input.DBSubnetGroupName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
+		input.CustomIamInstanceProfile = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("engine_version"); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
@@ -388,6 +399,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
 	d.Set("copy_tags_to_snapshot", db.CopyTagsToSnapshot)
+	d.Set("custom_iam_instance_profile", db.CustomIamInstanceProfile)
 	if len(db.DBParameterGroups) > 0 && db.DBParameterGroups[0] != nil {
 		d.Set("db_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
 	}
