@@ -1,4 +1,9 @@
 ## 5.6.2 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_s3_bucket: Fix `InvalidArgument: Invalid attribute name specified` errors when listing S3 Bucket objects, caused by an [AWS SDK for Go regression](https://github.com/aws/aws-sdk-go/issues/4897) ([#32317](https://github.com/hashicorp/terraform-provider-aws/issues/32317))
+
 ## 5.6.1 (June 30, 2023)
 
 BUG FIXES:
