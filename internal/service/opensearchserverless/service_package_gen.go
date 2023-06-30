@@ -24,6 +24,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory: newDataSourceCollection,
 			Name:    "Collection",
 		},
+		{
+			Factory: newDataSourceSecurityConfig,
+			Name:    "Security Config",
+		},
 	}
 }
 
