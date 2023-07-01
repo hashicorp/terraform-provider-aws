@@ -29,7 +29,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceMonitor,
+			Factory:  resourceMonitor,
 			TypeName: "aws_internetmonitor_monitor",
 			Name:     "Monitor",
 			Tags: &types.ServicePackageResourceTags{

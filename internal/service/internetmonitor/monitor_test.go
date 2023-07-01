@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/internetmonitor"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -14,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfinternetmonitor "github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccInternetMonitorMonitor_basic(t *testing.T) {
@@ -23,7 +23,7 @@ func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, internetmonitor.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,8 +33,8 @@ func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 					testAccCheckMonitorExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "internetmonitor", regexp.MustCompile(`monitor/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "traffic_percentage_to_monitor", "1"),
 					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_percentage_to_monitor", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -61,7 +61,7 @@ func TestAccInternetMonitorMonitor_log(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, internetmonitor.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -90,7 +90,7 @@ func TestAccInternetMonitorMonitor_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, internetmonitor.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -113,7 +113,7 @@ func TestAccInternetMonitorMonitor_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, internetmonitor.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -153,14 +153,14 @@ func TestAccInternetMonitorMonitor_tags(t *testing.T) {
 
 func testAccCheckMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InternetMonitorConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InternetMonitorClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_internetmonitor_monitor" {
 				continue
 			}
 
-			_, err := tfinternetmonitor.FindMonitor(ctx, conn, rs.Primary.ID)
+			_, err := tfinternetmonitor.FindMonitorByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -170,27 +170,23 @@ func testAccCheckMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("InternetMonitor Monitor %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Internet Monitor Monitor %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckMonitorExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckMonitorExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No InternetMonitor Monitor ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InternetMonitorClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InternetMonitorConn(ctx)
-
-		_, err := tfinternetmonitor.FindMonitor(ctx, conn, rs.Primary.ID)
+		_, err := tfinternetmonitor.FindMonitorByName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
