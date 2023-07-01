@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/internetmonitor/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -16,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -117,6 +117,10 @@ func resourceMonitor() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
+
+const (
+	errCodeResourceNotFoundException = "ResourceNotFoundException"
+)
 
 func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -276,6 +280,11 @@ func resourceMonitorDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	_, err := conn.UpdateMonitor(ctx, input)
 
+	// if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Internet Monitor Monitor (%s): %s", d.Id(), err)
 	}
@@ -289,7 +298,8 @@ func resourceMonitorDelete(ctx context.Context, d *schema.ResourceData, meta int
 		MonitorName: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*types.NotFoundException](err) {
+	// if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags
 	}
 
@@ -307,7 +317,8 @@ func findMonitorByName(ctx context.Context, conn *internetmonitor.Client, name s
 
 	output, err := conn.GetMonitor(ctx, input)
 
-	if errs.IsA[*types.NotFoundException](err) {
+	// if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
