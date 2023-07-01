@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/internetmonitor"
-	"github.com/aws/aws-sdk-go/service/internetmonitor/internetmonitoriface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/internetmonitor"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/internetmonitor/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -17,12 +17,12 @@ import (
 // listTags lists internetmonitor service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn internetmonitoriface.InternetMonitorAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *internetmonitor.Client, identifier string) (tftags.KeyValueTags, error) {
 	input := &internetmonitor.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
+	output, err := conn.ListTagsForResource(ctx, input)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -34,7 +34,7 @@ func listTags(ctx context.Context, conn internetmonitoriface.InternetMonitorAPI,
 // ListTags lists internetmonitor service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).InternetMonitorConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).InternetMonitorClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -81,7 +81,7 @@ func setTagsOut(ctx context.Context, tags map[string]*string) {
 // updateTags updates internetmonitor service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn internetmonitoriface.InternetMonitorAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *internetmonitor.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -90,10 +90,10 @@ func updateTags(ctx context.Context, conn internetmonitoriface.InternetMonitorAP
 	if len(removedTags) > 0 {
 		input := &internetmonitor.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResourceWithContext(ctx, input)
+		_, err := conn.UntagResource(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -108,7 +108,7 @@ func updateTags(ctx context.Context, conn internetmonitoriface.InternetMonitorAP
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResourceWithContext(ctx, input)
+		_, err := conn.TagResource(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -121,5 +121,5 @@ func updateTags(ctx context.Context, conn internetmonitoriface.InternetMonitorAP
 // UpdateTags updates internetmonitor service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).InternetMonitorConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).InternetMonitorClient(ctx), identifier, oldTags, newTags)
 }
