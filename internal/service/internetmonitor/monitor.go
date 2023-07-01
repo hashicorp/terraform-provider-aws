@@ -43,6 +43,25 @@ func resourceMonitor() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"health_events_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"availability_score_threshold": {
+							Type:     schema.TypeFloat,
+							Optional: true,
+							Default:  95.0,
+						},
+						"performance_score_threshold": {
+							Type:     schema.TypeFloat,
+							Optional: true,
+							Default:  95.0,
+						},
+					},
+				},
+			},
 			"internet_measurements_log_delivery": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -133,6 +152,10 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:        getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("health_events_config"); ok {
+		input.HealthEventsConfig = expandHealthEventsConfig(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("internet_measurements_log_delivery"); ok {
 		input.InternetMeasurementsLogDelivery = expandInternetMeasurementsLogDelivery(v.([]interface{}))
 	}
@@ -200,11 +223,13 @@ func resourceMonitorRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Internet Monitor Monitor (%s): %s", d.Id(), err)
 	}
 
+	d.Set("arn", monitor.MonitorArn)
+	if err := d.Set("health_events_config", flattenHealthEventsConfig(monitor.HealthEventsConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting health_events_config: %s", err)
+	}
 	if err := d.Set("internet_measurements_log_delivery", flattenInternetMeasurementsLogDelivery(monitor.InternetMeasurementsLogDelivery)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting internet_measurements_log_delivery: %s", err)
 	}
-
-	d.Set("arn", monitor.MonitorArn)
 	d.Set("monitor_name", monitor.MonitorName)
 	d.Set("max_city_networks_to_monitor", monitor.MaxCityNetworksToMonitor)
 	d.Set("resources", flex.FlattenStringValueSet(monitor.Resources))
@@ -224,6 +249,10 @@ func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input := &internetmonitor.UpdateMonitorInput{
 			ClientToken: aws.String(id.UniqueId()),
 			MonitorName: aws.String(d.Id()),
+		}
+
+		if d.HasChange("health_events_config") {
+			input.HealthEventsConfig = expandHealthEventsConfig(d.Get("health_events_config").([]interface{}))
 		}
 
 		if d.HasChange("internet_measurements_log_delivery") {
@@ -377,6 +406,25 @@ func waitMonitor(ctx context.Context, conn *internetmonitor.Client, name string,
 	return err
 }
 
+func expandHealthEventsConfig(tfList []interface{}) *types.HealthEventsConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &types.HealthEventsConfig{}
+
+	if v, ok := tfMap["availability_score_threshold"].(float64); ok && v != 0.0 {
+		apiObject.AvailabilityScoreThreshold = v
+	}
+
+	if v, ok := tfMap["performance_score_threshold"].(float64); ok && v != 0.0 {
+		apiObject.PerformanceScoreThreshold = v
+	}
+
+	return apiObject
+}
+
 func expandInternetMeasurementsLogDelivery(tfList []interface{}) *types.InternetMeasurementsLogDelivery {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -413,6 +461,19 @@ func expandS3Config(tfList []interface{}) *types.S3Config {
 	}
 
 	return apiObject
+}
+
+func flattenHealthEventsConfig(apiObject *types.HealthEventsConfig) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		"availability_score_threshold": apiObject.AvailabilityScoreThreshold,
+		"performance_score_threshold":  apiObject.PerformanceScoreThreshold,
+	}
+
+	return []interface{}{tfMap}
 }
 
 func flattenInternetMeasurementsLogDelivery(apiObject *types.InternetMeasurementsLogDelivery) []interface{} {
