@@ -863,7 +863,7 @@ func expandJDBCTarget(cfg map[string]interface{}) *glue.JdbcTarget {
 	}
 
 	if v, ok := cfg["enable_additional_metadata"].([]interface{}); ok {
-		target.Exclusions = flex.ExpandStringList(v)
+		target.EnableAdditionalMetadata = flex.ExpandStringList(v)
 	}
 
 	if v, ok := cfg["exclusions"].([]interface{}); ok {
