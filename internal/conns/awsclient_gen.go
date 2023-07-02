@@ -25,6 +25,7 @@ import (
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
 	ivschat_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ivschat"
 	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
+	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
@@ -193,7 +194,6 @@ import (
 	ivs_sdkv1 "github.com/aws/aws-sdk-go/service/ivs"
 	kafka_sdkv1 "github.com/aws/aws-sdk-go/service/kafka"
 	kafkaconnect_sdkv1 "github.com/aws/aws-sdk-go/service/kafkaconnect"
-	keyspaces_sdkv1 "github.com/aws/aws-sdk-go/service/keyspaces"
 	kinesis_sdkv1 "github.com/aws/aws-sdk-go/service/kinesis"
 	kinesisanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	kinesisanalyticsv2_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
@@ -984,8 +984,8 @@ func (c *AWSClient) KendraClient(ctx context.Context) *kendra_sdkv2.Client {
 	return errs.Must(client[*kendra_sdkv2.Client](ctx, c, names.Kendra))
 }
 
-func (c *AWSClient) KeyspacesConn(ctx context.Context) *keyspaces_sdkv1.Keyspaces {
-	return errs.Must(conn[*keyspaces_sdkv1.Keyspaces](ctx, c, names.Keyspaces))
+func (c *AWSClient) KeyspacesClient(ctx context.Context) *keyspaces_sdkv2.Client {
+	return errs.Must(client[*keyspaces_sdkv2.Client](ctx, c, names.Keyspaces))
 }
 
 func (c *AWSClient) KinesisConn(ctx context.Context) *kinesis_sdkv1.Kinesis {
