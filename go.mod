@@ -28,6 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.7
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.41.0
+	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.3.2
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.31.6
