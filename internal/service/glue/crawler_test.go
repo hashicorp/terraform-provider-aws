@@ -207,6 +207,7 @@ func TestAccGlueCrawler_jdbcTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.exclusions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.path", "database-name/%"),
+					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.enable_additional_metadata.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "role", rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "0"),
@@ -232,6 +233,7 @@ func TestAccGlueCrawler_jdbcTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.exclusions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.path", "database-name/table-name"),
+					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.enable_additional_metadata.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "role", rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "0"),
@@ -247,6 +249,32 @@ func TestAccGlueCrawler_jdbcTarget(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCrawlerConfig_jdbcTargetMetadata(rName, jdbcConnectionUrl, "database-name/table-name"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration", ""),
+					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.exclusions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.path", "database-name/table-name"),
+					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.enable_additional_metadata.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "role", rName),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schedule", ""),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "DEPRECATE_IN_DATABASE"),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
+					resource.TestCheckResourceAttr(resourceName, "table_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
 			},
 		},
 	})
@@ -1982,6 +2010,38 @@ resource "aws_glue_crawler" "test" {
   jdbc_target {
     connection_name = aws_glue_connection.test.name
     path            = %[3]q
+  }
+}
+`, rName, jdbcConnectionUrl, path))
+}
+
+func testAccCrawlerConfig_jdbcTargetMetadata(rName, jdbcConnectionUrl, path string) string {
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_connection" "test" {
+  name = %[1]q
+
+  connection_properties = {
+    JDBC_CONNECTION_URL = %[1]q
+    PASSWORD            = "testpassword"
+    USERNAME            = "testusername"
+  }
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  jdbc_target {
+    connection_name            = aws_glue_connection.test.name
+    path                       = %[3]q
+	enable_additional_metadata = ["COMMENTS"]
   }
 }
 `, rName, jdbcConnectionUrl, path))

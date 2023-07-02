@@ -561,6 +561,11 @@ func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					return retry.RetryableError(err)
 				}
 
+				// InvalidInputException: com.amazonaws.services.glue.model.AccessDeniedException: You need to enable AWS Security Token Service for this region. . Please verify the role's TrustPolicy.
+				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Please verify the role's TrustPolicy") {
+					return retry.RetryableError(err)
+				}
+
 				// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
 				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "is not authorized") {
 					return retry.RetryableError(err)
