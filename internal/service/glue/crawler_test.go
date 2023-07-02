@@ -2041,7 +2041,7 @@ resource "aws_glue_crawler" "test" {
   jdbc_target {
     connection_name            = aws_glue_connection.test.name
     path                       = %[3]q
-	enable_additional_metadata = ["COMMENTS"]
+    enable_additional_metadata = ["COMMENTS"]
   }
 }
 `, rName, jdbcConnectionUrl, path))
