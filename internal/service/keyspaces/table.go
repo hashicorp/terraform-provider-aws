@@ -1023,7 +1023,7 @@ func flattenEncryptionSpecification(apiObject *types.EncryptionSpecification) ma
 	}
 
 	tfMap := map[string]interface{}{
-		"types": apiObject.Type,
+		"type": apiObject.Type,
 	}
 
 	if v := apiObject.KmsKeyIdentifier; v != nil {
