@@ -35,6 +35,7 @@ const (
 	Inspector2EndpointID                 = "inspector2"
 	IVSChatEndpointID                    = "ivschat"
 	KendraEndpointID                     = "kendra"
+	KeyspacesEndpointID                  = "keyspaces"
 	LambdaEndpointID                     = "lambda"
 	MediaLiveEndpointID                  = "medialive"
 	ObservabilityAccessManagerEndpointID = "oam"
