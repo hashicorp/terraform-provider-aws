@@ -43,15 +43,18 @@ resource "aws_vpc_security_group_ingress_rule" "allow_tls" {
   to_port     = 443
 }
 
-resource "aws_vpc_security_group_egress_rule" "allow_all_traffic" {
+resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
   security_group_id = aws_security_group.allow_tls.id
-
-  cidr_ipv4 = ["0.0.0.0/0"]
-  cidr_piv6 = ["::/0"]
-  # -1 is semantically equivalent to all ports and must be specified for the from_port and to_port if the protocol is "-1"
-  from_port   = -1
+  cidr_ipv4 = "0.0.0.0/0"
+  # -1 is semantically equivalent to all ports
   ip_protocol = "-1"
-  to_port     = -1
+}
+
+resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv6" {
+  security_group_id = aws_security_group.allow_tls.id
+  cidr_piv6 = "::/0"
+  # -1 is semantically equivalent to all ports
+  ip_protocol = "-1"
 }
 ```
 
