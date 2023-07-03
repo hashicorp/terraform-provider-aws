@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearchserverless
 
 import (
@@ -11,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAccessPolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, id, policyType string) (*types.AccessPolicyDetail, error) {
+func findAccessPolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, id, policyType string) (*types.AccessPolicyDetail, error) {
 	in := &opensearchserverless.GetAccessPolicyInput{
 		Name: aws.String(id),
 		Type: types.AccessPolicyType(policyType),
@@ -36,7 +39,7 @@ func FindAccessPolicyByNameAndType(ctx context.Context, conn *opensearchserverle
 	return out.AccessPolicyDetail, nil
 }
 
-func FindCollectionByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.CollectionDetail, error) {
+func findCollectionByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.CollectionDetail, error) {
 	in := &opensearchserverless.BatchGetCollectionInput{
 		Ids: []string{id},
 	}
@@ -60,7 +63,7 @@ func FindCollectionByID(ctx context.Context, conn *opensearchserverless.Client, 
 	return &out.CollectionDetails[0], nil
 }
 
-func FindCollectionByName(ctx context.Context, conn *opensearchserverless.Client, name string) (*types.CollectionDetail, error) {
+func findCollectionByName(ctx context.Context, conn *opensearchserverless.Client, name string) (*types.CollectionDetail, error) {
 	in := &opensearchserverless.BatchGetCollectionInput{
 		Names: []string{name},
 	}
@@ -88,7 +91,7 @@ func FindCollectionByName(ctx context.Context, conn *opensearchserverless.Client
 	return &out.CollectionDetails[0], nil
 }
 
-func FindSecurityConfigByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.SecurityConfigDetail, error) {
+func findSecurityConfigByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.SecurityConfigDetail, error) {
 	in := &opensearchserverless.GetSecurityConfigInput{
 		Id: aws.String(id),
 	}
@@ -112,7 +115,7 @@ func FindSecurityConfigByID(ctx context.Context, conn *opensearchserverless.Clie
 	return out.SecurityConfigDetail, nil
 }
 
-func FindSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, name, policyType string) (*types.SecurityPolicyDetail, error) {
+func findSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, name, policyType string) (*types.SecurityPolicyDetail, error) {
 	in := &opensearchserverless.GetSecurityPolicyInput{
 		Name: aws.String(name),
 		Type: types.SecurityPolicyType(policyType),
@@ -137,7 +140,7 @@ func FindSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserver
 	return out.SecurityPolicyDetail, nil
 }
 
-func FindVPCEndpointByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.VpcEndpointDetail, error) {
+func findVPCEndpointByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.VpcEndpointDetail, error) {
 	in := &opensearchserverless.BatchGetVpcEndpointInput{
 		Ids: []string{id},
 	}

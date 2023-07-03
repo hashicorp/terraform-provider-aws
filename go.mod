@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/acm v1.17.13
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.17.11
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.25.0
-	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.6
+	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.14
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.4
@@ -26,6 +26,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.16.2
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.13
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.15.0
+	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.3.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.7
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.3.2
@@ -36,6 +37,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.6
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.8
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.20.0
+	github.com/aws/aws-sdk-go-v2/service/qldb v1.15.13
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.14
 	github.com/aws/aws-sdk-go-v2/service/rds v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.15
@@ -51,6 +53,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/swf v1.15.2
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.8
+	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.0.2
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.7
 	github.com/aws/aws-sdk-go-v2/service/xray v1.16.13
 	github.com/aws/smithy-go v1.13.5

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports

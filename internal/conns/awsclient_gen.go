@@ -23,6 +23,7 @@ import (
 	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
 	identitystore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/identitystore"
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
+	internetmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	ivschat_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ivschat"
 	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
 	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
@@ -33,6 +34,7 @@ import (
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
+	qldb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qldb"
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	resourceexplorer2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
@@ -48,6 +50,7 @@ import (
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
 	timestreamwrite_sdkv2 "github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	transcribe_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transcribe"
+	verifiedpermissions_sdkv2 "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	vpclattice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	acmpca_sdkv1 "github.com/aws/aws-sdk-go/service/acmpca"
@@ -176,7 +179,6 @@ import (
 	iam_sdkv1 "github.com/aws/aws-sdk-go/service/iam"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	inspector_sdkv1 "github.com/aws/aws-sdk-go/service/inspector"
-	internetmonitor_sdkv1 "github.com/aws/aws-sdk-go/service/internetmonitor"
 	iot_sdkv1 "github.com/aws/aws-sdk-go/service/iot"
 	iot1clickdevicesservice_sdkv1 "github.com/aws/aws-sdk-go/service/iot1clickdevicesservice"
 	iot1clickprojects_sdkv1 "github.com/aws/aws-sdk-go/service/iot1clickprojects"
@@ -260,7 +262,6 @@ import (
 	polly_sdkv1 "github.com/aws/aws-sdk-go/service/polly"
 	prometheusservice_sdkv1 "github.com/aws/aws-sdk-go/service/prometheusservice"
 	proton_sdkv1 "github.com/aws/aws-sdk-go/service/proton"
-	qldb_sdkv1 "github.com/aws/aws-sdk-go/service/qldb"
 	qldbsession_sdkv1 "github.com/aws/aws-sdk-go/service/qldbsession"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	ram_sdkv1 "github.com/aws/aws-sdk-go/service/ram"
@@ -904,8 +905,8 @@ func (c *AWSClient) Inspector2Client(ctx context.Context) *inspector2_sdkv2.Clie
 	return errs.Must(client[*inspector2_sdkv2.Client](ctx, c, names.Inspector2))
 }
 
-func (c *AWSClient) InternetMonitorConn(ctx context.Context) *internetmonitor_sdkv1.InternetMonitor {
-	return errs.Must(conn[*internetmonitor_sdkv1.InternetMonitor](ctx, c, names.InternetMonitor))
+func (c *AWSClient) InternetMonitorClient(ctx context.Context) *internetmonitor_sdkv2.Client {
+	return errs.Must(client[*internetmonitor_sdkv2.Client](ctx, c, names.InternetMonitor))
 }
 
 func (c *AWSClient) IoTConn(ctx context.Context) *iot_sdkv1.IoT {
@@ -1272,8 +1273,8 @@ func (c *AWSClient) ProtonConn(ctx context.Context) *proton_sdkv1.Proton {
 	return errs.Must(conn[*proton_sdkv1.Proton](ctx, c, names.Proton))
 }
 
-func (c *AWSClient) QLDBConn(ctx context.Context) *qldb_sdkv1.QLDB {
-	return errs.Must(conn[*qldb_sdkv1.QLDB](ctx, c, names.QLDB))
+func (c *AWSClient) QLDBClient(ctx context.Context) *qldb_sdkv2.Client {
+	return errs.Must(client[*qldb_sdkv2.Client](ctx, c, names.QLDB))
 }
 
 func (c *AWSClient) QLDBSessionConn(ctx context.Context) *qldbsession_sdkv1.QLDBSession {
@@ -1574,6 +1575,10 @@ func (c *AWSClient) TranslateConn(ctx context.Context) *translate_sdkv1.Translat
 
 func (c *AWSClient) VPCLatticeClient(ctx context.Context) *vpclattice_sdkv2.Client {
 	return errs.Must(client[*vpclattice_sdkv2.Client](ctx, c, names.VPCLattice))
+}
+
+func (c *AWSClient) VerifiedPermissionsClient(ctx context.Context) *verifiedpermissions_sdkv2.Client {
+	return errs.Must(client[*verifiedpermissions_sdkv2.Client](ctx, c, names.VerifiedPermissions))
 }
 
 func (c *AWSClient) VoiceIDConn(ctx context.Context) *voiceid_sdkv1.VoiceID {
