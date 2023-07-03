@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -79,7 +80,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				MaxItems:         1,
+				MaxItems:         2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"dns_record_ip_type": {
@@ -202,7 +203,14 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+		// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
+		// that support both gateway and interface endpoints, i.e. S3
+		if ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9])\\.s3", serviceName); ok {
+			input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDnsOnly(v.([]interface{})[0].(map[string]interface{}))
+		} else {
+			input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+		}
+
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
@@ -375,12 +383,13 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if d.HasChange("dns_options") {
 			if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				tfMap := v.([]interface{})[0].(map[string]interface{})
-				apiObject := expandDNSOptionsSpecification(tfMap)
-				if privateDNSEnabled {
-					// Always send PrivateDnsOnlyForInboundResolverEndpoint on update.
-					apiObject.PrivateDnsOnlyForInboundResolverEndpoint = aws.Bool(tfMap["private_dns_only_for_inbound_resolver_endpoint"].(bool))
+				// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
+				// that support both gateway and interface endpoints, i.e. S3
+				if ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9])\\.s3", d.Get("service_name").(string)); ok {
+					input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDnsOnly(tfMap)
+				} else {
+					input.DnsOptions = expandDNSOptionsSpecification(tfMap)
 				}
-				input.DnsOptions = apiObject
 			}
 		}
 
@@ -492,7 +501,21 @@ func expandDNSOptionsSpecification(tfMap map[string]interface{}) *ec2.DnsOptions
 		apiObject.DnsRecordIpType = aws.String(v)
 	}
 
-	if v, ok := tfMap["private_dns_only_for_inbound_resolver_endpoint"].(bool); ok && v {
+	return apiObject
+}
+
+func expandDNSOptionsSpecificationWithPrivateDnsOnly(tfMap map[string]interface{}) *ec2.DnsOptionsSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.DnsOptionsSpecification{}
+
+	if v, ok := tfMap["dns_record_ip_type"].(string); ok && v != "" {
+		apiObject.DnsRecordIpType = aws.String(v)
+	}
+
+	if v, ok := tfMap["private_dns_only_for_inbound_resolver_endpoint"].(bool); ok {
 		apiObject.PrivateDnsOnlyForInboundResolverEndpoint = aws.Bool(v)
 	}
 
