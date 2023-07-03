@@ -625,7 +625,7 @@ func TestAccGlueCrawler_icebergTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iceberg_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_target.0.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_target.0.maximum_traversal_depth", "2"),
-					resource.TestCheckResourceAttr(resourceName, "iceberg_target.0.paths.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_target.0.paths.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "iceberg_target.0.paths.*", "s3://table2"),
 				),
 			},
