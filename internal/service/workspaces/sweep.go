@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -38,11 +38,11 @@ func sweepDirectories(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.WorkSpacesConn(ctx)
+	conn := client.WorkSpacesClient(ctx)
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeWorkspaceDirectoriesPagesWithContext(ctx, input, func(page *workspaces.DescribeWorkspaceDirectoriesOutput, lastPage bool) bool {
+	err = conn.DescribeWorkspaceDirectoriesPages(ctx, input, func(page *workspaces.DescribeWorkspaceDirectoriesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -50,7 +50,7 @@ func sweepDirectories(region string) error {
 		for _, directory := range page.Directories {
 			r := ResourceDirectory()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(directory.DirectoryId))
+			d.SetId(aws.ToString(directory.DirectoryId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -67,7 +67,7 @@ func sweepDirectories(region string) error {
 		return fmt.Errorf("error listing WorkSpaces Directories (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WorkSpaces Directories (%s): %w", region, err)
@@ -82,7 +82,7 @@ func sweepIPGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.WorkSpacesConn(ctx)
+	conn := client.WorkSpacesClient(ctx)
 	input := &workspaces.DescribeIpGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -94,7 +94,7 @@ func sweepIPGroups(region string) error {
 		for _, ipGroup := range page.Result {
 			r := ResourceIPGroup()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(ipGroup.GroupId))
+			d.SetId(aws.ToString(ipGroup.GroupId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -111,7 +111,7 @@ func sweepIPGroups(region string) error {
 		return fmt.Errorf("error listing WorkSpaces Ip Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WorkSpaces Ip Groups (%s): %w", region, err)
@@ -126,13 +126,13 @@ func sweepWorkspace(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.WorkSpacesConn(ctx)
+	conn := client.WorkSpacesClient(ctx)
 
 	var errors error
 	input := &workspaces.DescribeWorkspacesInput{}
-	err = conn.DescribeWorkspacesPagesWithContext(ctx, input, func(resp *workspaces.DescribeWorkspacesOutput, _ bool) bool {
+	err = conn.DescribeWorkspacesPages(ctx, input, func(resp *workspaces.DescribeWorkspacesOutput, _ bool) bool {
 		for _, workspace := range resp.Workspaces {
-			err := WorkspaceDelete(ctx, conn, aws.StringValue(workspace.WorkspaceId), WorkspaceTerminatedTimeout)
+			err := WorkspaceDelete(ctx, conn, aws.ToString(workspace.WorkspaceId), WorkspaceTerminatedTimeout)
 			if err != nil {
 				errors = multierror.Append(errors, err)
 			}
