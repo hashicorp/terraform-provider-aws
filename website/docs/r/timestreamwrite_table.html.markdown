@@ -39,6 +39,23 @@ resource "aws_timestreamwrite_table" "example" {
 }
 ```
 
+### Customer-defined Partition Key
+
+```hcl
+resource "aws_timestreamwrite_table" "example" {
+  database_name = aws_timestreamwrite_database.example.database_name
+  table_name    = "example"
+
+  schema {
+    composite_partition_key {
+      enforcement_in_record = "REQUIRED"
+      name                  = "attr1"
+      type                  = "DIMENSION"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
