@@ -223,3 +223,20 @@ func flattenIPGroupRules(rules []types.IpRuleItem) []map[string]interface{} {
 	}
 	return result
 }
+
+func describeIPGroupsPages(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeIpGroupsInput, fn func(*workspaces.DescribeIpGroupsOutput, bool) bool) error {
+	for {
+		output, err := conn.DescribeIpGroups(ctx, input)
+		if err != nil {
+			return err
+		}
+
+		lastPage := aws.ToString(output.NextToken) == ""
+		if !fn(output, lastPage) || lastPage {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+	return nil
+}
