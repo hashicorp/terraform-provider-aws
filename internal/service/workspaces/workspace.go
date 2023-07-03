@@ -353,13 +353,13 @@ func ExpandWorkspaceProperties(properties []interface{}) *types.WorkspacePropert
 	p := properties[0].(map[string]interface{})
 
 	workspaceProperties := &types.WorkspaceProperties{
-		ComputeTypeName:   p["compute_type_name"].(types.Compute),
+		ComputeTypeName:   types.Compute(p["compute_type_name"].(string)),
 		RootVolumeSizeGib: aws.Int32(int32(p["root_volume_size_gib"].(int))),
-		RunningMode:       p["running_mode"].(types.RunningMode),
+		RunningMode:       types.RunningMode(p["running_mode"].(string)),
 		UserVolumeSizeGib: aws.Int32(int32(p["user_volume_size_gib"].(int))),
 	}
 
-	if p["running_mode"].(types.RunningMode) == types.RunningModeAutoStop {
+	if p["running_mode"].(string) == string(types.RunningModeAutoStop) {
 		workspaceProperties.RunningModeAutoStopTimeoutInMinutes = aws.Int32(int32(p["running_mode_auto_stop_timeout_in_minutes"].(int)))
 	}
 
