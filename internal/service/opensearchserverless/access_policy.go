@@ -139,7 +139,7 @@ func (r *resourceAccessPolicy) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	out, err := FindAccessPolicyByNameAndType(ctx, conn, state.ID.ValueString(), state.Type.ValueString())
+	out, err := findAccessPolicyByNameAndType(ctx, conn, state.ID.ValueString(), state.Type.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
