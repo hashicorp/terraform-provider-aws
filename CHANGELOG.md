@@ -9,6 +9,10 @@ ENHANCEMENTS:
 
 * resource/aws_glue_catalog_database: Add `target_database.region` argument ([#32283](https://github.com/hashicorp/terraform-provider-aws/issues/32283))
 
+BUG FIXES:
+
+* resource/aws_secretsmanager_secret_rotation: Fix `InvalidParameterException: You cannot specify both rotation frequency and schedule expression together` errors on resource Update ([#31915](https://github.com/hashicorp/terraform-provider-aws/issues/31915))
+
 ## 5.6.2 (June 30, 2023)
 
 BUG FIXES:
