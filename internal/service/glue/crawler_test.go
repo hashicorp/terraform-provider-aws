@@ -3118,9 +3118,9 @@ resource "aws_glue_crawler" "test" {
   role          = aws_iam_role.test.name
 
   iceberg_target {
-    connection_name           = aws_glue_connection.test.name
-    paths                     = [%[3]q]
-    maximum_traversal_depth   = %[4]d
+    connection_name         = aws_glue_connection.test.name
+    paths                   = [%[3]q]
+    maximum_traversal_depth = %[4]d
   }
 }
 `, rName, connectionUrl, tableName, depth))
