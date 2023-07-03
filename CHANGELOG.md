@@ -9,13 +9,16 @@ ENHANCEMENTS:
 
 * resource/aws_glue_catalog_database: Add `target_database.region` argument ([#32283](https://github.com/hashicorp/terraform-provider-aws/issues/32283))
 
+BUG FIXES:
+
+* resource/aws_service_discovery_private_dns_namespaceediscovery: Fix bug where a resource replacement occurs when the description is changed. ([#32341](https://github.com/hashicorp/terraform-provider-aws/issues/32341))
+* resource/aws_service_discovery_public_dns_namespaceediscovery: Fix bug where a resource replacement occurs when the description is changed. ([#32341](https://github.com/hashicorp/terraform-provider-aws/issues/32341))
+
 ## 5.6.2 (June 30, 2023)
 
 BUG FIXES:
 
 * resource/aws_s3_bucket: Fix `InvalidArgument: Invalid attribute name specified` errors when listing S3 Bucket objects, caused by an [AWS SDK for Go regression](https://github.com/aws/aws-sdk-go/issues/4897) ([#32317](https://github.com/hashicorp/terraform-provider-aws/issues/32317))
-* resource/aws_servicaws_service_discovery_private_dns_namespaceediscovery: Fix bug where a resource replacement occurs when the description is changed. ([#32341](https://github.com/hashicorp/terraform-provider-aws/issues/32341))
-* resource/aws_servicaws_service_discovery_public_dns_namespaceediscovery: Fix bug where a resource replacement occurs when the description is changed. ([#32341](https://github.com/hashicorp/terraform-provider-aws/issues/32341))
 
 ## 5.6.1 (June 30, 2023)
 
