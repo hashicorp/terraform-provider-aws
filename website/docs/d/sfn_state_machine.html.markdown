@@ -31,4 +31,5 @@ data "aws_sfn_state_machine" "example" {
 * `role_arn` - Set to the role_arn used by the state function.
 * `definition` - Set to the state machine definition.
 * `creation_date` - Date the state machine was created.
+* `revision_id` - The revision identifier for the state machine.
 * `status` - Set to the current status of the state machine.

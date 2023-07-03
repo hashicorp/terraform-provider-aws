@@ -23,8 +23,10 @@ import (
 	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
 	identitystore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/identitystore"
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
+	internetmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	ivschat_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ivschat"
 	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
+	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
@@ -175,7 +177,6 @@ import (
 	iam_sdkv1 "github.com/aws/aws-sdk-go/service/iam"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	inspector_sdkv1 "github.com/aws/aws-sdk-go/service/inspector"
-	internetmonitor_sdkv1 "github.com/aws/aws-sdk-go/service/internetmonitor"
 	iot_sdkv1 "github.com/aws/aws-sdk-go/service/iot"
 	iot1clickdevicesservice_sdkv1 "github.com/aws/aws-sdk-go/service/iot1clickdevicesservice"
 	iot1clickprojects_sdkv1 "github.com/aws/aws-sdk-go/service/iot1clickprojects"
@@ -194,7 +195,6 @@ import (
 	ivs_sdkv1 "github.com/aws/aws-sdk-go/service/ivs"
 	kafka_sdkv1 "github.com/aws/aws-sdk-go/service/kafka"
 	kafkaconnect_sdkv1 "github.com/aws/aws-sdk-go/service/kafkaconnect"
-	keyspaces_sdkv1 "github.com/aws/aws-sdk-go/service/keyspaces"
 	kinesis_sdkv1 "github.com/aws/aws-sdk-go/service/kinesis"
 	kinesisanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	kinesisanalyticsv2_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
@@ -905,8 +905,8 @@ func (c *AWSClient) Inspector2Client(ctx context.Context) *inspector2_sdkv2.Clie
 	return errs.Must(client[*inspector2_sdkv2.Client](ctx, c, names.Inspector2))
 }
 
-func (c *AWSClient) InternetMonitorConn(ctx context.Context) *internetmonitor_sdkv1.InternetMonitor {
-	return errs.Must(conn[*internetmonitor_sdkv1.InternetMonitor](ctx, c, names.InternetMonitor))
+func (c *AWSClient) InternetMonitorClient(ctx context.Context) *internetmonitor_sdkv2.Client {
+	return errs.Must(client[*internetmonitor_sdkv2.Client](ctx, c, names.InternetMonitor))
 }
 
 func (c *AWSClient) IoTConn(ctx context.Context) *iot_sdkv1.IoT {
@@ -985,8 +985,8 @@ func (c *AWSClient) KendraClient(ctx context.Context) *kendra_sdkv2.Client {
 	return errs.Must(client[*kendra_sdkv2.Client](ctx, c, names.Kendra))
 }
 
-func (c *AWSClient) KeyspacesConn(ctx context.Context) *keyspaces_sdkv1.Keyspaces {
-	return errs.Must(conn[*keyspaces_sdkv1.Keyspaces](ctx, c, names.Keyspaces))
+func (c *AWSClient) KeyspacesClient(ctx context.Context) *keyspaces_sdkv2.Client {
+	return errs.Must(client[*keyspaces_sdkv2.Client](ctx, c, names.Keyspaces))
 }
 
 func (c *AWSClient) KinesisConn(ctx context.Context) *kinesis_sdkv1.Kinesis {

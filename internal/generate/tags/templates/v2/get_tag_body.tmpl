@@ -28,7 +28,7 @@ func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{
 		return nil, err
 	}
 
-	listTags := KeyValueTags(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
+	listTags := {{ .KeyValueTagsFunc }}(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
 	{{- else }}
 	listTags, err := {{ .ListTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 

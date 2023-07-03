@@ -26,40 +26,42 @@ func ResourceGroupMembership() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			"aws_account_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
+				"aws_account_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
 
-			"member_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"member_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
 
-			"group_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"group_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
 
-			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "default",
-				ValidateFunc: validation.StringInSlice([]string{
-					"default",
-				}, false),
-			},
+				"namespace": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Default:  "default",
+					ValidateFunc: validation.StringInSlice([]string{
+						"default",
+					}, false),
+				},
+			}
 		},
 	}
 }

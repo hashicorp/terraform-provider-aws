@@ -112,10 +112,15 @@ project {
         // Define this parameter even when not set to allow individual builds to set the value
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
 
-        // These should be overridden in the base AWS project
-        param("env.GOPATH", "")
-        param("env.GO111MODULE", "") // No longer needed as of Go 1.16
-        param("env.GO_VERSION", "") // We're using `goenv` and `.go-version`
+        // These overrides exist because of the inherited dependency in the existing project structure and can
+        // be removed when this is moved outside of it
+        val isOnPrem = DslContext.getParameter("is_on_prem", "true").equals("true", ignoreCase = true)
+        if (isOnPrem) {
+            // These should be overridden in the base AWS project
+            param("env.GOPATH", "")
+            param("env.GO111MODULE", "") // No longer needed as of Go 1.16
+            param("env.GO_VERSION", "") // We're using `goenv` and `.go-version`
+        }
     }
 
     subProject(Services)
@@ -137,10 +142,7 @@ object PullRequest : BuildType({
 
     val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
     steps {
-        script {
-            name = "Setup GOENV"
-            scriptContent = File("./scripts/setup_goenv.sh").readText()
-        }
+        configureGoEnv()
         script {
             name = "Run Tests"
             scriptContent = File("./scripts/pullrequest_tests/tests.sh").readText()
@@ -240,20 +242,24 @@ object FullBuild : BuildType({
         } else {
             "Sun-Thu"
         }
-        triggers {
-            schedule {
-                schedulingPolicy = cron {
-                    dayOfWeek = triggerDay
-                    val triggerHM = LocalTime.from(triggerTime)
-                    hours = triggerHM.getHour().toString()
-                    minutes = triggerHM.getMinute().toString()
-                    timezone = ZoneId.from(triggerTime).toString()
+
+        val enableTestTriggersGlobally = DslContext.getParameter("enable_test_triggers_globally", "true").equals("true", ignoreCase = true)
+        if (enableTestTriggersGlobally) {
+            triggers {
+                schedule {
+                    schedulingPolicy = cron {
+                        dayOfWeek = triggerDay
+                        val triggerHM = LocalTime.from(triggerTime)
+                        hours = triggerHM.getHour().toString()
+                        minutes = triggerHM.getMinute().toString()
+                        timezone = ZoneId.from(triggerTime).toString()
+                    }
+                    branchFilter = "" // For a Composite build, the branch filter must be empty
+                    triggerBuild = always()
+                    withPendingChangesOnly = false
+                    enableQueueOptimization = false
+                    enforceCleanCheckoutForDependencies = true
                 }
-                branchFilter = "" // For a Composite build, the branch filter must be empty
-                triggerBuild = always()
-                withPendingChangesOnly = false
-                enableQueueOptimization = false
-                enforceCleanCheckoutForDependencies = true
             }
         }
     }
@@ -298,10 +304,7 @@ object SetUp : BuildType({
     }
 
     steps {
-        script {
-            name = "Setup GOENV"
-            scriptContent = File("./scripts/setup_goenv.sh").readText()
-        }
+        configureGoEnv()
         script {
             name = "Run provider unit tests"
             scriptContent = File("./scripts/provider_tests/unit_tests.sh").readText()
@@ -394,11 +397,7 @@ object CleanUp : BuildType({
     }
 
     steps {
-        script {
-            name = "Setup GOENV"
-            enabled = false
-            scriptContent = File("./scripts/setup_goenv.sh").readText()
-        }
+        configureGoEnv()
         script {
             name = "Post-Sweeper"
             enabled = false
@@ -417,10 +416,7 @@ object Sweeper : BuildType({
     }
 
     steps {
-        script {
-            name = "Setup GOENV"
-            scriptContent = File("./scripts/setup_goenv.sh").readText()
-        }
+        configureGoEnv()
         script {
             name = "Sweeper"
             scriptContent = File("./scripts/sweeper.sh").readText()
@@ -431,19 +427,22 @@ object Sweeper : BuildType({
     if (triggerTimeRaw != "") {
         val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
         val triggerTime = formatter.parse(triggerTimeRaw)
-        triggers {
-            schedule {
-                schedulingPolicy = daily {
-                    val triggerHM = LocalTime.from(triggerTime)
-                    hour = triggerHM.getHour()
-                    minute = triggerHM.getMinute()
-                    timezone = ZoneId.from(triggerTime).toString()
+        val enableTestTriggersGlobally = DslContext.getParameter("enable_test_triggers_globally", "true").equals("true", ignoreCase = true)
+        if (enableTestTriggersGlobally) {
+            triggers {
+                schedule {
+                    schedulingPolicy = daily {
+                        val triggerHM = LocalTime.from(triggerTime)
+                        hour = triggerHM.getHour()
+                        minute = triggerHM.getMinute()
+                        timezone = ZoneId.from(triggerTime).toString()
+                    }
+                    branchFilter = "+:refs/heads/main"
+                    triggerBuild = always()
+                    withPendingChangesOnly = false
+                    enableQueueOptimization = false
+                    enforceCleanCheckoutForDependencies = true
                 }
-                branchFilter = "+:refs/heads/main"
-                triggerBuild = always()
-                withPendingChangesOnly = false
-                enableQueueOptimization = false
-                enforceCleanCheckoutForDependencies = true
             }
         }
     }

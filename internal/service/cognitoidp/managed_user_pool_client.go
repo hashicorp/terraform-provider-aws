@@ -21,13 +21,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwstringplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/stringplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -305,9 +305,7 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 						"access_token": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								fwstringplanmodifier.DefaultValue(cognitoidentityprovider.TimeUnitsTypeHours),
-							},
+							Default:  stringdefault.StaticString(cognitoidentityprovider.TimeUnitsTypeHours),
 							Validators: []validator.String{
 								stringvalidator.OneOf(cognitoidentityprovider.TimeUnitsType_Values()...),
 							},
@@ -315,9 +313,7 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 						"id_token": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								fwstringplanmodifier.DefaultValue(cognitoidentityprovider.TimeUnitsTypeHours),
-							},
+							Default:  stringdefault.StaticString(cognitoidentityprovider.TimeUnitsTypeHours),
 							Validators: []validator.String{
 								stringvalidator.OneOf(cognitoidentityprovider.TimeUnitsType_Values()...),
 							},
@@ -325,9 +321,7 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 						"refresh_token": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								fwstringplanmodifier.DefaultValue(cognitoidentityprovider.TimeUnitsTypeDays),
-							},
+							Default:  stringdefault.StaticString(cognitoidentityprovider.TimeUnitsTypeDays),
 							Validators: []validator.String{
 								stringvalidator.OneOf(cognitoidentityprovider.TimeUnitsType_Values()...),
 							},

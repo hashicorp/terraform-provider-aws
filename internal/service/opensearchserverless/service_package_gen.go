@@ -15,7 +15,20 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourceAccessPolicy,
+			Name:    "Access Policy",
+		},
+		{
+			Factory: newDataSourceCollection,
+			Name:    "Collection",
+		},
+		{
+			Factory: newDataSourceSecurityConfig,
+			Name:    "Security Config",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
@@ -43,7 +56,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{}
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceSecurityPolicy,
+			TypeName: "aws_opensearchserverless_security_policy",
+		},
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {

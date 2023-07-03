@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -1300,7 +1303,7 @@ func stripResourceModifiers(r *Resource) *Resource {
 	newResource.CustomizeDiff = nil
 	newResource.Schema = map[string]*Schema{}
 
-	for k, s := range r.Schema {
+	for k, s := range r.SchemaMap() {
 		newResource.Schema[k] = stripSchema(s)
 	}
 

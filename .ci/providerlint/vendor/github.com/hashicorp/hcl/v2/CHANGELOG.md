@@ -1,5 +1,15 @@
 # HCL Changelog
 
+## v2.17.0 (May 31, 2023)
+
+### Enhancements
+
+* HCL now uses a newer version of the upstream `cty` library which has improved treatment of unknown values: it can now track additional optional information that reduces the range of an unknown value, which allows some operations against unknown values to return known or partially-known results. ([#590](https://github.com/hashicorp/hcl/pull/590))
+
+    **Note:** This change effectively passes on [`cty`'s notion of backward compatibility](https://github.com/zclconf/go-cty/blob/main/COMPATIBILITY.md) whereby unknown values can become "more known" in later releases. In particular, if your caller is using `cty.Value.RawEquals` in its tests against the results of operations with unknown values then you may see those tests begin failing after upgrading, due to the values now being more "refined".
+    
+    If so, you should review the refinements with consideration to [the `cty` refinements docs](https://github.com/zclconf/go-cty/blob/7dcbae46a6f247e983efb1fa774d2bb68781a333/docs/refinements.md) and update your expected results to match only if the reported refinements seem correct for the given situation. The `RawEquals` method is intended only for making exact value comparisons in test cases, so main application code should not use it; use `Equals` instead for real logic, which will take refinements into account automatically.
+
 ## v2.16.2 (March 9, 2023)
 
 ### Bugs Fixed

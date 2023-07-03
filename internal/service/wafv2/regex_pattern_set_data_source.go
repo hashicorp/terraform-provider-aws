@@ -17,36 +17,38 @@ func DataSourceRegexPatternSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRegexPatternSetRead,
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"regular_expression": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"regex_string": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"regular_expression": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"regex_string": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"scope": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
-			},
+				"scope": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
+				},
+			}
 		},
 	}
 }
