@@ -38,25 +38,27 @@ func sweepDirectories(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.WorkSpacesClient(ctx)
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
+	conn := client.WorkSpacesClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeWorkspaceDirectoriesPages(ctx, input, func(page *workspaces.DescribeWorkspaceDirectoriesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := workspaces.NewDescribeWorkspaceDirectoriesPaginator(conn, input, func(out *workspaces.DescribeWorkspaceDirectoriesPaginatorOptions) {})
+
+	for paginator.HasMorePages() {
+		out, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			return err
 		}
 
-		for _, directory := range page.Directories {
+		for _, directory := range out.Directories {
 			r := ResourceDirectory()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(directory.DirectoryId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
+	}
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WorkSpaces Directory sweep for %s: %s", region, err)
@@ -67,7 +69,7 @@ func sweepDirectories(region string) error {
 		return fmt.Errorf("error listing WorkSpaces Directories (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WorkSpaces Directories (%s): %w", region, err)
@@ -111,7 +113,7 @@ func sweepIPGroups(region string) error {
 		return fmt.Errorf("error listing WorkSpaces Ip Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WorkSpaces Ip Groups (%s): %w", region, err)
@@ -127,19 +129,27 @@ func sweepWorkspace(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.WorkSpacesClient(ctx)
-
-	var errors error
 	input := &workspaces.DescribeWorkspacesInput{}
-	err = conn.DescribeWorkspacesPages(ctx, input, func(resp *workspaces.DescribeWorkspacesOutput, _ bool) bool {
-		for _, workspace := range resp.Workspaces {
+	var errors error
+
+	paginator := workspaces.NewDescribeWorkspacesPaginator(conn, input, func(out *workspaces.DescribeWorkspacesPaginatorOptions) {})
+
+	for paginator.HasMorePages() {
+		out, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			return err
+		}
+
+		for _, workspace := range out.Workspaces {
 			err := WorkspaceDelete(ctx, conn, aws.ToString(workspace.WorkspaceId), WorkspaceTerminatedTimeout)
 			if err != nil {
 				errors = multierror.Append(errors, err)
 			}
 
 		}
-		return true
-	})
+	}
+
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping workspaces sweep for %s: %s", region, err)
 		return errors // In case we have completed some pages, but had errors
