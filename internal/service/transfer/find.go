@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer
 
 import (
@@ -10,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAccessByServerIDAndExternalID(ctx context.Context, conn *transfer.Transfer, serverID, externalID string) (*transfer.DescribedAccess, error) {
+func FindAccessByTwoPartKey(ctx context.Context, conn *transfer.Transfer, serverID, externalID string) (*transfer.DescribedAccess, error) {
 	input := &transfer.DescribeAccessInput{
 		ExternalId: aws.String(externalID),
 		ServerId:   aws.String(serverID),
@@ -34,6 +37,107 @@ func FindAccessByServerIDAndExternalID(ctx context.Context, conn *transfer.Trans
 	}
 
 	return output.Access, nil
+}
+
+func FindAgreementByTwoPartKey(ctx context.Context, conn *transfer.Transfer, serverID, agreementID string) (*transfer.DescribedAgreement, error) {
+	input := &transfer.DescribeAgreementInput{
+		AgreementId: aws.String(agreementID),
+		ServerId:    aws.String(serverID),
+	}
+
+	output, err := conn.DescribeAgreementWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Agreement == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Agreement, nil
+}
+
+func FindCertificateByID(ctx context.Context, conn *transfer.Transfer, id string) (*transfer.DescribedCertificate, error) {
+	input := &transfer.DescribeCertificateInput{
+		CertificateId: aws.String(id),
+	}
+
+	output, err := conn.DescribeCertificateWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Certificate == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Certificate, nil
+}
+
+func FindConnectorByID(ctx context.Context, conn *transfer.Transfer, id string) (*transfer.DescribedConnector, error) {
+	input := &transfer.DescribeConnectorInput{
+		ConnectorId: aws.String(id),
+	}
+
+	output, err := conn.DescribeConnectorWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Connector == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Connector, nil
+}
+
+func FindProfileByID(ctx context.Context, conn *transfer.Transfer, id string) (*transfer.DescribedProfile, error) {
+	input := &transfer.DescribeProfileInput{
+		ProfileId: aws.String(id),
+	}
+
+	output, err := conn.DescribeProfileWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Profile == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Profile, nil
 }
 
 func FindServerByID(ctx context.Context, conn *transfer.Transfer, id string) (*transfer.DescribedServer, error) {

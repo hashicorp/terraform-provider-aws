@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional_test
 
 import (
@@ -525,7 +528,7 @@ resource "aws_wafregional_rule_group" "test" {
 // which isn't static because ruleId is generated as part of the test
 func computeActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priority int, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		ruleResource := tfwafregional.ResourceRuleGroup().Schema["activated_rule"].Elem.(*schema.Resource)
+		ruleResource := tfwafregional.ResourceRuleGroup().SchemaMap()["activated_rule"].Elem.(*schema.Resource)
 
 		m := map[string]interface{}{
 			"action": []interface{}{

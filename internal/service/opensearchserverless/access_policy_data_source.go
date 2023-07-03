@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearchserverless
 
 import (
@@ -70,7 +73,7 @@ func (d *dataSourceAccessPolicy) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	out, err := FindAccessPolicyByNameAndType(ctx, conn, data.Name.ValueString(), data.Type.ValueString())
+	out, err := findAccessPolicyByNameAndType(ctx, conn, data.Name.ValueString(), data.Type.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameAccessPolicy, data.Name.String(), err),

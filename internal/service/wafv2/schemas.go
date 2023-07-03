@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2
 
 import (
@@ -10,15 +13,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+var listOfEmptyObjectSchema *schema.Schema = &schema.Schema{
+	Type:     schema.TypeList,
+	Optional: true,
+	MaxItems: 1,
+	Elem: &schema.Resource{
+		Schema: map[string]*schema.Schema{},
+	},
+}
+
 func emptySchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{},
-		},
-	}
+	return listOfEmptyObjectSchema
 }
 
 func ruleLabelsSchema() *schema.Schema {

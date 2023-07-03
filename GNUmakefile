@@ -365,7 +365,7 @@ tfsdk2fw:
 
 tools:
 	cd .ci/providerlint && $(GO_VER) install .
-	cd .ci/tools && $(GO_VER) install github.com/bflad/tfproviderdocs
+	cd .ci/tools && $(GO_VER) install github.com/YakDriver/tfproviderdocs
 	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
 	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/cmd/golangci-lint
 	cd .ci/tools && $(GO_VER) install github.com/katbyte/terrafmt
