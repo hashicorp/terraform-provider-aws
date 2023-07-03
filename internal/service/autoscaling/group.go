@@ -3882,7 +3882,7 @@ func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) dia
 		}
 	}
 
-	schema := ResourceGroup().Schema
+	schema := ResourceGroup().SchemaMap()
 	for attr, attrSchema := range schema {
 		if v == attr {
 			if attrSchema.Computed && !attrSchema.Optional {

@@ -15,8 +15,8 @@ github.com/apparentlymart/go-textseg/v13 v13.0.0 h1:Y+KvPE1NYz0xl601PVImeQfFyEy6
 github.com/apparentlymart/go-textseg/v13 v13.0.0/go.mod h1:ZK2fH7c4NqDTLtiYLvIkEghdlcqw7yxLeM89kiTRPUo=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 h1:BUAU3CGlLvorLI26FmByPp2eC2qla6E1Tw+scpcg/to=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.44.293 h1:oBPrQqsyMYe61Sl/xKVvQFflXjPwYH11aKi8QR3Nhts=
-github.com/aws/aws-sdk-go v1.44.293/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.294 h1:3x7GaEth+pDU9HwFcAU0awZlEix5CEdyIZvV08SlHa8=
+github.com/aws/aws-sdk-go v1.44.294/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v1.18.0/go.mod h1:uzbQtefpm44goOPmdKyAlXSNcwlRgF3ePWVW6EtJvvw=
 github.com/aws/aws-sdk-go-v2 v1.18.1 h1:+tefE750oAb7ZQGzla6bLkOwfcQCEtC5y2RqoqCeqKo=
 github.com/aws/aws-sdk-go-v2 v1.18.1/go.mod h1:uzbQtefpm44goOPmdKyAlXSNcwlRgF3ePWVW6EtJvvw=
@@ -88,6 +88,8 @@ github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.7 h1:pI950CQHVEFW2/+UklRO4TWzH
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.7/go.mod h1:oOLFrfP14cyQdTsc3I8VohdYb8g86I7xduoMALyKLj0=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.41.0 h1:QZIaiIYfU8KCUuT4nCif9fifXryv+/pI/ounZMB4/0s=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.41.0/go.mod h1:huU0BQC+O9qcc3vrANhwkC9KP0hGg1quffiyfbJ1Ktg=
+github.com/aws/aws-sdk-go-v2/service/keyspaces v1.3.2 h1:nL5UBozBBCgCV5nv03YvDnuuCH11iI4pNjH/EchcBEU=
+github.com/aws/aws-sdk-go-v2/service/keyspaces v1.3.2/go.mod h1:kce6B9bwqIlk810LDwZC4bT928MQc9c88OtXkqGIymc=
 github.com/aws/aws-sdk-go-v2/service/lambda v1.37.0 h1:xzyM5ZR9kZW0/Bkw5EiihOy6B+BYclp5K+yb6OHjc7s=
 github.com/aws/aws-sdk-go-v2/service/lambda v1.37.0/go.mod h1:Q8zQi5nZpjUF/H55dKEpKfEvFWJkgZzjjqvDb2AR5b4=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.27.1 h1:q9YZIsBPkeafzYPAJUquHZW5WkdmsLLu4jWlWzNEyjI=
