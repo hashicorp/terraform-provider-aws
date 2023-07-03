@@ -106,7 +106,7 @@ func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.ToString(output.Name))
 
-	if _, err := waitLedgerCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
+	if _, err := waitLedgerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for QLDB Ledger (%s) create: %s", d.Id(), err)
 	}
 
@@ -181,7 +181,7 @@ func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[INFO] Deleting QLDB Ledger: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteLedger(ctx, input)
 	})
 
@@ -193,7 +193,7 @@ func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("deleting QLDB Ledger (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitLedgerDeleted(ctx, conn, d.Timeout(schema.TimeoutDelete), d.Id()); err != nil {
+	if _, err := waitLedgerDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for QLDB Ledger (%s) delete: %s", d.Id(), err)
 	}
 
@@ -248,7 +248,7 @@ func statusLedgerState(ctx context.Context, conn *qldb.Client, name string) retr
 	}
 }
 
-func waitLedgerCreated(ctx context.Context, conn *qldb.Client, timeout time.Duration, name string) (*qldb.DescribeLedgerOutput, error) {
+func waitLedgerCreated(ctx context.Context, conn *qldb.Client, name string, timeout time.Duration) (*qldb.DescribeLedgerOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.LedgerStateCreating),
 		Target:     enum.Slice(types.LedgerStateActive),
@@ -266,7 +266,7 @@ func waitLedgerCreated(ctx context.Context, conn *qldb.Client, timeout time.Dura
 	return nil, err
 }
 
-func waitLedgerDeleted(ctx context.Context, conn *qldb.Client, timeout time.Duration, name string) (*qldb.DescribeLedgerOutput, error) {
+func waitLedgerDeleted(ctx context.Context, conn *qldb.Client, name string, timeout time.Duration) (*qldb.DescribeLedgerOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.LedgerStateActive, types.LedgerStateDeleting),
 		Target:     []string{},

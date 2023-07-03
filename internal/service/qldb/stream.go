@@ -31,6 +31,11 @@ func resourceStream() *schema.Resource {
 		UpdateWithoutTimeout: resourceStreamUpdate,
 		DeleteWithoutTimeout: resourceStreamDelete,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(8 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -134,7 +139,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.ToString(output.StreamId))
 
-	if _, err := waitStreamCreated(ctx, conn, ledgerName, d.Id()); err != nil {
+	if _, err := waitStreamCreated(ctx, conn, ledgerName, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for QLDB Stream (%s) create: %s", d.Id(), err)
 	}
 
@@ -197,7 +202,7 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[INFO] Deleting QLDB Stream: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.CancelJournalKinesisStream(ctx, input)
 	})
 
@@ -209,7 +214,7 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("deleting QLDB Stream (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitStreamDeleted(ctx, conn, ledgerName, d.Id()); err != nil {
+	if _, err := waitStreamDeleted(ctx, conn, ledgerName, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for QLDB Stream (%s) delete: %s", d.Id(), err)
 	}
 
@@ -281,12 +286,12 @@ func statusStreamCreated(ctx context.Context, conn *qldb.Client, ledgerName, str
 	}
 }
 
-func waitStreamCreated(ctx context.Context, conn *qldb.Client, ledgerName, streamID string) (*types.JournalKinesisStreamDescription, error) {
+func waitStreamCreated(ctx context.Context, conn *qldb.Client, ledgerName, streamID string, timeout time.Duration) (*types.JournalKinesisStreamDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.StreamStatusImpaired),
 		Target:     enum.Slice(types.StreamStatusActive),
 		Refresh:    statusStreamCreated(ctx, conn, ledgerName, streamID),
-		Timeout:    8 * time.Minute,
+		Timeout:    timeout,
 		MinTimeout: 3 * time.Second,
 	}
 
@@ -317,12 +322,12 @@ func statusStreamDeleted(ctx context.Context, conn *qldb.Client, ledgerName, str
 	}
 }
 
-func waitStreamDeleted(ctx context.Context, conn *qldb.Client, ledgerName, streamID string) (*types.JournalKinesisStreamDescription, error) {
+func waitStreamDeleted(ctx context.Context, conn *qldb.Client, ledgerName, streamID string, timeout time.Duration) (*types.JournalKinesisStreamDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.StreamStatusActive, types.StreamStatusImpaired),
 		Target:     []string{},
 		Refresh:    statusStreamDeleted(ctx, conn, ledgerName, streamID),
-		Timeout:    5 * time.Minute,
+		Timeout:    timeout,
 		MinTimeout: 1 * time.Second,
 	}
 
