@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package names provides constants for AWS service names that are used as keys
 // for the endpoints slice in internal/conns/conns.go. The package also exposes
 // access to data found in the names_data.csv file, which provides additional

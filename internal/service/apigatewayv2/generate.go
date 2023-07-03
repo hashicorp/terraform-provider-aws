@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:generate go run ../../generate/listpages/main.go -ListOps=GetApis,GetApiMappings,GetDomainNames,GetVpcLinks
 //go:generate go run ../../generate/tags/main.go -ListTags -ListTagsOp=GetTags -ServiceTagsMap -UpdateTags
 //go:generate go run ../../generate/servicepackage/main.go
