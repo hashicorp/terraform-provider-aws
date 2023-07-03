@@ -206,11 +206,10 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
 		// that support both gateway and interface endpoints, i.e. S3
 		if ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9])\\.s3", serviceName); ok {
-			input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDnsOnly(v.([]interface{})[0].(map[string]interface{}))
+			input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(v.([]interface{})[0].(map[string]interface{}))
 		} else {
 			input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
 		}
-
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
@@ -386,7 +385,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 				// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
 				// that support both gateway and interface endpoints, i.e. S3
 				if ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9])\\.s3", d.Get("service_name").(string)); ok {
-					input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDnsOnly(tfMap)
+					input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap)
 				} else {
 					input.DnsOptions = expandDNSOptionsSpecification(tfMap)
 				}
@@ -504,7 +503,7 @@ func expandDNSOptionsSpecification(tfMap map[string]interface{}) *ec2.DnsOptions
 	return apiObject
 }
 
-func expandDNSOptionsSpecificationWithPrivateDnsOnly(tfMap map[string]interface{}) *ec2.DnsOptionsSpecification {
+func expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap map[string]interface{}) *ec2.DnsOptionsSpecification {
 	if tfMap == nil {
 		return nil
 	}
