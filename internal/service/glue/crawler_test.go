@@ -624,7 +624,7 @@ func TestAccGlueCrawler_icebergTarget(t *testing.T) {
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_target.0.connection_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "iceberg_target.0.maximum_traversal_depth", "1"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_target.0.maximum_traversal_depth", "2"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_target.0.paths.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "iceberg_target.0.paths.*", "s3://table2"),
 				),
@@ -3091,7 +3091,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_glue_catalog_database" "test" {
-  name = "%[1]s"
+  name = %[1]q
 }
 
 resource "aws_glue_connection" "test" {
@@ -3101,7 +3101,7 @@ resource "aws_glue_connection" "test" {
 
   connection_type = "NETWORK"
 
-  name = "%[1]s"
+  name = %[1]q
 
   physical_connection_requirements {
     availability_zone      = aws_subnet.test[0].availability_zone
