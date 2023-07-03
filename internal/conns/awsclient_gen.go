@@ -48,6 +48,7 @@ import (
 	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
+	timestreamwrite_sdkv2 "github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	transcribe_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transcribe"
 	verifiedpermissions_sdkv2 "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	vpclattice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/vpclattice"
@@ -314,7 +315,6 @@ import (
 	synthetics_sdkv1 "github.com/aws/aws-sdk-go/service/synthetics"
 	textract_sdkv1 "github.com/aws/aws-sdk-go/service/textract"
 	timestreamquery_sdkv1 "github.com/aws/aws-sdk-go/service/timestreamquery"
-	timestreamwrite_sdkv1 "github.com/aws/aws-sdk-go/service/timestreamwrite"
 	transcribestreamingservice_sdkv1 "github.com/aws/aws-sdk-go/service/transcribestreamingservice"
 	transfer_sdkv1 "github.com/aws/aws-sdk-go/service/transfer"
 	translate_sdkv1 "github.com/aws/aws-sdk-go/service/translate"
@@ -1553,8 +1553,8 @@ func (c *AWSClient) TimestreamQueryConn(ctx context.Context) *timestreamquery_sd
 	return errs.Must(conn[*timestreamquery_sdkv1.TimestreamQuery](ctx, c, names.TimestreamQuery))
 }
 
-func (c *AWSClient) TimestreamWriteConn(ctx context.Context) *timestreamwrite_sdkv1.TimestreamWrite {
-	return errs.Must(conn[*timestreamwrite_sdkv1.TimestreamWrite](ctx, c, names.TimestreamWrite))
+func (c *AWSClient) TimestreamWriteClient(ctx context.Context) *timestreamwrite_sdkv2.Client {
+	return errs.Must(client[*timestreamwrite_sdkv2.Client](ctx, c, names.TimestreamWrite))
 }
 
 func (c *AWSClient) TranscribeClient(ctx context.Context) *transcribe_sdkv2.Client {

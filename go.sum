@@ -77,6 +77,8 @@ github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.13 h1:xYUE2IwzSq1rNK9uf
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.13/go.mod h1:siVgFYduB/ThkiyUhVIBQ5AG3wBpbFho4KIQOHQLR2s=
 github.com/aws/aws-sdk-go-v2/service/inspector2 v1.15.0 h1:68YcB08CjQnszydJGLtT6qxxpcCiN8RymaQfZwhZA3I=
 github.com/aws/aws-sdk-go-v2/service/inspector2 v1.15.0/go.mod h1:a2EqXrt+5o49Cnp4iMc2Tpt38ZUiX8aJsNy9ZzH+y/s=
+github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.28 h1:/D994rtMQd1jQ2OY+7tvUlMlrv1L1c7Xtma/FhkbVtY=
+github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.28/go.mod h1:3bJI2pLY3ilrqO5EclusI1GbjFJh1iXYrhOItf2sjKw=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.27/go.mod h1:EOwBD4J4S5qYszS5/3DpkejfuK+Z5/1uzICfPaZLtqw=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.28 h1:bkRyG4a929RCnpVSTvLM2j/T4ls015ZhhYApbmYs15s=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.28/go.mod h1:jj7znCIg05jXlaGBlFMGP8+7UN3VtCkRBG2spnmRQkU=
@@ -141,6 +143,8 @@ github.com/aws/aws-sdk-go-v2/service/sts v1.19.2 h1:XFJ2Z6sNUUcAz9poj+245DMkrHE4
 github.com/aws/aws-sdk-go-v2/service/sts v1.19.2/go.mod h1:dp0yLPsLBOi++WTxzCjA/oZqi6NPIhoR+uF7GeMU9eg=
 github.com/aws/aws-sdk-go-v2/service/swf v1.15.2 h1:2ozdtzVA8NpZZZrE1BwYbWVbtA0uJ9rph2+LIgVF22k=
 github.com/aws/aws-sdk-go-v2/service/swf v1.15.2/go.mod h1:Jj8X0ex+9XIXgNI/zD/g0jvv2wd5LHEZq29FlJj1RUc=
+github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.17.2 h1:PlsApCYTMqiDmaCDikifXGYqQ53QWQ5UAOEZIevfcL8=
+github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.17.2/go.mod h1:xes7zyfBSJ6kgfmaIvTFbEfPc3CfU1HLx46qcEc6n2s=
 github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.8 h1:KfCL992IXYjCPT62KGBMCOxf4cvu5OwwqcJZRBORL+U=
 github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.8/go.mod h1:F8gPtIYU0JYmVyPeQI0zf8geCpbupPJfo3wPoIV6wy0=
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.0.2 h1:TOKE2XWYUF9WpGpn3rw1f8SGQHKU4S6zpSyIA2VX/rQ=

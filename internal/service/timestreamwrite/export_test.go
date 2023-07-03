@@ -1,14 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
-
-package keyspaces
+package timestreamwrite
 
 // Exports for use in tests only.
 var (
-	ResourceKeyspace = resourceKeyspace
+	ResourceDatabase = resourceDatabase
 	ResourceTable    = resourceTable
 
-	FindKeyspaceByName    = findKeyspaceByName
+	FindDatabaseByName    = findDatabaseByName
 	FindTableByTwoPartKey = findTableByTwoPartKey
 
 	TableParseResourceID = tableParseResourceID
