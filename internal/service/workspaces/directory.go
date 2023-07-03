@@ -230,13 +230,10 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, DirectoryRegisterInvalidResourceStateTimeout,
+	_, err := tfresource.RetryWhenIsA[*types.InvalidResourceStateException](ctx, DirectoryRegisterInvalidResourceStateTimeout,
 		func() (interface{}, error) {
 			return conn.RegisterWorkspaceDirectory(ctx, input)
-		},
-		// "error registering WorkSpaces Directory (d-000000000000): InvalidResourceStateException: The specified directory is not in a valid state. Confirm that the directory has a status of Active, and try again."
-		ire.ErrorCode(),
-	)
+		})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "registering WorkSpaces Directory (%s): %s", directoryID, err)
@@ -434,15 +431,12 @@ func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
 	log.Printf("[DEBUG] Deregistering WorkSpaces Directory: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, DirectoryDeregisterInvalidResourceStateTimeout,
+	_, err := tfresource.RetryWhenIsA[*types.InvalidResourceStateException](ctx, DirectoryRegisterInvalidResourceStateTimeout,
 		func() (interface{}, error) {
 			return conn.DeregisterWorkspaceDirectory(ctx, &workspaces.DeregisterWorkspaceDirectoryInput{
 				DirectoryId: aws.String(d.Id()),
 			})
-		},
-		// "error deregistering WorkSpaces Directory (d-000000000000): InvalidResourceStateException: The specified directory is not in a valid state. Confirm that the directory has a status of Active, and try again."
-		ire.ErrorCode(),
-	)
+		})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
