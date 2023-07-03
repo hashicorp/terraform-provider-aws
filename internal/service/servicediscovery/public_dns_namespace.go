@@ -37,7 +37,6 @@ func ResourcePublicDNSNamespace() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"hosted_zone": {
 				Type:     schema.TypeString,
