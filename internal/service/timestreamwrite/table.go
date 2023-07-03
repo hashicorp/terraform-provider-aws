@@ -121,6 +121,43 @@ func resourceTable() *schema.Resource {
 					},
 				},
 			},
+			"schema": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"composite_partition_key": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enforcement_in_record": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.PartitionKeyEnforcementLevel](),
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+									"type": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[types.PartitionKeyType](),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"table_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -150,12 +187,16 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Tags:         getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("magnetic_store_write_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
+		input.MagneticStoreWriteProperties = expandMagneticStoreWriteProperties(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("retention_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
 		input.RetentionProperties = expandRetentionProperties(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("magnetic_store_write_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
-		input.MagneticStoreWriteProperties = expandMagneticStoreWriteProperties(v.([]interface{}))
+	if v, ok := d.GetOk("schema"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Schema = expandSchema(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	_, err := conn.CreateTable(ctx, input)
@@ -193,6 +234,13 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err := d.Set("retention_properties", flattenRetentionProperties(table.RetentionProperties)); err != nil {
 		return diag.Errorf("setting retention_properties: %s", err)
 	}
+	if table.Schema != nil {
+		if err := d.Set("schema", []interface{}{flattenSchema(table.Schema)}); err != nil {
+			return diag.Errorf("setting schema: %s", err)
+		}
+	} else {
+		d.Set("schema", nil)
+	}
 	d.Set("table_name", table.TableName)
 
 	return nil
@@ -212,12 +260,18 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			TableName:    aws.String(tableName),
 		}
 
+		if d.HasChange("magnetic_store_write_properties") {
+			input.MagneticStoreWriteProperties = expandMagneticStoreWriteProperties(d.Get("magnetic_store_write_properties").([]interface{}))
+		}
+
 		if d.HasChange("retention_properties") {
 			input.RetentionProperties = expandRetentionProperties(d.Get("retention_properties").([]interface{}))
 		}
 
-		if d.HasChange("magnetic_store_write_properties") {
-			input.MagneticStoreWriteProperties = expandMagneticStoreWriteProperties(d.Get("magnetic_store_write_properties").([]interface{}))
+		if d.HasChange("schema") {
+			if v, ok := d.GetOk("schema"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.Schema = expandSchema(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
 		_, err = conn.UpdateTable(ctx, input)
@@ -430,6 +484,113 @@ func flattenS3Configuration(apiObject *types.S3Configuration) []interface{} {
 	}
 
 	return []interface{}{tfMap}
+}
+
+func expandSchema(tfMap map[string]interface{}) *types.Schema {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.Schema{}
+
+	if v, ok := tfMap["composite_partition_key"].([]interface{}); ok && len(v) > 0 {
+		apiObject.CompositePartitionKey = expandPartitionKeys(v)
+	}
+
+	return apiObject
+}
+
+func expandPartitionKey(tfMap map[string]interface{}) *types.PartitionKey {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PartitionKey{}
+
+	if v, ok := tfMap["enforcement_in_record"].(string); ok && v != "" {
+		apiObject.EnforcementInRecord = types.PartitionKeyEnforcementLevel(v)
+	}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = types.PartitionKeyType(v)
+	}
+
+	return apiObject
+}
+
+func expandPartitionKeys(tfList []interface{}) []types.PartitionKey {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.PartitionKey
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandPartitionKey(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenSchema(apiObject *types.Schema) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CompositePartitionKey; v != nil {
+		tfMap["composite_partition_key"] = flattenPartitionKeys(v)
+	}
+
+	return tfMap
+}
+
+func flattenPartitionKey(apiObject *types.PartitionKey) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"enforcement_in_record": apiObject.EnforcementInRecord,
+		"type":                  apiObject.Type,
+	}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenPartitionKeys(apiObjects []types.PartitionKey) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenPartitionKey(&apiObject))
+	}
+
+	return tfList
 }
 
 const tableIDSeparator = ":"

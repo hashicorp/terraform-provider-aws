@@ -33,10 +33,15 @@ func TestAccTimestreamWriteTable_basic(t *testing.T) {
 					testAccCheckTableExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "timestream", fmt.Sprintf("database/%[1]s/table/%[1]s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "database_name", dbResourceName, "database_name"),
-					resource.TestCheckResourceAttr(resourceName, "retention_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "false"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "retention_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schema.0.composite_partition_key.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schema.0.composite_partition_key.0.enforcement_in_record", ""),
+					resource.TestCheckResourceAttr(resourceName, "schema.0.composite_partition_key.0.name", ""),
+					resource.TestCheckResourceAttr(resourceName, "schema.0.composite_partition_key.0.type", "MEASURE"),
 					resource.TestCheckResourceAttr(resourceName, "table_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -355,44 +360,38 @@ func testAccCheckTableExists(ctx context.Context, n string) resource.TestCheckFu
 	}
 }
 
-func testAccTableBaseConfig(rName string) string {
+func testAccTableConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_timestreamwrite_database" "test" {
-  database_name = %q
+  database_name = %[1]q
 }
 `, rName)
 }
 
 func testAccTableConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccTableBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTableConfig_base(rName), fmt.Sprintf(`
 resource "aws_timestreamwrite_table" "test" {
   database_name = aws_timestreamwrite_database.test.database_name
-  table_name    = %q
+  table_name    = %[1]q
 }
 `, rName))
 }
 
 func testAccTableConfig_magneticStoreWriteProperties(rName string, enable bool) string {
-	return acctest.ConfigCompose(
-		testAccTableBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTableConfig_base(rName), fmt.Sprintf(`
 resource "aws_timestreamwrite_table" "test" {
   database_name = aws_timestreamwrite_database.test.database_name
-  table_name    = %q
+  table_name    = %[1]q
 
   magnetic_store_write_properties {
-    enable_magnetic_store_writes = %t
+    enable_magnetic_store_writes = %[2]t
   }
 }
 `, rName, enable))
 }
 
 func testAccTableConfig_magneticStoreWritePropertiesS3(rName, prefix string) string {
-	return acctest.ConfigCompose(
-		testAccTableBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTableConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -417,9 +416,7 @@ resource "aws_timestreamwrite_table" "test" {
 }
 
 func testAccTableConfig_magneticStoreWritePropertiesS3KMS(rName string) string {
-	return acctest.ConfigCompose(
-		testAccTableBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTableConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -451,25 +448,21 @@ resource "aws_timestreamwrite_table" "test" {
 }
 
 func testAccTableConfig_retentionProperties(rName string, magneticStoreDays, memoryStoreHours int) string {
-	return acctest.ConfigCompose(
-		testAccTableBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTableConfig_base(rName), fmt.Sprintf(`
 resource "aws_timestreamwrite_table" "test" {
   database_name = aws_timestreamwrite_database.test.database_name
-  table_name    = %q
+  table_name    = %[1]q
 
   retention_properties {
-    magnetic_store_retention_period_in_days = %d
-    memory_store_retention_period_in_hours  = %d
+    magnetic_store_retention_period_in_days = %[2]d
+    memory_store_retention_period_in_hours  = %[3]d
   }
 }
 `, rName, magneticStoreDays, memoryStoreHours))
 }
 
 func testAccTableConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		testAccTableBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTableConfig_base(rName), fmt.Sprintf(`
 resource "aws_timestreamwrite_table" "test" {
   database_name = aws_timestreamwrite_database.test.database_name
   table_name    = %[1]q
@@ -482,9 +475,7 @@ resource "aws_timestreamwrite_table" "test" {
 }
 
 func testAccTableConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccTableBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTableConfig_base(rName), fmt.Sprintf(`
 resource "aws_timestreamwrite_table" "test" {
   database_name = aws_timestreamwrite_database.test.database_name
   table_name    = %[1]q
