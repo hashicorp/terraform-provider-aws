@@ -101,7 +101,7 @@ resource "aws_opensearchserverless_vpc_endpoint" "test" {
 }
 
 data "aws_opensearchserverless_vpc_endpoint" "test" {
-  id = aws_opensearchserverless_vpc_endpoint.test.id
+  vpc_endpoint_id = aws_opensearchserverless_vpc_endpoint.test.id
 }
 `, rName))
 }

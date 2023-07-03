@@ -23,7 +23,7 @@ func DataSourceVPCEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			"vpc_endpoint_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -57,11 +57,11 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 
-	id := d.Get("id").(string)
+	id := d.Get("vpc_endpoint_id").(string)
 	vpcEndpoint, err := FindVPCEndpointByID(ctx, conn, id)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint with id (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Serverless VPC Endpoint with id (%s): %s", id, err)
 	}
 
 	d.SetId(aws.ToString(vpcEndpoint.Id))
