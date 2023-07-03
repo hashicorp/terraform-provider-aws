@@ -86,7 +86,6 @@ func resourcePrivateDNSNamespaceCreate(ctx context.Context, d *schema.ResourceDa
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Service Discovery Private DNS Namespace: %s", input)
 	output, err := conn.CreatePrivateDnsNamespaceWithContext(ctx, input)
 
 	if err != nil {
@@ -139,7 +138,30 @@ func resourcePrivateDNSNamespaceRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourcePrivateDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Tags only.
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+
+	if d.HasChange("description") {
+		input := &servicediscovery.UpdatePrivateDnsNamespaceInput{
+			Id: aws.String(d.Id()),
+			Namespace: &servicediscovery.PrivateDnsNamespaceChange{
+				Description: aws.String(d.Get("description").(string)),
+			},
+			UpdaterRequestId: aws.String(id.UniqueId()),
+		}
+
+		output, err := conn.UpdatePrivateDnsNamespaceWithContext(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("updating Service Discovery Private DNS Namespace (%s): %s", d.Id(), err)
+		}
+
+		if output != nil && output.OperationId != nil {
+			if _, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
+				return diag.Errorf("waiting for Service Discovery Private DNS Namespace (%s) update: %s", d.Id(), err)
+			}
+		}
+	}
+
 	return resourcePrivateDNSNamespaceRead(ctx, d, meta)
 }
 
