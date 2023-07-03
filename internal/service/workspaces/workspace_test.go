@@ -647,9 +647,9 @@ func TestExpandWorkspaceProperties(t *testing.T) {
 		{
 			input: []interface{}{
 				map[string]interface{}{
-					"compute_type_name":                         types.ComputeValue,
+					"compute_type_name":                         string(types.ComputeValue),
 					"root_volume_size_gib":                      80,
-					"running_mode":                              types.RunningModeAutoStop,
+					"running_mode":                              string(types.RunningModeAutoStop),
 					"running_mode_auto_stop_timeout_in_minutes": 60,
 					"user_volume_size_gib":                      10,
 				},
