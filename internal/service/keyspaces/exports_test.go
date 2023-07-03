@@ -7,4 +7,6 @@ var (
 
 	FindKeyspaceByName    = findKeyspaceByName
 	FindTableByTwoPartKey = findTableByTwoPartKey
+
+	TableParseResourceID = tableParseResourceID
 )
