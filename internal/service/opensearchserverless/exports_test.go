@@ -7,4 +7,10 @@ var (
 	ResourceSecurityConfig = newResourceSecurityConfig
 	ResourceSecurityPolicy = newResourceSecurityPolicy
 	ResourceVPCEndpoint    = newResourceVPCEndpoint
+
+	FindAccessPolicyByNameAndType   = findAccessPolicyByNameAndType
+	FindCollectionByID              = findCollectionByID
+	FindSecurityConfigByID          = findSecurityConfigByID
+	FindSecurityPolicyByNameAndType = findSecurityPolicyByNameAndType
+	FindVPCEndpointByID             = findVPCEndpointByID
 )

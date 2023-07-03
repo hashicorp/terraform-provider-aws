@@ -83,7 +83,7 @@ func (d *dataSourceSecurityConfig) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	out, err := FindSecurityConfigByID(ctx, conn, data.ID.ValueString())
+	out, err := findSecurityConfigByID(ctx, conn, data.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameSecurityConfig, data.ID.String(), err),

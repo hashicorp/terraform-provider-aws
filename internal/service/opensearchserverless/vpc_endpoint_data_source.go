@@ -58,7 +58,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 
 	id := d.Get("vpc_endpoint_id").(string)
-	vpcEndpoint, err := FindVPCEndpointByID(ctx, conn, id)
+	vpcEndpoint, err := findVPCEndpointByID(ctx, conn, id)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Serverless VPC Endpoint with id (%s): %s", id, err)
