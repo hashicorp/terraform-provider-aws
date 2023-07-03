@@ -34,6 +34,7 @@ import (
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
+	qldb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qldb"
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	resourceexplorer2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
@@ -260,7 +261,6 @@ import (
 	polly_sdkv1 "github.com/aws/aws-sdk-go/service/polly"
 	prometheusservice_sdkv1 "github.com/aws/aws-sdk-go/service/prometheusservice"
 	proton_sdkv1 "github.com/aws/aws-sdk-go/service/proton"
-	qldb_sdkv1 "github.com/aws/aws-sdk-go/service/qldb"
 	qldbsession_sdkv1 "github.com/aws/aws-sdk-go/service/qldbsession"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	ram_sdkv1 "github.com/aws/aws-sdk-go/service/ram"
@@ -1273,8 +1273,8 @@ func (c *AWSClient) ProtonConn(ctx context.Context) *proton_sdkv1.Proton {
 	return errs.Must(conn[*proton_sdkv1.Proton](ctx, c, names.Proton))
 }
 
-func (c *AWSClient) QLDBConn(ctx context.Context) *qldb_sdkv1.QLDB {
-	return errs.Must(conn[*qldb_sdkv1.QLDB](ctx, c, names.QLDB))
+func (c *AWSClient) QLDBClient(ctx context.Context) *qldb_sdkv2.Client {
+	return errs.Must(client[*qldb_sdkv2.Client](ctx, c, names.QLDB))
 }
 
 func (c *AWSClient) QLDBSessionConn(ctx context.Context) *qldbsession_sdkv1.QLDBSession {
