@@ -147,7 +147,10 @@ func testAccIPGroup_MultipleDirectories(t *testing.T) {
 	directoryResourceName2 := "aws_workspaces_directory.test2"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPGroupDestroy(ctx),
