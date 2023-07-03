@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package R006 defines an Analyzer that checks for
 // RetryFunc that omit retryable errors
 package R006

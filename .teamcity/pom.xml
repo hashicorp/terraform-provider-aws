@@ -1,4 +1,9 @@
 <?xml version="1.0"?>
+<!--
+ Copyright (c) HashiCorp, Inc.
+ SPDX-License-Identifier: MPL-2.0
+-->
+
 <project>
     <modelVersion>4.0.0</modelVersion>
     <name>Terraform-Provider-AWS Config DSL Script</name>

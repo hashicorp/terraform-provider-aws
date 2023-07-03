@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package S001 defines an Analyzer that checks for
 // Schema of TypeList or TypeSet missing Elem
 package S001

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package AT005 defines an Analyzer that checks for
 // acceptance tests prefixed with Test but not TestAcc
 package AT005

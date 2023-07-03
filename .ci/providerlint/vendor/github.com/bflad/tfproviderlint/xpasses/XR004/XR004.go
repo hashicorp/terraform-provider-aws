@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package XR004 defines an Analyzer that checks for
 // ResourceData.Set() calls missing error checking with
 // complex types

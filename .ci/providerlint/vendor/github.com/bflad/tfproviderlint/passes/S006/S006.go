@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package S006 defines an Analyzer that checks for
 // Schema of TypeMap missing Elem
 package S006

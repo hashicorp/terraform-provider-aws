@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package ecdsa implements ECDSA signature, suitable for OpenPGP,
 // as specified in RFC 6637, section 5.
 package ecdsa

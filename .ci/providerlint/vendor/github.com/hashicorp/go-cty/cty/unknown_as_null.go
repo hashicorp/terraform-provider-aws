@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cty
 
 // UnknownAsNull returns a value of the same type as the given value but

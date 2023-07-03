@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package S023 defines an Analyzer that checks for
 // Schema that should omit Elem with incompatible Type
 package S023

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package AWSAT002 defines an Analyzer that checks for
 // hardcoded AMI IDs
 package AWSAT002

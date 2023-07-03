@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 val orgacctServices = mapOf(
     "accessanalyzer" to ServiceSpec("IAM Access Analyzer"),
     "backup" to ServiceSpec("Backup", "TestAccBackupGlobalSettings_basic"),

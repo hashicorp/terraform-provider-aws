@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package S018 defines an Analyzer that checks for
 // Schema that should prefer TypeList with MaxItems 1
 package S018

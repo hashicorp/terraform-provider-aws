@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Built-in base types for API calls. Primarily useful as return types.
 
 syntax = "proto2";

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 #define ladderStepLeg          \
     addSub(x2,z2)              \
     addSub(x3,z3)              \

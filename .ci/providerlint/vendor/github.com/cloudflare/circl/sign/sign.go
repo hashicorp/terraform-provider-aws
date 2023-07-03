@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package sign provides unified interfaces for signature schemes.
 //
 // A register of schemes is available in the package

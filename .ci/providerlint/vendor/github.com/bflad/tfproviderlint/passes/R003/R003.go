@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package R003 defines an Analyzer that checks for
 // Resource having Exists functions
 package R003

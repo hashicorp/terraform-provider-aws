@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 rules:
   # To fix:
   #   find internal/service/*/*.go -print | xargs ruby -p -i -e 'gsub(/diag.FromErr\(fmt.Errorf\((.*)\)\)/, "diag.Errorf(\\1)")'

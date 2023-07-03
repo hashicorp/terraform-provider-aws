@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package endpoints provides the types and functionality for defining regions
 // and endpoints, as well as querying those definitions.
 //

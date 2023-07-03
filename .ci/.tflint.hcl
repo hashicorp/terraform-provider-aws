@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 plugin "aws" {
   enabled = true
   version = "0.23.1"

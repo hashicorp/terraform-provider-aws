@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package ed448 implements Ed448 signature scheme as described in RFC-8032.
 //
 // This package implements two signature variants.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package mlsbset provides a constant-time exponentiation method with precomputation.
 //
 // References: "Efficient and secure algorithms for GLV-based scalar

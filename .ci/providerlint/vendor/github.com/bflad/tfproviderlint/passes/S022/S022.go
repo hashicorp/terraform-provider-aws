@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package S022 defines an Analyzer that checks for
 // Schema of TypeMap with invalid Elem of *schema.Resource
 package S022

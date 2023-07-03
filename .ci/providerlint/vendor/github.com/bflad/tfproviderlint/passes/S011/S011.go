@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package S011 defines an Analyzer that checks for
 // Schema with only Computed enabled and DiffSuppressFunc configured
 package S011

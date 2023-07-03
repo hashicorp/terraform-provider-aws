@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package AT003 defines an Analyzer that checks for
 // acceptance test names missing an underscore
 package AT003

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package S017 defines an Analyzer that checks for
 // Schema including MaxItems or MinItems without TypeList,
 // TypeMap, or TypeSet

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cty
 
 // Walk visits all of the values in a possibly-complex structure, calling

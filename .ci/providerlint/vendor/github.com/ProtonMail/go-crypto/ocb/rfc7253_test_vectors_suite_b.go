@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ocb
 
 // Second set of test vectors from https://tools.ietf.org/html/rfc7253

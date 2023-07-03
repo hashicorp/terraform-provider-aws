@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package x448
 
 import fp "github.com/cloudflare/circl/math/fp448"

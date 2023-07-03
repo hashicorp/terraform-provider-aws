@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 name: "Other"
 description: "Choose this option if your issue does not fit the description of the others."
 labels: ["needs-triage"]

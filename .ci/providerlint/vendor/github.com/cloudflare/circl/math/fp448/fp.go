@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package fp448 provides prime field arithmetic over GF(2^448-2^224-1).
 package fp448
 

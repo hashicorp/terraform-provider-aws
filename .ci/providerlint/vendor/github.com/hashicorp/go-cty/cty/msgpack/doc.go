@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package msgpack provides functions for serializing cty values in the
 // msgpack encoding, and decoding them again.
 //

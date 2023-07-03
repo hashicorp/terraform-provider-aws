@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package R002 defines an Analyzer that checks for
 // ResourceData.Set() calls using * dereferences
 package R002

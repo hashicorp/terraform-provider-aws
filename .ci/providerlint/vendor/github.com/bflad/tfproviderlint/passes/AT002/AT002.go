@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package AT002 defines an Analyzer that checks for
 // acceptance test names including the word import
 package AT002

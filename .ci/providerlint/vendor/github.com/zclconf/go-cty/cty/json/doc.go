@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package json provides functions for serializing cty types and values in
 // JSON format, and for decoding them again.
 //

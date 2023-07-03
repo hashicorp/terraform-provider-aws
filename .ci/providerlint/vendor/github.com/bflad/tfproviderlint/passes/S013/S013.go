@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package S013 defines an Analyzer that checks for
 // Schema that one of Computed, Optional, or Required
 // is not configured

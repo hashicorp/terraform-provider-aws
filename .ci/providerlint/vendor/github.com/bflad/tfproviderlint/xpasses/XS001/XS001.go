@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package XS001 defines an Analyzer that checks for
 // Schema that Description is configured
 package XS001

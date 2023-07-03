@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package openpgp
 
 const testKey1KeyId uint64 = 0xA34D7E18C20C31BB

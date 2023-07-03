@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package internal
 
 // MainPath stores the file path of the main package. On App Engine Standard

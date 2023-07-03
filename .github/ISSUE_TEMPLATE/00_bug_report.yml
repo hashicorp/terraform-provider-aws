@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 name: "Report a Bug"
 description: "Choose this option to let us know about an unexpected error, a crash, or otherwise incorrect behavior."
 title: "[Bug]: "

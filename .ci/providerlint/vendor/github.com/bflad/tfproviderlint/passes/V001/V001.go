@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package V001 defines an Analyzer that checks for
 // custom SchemaValidateFunc that implement validation.StringMatch()
 package V001

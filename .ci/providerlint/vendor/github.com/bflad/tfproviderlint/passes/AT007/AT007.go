@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package AT007 defines an Analyzer that checks for
 // acceptance tests containing multiple resource.ParallelTest() invocations
 package AT007

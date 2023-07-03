@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package S004 defines an Analyzer that checks for
 // Schema with Required enabled and Default configured
 package S004

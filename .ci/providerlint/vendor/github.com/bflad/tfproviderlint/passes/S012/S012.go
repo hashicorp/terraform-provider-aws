@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package S012 defines an Analyzer that checks for
 // Schema that Type is configured
 package S012

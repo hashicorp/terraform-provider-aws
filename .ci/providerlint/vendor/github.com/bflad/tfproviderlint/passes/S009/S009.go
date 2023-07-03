@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package S009 defines an Analyzer that checks for
 // Schema of TypeList or TypeSet with ValidateFunc configured
 package S009

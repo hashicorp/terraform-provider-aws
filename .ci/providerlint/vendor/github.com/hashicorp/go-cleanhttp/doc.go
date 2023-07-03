@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package cleanhttp offers convenience utilities for acquiring "clean"
 // http.Transport and http.Client structs.
 //

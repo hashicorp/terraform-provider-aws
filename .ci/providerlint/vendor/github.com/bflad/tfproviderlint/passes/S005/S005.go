@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package S005 defines an Analyzer that checks for
 // Schema with Computed enabled and Default configured
 package S005

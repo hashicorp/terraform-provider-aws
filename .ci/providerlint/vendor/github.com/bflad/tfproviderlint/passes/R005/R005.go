@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package R005 defines an Analyzer that checks for
 // ResourceData.HasChange() calls that can be combined into
 // a single HasChanges() call.

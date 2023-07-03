@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package brainpool implements Brainpool elliptic curves.
 // Implementation of rcurves is from github.com/ebfe/brainpool
 // Note that these curves are implemented with naive, non-constant time operations

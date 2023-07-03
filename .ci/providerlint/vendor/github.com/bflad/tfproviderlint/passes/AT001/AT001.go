@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package AT001 defines an Analyzer that checks for
 // TestCase missing CheckDestroy
 package AT001
