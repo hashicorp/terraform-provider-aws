@@ -143,7 +143,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	databaseName := d.Get("database_name").(string)
 	tableName := d.Get("table_name").(string)
-	id := TableCreateResourceID(tableName, databaseName)
+	id := tableCreateResourceID(tableName, databaseName)
 	input := &timestreamwrite.CreateTableInput{
 		DatabaseName: aws.String(databaseName),
 		TableName:    aws.String(tableName),
@@ -172,7 +172,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
-	tableName, databaseName, err := TableParseResourceID(d.Id())
+	tableName, databaseName, err := tableParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -202,7 +202,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		tableName, databaseName, err := TableParseResourceID(d.Id())
+		tableName, databaseName, err := tableParseResourceID(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -233,7 +233,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
-	tableName, databaseName, err := TableParseResourceID(d.Id())
+	tableName, databaseName, err := tableParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -434,14 +434,14 @@ func flattenS3Configuration(apiObject *types.S3Configuration) []interface{} {
 
 const tableIDSeparator = ":"
 
-func TableCreateResourceID(tableName, databaseName string) string {
+func tableCreateResourceID(tableName, databaseName string) string {
 	parts := []string{tableName, databaseName}
 	id := strings.Join(parts, tableIDSeparator)
 
 	return id
 }
 
-func TableParseResourceID(id string) (string, string, error) {
+func tableParseResourceID(id string) (string, string, error) {
 	parts := strings.SplitN(id, tableIDSeparator, 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {

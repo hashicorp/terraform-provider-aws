@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/timestreamwrite"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftimestreamwrite "github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccTimestreamWriteTable_basic(t *testing.T) {
@@ -24,7 +23,7 @@ func TestAccTimestreamWriteTable_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -58,7 +57,7 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -105,7 +104,7 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3Config(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -150,7 +149,7 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3KMSConfig(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -184,7 +183,7 @@ func TestAccTimestreamWriteTable_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -208,7 +207,7 @@ func TestAccTimestreamWriteTable_retentionProperties(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -258,7 +257,7 @@ func TestAccTimestreamWriteTable_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -305,27 +304,22 @@ func TestAccTimestreamWriteTable_tags(t *testing.T) {
 
 func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_timestreamwrite_table" {
 				continue
 			}
 
-			tableName, dbName, err := tftimestreamwrite.TableParseID(rs.Primary.ID)
+			tableName, databaseName, err := tftimestreamwrite.TableParseResourceID(rs.Primary.ID)
 
 			if err != nil {
 				return err
 			}
 
-			input := &timestreamwrite.DescribeTableInput{
-				DatabaseName: aws.String(dbName),
-				TableName:    aws.String(tableName),
-			}
+			_, err = tftimestreamwrite.FindTableByTwoPartKey(ctx, conn, databaseName, tableName)
 
-			output, err := conn.DescribeTableWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, timestreamwrite.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -333,9 +327,7 @@ func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			if output != nil && output.Table != nil {
-				return fmt.Errorf("Timestream Table (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Timestream Table %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -349,34 +341,17 @@ func testAccCheckTableExists(ctx context.Context, n string) resource.TestCheckFu
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no resource ID is set")
-		}
-
-		tableName, dbName, err := tftimestreamwrite.TableParseID(rs.Primary.ID)
+		tableName, databaseName, err := tftimestreamwrite.TableParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteClient(ctx)
 
-		input := &timestreamwrite.DescribeTableInput{
-			DatabaseName: aws.String(dbName),
-			TableName:    aws.String(tableName),
-		}
+		_, err = tftimestreamwrite.FindTableByTwoPartKey(ctx, conn, databaseName, tableName)
 
-		output, err := conn.DescribeTableWithContext(ctx, input)
-
-		if err != nil {
-			return err
-		}
-
-		if output == nil || output.Table == nil {
-			return fmt.Errorf("Timestream Table (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 

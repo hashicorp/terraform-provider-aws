@@ -7,4 +7,6 @@ var (
 
 	FindDatabaseByName    = findDatabaseByName
 	FindTableByTwoPartKey = findTableByTwoPartKey
+
+	TableParseResourceID = tableParseResourceID
 )
