@@ -134,6 +134,7 @@ func resourceTable() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"enforcement_in_record": {
