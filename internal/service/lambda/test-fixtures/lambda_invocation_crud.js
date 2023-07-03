@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 const AWS = require('aws-sdk')
 const ssmClient = new AWS.SSM();
 
