@@ -61,6 +61,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceSecurityPolicy,
 			TypeName: "aws_opensearchserverless_security_policy",
 		},
+		{
+			Factory:  DataSourceVPCEndpoint,
+			TypeName: "aws_opensearchserverless_vpc_endpoint",
+		},
 	}
 }
 
