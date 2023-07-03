@@ -93,10 +93,17 @@ func TestAccServiceDiscoveryPublicDNSNamespace_description(t *testing.T) {
 		CheckDestroy:             testAccCheckPublicDNSNamespaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicDNSNamespaceConfig_description(rName, "test"),
+				Config: testAccPublicDNSNamespaceConfig_description(rName, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc1"),
+				),
+			},
+			{
+				Config: testAccPublicDNSNamespaceConfig_description(rName, "desc2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPublicDNSNamespaceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc2"),
 				),
 			},
 		},
