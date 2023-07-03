@@ -23,6 +23,7 @@ import (
 	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
 	identitystore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/identitystore"
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
+	internetmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	ivschat_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ivschat"
 	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
 	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
@@ -175,7 +176,6 @@ import (
 	iam_sdkv1 "github.com/aws/aws-sdk-go/service/iam"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	inspector_sdkv1 "github.com/aws/aws-sdk-go/service/inspector"
-	internetmonitor_sdkv1 "github.com/aws/aws-sdk-go/service/internetmonitor"
 	iot_sdkv1 "github.com/aws/aws-sdk-go/service/iot"
 	iot1clickdevicesservice_sdkv1 "github.com/aws/aws-sdk-go/service/iot1clickdevicesservice"
 	iot1clickprojects_sdkv1 "github.com/aws/aws-sdk-go/service/iot1clickprojects"
@@ -904,8 +904,8 @@ func (c *AWSClient) Inspector2Client(ctx context.Context) *inspector2_sdkv2.Clie
 	return errs.Must(client[*inspector2_sdkv2.Client](ctx, c, names.Inspector2))
 }
 
-func (c *AWSClient) InternetMonitorConn(ctx context.Context) *internetmonitor_sdkv1.InternetMonitor {
-	return errs.Must(conn[*internetmonitor_sdkv1.InternetMonitor](ctx, c, names.InternetMonitor))
+func (c *AWSClient) InternetMonitorClient(ctx context.Context) *internetmonitor_sdkv2.Client {
+	return errs.Must(client[*internetmonitor_sdkv2.Client](ctx, c, names.InternetMonitor))
 }
 
 func (c *AWSClient) IoTConn(ctx context.Context) *iot_sdkv1.IoT {
