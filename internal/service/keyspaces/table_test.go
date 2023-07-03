@@ -38,6 +38,7 @@ func TestAccKeyspacesTable_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cassandra", fmt.Sprintf("/keyspace/%s/table/%s", rName1, rName2)),
 					resource.TestCheckResourceAttr(resourceName, "capacity_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.throughput_mode", "PAY_PER_REQUEST"),
+					resource.TestCheckResourceAttr(resourceName, "client_side_timestamps.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "comment.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "comment.0.message", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_time_to_live", "0"),
@@ -139,6 +140,36 @@ func TestAccKeyspacesTable_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccKeyspacesTable_clientSideTimestamps(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v keyspaces.GetTableOutput
+	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
+	resourceName := "aws_keyspaces_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_clientSideTimestamps(rName1, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "client_side_timestamps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_side_timestamps.0.status", "ENABLED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -608,6 +639,34 @@ resource "aws_keyspaces_table" "test" {
   }
 }
 `, rName1, rName2, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccTableConfig_clientSideTimestamps(rName1, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_keyspaces_keyspace" "test" {
+  name = %[1]q
+}
+
+resource "aws_keyspaces_table" "test" {
+  keyspace_name = aws_keyspaces_keyspace.test.name
+  table_name    = %[2]q
+
+  schema_definition {
+    column {
+      name = "message"
+      type = "ascii"
+    }
+
+    partition_key {
+      name = "message"
+    }
+  }
+
+  client_side_timestamps {
+    status = "ENABLED"
+  }
+}
+`, rName1, rName2)
 }
 
 func testAccTableConfig_multipleColumns(rName1, rName2 string) string {

@@ -45,10 +45,14 @@ func resourceTable() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("schema_definition.0.column", func(_ context.Context, o, n, meta interface{}) bool {
+			customdiff.ForceNewIfChange("client_side_timestamps", func(_ context.Context, old, new, meta interface{}) bool {
+				// Client-side timestamps cannot be disabled.
+				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
+			}),
+			customdiff.ForceNewIfChange("schema_definition.0.column", func(_ context.Context, old, new, meta interface{}) bool {
 				// Columns can only be added.
-				if os, ok := o.(*schema.Set); ok {
-					if ns, ok := n.(*schema.Set); ok {
+				if os, ok := old.(*schema.Set); ok {
+					if ns, ok := new.(*schema.Set); ok {
 						if del := os.Difference(ns); del.Len() > 0 {
 							return true
 						}
@@ -87,6 +91,20 @@ func resourceTable() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntAtLeast(1),
+						},
+					},
+				},
+			},
+			"client_side_timestamps": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"status": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.ClientSideTimestampsStatus](),
 						},
 					},
 				},
@@ -297,6 +315,10 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.CapacitySpecification = expandCapacitySpecification(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("client_side_timestamps"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ClientSideTimestamps = expandClientSideTimestamps(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("comment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Comment = expandComment(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -364,6 +386,13 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	} else {
 		d.Set("capacity_specification", nil)
+	}
+	if table.ClientSideTimestamps != nil {
+		if err := d.Set("client_side_timestamps", []interface{}{flattenClientSideTimestamps(table.ClientSideTimestamps)}); err != nil {
+			return diag.Errorf("setting client_side_timestamps: %s", err)
+		}
+	} else {
+		d.Set("client_side_timestamps", nil)
 	}
 	if table.Comment != nil {
 		if err := d.Set("comment", []interface{}{flattenComment(table.Comment)}); err != nil {
@@ -435,6 +464,26 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return diag.Errorf("waiting for Keyspaces Table (%s) CapacitySpecification update: %s", d.Id(), err)
+				}
+			}
+		}
+
+		if d.HasChange("client_side_timestamps") {
+			if v, ok := d.GetOk("client_side_timestamps"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input := &keyspaces.UpdateTableInput{
+					ClientSideTimestamps: expandClientSideTimestamps(v.([]interface{})[0].(map[string]interface{})),
+					KeyspaceName:         aws.String(keyspaceName),
+					TableName:            aws.String(tableName),
+				}
+
+				_, err := conn.UpdateTable(ctx, input)
+
+				if err != nil {
+					return diag.Errorf("updating Keyspaces Table (%s) ClientSideTimestamps: %s", d.Id(), err)
+				}
+
+				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return diag.Errorf("waiting for Keyspaces Table (%s) ClientSideTimestamps update: %s", d.Id(), err)
 				}
 			}
 		}
@@ -729,6 +778,20 @@ func expandCapacitySpecification(tfMap map[string]interface{}) *types.CapacitySp
 	return apiObject
 }
 
+func expandClientSideTimestamps(tfMap map[string]interface{}) *types.ClientSideTimestamps {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ClientSideTimestamps{}
+
+	if v, ok := tfMap["status"].(string); ok && v != "" {
+		apiObject.Status = types.ClientSideTimestampsStatus(v)
+	}
+
+	return apiObject
+}
+
 func expandComment(tfMap map[string]interface{}) *types.Comment {
 	if tfMap == nil {
 		return nil
@@ -998,6 +1061,18 @@ func flattenCapacitySpecificationSummary(apiObject *types.CapacitySpecificationS
 
 	if v := apiObject.WriteCapacityUnits; v != nil {
 		tfMap["write_capacity_units"] = aws.ToInt64(v)
+	}
+
+	return tfMap
+}
+
+func flattenClientSideTimestamps(apiObject *types.ClientSideTimestamps) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"status": apiObject.Status,
 	}
 
 	return tfMap
