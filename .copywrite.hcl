@@ -12,5 +12,6 @@ project {
     ".github/**",
     ".teamcity/**",
     ".release/**",
+    "infrastructure/repository/labels-service.tf",
   ]
 }
