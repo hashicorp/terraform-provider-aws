@@ -348,7 +348,7 @@ swf,swf,swf,swf,,swf,,,SWF,SWF,,,2,,aws_swf_,,swf_,SWF (Simple Workflow),Amazon,
 ,,,,,,,,,,,,,,,,,Tag Editor,AWS,x,,,,Part of Resource Groups Tagging
 textract,textract,textract,textract,,textract,,,Textract,Textract,,1,,,aws_textract_,,textract_,Textract,Amazon,,,,,
 timestream-query,timestreamquery,timestreamquery,timestreamquery,,timestreamquery,,,TimestreamQuery,TimestreamQuery,,1,,,aws_timestreamquery_,,timestreamquery_,Timestream Query,Amazon,,,,,
-timestream-write,timestreamwrite,timestreamwrite,timestreamwrite,,timestreamwrite,,,TimestreamWrite,TimestreamWrite,,1,,,aws_timestreamwrite_,,timestreamwrite_,Timestream Write,Amazon,,,,,
+timestream-write,timestreamwrite,timestreamwrite,timestreamwrite,,timestreamwrite,,,TimestreamWrite,TimestreamWrite,,,2,,aws_timestreamwrite_,,timestreamwrite_,Timestream Write,Amazon,,,,,
 ,,,,,,,,,,,,,,,,,Tools for PowerShell,AWS,x,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Training and Certification,AWS,x,,,,No SDK support
 transcribe,transcribe,transcribeservice,transcribe,,transcribe,,transcribeservice,Transcribe,TranscribeService,,,2,,aws_transcribe_,,transcribe_,Transcribe,Amazon,,,,,
