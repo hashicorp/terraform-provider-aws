@@ -13,5 +13,6 @@ project {
     ".teamcity/**",
     ".release/**",
     "infrastructure/repository/labels-service.tf",
+    ".goreleaser.yml",
   ]
 }
