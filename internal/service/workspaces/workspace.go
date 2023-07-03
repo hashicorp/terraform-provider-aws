@@ -86,7 +86,7 @@ func ResourceWorkspace() *schema.Resource {
 						"compute_type_name": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      types.ComputeValue,
+							Default:      string(types.ComputeValue),
 							ValidateFunc: validation.StringInSlice(flattenComputeEnumValues(types.Compute("").Values()), false),
 						},
 						"root_volume_size_gib": {
@@ -101,7 +101,7 @@ func ResourceWorkspace() *schema.Resource {
 						"running_mode": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  types.RunningModeAlwaysOn,
+							Default:  string(types.RunningModeAlwaysOn),
 							ValidateFunc: validation.StringInSlice(enum.Slice(
 								types.RunningModeAlwaysOn,
 								types.RunningModeAutoStop,
@@ -353,13 +353,13 @@ func ExpandWorkspaceProperties(properties []interface{}) *types.WorkspacePropert
 	p := properties[0].(map[string]interface{})
 
 	workspaceProperties := &types.WorkspaceProperties{
-		ComputeTypeName:   types.Compute(p["compute_type_name"].(string)),
+		ComputeTypeName:   p["compute_type_name"].(types.Compute),
 		RootVolumeSizeGib: aws.Int32(int32(p["root_volume_size_gib"].(int))),
-		RunningMode:       types.RunningMode(p["running_mode"].(string)),
+		RunningMode:       p["running_mode"].(types.RunningMode),
 		UserVolumeSizeGib: aws.Int32(int32(p["user_volume_size_gib"].(int))),
 	}
 
-	if p["running_mode"].(string) == string(types.RunningModeAutoStop) {
+	if p["running_mode"].(types.RunningMode) == types.RunningModeAutoStop {
 		workspaceProperties.RunningModeAutoStopTimeoutInMinutes = aws.Int32(int32(p["running_mode_auto_stop_timeout_in_minutes"].(int)))
 	}
 
