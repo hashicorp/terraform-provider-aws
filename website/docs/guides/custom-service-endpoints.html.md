@@ -123,6 +123,7 @@ provider "aws" {
   <li><code>cloudwatch</code></li>
   <li><code>codeartifact</code></li>
   <li><code>codebuild</code></li>
+  <li><code>codecatalyst</code></li>
   <li><code>codecommit</code></li>
   <li><code>codeguruprofiler</code></li>
   <li><code>codegurureviewer</code></li>

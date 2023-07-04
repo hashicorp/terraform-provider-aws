@@ -226,6 +226,9 @@ service/codeartifact:
 service/codebuild:
   - 'internal/service/codebuild/**/*'
   - 'website/**/codebuild_*'
+service/codecatalyst:
+  - 'internal/service/codecatalyst/**/*'
+  - 'website/**/codecatalyst_*'
 service/codecommit:
   - 'internal/service/codecommit/**/*'
   - 'website/**/codecommit_*'

@@ -133,6 +133,8 @@ service/codeartifact:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codeartifact_'
 service/codebuild:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codebuild_'
+service/codecatalyst:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecatalyst_'
 service/codecommit:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecommit_'
 service/codeguruprofiler:
