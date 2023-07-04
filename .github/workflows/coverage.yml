@@ -1,0 +1,30 @@
+name: Coverage Documentation (Experiment)
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  coverage:
+    runs-on:
+      - ubuntu-latest
+    steps:
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+      - run: echo $PATH
+      - run: git config --global user.email "github-team-terraform-aws@hashicorp.com"
+      - run: git config --global user.name "team-tf-aws"
+      - run: go install github.com/breathingdust/duvet@main
+      - run: |
+          duvet service -f markdown -d docs
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@153407881ec5c347639a548ade7d8ad1d6740e38 # v5.0.2
+        with:
+          commit-message: "docs: update coverage stats"
+          title: "docs: update coverage stats"
+          body: "This PR updates the experimental resource level coverage stats found in the contributor documentation."
+          branch: coverage
