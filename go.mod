@@ -53,7 +53,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/swf v1.15.2
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.8
-	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.0.2
+	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.0.4
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.7
 	github.com/aws/aws-sdk-go-v2/service/xray v1.16.13
 	github.com/aws/smithy-go v1.13.5
