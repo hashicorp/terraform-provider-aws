@@ -56,6 +56,7 @@ var (
 	tagInCustomVal          = flag.String("TagInCustomVal", "", "tagInCustomVal")
 	tagInIDElem             = flag.String("TagInIDElem", "ResourceArn", "tagInIDElem")
 	tagInIDNeedSlice        = flag.String("TagInIDNeedSlice", "", "tagInIDNeedSlice")
+	tagInIDNeedValueSlice   = flag.String("TagInIDNeedValueSlice", "", "tagInIDNeedValueSlice")
 	tagInTagsElem           = flag.String("TagInTagsElem", "Tags", "tagInTagsElem")
 	tagKeyType              = flag.String("TagKeyType", "", "tagKeyType")
 	tagOp                   = flag.String("TagOp", "TagResource", "tagOp")
@@ -170,6 +171,7 @@ type TemplateData struct {
 	TagInCustomVal          string
 	TagInIDElem             string
 	TagInIDNeedSlice        string
+	TagInIDNeedValueSlice   string
 	TagInTagsElem           string
 	TagKeyType              string
 	TagOp                   string
@@ -316,6 +318,7 @@ func main() {
 		TagInCustomVal:          *tagInCustomVal,
 		TagInIDElem:             *tagInIDElem,
 		TagInIDNeedSlice:        *tagInIDNeedSlice,
+		TagInIDNeedValueSlice:   *tagInIDNeedValueSlice,
 		TagInTagsElem:           *tagInTagsElem,
 		TagKeyType:              *tagKeyType,
 		TagOp:                   *tagOp,
