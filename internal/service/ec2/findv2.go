@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -80,6 +80,13 @@ func FindVPCsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsIn
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
 		if err != nil {
 			return nil, fmt.Errorf("reading VPCs: %s", err)
 		}
@@ -101,13 +108,6 @@ func FindVPCByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.
 
 	if err != nil {
 		return nil, err
-	}
-
-	// Eventual consistency check.
-	if aws.ToString(output.VpcId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
 	}
 
 	return output, nil
