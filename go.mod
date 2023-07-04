@@ -48,7 +48,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.4.3
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.18.2
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.36.7
-	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.15.6
+	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.15.7
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/swf v1.15.2
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.17.2
