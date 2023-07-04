@@ -30,3 +30,6 @@ var ServiceTagsSliceBody string
 
 //go:embed update_tags_body.tmpl
 var UpdateTagsBody string
+
+//go:embed wait_tags_propagated_body.tmpl
+var WaitTagsPropagatedBody string
