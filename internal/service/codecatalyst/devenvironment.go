@@ -5,11 +5,7 @@ import (
 
 	"context"
 	"errors"
-	"fmt"
 	"log"
-	"reflect"
-	"regexp"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -18,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -54,7 +49,7 @@ func ResourceDevenvironment() *schema.Resource {
 		},
 		
 		Schema: map[string]*schema.Schema{
-			"alias": schema.StringAttribute{
+			"alias": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -172,11 +167,11 @@ func resourceDevenvironmentCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if err != nil {
 
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameDevenvironment, d.Get("name").(string), err)...)
+		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameDevenvironment, d.Get("id").(string), err)...)
 	}
 
-	if out == nil || out == nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameDevenvironment, d.Get("name").(string), errors.New("empty output"))...)
+	if  out == nil {
+		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameDevenvironment, d.Get("id").(string), errors.New("empty output"))...)
 	}
 	
 
@@ -217,25 +212,15 @@ func resourceDevenvironmentRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("inactivity_timeout_minutes", out.InactivityTimeoutMinutes)
 	d.Set("persistent_storage", flattenPersistentStorage(out.PersistentStorage))
 	
-	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
+	if err := d.Set("ides", flattenIdes(out.Ides)); err != nil {
+		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionSetting, ResNameDevenvironment, d.Id(), err)...)
+	}
+
+	if err := d.Set("ides", flattenRepositories(out.Repositories)); err != nil {
 		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionSetting, ResNameDevenvironment, d.Id(), err)...)
 	}
 	
-	// TIP: Setting a JSON string to avoid errorneous diffs.
-	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
-	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionSetting, ResNameDevenvironment, d.Id(), err)...)
-	}
-
-	p, err = structure.NormalizeJsonString(p)
-	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionSetting, ResNameDevenvironment, d.Id(), err)...)
-	}
-
-	d.Set("policy", p)
-
 	
-	// TIP: -- 6. Return diags
 	return diags
 }
 
@@ -244,40 +229,40 @@ func resourceDevenvironmentUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 	
-	// TIP: -- 2. Populate a modify input structure and check for changes
-	//
-	// When creating the input structure, only include mandatory fields. Other
-	// fields are set as needed. You can use a flag, such as update below, to
-	// determine if a certain portion of arguments have been changed and
-	// whether to call the AWS update function.
 	update := false
 
 	in := &codecatalyst.UpdateDevEnvironmentInput{
 		Id: aws.String(d.Id()),
 	}
 
-	if d.HasChanges("an_argument") {
-		in.AnArgument = aws.String(d.Get("an_argument").(string))
+	if d.HasChanges("alias") {
+		in.Alias = aws.String(d.Get("alias").(string))
 		update = true
 	}
+
+	if d.HasChanges("instance_type") {
+		in.InstanceType = types.InstanceType(d.Get("instance_type").(string))
+		update = true
+	}
+
+
 
 	if !update {
 
 		return diags
 	}
 	
-	// TIP: -- 3. Call the AWS modify/update function
 	log.Printf("[DEBUG] Updating Codecatalyst Devenvironment (%s): %#v", d.Id(), in)
 	out, err := conn.UpdateDevEnvironment(ctx, in)
 	if err != nil {
 		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionUpdating, ResNameDevenvironment, d.Id(), err)...)
 	}
 	
-	if _, err := waitDevenvironmentUpdated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitDevenvironmentUpdated(ctx, conn, aws.ToString(out.Id) ,out.SpaceName, out.ProjectName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionWaitingForUpdate, ResNameDevenvironment, d.Id(), err)...)
 	}
 	
-	// TIP: -- 5. Call the Read function in the Update return
+
 	return append(diags, resourceDevenvironmentRead(ctx, d, meta)...)
 }
 
@@ -411,14 +396,65 @@ func findDevenvironmentByID(ctx context.Context, conn *codecatalyst.Client, id s
 	return out, nil
 }
 
-func flattenide(apiObject *types.IdeConfiguration) map[string]interface{} {
+func flattenRepositories(apiObjects []types.DevEnvironmentRepositorySummary) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenRepository(&apiObject))
+	}
+
+	return tfList
+}
+
+func flattenRepository(apiObject *types.DevEnvironmentRepositorySummary) interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"name": aws.ToString(apiObject.Name),
-		"runtime": aws.ToString(apiObject.Runtime),
+	tfMap := map[string]interface{}{}
+
+	if v:=apiObject.BranchName; v != nil {
+		tfMap["branch_name"] = aws.ToString(v)
+	}
+
+	if v:=apiObject.RepositoryName; v != nil {
+		tfMap["repository_name"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenIdes(apiObjects []types.Ide) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenIde(&apiObject))
+	}
+
+	return tfList
+}
+
+func flattenIde(apiObject *types.Ide) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v:=apiObject.Name; v != nil {
+		tfMap["name"] = aws.ToString(v)
+	}
+
+	if v:=apiObject.Runtime; v != nil {
+		tfMap["runtime"] = aws.ToString(v)
 	}
 
 	return tfMap

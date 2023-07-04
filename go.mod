@@ -15,6 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.14
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.21.2
+	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.3.2
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.3
@@ -105,7 +106,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.34 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.28 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.34 // indirect
-	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.3.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.20.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.28 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.14.3 // indirect
