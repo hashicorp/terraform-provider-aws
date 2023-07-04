@@ -1,0 +1,93 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package types_test
+
+import (
+	"context"
+	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+)
+
+func TestObjectTypeOfValueFromTerraform(t *testing.T) {
+	t.Parallel()
+
+	type ObjectA struct {
+		Name types.String `tfsdk:"name"`
+	}
+	objectA := ObjectA{
+		Name: types.StringValue("test"),
+	}
+	objectAType := tftypes.Object{
+		AttributeTypes: map[string]tftypes.Type{
+			"name": tftypes.String,
+		},
+	}
+	objectAValue := tftypes.NewValue(objectAType, map[string]tftypes.Value{
+		"name": tftypes.NewValue(tftypes.String, "test"),
+	})
+
+	type ObjectB struct {
+		Length types.Int64 `tfsdk:"length"`
+	}
+	objectBType := tftypes.Object{
+		AttributeTypes: map[string]tftypes.Type{
+			"length": tftypes.Number,
+		},
+	}
+	objectBValue := tftypes.NewValue(objectBType, map[string]tftypes.Value{
+		"length": tftypes.NewValue(tftypes.Number, 42),
+	})
+
+	ctx := context.Background()
+	testCases := map[string]struct {
+		tfVal   tftypes.Value
+		wantVal attr.Value
+		wantErr bool
+	}{
+		"null value": {
+			tfVal:   tftypes.NewValue(objectAType, nil),
+			wantVal: fwtypes.NewObjectValueOfNull[ObjectA](ctx),
+		},
+		"unknown value": {
+			tfVal:   tftypes.NewValue(objectAType, tftypes.UnknownValue),
+			wantVal: fwtypes.NewObjectValueOfUnknown[ObjectA](ctx),
+		},
+		"valid value": {
+			tfVal:   objectAValue,
+			wantVal: fwtypes.NewObjectValueOf[ObjectA](ctx, &objectA),
+		},
+		"invalid Terraform value": {
+			tfVal:   objectBValue,
+			wantVal: fwtypes.NewObjectValueOf[ObjectA](ctx, &objectA),
+			wantErr: true,
+		},
+	}
+
+	for name, testCase := range testCases {
+		name, testCase := name, testCase
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			gotVal, err := fwtypes.NewObjectTypeOf[ObjectA](ctx).ValueFromTerraform(ctx, testCase.tfVal)
+			gotErr := err != nil
+
+			if gotErr != testCase.wantErr {
+				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.wantErr)
+			}
+
+			if gotErr {
+				if !testCase.wantErr {
+					t.Errorf("err = %q", err)
+				}
+			} else if diff := cmp.Diff(gotVal, testCase.wantVal); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
