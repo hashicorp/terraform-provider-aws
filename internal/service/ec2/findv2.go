@@ -72,11 +72,11 @@ func FindVPCV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInp
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output[0], nil
+	return &output[0], nil
 }
 
-func FindVPCsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) ([]*awstypes.Vpc, error) {
-	var output []*awstypes.Vpc
+func FindVPCsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) ([]awstypes.Vpc, error) {
+	var output []awstypes.Vpc
 
 	pages := ec2.NewDescribeVpcsPaginator(conn, input)
 
@@ -95,7 +95,7 @@ func FindVPCsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsIn
 		}
 
 		for _, v := range page.Vpcs {
-			output = append(output, &v)
+			output = append(output, v)
 		}
 	}
 
@@ -168,11 +168,11 @@ func FindNetworkACLV2(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output[0], nil
+	return &output[0], nil
 }
 
-func FindNetworkACLsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) ([]*awstypes.NetworkAcl, error) {
-	var output []*awstypes.NetworkAcl
+func FindNetworkACLsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) ([]awstypes.NetworkAcl, error) {
+	var output []awstypes.NetworkAcl
 
 	pages := ec2.NewDescribeNetworkAclsPaginator(conn, input)
 
@@ -184,7 +184,7 @@ func FindNetworkACLsV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 		}
 
 		for _, v := range page.NetworkAcls {
-			output = append(output, &v)
+			output = append(output, v)
 		}
 	}
 
@@ -224,7 +224,7 @@ func FindRouteTableV2(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil {
+	if len(output) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -232,11 +232,11 @@ func FindRouteTableV2(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output[0], nil
+	return &output[0], nil
 }
 
-func FindRouteTablesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) ([]*awstypes.RouteTable, error) {
-	var output []*awstypes.RouteTable
+func FindRouteTablesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) ([]awstypes.RouteTable, error) {
+	var output []awstypes.RouteTable
 
 	pages := ec2.NewDescribeRouteTablesPaginator(conn, input)
 
@@ -248,7 +248,7 @@ func FindRouteTablesV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 		}
 
 		for _, v := range page.RouteTables {
-			output = append(output, &v)
+			output = append(output, v)
 		}
 	}
 
@@ -267,7 +267,7 @@ func FindSecurityGroupV2(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil {
+	if len(output) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -275,11 +275,11 @@ func FindSecurityGroupV2(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output[0], nil
+	return &output[0], nil
 }
 
-func FindSecurityGroupsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) ([]*awstypes.SecurityGroup, error) {
-	var output []*awstypes.SecurityGroup
+func FindSecurityGroupsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) ([]awstypes.SecurityGroup, error) {
+	var output []awstypes.SecurityGroup
 
 	pages := ec2.NewDescribeSecurityGroupsPaginator(conn, input)
 
@@ -291,7 +291,7 @@ func FindSecurityGroupsV2(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 		}
 
 		for _, v := range page.SecurityGroups {
-			output = append(output, &v)
+			output = append(output, v)
 		}
 	}
 
@@ -302,8 +302,8 @@ func FindSecurityGroupsV2(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 	return output, nil
 }
 
-func FindIPAMPoolAllocationsV2(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolAllocationsInput) ([]*awstypes.IpamPoolAllocation, error) {
-	var output []*awstypes.IpamPoolAllocation
+func FindIPAMPoolAllocationsV2(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolAllocationsInput) ([]awstypes.IpamPoolAllocation, error) {
+	var output []awstypes.IpamPoolAllocation
 
 	pages := ec2.NewGetIpamPoolAllocationsPaginator(conn, input)
 
@@ -315,7 +315,7 @@ func FindIPAMPoolAllocationsV2(ctx context.Context, conn *ec2.Client, input *ec2
 		}
 
 		for _, v := range page.IpamPoolAllocations {
-			output = append(output, &v)
+			output = append(output, v)
 		}
 	}
 

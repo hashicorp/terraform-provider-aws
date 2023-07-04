@@ -11,32 +11,33 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func WaitVPCCreatedV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Vpc, error) {
+func WaitVPCCreatedV2(ctx context.Context, conn *ec2.Client, id string) (*types.Vpc, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.VpcStatePending)},
-		Target:  []string{string(awstypes.VpcStateAvailable)},
+		Pending: enum.Slice(types.VpcStatePending),
+		Target:  enum.Slice(types.VpcStateAvailable),
 		Refresh: StatusVPCStateV2(ctx, conn, id),
 		Timeout: vpcCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.Vpc); ok {
+	if output, ok := outputRaw.(*types.Vpc); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func WaitVPCIPv6CIDRBlockAssociationCreatedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcCidrBlockState, error) {
+func WaitVPCIPv6CIDRBlockAssociationCreatedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.VpcCidrBlockState, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{string(awstypes.VpcCidrBlockStateCodeAssociating), string(awstypes.VpcCidrBlockStateCodeDisassociated), string(awstypes.VpcCidrBlockStateCodeFailing)},
-		Target:     []string{string(awstypes.VpcCidrBlockStateCodeAssociated)},
+		Pending:    enum.Slice(types.VpcCidrBlockStateCodeAssociating, types.VpcCidrBlockStateCodeDisassociated, types.VpcCidrBlockStateCodeFailing),
+		Target:     enum.Slice(types.VpcCidrBlockStateCodeAssociated),
 		Refresh:    StatusVPCIPv6CIDRBlockAssociationStateV2(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
@@ -45,8 +46,8 @@ func WaitVPCIPv6CIDRBlockAssociationCreatedV2(ctx context.Context, conn *ec2.Cli
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.VpcCidrBlockState); ok {
-		if state := output.State; state == awstypes.VpcCidrBlockStateCodeFailed {
+	if output, ok := outputRaw.(*types.VpcCidrBlockState); ok {
+		if state := output.State; state == types.VpcCidrBlockStateCodeFailed {
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
@@ -56,7 +57,7 @@ func WaitVPCIPv6CIDRBlockAssociationCreatedV2(ctx context.Context, conn *ec2.Cli
 	return nil, err
 }
 
-func WaitVPCAttributeUpdatedV2(ctx context.Context, conn *ec2.Client, vpcID string, attribute string, expectedValue bool) (*awstypes.Vpc, error) {
+func WaitVPCAttributeUpdatedV2(ctx context.Context, conn *ec2.Client, vpcID string, attribute string, expectedValue bool) (*types.Vpc, error) {
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
 		Refresh:    StatusVPCAttributeValueV2(ctx, conn, vpcID, attribute),
@@ -67,16 +68,16 @@ func WaitVPCAttributeUpdatedV2(ctx context.Context, conn *ec2.Client, vpcID stri
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.Vpc); ok {
+	if output, ok := outputRaw.(*types.Vpc); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func WaitVPCIPv6CIDRBlockAssociationDeletedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcCidrBlockState, error) {
+func WaitVPCIPv6CIDRBlockAssociationDeletedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.VpcCidrBlockState, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{string(awstypes.VpcCidrBlockStateCodeAssociated), string(awstypes.VpcCidrBlockStateCodeDisassociating), string(awstypes.VpcCidrBlockStateCodeFailing)},
+		Pending:    enum.Slice(types.VpcCidrBlockStateCodeAssociated, types.VpcCidrBlockStateCodeDisassociating, types.VpcCidrBlockStateCodeFailing),
 		Target:     []string{},
 		Refresh:    StatusVPCIPv6CIDRBlockAssociationStateV2(ctx, conn, id),
 		Timeout:    timeout,
@@ -86,8 +87,8 @@ func WaitVPCIPv6CIDRBlockAssociationDeletedV2(ctx context.Context, conn *ec2.Cli
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.VpcCidrBlockState); ok {
-		if state := output.State; state == awstypes.VpcCidrBlockStateCodeFailed {
+	if output, ok := outputRaw.(*types.VpcCidrBlockState); ok {
+		if state := output.State; state == types.VpcCidrBlockStateCodeFailed {
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
