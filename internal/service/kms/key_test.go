@@ -492,6 +492,19 @@ func TestAccKMSKey_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
+			{
+				Config: testAccKeyConfig_tags0(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
+			},
 		},
 	})
 }
@@ -1051,4 +1064,12 @@ resource "aws_kms_key" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccKeyConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description = %[1]q
+}
+`, rName)
 }
