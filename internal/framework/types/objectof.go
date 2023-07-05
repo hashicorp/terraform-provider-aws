@@ -90,6 +90,8 @@ type ObjectValueOf[T any] struct {
 	basetypes.ObjectValue
 }
 
+var _ basetypes.ObjectValuable = ObjectValueOf[struct{}]{}
+
 func (v ObjectValueOf[T]) Equal(o attr.Value) bool {
 	other, ok := o.(ObjectValueOf[T])
 

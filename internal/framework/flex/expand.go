@@ -16,6 +16,7 @@ import (
 
 // TODO
 // TODO Return Diagnostics, not error.
+// TODO Add a post-func to tidy up.
 // TODO
 
 // Expand "expands" a resource's "business logic" data structure,

@@ -90,6 +90,8 @@ type ListValueOf[T any] struct {
 	basetypes.ListValue
 }
 
+var _ basetypes.ListValuable = ListValueOf[struct{}]{}
+
 func (v ListValueOf[T]) Equal(o attr.Value) bool {
 	other, ok := o.(ListValueOf[T])
 

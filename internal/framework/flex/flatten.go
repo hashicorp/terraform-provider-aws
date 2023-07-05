@@ -16,6 +16,7 @@ import (
 
 // TODO
 // TODO Return Diagnostics, not error.
+// TODO Add a post-func to tidy up.
 // TODO
 
 // Flatten "flattens" an AWS SDK for Go v2 API data structure into
