@@ -19,6 +19,10 @@ type ListTypeOf[T any] struct {
 
 var _ basetypes.ListTypable = ListTypeOf[struct{}]{}
 
+func NewListTypeOf[T any](ctx context.Context) ListTypeOf[T] {
+	return ListTypeOf[T]{basetypes.ListType{ElemType: NewObjectTypeOf[T](ctx)}}
+}
+
 func (t ListTypeOf[T]) Equal(o attr.Type) bool {
 	other, ok := o.(ListTypeOf[T])
 
