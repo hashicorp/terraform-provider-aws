@@ -153,7 +153,7 @@ func testAccDevenvironmentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codecatalyst_devenvironment" "test" {
   alias = %[1]q
-  space_name = "personal-926562225508"
+  space_name = "terraform"
   project_name = "terraform-contribution"
   instance_type = "dev.standard1.small"
   persistent_storage  {
