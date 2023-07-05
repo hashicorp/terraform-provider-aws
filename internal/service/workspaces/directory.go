@@ -23,8 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var ire *types.InvalidResourceStateException
-
 // @SDKResource("aws_workspaces_directory", name="Directory")
 // @Tags(identifierAttribute="id")
 func ResourceDirectory() *schema.Resource {
