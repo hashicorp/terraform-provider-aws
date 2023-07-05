@@ -102,8 +102,19 @@ func (v ObjectValueOf[T]) Equal(o attr.Value) bool {
 	return v.ObjectValue.Equal(other.ObjectValue)
 }
 
+type ValueAsPtr interface {
+	ValueAsPtr(context.Context) (any, diag.Diagnostics)
+}
+
 func (v ObjectValueOf[T]) Type(ctx context.Context) attr.Type {
 	return NewObjectTypeOf[T](ctx)
+}
+
+func (v ObjectValueOf[T]) ValueAsPtr(ctx context.Context) (any, diag.Diagnostics) {
+	target := new(T)
+	diags := v.ObjectValue.As(ctx, target, basetypes.ObjectAsOptions{})
+
+	return target, diags
 }
 
 func NewObjectValueOfNull[T any](ctx context.Context) ObjectValueOf[T] {

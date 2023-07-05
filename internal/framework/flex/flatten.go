@@ -35,7 +35,7 @@ func Flatten(ctx context.Context, apiObject, tfObject any) error {
 
 type flattenVisitor struct{}
 
-func (v flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, valTo reflect.Value) error {
+func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, valTo reflect.Value) error {
 	vTo, ok := valTo.Interface().(attr.Value)
 	if !ok {
 		return fmt.Errorf("does not implement attr.Value: %s", valTo.Kind())

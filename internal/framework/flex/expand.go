@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 // TODO
@@ -84,7 +85,7 @@ type fieldVisitor interface {
 
 type expandVisitor struct{}
 
-func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, valTo reflect.Value) error {
+func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFrom, valTo reflect.Value) error {
 	vFrom, ok := valFrom.Interface().(attr.Value)
 	if !ok {
 		return fmt.Errorf("does not implement attr.Value: %s", valFrom.Kind())
@@ -208,7 +209,7 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 		if err := fwdiag.DiagnosticsError(diags); err != nil {
 			return err
 		}
-		switch v.ElementType(ctx).(type) {
+		switch tElem := v.ElementType(ctx).(type) {
 		case basetypes.StringTypable:
 			switch kTo {
 			case reflect.Slice:
@@ -233,6 +234,30 @@ func (v expandVisitor) visit(ctx context.Context, fieldName string, valFrom, val
 			}
 
 		case basetypes.ObjectTypable:
+			// TODO...
+			switch kTo {
+			case reflect.Ptr:
+				switch valTo.Type().Elem().Kind() {
+				case reflect.Struct:
+					if p, ok := tElem.ValueType(ctx).(types.ValueAsPtr); ok {
+						if elements := v.Elements(); len(elements) == 1 {
+							//
+							// types.List(OfObject) -> *struct.
+							//
+							from, diags := p.ValueAsPtr(ctx)
+							if err := fwdiag.DiagnosticsError(diags); err != nil {
+								return err
+							}
+							to := reflect.New(valTo.Type())
+							if err := walkStructFields(ctx, from, to, visitor); err != nil {
+								return err
+							}
+							valTo.Set(reflect.ValueOf(to))
+							return nil
+						}
+					}
+				}
+			}
 			//
 			// types.List(OfObject) -> ???.
 			//

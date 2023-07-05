@@ -114,7 +114,7 @@ type YTestExpand struct {
 }
 
 type AATestExpand struct {
-	Data types.List
+	Data fwtypes.ListValueOf[BTestExpand]
 }
 
 type BBTestExpand struct {
@@ -319,10 +319,8 @@ func TestGenericExpand(t *testing.T) {
 		},
 		{
 			TestName: "single list Source and single *struct Target",
-			Source: &AATestExpand{Data: types.ListValueMust(types.ObjectType{AttrTypes: AttributeTypesMust[BTestExpand](ctx)}, []attr.Value{
-				types.ObjectValueMust(AttributeTypesMust[BTestExpand](ctx), map[string]attr.Value{"name": types.StringValue("a")}),
-			})},
-			Target: &BBTestExpand{},
+			Source:   &AATestExpand{Data: fwtypes.NewListValueOfPtr(ctx, &BTestExpand{Name: types.StringValue("a")})},
+			Target:   &BBTestExpand{},
 			// WantTarget: &BBTestExpand{Data: &CTestExpand{Name: "a"}},
 			WantTarget: &BBTestExpand{},
 		},
