@@ -38,6 +38,10 @@ func ResourceSMSSandboxPhoneNumber() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.SyntaxLanguageCode](),
 			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
