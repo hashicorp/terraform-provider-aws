@@ -126,3 +126,56 @@ func TestObjectTypeOfValueFromTerraform(t *testing.T) {
 		})
 	}
 }
+
+func TestObjectValueOfEqual(t *testing.T) {
+	t.Parallel()
+
+	objectA := ObjectA{
+		Name: types.StringValue("test"),
+	}
+	objectB := ObjectB{
+		Length: types.Int64Value(42),
+	}
+	objectA2 := ObjectA{
+		Name: types.StringValue("test2"),
+	}
+
+	ctx := context.Background()
+	testCases := map[string]struct {
+		other attr.Value
+		want  bool
+	}{
+		"string value": {
+			other: types.StringValue("test"),
+		},
+		"equal value": {
+			other: fwtypes.NewObjectValueOf(ctx, &objectA),
+			want:  true,
+		},
+		"struct not equal value": {
+			other: fwtypes.NewObjectValueOf(ctx, &objectA2),
+		},
+		"other struct value": {
+			other: fwtypes.NewObjectValueOf(ctx, &objectB),
+		},
+		"null value": {
+			other: fwtypes.NewObjectValueOfNull[ObjectA](ctx),
+		},
+		"unknown value": {
+			other: fwtypes.NewObjectValueOfUnknown[ObjectA](ctx),
+		},
+	}
+
+	for name, testCase := range testCases {
+		name, testCase := name, testCase
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := fwtypes.NewObjectValueOf(ctx, &objectA).Equal(testCase.other)
+
+			if got != testCase.want {
+				t.Errorf("got = %v, want = %v", got, testCase.want)
+			}
+		})
+	}
+}
