@@ -348,7 +348,7 @@ data "aws_outposts_outpost" "test" {
 }
 
 data "aws_outposts_assets" "test" {
-	arn = data.aws_outposts_outpost.test.arn
+  arn = data.aws_outposts_outpost.test.arn
 }
 
 resource "aws_ec2_host" "test" {
