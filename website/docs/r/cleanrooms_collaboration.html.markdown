@@ -83,16 +83,11 @@ In addition to all arguments above, the following attributes are exported:
 * `member status` - For each member included in the collaboration an additional computed attribute of status is added. These values [may be
 ound here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_MemberSummary.html#API-Type-MemberSummary-status)
 * `updated_time` - The date and time he collaboration was last updated
-<<<<<<< HEAD
-
-=======
->>>>>>> ec8e21306e (Add collaboration resource for aws cleanrooms)
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `1m`)
-- `read` - (Default `1m`)
 - `update` - (Default `1m`)
 - `delete` - (Default `1m`)
