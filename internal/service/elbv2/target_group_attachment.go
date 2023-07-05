@@ -29,6 +29,8 @@ func ResourceTargetGroupAttachment() *schema.Resource {
 		ReadWithoutTimeout:   resourceAttachmentRead,
 		DeleteWithoutTimeout: resourceAttachmentDelete,
 
+		DeprecationMessage: "Use the aws_lb_target_registration resource instead.",
+
 		Schema: map[string]*schema.Schema{
 			"target_group_arn": {
 				Type:     schema.TypeString,
