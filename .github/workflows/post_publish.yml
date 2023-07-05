@@ -58,7 +58,7 @@ jobs:
           github_release_name: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
           github_token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
   coverage:
-    needs: [ on-success-or-workflow-dispatch ]
+    needs: [on-success-or-workflow-dispatch]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
