@@ -52,6 +52,7 @@ import (
 	transcribe_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transcribe"
 	verifiedpermissions_sdkv2 "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	vpclattice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	acmpca_sdkv1 "github.com/aws/aws-sdk-go/service/acmpca"
 	alexaforbusiness_sdkv1 "github.com/aws/aws-sdk-go/service/alexaforbusiness"
@@ -327,7 +328,6 @@ import (
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
 	workmail_sdkv1 "github.com/aws/aws-sdk-go/service/workmail"
 	workmailmessageflow_sdkv1 "github.com/aws/aws-sdk-go/service/workmailmessageflow"
-	workspaces_sdkv1 "github.com/aws/aws-sdk-go/service/workspaces"
 	workspacesweb_sdkv1 "github.com/aws/aws-sdk-go/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1621,8 +1621,8 @@ func (c *AWSClient) WorkMailMessageFlowConn(ctx context.Context) *workmailmessag
 	return errs.Must(conn[*workmailmessageflow_sdkv1.WorkMailMessageFlow](ctx, c, names.WorkMailMessageFlow))
 }
 
-func (c *AWSClient) WorkSpacesConn(ctx context.Context) *workspaces_sdkv1.WorkSpaces {
-	return errs.Must(conn[*workspaces_sdkv1.WorkSpaces](ctx, c, names.WorkSpaces))
+func (c *AWSClient) WorkSpacesClient(ctx context.Context) *workspaces_sdkv2.Client {
+	return errs.Must(client[*workspaces_sdkv2.Client](ctx, c, names.WorkSpaces))
 }
 
 func (c *AWSClient) WorkSpacesWebConn(ctx context.Context) *workspacesweb_sdkv1.WorkSpacesWeb {

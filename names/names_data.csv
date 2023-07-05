@@ -374,7 +374,7 @@ workdocs,workdocs,workdocs,workdocs,,workdocs,,,WorkDocs,WorkDocs,,1,,,aws_workd
 worklink,worklink,worklink,worklink,,worklink,,,WorkLink,WorkLink,,1,,,aws_worklink_,,worklink_,WorkLink,Amazon,,,,,
 workmail,workmail,workmail,workmail,,workmail,,,WorkMail,WorkMail,,1,,,aws_workmail_,,workmail_,WorkMail,Amazon,,,,,
 workmailmessageflow,workmailmessageflow,workmailmessageflow,workmailmessageflow,,workmailmessageflow,,,WorkMailMessageFlow,WorkMailMessageFlow,,1,,,aws_workmailmessageflow_,,workmailmessageflow_,WorkMail Message Flow,Amazon,,,,,
-workspaces,workspaces,workspaces,workspaces,,workspaces,,,WorkSpaces,WorkSpaces,,1,,,aws_workspaces_,,workspaces_,WorkSpaces,Amazon,,,,,
+workspaces,workspaces,workspaces,workspaces,,workspaces,,,WorkSpaces,WorkSpaces,,,2,,aws_workspaces_,,workspaces_,WorkSpaces,Amazon,,,,,
 workspaces-web,workspacesweb,workspacesweb,workspacesweb,,workspacesweb,,,WorkSpacesWeb,WorkSpacesWeb,,1,,,aws_workspacesweb_,,workspacesweb_,WorkSpaces Web,Amazon,,,,,
 xray,xray,xray,xray,,xray,,,XRay,XRay,,,2,,aws_xray_,,xray_,X-Ray,AWS,,,,,
 verifiedpermissions,verifiedpermissions,verifiedpermissions,verifiedpermissions,,verifiedpermissions,,,VerifiedPermissions,VerifiedPermissions,,,2,,aws_verifiedpermissions_,,verifiedpermissions_,Verified Permissions,Amazon,,,,,
