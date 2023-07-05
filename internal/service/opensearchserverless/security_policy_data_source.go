@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearchserverless
 
 import (
@@ -64,7 +67,7 @@ func dataSourceSecurityPolicyRead(ctx context.Context, d *schema.ResourceData, m
 
 	securityPolicyName := d.Get("name").(string)
 	securityPolicyType := d.Get("type").(string)
-	securityPolicy, err := FindSecurityPolicyByNameAndType(ctx, conn, securityPolicyName, securityPolicyType)
+	securityPolicy, err := findSecurityPolicyByNameAndType(ctx, conn, securityPolicyName, securityPolicyType)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Security Policy with name (%s) and type (%s): %s", securityPolicyName, securityPolicyType, err)

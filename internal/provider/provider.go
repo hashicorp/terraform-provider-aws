@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -42,7 +45,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				Optional:      true,
 				ConflictsWith: []string{"forbidden_account_ids"},
-				Set:           schema.HashString,
 			},
 			"assume_role":                   assumeRoleSchema(),
 			"assume_role_with_web_identity": assumeRoleWithWebIdentitySchema(),
@@ -87,7 +89,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				Optional:      true,
 				ConflictsWith: []string{"allowed_account_ids"},
-				Set:           schema.HashString,
 			},
 			"http_proxy": {
 				Type:     schema.TypeString,
@@ -106,14 +107,12 @@ func New(ctx context.Context) (*schema.Provider, error) {
 							Type:        schema.TypeSet,
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Set:         schema.HashString,
 							Description: "Resource tag keys to ignore across all resources.",
 						},
 						"key_prefixes": {
 							Type:        schema.TypeSet,
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Set:         schema.HashString,
 							Description: "Resource tag key prefixes to ignore across all resources.",
 						},
 					},

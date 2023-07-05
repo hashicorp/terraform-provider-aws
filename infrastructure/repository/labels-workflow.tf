@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 variable "workflow_labels" {
   default = {
     # Stop the search. Keep these alphabetibelized.
