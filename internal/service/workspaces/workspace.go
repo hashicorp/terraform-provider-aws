@@ -201,7 +201,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diags
 	}
 
-	workspace := rawOutput.(*types.Workspace)
+	workspace := rawOutput.(types.Workspace)
 	d.Set("bundle_id", workspace.BundleId)
 	d.Set("directory_id", workspace.DirectoryId)
 	d.Set("ip_address", workspace.IpAddress)
