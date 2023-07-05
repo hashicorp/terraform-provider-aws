@@ -1,9 +1,9 @@
 ---
-subcategory: "Codecatalyst"
+subcategory: "CodeCatalyst"
 layout: "aws"
 page_title: "AWS: aws_codecatalyst_devenvironment"
 description: |-
-  Terraform resource for managing an AWS Codecatalyst Devenvironment.
+  Terraform resource for managing an AWS CodeCatalyst Devenvironment.
 ---
 <!---
 TIP: A few guiding principles for writing documentation:
@@ -15,7 +15,7 @@ TIP: A few guiding principles for writing documentation:
 --->`
 # Resource: aws_codecatalyst_devenvironment
 
-Terraform resource for managing an AWS Codecatalyst Devenvironment.
+Terraform resource for managing an AWS CodeCatalyst Devenvironment.
 
 ## Example Usage
 
@@ -53,7 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Codecatalyst Devenvironment can be imported using the `example_id_arg`, e.g.,
+CodeCatalyst Devenvironment can be imported using the `example_id_arg`, e.g.,
 
 ```
 $ terraform import aws_codecatalyst_devenvironment.example rft-8012925589

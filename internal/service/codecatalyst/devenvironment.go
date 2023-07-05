@@ -1,8 +1,6 @@
 package codecatalyst
 
-
 import (
-
 	"context"
 	"errors"
 	"log"
@@ -14,79 +12,73 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+
+	// "github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @SDKResource("aws_codecatalyst_devenvironment", name="Devenvironment")
-// Tagging annotations are used for "transparent tagging".
-// Change the "identifierAttribute" value to the name of the attribute used in ListTags and UpdateTags calls (e.g. "arn").
-// @Tags(identifierAttribute="id")
 func ResourceDevenvironment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDevenvironmentCreate,
 		ReadWithoutTimeout:   resourceDevenvironmentRead,
 		UpdateWithoutTimeout: resourceDevenvironmentUpdate,
 		DeleteWithoutTimeout: resourceDevenvironmentDelete,
-		
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
-		
+
 		Schema: map[string]*schema.Schema{
 			"alias": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"ides": { 
+			"ides": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:         schema.TypeString,
+							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"runtime": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
+			},
+			"inactivity_timeout_minutes": {
+				Type:     schema.TypeInt,
+				Default:  15,
+				Optional: true,
+			},
+			"instance_type": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"project_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"space_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"inactivity_timeout_minutes":{
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"instance_type":{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"persistent_storage": { 
+			"persistent_storage": {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -99,30 +91,28 @@ func ResourceDevenvironment() *schema.Resource {
 					},
 				},
 			},
-			"repositories": { 
+			"repositories": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MaxItems: 1,
+				MaxItems: 100,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"branch_name": {
-							Type:         schema.TypeString,
+							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"repository_name": {
-							Type:         schema.TypeString,
+							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-
-
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"space_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -134,16 +124,13 @@ func resourceDevenvironmentCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
-	
-	storage := expandPersistentStorageConfiguration(d.Get("persistant_storage").([]interface{})[0].(map[string]interface{}))
+	storage := expandPersistentStorageConfiguration(d.Get("persistent_storage").([]interface{})[0].(map[string]interface{}))
 	instanceType := types.InstanceType(d.Get("instance_type").(string))
-
 	in := &codecatalyst.CreateDevEnvironmentInput{
-		ProjectName: aws.String(d.Get("project_name").(string)),
-		SpaceName:  aws.String(d.Get("space_name").(string)),
+		ProjectName:       aws.String(d.Get("project_name").(string)),
+		SpaceName:         aws.String(d.Get("space_name").(string)),
 		PersistentStorage: storage,
-		InstanceType: instanceType,
-
+		InstanceType:      instanceType,
 	}
 
 	if v, ok := d.GetOk("inactivity_timeout_minutes"); ok {
@@ -162,25 +149,23 @@ func resourceDevenvironmentCreate(ctx context.Context, d *schema.ResourceData, m
 		in.Repositories = expandRepositorysInput(v.([]interface{}))
 	}
 
-
 	out, err := conn.CreateDevEnvironment(ctx, in)
 
 	if err != nil {
 
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameDevenvironment, d.Get("id").(string), err)...)
+		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameDevenvironment, d.Id(), err)...)
 	}
 
-	if  out == nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameDevenvironment, d.Get("id").(string), errors.New("empty output"))...)
+	if out == nil {
+		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameDevenvironment, d.Id(), errors.New("empty output"))...)
 	}
-	
 
 	d.SetId(aws.ToString(out.Id))
-	
+
 	if _, err := waitDevenvironmentCreated(ctx, conn, d.Id(), out.SpaceName, out.ProjectName, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionWaitingForCreation, ResNameDevenvironment, d.Id(), err)...)
 	}
-	
+
 	return append(diags, resourceDevenvironmentRead(ctx, d, meta)...)
 }
 
@@ -188,12 +173,12 @@ func resourceDevenvironmentRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
-	
+
 	spaceName := aws.String(d.Get("space_name").(string))
 	projectName := aws.String(d.Get("project_name").(string))
 
-	out, err := findDevenvironmentByID(ctx, conn, d.Id(),spaceName, projectName)
-	
+	out, err := findDevenvironmentByID(ctx, conn, d.Id(), spaceName, projectName)
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Codecatalyst Devenvironment (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -203,7 +188,6 @@ func resourceDevenvironmentRead(ctx context.Context, d *schema.ResourceData, met
 	if err != nil {
 		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionReading, ResNameDevenvironment, d.Id(), err)...)
 	}
-	
 
 	d.Set("alias", out.Alias)
 	d.Set("project_name", out.ProjectName)
@@ -211,16 +195,15 @@ func resourceDevenvironmentRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("instance_type", out.InstanceType)
 	d.Set("inactivity_timeout_minutes", out.InactivityTimeoutMinutes)
 	d.Set("persistent_storage", flattenPersistentStorage(out.PersistentStorage))
-	
+
 	if err := d.Set("ides", flattenIdes(out.Ides)); err != nil {
 		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionSetting, ResNameDevenvironment, d.Id(), err)...)
 	}
 
-	if err := d.Set("ides", flattenRepositories(out.Repositories)); err != nil {
+	if err := d.Set("repositories", flattenRepositories(out.Repositories)); err != nil {
 		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionSetting, ResNameDevenvironment, d.Id(), err)...)
 	}
-	
-	
+
 	return diags
 }
 
@@ -228,7 +211,7 @@ func resourceDevenvironmentUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
-	
+
 	update := false
 
 	in := &codecatalyst.UpdateDevEnvironmentInput{
@@ -245,23 +228,20 @@ func resourceDevenvironmentUpdate(ctx context.Context, d *schema.ResourceData, m
 		update = true
 	}
 
-
-
 	if !update {
 
 		return diags
 	}
-	
+
 	log.Printf("[DEBUG] Updating Codecatalyst Devenvironment (%s): %#v", d.Id(), in)
 	out, err := conn.UpdateDevEnvironment(ctx, in)
 	if err != nil {
 		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionUpdating, ResNameDevenvironment, d.Id(), err)...)
 	}
-	
-	if _, err := waitDevenvironmentUpdated(ctx, conn, aws.ToString(out.Id) ,out.SpaceName, out.ProjectName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+
+	if _, err := waitDevenvironmentUpdated(ctx, conn, aws.ToString(out.Id), out.SpaceName, out.ProjectName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionWaitingForUpdate, ResNameDevenvironment, d.Id(), err)...)
 	}
-	
 
 	return append(diags, resourceDevenvironmentRead(ctx, d, meta)...)
 }
@@ -272,36 +252,27 @@ func resourceDevenvironmentDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
 	log.Printf("[INFO] Deleting Codecatalyst Devenvironment %s", d.Id())
-	
 
-	out, err := conn.DeleteDevEnvironment(ctx, &codecatalyst.DeleteDevEnvironmentInput{
-		Id: aws.String(d.Id()),
-		SpaceName: aws.String(d.Get("space_name").(string)),
+	_, err := conn.DeleteDevEnvironment(ctx, &codecatalyst.DeleteDevEnvironmentInput{
+		Id:          aws.String(d.Id()),
+		SpaceName:   aws.String(d.Get("space_name").(string)),
 		ProjectName: aws.String(d.Get("project_name").(string)),
 	})
-	
 
-	if errs.IsA[*types.ResourceNotFoundException](err){
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 	if err != nil {
 		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionDeleting, ResNameDevenvironment, d.Id(), err)...)
 	}
-	
-
-	if _, err := waitDevenvironmentDeleted(ctx, conn, d.Id(), out.SpaceName, out.ProjectName,d.Timeout(schema.TimeoutDelete)); err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionWaitingForDeletion, ResNameDevenvironment, d.Id(), err)...)
-	}
-	
 
 	return diags
 }
 
-
-func waitDevenvironmentCreated(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string,  timeout time.Duration) (*codecatalyst.GetDevEnvironmentOutput, error) {
+func waitDevenvironmentCreated(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string, timeout time.Duration) (*codecatalyst.GetDevEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.DevEnvironmentStatusPending),
-		Target:                    enum.Slice(types.DevEnvironmentStatusRunning,types.DevEnvironmentStatusStopped,types.DevEnvironmentStatusStopping),
+		Pending:                   enum.Slice(types.DevEnvironmentStatusPending, types.DevEnvironmentStatusStarting),
+		Target:                    enum.Slice(types.DevEnvironmentStatusRunning, types.DevEnvironmentStatusStopped, types.DevEnvironmentStatusStopping),
 		Refresh:                   statusDevenvironment(ctx, conn, id, spaceName, projectName),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -316,11 +287,9 @@ func waitDevenvironmentCreated(ctx context.Context, conn *codecatalyst.Client, i
 	return nil, err
 }
 
-
-
-func waitDevenvironmentUpdated(ctx context.Context, conn *codecatalyst.Client, id string,  spaceName *string, projectName *string,timeout time.Duration) (*codecatalyst.GetDevEnvironmentOutput, error) {
+func waitDevenvironmentUpdated(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string, timeout time.Duration) (*codecatalyst.GetDevEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.DevEnvironmentStatusStopping,types.DevEnvironmentStatusPending,types.DevEnvironmentStatusStopped),
+		Pending:                   enum.Slice(types.DevEnvironmentStatusStopping, types.DevEnvironmentStatusPending, types.DevEnvironmentStatusStopped),
 		Target:                    enum.Slice(types.DevEnvironmentStatusRunning),
 		Refresh:                   statusDevenvironment(ctx, conn, id, spaceName, projectName),
 		Timeout:                   timeout,
@@ -335,24 +304,6 @@ func waitDevenvironmentUpdated(ctx context.Context, conn *codecatalyst.Client, i
 
 	return nil, err
 }
-
-
-func waitDevenvironmentDeleted(ctx context.Context, conn *codecatalyst.Client, id string,  spaceName *string, projectName *string,timeout time.Duration) (*codecatalyst.GetDevEnvironmentOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.DevEnvironmentStatusDeleting,types.DevEnvironmentStatusStopped,types.DevEnvironmentStatusStopping),
-		Target:                    enum.Slice(types.DevEnvironmentStatusDeleted),
-		Refresh:                   statusDevenvironment(ctx, conn, id, spaceName, projectName),
-		Timeout:                   timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*codecatalyst.GetDevEnvironmentOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
 
 func statusDevenvironment(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
@@ -369,17 +320,15 @@ func statusDevenvironment(ctx context.Context, conn *codecatalyst.Client, id str
 	}
 }
 
-
-
 func findDevenvironmentByID(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string) (*codecatalyst.GetDevEnvironmentOutput, error) {
 	in := &codecatalyst.GetDevEnvironmentInput{
-		Id: aws.String(id),
+		Id:          aws.String(id),
 		ProjectName: projectName,
-		SpaceName: spaceName,
+		SpaceName:   spaceName,
 	}
 
 	out, err := conn.GetDevEnvironment(ctx, in)
-	if errs.IsA[*types.ResourceNotFoundException](err){
+	if errs.IsA[*types.AccessDeniedException](err) || errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -417,11 +366,11 @@ func flattenRepository(apiObject *types.DevEnvironmentRepositorySummary) interfa
 
 	tfMap := map[string]interface{}{}
 
-	if v:=apiObject.BranchName; v != nil {
+	if v := apiObject.BranchName; v != nil {
 		tfMap["branch_name"] = aws.ToString(v)
 	}
 
-	if v:=apiObject.RepositoryName; v != nil {
+	if v := apiObject.RepositoryName; v != nil {
 		tfMap["repository_name"] = aws.ToString(v)
 	}
 
@@ -449,18 +398,18 @@ func flattenIde(apiObject *types.Ide) map[string]interface{} {
 
 	tfMap := map[string]interface{}{}
 
-	if v:=apiObject.Name; v != nil {
+	if v := apiObject.Name; v != nil {
 		tfMap["name"] = aws.ToString(v)
 	}
 
-	if v:=apiObject.Runtime; v != nil {
+	if v := apiObject.Runtime; v != nil {
 		tfMap["runtime"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenPersistentStorage(apiObject *types.PersistentStorage) map[string]interface{} {
+func flattenPersistentStorage(apiObject *types.PersistentStorage) []map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -469,7 +418,7 @@ func flattenPersistentStorage(apiObject *types.PersistentStorage) map[string]int
 		"size": aws.ToInt32(apiObject.SizeInGiB),
 	}
 
-	return tfMap
+	return []map[string]interface{}{tfMap}
 }
 
 func expandRepositorysInput(tfList []interface{}) []types.RepositoryInput {
@@ -498,11 +447,11 @@ func expandRepositoryInput(tfMap map[string]interface{}) types.RepositoryInput {
 	apiObject := types.RepositoryInput{}
 
 	if v, ok := tfMap["branch_name"].(string); ok && v != "" {
-		apiObject.BranchName= aws.String(string(v))
+		apiObject.BranchName = aws.String(string(v))
 	}
 
 	if v, ok := tfMap["repository_name"].(string); ok && v != "" {
-		apiObject.RepositoryName= aws.String(string(v))
+		apiObject.RepositoryName = aws.String(string(v))
 	}
 
 	return apiObject
@@ -534,11 +483,11 @@ func expandIdeConfiguration(tfMap map[string]interface{}) types.IdeConfiguration
 	apiObject := types.IdeConfiguration{}
 
 	if v, ok := tfMap["name"].(string); ok && v != "" {
-		apiObject.Name= aws.String(string(v))
+		apiObject.Name = aws.String(string(v))
 	}
 
 	if v, ok := tfMap["runtime"].(string); ok && v != "" {
-		apiObject.Name= aws.String(string(v))
+		apiObject.Name = aws.String(string(v))
 	}
 
 	return apiObject
@@ -548,7 +497,7 @@ func expandPersistentStorageConfiguration(tfMap map[string]interface{}) *types.P
 	apiObject := &types.PersistentStorageConfiguration{}
 
 	if v, ok := tfMap["size"].(int); ok && v != 0 {
-		apiObject.SizeInGiB= aws.Int32(int32(v))
+		apiObject.SizeInGiB = aws.Int32(int32(v))
 	}
 
 	return apiObject
