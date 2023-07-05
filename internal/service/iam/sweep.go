@@ -469,15 +469,8 @@ func newPolicySweeper(resource *schema.Resource, d *schema.ResourceData, client 
 func (ps policySweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
 	err := ps.sweepable.Delete(ctx, timeout, optFns...)
 
-	errStr := err.Error()
-
-	if strings.Contains(errStr, iam.ErrCodeDeleteConflictException) {
-		log.Printf("[WARN] Ignoring IAM Policy (%s) deletion error: %s", ps.d.Id(), err)
-		return nil
-	}
-
 	accessDenied := regexp.MustCompile(`AccessDenied: .+ with an explicit deny`)
-	if accessDenied.MatchString(errStr) {
+	if accessDenied.MatchString(err.Error()) {
 		log.Printf("[DEBUG] Skipping IAM Policy (%s): %s", ps.d.Id(), err)
 		return nil
 	}
