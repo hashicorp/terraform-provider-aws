@@ -55,6 +55,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.8
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.0.4
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.7
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.28.15
 	github.com/aws/aws-sdk-go-v2/service/xray v1.16.13
 	github.com/aws/smithy-go v1.13.5
 	github.com/beevik/etree v1.2.0
@@ -114,7 +115,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.12.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.19.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.28.15 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
