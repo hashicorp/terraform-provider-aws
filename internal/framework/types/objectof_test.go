@@ -14,12 +14,51 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
+type ObjectA struct {
+	Name types.String `tfsdk:"name"`
+}
+
+type ObjectB struct {
+	Length types.Int64 `tfsdk:"length"`
+}
+
+func TestObjectTypeOfEqual(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	testCases := map[string]struct {
+		other attr.Type
+		want  bool
+	}{
+		"string type": {
+			other: types.StringType,
+		},
+		"equal type": {
+			other: fwtypes.NewObjectTypeOf[ObjectA](ctx),
+			want:  true,
+		},
+		"other struct type": {
+			other: fwtypes.NewObjectTypeOf[ObjectB](ctx),
+		},
+	}
+
+	for name, testCase := range testCases {
+		name, testCase := name, testCase
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := fwtypes.NewObjectTypeOf[ObjectA](ctx).Equal(testCase.other)
+
+			if got != testCase.want {
+				t.Errorf("got = %v, want = %v", got, testCase.want)
+			}
+		})
+	}
+}
+
 func TestObjectTypeOfValueFromTerraform(t *testing.T) {
 	t.Parallel()
 
-	type ObjectA struct {
-		Name types.String `tfsdk:"name"`
-	}
 	objectA := ObjectA{
 		Name: types.StringValue("test"),
 	}
@@ -31,10 +70,6 @@ func TestObjectTypeOfValueFromTerraform(t *testing.T) {
 	objectAValue := tftypes.NewValue(objectAType, map[string]tftypes.Value{
 		"name": tftypes.NewValue(tftypes.String, "test"),
 	})
-
-	type ObjectB struct {
-		Length types.Int64 `tfsdk:"length"`
-	}
 	objectBType := tftypes.Object{
 		AttributeTypes: map[string]tftypes.Type{
 			"length": tftypes.Number,
