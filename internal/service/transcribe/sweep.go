@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -51,7 +54,7 @@ func init() {
 
 func sweepLanguageModels(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
@@ -101,7 +104,7 @@ func sweepLanguageModels(region string) error {
 
 func sweepMedicalVocabularies(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
@@ -152,7 +155,7 @@ func sweepMedicalVocabularies(region string) error {
 
 func sweepVocabularies(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
@@ -203,7 +206,7 @@ func sweepVocabularies(region string) error {
 
 func sweepVocabularyFilters(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -41,6 +44,7 @@ const (
 	errCodeInvalidGroupInUse                                 = "InvalidGroup.InUse"
 	errCodeInvalidGroupNotFound                              = "InvalidGroup.NotFound"
 	errCodeInvalidHostIDNotFound                             = "InvalidHostID.NotFound"
+	errCodeInvalidInstanceConnectEndpointIdNotFound          = "InvalidInstanceConnectEndpointId.NotFound"
 	errCodeInvalidInstanceID                                 = "InvalidInstanceID"
 	errCodeInvalidInstanceIDNotFound                         = "InvalidInstanceID.NotFound"
 	errCodeInvalidInternetGatewayIDNotFound                  = "InvalidInternetGatewayID.NotFound"

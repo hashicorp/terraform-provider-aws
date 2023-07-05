@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package create
 
 import (
@@ -49,14 +52,24 @@ func Error(service, action, resource, id string, gotError error) error {
 	return errors.New(ProblemStandardMessage(service, action, resource, id, gotError))
 }
 
+// AddError returns diag.Diagnostics with an additional diag.Diagnostic containing
+// an error using a standardized problem message
+func AddError(diags diag.Diagnostics, service, action, resource, id string, gotError error) diag.Diagnostics {
+	return append(diags, newError(service, action, resource, id, gotError))
+}
+
 // DiagError returns a 1-length diag.Diagnostics with a diag.Error-level diag.Diagnostic
 // with a standardized error message
 func DiagError(service, action, resource, id string, gotError error) diag.Diagnostics {
 	return diag.Diagnostics{
-		diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  ProblemStandardMessage(service, action, resource, id, gotError),
-		},
+		newError(service, action, resource, id, gotError),
+	}
+}
+
+func newError(service, action, resource, id string, gotError error) diag.Diagnostic {
+	return diag.Diagnostic{
+		Severity: diag.Error,
+		Summary:  ProblemStandardMessage(service, action, resource, id, gotError),
 	}
 }
 
@@ -95,6 +108,15 @@ func AddWarning(diags diag.Diagnostics, service, action, resource, id string, go
 		diag.Diagnostic{
 			Severity: diag.Warning,
 			Summary:  ProblemStandardMessage(service, action, resource, id, gotError),
+		},
+	)
+}
+
+func AddWarningMessage(diags diag.Diagnostics, service, action, resource, id, message string) diag.Diagnostics {
+	return append(diags,
+		diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  ProblemStandardMessage(service, action, resource, id, fmt.Errorf(message)),
 		},
 	)
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -1563,7 +1566,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	var instance *rds.DBInstance
 	var err error
-	if instance, err = waitDBInstanceAvailableSDKv1(ctx, conn, d.Get("identifier").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if instance, err = waitDBInstanceAvailableSDKv1(ctx, conn, identifier, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) create: %s", identifier, err)
 	}
 
@@ -2373,17 +2376,16 @@ func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rd
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.DBInstances) == 0 || output.DBInstances[0] == nil {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	dbInstance := output.DBInstances[0]
-
-	return dbInstance, nil
+	return tfresource.AssertSinglePtrResult(output.DBInstances)
 }
 
 // findDBInstanceByIDSDKv2 in general should be called with a DbiResourceId of the form
@@ -2419,15 +2421,16 @@ func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id str
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.DBInstances) == 0 {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return &output.DBInstances[0], nil
+	return tfresource.AssertSingleValueResult(output.DBInstances)
 }
 
 func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {

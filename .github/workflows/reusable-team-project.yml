@@ -8,7 +8,7 @@ on:
         type: string
 env:
   ITEM_NODE_ID: ${{ github.event.issue.node_id || github.event.pull_request.node_id }}
-  GH_TOKEN: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
+  GH_TOKEN: ${{ secrets.PROJECT_SCOPED_TOKEN }}
 jobs:
   add-to-project:
     name: "Add Item to Project and Optionally Set Status"

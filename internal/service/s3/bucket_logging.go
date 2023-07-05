@@ -1,7 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -9,9 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -96,6 +102,7 @@ func ResourceBucketLogging() *schema.Resource {
 }
 
 func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
@@ -126,7 +133,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return diag.Errorf("putting S3 bucket (%s) logging: %s", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) Logging: %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
@@ -135,47 +142,49 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &s3.GetBucketLoggingInput{
-		Bucket: aws.String(bucket),
-	}
+	outputRaw, err := tfresource.RetryWhen(ctx, 2*time.Minute, func() (interface{}, error) {
+		return FindBucketLoggingByID(ctx, conn, bucket, expectedBucketOwner)
+	},
+		func(err error) (bool, error) {
+			if tfresource.NotFound(err) {
+				return true, err
+			}
 
-	if expectedBucketOwner != "" {
-		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-	}
+			if errors.Is(err, tfresource.ErrEmptyResult) {
+				return true, err
+			}
 
-	resp, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
-		return conn.GetBucketLoggingWithContext(ctx, input)
-	}, s3.ErrCodeNoSuchBucket)
+			return false, err
+		})
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Logging (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Bucket (%s) Logging: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Logging for bucket (%s): %s", d.Id(), err)
 	}
 
-	output, ok := resp.(*s3.GetBucketLoggingOutput)
-
-	if !ok || output.LoggingEnabled == nil {
+	if errors.Is(err, tfresource.ErrEmptyResult) {
 		if d.IsNewResource() {
-			return diag.Errorf("reading S3 Bucket (%s) Logging: empty output", d.Id())
+			return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Logging: empty output", d.Id())
 		}
 		log.Printf("[WARN] S3 Bucket Logging (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	loggingEnabled := output.LoggingEnabled
+	loggingEnabled := outputRaw.(*s3.GetBucketLoggingOutput).LoggingEnabled
 
 	d.Set("bucket", d.Id())
 	d.Set("expected_bucket_owner", expectedBucketOwner)
@@ -183,18 +192,19 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("target_prefix", loggingEnabled.TargetPrefix)
 
 	if err := d.Set("target_grant", flattenBucketLoggingTargetGrants(loggingEnabled.TargetGrants)); err != nil {
-		return diag.Errorf("setting target_grant: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting target_grant: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	loggingEnabled := &s3.LoggingEnabled{
@@ -222,18 +232,19 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return diag.Errorf("updating S3 bucket (%s) logging: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating S3 bucket (%s) logging: %s", d.Id(), err)
 	}
 
 	return resourceBucketLoggingRead(ctx, d, meta)
 }
 
 func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &s3.PutBucketLoggingInput{
@@ -252,7 +263,7 @@ func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 Bucket (%s) Logging: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s) Logging: %s", d.Id(), err)
 	}
 
 	return nil
@@ -370,4 +381,33 @@ func flattenBucketLoggingTargetGrantGrantee(g *s3.Grantee) []interface{} {
 	}
 
 	return []interface{}{m}
+}
+
+func FindBucketLoggingByID(ctx context.Context, conn *s3.S3, id, expectedBucketOwner string) (*s3.GetBucketLoggingOutput, error) {
+	in := &s3.GetBucketLoggingInput{
+		Bucket: aws.String(id),
+	}
+
+	if expectedBucketOwner != "" {
+		in.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+	}
+
+	out, err := conn.GetBucketLoggingWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.LoggingEnabled == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }

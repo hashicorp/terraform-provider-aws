@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -65,7 +68,7 @@ func isCompleteSetupError(err error) bool {
 
 func sweepAssessments(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
@@ -110,7 +113,7 @@ func sweepAssessments(region string) error {
 
 func sweepAssessmentDelegations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
@@ -154,7 +157,7 @@ func sweepAssessmentDelegations(region string) error {
 
 func sweepAssessmentReports(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
@@ -200,7 +203,7 @@ func sweepAssessmentReports(region string) error {
 
 func sweepControls(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
@@ -245,7 +248,7 @@ func sweepControls(region string) error {
 
 func sweepFrameworks(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
@@ -290,7 +293,7 @@ func sweepFrameworks(region string) error {
 
 func sweepFrameworkShares(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
