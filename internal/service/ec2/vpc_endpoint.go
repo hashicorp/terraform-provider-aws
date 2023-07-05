@@ -492,7 +492,7 @@ func expandDNSOptionsSpecification(tfMap map[string]interface{}) *ec2.DnsOptions
 		apiObject.DnsRecordIpType = aws.String(v)
 	}
 
-	if v, ok := tfMap["private_dns_only_for_inbound_resolver_endpoint"].(bool); ok {
+	if v, ok := tfMap["private_dns_only_for_inbound_resolver_endpoint"].(bool); ok && v {
 		apiObject.PrivateDnsOnlyForInboundResolverEndpoint = aws.Bool(v)
 	}
 

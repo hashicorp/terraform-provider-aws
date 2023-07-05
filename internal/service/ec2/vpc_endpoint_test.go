@@ -117,14 +117,14 @@ func TestAccVPCEndpoint_interfacePrivateDNS(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointConfig_interfacePrivateDNS(rName),
+				Config: testAccVPCEndpointConfig_interfacePrivateDNS(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "cidr_blocks.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", "true"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "true"),
 				),
 			},
@@ -134,14 +134,14 @@ func TestAccVPCEndpoint_interfacePrivateDNS(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCEndpointConfig_interfacePrivateDNSWithGateway(rName),
+				Config: testAccVPCEndpointConfig_interfacePrivateDNS(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "cidr_blocks.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", "true"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "true"),
 				),
 			},
@@ -742,40 +742,7 @@ resource "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccVPCEndpointConfig_interfacePrivateDNS(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-data "aws_region" "current" {}
-
-resource "aws_vpc_endpoint" "test" {
-  vpc_id              = aws_vpc.test.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.s3"
-  private_dns_enabled = true
-  vpc_endpoint_type   = "Interface"
-  ip_address_type     = "ipv4"
-
-  dns_options {
-    dns_record_ip_type                             = "ipv4"
-    private_dns_only_for_inbound_resolver_endpoint = false
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
-func testAccVPCEndpointConfig_interfacePrivateDNSWithGateway(rName string) string {
+func testAccVPCEndpointConfig_interfacePrivateDNS(rName string, privateDNSOnlyForInboundResolverEndpoint bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
@@ -792,6 +759,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_endpoint" "gateway" {
   vpc_id       = aws_vpc.test.id
   service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+
   tags = {
     Name = %[1]q
   }
@@ -806,7 +774,7 @@ resource "aws_vpc_endpoint" "test" {
 
   dns_options {
     dns_record_ip_type                             = "ipv4"
-    private_dns_only_for_inbound_resolver_endpoint = true
+    private_dns_only_for_inbound_resolver_endpoint = %[2]t
   }
 
   tags = {
@@ -816,7 +784,7 @@ resource "aws_vpc_endpoint" "test" {
   # To set PrivateDnsOnlyForInboundResolverEndpoint to true, the VPC vpc-abcd1234 must have a Gateway endpoint for the service.
   depends_on = [aws_vpc_endpoint.gateway]
 }
-`, rName)
+`, rName, privateDNSOnlyForInboundResolverEndpoint)
 }
 
 func testAccVPCEndpointConfig_ipAddressType(rName, addressType string) string {
