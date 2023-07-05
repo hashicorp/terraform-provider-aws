@@ -80,7 +80,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				MaxItems:         2,
+				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"dns_record_ip_type": {
@@ -204,8 +204,8 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
-		// that support both gateway and interface endpoints, i.e. S3
-		if ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9])\\.s3", serviceName); ok {
+		// that support both gateway and interface endpoints, i.e. S3.
+		if isAmazonS3VPCEndpoint(serviceName) {
 			input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(v.([]interface{})[0].(map[string]interface{}))
 		} else {
 			input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
@@ -383,8 +383,8 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 			if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				tfMap := v.([]interface{})[0].(map[string]interface{})
 				// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
-				// that support both gateway and interface endpoints, i.e. S3
-				if ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9])\\.s3", d.Get("service_name").(string)); ok {
+				// that support both gateway and interface endpoints, i.e. S3.
+				if isAmazonS3VPCEndpoint(d.Get("service_name").(string)) {
 					input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap)
 				} else {
 					input.DnsOptions = expandDNSOptionsSpecification(tfMap)
@@ -487,6 +487,11 @@ func vpcEndpointAccept(ctx context.Context, conn *ec2.EC2, vpceID, serviceName s
 	}
 
 	return nil
+}
+
+func isAmazonS3VPCEndpoint(serviceName string) bool {
+	ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9])\\.s3", serviceName)
+	return ok
 }
 
 func expandDNSOptionsSpecification(tfMap map[string]interface{}) *ec2.DnsOptionsSpecification {
