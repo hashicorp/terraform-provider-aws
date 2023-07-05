@@ -1157,7 +1157,6 @@ func sweepThings(region string) error {
       // Otherwise, do not include it.
       if err != nil {
         err := fmt.Errorf("reading Example Thing (%s): %w", id, err)
-        log.Printf("[ERROR] %s", err)
         errs = multierror.Append(errs, err)
         continue
       }
@@ -1168,24 +1167,25 @@ func sweepThings(region string) error {
     return !lastPage
   })
 
-  if err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("listing Example Thing for %s: %w", region, err))
-  }
-
-  if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("sweeping Example Thing for %s: %w", region, err))
-  }
-
   if sweep.SkipSweepError(err) {
     log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
+  }
+  if err != nil {
+    errs = multierror.Append(errs, fmt.Errorf("listing Example Things for %s: %w", region, err))
+  }
+
+  if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+    errs = multierror.Append(errs, fmt.Errorf("sweeping Example Things for %s: %w", region, err))
   }
 
   return errs.ErrorOrNil()
 }
 ```
 
-Otherwise, if no paginated SDK call is available:
+If no paginated SDK call is available,
+consider generating one using the [`listpages` generator](https://github.com/hashicorp/terraform-provider-aws/blob/main/internal/generate/listpages/README.md),
+or implement the sweeper as follows:
 
 ```go
 func sweepThings(region string) error {
@@ -1204,6 +1204,14 @@ func sweepThings(region string) error {
 
   for {
     output, err := conn.ListThings(input)
+    if sweep.SkipSweepError(err) {
+      log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
+      return nil
+    }
+    if err != nil {
+      errs = multierror.Append(errs, fmt.Errorf("listing Example Things for %s: %w", region, err))
+      return errs.ErrorOrNil()
+    }
 
     for _, thing := range output.Things {
       r := ResourceThing()
@@ -1222,7 +1230,6 @@ func sweepThings(region string) error {
       // Otherwise, do not include it.
       if err != nil {
         err := fmt.Errorf("reading Example Thing (%s): %w", id, err)
-        log.Printf("[ERROR] %s", err)
         errs = multierror.Append(errs, err)
         continue
       }
@@ -1239,11 +1246,6 @@ func sweepThings(region string) error {
 
   if err := sweep.SweepOrchestrator(sweepResources); err != nil {
     errs = multierror.Append(errs, fmt.Errorf("sweeping Example Thing for %s: %w", region, err))
-  }
-
-  if sweep.SkipSweepError(err) {
-    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
-    return nil
   }
 
   return errs.ErrorOrNil()
