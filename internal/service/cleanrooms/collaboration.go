@@ -13,12 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms/types"
-	awsv1 "github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -218,16 +218,21 @@ func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("create_time", collaboration.CreateTime.String())
 	d.Set("update_time", collaboration.UpdateTime.String())
 	d.Set("query_log_status", collaboration.QueryLogStatus)
-	d.Set("data_encryption_metadata", flattenDataEncryptionMetadata(collaboration.DataEncryptionMetadata))
+	if err := d.Set("data_encryption_metadata", flattenDataEncryptionMetadata(collaboration.DataEncryptionMetadata)); err != nil {
+		return diag.Errorf("setting data_encryption_metadata: %s", err)
+	}
 
 	membersOut, err := findMembersByCollaborationId(ctx, conn, d.Id())
 	if err != nil {
 		return create.DiagError(names.CleanRooms, create.ErrActionSetting, ResNameCollaboration, d.Id(), err)
 	}
 
-	d.Set("member", flattenMembers(membersOut.MemberSummaries, collaboration.CreatorAccountId))
-	creatorAbilities := flattenCreatorAbilities(membersOut.MemberSummaries, collaboration.CreatorAccountId)
-	d.Set("creator_member_abilities", creatorAbilities)
+	if err := d.Set("member", flattenMembers(membersOut.MemberSummaries, collaboration.CreatorAccountId)); err != nil {
+		return diag.Errorf("setting member: %s", err)
+	}
+	if err := d.Set("creator_member_abilities", flattenCreatorAbilities(membersOut.MemberSummaries, collaboration.CreatorAccountId)); err != nil {
+		return diag.Errorf("setting creator_member_abilities: %s", err)
+	}
 
 	return nil
 }
@@ -249,7 +254,6 @@ func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		log.Printf("[DEBUG] Updating CleanRooms Collaboration (%s): %#v", d.Id(), input)
 		_, err := conn.UpdateCollaboration(ctx, input)
 		if err != nil {
 			return create.DiagError(names.CleanRooms, create.ErrActionUpdating, ResNameCollaboration, d.Id(), err)
@@ -261,18 +265,17 @@ func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceCollaborationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
-	log.Printf("[INFO] Deleting CleanRooms Collaboration %s", d.Id())
 
+	log.Printf("[INFO] Deleting CleanRooms Collaboration %s", d.Id())
 	_, err := conn.DeleteCollaboration(ctx, &cleanrooms.DeleteCollaborationInput{
 		CollaborationIdentifier: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.AccessDeniedException
-		if errors.As(err, &nfe) {
-			return nil
-		}
+	if errs.IsA[*types.AccessDeniedException](err) {
+		return nil
+	}
 
+	if err != nil {
 		return create.DiagError(names.CleanRooms, create.ErrActionDeleting, ResNameCollaboration, d.Id(), err)
 	}
 
@@ -284,22 +287,23 @@ func findCollaborationByID(ctx context.Context, conn *cleanrooms.Client, id stri
 		CollaborationIdentifier: aws.String(id),
 	}
 	out, err := conn.GetCollaboration(ctx, in)
-	if err != nil {
-		//We throw Access Denied for NFE in Cleanrooms for collaborations since they are cross account
-		var nfe *types.AccessDeniedException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.AccessDeniedException](err) {
+		//We throw Access Denied for NFE in Cleanrooms for collaborations since they are cross account
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
 	if out == nil || out.Collaboration == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
+
 	return out, nil
 }
 
@@ -308,15 +312,15 @@ func findMembersByCollaborationId(ctx context.Context, conn *cleanrooms.Client, 
 		CollaborationIdentifier: aws.String(id),
 	}
 	out, err := conn.ListMembers(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -392,7 +396,7 @@ func flattenDataEncryptionMetadata(dataEncryptionMetadata *types.DataEncryptionM
 func flattenMembers(members []types.MemberSummary, ownerAccount *string) []interface{} {
 	flattenedMembers := []interface{}{}
 	for _, member := range members {
-		if awsv1.StringValue(member.AccountId) != awsv1.StringValue(ownerAccount) {
+		if aws.ToString(member.AccountId) != aws.ToString(ownerAccount) {
 			memberMap := map[string]interface{}{}
 			memberMap["status"] = member.Status
 			memberMap["account_id"] = member.AccountId
@@ -407,7 +411,7 @@ func flattenMembers(members []types.MemberSummary, ownerAccount *string) []inter
 func flattenCreatorAbilities(members []types.MemberSummary, ownerAccount *string) []string {
 	flattenedAbilities := []string{}
 	for _, member := range members {
-		if awsv1.StringValue(member.AccountId) == awsv1.StringValue(ownerAccount) {
+		if aws.ToString(member.AccountId) == aws.ToString(ownerAccount) {
 			return flattenMemberAbilities(member.Abilities)
 		}
 	}
