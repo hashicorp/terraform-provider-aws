@@ -17,8 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-
-	// "github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -55,12 +53,10 @@ func ResourceDevenvironment() *schema.Resource {
 						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
 						},
 						"runtime": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
 						},
 					},
 				},
@@ -71,8 +67,9 @@ func ResourceDevenvironment() *schema.Resource {
 				Optional: true,
 			},
 			"instance_type": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.InstanceType](),
 			},
 			"project_name": {
 				Type:     schema.TypeString,
@@ -152,7 +149,6 @@ func resourceDevenvironmentCreate(ctx context.Context, d *schema.ResourceData, m
 	out, err := conn.CreateDevEnvironment(ctx, in)
 
 	if err != nil {
-
 		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameDevenvironment, d.Id(), err)...)
 	}
 
@@ -227,9 +223,7 @@ func resourceDevenvironmentUpdate(ctx context.Context, d *schema.ResourceData, m
 		in.InstanceType = types.InstanceType(d.Get("instance_type").(string))
 		update = true
 	}
-
 	if !update {
-
 		return diags
 	}
 
@@ -447,11 +441,10 @@ func expandRepositoryInput(tfMap map[string]interface{}) types.RepositoryInput {
 	apiObject := types.RepositoryInput{}
 
 	if v, ok := tfMap["branch_name"].(string); ok && v != "" {
-		apiObject.BranchName = aws.String(string(v))
+		apiObject.BranchName = aws.String(v)
 	}
-
 	if v, ok := tfMap["repository_name"].(string); ok && v != "" {
-		apiObject.RepositoryName = aws.String(string(v))
+		apiObject.RepositoryName = aws.String(v)
 	}
 
 	return apiObject
@@ -483,11 +476,10 @@ func expandIdeConfiguration(tfMap map[string]interface{}) types.IdeConfiguration
 	apiObject := types.IdeConfiguration{}
 
 	if v, ok := tfMap["name"].(string); ok && v != "" {
-		apiObject.Name = aws.String(string(v))
+		apiObject.Name = aws.String(v)
 	}
-
 	if v, ok := tfMap["runtime"].(string); ok && v != "" {
-		apiObject.Name = aws.String(string(v))
+		apiObject.Runtime = aws.String(v)
 	}
 
 	return apiObject

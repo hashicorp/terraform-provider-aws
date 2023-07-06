@@ -16,9 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfcodecatalyst "github.com/hashicorp/terraform-provider-aws/internal/service/codecatalyst"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCodecatalystDevenvironment_basic(t *testing.T) {
@@ -37,9 +36,45 @@ func TestAccCodecatalystDevenvironment_basic(t *testing.T) {
 				Config: testAccDevenvironmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDevenvironmentExists(ctx, resourceName, &devEnvironment),
-					// resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
-					// resource.TestCheckResourceAttrPair(resourceName, "target.0.id", instanceResourceName, "id"),
-					// resource.TestCheckResourceAttr(resourceName, "target.0.port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "alias", rName),
+					resource.TestCheckResourceAttr(resourceName, "space_name", "personal-926562225508"),
+					resource.TestCheckResourceAttr(resourceName, "project_name", "terraform-contribution"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "dev.standard1.small"),
+					resource.TestCheckResourceAttr(resourceName, "persistent_storage.0.size", "16"),
+					resource.TestCheckResourceAttr(resourceName, "ides.0.name", "PyCharm"),
+					resource.TestCheckResourceAttr(resourceName, "ides.0.runtime", "public.ecr.aws/jetbrains/py"),
+					resource.TestCheckResourceAttr(resourceName, "ides.0.runtime", "public.ecr.aws/jetbrains/py"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCodecatalystDevenvironment_withRepositories(t *testing.T) {
+	ctx := acctest.Context(t)
+	var devEnvironment codecatalyst.GetDevEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codecatalyst_devenvironment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCatalyst),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDevenvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDevenvironmentConfig_withRepositories(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDevenvironmentExists(ctx, resourceName, &devEnvironment),
+					resource.TestCheckResourceAttr(resourceName, "alias", rName),
+					resource.TestCheckResourceAttr(resourceName, "space_name", "personal-926562225508"),
+					resource.TestCheckResourceAttr(resourceName, "project_name", "terraform-contribution"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "dev.standard1.small"),
+					resource.TestCheckResourceAttr(resourceName, "persistent_storage.0.size", "16"),
+					resource.TestCheckResourceAttr(resourceName, "ides.0.name", "VSCode"),
+					resource.TestCheckResourceAttr(resourceName, "inactivity_timeout_minutes", "40"),
+					resource.TestCheckResourceAttr(resourceName, "repositories.0.repository_name", "terraform-provider-aws"),
+					resource.TestCheckResourceAttr(resourceName, "repositories.0.branch_name", "main"),
 				),
 			},
 		},
@@ -84,11 +119,11 @@ func testAccCheckDevenvironmentDestroy(ctx context.Context) resource.TestCheckFu
 				SpaceName:   aws.String(spaceName),
 				ProjectName: aws.String(projectName),
 			})
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
+			if errs.IsA[*types.AccessDeniedException](err) {
+				continue
 			}
 			if err != nil {
-				return nil
+				return err
 			}
 
 			return create.Error(names.CodeCatalyst, create.ErrActionCheckingDestroyed, tfcodecatalyst.ResNameDevenvironment, rs.Primary.ID, errors.New("not destroyed"))
@@ -153,7 +188,7 @@ func testAccDevenvironmentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codecatalyst_devenvironment" "test" {
   alias = %[1]q
-  space_name = "terraform"
+  space_name = "personal-926562225508"
   project_name = "terraform-contribution"
   instance_type = "dev.standard1.small"
   persistent_storage  {
@@ -164,6 +199,34 @@ resource "aws_codecatalyst_devenvironment" "test" {
   }
 
   
+}
+`, rName)
+}
+
+func testAccDevenvironmentConfig_withRepositories(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_codecatalyst_devenvironment" "test" {
+  alias = %[1]q
+  space_name = "personal-926562225508"
+  project_name = "terraform-contribution"
+  instance_type = "dev.standard1.small"
+
+  persistent_storage  {
+	size = 16
+  }
+
+  ides {
+	name = "PyCharm"
+	runtime = "public.ecr.aws/jetbrains/py"
+  }
+
+  inactivity_timeout_minutes = 40
+
+  repositories {
+	repository_name = "terraform-provider-aws"
+	branch_name = "main"
+  }
+
 }
 `, rName)
 }
