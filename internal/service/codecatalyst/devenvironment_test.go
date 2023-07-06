@@ -37,13 +37,11 @@ func TestAccCodeCatalystDevenvironment_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDevenvironmentExists(ctx, resourceName, &devEnvironment),
 					resource.TestCheckResourceAttr(resourceName, "alias", rName),
-					resource.TestCheckResourceAttr(resourceName, "space_name", "personal-926562225508"),
-					resource.TestCheckResourceAttr(resourceName, "project_name", "terraform-contribution"),
+					resource.TestCheckResourceAttr(resourceName, "space_name", "terraform"),
+					resource.TestCheckResourceAttr(resourceName, "project_name", "terraform"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "dev.standard1.small"),
 					resource.TestCheckResourceAttr(resourceName, "persistent_storage.0.size", "16"),
-					resource.TestCheckResourceAttr(resourceName, "ides.0.name", "PyCharm"),
-					resource.TestCheckResourceAttr(resourceName, "ides.0.runtime", "public.ecr.aws/jetbrains/py"),
-					resource.TestCheckResourceAttr(resourceName, "ides.0.runtime", "public.ecr.aws/jetbrains/py"),
+					resource.TestCheckResourceAttr(resourceName, "ides.0.name", "VSCode"),
 				),
 			},
 		},
@@ -67,11 +65,12 @@ func TestAccCodeCatalystDevenvironment_withRepositories(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDevenvironmentExists(ctx, resourceName, &devEnvironment),
 					resource.TestCheckResourceAttr(resourceName, "alias", rName),
-					resource.TestCheckResourceAttr(resourceName, "space_name", "personal-926562225508"),
-					resource.TestCheckResourceAttr(resourceName, "project_name", "terraform-contribution"),
+					resource.TestCheckResourceAttr(resourceName, "space_name", "terraform"),
+					resource.TestCheckResourceAttr(resourceName, "project_name", "terraform"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "dev.standard1.small"),
 					resource.TestCheckResourceAttr(resourceName, "persistent_storage.0.size", "16"),
-					resource.TestCheckResourceAttr(resourceName, "ides.0.name", "VSCode"),
+					resource.TestCheckResourceAttr(resourceName, "ides.0.name", "PyCharm"),
+					resource.TestCheckResourceAttr(resourceName, "ides.0.runtime", "public.ecr.aws/jetbrains/py"),
 					resource.TestCheckResourceAttr(resourceName, "inactivity_timeout_minutes", "40"),
 					resource.TestCheckResourceAttr(resourceName, "repositories.0.repository_name", "terraform-provider-aws"),
 					resource.TestCheckResourceAttr(resourceName, "repositories.0.branch_name", "main"),
@@ -166,8 +165,8 @@ func testAccCheckDevenvironmentExists(ctx context.Context, name string, devenvir
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCatalystClient(ctx)
 
-	spaceName := "personal-926562225508"
-	projectName := "terraform-contribution"
+	spaceName := "terraform"
+	projectName := "terraform"
 
 	input := &codecatalyst.ListDevEnvironmentsInput{
 		SpaceName:   aws.String(spaceName),
@@ -188,8 +187,8 @@ func testAccDevenvironmentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codecatalyst_devenvironment" "test" {
   alias         = %[1]q
-  space_name    = "personal-926562225508"
-  project_name  = "terraform-contribution"
+  space_name    = "terraform"
+  project_name  = "terraform"
   instance_type = "dev.standard1.small"
   persistent_storage {
     size = 16
@@ -207,8 +206,8 @@ func testAccDevenvironmentConfig_withRepositories(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codecatalyst_devenvironment" "test" {
   alias         = %[1]q
-  space_name    = "personal-926562225508"
-  project_name  = "terraform-contribution"
+  space_name    = "terraform"
+  project_name  = "terraform"
   instance_type = "dev.standard1.small"
 
   persistent_storage {
