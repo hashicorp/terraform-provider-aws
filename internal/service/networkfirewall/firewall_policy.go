@@ -63,7 +63,6 @@ func ResourceFirewallPolicy() *schema.Resource {
 									"rule_variables": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"key": {
@@ -559,7 +558,6 @@ func flattenPolicyVariables(variables *networkfirewall.PolicyVariables) []interf
 	}
 
 	return []interface{}{m}
-
 }
 
 func flattenStatefulEngineOptions(options *networkfirewall.StatefulEngineOptions) []interface{} {
