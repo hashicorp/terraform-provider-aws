@@ -383,13 +383,8 @@ func expandPolicyVariables(tfMap map[string]interface{}) *networkfirewall.Policy
 
 	policyVariables := &networkfirewall.PolicyVariables{}
 
-	if tfList, ok := tfMap["rule_variables"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
-		pvMap, ok := tfList[0].(map[string]interface{})
-		if ok {
-			if v, ok := pvMap["ip_sets"].(*schema.Set); ok && v.Len() > 0 {
-				policyVariables.RuleVariables = expandIPSets(v.List())
-			}
-		}
+	if rvMap, ok := tfMap["rule_variables"].(*schema.Set); ok && rvMap.Len() > 0 {
+		policyVariables.RuleVariables = expandIPSets(rvMap.List())
 	}
 
 	return policyVariables
