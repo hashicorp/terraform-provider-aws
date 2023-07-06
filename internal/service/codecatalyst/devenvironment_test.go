@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCodecatalystDevenvironment_basic(t *testing.T) {
+func TestAccCodeCatalystDevenvironment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var devEnvironment codecatalyst.GetDevEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -50,7 +50,7 @@ func TestAccCodecatalystDevenvironment_basic(t *testing.T) {
 	})
 }
 
-func TestAccCodecatalystDevenvironment_withRepositories(t *testing.T) {
+func TestAccCodeCatalystDevenvironment_withRepositories(t *testing.T) {
 	ctx := acctest.Context(t)
 	var devEnvironment codecatalyst.GetDevEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -80,7 +80,7 @@ func TestAccCodecatalystDevenvironment_withRepositories(t *testing.T) {
 		},
 	})
 }
-func TestAccCodecatalystDevenvironment_disappears(t *testing.T) {
+func TestAccCodeCatalystDevenvironment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var devEnvironment codecatalyst.GetDevEnvironmentOutput
@@ -187,18 +187,18 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccDevenvironmentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codecatalyst_devenvironment" "test" {
-  alias = %[1]q
-  space_name = "personal-926562225508"
-  project_name = "terraform-contribution"
+  alias         = %[1]q
+  space_name    = "personal-926562225508"
+  project_name  = "terraform-contribution"
   instance_type = "dev.standard1.small"
-  persistent_storage  {
-	size = 16
+  persistent_storage {
+    size = 16
   }
   ides {
-	name = "VSCode"
+    name = "VSCode"
   }
 
-  
+
 }
 `, rName)
 }
@@ -206,25 +206,25 @@ resource "aws_codecatalyst_devenvironment" "test" {
 func testAccDevenvironmentConfig_withRepositories(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codecatalyst_devenvironment" "test" {
-  alias = %[1]q
-  space_name = "personal-926562225508"
-  project_name = "terraform-contribution"
+  alias         = %[1]q
+  space_name    = "personal-926562225508"
+  project_name  = "terraform-contribution"
   instance_type = "dev.standard1.small"
 
-  persistent_storage  {
-	size = 16
+  persistent_storage {
+    size = 16
   }
 
   ides {
-	name = "PyCharm"
-	runtime = "public.ecr.aws/jetbrains/py"
+    name    = "PyCharm"
+    runtime = "public.ecr.aws/jetbrains/py"
   }
 
   inactivity_timeout_minutes = 40
 
   repositories {
-	repository_name = "terraform-provider-aws"
-	branch_name = "main"
+    repository_name = "terraform-provider-aws"
+    branch_name     = "main"
   }
 
 }

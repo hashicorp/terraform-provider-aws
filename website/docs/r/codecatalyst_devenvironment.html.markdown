@@ -13,32 +13,34 @@ TIP: A few guiding principles for writing documentation:
 4. Document your feature as it exists now; do not mention the future or past if you can help it.
 5. Use accessible and inclusive language.
 --->`
+
 # Resource: aws_codecatalyst_devenvironment
 
 Terraform resource for managing an AWS CodeCatalyst Dev Environment.
 
 ## Example Usage
+
 ```terraform
 resource "aws_codecatalyst_devenvironment" "test" {
-  alias = "devenv"
-  space_name = "myspace"
-  project_name = "myproject"
+  alias         = "devenv"
+  space_name    = "myspace"
+  project_name  = "myproject"
   instance_type = "dev.standard1.small"
 
-  persistent_storage  {
-	size = 16
+  persistent_storage {
+    size = 16
   }
 
   ides {
-	name = "PyCharm"
-	runtime = "public.ecr.aws/jetbrains/py"
+    name    = "PyCharm"
+    runtime = "public.ecr.aws/jetbrains/py"
   }
 
   inactivity_timeout_minutes = 40
 
   repositories {
-	repository_name = "terraform-provider-aws"
-	branch_name = "main"
+    repository_name = "terraform-provider-aws"
+    branch_name     = "main"
   }
 
 }
@@ -54,13 +56,10 @@ The following arguments are required:
 * `ides` - (Required) Information about the integrated development environment (IDE) configured for a Dev Environment.
 * `instance_type` - (Required) The Amazon EC2 instace type to use for the Dev Environment. Valid values include dev.standard1.small,dev.standard1.medium,dev.standard1.large,dev.standard1.xlarge
 
-
-
 The following arguments are optional:
 
 * `inactivity_timeout_minutes` - (Optional) The amount of time the Dev Environment will run without any activity detected before stopping, in minutes. Only whole integers are allowed. Dev Environments consume compute minutes when running.
 * `repositories` - (Optional) The source repository that contains the branch to clone into the Dev Environment.
-
 
 ides (`ides`) supports the following:
 
