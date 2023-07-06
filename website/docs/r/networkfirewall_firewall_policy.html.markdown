@@ -130,6 +130,7 @@ In addition, you can specify custom actions that are compatible with your standa
 * `stateless_rule_group_reference` - (Optional) Set of configuration blocks containing references to the stateless rule groups that are used in the policy. See [Stateless Rule Group Reference](#stateless-rule-group-reference) below for details.
 
 ### Rule Variables
+
 The `rule_variables` block supports the following arguments:
 
 * `key` - (Required) An alphanumeric string to identify the `ip_set`. Valid values: `HOME_NET`
@@ -137,7 +138,8 @@ The `rule_variables` block supports the following arguments:
 * `ip_set` - (Required) A configuration block that defines a set of IP addresses. See [IP Set](#ip-set) below for details.
 
 ### IP Set
-The `ip_set` block supports the following arguement:
+
+The `ip_set` block supports the following argument:
 
 * `definition` - (Required) Set of IPv4 or IPv6 addresses in CIDR notation to use for the Suricata `HOME_NET` variable.
 
