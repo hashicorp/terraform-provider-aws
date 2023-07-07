@@ -242,8 +242,8 @@ func TestAccSageMakerEndpoint_deploymentConfig_rolling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.rolling_update_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.rolling_update_policy.0.wait_interval_in_seconds", "60"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.rolling_update_policy.0.maximum_batch_size.0.type", "INSTANCE_COUNT"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.rolling_update_policy.0.maximum_batch_size.0.value", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.rolling_update_policy.0.maximum_batch_size.0.type", "CAPACITY_PERCENT"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.rolling_update_policy.0.maximum_batch_size.0.value", "5"),
 				),
 			},
 			{
