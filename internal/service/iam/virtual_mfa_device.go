@@ -5,10 +5,12 @@ package iam
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -101,6 +103,7 @@ func resourceVirtualMFADeviceCreate(ctx context.Context, d *schema.ResourceData,
 	vMFA := output.VirtualMFADevice
 	d.SetId(aws.StringValue(vMFA.SerialNumber))
 
+	// Base32StringSeed and QRCodePNG must be read here, because they are not available via ListVirtualMFADevices
 	d.Set("base_32_string_seed", string(vMFA.Base32StringSeed))
 	d.Set("qr_code_png", string(vMFA.QRCodePNG))
 
@@ -138,6 +141,14 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.Set("arn", vMFA.SerialNumber)
+
+	path, name, err := parseVirtualMFADeviceARN(aws.StringValue(vMFA.SerialNumber))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IAM Virtual MFA Device (%s): %s", d.Id(), err)
+	}
+
+	d.Set("path", path)
+	d.Set("virtual_mfa_device_name", name)
 
 	// The call above returns empty tags.
 	output, err := conn.ListMFADeviceTagsWithContext(ctx, &iam.ListMFADeviceTagsInput{
@@ -221,4 +232,19 @@ func FindVirtualMFADeviceBySerialNumber(ctx context.Context, conn *iam.IAM, seri
 	}
 
 	return output, nil
+}
+
+func parseVirtualMFADeviceARN(s string) (path, name string, err error) {
+	arn, err := arn.Parse(s)
+	if err != nil {
+		return "", "", err
+	}
+
+	re := regexp.MustCompile(`^mfa(/|/[\x{0021}-\x{007E}]+/)([-A-Za-z0-9_+=,.@]+)$`)
+	matches := re.FindStringSubmatch(arn.Resource)
+	if len(matches) != 3 {
+		return "", "", fmt.Errorf("IAM Virtual MFA Device ARN: invalid resource section (%s)", arn.Resource)
+	}
+
+	return matches[1], matches[2], nil
 }
