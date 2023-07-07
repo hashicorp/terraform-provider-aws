@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8
-	github.com/aws/aws-sdk-go v1.44.297
+	github.com/aws/aws-sdk-go v1.44.298
 	github.com/aws/aws-sdk-go-v2 v1.18.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.4
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.19.14
@@ -14,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.14
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.21.2
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.3
@@ -32,7 +32,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.3.2
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.27.1
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.31.6
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/oam v1.1.13
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.6
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.8
