@@ -70,7 +70,7 @@ func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
-	var id string
+	var idOrName string
 	studioId := d.Get("studio_id").(string)
 	identityType := d.Get("identity_type").(string)
 	input := &emr.CreateStudioSessionMappingInput{
@@ -81,12 +81,12 @@ func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceD
 
 	if v, ok := d.GetOk("identity_id"); ok {
 		input.IdentityId = aws.String(v.(string))
-		id = v.(string)
+		idOrName = v.(string)
 	}
 
 	if v, ok := d.GetOk("identity_name"); ok {
 		input.IdentityName = aws.String(v.(string))
-		id = v.(string)
+		idOrName = v.(string)
 	}
 
 	_, err := conn.CreateStudioSessionMappingWithContext(ctx, input)
@@ -94,7 +94,7 @@ func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "creating EMR Studio Session Mapping: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s:%s", studioId, identityType, id))
+	d.SetId(fmt.Sprintf("%s:%s:%s", studioId, identityType, idOrName))
 
 	return append(diags, resourceStudioSessionMappingRead(ctx, d, meta)...)
 }
@@ -103,7 +103,7 @@ func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
-	studioId, identityType, identityId, err := readStudioSessionMapping(d.Id())
+	studioId, identityType, identityIdOrName, err := readStudioSessionMapping(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EMR Studio Session Mapping (%s): %s", d.Id(), err)
 	}
@@ -112,7 +112,12 @@ func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceD
 		SessionPolicyArn: aws.String(d.Get("session_policy_arn").(string)),
 		IdentityType:     aws.String(identityType),
 		StudioId:         aws.String(studioId),
-		IdentityId:       aws.String(identityId),
+	}
+
+	if isIdentityId(identityIdOrName) {
+		input.IdentityId = aws.String(identityIdOrName)
+	} else {
+		input.IdentityName = aws.String(identityIdOrName)
 	}
 
 	_, err = conn.UpdateStudioSessionMappingWithContext(ctx, input)
@@ -127,7 +132,7 @@ func resourceStudioSessionMappingRead(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
-	mapping, err := FindStudioSessionMappingByID(ctx, conn, d.Id())
+	mapping, err := FindStudioSessionMappingByIDOrName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EMR Studio Session Mapping (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -150,7 +155,8 @@ func resourceStudioSessionMappingRead(ctx context.Context, d *schema.ResourceDat
 func resourceStudioSessionMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
-	studioId, identityType, identityId, err := readStudioSessionMapping(d.Id())
+
+	studioId, identityType, identityIdOrName, err := readStudioSessionMapping(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EMR Studio Session Mapping (%s): %s", d.Id(), err)
 	}
@@ -158,7 +164,12 @@ func resourceStudioSessionMappingDelete(ctx context.Context, d *schema.ResourceD
 	input := &emr.DeleteStudioSessionMappingInput{
 		IdentityType: aws.String(identityType),
 		StudioId:     aws.String(studioId),
-		IdentityId:   aws.String(identityId),
+	}
+
+	if isIdentityId(identityIdOrName) {
+		input.IdentityId = aws.String(identityIdOrName)
+	} else {
+		input.IdentityName = aws.String(identityIdOrName)
 	}
 
 	log.Printf("[INFO] Deleting EMR Studio Session Mapping: %s", d.Id())

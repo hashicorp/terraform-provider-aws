@@ -103,7 +103,7 @@ func testAccCheckStudioSessionMappingExists(ctx context.Context, resourceName st
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
 
-		output, err := tfemr.FindStudioSessionMappingByID(ctx, conn, rs.Primary.ID)
+		output, err := tfemr.FindStudioSessionMappingByIDOrName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -127,7 +127,7 @@ func testAccCheckStudioSessionMappingDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tfemr.FindStudioSessionMappingByID(ctx, conn, rs.Primary.ID)
+			_, err := tfemr.FindStudioSessionMappingByIDOrName(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				continue
 			}
