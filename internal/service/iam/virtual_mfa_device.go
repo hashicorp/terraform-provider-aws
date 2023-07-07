@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -48,6 +49,10 @@ func ResourceVirtualMFADevice() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"enable_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"path": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -61,6 +66,10 @@ func ResourceVirtualMFADevice() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"user_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"virtual_mfa_device_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -149,6 +158,14 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("path", path)
 	d.Set("virtual_mfa_device_name", name)
+
+	if v := vMFA.EnableDate; v != nil {
+		d.Set("enable_date", aws.TimeValue(v).Format(time.RFC3339))
+	}
+
+	if u := vMFA.User; u != nil {
+		d.Set("user_name", u.UserName)
+	}
 
 	// The call above returns empty tags.
 	output, err := conn.ListMFADeviceTagsWithContext(ctx, &iam.ListMFADeviceTagsInput{

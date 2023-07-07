@@ -38,8 +38,10 @@ func TestAccIAMVirtualMFADevice_basic(t *testing.T) {
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("mfa/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "base_32_string_seed"),
+					resource.TestCheckNoResourceAttr(resourceName, "enable_date"),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
 					resource.TestCheckResourceAttrSet(resourceName, "qr_code_png"),
+					resource.TestCheckNoResourceAttr(resourceName, "user_name"),
 				),
 			},
 			{
