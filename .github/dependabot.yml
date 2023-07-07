@@ -11,7 +11,7 @@ updates:
       aws-sdk-go:
         patterns:
           - "github.com/aws/aws-sdk-go"
-          - "github.com/aws/aws-sdk-go-v2/service/*"
+          - "github.com/aws/aws-sdk-go-v2/*"
     ignore:
       # hcl/v2 should only be updated via terraform-plugin-sdk
       - dependency-name: "github.com/hashicorp/hcl/v2"
