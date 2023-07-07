@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_signer_signing_profile: Update `platform_id` validation
+```

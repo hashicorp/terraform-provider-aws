@@ -43,7 +43,7 @@ func ResourceSigningProfile() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"AWSLambda-SHA384-ECDSA"},
+					"AWSLambda-SHA384-ECDSA", "Notation-OCI-SHA384-ECDSA", "AWSIoTDeviceManagement-SHA256-ECDSA", "AmazonFreeRTOS-TI-CC3220SF", "AmazonFreeRTOS-Default"},
 					false),
 			},
 			"name": {
@@ -88,6 +88,11 @@ func ResourceSigningProfile() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"signing_material": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
 			},
 			"platform_display_name": {
 				Type:     schema.TypeString,
@@ -154,6 +159,13 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
+	if v, exists := d.GetOk("signing_material"); exists {
+		signingMaterial := v.(string)
+		signingProfileInput.SigningMaterial = &signer.SigningMaterial{
+			CertificateArn: &signingMaterial,
+		}
+	}
+
 	_, err := conn.PutSigningProfileWithContext(ctx, signingProfileInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Signer signing profile: %s", err)
@@ -185,14 +197,15 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set("platform_id", signingProfileOutput.PlatformId); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile platform id: %s", err)
 	}
-
-	if err := d.Set("signature_validity_period", []interface{}{
-		map[string]interface{}{
-			"value": signingProfileOutput.SignatureValidityPeriod.Value,
-			"type":  signingProfileOutput.SignatureValidityPeriod.Type,
-		},
-	}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile signature validity period: %s", err)
+	if signingProfileOutput.SignatureValidityPeriod != nil {
+		if err := d.Set("signature_validity_period", []interface{}{
+			map[string]interface{}{
+				"value": signingProfileOutput.SignatureValidityPeriod.Value,
+				"type":  signingProfileOutput.SignatureValidityPeriod.Type,
+			},
+		}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signer signing profile signature validity period: %s", err)
+		}
 	}
 
 	if err := d.Set("platform_display_name", signingProfileOutput.PlatformDisplayName); err != nil {
@@ -217,6 +230,11 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 
 	if err := d.Set("status", signingProfileOutput.Status); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile status: %s", err)
+	}
+	if signingProfileOutput.SigningMaterial != nil {
+		if err := d.Set("signing_material", signingProfileOutput.SigningMaterial.CertificateArn); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signer signing profile material: %s", err)
+		}
 	}
 
 	setTagsOut(ctx, signingProfileOutput.Tags)
