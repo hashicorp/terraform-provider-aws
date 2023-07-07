@@ -109,9 +109,9 @@ require (
 	github.com/hashicorp/terraform-exec v0.18.1 // indirect
 	github.com/hashicorp/terraform-json v0.17.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework v1.3.2 // indirect
-	github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.0 // indirect
+	github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.1 // indirect
 	github.com/hashicorp/terraform-plugin-framework-validators v0.10.0 // indirect
-	github.com/hashicorp/terraform-plugin-go v0.17.0 // indirect
+	github.com/hashicorp/terraform-plugin-go v0.18.0 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.9.0 // indirect
 	github.com/hashicorp/terraform-plugin-mux v0.11.1 // indirect
 	github.com/hashicorp/terraform-plugin-testing v1.3.0 // indirect
