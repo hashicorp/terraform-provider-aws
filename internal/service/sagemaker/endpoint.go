@@ -73,6 +73,10 @@ func ResourceEndpoint() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
+							ExactlyOneOf: []string{
+								"deployment_config.0.blue_green_update_policy",
+								"deployment_config.0.rolling_update_policy",
+							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"maximum_execution_timeout_in_seconds": {
@@ -150,6 +154,10 @@ func ResourceEndpoint() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
+							ExactlyOneOf: []string{
+								"deployment_config.0.blue_green_update_policy",
+								"deployment_config.0.rolling_update_policy",
+							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"maximum_batch_size": {
