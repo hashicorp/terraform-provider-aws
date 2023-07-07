@@ -211,6 +211,18 @@ resource "null_resource" "example" {
 }
 ```
 
+To subsequently remove all managed ingress & egress rules:
+
+```terraform
+resource "aws_security_group" "example" {
+  name   = "sg"
+  vpc_id = aws_vpc.example.id
+
+  ingress = []
+  egress  = []
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
