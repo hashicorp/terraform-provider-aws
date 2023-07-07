@@ -95,7 +95,7 @@ You can specify inclusions or exclusions, but not both. If you specify an `inclu
 
 * `firewall_deployment_model` - (Optional) Defines the deployment model to use for the firewall policy. To use a distributed model, remove the `policy_option` section. Valid values are `CENTRALIZED` and `DISTRIBUTED`.
 
-## `thirparty_firewall_policy` Configuration Block
+## `thirdparty_firewall_policy` Configuration Block
 
 * `firewall_deployment_model` - (Optional) Defines the deployment model to use for the third-party firewall policy. Valid values are `CENTRALIZED` and `DISTRIBUTED`.
 
