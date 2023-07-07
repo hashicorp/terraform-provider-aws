@@ -53,12 +53,13 @@ updates:
 
   - directory: "/tools/tfsdk2fw"
     package-ecosystem: "gomod"
+    allow:
+      - dependency-type: direct
     ignore:
       # terraform-plugin-sdk/v2 should only be updated via terraform-provider-aws
       - dependency-name: "github.com/hashicorp/terraform-plugin-sdk/v2"
       - dependency-name: "golang.org/x/tools"
       - dependency-name: "google.golang.org/grpc"
-      - dependency-type: indirect
     schedule:
       interval: "daily"
 
