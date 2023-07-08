@@ -205,6 +205,19 @@ func resourceVirtualMFADeviceDelete(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
+	if v := d.Get("user_name"); v != "" {
+		_, err := conn.DeactivateMFADeviceWithContext(ctx, &iam.DeactivateMFADeviceInput{
+			UserName:     aws.String(v.(string)),
+			SerialNumber: aws.String(d.Id()),
+		})
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			return diags
+		}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "deactivating IAM Virtual MFA Device (%s): %s", d.Id(), err)
+		}
+	}
+
 	log.Printf("[INFO] Deleting IAM Virtual MFA Device: %s", d.Id())
 	_, err := conn.DeleteVirtualMFADeviceWithContext(ctx, &iam.DeleteVirtualMFADeviceInput{
 		SerialNumber: aws.String(d.Id()),
