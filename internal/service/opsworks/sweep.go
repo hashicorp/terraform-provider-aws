@@ -377,7 +377,7 @@ func newUserProfileSweeper(resource *schema.Resource, d *schema.ResourceData, cl
 
 func (ups userProfileSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
 	err := ups.sweepable.Delete(ctx, timeout, optFns...)
-	if strings.Contains(err.Error(), "Cannot delete self") {
+	if err != nil && strings.Contains(err.Error(), "Cannot delete self") {
 		log.Printf("[WARN] Skipping OpsWorks User Profile (%s): %s", ups.d.Id(), err)
 		return nil
 	}
