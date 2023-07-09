@@ -9,6 +9,7 @@ package kms
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -38,6 +39,8 @@ func sweepKeys(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
+	accessDenied := regexp.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
+
 	err = conn.ListKeysPagesWithContext(ctx, input, func(page *kms.ListKeysOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -52,7 +55,11 @@ func sweepKeys(region string) error {
 			}
 
 			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error reading KMS Key (%s): %w", keyID, err))
+				if accessDenied.MatchString(err.Error()) {
+					log.Printf("[DEBUG] Skipping KMS Key (%s): %s", keyID, err)
+					continue
+				}
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("reading KMS Key (%s): %w", keyID, err))
 				continue
 			}
 
