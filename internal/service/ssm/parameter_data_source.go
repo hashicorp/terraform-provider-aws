@@ -73,10 +73,15 @@ func dataParameterRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(param.Name))
 	d.Set("arn", param.ARN)
-	d.Set("insecure_value", param.Value)
+	if aws.StringValue(param.Type) == ssm.ParameterTypeSecureString {
+		d.Set("insecure_value", param.Value)
+		d.Set("value", "")
+	} else {
+		d.Set("value", param.Value)
+		d.Set("insecure_value", "")
+	}
 	d.Set("name", param.Name)
 	d.Set("type", param.Type)
-	d.Set("value", param.Value)
 	d.Set("version", param.Version)
 
 	return diags

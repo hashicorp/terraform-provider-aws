@@ -24,7 +24,6 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 				Config: testAccParameterDataSourceConfig_basic(name, "false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "insecure_value", "TestValue"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
 					resource.TestCheckResourceAttr(resourceName, "value", "TestValue"),
@@ -36,7 +35,6 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 				Config: testAccParameterDataSourceConfig_basic(name, "true"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "insecure_value", "TestValue"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
 					resource.TestCheckResourceAttr(resourceName, "value", "TestValue"),
@@ -61,7 +59,6 @@ func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
 				Config: testAccParameterDataSourceConfig_basic(name, "false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "insecure_value", "TestValue"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
 					resource.TestCheckResourceAttr(resourceName, "value", "TestValue"),
@@ -85,4 +82,18 @@ data "aws_ssm_parameter" "test" {
   with_decryption = %s
 }
 `, name, withDecryption)
+}
+
+func testAccParameterConfig_insecureValue(rName, pType string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name           = %[1]q
+  type           = %[2]q
+  insecure_value = "notsecret"
+}
+
+data "aws_ssm_parameter" "test" {
+  name = aws_ssm_parameter.test.name
+}
+`, rName, pType)
 }
