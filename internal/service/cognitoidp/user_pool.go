@@ -1813,7 +1813,7 @@ func flattenUserPoolSchema(configuredAttributes, inputs []*cognitoidentityprovid
 			value["number_attribute_constraints"] = []map[string]interface{}{subvalue}
 		}
 
-		if input.StringAttributeConstraints != nil {
+		if input.StringAttributeConstraints != nil && !skipFlatteningStringAttributeContraints(configuredAttributes, input) {
 			subvalue := make(map[string]interface{})
 
 			if input.StringAttributeConstraints.MinLength != nil {
@@ -2299,4 +2299,27 @@ func flattenUserPoolUserAttributeUpdateSettings(u *cognitoidentityprovider.UserA
 	m["attributes_require_verification_before_update"] = flex.FlattenStringSet(u.AttributesRequireVerificationBeforeUpdate)
 
 	return []map[string]interface{}{m}
+}
+
+// skipFlatteningStringAttributeContraints returns true when all of the schema arguments
+// match an existing configured attribute, except an empty "string_attribute_constraints" block.
+// In this situation the Describe API returns default constraint values, and a persistent diff
+// would be present if written to state.
+func skipFlatteningStringAttributeContraints(configuredAttributes []*cognitoidentityprovider.SchemaAttributeType, input *cognitoidentityprovider.SchemaAttributeType) bool {
+	skip := false
+	for _, configuredAttribute := range configuredAttributes {
+		// Root elements are all equal
+		if reflect.DeepEqual(input.AttributeDataType, configuredAttribute.AttributeDataType) &&
+			reflect.DeepEqual(input.DeveloperOnlyAttribute, configuredAttribute.DeveloperOnlyAttribute) &&
+			reflect.DeepEqual(input.Mutable, configuredAttribute.Mutable) &&
+			reflect.DeepEqual(input.Name, configuredAttribute.Name) &&
+			reflect.DeepEqual(input.Required, configuredAttribute.Required) &&
+			// The configured "string_attribute_constraints" object is empty, but the returned value is not
+			(aws.StringValue(configuredAttribute.AttributeDataType) == cognitoidentityprovider.AttributeDataTypeString &&
+				configuredAttribute.StringAttributeConstraints == nil &&
+				input.StringAttributeConstraints != nil) {
+			skip = true
+		}
+	}
+	return skip
 }
