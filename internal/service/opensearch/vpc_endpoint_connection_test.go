@@ -60,7 +60,7 @@ func TestAccOpenSearchVPCEndpointConnection_update(t *testing.T) {
 				Config: testAccVPCEndpointConnectionConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", "ACTIVE"),
 				),
 			},
@@ -68,7 +68,7 @@ func TestAccOpenSearchVPCEndpointConnection_update(t *testing.T) {
 				Config: testAccVPCEndpointConnectionConfigUpdate(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", "ACTIVE"),
 				),
 			},
