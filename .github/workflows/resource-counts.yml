@@ -2,7 +2,7 @@ name: Resource Counts
 on:
   workflow_dispatch: {}
   schedule:
-    - cron:  '0 9 * * WED'
+    - cron: '0 9 * * WED'
 permissions:
   contents: write
   pull-requests: write
