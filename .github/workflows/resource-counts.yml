@@ -1,6 +1,8 @@
 name: Resource Counts
 on:
   workflow_dispatch: {}
+  schedule:
+    - 0 9 * * WED
 permissions:
   contents: write
   pull-requests: write
