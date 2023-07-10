@@ -97,6 +97,14 @@ The following arguments are supported:
 * `table_name` - (Required) Name of the DynamoDB table.
 * `region` - (Optional) AWS region of the DynamoDB table. Defaults to current region.
 * `use_caller_credentials` - (Optional) Set to `true` to use Amazon Cognito credentials with this data source.
+* `delta_sync_config` - (Optional) The DeltaSyncConfig for a versioned data source. See [Delta Sync Config](#delta-sync-config)
+* `versioned` - (Optional) Detects Conflict Detection and Resolution with this data source.
+
+### Delta Sync Config
+
+* `base_table_ttl` - (Optional) The number of minutes that an Item is stored in the data source.
+* `delta_sync_table_name` - (Required) The table name.
+* `delta_sync_table_ttl` - (Optional) The number of minutes that a Delta Sync log entry is stored in the Delta Sync table.
 
 ### ElasticSearch Config
 
