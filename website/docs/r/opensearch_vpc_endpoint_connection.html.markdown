@@ -45,7 +45,7 @@ resource "aws_opensearch_vpc_endpoint_connection" "test" {
 	  subnet_ids         = [aws_subnet.test.id, aws_subnet.test2.id]
 	}
   
-  }
+}
 
 ```
 
