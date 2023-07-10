@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearchserverless
 
 import (
@@ -151,7 +154,7 @@ func (r *resourceVpcEndpoint) Create(ctx context.Context, req resource.CreateReq
 	// The create operation only returns the Id and Name so retrieve the newly
 	// created VPC Endpoint so we can store the possibly computed
 	// security_group_ids in state
-	vpcEndpoint, err := FindVPCEndpointByID(ctx, conn, aws.ToString(out.CreateVpcEndpointDetail.Id))
+	vpcEndpoint, err := findVPCEndpointByID(ctx, conn, aws.ToString(out.CreateVpcEndpointDetail.Id))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionChecking, ResNameVPCEndpoint, plan.Name.String(), nil),
@@ -174,7 +177,7 @@ func (r *resourceVpcEndpoint) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	out, err := FindVPCEndpointByID(ctx, conn, state.ID.ValueString())
+	out, err := findVPCEndpointByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -255,7 +258,7 @@ func (r *resourceVpcEndpoint) Update(ctx context.Context, req resource.UpdateReq
 	// The update operation only returns security_group_ids if those were
 	// changed so retrieve the updated VPC Endpoint so we can store the
 	// actual security_group_ids in state
-	vpcEndpoint, err := FindVPCEndpointByID(ctx, conn, *out.UpdateVpcEndpointDetail.Id)
+	vpcEndpoint, err := findVPCEndpointByID(ctx, conn, *out.UpdateVpcEndpointDetail.Id)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionChecking, ResNameVPCEndpoint, plan.Name.String(), nil),
@@ -374,7 +377,7 @@ func waitVPCEndpointDeleted(ctx context.Context, conn *opensearchserverless.Clie
 
 func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := FindVPCEndpointByID(ctx, conn, id)
+		out, err := findVPCEndpointByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}

@@ -30,7 +30,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `addresses` - An array of strings that specify one or more IP addresses or blocks of IP addresses in Classless Inter-Domain Routing (CIDR) notation.
+* `addresses` - An array of strings that specifies zero or more IP addresses or blocks of IP addresses in Classless Inter-Domain Routing (CIDR) notation.
 * `arn` - ARN of the entity.
 * `description` - Description of the set that helps with identification.
 * `id` - Unique identifier for the set.

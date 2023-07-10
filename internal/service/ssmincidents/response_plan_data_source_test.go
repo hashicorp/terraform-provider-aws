@@ -1,7 +1,9 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmincidents_test
 
 import (
-	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -13,8 +15,7 @@ import (
 )
 
 func testResponsePlanDataSource_basic(t *testing.T) {
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rTitle := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ssmincidents_response_plan.test"

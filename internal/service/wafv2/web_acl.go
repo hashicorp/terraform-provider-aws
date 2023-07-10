@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2
 
 import (
@@ -54,112 +57,114 @@ func ResourceWebACL() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"captcha_config":       outerCaptchaConfigSchema(),
-			"custom_response_body": customResponseBodySchema(),
-			"default_action": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allow": allowConfigSchema(),
-						"block": blockConfigSchema(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"capacity": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"captcha_config":       outerCaptchaConfigSchema(),
+				"custom_response_body": customResponseBodySchema(),
+				"default_action": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allow": allowConfigSchema(),
+							"block": blockConfigSchema(),
+						},
 					},
 				},
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-			},
-			"lock_token": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain only alphanumeric hyphen and underscore characters"),
-				),
-			},
-			"rule": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"action": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"allow":     allowConfigSchema(),
-									"block":     blockConfigSchema(),
-									"captcha":   captchaConfigSchema(),
-									"challenge": challengeConfigSchema(),
-									"count":     countConfigSchema(),
-								},
-							},
-						},
-						"captcha_config": outerCaptchaConfigSchema(),
-						"name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						"override_action": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"count": emptySchema(),
-									"none":  emptySchema(),
-								},
-							},
-						},
-						"priority": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"rule_label":        ruleLabelsSchema(),
-						"statement":         webACLRootStatementSchema(webACLRootStatementSchemaLevel),
-						"visibility_config": visibilityConfigSchema(),
-					},
+				"description": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 256),
 				},
-			},
-			"scope": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"token_domains": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"lock_token": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 253),
-						validation.StringMatch(regexp.MustCompile(`^[\w\.\-/]+$`), "must contain only alphanumeric, hyphen, dot, underscore and forward-slash characters"),
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
-			},
-			"visibility_config": visibilityConfigSchema(),
+				"rule": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"action": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"allow":     allowConfigSchema(),
+										"block":     blockConfigSchema(),
+										"captcha":   captchaConfigSchema(),
+										"challenge": challengeConfigSchema(),
+										"count":     countConfigSchema(),
+									},
+								},
+							},
+							"captcha_config": outerCaptchaConfigSchema(),
+							"name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 128),
+							},
+							"override_action": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"count": emptySchema(),
+										"none":  emptySchema(),
+									},
+								},
+							},
+							"priority": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"rule_label":        ruleLabelsSchema(),
+							"statement":         webACLRootStatementSchema(webACLRootStatementSchemaLevel),
+							"visibility_config": visibilityConfigSchema(),
+						},
+					},
+				},
+				"scope": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"token_domains": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.All(
+							validation.StringLenBetween(1, 253),
+							validation.StringMatch(regexp.MustCompile(`^[\w\.\-/]+$`), "must contain only alphanumeric, hyphen, dot, underscore and forward-slash characters"),
+						),
+					},
+				},
+				"visibility_config": visibilityConfigSchema(),
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,

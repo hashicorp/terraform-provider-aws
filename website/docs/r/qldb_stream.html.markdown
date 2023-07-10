@@ -56,3 +56,10 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the QLDB Stream.
 * `arn` - The ARN of the QLDB Stream.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `8m`)
+- `delete` - (Default `5m`)
