@@ -305,6 +305,7 @@ const (
 	Transfer                     = "transfer"
 	Translate                    = "translate"
 	VPCLattice                   = "vpclattice"
+	VerifiedPermissions          = "verifiedpermissions"
 	VoiceID                      = "voiceid"
 	WAF                          = "waf"
 	WAFRegional                  = "wafregional"

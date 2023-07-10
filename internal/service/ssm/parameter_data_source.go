@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
@@ -73,12 +76,10 @@ func dataParameterRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(param.Name))
 	d.Set("arn", param.ARN)
-	if aws.StringValue(param.Type) == ssm.ParameterTypeSecureString {
+	d.Set("value", param.Value)
+	d.Set("insecure_value", nil)
+	if aws.StringValue(param.Type) != ssm.ParameterTypeSecureString {
 		d.Set("insecure_value", param.Value)
-		d.Set("value", "")
-	} else {
-		d.Set("value", param.Value)
-		d.Set("insecure_value", "")
 	}
 	d.Set("name", param.Name)
 	d.Set("type", param.Type)

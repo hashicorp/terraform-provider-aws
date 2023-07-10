@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
@@ -164,7 +167,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
-		if err := WaitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
+		if err := waitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica Key (%s) tag propagation: %s", d.Id(), err)
 		}
 	}
@@ -249,12 +252,6 @@ func resourceReplicaKeyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		// Only disable after all attributes have been modified because we cannot modify disabled keys.
 		if err := updateKeyEnabled(ctx, conn, d.Id(), enabled); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating KMS Replica Key (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		if err := WaitTagsPropagated(ctx, conn, d.Id(), tftags.New(ctx, d.Get("tags_all").(map[string]interface{}))); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica Key (%s) tag propagation: %s", d.Id(), err)
 		}
 	}
 

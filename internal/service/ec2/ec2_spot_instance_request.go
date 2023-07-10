@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -42,14 +45,15 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 
 		Schema: func() map[string]*schema.Schema {
 			// The Spot Instance Request Schema is based on the AWS Instance schema.
-			s := ResourceInstance().Schema
+			s := ResourceInstance().SchemaMap()
 
-			// Everything on a spot instance is ForceNew (except tags).
+			// Everything on a spot instance is ForceNew (except tags/tags_all).
 			for k, v := range s {
 				if v.Computed && !v.Optional {
 					continue
 				}
-				if k == names.AttrTags || k == "volume_tags" {
+				// tags_all is Optional+Computed.
+				if k == names.AttrTags || k == names.AttrTagsAll {
 					continue
 				}
 				v.ForceNew = true

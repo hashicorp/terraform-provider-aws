@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
@@ -6,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -135,6 +139,7 @@ func TestAccGlueCatalogDatabase_targetDatabase(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_database.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.catalog_id", "aws_glue_catalog_database.test2", "catalog_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.database_name", "aws_glue_catalog_database.test2", "name"),
+					resource.TestCheckResourceAttr(resourceName, "target_database.0.region", ""),
 				),
 			},
 			{
@@ -150,7 +155,40 @@ func TestAccGlueCatalogDatabase_targetDatabase(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_database.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.catalog_id", "aws_glue_catalog_database.test2", "catalog_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.database_name", "aws_glue_catalog_database.test2", "name"),
+					resource.TestCheckResourceAttr(resourceName, "target_database.0.region", ""),
 				),
+			},
+		},
+	})
+}
+
+func TestAccGlueCatalogDatabase_targetDatabaseWithRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var providers []*schema.Provider
+	resourceName := "aws_glue_catalog_database.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:  testAccCatalogDatabaseConfig_targetWithRegion(rName),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogDatabaseExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "target_database.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.catalog_id", "aws_glue_catalog_database.test2", "catalog_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.database_name", "aws_glue_catalog_database.test2", "name"),
+					resource.TestCheckResourceAttr(resourceName, "target_database.0.region", acctest.AlternateRegion()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -315,6 +353,26 @@ resource "aws_glue_catalog_database" "test2" {
   location_uri = "my-location"
 }
 `, rName)
+}
+
+func testAccCatalogDatabaseConfig_targetWithRegion(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+
+  target_database {
+    catalog_id    = aws_glue_catalog_database.test2.catalog_id
+    database_name = aws_glue_catalog_database.test2.name
+    region        = %[2]q
+  }
+}
+
+resource "aws_glue_catalog_database" "test2" {
+  provider = "awsalternate"
+
+  name = "%[1]s-2"
+}
+`, rName, acctest.AlternateRegion()))
 }
 
 func testAccCatalogDatabaseConfig_permission(rName, permission string) string {
