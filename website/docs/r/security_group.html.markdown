@@ -93,7 +93,7 @@ resource "aws_vpc_endpoint" "my_endpoint" {
 
 You can also find a specific Prefix List using the `aws_prefix_list` data source.
 
-### Removing All Rules
+### Removing All Ingress and Egress Rules
 
 The `ingress` and `egress` arguments are processed in [attribute-as-blocks](https://developer.hashicorp.com/terraform/language/attr-as-blocks) mode. Due to this, removing these arguments from the configuration will **not** cause Terraform to destroy the managed rules. To subsequently remove all managed ingress and egress rules:
 
