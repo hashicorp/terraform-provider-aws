@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package keyspaces
 
 import (
@@ -304,7 +307,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	keyspaceName := d.Get("keyspace_name").(string)
 	tableName := d.Get("table_name").(string)
-	id := TableCreateResourceID(keyspaceName, tableName)
+	id := tableCreateResourceID(keyspaceName, tableName)
 	input := &keyspaces.CreateTableInput{
 		KeyspaceName: aws.String(keyspaceName),
 		TableName:    aws.String(tableName),
@@ -361,7 +364,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
-	keyspaceName, tableName, err := TableParseResourceID(d.Id())
+	keyspaceName, tableName, err := tableParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -439,7 +442,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
-	keyspaceName, tableName, err := TableParseResourceID(d.Id())
+	keyspaceName, tableName, err := tableParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -609,7 +612,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
-	keyspaceName, tableName, err := TableParseResourceID(d.Id())
+	keyspaceName, tableName, err := tableParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -638,14 +641,14 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 const tableIDSeparator = "/"
 
-func TableCreateResourceID(keyspaceName, tableName string) string {
+func tableCreateResourceID(keyspaceName, tableName string) string {
 	parts := []string{keyspaceName, tableName}
 	id := strings.Join(parts, tableIDSeparator)
 
 	return id
 }
 
-func TableParseResourceID(id string) (string, string, error) {
+func tableParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, tableIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {

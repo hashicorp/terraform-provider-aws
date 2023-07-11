@@ -35,6 +35,7 @@ import (
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
+	qldb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qldb"
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	resourceexplorer2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
@@ -48,9 +49,11 @@ import (
 	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
+	timestreamwrite_sdkv2 "github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	transcribe_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transcribe"
 	verifiedpermissions_sdkv2 "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	vpclattice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	acmpca_sdkv1 "github.com/aws/aws-sdk-go/service/acmpca"
 	alexaforbusiness_sdkv1 "github.com/aws/aws-sdk-go/service/alexaforbusiness"
@@ -261,7 +264,6 @@ import (
 	polly_sdkv1 "github.com/aws/aws-sdk-go/service/polly"
 	prometheusservice_sdkv1 "github.com/aws/aws-sdk-go/service/prometheusservice"
 	proton_sdkv1 "github.com/aws/aws-sdk-go/service/proton"
-	qldb_sdkv1 "github.com/aws/aws-sdk-go/service/qldb"
 	qldbsession_sdkv1 "github.com/aws/aws-sdk-go/service/qldbsession"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	ram_sdkv1 "github.com/aws/aws-sdk-go/service/ram"
@@ -315,7 +317,6 @@ import (
 	synthetics_sdkv1 "github.com/aws/aws-sdk-go/service/synthetics"
 	textract_sdkv1 "github.com/aws/aws-sdk-go/service/textract"
 	timestreamquery_sdkv1 "github.com/aws/aws-sdk-go/service/timestreamquery"
-	timestreamwrite_sdkv1 "github.com/aws/aws-sdk-go/service/timestreamwrite"
 	transcribestreamingservice_sdkv1 "github.com/aws/aws-sdk-go/service/transcribestreamingservice"
 	transfer_sdkv1 "github.com/aws/aws-sdk-go/service/transfer"
 	translate_sdkv1 "github.com/aws/aws-sdk-go/service/translate"
@@ -328,7 +329,6 @@ import (
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
 	workmail_sdkv1 "github.com/aws/aws-sdk-go/service/workmail"
 	workmailmessageflow_sdkv1 "github.com/aws/aws-sdk-go/service/workmailmessageflow"
-	workspaces_sdkv1 "github.com/aws/aws-sdk-go/service/workspaces"
 	workspacesweb_sdkv1 "github.com/aws/aws-sdk-go/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1278,8 +1278,8 @@ func (c *AWSClient) ProtonConn(ctx context.Context) *proton_sdkv1.Proton {
 	return errs.Must(conn[*proton_sdkv1.Proton](ctx, c, names.Proton))
 }
 
-func (c *AWSClient) QLDBConn(ctx context.Context) *qldb_sdkv1.QLDB {
-	return errs.Must(conn[*qldb_sdkv1.QLDB](ctx, c, names.QLDB))
+func (c *AWSClient) QLDBClient(ctx context.Context) *qldb_sdkv2.Client {
+	return errs.Must(client[*qldb_sdkv2.Client](ctx, c, names.QLDB))
 }
 
 func (c *AWSClient) QLDBSessionConn(ctx context.Context) *qldbsession_sdkv1.QLDBSession {
@@ -1558,8 +1558,8 @@ func (c *AWSClient) TimestreamQueryConn(ctx context.Context) *timestreamquery_sd
 	return errs.Must(conn[*timestreamquery_sdkv1.TimestreamQuery](ctx, c, names.TimestreamQuery))
 }
 
-func (c *AWSClient) TimestreamWriteConn(ctx context.Context) *timestreamwrite_sdkv1.TimestreamWrite {
-	return errs.Must(conn[*timestreamwrite_sdkv1.TimestreamWrite](ctx, c, names.TimestreamWrite))
+func (c *AWSClient) TimestreamWriteClient(ctx context.Context) *timestreamwrite_sdkv2.Client {
+	return errs.Must(client[*timestreamwrite_sdkv2.Client](ctx, c, names.TimestreamWrite))
 }
 
 func (c *AWSClient) TranscribeClient(ctx context.Context) *transcribe_sdkv2.Client {
@@ -1626,8 +1626,8 @@ func (c *AWSClient) WorkMailMessageFlowConn(ctx context.Context) *workmailmessag
 	return errs.Must(conn[*workmailmessageflow_sdkv1.WorkMailMessageFlow](ctx, c, names.WorkMailMessageFlow))
 }
 
-func (c *AWSClient) WorkSpacesConn(ctx context.Context) *workspaces_sdkv1.WorkSpaces {
-	return errs.Must(conn[*workspaces_sdkv1.WorkSpaces](ctx, c, names.WorkSpaces))
+func (c *AWSClient) WorkSpacesClient(ctx context.Context) *workspaces_sdkv2.Client {
+	return errs.Must(client[*workspaces_sdkv2.Client](ctx, c, names.WorkSpaces))
 }
 
 func (c *AWSClient) WorkSpacesWebConn(ctx context.Context) *workspacesweb_sdkv1.WorkSpacesWeb {

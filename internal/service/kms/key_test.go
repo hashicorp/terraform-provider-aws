@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms_test
 
 import (
@@ -44,6 +47,13 @@ func TestAccKMSKey_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
+			},
+			{
+				// Set deletion window to 7 days
+				Config: testAccKeyConfig_basicDeletionWindow(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+				),
 			},
 		},
 	})
@@ -489,6 +499,19 @@ func TestAccKMSKey_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
+			{
+				Config: testAccKeyConfig_tags0(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
+			},
 		},
 	})
 }
@@ -585,6 +608,14 @@ func testAccCheckKeyExists(ctx context.Context, name string, key *kms.KeyMetadat
 func testAccKeyConfig_basic() string {
 	return `
 resource "aws_kms_key" "test" {}
+`
+}
+
+func testAccKeyConfig_basicDeletionWindow() string {
+	return `
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+}
 `
 }
 
@@ -1028,7 +1059,8 @@ resource "aws_kms_key" "test" {
 func testAccKeyConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 
   tags = {
     %[2]q = %[3]q
@@ -1040,7 +1072,8 @@ resource "aws_kms_key" "test" {
 func testAccKeyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 
   tags = {
     %[2]q = %[3]q
@@ -1048,4 +1081,13 @@ resource "aws_kms_key" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccKeyConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+`, rName)
 }

@@ -277,7 +277,7 @@ polly,polly,polly,polly,,polly,,,Polly,Polly,,1,,,aws_polly_,,polly_,Polly,Amazo
 ,,,,,,,,,,,,,,,,,Porting Assistant for .NET,,x,,,,No SDK support
 pricing,pricing,pricing,pricing,,pricing,,,Pricing,Pricing,,,2,,aws_pricing_,,pricing_,Pricing Calculator,AWS,,,,,
 proton,proton,proton,proton,,proton,,,Proton,Proton,,1,,,aws_proton_,,proton_,Proton,AWS,,,,,
-qldb,qldb,qldb,qldb,,qldb,,,QLDB,QLDB,,1,,,aws_qldb_,,qldb_,QLDB (Quantum Ledger Database),Amazon,,,,,
+qldb,qldb,qldb,qldb,,qldb,,,QLDB,QLDB,,,2,,aws_qldb_,,qldb_,QLDB (Quantum Ledger Database),Amazon,,,,,
 qldb-session,qldbsession,qldbsession,qldbsession,,qldbsession,,,QLDBSession,QLDBSession,,1,,,aws_qldbsession_,,qldbsession_,QLDB Session,Amazon,,,,,
 quicksight,quicksight,quicksight,quicksight,,quicksight,,,QuickSight,QuickSight,,1,,,aws_quicksight_,,quicksight_,QuickSight,Amazon,,,,,
 ram,ram,ram,ram,,ram,,,RAM,RAM,,1,,,aws_ram_,,ram_,RAM (Resource Access Manager),AWS,,,,,
@@ -348,7 +348,7 @@ swf,swf,swf,swf,,swf,,,SWF,SWF,,,2,,aws_swf_,,swf_,SWF (Simple Workflow),Amazon,
 ,,,,,,,,,,,,,,,,,Tag Editor,AWS,x,,,,Part of Resource Groups Tagging
 textract,textract,textract,textract,,textract,,,Textract,Textract,,1,,,aws_textract_,,textract_,Textract,Amazon,,,,,
 timestream-query,timestreamquery,timestreamquery,timestreamquery,,timestreamquery,,,TimestreamQuery,TimestreamQuery,,1,,,aws_timestreamquery_,,timestreamquery_,Timestream Query,Amazon,,,,,
-timestream-write,timestreamwrite,timestreamwrite,timestreamwrite,,timestreamwrite,,,TimestreamWrite,TimestreamWrite,,1,,,aws_timestreamwrite_,,timestreamwrite_,Timestream Write,Amazon,,,,,
+timestream-write,timestreamwrite,timestreamwrite,timestreamwrite,,timestreamwrite,,,TimestreamWrite,TimestreamWrite,,,2,,aws_timestreamwrite_,,timestreamwrite_,Timestream Write,Amazon,,,,,
 ,,,,,,,,,,,,,,,,,Tools for PowerShell,AWS,x,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Training and Certification,AWS,x,,,,No SDK support
 transcribe,transcribe,transcribeservice,transcribe,,transcribe,,transcribeservice,Transcribe,TranscribeService,,,2,,aws_transcribe_,,transcribe_,Transcribe,Amazon,,,,,
@@ -374,7 +374,7 @@ workdocs,workdocs,workdocs,workdocs,,workdocs,,,WorkDocs,WorkDocs,,1,,,aws_workd
 worklink,worklink,worklink,worklink,,worklink,,,WorkLink,WorkLink,,1,,,aws_worklink_,,worklink_,WorkLink,Amazon,,,,,
 workmail,workmail,workmail,workmail,,workmail,,,WorkMail,WorkMail,,1,,,aws_workmail_,,workmail_,WorkMail,Amazon,,,,,
 workmailmessageflow,workmailmessageflow,workmailmessageflow,workmailmessageflow,,workmailmessageflow,,,WorkMailMessageFlow,WorkMailMessageFlow,,1,,,aws_workmailmessageflow_,,workmailmessageflow_,WorkMail Message Flow,Amazon,,,,,
-workspaces,workspaces,workspaces,workspaces,,workspaces,,,WorkSpaces,WorkSpaces,,1,,,aws_workspaces_,,workspaces_,WorkSpaces,Amazon,,,,,
+workspaces,workspaces,workspaces,workspaces,,workspaces,,,WorkSpaces,WorkSpaces,,,2,,aws_workspaces_,,workspaces_,WorkSpaces,Amazon,,,,,
 workspaces-web,workspacesweb,workspacesweb,workspacesweb,,workspacesweb,,,WorkSpacesWeb,WorkSpacesWeb,,1,,,aws_workspacesweb_,,workspacesweb_,WorkSpaces Web,Amazon,,,,,
 xray,xray,xray,xray,,xray,,,XRay,XRay,,,2,,aws_xray_,,xray_,X-Ray,AWS,,,,,
 verifiedpermissions,verifiedpermissions,verifiedpermissions,verifiedpermissions,,verifiedpermissions,,,VerifiedPermissions,VerifiedPermissions,,,2,,aws_verifiedpermissions_,,verifiedpermissions_,Verified Permissions,Amazon,,,,,

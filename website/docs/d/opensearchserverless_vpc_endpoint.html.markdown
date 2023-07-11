@@ -14,7 +14,7 @@ Terraform data source for managing an AWS OpenSearch Serverless VPC Endpoint.
 
 ```terraform
 data "aws_opensearchserverless_vpc_endpoint" "example" {
-  id = "vpce-829a4487959e2a839"
+  vpc_endpoint_id = "vpce-829a4487959e2a839"
 }
 ```
 
@@ -22,7 +22,7 @@ data "aws_opensearchserverless_vpc_endpoint" "example" {
 
 The following arguments are required:
 
-* `id` - (Required) The unique identifier of the endpoint.
+* `vpc_endpoint_id` - (Required) The unique identifier of the endpoint.
 
 ## Attributes Reference
 
