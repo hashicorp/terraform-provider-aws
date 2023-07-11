@@ -108,7 +108,8 @@ func TestAccOpenSearchVPCEndpointConnection_disappears(t *testing.T) {
 func testAccVPCEndpointConnectionConfig(name string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`resource "aws_vpc" "test" {
+		fmt.Sprintf(`
+		         resource "aws_vpc" "test" {
 			cidr_block = "192.168.0.0/22"
 			
 			tags = {

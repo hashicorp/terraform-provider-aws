@@ -14,8 +14,6 @@ Manages an [AWS Opensearch VPC Endpoint Connection](https://docs.aws.amazon.com/
 
 ### Basic Usage
 
-sample code here
-
 ```terraform
 
 resource "aws_opensearch_vpc_endpoint_connection" "foo" {
