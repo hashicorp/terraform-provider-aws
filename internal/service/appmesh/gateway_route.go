@@ -159,6 +159,27 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 													},
 												},
 												AtLeastOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.path", attrName),
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
+												},
+											},
+											"path": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 1,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"exact": {
+															Type:         schema.TypeString,
+															Required:     true,
+															ValidateFunc: validation.StringLenBetween(1, 255),
+														},
+													},
+												},
+												AtLeastOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.path", attrName),
 													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
 													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
 												},
@@ -191,6 +212,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 													},
 												},
 												AtLeastOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.path", attrName),
 													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
 													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
 												},
@@ -783,6 +805,15 @@ func expandHTTPGatewayRouteRewrite(vHttpRouteRewrite []interface{}) *appmesh.Htt
 		routeRewrite.Hostname = routeHostnameRewrite
 	}
 
+	if vRoutePathRewrite, ok := mRouteRewrite["path"].([]interface{}); ok && len(vRoutePathRewrite) > 0 && vRoutePathRewrite[0] != nil {
+		mRoutePathRewrite := vRoutePathRewrite[0].(map[string]interface{})
+		routePathRewrite := &appmesh.HttpGatewayRoutePathRewrite{}
+		if vExact, ok := mRoutePathRewrite["exact"].(string); ok && vExact != "" {
+			routePathRewrite.Exact = aws.String(vExact)
+		}
+		routeRewrite.Path = routePathRewrite
+	}
+
 	if vRoutePrefixRewrite, ok := mRouteRewrite["prefix"].([]interface{}); ok && len(vRoutePrefixRewrite) > 0 && vRoutePrefixRewrite[0] != nil {
 		mRoutePrefixRewrite := vRoutePrefixRewrite[0].(map[string]interface{})
 		routePrefixRewrite := &appmesh.HttpGatewayRoutePrefixRewrite{}
@@ -1134,6 +1165,13 @@ func flattenHTTPGatewayRouteRewrite(routeRewrite *appmesh.HttpGatewayRouteRewrit
 			"default_target_hostname": aws.StringValue(rewriteHostname.DefaultTargetHostname),
 		}
 		mRouteRewrite["hostname"] = []interface{}{mRewriteHostname}
+	}
+
+	if rewritePath := routeRewrite.Path; rewritePath != nil {
+		mRewritePath := map[string]interface{}{
+			"exact": aws.StringValue(rewritePath.Exact),
+		}
+		mRouteRewrite["path"] = []interface{}{mRewritePath}
 	}
 
 	if rewritePrefix := routeRewrite.Prefix; rewritePrefix != nil {

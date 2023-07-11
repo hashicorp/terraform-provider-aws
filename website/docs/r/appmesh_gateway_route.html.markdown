@@ -83,11 +83,16 @@ The `http_route` and `http2_route`'s `action` object additionally supports the f
 The `rewrite` object supports the following:
 
 * `hostname` - (Optional) Host name to rewrite.
+* `path` - (Optional) Exact path to rewrite.
 * `prefix` - (Optional) Specified beginning characters to rewrite.
 
 The `hostname` object supports the following:
 
 * `default_target_hostname` - (Required) Default target host name to write to. Valid values: `ENABLED`, `DISABLED`.
+
+The `path` object supports the following:
+
+* `exact` - (Required) Value used to replace matched path.
 
 The `prefix` object supports the following:
 
