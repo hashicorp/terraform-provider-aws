@@ -238,6 +238,6 @@ resource "aws_opensearch_vpc_endpoint_connection" "foo" {
     security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
     subnet_ids         = [aws_subnet.test.id, aws_subnet.test2.id]
   }
-}	  
+}
 `, name))
 }
