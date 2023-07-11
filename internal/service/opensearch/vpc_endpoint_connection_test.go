@@ -164,6 +164,14 @@ resource "aws_opensearch_domain" "test" {
     subnet_ids         = [aws_subnet.test.id, aws_subnet.test2.id]
   }
 }
+
+resource "aws_opensearch_vpc_endpoint_connection" "foo" {
+	domain_arn = aws_opensearch_domain.domain_1.arn
+	vpc_options {
+	  security_group_ids = [aws_security_group.test.id]
+	  subnet_ids         = [aws_subnet.test.id, aws_subnet.test2.id]
+	}
+}
 `, name))
 
 }
