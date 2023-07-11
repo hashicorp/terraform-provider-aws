@@ -213,10 +213,18 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Ipv6NetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return conn.CreateVpc(ctx, input)
-		// "UnsupportedOperation: The operation AllocateIpamPoolCidr is not supported. Account 123456789012 is not monitored by IPAM ipam-07b079e3392782a55."
-	}, errCodeUnsupportedOperation, "is not monitored by IPAM")
+	outputRaw, err := tfresource.RetryWhen(ctx, ec2PropagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateVpc(ctx, input)
+		},
+		func(err error) (bool, error) {
+			// "UnsupportedOperation: The operation AllocateIpamPoolCidr is not supported. Account 123456789012 is not monitored by IPAM ipam-07b079e3392782a55."
+			if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "is not monitored by IPAM") {
+				return true, err
+			}
+			return false, err
+		},
+	)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC: %s", err)
