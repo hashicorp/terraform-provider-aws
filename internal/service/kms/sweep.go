@@ -9,10 +9,10 @@ package kms
 import (
 	"fmt"
 	"log"
-	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -40,8 +40,6 @@ func sweepKeys(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	accessDenied := regexp.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
-
 	err = conn.ListKeysPagesWithContext(ctx, input, func(page *kms.ListKeysOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -56,7 +54,7 @@ func sweepKeys(region string) error {
 			}
 
 			if err != nil {
-				if accessDenied.MatchString(err.Error()) {
+				if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to perform") {
 					log.Printf("[DEBUG] Skipping KMS Key (%s): %s", keyID, err)
 					continue
 				}
