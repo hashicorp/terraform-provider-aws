@@ -18,6 +18,7 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
 func init() {
@@ -141,7 +142,7 @@ func sweepComputeEnvironments(region string) error {
 			d := r.Data(nil)
 			d.SetId(name)
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -187,7 +188,7 @@ func sweepJobDefinitions(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.JobDefinitionArn))
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -232,7 +233,7 @@ func sweepJobQueues(region string) error {
 			d.SetId(aws.StringValue(v.JobQueueArn))
 			d.Set("name", v.JobQueueName)
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -276,7 +277,7 @@ func sweepSchedulingPolicies(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.Arn))
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
