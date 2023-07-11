@@ -187,7 +187,7 @@ func sweepJobDefinitions(region string) error {
 		}
 
 		for _, v := range page.JobDefinitions {
-			r := ResourceSchedulingPolicy()
+			r := ResourceJobDefinition()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.JobDefinitionArn))
 
