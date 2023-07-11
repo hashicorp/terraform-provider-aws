@@ -149,7 +149,7 @@ func sweepComputeEnvironments(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Batch Compute Environment sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		return nil
 	}
 
 	if err != nil {
@@ -160,10 +160,6 @@ func sweepComputeEnvironments(region string) error {
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Batch Compute Environments (%s): %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Batch Compute Environments: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
