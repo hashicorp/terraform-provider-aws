@@ -109,7 +109,7 @@ func testAccVPCEndpointConnectionConfig(name string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-		         resource "aws_vpc" "test" {
+			resource "aws_vpc" "test" {
 			cidr_block = "192.168.0.0/22"
 			
 			tags = {
@@ -171,8 +171,8 @@ func testAccVPCEndpointConnectionConfig(name string) string {
 			  security_group_ids = [aws_security_group.test.id]
 			  subnet_ids         = [aws_subnet.test.id, aws_subnet.test2.id]
 			}
-			
-			}`, name))
+			}
+		`, name))
 
 }
 
@@ -180,7 +180,7 @@ func testAccVPCEndpointConnectionConfigUpdate(name string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-		resource "aws_vpc" "test" {
+		  resource "aws_vpc" "test" {
 			cidr_block = "192.168.0.0/22"
 		  
 			tags = {
@@ -242,8 +242,7 @@ func testAccVPCEndpointConnectionConfigUpdate(name string) string {
 			  security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
 			  subnet_ids         = [aws_subnet.test.id, aws_subnet.test2.id]
 			}
-		  
 		  }		  
-`, name))
+		`, name))
 
 }
