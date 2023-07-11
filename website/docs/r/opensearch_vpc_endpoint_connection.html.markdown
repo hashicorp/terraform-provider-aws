@@ -15,36 +15,13 @@ Manages an [AWS Opensearch VPC Endpoint Connection](https://docs.aws.amazon.com/
 ### Basic Usage
 
 ```terraform
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
-
-resource "aws_opensearch_domain" "domain_1" {
-  domain_name = testdomain
-
-  ebs_options {
-    ebs_enabled = true
-    volume_size = 10
-  }
-
-  cluster_config {
-    instance_count         = 2
-    zone_awareness_enabled = true
-    instance_type          = "t3.small.search"
-  }
-
-  vpc_options {
-    security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
-    subnet_ids         = [aws_subnet.test.id, aws_subnet.test2.id]
-  }
-}
 
 resource "aws_opensearch_vpc_endpoint_connection" "test" {
 	domain_arn = aws_opensearch_domain.domain_1.arn
 	vpc_options {
 	  security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
 	  subnet_ids         = [aws_subnet.test.id, aws_subnet.test2.id]
-	}
-  
+	}  
 }
 
 ```
