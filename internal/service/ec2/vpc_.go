@@ -375,7 +375,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		}
 	}
 
-	setTagsOut(ctx, vpc.Tags)
+	setTagsOutV2(ctx, vpc.Tags)
 
 	return diags
 }
@@ -536,27 +536,26 @@ func resourceVPCCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v in
 // Try and find IPv6 CIDR block information, first by any stored association ID.
 // Then if no IPv6 CIDR block information is available, use the first associated IPv6 CIDR block.
 func defaultIPv6CIDRBlockAssociation(vpc *types.Vpc, associationID string) *types.VpcIpv6CidrBlockAssociation {
-	var ipv6CIDRBlockAssociation *types.VpcIpv6CidrBlockAssociation
+	var ipv6CIDRBlockAssociation types.VpcIpv6CidrBlockAssociation
 
 	if associationID != "" {
 		for _, v := range vpc.Ipv6CidrBlockAssociationSet {
 			if state := string(v.Ipv6CidrBlockState.State); state == string(types.VpcCidrBlockStateCodeAssociated) && aws.ToString(v.AssociationId) == associationID {
-				ipv6CIDRBlockAssociation = &v
-
+				ipv6CIDRBlockAssociation = v
 				break
 			}
 		}
 	}
 
-	if ipv6CIDRBlockAssociation == nil {
+	if ipv6CIDRBlockAssociation == (types.VpcIpv6CidrBlockAssociation{}) {
 		for _, v := range vpc.Ipv6CidrBlockAssociationSet {
 			if string(v.Ipv6CidrBlockState.State) == string(types.VpcCidrBlockStateCodeAssociated) {
-				ipv6CIDRBlockAssociation = &v
+				ipv6CIDRBlockAssociation = v
 			}
 		}
 	}
 
-	return ipv6CIDRBlockAssociation
+	return &ipv6CIDRBlockAssociation
 }
 
 type vpcInfo struct {

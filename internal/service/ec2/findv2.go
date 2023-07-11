@@ -94,9 +94,7 @@ func FindVPCsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsIn
 			return nil, fmt.Errorf("reading VPCs: %s", err)
 		}
 
-		for _, v := range page.Vpcs {
-			output = append(output, v)
-		}
+		output = append(output, page.Vpcs...)
 	}
 
 	return output, nil
@@ -183,9 +181,7 @@ func FindNetworkACLsV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 			return nil, fmt.Errorf("reading Network ACLs: %s", err)
 		}
 
-		for _, v := range page.NetworkAcls {
-			output = append(output, v)
-		}
+		output = append(output, page.NetworkAcls...)
 	}
 
 	if len(output) == 0 {
@@ -247,9 +243,7 @@ func FindRouteTablesV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 			return nil, fmt.Errorf("reading Route Tables: %s", err)
 		}
 
-		for _, v := range page.RouteTables {
-			output = append(output, v)
-		}
+		output = append(output, page.RouteTables...)
 	}
 
 	if len(output) == 0 {
@@ -290,9 +284,7 @@ func FindSecurityGroupsV2(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 			return nil, fmt.Errorf("reading Security Groups: %s", err)
 		}
 
-		for _, v := range page.SecurityGroups {
-			output = append(output, v)
-		}
+		output = append(output, page.SecurityGroups...)
 	}
 
 	if len(output) == 0 {
@@ -314,9 +306,7 @@ func FindIPAMPoolAllocationsV2(ctx context.Context, conn *ec2.Client, input *ec2
 			return nil, fmt.Errorf("reading IPAM Pool Allocations: %s", err)
 		}
 
-		for _, v := range page.IpamPoolAllocations {
-			output = append(output, v)
-		}
+		output = append(output, page.IpamPoolAllocations...)
 	}
 
 	if len(output) == 0 {
