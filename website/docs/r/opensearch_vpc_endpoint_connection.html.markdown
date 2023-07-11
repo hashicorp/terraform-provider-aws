@@ -16,7 +16,7 @@ Manages an [AWS Opensearch VPC Endpoint Connection](https://docs.aws.amazon.com/
 
 ```terraform
 
-resource "aws_opensearch_vpc_endpoint_connection" "test" {
+resource "aws_opensearch_vpc_endpoint_connection" "foo" {
 	domain_arn = aws_opensearch_domain.domain_1.arn
 	vpc_options {
 	  security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
