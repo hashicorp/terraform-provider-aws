@@ -70,7 +70,7 @@ func sweepScheduleGroups(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Schedule Group for %s: %w", region, err))
 	}
 
@@ -116,7 +116,7 @@ func sweepSchedules(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Schedule for %s: %w", region, err))
 	}
 

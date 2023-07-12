@@ -81,7 +81,7 @@ func sweepAccessPolicies(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping OpenSearch Serverless Access Policies for %s: %w", region, err))
 	}
 	if sweep.SkipSweepError(err) {
@@ -127,7 +127,7 @@ func sweepCollections(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping OpenSearch Serverless Collections for %s: %w", region, err))
 	}
 	if sweep.SkipSweepError(err) {
@@ -175,7 +175,7 @@ func sweepSecurityConfigs(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping OpenSearch Serverless Security Configs for %s: %w", region, err))
 	}
 	if sweep.SkipSweepError(err) {
@@ -252,7 +252,7 @@ func sweepSecurityPolicies(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping OpenSearch Serverless Security Policies for %s: %w", region, err))
 	}
 	if sweep.SkipSweepError(err) {
@@ -298,7 +298,7 @@ func sweepVPCEndpoints(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping OpenSearch Serverless VPC Endpoints for %s: %w", region, err))
 	}
 	if sweep.SkipSweepError(err) {

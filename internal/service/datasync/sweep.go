@@ -292,7 +292,7 @@ func sweepLocationFSxLustres(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping DataSync Location FSX Lustre File Systems: %w", err))
 	}
 
@@ -350,7 +350,7 @@ func sweepLocationNFSs(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping DataSync Location Nfs: %w", err))
 	}
 
@@ -466,7 +466,7 @@ func sweepLocationSMBs(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping DataSync Location SMB: %w", err))
 	}
 
@@ -524,7 +524,7 @@ func sweepLocationHDFSs(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping DataSync Location HDFS: %w", err))
 	}
 

@@ -64,7 +64,7 @@ func sweepConfigurationSets(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing Configuration Sets for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Configuration Sets for %s: %w", region, err))
 	}
 
@@ -111,7 +111,7 @@ func sweepContactLists(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing Contact Lists for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Contact Lists for %s: %w", region, err))
 	}
 

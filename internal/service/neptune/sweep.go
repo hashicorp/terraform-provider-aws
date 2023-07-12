@@ -152,7 +152,7 @@ func sweepClusters(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("listing Neptune Clusters (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("sweeping Neptune Clusters (%s): %w", region, err))
 	}
@@ -197,7 +197,7 @@ func sweepClusterInstances(region string) error {
 		return fmt.Errorf("listing Neptune Cluster Instances (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("sweeping Neptune Cluster Instances (%s): %w", region, err)

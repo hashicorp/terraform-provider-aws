@@ -64,7 +64,7 @@ func sweepKeyspaces(region string) error { // nosemgrep:ci.keyspaces-in-func-nam
 		}
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Keyspaces Keyspaces (%s): %w", region, err)
