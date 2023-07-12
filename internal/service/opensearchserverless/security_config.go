@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearchserverless
 
 import (
@@ -167,7 +170,7 @@ func (r *resourceSecurityConfig) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	out, err := FindSecurityConfigByID(ctx, conn, state.ID.ValueString())
+	out, err := findSecurityConfigByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -316,7 +319,7 @@ func expandSAMLOptions(ctx context.Context, object types.Object, diags *diag.Dia
 }
 
 func flattenSAMLOptions(ctx context.Context, so *awstypes.SamlConfigOptions) types.Object {
-	attributeTypes := framework.AttributeTypesMust[samlOptions](ctx)
+	attributeTypes := flex.AttributeTypesMust[samlOptions](ctx)
 
 	if so == nil {
 		return types.ObjectNull(attributeTypes)

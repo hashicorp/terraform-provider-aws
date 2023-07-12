@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -17,9 +20,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -42,7 +45,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				Optional:      true,
 				ConflictsWith: []string{"forbidden_account_ids"},
-				Set:           schema.HashString,
 			},
 			"assume_role":                   assumeRoleSchema(),
 			"assume_role_with_web_identity": assumeRoleWithWebIdentitySchema(),
@@ -87,7 +89,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				Optional:      true,
 				ConflictsWith: []string{"allowed_account_ids"},
-				Set:           schema.HashString,
 			},
 			"http_proxy": {
 				Type:     schema.TypeString,
@@ -106,14 +107,12 @@ func New(ctx context.Context) (*schema.Provider, error) {
 							Type:        schema.TypeSet,
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Set:         schema.HashString,
 							Description: "Resource tag keys to ignore across all resources.",
 						},
 						"key_prefixes": {
 							Type:        schema.TypeSet,
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Set:         schema.HashString,
 							Description: "Resource tag key prefixes to ignore across all resources.",
 						},
 					},
@@ -323,9 +322,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			interceptors := interceptorItems{}
 
 			if v.Tags != nil {
+				schema := r.SchemaMap()
+
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
-				if v, ok := r.Schema[names.AttrTags]; ok {
+				if v, ok := schema[names.AttrTags]; ok {
 					if v.Computed {
 						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
 						continue
@@ -334,7 +335,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
 					continue
 				}
-				if v, ok := r.Schema[names.AttrTagsAll]; ok {
+				if v, ok := schema[names.AttrTagsAll]; ok {
 					if !v.Computed {
 						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
 						continue

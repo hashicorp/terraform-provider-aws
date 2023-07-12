@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -81,7 +84,7 @@ func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, routeTableID)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, RouteTableAssociationPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return nil, FindVPCEndpointRouteTableAssociationExists(ctx, conn, endpointID, routeTableID)
 	}, d.IsNewResource())
 

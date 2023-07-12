@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch_test
 
 import (
@@ -202,6 +205,7 @@ func TestAccBatchComputeEnvironment_createEC2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.placement_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.security_group_ids.*", securityGroupResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.spot_iam_fleet_role", ""),
@@ -1043,6 +1047,72 @@ func TestAccBatchComputeEnvironment_ec2Configuration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.1.image_type", "ECS_AL2_NVIDIA"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.security_group_ids.*", securityGroupResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.spot_iam_fleet_role", spotFleetRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.subnets.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.subnets.*", subnetResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.type", "SPOT"),
+					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role", serviceRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, "status_reason"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "MANAGED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBatchComputeEnvironment_ec2ConfigurationPlacementGroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ce batch.ComputeEnvironmentDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
+	securityGroupResourceName := "aws_security_group.test"
+	serviceRoleResourceName := "aws_iam_role.batch_service"
+	spotFleetRoleResourceName := "aws_iam_role.ec2_spot_fleet"
+	subnetResourceName := "aws_subnet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentConfig_ec2ConfigurationPlacementGroup(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.desired_vcpus", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_key_pair", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.0.image_id_override"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2"),
+					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.1.image_id_override"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.1.image_type", "ECS_AL2_NVIDIA"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.placement_group", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.security_group_ids.*", securityGroupResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.spot_iam_fleet_role", spotFleetRoleResourceName, "arn"),
@@ -2476,6 +2546,52 @@ resource "aws_batch_compute_environment" "test" {
 
     max_vcpus = 16
     min_vcpus = 0
+
+    security_group_ids = [
+      aws_security_group.test.id
+    ]
+    spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
+    subnets = [
+      aws_subnet.test.id
+    ]
+    type = "SPOT"
+  }
+
+  service_role = aws_iam_role.batch_service.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.batch_service]
+}
+`, rName))
+}
+
+func testAccComputeEnvironmentConfig_ec2ConfigurationPlacementGroup(rName string) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "cluster"
+}
+
+resource "aws_batch_compute_environment" "test" {
+  compute_environment_name = %[1]q
+
+  compute_resources {
+    instance_role = aws_iam_instance_profile.ecs_instance.arn
+    instance_type = ["optimal"]
+
+    ec2_configuration {
+      image_id_override = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+      image_type        = "ECS_AL2"
+    }
+
+    ec2_configuration {
+      image_id_override = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+      image_type        = "ECS_AL2_NVIDIA"
+    }
+
+    max_vcpus = 16
+    min_vcpus = 0
+
+    placement_group = aws_placement_group.test.name
 
     security_group_ids = [
       aws_security_group.test.id

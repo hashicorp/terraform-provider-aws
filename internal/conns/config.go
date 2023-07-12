@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package conns
 
 import (
@@ -132,7 +135,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 
 	if len(c.ForbiddenAccountIds) > 0 {
-		for _, forbiddenAccountID := range c.AllowedAccountIds {
+		for _, forbiddenAccountID := range c.ForbiddenAccountIds {
 			if accountID == forbiddenAccountID {
 				return nil, diag.Errorf("AWS account ID not allowed: %s", accountID)
 			}

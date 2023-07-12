@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
@@ -33,40 +36,42 @@ func ResourceGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			"aws_account_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
+				"aws_account_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
 
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+				"description": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
 
-			"group_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"group_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
 
-			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  DefaultGroupNamespace,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
-				),
-			},
+				"namespace": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Default:  DefaultGroupNamespace,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+					),
+				},
+			}
 		},
 	}
 }

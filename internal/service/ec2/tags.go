@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -5,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
@@ -57,7 +61,7 @@ func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t s
 	}
 }
 
-// getTagSpecificationsIn returns EC2 service tags from Context.
+// getTagSpecificationsIn returns AWS SDK for Go v1 EC2 service tags from Context.
 // nil is returned if there are no input tags.
 func getTagSpecificationsIn(ctx context.Context, resourceType string) []*ec2.TagSpecification {
 	tags := getTagsIn(ctx)
@@ -69,6 +73,23 @@ func getTagSpecificationsIn(ctx context.Context, resourceType string) []*ec2.Tag
 	return []*ec2.TagSpecification{
 		{
 			ResourceType: aws.String(resourceType),
+			Tags:         tags,
+		},
+	}
+}
+
+// getTagSpecificationsInV2 returns AWS SDK for Go v2 EC2 service tags from Context.
+// nil is returned if there are no input tags.
+func getTagSpecificationsInV2(ctx context.Context, resourceType awstypes.ResourceType) []awstypes.TagSpecification {
+	tags := getTagsInV2(ctx)
+
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return []awstypes.TagSpecification{
+		{
+			ResourceType: resourceType,
 			Tags:         tags,
 		},
 	}

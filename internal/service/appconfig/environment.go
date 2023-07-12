@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
@@ -430,7 +433,7 @@ func expandMonitors(l []monitorData) []awstypes.Monitor {
 }
 
 func flattenMonitors(ctx context.Context, apiObjects []awstypes.Monitor, diags *diag.Diagnostics) types.Set {
-	monitorDataTypes := framework.AttributeTypesMust[monitorData](ctx)
+	monitorDataTypes := flex.AttributeTypesMust[monitorData](ctx)
 	elemType := types.ObjectType{AttrTypes: monitorDataTypes}
 
 	if len(apiObjects) == 0 {
@@ -473,7 +476,7 @@ func flattenMonitorData(ctx context.Context, apiObject awstypes.Monitor, diags *
 }
 
 func (m monitorData) value(ctx context.Context, diags *diag.Diagnostics) types.Object {
-	monitorDataTypes := framework.AttributeTypesMust[monitorData](ctx)
+	monitorDataTypes := flex.AttributeTypesMust[monitorData](ctx)
 
 	obj, d := types.ObjectValueFrom(ctx, monitorDataTypes, m)
 	diags.Append(d...)

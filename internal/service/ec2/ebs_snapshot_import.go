@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -221,7 +224,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 		input.RoleName = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.ImportSnapshotWithContext(ctx, input)
 		},

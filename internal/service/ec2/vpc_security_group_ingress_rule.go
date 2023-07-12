@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -134,7 +137,7 @@ func (r *resourceSecurityGroupRule) Schema(ctx context.Context, req resource.Sch
 				Optional: true,
 			},
 			"security_group_id": schema.StringAttribute{
-				Optional: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -177,8 +180,8 @@ func (r *resourceSecurityGroupRule) Create(ctx context.Context, request resource
 	data.ID = types.StringValue(securityGroupRuleID)
 
 	conn := r.Meta().EC2Conn(ctx)
-	if err := updateTags(ctx, conn, data.ID.ValueString(), nil, KeyValueTags(ctx, getTagsIn(ctx))); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("adding VPC Security Group Rule (%s) tags", data.ID.ValueString()), err.Error())
+	if err := createTags(ctx, conn, data.ID.ValueString(), getTagsIn(ctx)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("setting VPC Security Group Rule (%s) tags", data.ID.ValueString()), err.Error())
 
 		return
 	}

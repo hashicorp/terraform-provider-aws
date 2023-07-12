@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb_test
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
@@ -7,7 +10,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"reflect"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
@@ -149,8 +151,6 @@ func TestValidLoadBalancerHealthCheckTarget(t *testing.T) {
 	}
 
 	randomRunes := func(n int) string {
-		rand.Seed(time.Now().UTC().UnixNano())
-
 		// A complete set of modern Katakana characters.
 		runes := []rune("アイウエオ" +
 			"カキクケコガギグゲゴサシスセソザジズゼゾ" +

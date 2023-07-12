@@ -93,6 +93,20 @@ resource "aws_vpc_endpoint" "my_endpoint" {
 
 You can also find a specific Prefix List using the `aws_prefix_list` data source.
 
+### Removing All Ingress and Egress Rules
+
+The `ingress` and `egress` arguments are processed in [attributes-as-blocks](https://developer.hashicorp.com/terraform/language/attr-as-blocks) mode. Due to this, removing these arguments from the configuration will **not** cause Terraform to destroy the managed rules. To subsequently remove all managed ingress and egress rules:
+
+```terraform
+resource "aws_security_group" "example" {
+  name   = "sg"
+  vpc_id = aws_vpc.example.id
+
+  ingress = []
+  egress  = []
+}
+```
+
 ### Recreating a Security Group
 
 A simple security group `name` change "forces new" the security group--Terraform destroys the security group and creates a new one. (Likewise, `description`, `name_prefix`, or `vpc_id` [cannot be changed](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/working-with-security-groups.html#creating-security-group).) Attempting to recreate the security group leads to a variety of complications depending on how it is used.
@@ -236,6 +250,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+~> **Note** Although `cidr_blocks`, `ipv6_cidr_blocks`, `prefix_list_ids`, and `security_groups` are all marked as optional, you _must_ provide one of them in order to configure the source of the traffic.
+
 * `cidr_blocks` - (Optional) List of CIDR blocks.
 * `description` - (Optional) Description of this ingress rule.
 * `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
@@ -253,6 +269,8 @@ The following arguments are required:
 * `to_port` - (Required) End range port (or ICMP code if protocol is `icmp`).
 
 The following arguments are optional:
+
+~> **Note** Although `cidr_blocks`, `ipv6_cidr_blocks`, `prefix_list_ids`, and `security_groups` are all marked as optional, you _must_ provide one of them in order to configure the destination of the traffic.
 
 * `cidr_blocks` - (Optional) List of CIDR blocks.
 * `description` - (Optional) Description of this egress rule.
