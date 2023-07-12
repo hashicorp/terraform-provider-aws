@@ -70,7 +70,7 @@ func sweepDirectories(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WorkSpaces Directories (%s): %w", region, err)
@@ -114,7 +114,7 @@ func sweepIPGroups(region string) error {
 		return fmt.Errorf("error listing WorkSpaces IP Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WorkSpaces IP Groups (%s): %w", region, err)
@@ -172,7 +172,7 @@ func sweepWorkspace(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WorkSpaces Workspaces (%s): %w", region, err)

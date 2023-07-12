@@ -87,7 +87,7 @@ func sweepResourceDefaultPatchBaselines(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Default Patch Baselines for %s: %w", region, err))
 	}
 
@@ -205,7 +205,7 @@ func sweepResourcePatchBaselines(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepables);err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Patch Baselines for %s: %w", region, err))
 	}
 
@@ -254,7 +254,7 @@ func sweepResourceDataSyncs(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing SSM Resource Data Sync for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping SSM Resource Data Sync for %s: %w", region, err))
 	}
 

@@ -55,7 +55,7 @@ func sweepAnalyzers(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("sweeping IAM Access Analyzer Analyzers (%s): %w", region, err)

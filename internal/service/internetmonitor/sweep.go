@@ -55,7 +55,7 @@ func sweepMonitors(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Internet Monitor Monitors (%s): %w", region, err)

@@ -68,7 +68,7 @@ func sweepCertificateAuthorities(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing ACM PCA Certificate Authorities: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping ACM PCA Certificate Authorities for %s: %w", region, err))
 	}
 

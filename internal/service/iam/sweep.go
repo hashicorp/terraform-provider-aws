@@ -449,7 +449,7 @@ func sweepPolicies(region string) error {
 		return fmt.Errorf("retrieving IAM Policies: %w", err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 	if err != nil {
 		return fmt.Errorf("sweeping IAM Policies (%s): %w", region, err)
 	}

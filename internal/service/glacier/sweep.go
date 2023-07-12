@@ -55,7 +55,7 @@ func sweepVaults(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Glacier Vaults (%s): %w", region, err)

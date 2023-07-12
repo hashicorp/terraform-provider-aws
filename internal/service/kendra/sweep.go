@@ -59,7 +59,7 @@ func sweepIndex(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Kendra Indices for %s: %w", region, err))
 	}
 
