@@ -168,8 +168,9 @@ func (r *resourceConnectionAlias) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *resourceConnectionAlias) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan resourceConnectionAliasData
+	var plan, state resourceConnectionAliasData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -215,6 +216,10 @@ func (r *resourceConnectionAlias) Delete(ctx context.Context, req resource.Delet
 
 func (r *resourceConnectionAlias) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *resourceConnectionAlias) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
 func (data *resourceConnectionAliasData) update(ctx context.Context, in *awstypes.ConnectionAlias) {
