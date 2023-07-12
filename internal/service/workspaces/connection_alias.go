@@ -70,10 +70,16 @@ func (r *resourceConnectionAlias) Schema(ctx context.Context, req resource.Schem
 			"owner_account_id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The identifier of the Amazon Web Services account that owns the connection alias.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"state": schema.StringAttribute{
 				Computed:    true,
 				Description: "The current state of the connection alias.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -81,6 +87,7 @@ func (r *resourceConnectionAlias) Schema(ctx context.Context, req resource.Schem
 		Blocks: map[string]schema.Block{
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
+				Update: true,
 				Delete: true,
 			}),
 		},
