@@ -5,14 +5,7 @@ page_title: "AWS: aws_workspaces_connection_alias"
 description: |-
   Terraform resource for managing an AWS WorkSpaces Connection Alias.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_workspaces_connection_alias
 
 Terraform resource for managing an AWS WorkSpaces Connection Alias.
@@ -23,6 +16,7 @@ Terraform resource for managing an AWS WorkSpaces Connection Alias.
 
 ```terraform
 resource "aws_workspaces_connection_alias" "example" {
+  connection_string = "testdomain.test"
 }
 ```
 
@@ -30,18 +24,17 @@ resource "aws_workspaces_connection_alias" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `connection_string` - (Required) The connection string specified for the connection alias. The connection string must be in the form of a fully qualified domain name (FQDN), such as www.example.com.
+* `tags` – (Optional) A map of tags assigned to the WorkSpaces Connection Alias. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the Connection Alias. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `id` - The identifier of the connection alias.
+* `owner_account_id` - The identifier of the Amazon Web Services account that owns the connection alias.
+* `state` - The current state of the connection alias.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -53,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WorkSpaces Connection Alias can be imported using the `example_id_arg`, e.g.,
+WorkSpaces Connection Alias can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_workspaces_connection_alias.example rft-8012925589
