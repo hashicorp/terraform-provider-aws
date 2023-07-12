@@ -1295,7 +1295,7 @@ func flattenPivotTableAggregatedFieldWells(apiObject *quicksight.PivotTableAggre
 		tfMap["columns"] = flattenDimensionFields(apiObject.Columns)
 	}
 	if apiObject.Rows != nil {
-		tfMap["row"] = flattenDimensionFields(apiObject.Rows)
+		tfMap["rows"] = flattenDimensionFields(apiObject.Rows)
 	}
 	if apiObject.Values != nil {
 		tfMap["values"] = flattenMeasureFields(apiObject.Values)
@@ -1671,7 +1671,7 @@ func flattenPivotTableFieldOption(apiObject []*quicksight.PivotTableFieldOption)
 			tfMap["custom_label"] = aws.StringValue(config.CustomLabel)
 		}
 		if config.Visibility != nil {
-			tfMap["visbility"] = aws.StringValue(config.Visibility)
+			tfMap["visibility"] = aws.StringValue(config.Visibility)
 		}
 
 		tfList = append(tfList, tfMap)
