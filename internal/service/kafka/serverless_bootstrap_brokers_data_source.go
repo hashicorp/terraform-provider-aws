@@ -16,7 +16,7 @@ func DataSourceServerlessBootstrapBrokers() *schema.Resource {
 		ReadWithoutTimeout: dataSourceBootstrapBrokers,
 
 		Schema: map[string]*schema.Schema{
-			"BootstrapBrokerStringPublicSaslIam": {
+			"bootstrap_broker_string_sasl_iam": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,7 +39,7 @@ func dataSourceBootstrapBrokers(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "Getting MSK Cluster (%s) Boostrap Brokers: %s", clusterArn, err)
 	}
 
-	d.Set("BootstrapBrokerStringPublicSaslIam", resp.BootstrapBrokerStringPublicSaslIam)
+	d.Set("bootstrap_broker_string_sasl_iam", resp.BootstrapBrokerStringSaslIam)
 
 	return diags
 }
