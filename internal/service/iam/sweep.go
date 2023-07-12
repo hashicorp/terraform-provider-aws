@@ -918,8 +918,10 @@ func sweepVirtualMFADevice(region string) error {
 	}
 	conn := client.IAMConn(ctx)
 	var sweeperErrs *multierror.Error
-	input := &iam.ListVirtualMFADevicesInput{}
 
+	accessDenied := regexp.MustCompile(`AccessDenied: .+ with an explicit deny`)
+
+	input := &iam.ListVirtualMFADevicesInput{}
 	err = conn.ListVirtualMFADevicesPagesWithContext(ctx, input, func(page *iam.ListVirtualMFADevicesOutput, lastPage bool) bool {
 		if len(page.VirtualMFADevices) == 0 {
 			log.Printf("[INFO] No IAM Virtual MFA Devices to sweep")
@@ -936,11 +938,19 @@ func sweepVirtualMFADevice(region string) error {
 			r := ResourceVirtualMFADevice()
 			d := r.Data(nil)
 			d.SetId(serialNum)
+
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("reading IAM Virtual MFA Device (%s): %w", serialNum, err))
+				continue
+			}
+
 			err := sdk.DeleteResource(ctx, r, d, client)
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting IAM Virtual MFA Device (%s): %w", device, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				if accessDenied.MatchString(err.Error()) {
+					log.Printf("[DEBUG] Skipping IAM Virtual MFA Device (%s): %s", serialNum, err)
+					continue
+				}
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("deleting IAM Virtual MFA Device (%s): %w", serialNum, err))
 				continue
 			}
 		}
