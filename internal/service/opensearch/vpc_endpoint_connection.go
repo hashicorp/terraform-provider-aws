@@ -27,7 +27,6 @@ func ResourceVPCEndpoint() *schema.Resource {
 		ReadWithoutTimeout:   resourceVPCEndpointRead,
 		UpdateWithoutTimeout: resourceVPCEndpointPut,
 		DeleteWithoutTimeout: resourceVPCEndpointDelete,
-
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
