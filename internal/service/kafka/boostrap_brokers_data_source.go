@@ -85,7 +85,7 @@ func dataSourceBootstrapBrokers(ctx context.Context, d *schema.ResourceData, met
 	d.Set("bootstrap_broker_string_public_sasl_iam", resp.BootstrapBrokerStringPublicSaslIam)
 	d.Set("bootstrap_broker_string_vpc_connectivity_tls", resp.BootstrapBrokerStringVpcConnectivityTls)
 	d.Set("bootstrap_broker_string_vpc_connectivity_sasl_scram", resp.BootstrapBrokerStringVpcConnectivitySaslScram)
-	d.Set("bootstrap_broker_string_public_sasl_iam", resp.BootstrapBrokerStringVpcConnectivitySaslIam)
+	d.Set("bootstrap_broker_string_vpc_connectivity_sasl_iam", resp.BootstrapBrokerStringVpcConnectivitySaslIam)
 
 	return diags
 }
