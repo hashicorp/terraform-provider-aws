@@ -104,7 +104,7 @@ type Sweepable interface {
 	Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error
 }
 
-func SweepOrchestratorWithContext(ctx context.Context, sweepables []Sweepable, optFns ...tfresource.OptionsFunc) error {
+func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tfresource.OptionsFunc) error {
 	var g multierror.Group
 
 	for _, sweepable := range sweepables {

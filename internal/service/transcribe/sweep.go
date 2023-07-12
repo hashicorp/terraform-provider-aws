@@ -90,7 +90,7 @@ func sweepLanguageModels(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Transcribe Language Models for %s: %w", region, err))
 	}
 
@@ -141,7 +141,7 @@ func sweepMedicalVocabularies(region string) error {
 		in.NextToken = out.NextToken
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Transcribe Medical Vocabularies for %s: %w", region, err))
 	}
 
@@ -192,7 +192,7 @@ func sweepVocabularies(region string) error {
 		in.NextToken = out.NextToken
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Transcribe Vocabularies for %s: %w", region, err))
 	}
 
@@ -244,7 +244,7 @@ func sweepVocabularyFilters(region string) error {
 		in.NextToken = out.NextToken
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Transcribe Vocabulary Filters for %s: %w", region, err))
 	}
 

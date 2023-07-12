@@ -90,7 +90,7 @@ func sweepIPSets(region string) error {
 		return fmt.Errorf("error listing WAFv2 IPSets (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WAFv2 IPSets (%s): %w", region, err)
@@ -139,7 +139,7 @@ func sweepRegexPatternSets(region string) error {
 		return fmt.Errorf("error listing WAFv2 RegexPatternSets (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WAFv2 RegexPatternSets (%s): %w", region, err)
@@ -188,7 +188,7 @@ func sweepRuleGroups(region string) error {
 		return fmt.Errorf("error listing WAFv2 RuleGroups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WAFv2 RuleGroups (%s): %w", region, err)
@@ -247,7 +247,7 @@ func sweepWebACLs(region string) error {
 		return fmt.Errorf("error listing WAFv2 WebACLs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WAFv2 WebACLs (%s): %w", region, err)

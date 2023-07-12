@@ -80,7 +80,7 @@ func sweepChannels(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping MediaLive Channels for %s: %w", region, err))
 	}
 
@@ -130,7 +130,7 @@ func sweepInputs(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping MediaLive Inputs for %s: %w", region, err))
 	}
 
@@ -180,7 +180,7 @@ func sweepInputSecurityGroups(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping MediaLive Input Security Groups for %s: %w", region, err))
 	}
 
@@ -230,7 +230,7 @@ func sweepMultiplexes(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping MediaLive Multiplexes for %s: %w", region, err))
 	}
 

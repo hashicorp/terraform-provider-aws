@@ -58,7 +58,7 @@ func sweepEnvironmentEC2s(region string) error {
 		return fmt.Errorf("error listing Cloud9 EC2 Environments (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Cloud9 EC2 Environments (%s): %w", region, err)
