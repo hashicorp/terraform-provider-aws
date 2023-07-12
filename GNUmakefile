@@ -189,6 +189,8 @@ importlint:
 
 lint: golangci-lint providerlint importlint
 
+lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix
+
 providerlint:
 	@echo "==> Checking source code with providerlint..."
 	@providerlint \
@@ -429,6 +431,7 @@ yamllint:
 	golangci-lint \
 	importlint \
 	lint \
+	lint-fix \
 	providerlint \
 	sane \
 	sanity \
