@@ -35,7 +35,7 @@ func dataSourceBootstrapBrokers(ctx context.Context, d *schema.ResourceData, met
 
 	req, resp := conn.GetBootstrapBrokersRequest(input)
 	err := req.Send()
-	if err == nil {
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "Getting MSK Cluster (%s) Boostrap Brokers: %s", clusterArn, err)
 	}
 
