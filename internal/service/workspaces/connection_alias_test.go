@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccWorkspacesClientectionAlias_basic(t *testing.T) {
+func TestAccWorkspacesConnectionAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var connectionalias awstypes.ConnectionAlias
@@ -58,7 +58,7 @@ func TestAccWorkspacesClientectionAlias_basic(t *testing.T) {
 	})
 }
 
-func TestAccWorkspacesClientectionAlias_disappears(t *testing.T) {
+func TestAccWorkspacesConnectionAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var connectionalias awstypes.ConnectionAlias
@@ -87,7 +87,7 @@ func TestAccWorkspacesClientectionAlias_disappears(t *testing.T) {
 	})
 }
 
-func TestAccWorkspacesClientectionAlias_tags(t *testing.T) {
+func TestAccWorkspacesConnectionAlias_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var connectionalias awstypes.ConnectionAlias
