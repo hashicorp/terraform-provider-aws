@@ -10,7 +10,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -154,7 +153,7 @@ func testAccCheckConnectionAliasDestroy(ctx context.Context) resource.TestCheckF
 			}
 
 			if err != nil {
-				return nil
+				return err
 			}
 
 			return create.Error(names.WorkSpaces, create.ErrActionCheckingDestroyed, tfworkspaces.ResNameConnectionAlias, rs.Primary.ID, errors.New("not destroyed"))
@@ -199,16 +198,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckConnectionAliasNotRecreated(before, after *awstypes.ConnectionAlias) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.AliasId), aws.ToString(after.AliasId); before != after {
-			return create.Error(names.WorkSpaces, create.ErrActionCheckingNotRecreated, tfworkspaces.ResNameConnectionAlias, before, errors.New("recreated"))
-		}
-
-		return nil
 	}
 }
 
