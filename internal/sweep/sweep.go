@@ -116,6 +116,8 @@ func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tf
 }
 
 // Deprecated: Usse awsv1.SkipSweepError
+//
+//nolint:stylecheck // It's not required for functions, so why for variables?
 var SkipSweepError = awsv1.SkipSweepError
 
 func Partition(region string) string {
