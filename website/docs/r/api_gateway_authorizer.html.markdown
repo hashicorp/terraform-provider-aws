@@ -40,7 +40,7 @@ data "aws_iam_role_policy_document" "invocation_assume_role" {
 resource "aws_iam_role" "invocation_role" {
   name               = "api_gateway_auth_invocation"
   path               = "/"
-  assume_role_policy = data.aws_iam_role_policy_document.assume_role.json
+  assume_role_policy = data.aws_iam_role_policy_document.invocation_assume_role.json
 }
 
 data "aws_iam_policy_document" "invocation_policy" {
