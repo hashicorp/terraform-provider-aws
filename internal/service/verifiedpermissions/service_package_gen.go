@@ -33,6 +33,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_verifiedpermissions_policy_store",
 			Name:     "Policy Store",
 		},
+		{
+			Factory:  ResourcePolicyTemplate,
+			TypeName: "aws_verifiedpermissions_policy_template",
+			Name:     "Policy Template",
+		},
 	}
 }
 
