@@ -46,6 +46,33 @@ func TestAccQuickSightGroupMembership_basic(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightGroupMembership_withNamespace(t *testing.T) {
+	ctx := acctest.Context(t)
+	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	memberName := "tfacctest" + sdkacctest.RandString(10)
+	nameSpaceName := "tfacctestnamespace" + sdkacctest.RandString(10)
+	resourceName := "aws_quicksight_group_membership.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		CheckDestroy:             testAccCheckGroupMembershipDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupMembershipConfig_withNamespace(groupName, memberName, nameSpaceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupMembershipExists(ctx, resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 func TestAccQuickSightGroupMembership_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -148,4 +175,42 @@ resource "aws_quicksight_group_membership" "default" {
   member_name = aws_quicksight_user.%s.user_name
 }
 `, memberName))
+}
+
+func testAccGroupMembershipConfig_withNamespace(groupName string, memberName string, namespace string) string {
+	return acctest.ConfigCompose(
+		testAccNamespaceConfig_basic(namespace),
+		testAccGroupConfig_withNamespace(groupName),
+		testAccUserConfig_withNamespace(memberName),
+		fmt.Sprintf(`
+resource "aws_quicksight_group_membership" "default" {
+  group_name  = aws_quicksight_group.default.group_name
+  member_name = aws_quicksight_user.%s.user_name
+  namespace   = aws_quicksight_namespace.test.namespace
+}
+`, memberName))
+}
+
+func testAccGroupConfig_withNamespace(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_quicksight_group" "default" {
+  group_name = %[1]q
+  namespace  = aws_quicksight_namespace.test.namespace
+}
+`, rName)
+}
+
+func testAccUserConfig_withNamespace(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_quicksight_user" %[1]q {
+  aws_account_id = data.aws_caller_identity.current.account_id
+  user_name      = %[1]q
+  email          = %[2]q
+  namespace      = aws_quicksight_namespace.test.namespace
+  identity_type  = "QUICKSIGHT"
+  user_role      = "READER"
+}
+`, rName, acctest.DefaultEmailAddress)
 }
