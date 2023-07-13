@@ -72,7 +72,7 @@ func DataSourceOntapFileSystem() *schema.Resource {
 										Computed: true,
 									},
 									"ip_addresses": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -89,7 +89,7 @@ func DataSourceOntapFileSystem() *schema.Resource {
 										Computed: true,
 									},
 									"ip_addresses": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -108,11 +108,9 @@ func DataSourceOntapFileSystem() *schema.Resource {
 				Computed: true,
 			},
 			"network_interface_ids": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
@@ -123,7 +121,7 @@ func DataSourceOntapFileSystem() *schema.Resource {
 				Computed: true,
 			},
 			"route_table_ids": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -136,7 +134,7 @@ func DataSourceOntapFileSystem() *schema.Resource {
 				Computed: true,
 			},
 			"subnet_ids": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
