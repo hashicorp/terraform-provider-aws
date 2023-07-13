@@ -8,7 +8,7 @@ on:
 
 jobs:
   community_check:
-    if: github.event_name == 'issues'
+    if: github.event.action == 'opened'
     uses: ./.github/workflows/community-check.yml
     secrets: inherit
     with:
@@ -17,7 +17,7 @@ jobs:
   RemoveNeedsTriageFromMaintainers:
     name: Remove needs-triage for Maintainers
     needs: community_check
-    if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'true'
+    if: needs.community_check.outputs.maintainer == 'true'
     uses: ./.github/workflows/reusable-add-or-remove-labels.yml
     with:
       remove: needs-triage
