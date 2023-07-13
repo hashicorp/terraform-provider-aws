@@ -7,6 +7,8 @@ jobs:
   community_check:
     uses: ./.github/workflows/community-check.yml
     secrets: inherit
+    with:
+      username: ${{ github.event.pull_request.user.login }}
 
   PermissionsCheck:
     needs: community_check

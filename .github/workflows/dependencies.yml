@@ -9,8 +9,11 @@ on:
 
 jobs:
   community_check:
+    if: github.event_name == 'pull_request_target'
     uses: ./.github/workflows/community-check.yml
     secrets: inherit
+    with:
+      username: ${{ github.event.pull_request.user.login }}
 
   changes:
     needs: community_check
