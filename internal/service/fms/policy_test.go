@@ -181,10 +181,10 @@ func testAccPolicy_policyOption(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.policy_option.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.policy_option.network_firewall_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.policy_option.network_firewall_policy.firewall_deployment_model", "CENTRALIZED"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.policy_option.thirdparty_firewall_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.policy_option.thirdparty_firewall_policy.firewall_deployment_model", "DISTRIBUTED"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.policy_option.0.network_firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.policy_option.0.network_firewall_policy.0.firewall_deployment_model", "CENTRALIZED"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.policy_option.0.third_party_firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.policy_option.0.third_party_firewall_policy.0.firewall_deployment_model", "DISTRIBUTED"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -372,7 +372,7 @@ resource "aws_fms_policy" "test" {
         firewall_deployment_model = "CENTRALIZED"
       }
 
-      thirdparty_firewall_policy {
+      third_party_firewall_policy {
         firewall_deployment_model = "DISTRIBUTED"
       }
     }

@@ -205,7 +205,7 @@ func sweepResourcePatchBaselines(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepables);err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Patch Baselines for %s: %w", region, err))
 	}
 
