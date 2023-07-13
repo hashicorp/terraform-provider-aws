@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * data-source/aws_ssm_parameter: Add `insecure_value` attribute ([#30817](https://github.com/hashicorp/terraform-provider-aws/issues/30817))
 * resource/aws_iam_virtual_mfa_device: Add `enable_date` and `user_name` attributes ([#32462](https://github.com/hashicorp/terraform-provider-aws/issues/32462))
+* resource/aws_dynamodb_table: Add `restore_backup_arn` argument ([#29883](https://github.com/hashicorp/terraform-provider-aws/issues/29883))
 
 BUG FIXES:
 
