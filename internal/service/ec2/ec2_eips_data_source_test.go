@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -22,7 +25,7 @@ func TestAccEC2EIPsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEIPsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue("data.aws_eips.all", "allocation_ids.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_eips.all", "allocation_ids.#", 1),
 					resource.TestCheckResourceAttr("data.aws_eips.by_tags", "allocation_ids.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_eips.by_tags", "public_ips.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_eips.none", "allocation_ids.#", "0"),
@@ -36,7 +39,7 @@ func TestAccEC2EIPsDataSource_basic(t *testing.T) {
 func testAccEIPsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test1" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = "%[1]s-1"
@@ -44,7 +47,7 @@ resource "aws_eip" "test1" {
 }
 
 resource "aws_eip" "test2" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = "%[1]s-2"

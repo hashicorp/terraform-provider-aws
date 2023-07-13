@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
@@ -287,7 +290,7 @@ func ResourceRiskConfiguration() *schema.Resource {
 
 func resourceRiskConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	userPoolId := d.Get("user_pool_id").(string)
 	id := userPoolId
@@ -325,7 +328,7 @@ func resourceRiskConfigurationPut(ctx context.Context, d *schema.ResourceData, m
 
 func resourceRiskConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	userPoolId, clientId, err := RiskConfigurationParseID(d.Id())
 	if err != nil {
@@ -368,7 +371,7 @@ func resourceRiskConfigurationRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceRiskConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	userPoolId, clientId, err := RiskConfigurationParseID(d.Id())
 	if err != nil {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -20,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -78,7 +81,7 @@ func (r *resourceCIDRLocation) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	collectionID := data.CIDRCollectionID.ValueString()
 	collection, err := findCIDRCollectionByID(ctx, conn, collectionID)
@@ -130,7 +133,7 @@ func (r *resourceCIDRLocation) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	cidrBlocks, err := findCIDRLocationByTwoPartKey(ctx, conn, collectionID, name)
 
@@ -177,7 +180,7 @@ func (r *resourceCIDRLocation) Update(ctx context.Context, request resource.Upda
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	collection, err := findCIDRCollectionByID(ctx, conn, collectionID)
 
@@ -255,7 +258,7 @@ func (r *resourceCIDRLocation) Delete(ctx context.Context, request resource.Dele
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	collection, err := findCIDRCollectionByID(ctx, conn, collectionID)
 

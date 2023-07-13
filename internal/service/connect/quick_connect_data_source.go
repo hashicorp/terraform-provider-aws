@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -105,7 +108,7 @@ func DataSourceQuickConnect() *schema.Resource {
 }
 
 func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -121,11 +124,11 @@ func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, met
 		quickConnectSummary, err := dataSourceGetQuickConnectSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Quick Connect Summary by name (%s): %w", name, err))
+			return diag.Errorf("finding Connect Quick Connect Summary by name (%s): %s", name, err)
 		}
 
 		if quickConnectSummary == nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Quick Connect Summary by name (%s): not found", name))
+			return diag.Errorf("finding Connect Quick Connect Summary by name (%s): not found", name)
 		}
 
 		input.QuickConnectId = quickConnectSummary.Id
@@ -134,11 +137,11 @@ func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, met
 	resp, err := conn.DescribeQuickConnectWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Quick Connect: %w", err))
+		return diag.Errorf("getting Connect Quick Connect: %s", err)
 	}
 
 	if resp == nil || resp.QuickConnect == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Quick Connect: empty response"))
+		return diag.Errorf("getting Connect Quick Connect: empty response")
 	}
 
 	quickConnect := resp.QuickConnect
@@ -149,11 +152,11 @@ func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("quick_connect_id", quickConnect.QuickConnectId)
 
 	if err := d.Set("quick_connect_config", flattenQuickConnectConfig(quickConnect.QuickConnectConfig)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting quick_connect_config: %s", err))
+		return diag.Errorf("setting quick_connect_config: %s", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(ctx, quickConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(quickConnect.QuickConnectId)))

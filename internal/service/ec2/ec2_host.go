@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -85,7 +88,7 @@ func ResourceHost() *schema.Resource {
 
 func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.AllocateHostsInput{
 		AutoPlacement:     aws.String(d.Get("auto_placement").(string)),
@@ -125,7 +128,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	host, err := FindHostByID(ctx, conn, d.Id())
 
@@ -155,14 +158,14 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("outpost_arn", host.OutpostArn)
 	d.Set("owner_id", host.OwnerId)
 
-	SetTagsOut(ctx, host.Tags)
+	setTagsOut(ctx, host.Tags)
 
 	return diags
 }
 
 func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyHostsInput{
@@ -205,7 +208,7 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Host: %s", d.Id())
 	output, err := conn.ReleaseHostsWithContext(ctx, &ec2.ReleaseHostsInput{

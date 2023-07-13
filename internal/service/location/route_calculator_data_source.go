@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location
 
 import (
@@ -49,7 +52,7 @@ func DataSourceRouteCalculator() *schema.Resource {
 }
 
 func dataSourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	out, err := findRouteCalculatorByName(ctx, conn, d.Get("calculator_name").(string))
 	if err != nil {

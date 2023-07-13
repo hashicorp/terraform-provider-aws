@@ -1,10 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
 	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -51,26 +53,23 @@ func DataSourcePolicy() *schema.Resource {
 
 func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	policyID := d.Get("policy_id").(string)
-	input := &organizations.DescribePolicyInput{
-		PolicyId: aws.String(policyID),
-	}
-
-	output, err := conn.DescribePolicyWithContext(ctx, input)
+	policy, err := findPolicyByID(ctx, conn, policyID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Policy (%s): %s", policyID, err)
 	}
 
-	d.SetId(aws.StringValue(output.Policy.PolicySummary.Id))
-	d.Set("arn", output.Policy.PolicySummary.Arn)
-	d.Set("aws_managed", output.Policy.PolicySummary.AwsManaged)
-	d.Set("content", output.Policy.Content)
-	d.Set("description", output.Policy.PolicySummary.Description)
-	d.Set("name", output.Policy.PolicySummary.Name)
-	d.Set("type", output.Policy.PolicySummary.Type)
+	policySummary := policy.PolicySummary
+	d.SetId(aws.StringValue(policySummary.Id))
+	d.Set("arn", policySummary.Arn)
+	d.Set("aws_managed", policySummary.AwsManaged)
+	d.Set("content", policy.Content)
+	d.Set("description", policySummary.Description)
+	d.Set("name", policySummary.Name)
+	d.Set("type", policySummary.Type)
 
 	return diags
 }

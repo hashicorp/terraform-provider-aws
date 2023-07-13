@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
@@ -88,10 +91,10 @@ func ResourceThingType() *schema.Resource {
 
 func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	input := &iot.CreateThingTypeInput{
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 		ThingTypeName: aws.String(d.Get("name").(string)),
 	}
 
@@ -130,7 +133,7 @@ func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	params := &iot.DescribeThingTypeInput{
 		ThingTypeName: aws.String(d.Id()),
@@ -161,7 +164,7 @@ func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceThingTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	if d.HasChange("deprecated") {
 		params := &iot.DeprecateThingTypeInput{
@@ -182,7 +185,7 @@ func resourceThingTypeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	// In order to delete an IoT Thing Type, you must deprecate it first and wait
 	// at least 5 minutes.

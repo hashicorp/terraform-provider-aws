@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -84,7 +87,7 @@ func testAccCheckUserPolicyAttachmentExists(ctx context.Context, n string, c int
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 		user := rs.Primary.Attributes["user"]
 
 		attachedPolicies, err := conn.ListAttachedUserPoliciesWithContext(ctx, &iam.ListAttachedUserPoliciesInput{

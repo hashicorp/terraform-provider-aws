@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chime
 
 import (
@@ -76,7 +79,7 @@ func ResourceVoiceConnectorStreaming() *schema.Resource {
 }
 
 func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
 	input := &chimesdkvoice.PutVoiceConnectorStreamingConfigurationInput{
@@ -99,7 +102,7 @@ func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.Resour
 	input.StreamingConfiguration = config
 
 	if _, err := conn.PutVoiceConnectorStreamingConfigurationWithContext(ctx, input); err != nil {
-		return diag.Errorf("error creating Chime Voice Connector (%s) streaming configuration: %s", vcId, err)
+		return diag.Errorf("creating Chime Voice Connector (%s) streaming configuration: %s", vcId, err)
 	}
 
 	d.SetId(vcId)
@@ -108,7 +111,7 @@ func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	input := &chimesdkvoice.GetVoiceConnectorStreamingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -122,11 +125,11 @@ func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.Resource
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting Chime Voice Connector (%s) streaming: %s", d.Id(), err)
+		return diag.Errorf("getting Chime Voice Connector (%s) streaming: %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.StreamingConfiguration == nil {
-		return diag.Errorf("error getting Chime Voice Connector (%s) streaming: empty response", d.Id())
+		return diag.Errorf("getting Chime Voice Connector (%s) streaming: empty response", d.Id())
 	}
 
 	d.Set("disabled", resp.StreamingConfiguration.Disabled)
@@ -134,18 +137,18 @@ func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.Resource
 	d.Set("voice_connector_id", d.Id())
 
 	if err := d.Set("streaming_notification_targets", flattenStreamingNotificationTargets(resp.StreamingConfiguration.StreamingNotificationTargets)); err != nil {
-		return diag.Errorf("error setting Chime Voice Connector streaming configuration targets (%s): %s", d.Id(), err)
+		return diag.Errorf("setting Chime Voice Connector streaming configuration targets (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("media_insights_configuration", flattenMediaInsightsConfiguration(resp.StreamingConfiguration.MediaInsightsConfiguration)); err != nil {
-		return diag.Errorf("error setting Chime Voice Connector streaming configuration media insights configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("setting Chime Voice Connector streaming configuration media insights configuration (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
 func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
 
@@ -170,7 +173,7 @@ func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.Resour
 		input.StreamingConfiguration = config
 
 		if _, err := conn.PutVoiceConnectorStreamingConfigurationWithContext(ctx, input); err != nil {
-			return diag.Errorf("error updating Chime Voice Connector (%s) streaming configuration: %s", d.Id(), err)
+			return diag.Errorf("updating Chime Voice Connector (%s) streaming configuration: %s", d.Id(), err)
 		}
 	}
 
@@ -178,7 +181,7 @@ func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	input := &chimesdkvoice.DeleteVoiceConnectorStreamingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -191,7 +194,7 @@ func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.Resour
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Chime Voice Connector (%s) streaming configuration: %s", d.Id(), err)
+		return diag.Errorf("deleting Chime Voice Connector (%s) streaming configuration: %s", d.Id(), err)
 	}
 
 	return nil

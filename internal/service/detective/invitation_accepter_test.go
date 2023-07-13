@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package detective_test
 
 import (
@@ -56,7 +59,7 @@ func testAccCheckInvitationAccepterExists(ctx context.Context, resourceName stri
 			return fmt.Errorf("resource (%s) has empty ID", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn(ctx)
 
 		result, err := tfdetective.FindInvitationByGraphARN(ctx, conn, rs.Primary.ID)
 
@@ -74,7 +77,7 @@ func testAccCheckInvitationAccepterExists(ctx context.Context, resourceName stri
 
 func testAccCheckInvitationAccepterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_detective_invitation_accepter" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
@@ -73,7 +76,7 @@ func FindCognitoUserInGroup(ctx context.Context, conn *cognitoidentityprovider.C
 	})
 
 	if err != nil {
-		return false, fmt.Errorf("error reading groups for user: %w", err)
+		return false, fmt.Errorf("reading groups for user: %w", err)
 	}
 
 	return found, nil

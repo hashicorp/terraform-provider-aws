@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -530,7 +533,7 @@ func TestAccVPCDefaultRouteTable_revokeExistingRules(t *testing.T) {
 
 func testAccCheckDefaultRouteTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_default_route_table" {
@@ -1233,7 +1236,7 @@ resource "aws_default_route_table" "test" {
 }
 
 func testAccPreCheckELBv2GatewayLoadBalancer(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 
 	input := &elbv2.DescribeAccountLimitsInput{}
 

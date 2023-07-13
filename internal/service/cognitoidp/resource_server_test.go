@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp_test
 
 import (
@@ -120,7 +123,7 @@ func testAccCheckResourceServerExists(ctx context.Context, n string, resourceSer
 			return errors.New("No Cognito Resource Server ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		userPoolID, identifier, err := tfcognitoidp.DecodeResourceServerID(rs.Primary.ID)
 		if err != nil {
@@ -148,7 +151,7 @@ func testAccCheckResourceServerExists(ctx context.Context, n string, resourceSer
 
 func testAccCheckResourceServerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_resource_server" {

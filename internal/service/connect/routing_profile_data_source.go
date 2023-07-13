@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -101,7 +104,7 @@ func DataSourceRoutingProfile() *schema.Resource {
 }
 
 func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -117,11 +120,11 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 		routingProfileSummary, err := dataSourceGetRoutingProfileSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Routing Profile Summary by name (%s): %w", name, err))
+			return diag.Errorf("finding Connect Routing Profile Summary by name (%s): %s", name, err)
 		}
 
 		if routingProfileSummary == nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Routing Profile Summary by name (%s): not found", name))
+			return diag.Errorf("finding Connect Routing Profile Summary by name (%s): not found", name)
 		}
 
 		input.RoutingProfileId = routingProfileSummary.Id
@@ -130,11 +133,11 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 	resp, err := conn.DescribeRoutingProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Routing Profile: %w", err))
+		return diag.Errorf("getting Connect Routing Profile: %s", err)
 	}
 
 	if resp == nil || resp.RoutingProfile == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Routing Profile: empty response"))
+		return diag.Errorf("getting Connect Routing Profile: empty response")
 	}
 
 	routingProfile := resp.RoutingProfile
@@ -154,13 +157,13 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 	queueConfigs, err := getRoutingProfileQueueConfigs(ctx, conn, instanceID, *routingProfile.RoutingProfileId)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %w", *routingProfile.RoutingProfileId, err))
+		return diag.Errorf("finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %s", *routingProfile.RoutingProfileId, err)
 	}
 
 	d.Set("queue_configs", queueConfigs)
 
 	if err := d.Set("tags", KeyValueTags(ctx, routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(routingProfile.RoutingProfileId)))

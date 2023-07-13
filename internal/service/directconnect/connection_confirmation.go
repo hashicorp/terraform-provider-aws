@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -32,7 +35,7 @@ func ResourceConnectionConfirmation() *schema.Resource {
 
 func resourceConnectionConfirmationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	connectionID := d.Get("connection_id").(string)
 	input := &directconnect.ConfirmConnectionInput{
@@ -57,7 +60,7 @@ func resourceConnectionConfirmationCreate(ctx context.Context, d *schema.Resourc
 
 func resourceConnectionConfirmationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	_, err := FindConnectionByID(ctx, conn, d.Id())
 

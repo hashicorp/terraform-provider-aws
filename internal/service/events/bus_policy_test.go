@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
@@ -116,7 +119,7 @@ func testAccCheckBusPolicyExists(ctx context.Context, pr string) resource.TestCh
 			Name: aws.String(eventBusName),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 		describedEventBus, err := conn.DescribeEventBusWithContext(ctx, input)
 
 		if err != nil {
@@ -147,7 +150,7 @@ func testAccBusPolicyDocument(ctx context.Context, pr string) resource.TestCheck
 			Name: aws.String(eventBusName),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 		describedEventBus, err := conn.DescribeEventBusWithContext(ctx, input)
 		if err != nil {
 			return fmt.Errorf("Reading EventBridge bus policy for '%s' failed: %w", pr, err)

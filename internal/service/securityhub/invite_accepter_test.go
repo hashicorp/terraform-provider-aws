@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub_test
 
 import (
@@ -50,7 +53,7 @@ func testAccCheckInviteAccepterExists(ctx context.Context, resourceName string) 
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		resp, err := conn.GetMasterAccountWithContext(ctx, &securityhub.GetMasterAccountInput{})
 
@@ -68,7 +71,7 @@ func testAccCheckInviteAccepterExists(ctx context.Context, resourceName string) 
 
 func testAccCheckInviteAccepterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_invite_accepter" {

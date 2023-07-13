@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
@@ -41,7 +44,7 @@ func DataSourceVault() *schema.Resource {
 
 func dataSourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -51,7 +54,7 @@ func dataSourceVaultRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	resp, err := conn.DescribeBackupVaultWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error getting Backup Vault: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Backup Vault: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.BackupVaultName))
@@ -60,7 +63,7 @@ func dataSourceVaultRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", resp.BackupVaultName)
 	d.Set("recovery_points", resp.NumberOfRecoveryPoints)
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(resp.BackupVaultArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(resp.BackupVaultArn))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Vault (%s): %s", name, err)
 	}

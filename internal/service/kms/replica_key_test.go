@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms_test
 
 import (
@@ -200,10 +203,13 @@ func TestAccKMSReplicaKey_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deletion_window_in_days",
+					"bypass_policy_lockout_safety_check",
+				},
 			},
 			{
 				Config: testAccReplicaKeyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -221,6 +227,22 @@ func TestAccKMSReplicaKey_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+			{
+				Config: testAccReplicaKeyConfig_tags0(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deletion_window_in_days",
+					"bypass_policy_lockout_safety_check",
+				},
 			},
 		},
 	})
@@ -366,6 +388,26 @@ resource "aws_kms_replica_key" "test" {
   deletion_window_in_days = 7
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccReplicaKeyConfig_tags0(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  provider = awsalternate
+
+  description  = %[1]q
+  multi_region = true
+
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_replica_key" "test" {
+  description     = %[1]q
+  primary_key_arn = aws_kms_key.test.arn
+
+  deletion_window_in_days = 7
+}
+`, rName))
 }
 
 func testAccReplicaKeyConfig_two(rName string) string {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mediapackage
 
 import (
@@ -87,12 +90,12 @@ func ResourceChannel() *schema.Resource {
 
 func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaPackageConn()
+	conn := meta.(*conns.AWSClient).MediaPackageConn(ctx)
 
 	input := &mediapackage.CreateChannelInput{
 		Id:          aws.String(d.Get("channel_id").(string)),
 		Description: aws.String(d.Get("description").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateChannelWithContext(ctx, input)
@@ -107,7 +110,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaPackageConn()
+	conn := meta.(*conns.AWSClient).MediaPackageConn(ctx)
 
 	input := &mediapackage.DescribeChannelInput{
 		Id: aws.String(d.Id()),
@@ -124,14 +127,14 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting hls_ingest: %s", err)
 	}
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	return diags
 }
 
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaPackageConn()
+	conn := meta.(*conns.AWSClient).MediaPackageConn(ctx)
 
 	input := &mediapackage.UpdateChannelInput{
 		Id:          aws.String(d.Id()),
@@ -148,7 +151,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaPackageConn()
+	conn := meta.(*conns.AWSClient).MediaPackageConn(ctx)
 
 	input := &mediapackage.DeleteChannelInput{
 		Id: aws.String(d.Id()),

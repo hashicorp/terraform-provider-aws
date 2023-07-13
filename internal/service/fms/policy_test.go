@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fms_test
 
 import (
@@ -269,7 +272,7 @@ func testAccPolicy_tags(t *testing.T) {
 
 func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fms_policy" {
@@ -304,7 +307,7 @@ func testAccCheckPolicyExists(ctx context.Context, n string) resource.TestCheckF
 			return fmt.Errorf("No FMS Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn(ctx)
 
 		_, err := tffms.FindPolicyByID(ctx, conn, rs.Primary.ID)
 

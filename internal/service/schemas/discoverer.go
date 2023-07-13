@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schemas
 
 import (
@@ -58,12 +61,12 @@ func ResourceDiscoverer() *schema.Resource {
 
 func resourceDiscovererCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	sourceARN := d.Get("source_arn").(string)
 	input := &schemas.CreateDiscovererInput{
 		SourceArn: aws.String(sourceARN),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -84,7 +87,7 @@ func resourceDiscovererCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDiscovererRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	output, err := FindDiscovererByID(ctx, conn, d.Id())
 
@@ -107,7 +110,7 @@ func resourceDiscovererRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDiscovererUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	if d.HasChange("description") {
 		input := &schemas.UpdateDiscovererInput{
@@ -128,7 +131,7 @@ func resourceDiscovererUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDiscovererDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Schemas Discoverer (%s)", d.Id())
 	_, err := conn.DeleteDiscovererWithContext(ctx, &schemas.DeleteDiscovererInput{

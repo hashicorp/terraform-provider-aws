@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package account
 
 import (
@@ -92,7 +95,7 @@ func resourcePrimaryContact() *schema.Resource {
 }
 
 func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountClient()
+	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
 	id := "default"
 	input := &account.PutContactInformationInput{
@@ -149,7 +152,7 @@ func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountClient()
+	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
 	contactInformation, err := findContactInformation(ctx, conn, d.Get("account_id").(string))
 

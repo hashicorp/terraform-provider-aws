@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53recoveryreadiness_test
 
 import (
@@ -332,7 +335,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
 
 func testAccCheckResourceSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53recoveryreadiness_resource_set" {
@@ -360,7 +363,7 @@ func testAccCheckResourceSetExists(ctx context.Context, name string) resource.Te
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 		input := &route53recoveryreadiness.GetResourceSetInput{
 			ResourceSetName: aws.String(rs.Primary.ID),
@@ -373,7 +376,7 @@ func testAccCheckResourceSetExists(ctx context.Context, name string) resource.Te
 }
 
 func testAccPreCheckResourceSet(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 	input := &route53recoveryreadiness.ListResourceSetsInput{}
 

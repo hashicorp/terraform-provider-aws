@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package controltower_test
 
 import (
@@ -100,7 +103,7 @@ func testAccCheckControlExists(ctx context.Context, n string, v *controltower.En
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn(ctx)
 
 		output, err := tfcontroltower.FindEnabledControlByTwoPartKey(ctx, conn, targetIdentifier, controlIdentifier)
 
@@ -116,7 +119,7 @@ func testAccCheckControlExists(ctx context.Context, n string, v *controltower.En
 
 func testAccCheckControlDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_controltower_control" {

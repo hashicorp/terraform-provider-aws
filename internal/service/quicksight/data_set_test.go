@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight_test
 
 import (
@@ -453,6 +456,46 @@ func TestAccQuickSightDataSet_tags(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightDataSet_noPhysicalTableMap(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSet quicksight.DataSet
+	resourceName := "aws_quicksight_data_set.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSetConfigNoPhysicalTableMap(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
+					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("dataset/%s", rId)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "import_mode", "SPICE"),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.logical_table_map_id", "joined"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.alias", "j"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.join_instruction.0.right_operand", "right"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.join_instruction.0.left_operand", "left"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.join_instruction.0.type", "INNER"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.join_instruction.0.on_clause", "Column1 = Column2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckDataSetExists(ctx context.Context, resourceName string, dataSet *quicksight.DataSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -465,7 +508,7 @@ func testAccCheckDataSetExists(ctx context.Context, resourceName string, dataSet
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		input := &quicksight.DescribeDataSetInput{
 			AwsAccountId: aws.String(awsAccountID),
@@ -488,7 +531,7 @@ func testAccCheckDataSetExists(ctx context.Context, resourceName string, dataSet
 
 func testAccCheckDataSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_data_set" {
 				continue
@@ -1033,4 +1076,85 @@ resource "aws_quicksight_data_set" "test" {
   }
 }
 `, rId, rName, key1, value1, key2, value2))
+}
+
+func testAccDataSetConfigNoPhysicalTableMap(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfigBase(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "left" {
+  data_set_id = "%[1]s-left"
+  name        = "%[2]s-left"
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = "%[1]s-left"
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "Column1"
+        type = "STRING"
+      }
+      upload_settings {
+        format = "JSON"
+      }
+    }
+  }
+}
+
+resource "aws_quicksight_data_set" "right" {
+  data_set_id = "%[1]s-right"
+  name        = "%[2]s-right"
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = "%[1]s-right"
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "Column2"
+        type = "STRING"
+      }
+      upload_settings {
+        format = "JSON"
+      }
+    }
+  }
+}
+
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  logical_table_map {
+    logical_table_map_id = "right"
+    alias                = "r"
+    source {
+      data_set_arn = aws_quicksight_data_set.right.arn
+    }
+  }
+
+  logical_table_map {
+    logical_table_map_id = "left"
+    alias                = "l"
+    source {
+      data_set_arn = aws_quicksight_data_set.left.arn
+    }
+  }
+
+  logical_table_map {
+    logical_table_map_id = "joined"
+    alias                = "j"
+    source {
+      join_instruction {
+        left_operand  = "left"
+        right_operand = "right"
+        type          = "INNER"
+        on_clause     = "Column1 = Column2"
+      }
+    }
+  }
+}
+`, rId, rName))
 }

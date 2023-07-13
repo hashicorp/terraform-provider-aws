@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -75,14 +78,14 @@ func ResourceSecurityProfile() *schema.Resource {
 }
 
 func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	securityProfileName := d.Get("name").(string)
 	input := &connect.CreateSecurityProfileInput{
 		InstanceId:          aws.String(instanceID),
 		SecurityProfileName: aws.String(securityProfileName),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -97,11 +100,11 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	output, err := conn.CreateSecurityProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Security Profile (%s): %w", securityProfileName, err))
+		return diag.Errorf("creating Connect Security Profile (%s): %s", securityProfileName, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Security Profile (%s): empty output", securityProfileName))
+		return diag.Errorf("creating Connect Security Profile (%s): empty output", securityProfileName)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.SecurityProfileId)))
@@ -110,7 +113,7 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
@@ -130,11 +133,11 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Security Profile (%s): %w", d.Id(), err))
+		return diag.Errorf("getting Connect Security Profile (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.SecurityProfile == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Security Profile (%s): empty response", d.Id()))
+		return diag.Errorf("getting Connect Security Profile (%s): empty response", d.Id())
 	}
 
 	d.Set("arn", resp.SecurityProfile.Arn)
@@ -148,20 +151,20 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 	permissions, err := getSecurityProfilePermissions(ctx, conn, instanceID, securityProfileID)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Security Profile Permissions for Security Profile (%s): %w", securityProfileID, err))
+		return diag.Errorf("finding Connect Security Profile Permissions for Security Profile (%s): %s", securityProfileID, err)
 	}
 
 	if permissions != nil {
 		d.Set("permissions", flex.FlattenStringSet(permissions))
 	}
 
-	SetTagsOut(ctx, resp.SecurityProfile.AllowedAccessControlTags)
+	setTagsOut(ctx, resp.SecurityProfile.Tags)
 
 	return nil
 }
 
 func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
@@ -185,14 +188,14 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 	_, err = conn.UpdateSecurityProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("updating SecurityProfile (%s): %w", d.Id(), err))
+		return diag.Errorf("updating SecurityProfile (%s): %s", d.Id(), err)
 	}
 
 	return resourceSecurityProfileRead(ctx, d, meta)
 }
 
 func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
@@ -206,7 +209,7 @@ func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting SecurityProfile (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting SecurityProfile (%s): %s", d.Id(), err)
 	}
 
 	return nil

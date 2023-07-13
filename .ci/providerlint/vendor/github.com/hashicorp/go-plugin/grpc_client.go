@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package plugin
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"math"
@@ -8,7 +12,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-plugin/internal/plugin"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health/grpc_health_v1"

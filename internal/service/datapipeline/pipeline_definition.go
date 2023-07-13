@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datapipeline
 
 import (
@@ -130,7 +133,7 @@ func ResourcePipelineDefinition() *schema.Resource {
 }
 
 func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DataPipelineConn()
+	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 
 	pipelineID := d.Get("pipeline_id").(string)
 	input := &datapipeline.PutPipelineDefinitionInput{
@@ -160,7 +163,7 @@ func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, 
 		if aws.BoolValue(output.Errored) {
 			errors := getValidationError(output.ValidationErrors)
 			if strings.Contains(errors.Error(), "role") {
-				return retry.RetryableError(fmt.Errorf("error validating after creation DataPipeline Pipeline Definition (%s): %w", pipelineID, errors))
+				return retry.RetryableError(fmt.Errorf("validating after creation DataPipeline Pipeline Definition (%s): %w", pipelineID, errors))
 			}
 		}
 
@@ -172,11 +175,11 @@ func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return diag.Errorf("error creating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
+		return diag.Errorf("creating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
 	}
 
 	if aws.BoolValue(output.Errored) {
-		return diag.Errorf("error validating after creation DataPipeline Pipeline Definition (%s): %s", pipelineID, getValidationError(output.ValidationErrors))
+		return diag.Errorf("validating after creation DataPipeline Pipeline Definition (%s): %s", pipelineID, getValidationError(output.ValidationErrors))
 	}
 
 	// Activate pipeline if enabled
@@ -186,7 +189,7 @@ func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, 
 
 	_, err = conn.ActivatePipelineWithContext(ctx, input2)
 	if err != nil {
-		return diag.Errorf("error activating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
+		return diag.Errorf("activating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
 	}
 
 	d.SetId(pipelineID)
@@ -195,7 +198,7 @@ func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DataPipelineConn()
+	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 	input := &datapipeline.GetPipelineDefinitionInput{
 		PipelineId: aws.String(d.Id()),
 	}
@@ -210,17 +213,17 @@ func resourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading DataPipeline Pipeline Definition (%s): %s", d.Id(), err)
+		return diag.Errorf("reading DataPipeline Pipeline Definition (%s): %s", d.Id(), err)
 	}
 
 	if err = d.Set("parameter_object", flattenPipelineDefinitionParameterObjects(resp.ParameterObjects)); err != nil {
-		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
+		return diag.Errorf("setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
 	}
 	if err = d.Set("parameter_value", flattenPipelineDefinitionParameterValues(resp.ParameterValues)); err != nil {
-		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
+		return diag.Errorf("setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
 	}
 	if err = d.Set("pipeline_object", flattenPipelineDefinitionObjects(resp.PipelineObjects)); err != nil {
-		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
+		return diag.Errorf("setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
 	}
 	d.Set("pipeline_id", d.Id())
 

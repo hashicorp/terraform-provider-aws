@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codegurureviewer
 
 import (
@@ -266,10 +269,10 @@ const (
 )
 
 func resourceRepositoryAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn()
+	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 
 	in := &codegurureviewer.AssociateRepositoryInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	in.KMSKeyDetails = expandKMSKeyDetails(d.Get("kms_key_details").([]interface{}))
@@ -298,7 +301,7 @@ func resourceRepositoryAssociationCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn()
+	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 
 	out, err := findRepositoryAssociationByID(ctx, conn, d.Id())
 
@@ -342,7 +345,7 @@ func resourceRepositoryAssociationUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceRepositoryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn()
+	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 
 	log.Printf("[INFO] Deleting CodeGuruReviewer RepositoryAssociation %s", d.Id())
 

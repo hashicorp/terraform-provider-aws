@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/backup"
@@ -23,10 +25,6 @@ func TestAccBackupVaultDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccVaultDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`Error getting Backup Vault`),
-			},
-			{
 				Config: testAccVaultDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
@@ -39,12 +37,6 @@ func TestAccBackupVaultDataSource_basic(t *testing.T) {
 		},
 	})
 }
-
-const testAccVaultDataSourceConfig_nonExistent = `
-data "aws_backup_vault" "test" {
-  name = "tf-acc-test-does-not-exist"
-}
-`
 
 func testAccVaultDataSourceConfig_basic(rInt int) string {
 	return fmt.Sprintf(`

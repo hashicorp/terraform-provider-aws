@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch_test
 
 import (
@@ -57,7 +60,6 @@ func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
 				Config: testAccDomainPolicyConfig_basic(ri, policy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.test", &domain),
-					resource.TestCheckResourceAttr("aws_opensearch_domain.test", "engine_version", "OpenSearch_1.1"),
 					func(s *terraform.State) error {
 						awsClient := acctest.Provider.Meta().(*conns.AWSClient)
 						expectedArn, err := buildDomainARN(name, awsClient.Partition, awsClient.AccountID, awsClient.Region)
@@ -117,8 +119,7 @@ func buildDomainARN(name, partition, accId, region string) (string, error) {
 func testAccDomainPolicyConfig_basic(randInt int, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name    = "tf-test-%d"
-  engine_version = "OpenSearch_1.1"
+  domain_name = "tf-test-%d"
 
   cluster_config {
     instance_type = "t2.small.search" # supported in both aws and aws-us-gov

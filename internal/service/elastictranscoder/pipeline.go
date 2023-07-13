@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elastictranscoder
 
 import (
@@ -232,7 +235,7 @@ func ResourcePipeline() *schema.Resource {
 
 func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 	req := &elastictranscoder.CreatePipelineInput{
 		AwsKmsKeyArn:    aws.String(d.Get("aws_kms_key_arn").(string)),
@@ -409,7 +412,7 @@ func flattenETPermList(perms []*elastictranscoder.Permission) []map[string]inter
 
 func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 	req := &elastictranscoder.UpdatePipelineInput{
 		Id: aws.String(d.Id()),
@@ -459,7 +462,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 	resp, err := conn.ReadPipelineWithContext(ctx, &elastictranscoder.ReadPipelineInput{
 		Id: aws.String(d.Id()),
@@ -525,7 +528,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 	log.Printf("[DEBUG] Elastic Transcoder Delete Pipeline: %s", d.Id())
 	_, err := conn.DeletePipelineWithContext(ctx, &elastictranscoder.DeletePipelineInput{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecrpublic
 
 import (
@@ -44,7 +47,7 @@ func DataSourceAuthorizationToken() *schema.Resource {
 
 func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRPublicConn()
+	conn := meta.(*conns.AWSClient).ECRPublicConn(ctx)
 	params := &ecrpublic.GetAuthorizationTokenInput{}
 
 	out, err := conn.GetAuthorizationTokenWithContext(ctx, params)

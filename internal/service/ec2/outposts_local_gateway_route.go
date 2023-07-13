@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -56,7 +59,7 @@ func ResourceLocalGatewayRoute() *schema.Resource {
 
 func resourceLocalGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	destination := d.Get("destination_cidr_block").(string)
 	localGatewayRouteTableID := d.Get("local_gateway_route_table_id").(string)
@@ -80,7 +83,7 @@ func resourceLocalGatewayRouteCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	localGatewayRouteTableID, destination, err := DecodeLocalGatewayRouteID(d.Id())
 	if err != nil {
@@ -145,7 +148,7 @@ func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceLocalGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	localGatewayRouteTableID, destination, err := DecodeLocalGatewayRouteID(d.Id())
 	if err != nil {

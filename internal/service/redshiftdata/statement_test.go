@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftdata_test
 
 import (
@@ -89,7 +92,7 @@ func testAccCheckStatementExists(ctx context.Context, n string, v *redshiftdataa
 			return fmt.Errorf("No Redshift Data Statement ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftDataConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftDataConn(ctx)
 
 		output, err := tfredshiftdata.FindStatementByID(ctx, conn, rs.Primary.ID)
 

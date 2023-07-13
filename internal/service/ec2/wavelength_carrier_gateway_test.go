@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -120,7 +123,7 @@ func TestAccWavelengthCarrierGateway_tags(t *testing.T) {
 
 func testAccCheckCarrierGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_carrier_gateway" {
@@ -155,7 +158,7 @@ func testAccCheckCarrierGatewayExists(ctx context.Context, n string, v *ec2.Carr
 			return fmt.Errorf("No EC2 Carrier Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindCarrierGatewayByID(ctx, conn, rs.Primary.ID)
 
@@ -170,7 +173,7 @@ func testAccCheckCarrierGatewayExists(ctx context.Context, n string, v *ec2.Carr
 }
 
 func testAccPreCheckWavelengthZoneAvailable(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeAvailabilityZonesInput{
 		Filters: tfec2.BuildAttributeFilterList(map[string]string{

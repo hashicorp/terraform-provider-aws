@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafkaconnect
 
 import (
@@ -42,7 +45,7 @@ func DataSourceWorkerConfiguration() *schema.Resource {
 }
 
 func dataSourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn()
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	name := d.Get("name")
 	var output []*kafkaconnect.WorkerConfigurationSummary
@@ -62,7 +65,7 @@ func dataSourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	})
 
 	if err != nil {
-		return diag.Errorf("error listing MSK Connect Worker Configurations: %s", err)
+		return diag.Errorf("listing MSK Connect Worker Configurations: %s", err)
 	}
 
 	if len(output) == 0 || output[0] == nil {
@@ -79,7 +82,7 @@ func dataSourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	config, err := FindWorkerConfigurationByARN(ctx, conn, arn)
 
 	if err != nil {
-		return diag.Errorf("error reading MSK Connect Worker Configuration (%s): %s", arn, err)
+		return diag.Errorf("reading MSK Connect Worker Configuration (%s): %s", arn, err)
 	}
 
 	d.SetId(aws.StringValue(config.Name))

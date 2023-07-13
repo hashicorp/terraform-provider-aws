@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emrserverless
 
 import (
@@ -201,7 +204,6 @@ func ResourceApplication() *schema.Resource {
 			"release_label": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -219,14 +221,14 @@ func ResourceApplication() *schema.Resource {
 
 func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRServerlessConn()
+	conn := meta.(*conns.AWSClient).EMRServerlessConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &emrserverless.CreateApplicationInput{
 		ClientToken:  aws.String(id.UniqueId()),
 		ReleaseLabel: aws.String(d.Get("release_label").(string)),
 		Name:         aws.String(name),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		Type:         aws.String(d.Get("type").(string)),
 	}
 
@@ -275,7 +277,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRServerlessConn()
+	conn := meta.(*conns.AWSClient).EMRServerlessConn(ctx)
 
 	application, err := FindApplicationByID(ctx, conn, d.Id())
 
@@ -319,19 +321,23 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
-	SetTagsOut(ctx, application.Tags)
+	setTagsOut(ctx, application.Tags)
 
 	return diags
 }
 
 func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRServerlessConn()
+	conn := meta.(*conns.AWSClient).EMRServerlessConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &emrserverless.UpdateApplicationInput{
 			ApplicationId: aws.String(d.Id()),
 			ClientToken:   aws.String(id.UniqueId()),
+		}
+
+		if v, ok := d.GetOk("release_label"); ok {
+			input.ReleaseLabel = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("architecture"); ok {
@@ -375,7 +381,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRServerlessConn()
+	conn := meta.(*conns.AWSClient).EMRServerlessConn(ctx)
 
 	log.Printf("[INFO] Deleting EMR Serverless Application: %s", d.Id())
 	_, err := conn.DeleteApplicationWithContext(ctx, &emrserverless.DeleteApplicationInput{

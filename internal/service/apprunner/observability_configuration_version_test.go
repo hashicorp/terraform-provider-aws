@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner_test
 
 import (
@@ -154,7 +157,7 @@ func testAccCheckObservabilityConfigurationDestroy(ctx context.Context) resource
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
 
 			input := &apprunner.DescribeObservabilityConfigurationInput{
 				ObservabilityConfigurationArn: aws.String(rs.Primary.ID),
@@ -190,7 +193,7 @@ func testAccCheckObservabilityConfigurationExists(ctx context.Context, n string)
 			return fmt.Errorf("No App Runner Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
 
 		input := &apprunner.DescribeObservabilityConfigurationInput{
 			ObservabilityConfigurationArn: aws.String(rs.Primary.ID),

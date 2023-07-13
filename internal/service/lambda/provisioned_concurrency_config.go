@@ -1,10 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -16,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 // @SDKResource("aws_lambda_provisioned_concurrency_config")
@@ -25,12 +28,23 @@ func ResourceProvisionedConcurrencyConfig() *schema.Resource {
 		ReadWithoutTimeout:   resourceProvisionedConcurrencyConfigRead,
 		UpdateWithoutTimeout: resourceProvisionedConcurrencyConfigUpdate,
 		DeleteWithoutTimeout: resourceProvisionedConcurrencyConfigDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(15 * time.Minute),
 			Update: schema.DefaultTimeout(15 * time.Minute),
+		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceProvisionedConcurrencyConfigV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: provisionedConcurrencyConfigStateUpgradeV0,
+				Version: 0,
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -51,13 +65,22 @@ func ResourceProvisionedConcurrencyConfig() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
 
+const (
+	ProvisionedConcurrencyIDPartCount = 2
+)
+
 func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
 
@@ -70,10 +93,15 @@ func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.R
 	_, err := conn.PutProvisionedConcurrencyConfigWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "putting Lambda Provisioned Concurrency Config (%s:%s): %s", functionName, qualifier, err)
+		return sdkdiag.AppendErrorf(diags, "putting Lambda Provisioned Concurrency Config (%s,%s): %s", functionName, qualifier, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", functionName, qualifier))
+	parts := []string{functionName, qualifier}
+	id, err := flex.FlattenResourceId(parts, ProvisionedConcurrencyIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Lambda Provisioned Concurrency Config ID (%s,%s): %s", functionName, qualifier, err)
+	}
+	d.SetId(id)
 
 	if err := waitForProvisionedConcurrencyConfigStatusReady(ctx, conn, functionName, qualifier, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Provisioned Concurrency Config (%s) to be ready: %s", d.Id(), err)
@@ -84,13 +112,14 @@ func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.R
 
 func resourceProvisionedConcurrencyConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
-	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), ProvisionedConcurrencyIDPartCount, false)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
 	}
+	functionName := parts[0]
+	qualifier := parts[1]
 
 	input := &lambda.GetProvisionedConcurrencyConfigInput{
 		FunctionName: aws.String(functionName),
@@ -118,13 +147,14 @@ func resourceProvisionedConcurrencyConfigRead(ctx context.Context, d *schema.Res
 
 func resourceProvisionedConcurrencyConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
-	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), ProvisionedConcurrencyIDPartCount, false)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
 	}
+	functionName := parts[0]
+	qualifier := parts[1]
 
 	input := &lambda.PutProvisionedConcurrencyConfigInput{
 		FunctionName:                    aws.String(functionName),
@@ -147,17 +177,21 @@ func resourceProvisionedConcurrencyConfigUpdate(ctx context.Context, d *schema.R
 
 func resourceProvisionedConcurrencyConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Lambda Provisioned Concurrency Config %q", d.Id())
+		return diags
+	}
 
-	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
+	parts, err := flex.ExpandResourceId(d.Id(), ProvisionedConcurrencyIDPartCount, false)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
 	}
 
 	input := &lambda.DeleteProvisionedConcurrencyConfigInput{
-		FunctionName: aws.String(functionName),
-		Qualifier:    aws.String(qualifier),
+		FunctionName: aws.String(parts[0]),
+		Qualifier:    aws.String(parts[1]),
 	}
 
 	_, err = conn.DeleteProvisionedConcurrencyConfigWithContext(ctx, input)
@@ -171,16 +205,6 @@ func resourceProvisionedConcurrencyConfigDelete(ctx context.Context, d *schema.R
 	}
 
 	return diags
-}
-
-func ProvisionedConcurrencyConfigParseID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ":", 2)
-
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected FUNCTION_NAME:QUALIFIER", id)
-	}
-
-	return parts[0], parts[1], nil
 }
 
 func refreshProvisionedConcurrencyConfigStatus(ctx context.Context, conn *lambda.Lambda, functionName, qualifier string) retry.StateRefreshFunc {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager_test
 
 import (
@@ -133,7 +136,7 @@ func testAccCheckTransitGatewayRouteTableAttachmentExists(ctx context.Context, n
 			return fmt.Errorf("No Network Manager Transit Gateway Route Table Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
 		output, err := tfnetworkmanager.FindTransitGatewayRouteTableAttachmentByID(ctx, conn, rs.Primary.ID)
 
@@ -149,7 +152,7 @@ func testAccCheckTransitGatewayRouteTableAttachmentExists(ctx context.Context, n
 
 func testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_transit_gateway_route_table_attachment" {
@@ -183,7 +186,7 @@ resource "aws_networkmanager_transit_gateway_peering" "test" {
     Name = %[1]q
   }
 
-  depends_on = [aws_ec2_transit_gateway_policy_table.test]
+  depends_on = [aws_ec2_transit_gateway_policy_table.test, aws_networkmanager_core_network_policy_attachment.test]
 }
 
 resource "aws_ec2_transit_gateway_route_table" "test" {
@@ -209,6 +212,11 @@ resource "aws_networkmanager_transit_gateway_route_table_attachment" "test" {
 
   depends_on = [aws_ec2_transit_gateway_policy_table_association.test]
 }
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_transit_gateway_route_table_attachment.test.id
+  attachment_type = aws_networkmanager_transit_gateway_route_table_attachment.test.attachment_type
+}
 `)
 }
 
@@ -223,6 +231,11 @@ resource "aws_networkmanager_transit_gateway_route_table_attachment" "test" {
   }
 
   depends_on = [aws_ec2_transit_gateway_policy_table_association.test]
+}
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_transit_gateway_route_table_attachment.test.id
+  attachment_type = aws_networkmanager_transit_gateway_route_table_attachment.test.attachment_type
 }
 `, tagKey1, tagValue1))
 }
@@ -239,6 +252,11 @@ resource "aws_networkmanager_transit_gateway_route_table_attachment" "test" {
   }
 
   depends_on = [aws_ec2_transit_gateway_policy_table_association.test]
+}
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_transit_gateway_route_table_attachment.test.id
+  attachment_type = aws_networkmanager_transit_gateway_route_table_attachment.test.attachment_type
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }

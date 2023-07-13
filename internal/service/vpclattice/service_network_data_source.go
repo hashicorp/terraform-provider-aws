@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice
 
 import (
@@ -69,7 +72,7 @@ const (
 )
 
 func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	serviceNetworkID := d.Get("service_network_identifier").(string)
 
@@ -89,7 +92,7 @@ func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("number_of_associated_vpcs", out.NumberOfAssociatedVPCs)
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags, err := ListTags(ctx, conn, aws.ToString(out.Arn))
+	tags, err := listTags(ctx, conn, aws.ToString(out.Arn))
 
 	if err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameServiceNetwork, serviceNetworkID, err)

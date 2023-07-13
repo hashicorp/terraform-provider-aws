@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch
 
 import (
@@ -48,7 +51,7 @@ func ResourceOutboundConnection() *schema.Resource {
 }
 
 func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	// Create the Outbound Connection
 	createOpts := &opensearchservice.CreateOutboundConnectionInput{
@@ -61,7 +64,7 @@ func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceDat
 
 	resp, err := conn.CreateOutboundConnectionWithContext(ctx, createOpts)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error creating Outbound Connection: %s", err))
+		return diag.Errorf("creating Outbound Connection: %s", err)
 	}
 
 	// Get the ID and store it
@@ -70,19 +73,19 @@ func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceDat
 
 	err = outboundConnectionWaitUntilAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error waiting for Outbound Connection to become available: %s", err))
+		return diag.Errorf("waiting for Outbound Connection to become available: %s", err)
 	}
 
 	return resourceOutboundConnectionRead(ctx, d, meta)
 }
 
 func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	ccscRaw, statusCode, err := outboundConnectionRefreshState(ctx, conn, d.Id())()
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error reading Outbound Connection: %s", err))
+		return diag.Errorf("reading Outbound Connection: %s", err)
 	}
 
 	ccsc := ccscRaw.(*opensearchservice.OutboundConnection)
@@ -103,7 +106,7 @@ func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	req := &opensearchservice.DeleteOutboundConnectionInput{
 		ConnectionId: aws.String(d.Id()),
@@ -116,11 +119,11 @@ func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error deleting Outbound Connection (%s): %s", d.Id(), err))
+		return diag.Errorf("deleting Outbound Connection (%s): %s", d.Id(), err)
 	}
 
 	if err := waitForOutboundConnectionDeletion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.FromErr(fmt.Errorf("Error waiting for VPC Peering Connection (%s) to be deleted: %s", d.Id(), err))
+		return diag.Errorf("waiting for VPC Peering Connection (%s) to be deleted: %s", d.Id(), err)
 	}
 
 	return nil
@@ -182,7 +185,7 @@ func outboundConnectionWaitUntilAvailable(ctx context.Context, conn *opensearchs
 		Timeout: timeout,
 	}
 	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
-		return fmt.Errorf("Error waiting for Outbound Connection (%s) to become available: %s", id, err)
+		return fmt.Errorf("waiting for Outbound Connection (%s) to become available: %s", id, err)
 	}
 	return nil
 }

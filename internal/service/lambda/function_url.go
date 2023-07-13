@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -120,7 +123,7 @@ func ResourceFunctionURL() *schema.Resource {
 }
 
 func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	name := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
@@ -143,7 +146,7 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 	_, err := conn.CreateFunctionUrlConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Lambda Function URL (%s): %s", id, err)
+		return diag.Errorf("creating Lambda Function URL (%s): %s", id, err)
 	}
 
 	d.SetId(id)
@@ -168,7 +171,7 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceConflictException, "The statement id (FunctionURLAllowPublicAccess) provided already exists") {
 				log.Printf("[DEBUG] function permission statement 'FunctionURLAllowPublicAccess' already exists.")
 			} else {
-				return diag.Errorf("error adding Lambda Function URL (%s) permission %s", d.Id(), err)
+				return diag.Errorf("adding Lambda Function URL (%s) permission %s", d.Id(), err)
 			}
 		}
 	}
@@ -177,7 +180,7 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	name, qualifier, err := FunctionURLParseResourceID(d.Id())
 
@@ -194,7 +197,7 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Lambda Function URL (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Lambda Function URL (%s): %s", d.Id(), err)
 	}
 
 	functionURL := aws.StringValue(output.FunctionUrl)
@@ -202,7 +205,7 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("authorization_type", output.AuthType)
 	if output.Cors != nil {
 		if err := d.Set("cors", []interface{}{flattenCors(output.Cors)}); err != nil {
-			return diag.Errorf("error setting cors: %s", err)
+			return diag.Errorf("setting cors: %s", err)
 		}
 	} else {
 		d.Set("cors", nil)
@@ -216,7 +219,7 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 	// Function URL endpoints have the following format:
 	// https://<url-id>.lambda-url.<region>.on.aws
 	if v, err := url.Parse(functionURL); err != nil {
-		return diag.Errorf("error parsing URL (%s): %s", functionURL, err)
+		return diag.Errorf("parsing URL (%s): %s", functionURL, err)
 	} else if v := strings.Split(v.Host, "."); len(v) > 0 {
 		d.Set("url_id", v[0])
 	} else {
@@ -227,7 +230,7 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	name, qualifier, err := FunctionURLParseResourceID(d.Id())
 
@@ -263,14 +266,14 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 	_, err = conn.UpdateFunctionUrlConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating Lambda Function URL (%s): %s", d.Id(), err)
+		return diag.Errorf("updating Lambda Function URL (%s): %s", d.Id(), err)
 	}
 
 	return resourceFunctionURLRead(ctx, d, meta)
 }
 
 func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	name, qualifier, err := FunctionURLParseResourceID(d.Id())
 
@@ -294,7 +297,7 @@ func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Lambda Function URL (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Lambda Function URL (%s): %s", d.Id(), err)
 	}
 
 	return nil

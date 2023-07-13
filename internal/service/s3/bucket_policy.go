@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -57,7 +60,7 @@ func ResourceBucketPolicy() *schema.Resource {
 
 func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 
@@ -87,7 +90,7 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 		_, err = conn.PutBucketPolicyWithContext(ctx, params)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error putting S3 policy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "putting S3 policy: %s", err)
 	}
 
 	d.SetId(bucket)
@@ -97,7 +100,7 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	log.Printf("[DEBUG] S3 bucket policy, read for bucket: %s", d.Id())
 	pol, err := conn.GetBucketPolicyWithContext(ctx, &s3.GetBucketPolicyInput{
@@ -134,7 +137,7 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 
@@ -148,7 +151,7 @@ func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error deleting S3 policy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 policy: %s", err)
 	}
 
 	return diags

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mediaconvert
 
 import (
@@ -113,7 +116,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Name:        aws.String(d.Get("name").(string)),
 		Status:      aws.String(d.Get("status").(string)),
 		PricingPlan: aws.String(d.Get("pricing_plan").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -165,13 +168,13 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting Media Convert Queue reservation_plan_settings: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(resp.Queue.Arn))
+	tags, err := listTags(ctx, conn, aws.StringValue(resp.Queue.Arn))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Media Convert Queue (%s): %s", d.Id(), err)
 	}
 
-	SetTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
@@ -206,7 +209,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := updateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
@@ -249,22 +252,22 @@ func GetAccountClient(ctx context.Context, awsClient *conns.AWSClient) (*mediaco
 		Mode: aws.String(mediaconvert.DescribeEndpointsModeDefault),
 	}
 
-	output, err := awsClient.MediaConvertConn().DescribeEndpointsWithContext(ctx, input)
+	output, err := awsClient.MediaConvertConn(ctx).DescribeEndpointsWithContext(ctx, input)
 
 	if err != nil {
-		return nil, fmt.Errorf("error describing MediaConvert Endpoints: %w", err)
+		return nil, fmt.Errorf("describing MediaConvert Endpoints: %w", err)
 	}
 
 	if output == nil || len(output.Endpoints) == 0 || output.Endpoints[0] == nil || output.Endpoints[0].Url == nil {
-		return nil, fmt.Errorf("error describing MediaConvert Endpoints: empty response or URL")
+		return nil, fmt.Errorf("describing MediaConvert Endpoints: empty response or URL")
 	}
 
 	endpointURL := aws.StringValue(output.Endpoints[0].Url)
 
-	sess, err := session.NewSession(&awsClient.MediaConvertConn().Config)
+	sess, err := session.NewSession(&awsClient.MediaConvertConn(ctx).Config)
 
 	if err != nil {
-		return nil, fmt.Errorf("error creating AWS MediaConvert session: %w", err)
+		return nil, fmt.Errorf("creating AWS MediaConvert session: %w", err)
 	}
 
 	conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))

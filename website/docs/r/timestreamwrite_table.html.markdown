@@ -39,6 +39,23 @@ resource "aws_timestreamwrite_table" "example" {
 }
 ```
 
+### Customer-defined Partition Key
+
+```hcl
+resource "aws_timestreamwrite_table" "example" {
+  database_name = aws_timestreamwrite_database.example.database_name
+  table_name    = "example"
+
+  schema {
+    composite_partition_key {
+      enforcement_in_record = "REQUIRED"
+      name                  = "attr1"
+      type                  = "DIMENSION"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -46,6 +63,7 @@ The following arguments are supported:
 * `database_name` – (Required) The name of the Timestream database.
 * `magnetic_store_write_properties` - (Optional) Contains properties to set on the table when enabling magnetic store writes. See [Magnetic Store Write Properties](#magnetic-store-write-properties) below for more details.
 * `retention_properties` - (Optional) The retention duration for the memory store and magnetic store. See [Retention Properties](#retention-properties) below for more details. If not provided, `magnetic_store_retention_period_in_days` default to 73000 and `memory_store_retention_period_in_hours` defaults to 6.
+* `schema` - (Optional) The schema of the table. See [Schema](#schema) below for more details.
 * `table_name` - (Required) The name of the Timestream table.
 * `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -77,6 +95,20 @@ The `retention_properties` block supports the following arguments:
 
 * `magnetic_store_retention_period_in_days` - (Required) The duration for which data must be stored in the magnetic store. Minimum value of 1. Maximum value of 73000.
 * `memory_store_retention_period_in_hours` - (Required) The duration for which data must be stored in the memory store. Minimum value of 1. Maximum value of 8766.
+
+### Schema
+
+The `schema` block supports the following arguments:
+
+* `composite_partition_key` - (Required) A non-empty list of partition keys defining the attributes used to partition the table data. The order of the list determines the partition hierarchy. The name and type of each partition key as well as the partition key order cannot be changed after the table is created. However, the enforcement level of each partition key can be changed. See [Composite Partition Key](#composite-partition-key) below for more details.
+
+### Composite Partition Key
+
+The `composite_partition_key` block supports the following arguments:
+
+* `enforcement_in_record` - (Optional) The level of enforcement for the specification of a dimension key in ingested records. Valid values: `REQUIRED`, `OPTIONAL`.
+* `name` - (Optional) The name of the attribute used for a dimension key.
+* `type` - (Required) The type of the partition key. Valid values: `DIMENSION`, `MEASURE`.
 
 ## Attributes Reference
 

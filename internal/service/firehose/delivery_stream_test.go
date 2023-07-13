@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package firehose_test
 
 import (
@@ -254,7 +257,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_externalUpdate(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).FirehoseConn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).FirehoseConn(ctx)
 					udi := firehose.UpdateDestinationInput{
 						DeliveryStreamName:             aws.String(rName),
 						DestinationId:                  aws.String("destinationId-000000000001"),
@@ -1632,7 +1635,7 @@ func testAccCheckDeliveryStreamExists(ctx context.Context, n string, v *firehose
 			return fmt.Errorf("No Kinesis Firehose Delivery Stream ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FirehoseConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FirehoseConn(ctx)
 
 		output, err := tffirehose.FindDeliveryStreamByName(ctx, conn, rs.Primary.Attributes["name"])
 
@@ -1653,7 +1656,7 @@ func testAccCheckDeliveryStreamDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).FirehoseConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).FirehoseConn(ctx)
 
 			_, err := tffirehose.FindDeliveryStreamByName(ctx, conn, rs.Primary.Attributes["name"])
 
@@ -1878,7 +1881,7 @@ func testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx context.Context) resource.
 
 func testAccCheckLambdaFunctionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_function" {

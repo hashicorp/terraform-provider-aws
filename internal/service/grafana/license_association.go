@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package grafana
 
 import (
@@ -58,7 +61,7 @@ func ResourceLicenseAssociation() *schema.Resource {
 
 func resourceLicenseAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	input := &managedgrafana.AssociateLicenseInput{
 		LicenseType: aws.String(d.Get("license_type").(string)),
@@ -83,7 +86,7 @@ func resourceLicenseAssociationCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceLicenseAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	workspace, err := FindLicensedWorkspaceByID(ctx, conn, d.Id())
 
@@ -114,7 +117,7 @@ func resourceLicenseAssociationRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceLicenseAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Grafana License Association: %s", d.Id())
 	_, err := conn.DisassociateLicenseWithContext(ctx, &managedgrafana.DisassociateLicenseInput{

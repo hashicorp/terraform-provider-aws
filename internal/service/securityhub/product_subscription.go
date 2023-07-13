@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub
 
 import (
@@ -42,7 +45,7 @@ func ResourceProductSubscription() *schema.Resource {
 
 func resourceProductSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 	productArn := d.Get("product_arn").(string)
 
 	log.Printf("[DEBUG] Enabling Security Hub Product Subscription for product %s", productArn)
@@ -62,7 +65,7 @@ func resourceProductSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceProductSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	productArn, productSubscriptionArn, err := ProductSubscriptionParseID(d.Id())
 
@@ -123,7 +126,7 @@ func ProductSubscriptionParseID(id string) (string, string, error) {
 
 func resourceProductSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 	log.Printf("[DEBUG] Disabling Security Hub Product Subscription %s", d.Id())
 
 	_, productSubscriptionArn, err := ProductSubscriptionParseID(d.Id())

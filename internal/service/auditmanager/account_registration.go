@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager
 
 import (
@@ -11,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -54,7 +57,7 @@ func (r *resourceAccountRegistration) Schema(ctx context.Context, req resource.S
 }
 
 func (r *resourceAccountRegistration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 	// Registration is applied per region, so use this as the ID
 	id := r.Meta().Region
 
@@ -87,7 +90,7 @@ func (r *resourceAccountRegistration) Create(ctx context.Context, req resource.C
 }
 
 func (r *resourceAccountRegistration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceAccountRegistrationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -116,7 +119,7 @@ func (r *resourceAccountRegistration) Read(ctx context.Context, req resource.Rea
 }
 
 func (r *resourceAccountRegistration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan, state resourceAccountRegistrationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -156,7 +159,7 @@ func (r *resourceAccountRegistration) Update(ctx context.Context, req resource.U
 }
 
 func (r *resourceAccountRegistration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceAccountRegistrationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

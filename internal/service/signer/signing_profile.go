@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package signer
 
 import (
@@ -130,7 +133,7 @@ func ResourceSigningProfile() *schema.Resource {
 
 func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
+	conn := meta.(*conns.AWSClient).SignerConn(ctx)
 
 	log.Printf("[DEBUG] Creating Signer signing profile")
 
@@ -140,7 +143,7 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	signingProfileInput := &signer.PutSigningProfileInput{
 		ProfileName: aws.String(profileName),
 		PlatformId:  aws.String(d.Get("platform_id").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, exists := d.GetOk("signature_validity_period"); exists {
@@ -163,7 +166,7 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
+	conn := meta.(*conns.AWSClient).SignerConn(ctx)
 
 	signingProfileOutput, err := conn.GetSigningProfileWithContext(ctx, &signer.GetSigningProfileInput{
 		ProfileName: aws.String(d.Id()),
@@ -216,7 +219,7 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile status: %s", err)
 	}
 
-	SetTagsOut(ctx, signingProfileOutput.Tags)
+	setTagsOut(ctx, signingProfileOutput.Tags)
 
 	if err := d.Set("revocation_record", flattenSigningProfileRevocationRecord(signingProfileOutput.RevocationRecord)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile revocation record: %s", err)
@@ -235,7 +238,7 @@ func resourceSigningProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceSigningProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
+	conn := meta.(*conns.AWSClient).SignerConn(ctx)
 
 	_, err := conn.CancelSigningProfileWithContext(ctx, &signer.CancelSigningProfileInput{
 		ProfileName: aws.String(d.Id()),

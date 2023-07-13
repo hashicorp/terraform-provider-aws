@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control
 
 import (
@@ -392,7 +395,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 }
 
 func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlClient()
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
@@ -404,7 +407,7 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 	input := &s3control.PutStorageLensConfigurationInput{
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
-		Tags:      StorageLensTags(KeyValueTags(ctx, GetTagsIn(ctx))),
+		Tags:      StorageLensTags(KeyValueTags(ctx, getTagsIn(ctx))),
 	}
 
 	if v, ok := d.GetOk("storage_lens_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -424,7 +427,7 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlClient()
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
 
@@ -457,13 +460,13 @@ func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("listing tags for S3 Storage Lens Configuration (%s): %s", d.Id(), err)
 	}
 
-	SetTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	return nil
 }
 
 func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlClient()
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
 
@@ -501,7 +504,7 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 }
 
 func resourceStorageLensConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlClient()
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
 

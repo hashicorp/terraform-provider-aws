@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package licensemanager_test
 
 import (
@@ -103,7 +106,7 @@ func testAccCheckGrantAccepterExists(ctx context.Context, n string, providerF fu
 			return fmt.Errorf("No License Manager License Configuration ID is set")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).LicenseManagerConn()
+		conn := providerF().Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
 
 		out, err := tflicensemanager.FindGrantAccepterByGrantARN(ctx, conn, rs.Primary.ID)
 
@@ -121,7 +124,7 @@ func testAccCheckGrantAccepterExists(ctx context.Context, n string, providerF fu
 
 func testAccCheckGrantAccepterDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).LicenseManagerConn()
+		conn := provider.Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_licensemanager_grant_accepter" {

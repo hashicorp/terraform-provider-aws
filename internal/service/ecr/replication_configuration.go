@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
 import (
@@ -92,7 +95,7 @@ func ResourceReplicationConfiguration() *schema.Resource {
 
 func resourceReplicationConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	input := ecr.PutReplicationConfigurationInput{
 		ReplicationConfiguration: expandReplicationConfigurationReplicationConfiguration(d.Get("replication_configuration").([]interface{})),
@@ -110,7 +113,7 @@ func resourceReplicationConfigurationPut(ctx context.Context, d *schema.Resource
 
 func resourceReplicationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	log.Printf("[DEBUG] Reading ECR Replication Configuration %s", d.Id())
 	out, err := conn.DescribeRegistryWithContext(ctx, &ecr.DescribeRegistryInput{})
@@ -129,7 +132,7 @@ func resourceReplicationConfigurationRead(ctx context.Context, d *schema.Resourc
 
 func resourceReplicationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	input := ecr.PutReplicationConfigurationInput{
 		ReplicationConfiguration: &ecr.ReplicationConfiguration{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package deploy
 
 import (
@@ -37,7 +40,7 @@ func ResourceApp() *schema.Resource {
 				}
 
 				applicationName := d.Id()
-				conn := meta.(*conns.AWSClient).DeployConn()
+				conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
 				input := &codedeploy.GetApplicationInput{
 					ApplicationName: aws.String(applicationName),
@@ -51,7 +54,7 @@ func ResourceApp() *schema.Resource {
 				}
 
 				if output == nil || output.Application == nil {
-					return []*schema.ResourceData{}, fmt.Errorf("error reading CodeDeploy Application (%s): empty response", applicationName)
+					return []*schema.ResourceData{}, fmt.Errorf("reading CodeDeploy Application (%s): empty response", applicationName)
 				}
 
 				d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.Application.ApplicationId), applicationName))
@@ -101,14 +104,14 @@ func ResourceApp() *schema.Resource {
 
 func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn()
+	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
 	application := d.Get("name").(string)
 	computePlatform := d.Get("compute_platform").(string)
 	resp, err := conn.CreateApplicationWithContext(ctx, &codedeploy.CreateApplicationInput{
 		ApplicationName: aws.String(application),
 		ComputePlatform: aws.String(computePlatform),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy Application (%s): %s", application, err)
@@ -126,7 +129,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn()
+	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
 	application := resourceAppParseID(d.Id())
 	name := d.Get("name").(string)
@@ -175,7 +178,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn()
+	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
 	if d.HasChange("name") {
 		o, n := d.GetChange("name")
@@ -195,7 +198,7 @@ func resourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{
 
 func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn()
+	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
 	_, err := conn.DeleteApplicationWithContext(ctx, &codedeploy.DeleteApplicationInput{
 		ApplicationName: aws.String(d.Get("name").(string)),

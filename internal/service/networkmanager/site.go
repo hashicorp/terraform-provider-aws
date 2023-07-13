@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -36,7 +39,7 @@ func ResourceSite() *schema.Resource {
 				parsedARN, err := arn.Parse(d.Id())
 
 				if err != nil {
-					return nil, fmt.Errorf("error parsing ARN (%s): %w", d.Id(), err)
+					return nil, fmt.Errorf("parsing ARN (%s): %w", d.Id(), err)
 				}
 
 				// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_networkmanager.html#networkmanager-resources-for-iam-policies.
@@ -107,12 +110,12 @@ func ResourceSite() *schema.Resource {
 }
 
 func resourceSiteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	input := &networkmanager.CreateSiteInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -127,20 +130,20 @@ func resourceSiteCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := conn.CreateSiteWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Network Manager Site: %s", err)
+		return diag.Errorf("creating Network Manager Site: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Site.SiteId))
 
 	if _, err := waitSiteCreated(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Network Manager Site (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for Network Manager Site (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceSiteRead(ctx, d, meta)
 }
 
 func resourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	site, err := FindSiteByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
@@ -152,7 +155,7 @@ func resourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Network Manager Site (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Network Manager Site (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", site.SiteArn)
@@ -160,19 +163,19 @@ func resourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("global_network_id", site.GlobalNetworkId)
 	if site.Location != nil {
 		if err := d.Set("location", []interface{}{flattenLocation(site.Location)}); err != nil {
-			return diag.Errorf("error setting location: %s", err)
+			return diag.Errorf("setting location: %s", err)
 		}
 	} else {
 		d.Set("location", nil)
 	}
 
-	SetTagsOut(ctx, site.Tags)
+	setTagsOut(ctx, site.Tags)
 
 	return nil
 }
 
 func resourceSiteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		globalNetworkID := d.Get("global_network_id").(string)
@@ -190,11 +193,11 @@ func resourceSiteUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err := conn.UpdateSiteWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("error updating Network Manager Site (%s): %s", d.Id(), err)
+			return diag.Errorf("updating Network Manager Site (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitSiteUpdated(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("error waiting for Network Manager Site (%s) update: %s", d.Id(), err)
+			return diag.Errorf("waiting for Network Manager Site (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -202,7 +205,7 @@ func resourceSiteUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceSiteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 
@@ -228,11 +231,11 @@ func resourceSiteDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Network Manager Site (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Network Manager Site (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitSiteDeleted(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("error waiting for Network Manager Site (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for Network Manager Site (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

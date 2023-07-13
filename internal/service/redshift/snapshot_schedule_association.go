@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -43,7 +46,7 @@ func ResourceSnapshotScheduleAssociation() *schema.Resource {
 
 func resourceSnapshotScheduleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 	clusterIdentifier := d.Get("cluster_identifier").(string)
 	scheduleIdentifier := d.Get("schedule_identifier").(string)
 
@@ -68,7 +71,7 @@ func resourceSnapshotScheduleAssociationCreate(ctx context.Context, d *schema.Re
 
 func resourceSnapshotScheduleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	scheduleIdentifier, assoicatedCluster, err := FindScheduleAssociationById(ctx, conn, d.Id())
 
@@ -89,7 +92,7 @@ func resourceSnapshotScheduleAssociationRead(ctx context.Context, d *schema.Reso
 
 func resourceSnapshotScheduleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 	clusterIdentifier, scheduleIdentifier, err := SnapshotScheduleAssociationParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Cluster Snapshot Schedule (%s): %s", d.Id(), err)

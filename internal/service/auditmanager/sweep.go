@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -13,8 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func init() {
@@ -65,12 +68,12 @@ func isCompleteSetupError(err error) bool {
 
 func sweepAssessments(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AuditManagerClient()
+	conn := client.AuditManagerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.ListAssessmentsInput{}
 	var errs *multierror.Error
@@ -91,11 +94,13 @@ func sweepAssessments(region string) error {
 			id := aws.ToString(assessment.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Assessment: %s", id)
-			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceAssessment, id, client))
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessment, client,
+				framework.NewAttribute("id", id),
+			))
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AuditManager Assessments for %s: %w", region, err))
 	}
 	if sweep.SkipSweepError(err) {
@@ -108,12 +113,12 @@ func sweepAssessments(region string) error {
 
 func sweepAssessmentDelegations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AuditManagerClient()
+	conn := client.AuditManagerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.GetDelegationsInput{}
 	var errs *multierror.Error
@@ -131,25 +136,15 @@ func sweepAssessmentDelegations(region string) error {
 		}
 
 		for _, d := range page.Delegations {
-			id := "" // ID is a combination of attributes for this resource, but not used for deletion
-
-			// assessment ID is required for delete operations
-			assessmentIDAttr := sweep.FrameworkSupplementalAttribute{
-				Path:  "assessment_id",
-				Value: aws.ToString(d.AssessmentId),
-			}
-			// delegation ID is required for delete operations
-			delegationIDAttr := sweep.FrameworkSupplementalAttribute{
-				Path:  "delegation_id",
-				Value: aws.ToString(d.Id),
-			}
-
-			log.Printf("[INFO] Deleting AuditManager Assessment Delegation: %s", delegationIDAttr.Value)
-			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceAssessmentDelegation, id, client, assessmentIDAttr, delegationIDAttr))
+			log.Printf("[INFO] Deleting AuditManager Assessment Delegation: %s", aws.ToString(d.Id))
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessmentDelegation, client,
+				framework.NewAttribute("assessment_id", aws.ToString(d.AssessmentId)),
+				framework.NewAttribute("delegation_id", aws.ToString(d.Id)),
+			))
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AuditManager Assessment Delegations for %s: %w", region, err))
 	}
 	if sweep.SkipSweepError(err) {
@@ -162,12 +157,12 @@ func sweepAssessmentDelegations(region string) error {
 
 func sweepAssessmentReports(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AuditManagerClient()
+	conn := client.AuditManagerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.ListAssessmentReportsInput{}
 	var errs *multierror.Error
@@ -186,18 +181,16 @@ func sweepAssessmentReports(region string) error {
 
 		for _, report := range page.AssessmentReports {
 			id := aws.ToString(report.Id)
-			// assessment ID is required for delete operations
-			assessmentIDAttr := sweep.FrameworkSupplementalAttribute{
-				Path:  "assessment_id",
-				Value: aws.ToString(report.AssessmentId),
-			}
 
 			log.Printf("[INFO] Deleting AuditManager Assessment Report: %s", id)
-			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceAssessmentReport, id, client, assessmentIDAttr))
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessmentReport, client,
+				framework.NewAttribute("id", id),
+				framework.NewAttribute("assessment_id", aws.ToString(report.AssessmentId)),
+			))
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AuditManager Assessment Reports for %s: %w", region, err))
 	}
 	if sweep.SkipSweepError(err) {
@@ -210,12 +203,12 @@ func sweepAssessmentReports(region string) error {
 
 func sweepControls(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AuditManagerClient()
+	conn := client.AuditManagerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.ListControlsInput{ControlType: types.ControlTypeCustom}
 	var errs *multierror.Error
@@ -236,11 +229,13 @@ func sweepControls(region string) error {
 			id := aws.ToString(control.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Control: %s", id)
-			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceControl, id, client))
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceControl, client,
+				framework.NewAttribute("id", id),
+			))
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AuditManager Controls for %s: %w", region, err))
 	}
 	if sweep.SkipSweepError(err) {
@@ -253,12 +248,12 @@ func sweepControls(region string) error {
 
 func sweepFrameworks(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AuditManagerClient()
+	conn := client.AuditManagerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.ListAssessmentFrameworksInput{FrameworkType: types.FrameworkTypeCustom}
 	var errs *multierror.Error
@@ -275,15 +270,17 @@ func sweepFrameworks(region string) error {
 			return fmt.Errorf("error retrieving AuditManager Frameworks: %w", err)
 		}
 
-		for _, framework := range page.FrameworkMetadataList {
-			id := aws.ToString(framework.Id)
+		for _, f := range page.FrameworkMetadataList {
+			id := aws.ToString(f.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Framework: %s", id)
-			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceFramework, id, client))
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceFramework, client,
+				framework.NewAttribute("id", id),
+			))
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AuditManager Frameworks for %s: %w", region, err))
 	}
 	if sweep.SkipSweepError(err) {
@@ -296,12 +293,12 @@ func sweepFrameworks(region string) error {
 
 func sweepFrameworkShares(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AuditManagerClient()
+	conn := client.AuditManagerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.ListAssessmentFrameworkShareRequestsInput{RequestType: types.ShareRequestTypeSent}
 	var errs *multierror.Error
@@ -322,11 +319,13 @@ func sweepFrameworkShares(region string) error {
 			id := aws.ToString(share.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Framework Share: %s", id)
-			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceFrameworkShare, id, client))
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceFrameworkShare, client,
+				framework.NewAttribute("id", id),
+			))
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AuditManager Framework Shares for %s: %w", region, err))
 	}
 	if sweep.SkipSweepError(err) {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub
 
 import (
@@ -69,7 +72,7 @@ func ResourceMember() *schema.Resource {
 
 func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	accountID := d.Get("account_id").(string)
 	input := &securityhub.CreateMembersInput{
@@ -115,7 +118,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	member, err := FindMemberByAccountID(ctx, conn, d.Id())
 
@@ -142,7 +145,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	_, err := conn.DisassociateMembersWithContext(ctx, &securityhub.DisassociateMembersInput{
 		AccountIds: aws.StringSlice([]string{d.Id()}),

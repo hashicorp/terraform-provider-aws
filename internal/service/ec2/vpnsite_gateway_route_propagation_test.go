@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -76,7 +79,7 @@ func testAccCheckVPNGatewayRoutePropagationExists(ctx context.Context, n string)
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		return tfec2.FindVPNGatewayRoutePropagationExists(ctx, conn, routeTableID, gatewayID)
 	}
@@ -95,7 +98,7 @@ func testAccCheckVPNGatewayRoutePropagationDestroy(ctx context.Context) resource
 				return err
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 			err = tfec2.FindVPNGatewayRoutePropagationExists(ctx, conn, routeTableID, gatewayID)
 
