@@ -1,4 +1,5 @@
-## 5.8.0 (Unreleased)
+## 5.9.0 (Unreleased)
+## 5.8.0 (July 13, 2023)
 
 ENHANCEMENTS:
 
