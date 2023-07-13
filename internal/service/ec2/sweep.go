@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -2628,7 +2627,7 @@ func sweepInstanceConnectEndpoints(region string) error {
 			}
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceInstanceConnectEndpoint, client,
-				framework.NewAttribute("id", aws_sdkv2.ToString(v.InstanceConnectEndpointId)),
+				framework.NewAttribute("id", aws.StringValue(v.InstanceConnectEndpointId)),
 			))
 		}
 
