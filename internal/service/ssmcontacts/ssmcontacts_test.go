@@ -51,6 +51,19 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			"basic":             testPlanDataSource_basic,
 			"channelTargetInfo": testPlanDataSource_channelTargetInfo,
 		},
+		"Rotation Resource Tests": {
+			"basic":      TestAccSSMContactsRotation_basic,
+			"disappears": TestAccSSMContactsRotation_disappears,
+			"update":     TestAccSSMContactsRotation_updateRequiredFields,
+			"startTime":  TestAccSSMContactsRotation_startTime,
+			"contactIds": TestAccSSMContactsRotation_contactIds,
+			"recurrence": TestAccSSMContactsRotation_recurrence,
+		},
+		"Rotation Data Source Tests": {
+			"basic":           TestAccSSMContactsRotationDataSource_basic,
+			"dailySettings":   TestAccSSMContactsRotationDataSource_dailySettings,
+			"monthlySettings": TestAccSSMContactsRotationDataSource_monthlySettings,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

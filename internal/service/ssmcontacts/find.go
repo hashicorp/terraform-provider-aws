@@ -61,3 +61,27 @@ func findContactChannelByID(ctx context.Context, conn *ssmcontacts.Client, id st
 
 	return out, nil
 }
+
+func FindRotationByID(ctx context.Context, conn *ssmcontacts.Client, id string) (*ssmcontacts.GetRotationOutput, error) {
+	in := &ssmcontacts.GetRotationInput{
+		RotationId: aws.String(id),
+	}
+	out, err := conn.GetRotation(ctx, in)
+	if err != nil {
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}

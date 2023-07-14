@@ -36,6 +36,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourcePlan,
 			TypeName: "aws_ssmcontacts_plan",
 		},
+		{
+			Factory:  DataSourceRotation,
+			TypeName: "aws_ssmcontacts_rotation",
+		},
 	}
 }
 
@@ -58,6 +62,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourcePlan,
 			TypeName: "aws_ssmcontacts_plan",
 			Name:     "Plan",
+		},
+		{
+			Factory:  ResourceRotation,
+			TypeName: "aws_ssmcontacts_rotation",
+			Name:     "Rotation",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }

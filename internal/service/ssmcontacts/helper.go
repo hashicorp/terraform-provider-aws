@@ -5,6 +5,7 @@ package ssmcontacts
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -39,4 +40,10 @@ func setPlanResourceData(d *schema.ResourceData, getContactOutput *ssmcontacts.G
 	}
 
 	return nil
+}
+
+func sortShiftCoverages(shiftCoverages []interface{}) {
+	sort.Slice(shiftCoverages, func(i, j int) bool {
+		return shiftCoverages[i].(map[string]interface{})["day_of_week"].(string) < shiftCoverages[j].(map[string]interface{})["day_of_week"].(string)
+	})
 }
