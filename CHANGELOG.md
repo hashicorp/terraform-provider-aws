@@ -1,4 +1,13 @@
 ## 5.9.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_db_instance: Add `max_allocated_storage` attribute ([#32477](https://github.com/hashicorp/terraform-provider-aws/issues/32477))
+
+BUG FIXES:
+
+* resource/aws_quicksight_analysis: Correctly expand comparison method ([#32285](https://github.com/hashicorp/terraform-provider-aws/issues/32285))
+
 ## 5.8.0 (July 13, 2023)
 
 ENHANCEMENTS:
