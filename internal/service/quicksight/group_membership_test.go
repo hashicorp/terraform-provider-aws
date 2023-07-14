@@ -50,6 +50,9 @@ func TestAccQuickSightGroupMembership_withNamespace(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_group_membership.test"
+	groupResourceName := "aws_quicksight_group.test"
+	userResourceName := "aws_quicksight_user.test"
+	namespaceResourceName := "aws_quicksight_namespace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -61,6 +64,9 @@ func TestAccQuickSightGroupMembership_withNamespace(t *testing.T) {
 				Config: testAccGroupMembershipConfig_withNamespace(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupMembershipExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "group_name", groupResourceName, "group_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "member_name", userResourceName, "user_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "namespace", namespaceResourceName, "namespace"),
 				),
 			},
 			{
