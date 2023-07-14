@@ -69,7 +69,7 @@ func sweepClusters(region string) error {
 		return fmt.Errorf("error listing MSK Clusters (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MSK Clusters (%s): %w", region, err)
@@ -113,7 +113,7 @@ func sweepConfigurations(region string) error {
 		return fmt.Errorf("error listing MSK Configurations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MSK Configurations (%s): %w", region, err)

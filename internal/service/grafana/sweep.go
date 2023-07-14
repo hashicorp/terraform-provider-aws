@@ -65,7 +65,7 @@ func sweepWorkSpaces(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing Grafana Workspace for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Grafana Workspace for %s: %w", region, err))
 	}
 

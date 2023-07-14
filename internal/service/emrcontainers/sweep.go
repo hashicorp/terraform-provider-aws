@@ -67,7 +67,7 @@ func sweepVirtualClusters(region string) error {
 		return fmt.Errorf("error listing EMR Containers Virtual Clusters (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EMR Containers Virtual Clusters (%s): %w", region, err)
@@ -111,7 +111,7 @@ func sweepJobTemplates(region string) error {
 		return fmt.Errorf("error listing EMR Containers Job Templates (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EMR Containers Job Templates (%s): %w", region, err)

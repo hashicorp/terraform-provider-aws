@@ -233,8 +233,8 @@ github.com/OpenPeeDeeP/depguard/v2 v2.1.0/go.mod h1:PUBgk35fX4i7JDmwzlJwJ+GMe6Nf
 github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7/go.mod h1:z4/9nQmJSSwwds7ejkxaJwO37dru3geImFUdJlaLzQo=
 github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 h1:wPbRQzjjwFc0ih8puEVAOFGELsn1zoIIYdxvML7mDxA=
 github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8/go.mod h1:I0gYDMZ6Z5GRU7l58bNFSkPTFN6Yl12dsUlAZ8xy98g=
-github.com/YakDriver/tfproviderdocs v0.4.0 h1:43cZSzzZvOy17nNBj1yNJqyXJ32pN+6gLjYGt38jdyo=
-github.com/YakDriver/tfproviderdocs v0.4.0/go.mod h1:exzn3DQfLxdiJwVM344Ob7OgL1wJFYa0prAbdaqPA+8=
+github.com/YakDriver/tfproviderdocs v0.5.0 h1:PmJnobXFVsx2WHTYFZhxmY633WtMZPozNyW2ouJ1APQ=
+github.com/YakDriver/tfproviderdocs v0.5.0/go.mod h1:cmvxw7mRCeXngkZzN5rgygQqujN0irc5OJOCPfOJ9cQ=
 github.com/acomagu/bufpipe v1.0.3 h1:fxAGrHZTgQ9w5QqVItgzwj235/uYZYgbXitB+dLupOk=
 github.com/acomagu/bufpipe v1.0.3/go.mod h1:mxdxdup/WdsKVreO5GpW4+M/1CE2sMG4jeGJ2sYmHc4=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
@@ -674,8 +674,8 @@ github.com/hashicorp/memberlist v0.3.0/go.mod h1:MS2lj3INKhZjWNqd3N0m3J+Jxf3DAOn
 github.com/hashicorp/serf v0.9.6/go.mod h1:TXZNMjZQijwlDvp+r0b63xZ45H7JmCmgg4gpTwn9UV4=
 github.com/hashicorp/terraform-exec v0.17.2 h1:EU7i3Fh7vDUI9nNRdMATCEfnm9axzTnad8zszYZ73Go=
 github.com/hashicorp/terraform-exec v0.17.2/go.mod h1:tuIbsL2l4MlwwIZx9HPM+LOV9vVyEfBYu2GsO1uH3/8=
-github.com/hashicorp/terraform-json v0.16.0 h1:UKkeWRWb23do5LNAFlh/K3N0ymn1qTOO8c+85Albo3s=
-github.com/hashicorp/terraform-json v0.16.0/go.mod h1:v0Ufk9jJnk6tcIZvScHvetlKfiNTC+WS21mnXIlc0B0=
+github.com/hashicorp/terraform-json v0.17.1 h1:eMfvh/uWggKmY7Pmb3T85u86E2EQg6EQHgyRwf3RkyA=
+github.com/hashicorp/terraform-json v0.17.1/go.mod h1:Huy6zt6euxaY9knPAFKjUITn8QxUFIe9VuSzb4zn/0o=
 github.com/hashicorp/terraform-registry-address v0.2.0 h1:92LUg03NhfgZv44zpNTLBGIbiyTokQCDcdH5BhVHT3s=
 github.com/hashicorp/terraform-registry-address v0.2.0/go.mod h1:478wuzJPzdmqT6OGbB/iH82EDcI8VFM4yujknh/1nIs=
 github.com/hashicorp/terraform-svchost v0.0.1 h1:Zj6fR5wnpOHnJUmLyWozjMeDaVuE+cstMPj41/eKmSQ=
