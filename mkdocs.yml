@@ -30,7 +30,7 @@ nav:
       - Acceptance Test Environment Variables: acc-test-environment-variables.md
       - Data Handling and Conversion: data-handling-and-conversion.md
       - Debugging: debugging.md
-      - Decision Log: design-decision-log.md
+      - Design Decision Log: design-decision-log.md
       - Dependency Updates: dependency-updates.md
       - AWS SDK for Go Versions: aws-go-sdk-versions.md
       - Terraform Plugin Versions: terraform-plugin-versions.md
