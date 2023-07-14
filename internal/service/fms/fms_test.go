@@ -21,6 +21,7 @@ func TestAccFMS_serial(t *testing.T) {
 			"cloudfrontDistribution": testAccPolicy_cloudFrontDistribution,
 			"includeMap":             testAccPolicy_includeMap,
 			"update":                 testAccPolicy_update,
+			"policyOption":           testAccPolicy_policyOption,
 			"resourceTags":           testAccPolicy_resourceTags,
 			"tags":                   testAccPolicy_tags,
 		},

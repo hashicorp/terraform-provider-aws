@@ -52,6 +52,7 @@ In addition to all arguments above, the following attributes are exported:
 * `license_model` - License model information for this DB instance.
 * `master_username` - Contains the master username for the DB instance.
 * `master_user_secret` - Provides the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret).
+* `max_allocated_storage` - The upper limit to which Amazon RDS can automatically scale the storage of the DB instance.
 * `monitoring_interval` - Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance.
 * `monitoring_role_arn` - ARN for the IAM role that permits RDS to send Enhanced Monitoring metrics to CloudWatch Logs.
 * `multi_az` - If the DB instance is a Multi-AZ deployment.
