@@ -1150,7 +1150,7 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 								Required: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"succeed_strings": {
+							"success_strings": {
 								Type:     schema.TypeSet,
 								Required: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
@@ -1175,7 +1175,7 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
 							},
-							"succeed_values": {
+							"success_values": {
 								Type:     schema.TypeSet,
 								Required: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
@@ -1201,7 +1201,7 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
 							},
-							"succeed_values": {
+							"success_values": {
 								Type:     schema.TypeSet,
 								Required: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},

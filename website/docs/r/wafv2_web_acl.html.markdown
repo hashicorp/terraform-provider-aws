@@ -698,20 +698,20 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `body_contains` Block
 
-* `succeed_strings` (Required) Strings in the body of the response that indicate a successful login attempt.
+* `success_strings` (Required) Strings in the body of the response that indicate a successful login attempt.
 * `failure_strings` (Required) Strings in the body of the response that indicate a failed login attempt.
 
 ### `header` Block
 
 * `name` (Required) The name of the header to match against. The name must be an exact match, including case.
-* `succeed_values` (Required) Values in the response header with the specified name that indicate a successful login attempt.
+* `success_values` (Required) Values in the response header with the specified name that indicate a successful login attempt.
 * `failure_values` (Required) Values in the response header with the specified name that indicate a failed login attempt.
 
 ### `json` Block
 
 * `identifier` (Required) The identifier for the value to match against in the JSON.
-* `succeed_values` (Required) Strings in the body of the response that indicate a successful login attempt.
-* `failure_values` (Required) Strings in the body of the response that indicate a failed login attempt.
+* `success_strings` (Required) Strings in the body of the response that indicate a successful login attempt.
+* `failure_strings` (Required) Strings in the body of the response that indicate a failed login attempt.
 
 ### `status_code` Block
 
