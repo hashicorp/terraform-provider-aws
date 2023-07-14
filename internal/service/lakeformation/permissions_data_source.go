@@ -95,7 +95,6 @@ func DataSourcePermissions() *schema.Resource {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
-							MaxItems: 15,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validateLFTagValues(),
@@ -132,7 +131,6 @@ func DataSourcePermissions() *schema.Resource {
 										Type:     schema.TypeSet,
 										Required: true,
 										MinItems: 1,
-										MaxItems: 15,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
 											ValidateFunc: validateLFTagValues(),

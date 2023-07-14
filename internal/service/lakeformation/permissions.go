@@ -150,7 +150,6 @@ func ResourcePermissions() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 							MinItems: 1,
-							MaxItems: 1000,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validateLFTagValues(),
@@ -199,7 +198,6 @@ func ResourcePermissions() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										MinItems: 1,
-										MaxItems: 1000,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
 											ValidateFunc: validateLFTagValues(),
