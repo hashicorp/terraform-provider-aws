@@ -36,26 +36,22 @@ func ResourceGroupMembership() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-
 				"aws_account_id": {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
 					ForceNew: true,
 				},
-
-				"member_name": {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
-				},
-
 				"group_name": {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
 				},
-
+				"member_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
 				"namespace": {
 					Type:     schema.TypeString,
 					Optional: true,
