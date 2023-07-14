@@ -23,7 +23,7 @@ func TestAccQuickSightGroupMembership_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	memberName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_quicksight_group_membership.default"
+	resourceName := "aws_quicksight_group_membership.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -48,10 +48,8 @@ func TestAccQuickSightGroupMembership_basic(t *testing.T) {
 
 func TestAccQuickSightGroupMembership_withNamespace(t *testing.T) {
 	ctx := acctest.Context(t)
-	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	memberName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	namespace := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_quicksight_group_membership.default"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_quicksight_group_membership.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -60,7 +58,7 @@ func TestAccQuickSightGroupMembership_withNamespace(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMembershipConfig_withNamespace(groupName, memberName, namespace),
+				Config: testAccGroupMembershipConfig_withNamespace(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupMembershipExists(ctx, resourceName),
 				),
@@ -77,7 +75,7 @@ func TestAccQuickSightGroupMembership_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	memberName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_quicksight_group_membership.default"
+	resourceName := "aws_quicksight_group_membership.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -170,41 +168,25 @@ func testAccGroupMembershipConfig_basic(groupName string, memberName string) str
 		testAccGroupConfig_basic(groupName),
 		testAccUserConfig_basic(memberName),
 		fmt.Sprintf(`
-resource "aws_quicksight_group_membership" "default" {
+resource "aws_quicksight_group_membership" "test" {
   group_name  = aws_quicksight_group.default.group_name
   member_name = aws_quicksight_user.%s.user_name
 }
 `, memberName))
 }
 
-func testAccGroupMembershipConfig_withNamespace(groupName string, memberName string, namespace string) string {
+func testAccGroupMembershipConfig_withNamespace(rName string) string {
 	return acctest.ConfigCompose(
-		testAccNamespaceConfig_basic(namespace),
-		testAccGroupConfig_withNamespace(groupName),
-		testAccUserConfig_withNamespace(memberName),
+		testAccNamespaceConfig_basic(rName),
 		fmt.Sprintf(`
-resource "aws_quicksight_group_membership" "default" {
-  group_name  = aws_quicksight_group.default.group_name
-  member_name = aws_quicksight_user.%s.user_name
-  namespace   = aws_quicksight_namespace.test.namespace
-}
-`, memberName))
-}
+data "aws_caller_identity" "current" {}
 
-func testAccGroupConfig_withNamespace(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_quicksight_group" "default" {
+resource "aws_quicksight_group" "test" {
   group_name = %[1]q
   namespace  = aws_quicksight_namespace.test.namespace
 }
-`, rName)
-}
 
-func testAccUserConfig_withNamespace(rName string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-resource "aws_quicksight_user" %[1]q {
+resource "aws_quicksight_user" "test" {
   aws_account_id = data.aws_caller_identity.current.account_id
   user_name      = %[1]q
   email          = %[2]q
@@ -212,5 +194,11 @@ resource "aws_quicksight_user" %[1]q {
   identity_type  = "QUICKSIGHT"
   user_role      = "READER"
 }
-`, rName, acctest.DefaultEmailAddress)
+
+resource "aws_quicksight_group_membership" "test" {
+  group_name  = aws_quicksight_group.test.group_name
+  member_name = aws_quicksight_user.test.user_name
+  namespace   = aws_quicksight_namespace.test.namespace
+}
+`, rName, acctest.DefaultEmailAddress))
 }
