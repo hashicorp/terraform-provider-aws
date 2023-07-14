@@ -22,7 +22,7 @@ import (
 func TestAccQuickSightGroupMembership_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	memberName := "tfacctest" + sdkacctest.RandString(10)
+	memberName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_group_membership.default"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -49,8 +49,8 @@ func TestAccQuickSightGroupMembership_basic(t *testing.T) {
 func TestAccQuickSightGroupMembership_withNamespace(t *testing.T) {
 	ctx := acctest.Context(t)
 	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	memberName := "tfacctest" + sdkacctest.RandString(10)
-	nameSpaceName := "tfacctestnamespace" + sdkacctest.RandString(10)
+	memberName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	namespace := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_group_membership.default"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -60,7 +60,7 @@ func TestAccQuickSightGroupMembership_withNamespace(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMembershipConfig_withNamespace(groupName, memberName, nameSpaceName),
+				Config: testAccGroupMembershipConfig_withNamespace(groupName, memberName, namespace),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupMembershipExists(ctx, resourceName),
 				),
@@ -76,7 +76,7 @@ func TestAccQuickSightGroupMembership_withNamespace(t *testing.T) {
 func TestAccQuickSightGroupMembership_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	memberName := "tfacctest" + sdkacctest.RandString(10)
+	memberName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_group_membership.default"
 
 	resource.ParallelTest(t, resource.TestCase{
