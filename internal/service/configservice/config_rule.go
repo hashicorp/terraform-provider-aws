@@ -189,6 +189,10 @@ func ResourceConfigRule() *schema.Resource {
 	}
 }
 
+const (
+	ResNameConfigRule = "Config Rule"
+)
+
 func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
@@ -250,6 +254,9 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 		log.Printf("[WARN] ConfigService Config Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
+	}
+	if err != nil {
+		return append(diags, create.DiagError(names.ConfigService, create.ErrActionReading, ResNameConfigRule, d.Id(), err)...)
 	}
 
 	arn := aws.StringValue(rule.ConfigRuleArn)
