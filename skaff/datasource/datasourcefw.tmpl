@@ -119,7 +119,7 @@ func (d *dataSource{{ .DataSource }}) Schema(ctx context.Context, req datasource
 				Required: true,
 			},
 			{{- if .IncludeTags }}
-			names.AttrTags: tftags.TagsAttribute(),
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			{{- end }}
 			"type": schema.StringAttribute{
 				Computed: true,
