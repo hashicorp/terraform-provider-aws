@@ -54,6 +54,7 @@ The following arguments are supported:
 * `security_style` - (Optional) Specifies the volume security style, Valid values are `UNIX`, `NTFS`, and `MIXED`.
 * `size_in_megabytes` - (Required) Specifies the size of the volume, in megabytes (MB), that you are creating.
 * `skip_final_backup` - (Optional) When enabled, will skip the default final backup taken when the volume is deleted. This configuration must be applied separately before attempting to delete the resource to have the desired behavior. Defaults to `false`.
+* `snapshot_policy` - (Optional) Specifies the snapshot policy for the volume. Valid values are `default`, `default-1weekly`, and `none`.
 * `storage_efficiency_enabled` - (Optional) Set to true to enable deduplication, compression, and compaction storage efficiency features on the volume.
 * `storage_virtual_machine_id` - (Required) Specifies the storage virtual machine in which to create the volume.
 * `tags` - (Optional) A map of tags to assign to the volume. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

@@ -93,6 +93,12 @@ func ResourceOntapVolume() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"snapshot_policy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      false,
+				ValidateFunc: validation.StringInSlice([]string{"default", "default-1weekly", "none"}, false),
+			},
 			"storage_efficiency_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -169,6 +175,10 @@ func resourceOntapVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.OntapConfiguration.SecurityStyle = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("snapshot_policy"); ok {
+		input.OntapConfiguration.SnapshotPolicy = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOkExists("storage_efficiency_enabled"); ok {
 		input.OntapConfiguration.StorageEfficiencyEnabled = aws.Bool(v.(bool))
 	}
@@ -220,6 +230,7 @@ func resourceOntapVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("ontap_volume_type", ontapConfig.OntapVolumeType)
 	d.Set("security_style", ontapConfig.SecurityStyle)
 	d.Set("size_in_megabytes", ontapConfig.SizeInMegabytes)
+	d.Set("snapshot_policy", ontapConfig.SnapshotPolicy)
 	d.Set("storage_efficiency_enabled", ontapConfig.StorageEfficiencyEnabled)
 	d.Set("storage_virtual_machine_id", ontapConfig.StorageVirtualMachineId)
 	if err := d.Set("tiering_policy", flattenOntapVolumeTieringPolicy(ontapConfig.TieringPolicy)); err != nil {
@@ -252,6 +263,10 @@ func resourceOntapVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("size_in_megabytes") {
 			input.OntapConfiguration.SizeInMegabytes = aws.Int64(int64(d.Get("size_in_megabytes").(int)))
+		}
+
+		if d.HasChange("snapshot_policy") {
+			input.OntapConfiguration.SnapshotPolicy = aws.String(d.Get("snapshot_policy").(string))
 		}
 
 		if d.HasChange("storage_efficiency_enabled") {
