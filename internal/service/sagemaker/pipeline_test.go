@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccSagemakerPipeline_basic(t *testing.T) {
+func TestAccSageMakerPipeline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline sagemaker.DescribePipelineOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -30,7 +30,7 @@ func TestAccSagemakerPipeline_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerPipelineConfig_basic(rName, rName),
+				Config: testAccSageMakerPipelineConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
@@ -47,7 +47,7 @@ func TestAccSagemakerPipeline_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSagemakerPipelineConfig_basic(rName, rNameUpdated),
+				Config: testAccSageMakerPipelineConfig_basic(rName, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
@@ -62,7 +62,7 @@ func TestAccSagemakerPipeline_basic(t *testing.T) {
 	})
 }
 
-func TestAccSagemakerPipeline_parallelism(t *testing.T) {
+func TestAccSageMakerPipeline_parallelism(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline sagemaker.DescribePipelineOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -75,7 +75,7 @@ func TestAccSagemakerPipeline_parallelism(t *testing.T) {
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerPipelineConfig_parallelism(rName),
+				Config: testAccSageMakerPipelineConfig_parallelism(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
@@ -92,7 +92,7 @@ func TestAccSagemakerPipeline_parallelism(t *testing.T) {
 	})
 }
 
-func TestAccSagemakerPipeline_tags(t *testing.T) {
+func TestAccSageMakerPipeline_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline sagemaker.DescribePipelineOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -105,7 +105,7 @@ func TestAccSagemakerPipeline_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerPipelineConfig_tags1(rName, "key1", "value1"),
+				Config: testAccSageMakerPipelineConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -118,7 +118,7 @@ func TestAccSagemakerPipeline_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSagemakerPipelineConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSageMakerPipelineConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -127,7 +127,7 @@ func TestAccSagemakerPipeline_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSagemakerPipelineConfig_tags1(rName, "key2", "value2"),
+				Config: testAccSageMakerPipelineConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -138,7 +138,7 @@ func TestAccSagemakerPipeline_tags(t *testing.T) {
 	})
 }
 
-func TestAccSagemakerPipeline_disappears(t *testing.T) {
+func TestAccSageMakerPipeline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline sagemaker.DescribePipelineOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -151,7 +151,7 @@ func TestAccSagemakerPipeline_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerPipelineConfig_basic(rName, rName),
+				Config: testAccSageMakerPipelineConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourcePipeline(), resourceName),
@@ -213,7 +213,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, pipeline *sagemak
 	}
 }
 
-func testAccSagemakerPipelineConfig_base(rName string) string {
+func testAccSageMakerPipelineConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -234,8 +234,8 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func testAccSagemakerPipelineConfig_basic(rName, dispName string) string {
-	return acctest.ConfigCompose(testAccSagemakerPipelineConfig_base(rName), fmt.Sprintf(`
+func testAccSageMakerPipelineConfig_basic(rName, dispName string) string {
+	return acctest.ConfigCompose(testAccSageMakerPipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_pipeline" "test" {
   pipeline_name         = %[1]q
   pipeline_display_name = %[2]q
@@ -255,8 +255,8 @@ resource "aws_sagemaker_pipeline" "test" {
 `, rName, dispName))
 }
 
-func testAccSagemakerPipelineConfig_parallelism(rName string) string {
-	return acctest.ConfigCompose(testAccSagemakerPipelineConfig_base(rName), fmt.Sprintf(`
+func testAccSageMakerPipelineConfig_parallelism(rName string) string {
+	return acctest.ConfigCompose(testAccSageMakerPipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_pipeline" "test" {
   pipeline_name         = %[1]q
   pipeline_display_name = %[1]q
@@ -280,8 +280,8 @@ resource "aws_sagemaker_pipeline" "test" {
 `, rName))
 }
 
-func testAccSagemakerPipelineConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccSagemakerPipelineConfig_base(rName), fmt.Sprintf(`
+func testAccSageMakerPipelineConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccSageMakerPipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_pipeline" "test" {
   pipeline_name         = %[1]q
   pipeline_display_name = %[1]q
@@ -305,8 +305,8 @@ resource "aws_sagemaker_pipeline" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccSagemakerPipelineConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccSagemakerPipelineConfig_base(rName), fmt.Sprintf(`
+func testAccSageMakerPipelineConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccSageMakerPipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_pipeline" "test" {
   pipeline_name         = %[1]q
   pipeline_display_name = %[1]q
