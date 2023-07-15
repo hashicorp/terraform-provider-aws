@@ -68,7 +68,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_route53_resolver_query_log_config_association", &resource.Sweeper{
 		Name: "aws_route53_resolver_query_log_config_association",
-		F:    sweepQueryLogAssociationsConfigs,
+		F:    sweepQueryLogConfigAssociations,
 	})
 
 	resource.AddTestSweepers("aws_route53_resolver_query_log_config", &resource.Sweeper{
@@ -426,7 +426,7 @@ func sweepFirewallRules(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func sweepQueryLogAssociationsConfigs(region string) error {
+func sweepQueryLogConfigAssociations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
