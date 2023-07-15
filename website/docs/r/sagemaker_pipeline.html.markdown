@@ -21,7 +21,7 @@ resource "aws_sagemaker_pipeline" "example" {
   role_arn              = aws_iam_role.example.arn
 
   pipeline_definition   = jsonencode({
-	Version = "2020-12-01"
+    Version = "2020-12-01"
     Steps = [{
       Name = "Test"
       Type = "Fail"

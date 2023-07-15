@@ -241,7 +241,7 @@ resource "aws_sagemaker_pipeline" "test" {
   pipeline_display_name = %[2]q
   role_arn              = aws_iam_role.test.arn
   pipeline_definition   = jsonencode({
-	Version = "2020-12-01"
+    Version = "2020-12-01"
     Steps = [{
       Name = "Test"
       Type = "Fail"
@@ -261,7 +261,7 @@ resource "aws_sagemaker_pipeline" "test" {
   pipeline_display_name = %[1]q
   role_arn              = aws_iam_role.test.arn
   pipeline_definition   = jsonencode({
-	Version = "2020-12-01"
+    Version = "2020-12-01"
     Steps = [{
       Name = "Test"
       Type = "Fail"
@@ -285,7 +285,7 @@ resource "aws_sagemaker_pipeline" "test" {
   pipeline_display_name = %[1]q
   role_arn              = aws_iam_role.test.arn
   pipeline_definition   = jsonencode({
-	Version = "2020-12-01"
+    Version = "2020-12-01"
     Steps = [{
       Name = "Test"
       Type = "Fail"
@@ -309,7 +309,7 @@ resource "aws_sagemaker_pipeline" "test" {
   pipeline_display_name = %[1]q
   role_arn              = aws_iam_role.test.arn
   pipeline_definition   = jsonencode({
-	Version = "2020-12-01"
+    Version = "2020-12-01"
     Steps = [{
       Name = "Test"
       Type = "Fail"
