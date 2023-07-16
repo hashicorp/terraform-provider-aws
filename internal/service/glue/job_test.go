@@ -1236,9 +1236,9 @@ resource "aws_glue_job" "test" {
   number_of_workers = 10
 
   command {
-	name			= "glueray"
-	python_version  = "3.9"
-	runtime         = "Ray2.4"
+    name            = "glueray"
+    python_version  = "3.9"
+    runtime         = "Ray2.4"
     script_location = "testscriptlocation"
   }
 
