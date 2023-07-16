@@ -64,6 +64,12 @@ func ResourceJob() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{"2", "3", "3.9"}, true),
 						},
+						"runtime": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice([]string{"Ray2.4"}, true),
+						},
 					},
 				},
 			},
@@ -438,6 +444,10 @@ func expandJobCommand(l []interface{}) *glue.JobCommand {
 		jobCommand.PythonVersion = aws.String(v)
 	}
 
+	if v, ok := m["runtime"].(string); ok && v != "" {
+		jobCommand.Runtime = aws.String(v)
+	}
+
 	return jobCommand
 }
 
@@ -480,6 +490,7 @@ func flattenJobCommand(jobCommand *glue.JobCommand) []map[string]interface{} {
 		"name":            aws.StringValue(jobCommand.Name),
 		"script_location": aws.StringValue(jobCommand.ScriptLocation),
 		"python_version":  aws.StringValue(jobCommand.PythonVersion),
+		"runtime":         aws.StringValue(jobCommand.Runtime),
 	}
 
 	return []map[string]interface{}{m}
