@@ -606,6 +606,18 @@ resource "aws_fsx_ontap_volume" "test" {
 `, rName, securityStyle))
 }
 
+func testAccONTAPVolumeConfig_size(rName string, size int) string {
+	return acctest.ConfigCompose(testAccOntapVolumeConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_volume" "test" {
+  name                       = %[1]q
+  junction_path              = "/%[1]s"
+  size_in_megabytes          = %[2]d
+  storage_efficiency_enabled = true
+  storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
+}
+`, rName, size))
+}
+
 func testAccONTAPVolumeConfig_snapshotPolicy(rName string, snapshotPolicy string) string {
 	return acctest.ConfigCompose(testAccOntapVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
@@ -617,18 +629,6 @@ resource "aws_fsx_ontap_volume" "test" {
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
 `, rName, snapshotPolicy))
-}
-
-func testAccONTAPVolumeConfig_size(rName string, size int) string {
-	return acctest.ConfigCompose(testAccOntapVolumeConfig_base(rName), fmt.Sprintf(`
-resource "aws_fsx_ontap_volume" "test" {
-  name                       = %[1]q
-  junction_path              = "/%[1]s"
-  size_in_megabytes          = %[2]d
-  storage_efficiency_enabled = true
-  storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
-}
-`, rName, size))
 }
 
 func testAccONTAPVolumeConfig_storageEfficiency(rName string, storageEfficiencyEnabled bool) string {
