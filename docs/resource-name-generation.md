@@ -52,21 +52,22 @@ d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
 
 ```go
 func TestAccServiceThing_nameGenerated(t *testing.T) {
+  ctx := acctest.Context(t)
   var thing service.ServiceThing
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:                 func() { acctest.PreCheck(t) },
+    PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckThingDestroy,
+    CheckDestroy:             testAccCheckThingDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccThingConfig_nameGenerated(),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckThingExists(resourceName, &thing),
+          testAccCheckThingExists(ctx, resourceName, &thing),
           acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-          resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
+          resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
         ),
       },
       // If the resource supports import:
@@ -80,19 +81,20 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
 }
 
 func TestAccServiceThing_namePrefix(t *testing.T) {
+  ctx := acctest.Context(t)
   var thing service.ServiceThing
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:                 func() { acctest.PreCheck(t) },
+    PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckThingDestroy,
+    CheckDestroy:             testAccCheckThingDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccThingConfig_namePrefix("tf-acc-test-prefix-"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckThingExists(resourceName, &thing),
+          testAccCheckThingExists(ctx, resourceName, &thing),
           acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
           resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
         ),

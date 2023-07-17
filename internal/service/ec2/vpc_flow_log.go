@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,28 +13,41 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_flow_log", name="Flow Log")
+// @Tags(identifierAttribute="id")
 func ResourceFlowLog() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLogFlowCreate,
-		Read:   resourceLogFlowRead,
-		Update: resourceLogFlowUpdate,
-		Delete: resourceLogFlowDelete,
+		CreateWithoutTimeout: resourceLogFlowCreate,
+		ReadWithoutTimeout:   resourceLogFlowRead,
+		UpdateWithoutTimeout: resourceLogFlowUpdate,
+		DeleteWithoutTimeout: resourceLogFlowDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"deliver_cross_account_role": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"destination_options": {
 				Type:             schema.TypeList,
@@ -116,8 +133,8 @@ func ResourceFlowLog() *schema.Resource {
 				ForceNew:     true,
 				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"traffic_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -148,10 +165,9 @@ func ResourceFlowLog() *schema.Resource {
 	}
 }
 
-func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	var resourceID string
 	var resourceType string
@@ -188,9 +204,11 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	input := &ec2.CreateFlowLogsInput{
+		ClientToken:        aws.String(id.UniqueId()),
 		LogDestinationType: aws.String(d.Get("log_destination_type").(string)),
 		ResourceIds:        aws.StringSlice([]string{resourceID}),
 		ResourceType:       aws.String(resourceType),
+		TagSpecifications:  getTagSpecificationsIn(ctx, ec2.ResourceTypeVpcFlowLog),
 	}
 
 	if resourceType != ec2.FlowLogsResourceTypeTransitGateway && resourceType != ec2.FlowLogsResourceTypeTransitGatewayAttachment {
@@ -201,6 +219,10 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("destination_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.DestinationOptions = expandDestinationOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("deliver_cross_account_role"); ok {
+		input.DeliverCrossAccountRole = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("iam_role_arn"); ok {
@@ -223,41 +245,37 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 		input.MaxAggregationInterval = aws.Int64(int64(v.(int)))
 	}
 
-	if len(tags) > 0 {
-		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcFlowLog)
-	}
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func() (interface{}, error) {
+		return conn.CreateFlowLogsWithContext(ctx, input)
+	}, errCodeInvalidParameter, "Unable to assume given IAM role")
 
-	log.Printf("[DEBUG] Creating Flow Log: %s", input)
-	output, err := conn.CreateFlowLogs(input)
-
-	if err == nil && output != nil {
-		err = UnsuccessfulItemsError(output.Unsuccessful)
+	if err == nil && outputRaw != nil {
+		err = UnsuccessfulItemsError(outputRaw.(*ec2.CreateFlowLogsOutput).Unsuccessful)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Flow Log (%s): %w", resourceID, err)
+		return sdkdiag.AppendErrorf(diags, "creating Flow Log (%s): %s", resourceID, err)
 	}
 
-	d.SetId(aws.StringValue(output.FlowLogIds[0]))
+	d.SetId(aws.StringValue(outputRaw.(*ec2.CreateFlowLogsOutput).FlowLogIds[0]))
 
-	return resourceLogFlowRead(d, meta)
+	return append(diags, resourceLogFlowRead(ctx, d, meta)...)
 }
 
-func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	fl, err := FindFlowLogByID(conn, d.Id())
+	fl, err := FindFlowLogByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Flow Log %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Flow Log (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Flow Log (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -267,24 +285,21 @@ func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpc-flow-log/%s", d.Id()),
 	}.String()
-
 	d.Set("arn", arn)
-
+	d.Set("deliver_cross_account_role", fl.DeliverCrossAccountRole)
 	if fl.DestinationOptions != nil {
 		if err := d.Set("destination_options", []interface{}{flattenDestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
-			return fmt.Errorf("error setting destination_options: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting destination_options: %s", err)
 		}
 	} else {
 		d.Set("destination_options", nil)
 	}
-
 	d.Set("iam_role_arn", fl.DeliverLogsPermissionArn)
 	d.Set("log_destination", fl.LogDestination)
 	d.Set("log_destination_type", fl.LogDestinationType)
 	d.Set("log_format", fl.LogFormat)
 	d.Set("log_group_name", fl.LogGroupName)
 	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
-
 	switch resourceID := aws.StringValue(fl.ResourceId); {
 	case strings.HasPrefix(resourceID, "vpc-"):
 		d.Set("vpc_id", resourceID)
@@ -299,43 +314,29 @@ func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	case strings.HasPrefix(resourceID, "eni-"):
 		d.Set("eni_id", resourceID)
 	}
-
 	if !strings.HasPrefix(aws.StringValue(fl.ResourceId), "tgw-") {
 		d.Set("traffic_type", fl.TrafficType)
 	}
 
-	tags := KeyValueTags(fl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, fl.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceLogFlowUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceLogFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Flow Log (%s) tags: %w", d.Id(), err)
-		}
-	}
+	// Tags only.
 
-	return resourceLogFlowRead(d, meta)
+	return append(diags, resourceLogFlowRead(ctx, d, meta)...)
 }
 
-func resourceLogFlowDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceLogFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting Flow Log: %s", d.Id())
-	output, err := conn.DeleteFlowLogs(&ec2.DeleteFlowLogsInput{
+	output, err := conn.DeleteFlowLogsWithContext(ctx, &ec2.DeleteFlowLogsInput{
 		FlowLogIds: aws.StringSlice([]string{d.Id()}),
 	})
 
@@ -344,14 +345,14 @@ func resourceLogFlowDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidFlowLogIdNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Flow Log (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Flow Log (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandDestinationOptionsRequest(tfMap map[string]interface{}) *ec2.DestinationOptionsRequest {

@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,15 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_organizations_delegated_administrators")
 func DataSourceDelegatedAdministrators() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDelegatedAdministratorsRead,
+
 		Schema: map[string]*schema.Schema{
-			"service_principal": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
 			"delegated_administrators": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -62,12 +61,17 @@ func DataSourceDelegatedAdministrators() *schema.Resource {
 					},
 				},
 			},
+			"service_principal": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
+			},
 		},
 	}
 }
 
 func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	input := &organizations.ListDelegatedAdministratorsInput{}
 
@@ -75,47 +79,39 @@ func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.Resour
 		input.ServicePrincipal = aws.String(v.(string))
 	}
 
-	var delegators []*organizations.DelegatedAdministrator
+	output, err := findDelegatedAdministrators(ctx, conn, input)
 
-	err := conn.ListDelegatedAdministratorsPagesWithContext(ctx, input, func(page *organizations.ListDelegatedAdministratorsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		delegators = append(delegators, page.DelegatedAdministrators...)
-
-		return !lastPage
-	})
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error describing organizations delegated Administrators: %w", err))
-	}
-
-	if err = d.Set("delegated_administrators", flattenDelegatedAdministrators(delegators)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting delegated_administrators: %w", err))
+		return diag.Errorf("reading Organizations Delegated Administrators: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
+	if err = d.Set("delegated_administrators", flattenDelegatedAdministrators(output)); err != nil {
+		return diag.Errorf("setting delegated_administrators: %s", err)
+	}
 
 	return nil
 }
 
-func flattenDelegatedAdministrators(delegatedAdministrators []*organizations.DelegatedAdministrator) []map[string]interface{} {
-	if len(delegatedAdministrators) == 0 {
+func flattenDelegatedAdministrators(apiObjects []*organizations.DelegatedAdministrator) []map[string]interface{} {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var result []map[string]interface{}
-	for _, delegated := range delegatedAdministrators {
-		result = append(result, map[string]interface{}{
-			"arn":                     aws.StringValue(delegated.Arn),
-			"delegation_enabled_date": aws.TimeValue(delegated.DelegationEnabledDate).Format(time.RFC3339),
-			"email":                   aws.StringValue(delegated.Email),
-			"id":                      aws.StringValue(delegated.Id),
-			"joined_method":           aws.StringValue(delegated.JoinedMethod),
-			"joined_timestamp":        aws.TimeValue(delegated.JoinedTimestamp).Format(time.RFC3339),
-			"name":                    aws.StringValue(delegated.Name),
-			"status":                  aws.StringValue(delegated.Status),
+	var tfList []map[string]interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]interface{}{
+			"arn":                     aws.StringValue(apiObject.Arn),
+			"delegation_enabled_date": aws.TimeValue(apiObject.DelegationEnabledDate).Format(time.RFC3339),
+			"email":                   aws.StringValue(apiObject.Email),
+			"id":                      aws.StringValue(apiObject.Id),
+			"joined_method":           aws.StringValue(apiObject.JoinedMethod),
+			"joined_timestamp":        aws.TimeValue(apiObject.JoinedTimestamp).Format(time.RFC3339),
+			"name":                    aws.StringValue(apiObject.Name),
+			"status":                  aws.StringValue(apiObject.Status),
 		})
 	}
-	return result
+
+	return tfList
 }

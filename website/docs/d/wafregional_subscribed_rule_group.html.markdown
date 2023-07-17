@@ -22,17 +22,17 @@ data "aws_wafregional_subscribed_rule_group" "by_metric_name" {
 }
 
 resource "aws_wafregional_web_acl" "acl" {
-  // ...
+  # ...
 
   rules {
     priority = 1
-    rule_id  = "${data.aws_wafregional_subscribed_rule_group.by_name.id}"
+    rule_id  = data.aws_wafregional_subscribed_rule_group.by_name.id
     type     = "GROUP"
   }
 
   rules {
     priority = 2
-    rule_id  = "${data.aws_wafregional_subscribed_rule_group.by_metric_name.id}"
+    rule_id  = data.aws_wafregional_subscribed_rule_group.by_metric_name.id
     type     = "GROUP"
   }
 }

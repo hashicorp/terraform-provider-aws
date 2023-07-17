@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -10,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_eks_addon_version")
 func DataSourceAddonVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAddonVersionRead,
@@ -37,7 +40,7 @@ func DataSourceAddonVersion() *schema.Resource {
 }
 
 func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	addonName := d.Get("addon_name").(string)
 	kubernetesVersion := d.Get("kubernetes_version").(string)
@@ -47,7 +50,7 @@ func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, met
 	versionInfo, err := FindAddonVersionByAddonNameAndKubernetesVersion(ctx, conn, id, kubernetesVersion, mostRecent)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading EKS Add-On version info (%s, %s): %w", id, kubernetesVersion, err))
+		return diag.Errorf("reading EKS Add-On version info (%s, %s): %s", id, kubernetesVersion, err)
 	}
 
 	d.SetId(id)

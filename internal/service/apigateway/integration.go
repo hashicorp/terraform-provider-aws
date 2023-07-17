@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,20 +13,26 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_api_gateway_integration")
 func ResourceIntegration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceIntegrationCreate,
-		Read:   resourceIntegrationRead,
-		Update: resourceIntegrationUpdate,
-		Delete: resourceIntegrationDelete,
+		CreateWithoutTimeout: resourceIntegrationCreate,
+		ReadWithoutTimeout:   resourceIntegrationRead,
+		UpdateWithoutTimeout: resourceIntegrationUpdate,
+		DeleteWithoutTimeout: resourceIntegrationDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID/HTTP-METHOD", d.Id())
@@ -39,89 +49,48 @@ func ResourceIntegration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"rest_api_id": {
+			"cache_key_parameters": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+			},
+			"cache_namespace": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
+			},
+			"connection_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"connection_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      apigateway.ConnectionTypeInternet,
+				ValidateFunc: validation.StringInSlice(apigateway.ConnectionType_Values(), false),
+			},
+			"content_handling": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validIntegrationContentHandling(),
+			},
+			"credentials": {
+				Type:     schema.TypeString,
+				Optional: true,
 				ForceNew: true,
 			},
-
-			"resource_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
 			"http_method": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validHTTPMethod(),
 			},
-
-			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					apigateway.IntegrationTypeHttp,
-					apigateway.IntegrationTypeAws,
-					apigateway.IntegrationTypeMock,
-					apigateway.IntegrationTypeHttpProxy,
-					apigateway.IntegrationTypeAwsProxy,
-				}, false),
-			},
-
-			"connection_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  apigateway.ConnectionTypeInternet,
-				ValidateFunc: validation.StringInSlice([]string{
-					apigateway.ConnectionTypeInternet,
-					apigateway.ConnectionTypeVpcLink,
-				}, false),
-			},
-
-			"connection_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"uri": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"credentials": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
 			"integration_http_method": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validHTTPMethod(),
 			},
-
-			"request_templates": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-
-			"request_parameters": {
-				Type:     schema.TypeMap,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
-
-			"content_handling": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validIntegrationContentHandling(),
-			},
-
 			"passthrough_behavior": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -133,31 +102,35 @@ func ResourceIntegration() *schema.Resource {
 					"NEVER",
 				}, false),
 			},
-
-			"cache_key_parameters": {
-				Type:     schema.TypeSet,
+			"request_parameters": {
+				Type:     schema.TypeMap,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 				Optional: true,
 			},
-
-			"cache_namespace": {
+			"request_templates": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"resource_id": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
+				ForceNew: true,
 			},
-
+			"rest_api_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"timeout_milliseconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(50, 29000),
 				Default:      29000,
 			},
-
 			"tls_config": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MinItems: 0,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -168,14 +141,23 @@ func ResourceIntegration() *schema.Resource {
 					},
 				},
 			},
+			"type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(apigateway.IntegrationType_Values(), false),
+			},
+			"uri": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
 
-func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
-
-	log.Print("[DEBUG] Creating API Gateway Integration")
+func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	input := &apigateway.PutIntegrationInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
@@ -238,78 +220,66 @@ func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Uri = aws.String(v.(string))
 	}
 
-	_, err := conn.PutIntegration(input)
+	_, err := conn.PutIntegrationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway Integration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway Integration: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("agi-%s-%s-%s", d.Get("rest_api_id").(string), d.Get("resource_id").(string), d.Get("http_method").(string)))
 
-	return resourceIntegrationRead(d, meta)
+	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
 
-func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
-	log.Printf("[DEBUG] Reading API Gateway Integration: %s", d.Id())
-	integration, err := conn.GetIntegration(&apigateway.GetIntegrationInput{
-		HttpMethod: aws.String(d.Get("http_method").(string)),
-		ResourceId: aws.String(d.Get("resource_id").(string)),
-		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-	})
+	integration, err := FindIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] API Gateway Integration (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
-			log.Printf("[WARN] API Gateway Integration (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading API Gateway Integration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Integration (%s): %s", d.Id(), err)
 	}
-	log.Printf("[DEBUG] Received API Gateway Integration: %s", integration)
 
-	if err := d.Set("cache_key_parameters", flex.FlattenStringList(integration.CacheKeyParameters)); err != nil {
-		return fmt.Errorf("error setting cache_key_parameters: %s", err)
-	}
+	d.Set("cache_key_parameters", aws.StringValueSlice(integration.CacheKeyParameters))
 	d.Set("cache_namespace", integration.CacheNamespace)
 	d.Set("connection_id", integration.ConnectionId)
 	d.Set("connection_type", apigateway.ConnectionTypeInternet)
-	if integration.ConnectionType != nil {
+	if integration.ConnectionType != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("connection_type", integration.ConnectionType)
 	}
 	d.Set("content_handling", integration.ContentHandling)
 	d.Set("credentials", integration.Credentials)
 	d.Set("integration_http_method", integration.HttpMethod)
 	d.Set("passthrough_behavior", integration.PassthroughBehavior)
-
-	if err := d.Set("request_parameters", aws.StringValueMap(integration.RequestParameters)); err != nil {
-		return fmt.Errorf("error setting request_parameters: %s", err)
-	}
-
+	d.Set("request_parameters", aws.StringValueMap(integration.RequestParameters))
 	// We need to explicitly convert key = nil values into key = "", which aws.StringValueMap() removes
-	requestTemplateMap := make(map[string]string)
-	for key, valuePointer := range integration.RequestTemplates {
-		requestTemplateMap[key] = aws.StringValue(valuePointer)
+	requestTemplates := make(map[string]string)
+	for k, v := range integration.RequestTemplates {
+		requestTemplates[k] = aws.StringValue(v)
 	}
-	if err := d.Set("request_templates", requestTemplateMap); err != nil {
-		return fmt.Errorf("error setting request_templates: %s", err)
-	}
-
+	d.Set("request_templates", requestTemplates)
 	d.Set("timeout_milliseconds", integration.TimeoutInMillis)
 	d.Set("type", integration.Type)
 	d.Set("uri", integration.Uri)
 
 	if err := d.Set("tls_config", flattenTLSConfig(integration.TlsConfig)); err != nil {
-		return fmt.Errorf("error setting tls_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tls_config: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
-	log.Printf("[DEBUG] Updating API Gateway Integration: %s", d.Id())
 	operations := make([]*apigateway.PatchOperation, 0)
 
 	// https://docs.aws.amazon.com/apigateway/api-reference/link-relation/integration-update/#remarks
@@ -478,42 +448,69 @@ func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	params := &apigateway.UpdateIntegrationInput{
+	input := &apigateway.UpdateIntegrationInput{
 		HttpMethod:      aws.String(d.Get("http_method").(string)),
+		PatchOperations: operations,
 		ResourceId:      aws.String(d.Get("resource_id").(string)),
 		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
-		PatchOperations: operations,
 	}
 
-	_, err := conn.UpdateIntegration(params)
+	_, err := conn.UpdateIntegrationWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("Error updating API Gateway Integration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating API Gateway Integration (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(fmt.Sprintf("agi-%s-%s-%s", d.Get("rest_api_id").(string), d.Get("resource_id").(string), d.Get("http_method").(string)))
-
-	return resourceIntegrationRead(d, meta)
+	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
 
-func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
-	log.Printf("[DEBUG] Deleting API Gateway Integration: %s", d.Id())
+func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
-	_, err := conn.DeleteIntegration(&apigateway.DeleteIntegrationInput{
+	log.Printf("[DEBUG] Deleting API Gateway Integration: %s", d.Id())
+	_, err := conn.DeleteIntegrationWithContext(ctx, &apigateway.DeleteIntegrationInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get("resource_id").(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway Integration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Integration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func FindIntegrationByThreePartKey(ctx context.Context, conn *apigateway.APIGateway, httpMethod, resourceID, apiID string) (*apigateway.Integration, error) {
+	input := &apigateway.GetIntegrationInput{
+		HttpMethod: aws.String(httpMethod),
+		ResourceId: aws.String(resourceID),
+		RestApiId:  aws.String(apiID),
+	}
+
+	output, err := conn.GetIntegrationWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func expandTLSConfig(vConfig []interface{}) *apigateway.TlsConfig {

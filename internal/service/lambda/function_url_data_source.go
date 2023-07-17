@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -11,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_lambda_function_url")
 func DataSourceFunctionURL() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFunctionURLRead,
@@ -72,6 +76,10 @@ func DataSourceFunctionURL() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"invoke_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"last_modified_time": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -89,7 +97,7 @@ func DataSourceFunctionURL() *schema.Resource {
 }
 
 func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	name := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
@@ -97,7 +105,7 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	output, err := FindFunctionURLByNameAndQualifier(ctx, conn, name, qualifier)
 
 	if err != nil {
-		return diag.Errorf("error reading Lambda Function URL (%s): %s", id, err)
+		return diag.Errorf("reading Lambda Function URL (%s): %s", id, err)
 	}
 
 	functionURL := aws.StringValue(output.FunctionUrl)
@@ -106,7 +114,7 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("authorization_type", output.AuthType)
 	if output.Cors != nil {
 		if err := d.Set("cors", []interface{}{flattenCors(output.Cors)}); err != nil {
-			return diag.Errorf("error setting cors: %s", err)
+			return diag.Errorf("setting cors: %s", err)
 		}
 	} else {
 		d.Set("cors", nil)
@@ -115,13 +123,14 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("function_arn", output.FunctionArn)
 	d.Set("function_name", name)
 	d.Set("function_url", functionURL)
+	d.Set("invoke_mode", output.InvokeMode)
 	d.Set("last_modified_time", output.LastModifiedTime)
 	d.Set("qualifier", qualifier)
 
 	// Function URL endpoints have the following format:
 	// https://<url-id>.lambda-url.<region>.on.aws
 	if v, err := url.Parse(functionURL); err != nil {
-		return diag.Errorf("error parsing URL (%s): %s", functionURL, err)
+		return diag.Errorf("parsing URL (%s): %s", functionURL, err)
 	} else if v := strings.Split(v.Host, "."); len(v) > 0 {
 		d.Set("url_id", v[0])
 	} else {

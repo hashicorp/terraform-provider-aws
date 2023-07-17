@@ -259,7 +259,7 @@ Error: Invalid for_each argument
   on main.tf line 16, in resource "aws_route53_record" "existing":
   16:   for_each = aws_acm_certificate.existing.domain_validation_options
 
-The "for_each" value depends on resource attributes that cannot be determined
+The `for_each` value depends on resource attributes that cannot be determined
 until apply, so Terraform cannot predict how many instances will be created.
 To work around this, use the -target argument to first apply only the
 resources that the for_each depends on.
@@ -267,7 +267,15 @@ resources that the for_each depends on.
 
 The `domain_validation_options` attribute is now a set type and the resource will attempt to populate the information necessary during the planning phase to handle the above situation in most environments without workarounds. This change also prevents Terraform from showing unexpected differences if the API returns the results in varying order.
 
-Configuration references to this attribute will likely require updates since sets cannot be indexed (e.g., `domain_validation_options[0]` or the older `domain_validation_options.0.` syntax will return errors). If the `domain_validation_options` list previously contained only a single element like the two examples just shown, it may be possible to wrap these references using the [`tolist()` function](https://www.terraform.io/docs/configuration/functions/tolist.html) (e.g., `tolist(aws_acm_certificate.example.domain_validation_options)[0]`) as a quick configuration update, however given the complexity and workarounds required with the previous `domain_validation_options` attribute implementation, different environments will require different configuration updates and migration steps. Below is a more advanced example. Further questions on potential update steps can be submitted to the [community forums](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33).
+Configuration references to this attribute will likely require updates since sets cannot be indexed (e.g., `domain_validation_options[0]` or the older `domain_validation_options.0.` syntax will return errors).
+If the `domain_validation_options` list previously contained only a single element like the two examples just shown,
+it may be possible to wrap these references using the [`tolist()` function](https://www.terraform.io/docs/configuration/functions/tolist.html)
+<!-- markdownlint-disable-next-line no-reversed-links -->
+(e.g., `tolist(aws_acm_certificate.example.domain_validation_options)[0]`) as a quick configuration update.
+However given the complexity and workarounds required with the previous `domain_validation_options` attribute implementation,
+different environments will require different configuration updates and migration steps.
+Below is a more advanced example.
+Further questions on potential update steps can be submitted to the [community forums](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33).
 
 For example, given this previous configuration using a `count` based resource approach that may have been used in certain environments:
 

@@ -10,13 +10,22 @@ description: |-
 
 ## Example Usage
 
-The following example below creates a CloudFront origin request policy.
+### Basic Usage
 
 ```terraform
 data "aws_cloudfront_origin_request_policy" "example" {
   name = "example-policy"
 }
+```
 
+### AWS-Managed Policies
+
+AWS managed origin request policy names are prefixed with `Managed-`:
+
+```terraform
+data "aws_cloudfront_origin_request_policy" "ua_referer" {
+  name = "Managed-UserAgentRefererHeaders"
+}
 ```
 
 ## Argument Reference
@@ -27,6 +36,8 @@ The following arguments are supported:
 * `id` - Identifier for the origin request policy.
 
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `comment` - Comment to describe the origin request policy.
 * `cookies_config` - Object that determines whether any cookies in viewer requests (and if so, which cookies) are included in the origin request key and automatically included in requests that CloudFront sends to the origin. See [Cookies Config](#cookies-config) for more information.

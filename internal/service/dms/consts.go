@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 const (
@@ -20,7 +23,9 @@ const (
 	engineNameAuroraPostgresqlServerless = "aurora-postgresql-serverless"
 	engineNameAuroraServerless           = "aurora-serverless"
 	engineNameAzuredb                    = "azuredb"
+	engineNameAzureSQLManagedInstance    = "azure-sql-managed-instance"
 	engineNameDB2                        = "db2"
+	engineNameDB2zOS                     = "db2-zos"
 	engineNameTransfer                   = "dms-transfer"
 	engineNameDocDB                      = "docdb"
 	engineNameDynamoDB                   = "dynamodb"
@@ -48,7 +53,9 @@ func engineName_Values() []string {
 		engineNameAuroraPostgresqlServerless,
 		engineNameAuroraServerless,
 		engineNameAzuredb,
+		engineNameAzureSQLManagedInstance,
 		engineNameDB2,
+		engineNameDB2zOS,
 		engineNameTransfer,
 		engineNameDocDB,
 		engineNameDynamoDB,

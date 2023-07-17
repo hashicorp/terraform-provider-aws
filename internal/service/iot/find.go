@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
@@ -6,19 +9,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAuthorizerByName(conn *iot.IoT, name string) (*iot.AuthorizerDescription, error) {
+func FindAuthorizerByName(ctx context.Context, conn *iot.IoT, name string) (*iot.AuthorizerDescription, error) {
 	input := &iot.DescribeAuthorizerInput{
 		AuthorizerName: aws.String(name),
 	}
 
-	output, err := conn.DescribeAuthorizer(input)
+	output, err := conn.DescribeAuthorizerWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -35,15 +38,15 @@ func FindAuthorizerByName(conn *iot.IoT, name string) (*iot.AuthorizerDescriptio
 	return output.AuthorizerDescription, nil
 }
 
-func FindThingByName(conn *iot.IoT, name string) (*iot.DescribeThingOutput, error) {
+func FindThingByName(ctx context.Context, conn *iot.IoT, name string) (*iot.DescribeThingOutput, error) {
 	input := &iot.DescribeThingInput{
 		ThingName: aws.String(name),
 	}
 
-	output, err := conn.DescribeThing(input)
+	output, err := conn.DescribeThingWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -60,15 +63,15 @@ func FindThingByName(conn *iot.IoT, name string) (*iot.DescribeThingOutput, erro
 	return output, nil
 }
 
-func FindThingGroupByName(conn *iot.IoT, name string) (*iot.DescribeThingGroupOutput, error) {
+func FindThingGroupByName(ctx context.Context, conn *iot.IoT, name string) (*iot.DescribeThingGroupOutput, error) {
 	input := &iot.DescribeThingGroupInput{
 		ThingGroupName: aws.String(name),
 	}
 
-	output, err := conn.DescribeThingGroup(input)
+	output, err := conn.DescribeThingGroupWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -85,14 +88,14 @@ func FindThingGroupByName(conn *iot.IoT, name string) (*iot.DescribeThingGroupOu
 	return output, nil
 }
 
-func FindThingGroupMembership(conn *iot.IoT, thingGroupName, thingName string) error {
+func FindThingGroupMembership(ctx context.Context, conn *iot.IoT, thingGroupName, thingName string) error {
 	input := &iot.ListThingGroupsForThingInput{
 		ThingName: aws.String(thingName),
 	}
 
 	var v *iot.GroupNameAndArn
 
-	err := conn.ListThingGroupsForThingPages(input, func(page *iot.ListThingGroupsForThingOutput, lastPage bool) bool {
+	err := conn.ListThingGroupsForThingPagesWithContext(ctx, input, func(page *iot.ListThingGroupsForThingOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -109,7 +112,7 @@ func FindThingGroupMembership(conn *iot.IoT, thingGroupName, thingName string) e
 	})
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		return &resource.NotFoundError{
+		return &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -122,13 +125,13 @@ func FindThingGroupMembership(conn *iot.IoT, thingGroupName, thingName string) e
 	return nil
 }
 
-func FindTopicRuleByName(conn *iot.IoT, name string) (*iot.GetTopicRuleOutput, error) {
+func FindTopicRuleByName(ctx context.Context, conn *iot.IoT, name string) (*iot.GetTopicRuleOutput, error) {
 	// GetTopicRule returns unhelpful errors such as
 	//	"An error occurred (UnauthorizedException) when calling the GetTopicRule operation: Access to topic rule 'xxxxxxxx' was denied"
 	// when querying for a rule that doesn't exist.
 	var rule *iot.TopicRuleListItem
 
-	err := conn.ListTopicRulesPages(&iot.ListTopicRulesInput{}, func(page *iot.ListTopicRulesOutput, lastPage bool) bool {
+	err := conn.ListTopicRulesPagesWithContext(ctx, &iot.ListTopicRulesInput{}, func(page *iot.ListTopicRulesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -160,7 +163,7 @@ func FindTopicRuleByName(conn *iot.IoT, name string) (*iot.GetTopicRuleOutput, e
 		RuleName: aws.String(name),
 	}
 
-	output, err := conn.GetTopicRule(input)
+	output, err := conn.GetTopicRuleWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -179,7 +182,7 @@ func FindTopicRuleDestinationByARN(ctx context.Context, conn *iot.IoT, arn strin
 	// when querying for a rule destination that doesn't exist.
 	var destination *iot.TopicRuleDestinationSummary
 
-	err := conn.ListTopicRuleDestinationsPages(&iot.ListTopicRuleDestinationsInput{}, func(page *iot.ListTopicRuleDestinationsOutput, lastPage bool) bool {
+	err := conn.ListTopicRuleDestinationsPagesWithContext(ctx, &iot.ListTopicRuleDestinationsInput{}, func(page *iot.ListTopicRuleDestinationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

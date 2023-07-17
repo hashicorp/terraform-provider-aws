@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -8,28 +12,29 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 )
 
 func TestAccAppConfigDeploymentStrategy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeploymentStrategyDestroy,
+		CheckDestroy:             testAccCheckDeploymentStrategyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStrategyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`deploymentstrategy/[a-z0-9]{4,7}`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_duration_in_minutes", "3"),
 					resource.TestCheckResourceAttr(resourceName, "growth_factor", "10"),
@@ -48,27 +53,28 @@ func TestAccAppConfigDeploymentStrategy_basic(t *testing.T) {
 }
 
 func TestAccAppConfigDeploymentStrategy_updateDescription(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeploymentStrategyDestroy,
+		CheckDestroy:             testAccCheckDeploymentStrategyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStrategyConfig_description(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 				),
 			},
 			{
 				Config: testAccDeploymentStrategyConfig_description(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 				),
 			},
@@ -82,19 +88,20 @@ func TestAccAppConfigDeploymentStrategy_updateDescription(t *testing.T) {
 }
 
 func TestAccAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeploymentStrategyDestroy,
+		CheckDestroy:             testAccCheckDeploymentStrategyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStrategyConfig_finalBakeTime(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "final_bake_time_in_minutes", "60"),
 				),
 			},
@@ -106,7 +113,7 @@ func TestAccAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
 			{
 				Config: testAccDeploymentStrategyConfig_finalBakeTime(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "final_bake_time_in_minutes", "30"),
 				),
 			},
@@ -119,7 +126,7 @@ func TestAccAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
 				// Test FinalBakeTimeInMinutes Removal
 				Config: testAccDeploymentStrategyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(ctx, resourceName),
 				),
 			},
 		},
@@ -127,20 +134,21 @@ func TestAccAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
 }
 
 func TestAccAppConfigDeploymentStrategy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeploymentStrategyDestroy,
+		CheckDestroy:             testAccCheckDeploymentStrategyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStrategyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentStrategyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceDeploymentStrategy(), resourceName),
+					testAccCheckDeploymentStrategyExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappconfig.ResourceDeploymentStrategy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -149,19 +157,20 @@ func TestAccAppConfigDeploymentStrategy_disappears(t *testing.T) {
 }
 
 func TestAccAppConfigDeploymentStrategy_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeploymentStrategyDestroy,
+		CheckDestroy:             testAccCheckDeploymentStrategyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentStrategyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -174,7 +183,7 @@ func TestAccAppConfigDeploymentStrategy_tags(t *testing.T) {
 			{
 				Config: testAccDeploymentStrategyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -183,7 +192,7 @@ func TestAccAppConfigDeploymentStrategy_tags(t *testing.T) {
 			{
 				Config: testAccDeploymentStrategyConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentStrategyExists(resourceName),
+					testAccCheckDeploymentStrategyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -192,37 +201,39 @@ func TestAccAppConfigDeploymentStrategy_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckDeploymentStrategyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+func testAccCheckDeploymentStrategyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appconfig_deployment_strategy" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appconfig_deployment_strategy" {
+				continue
+			}
+
+			input := &appconfig.GetDeploymentStrategyInput{
+				DeploymentStrategyId: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.GetDeploymentStrategyWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error getting Appconfig Deployment Strategy (%s): %w", rs.Primary.ID, err)
+			}
+
+			if output != nil {
+				return fmt.Errorf("AppConfig Deployment Strategy (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		input := &appconfig.GetDeploymentStrategyInput{
-			DeploymentStrategyId: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.GetDeploymentStrategy(input)
-
-		if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error getting Appconfig Deployment Strategy (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output != nil {
-			return fmt.Errorf("AppConfig Deployment Strategy (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDeploymentStrategyExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckDeploymentStrategyExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -233,13 +244,13 @@ func testAccCheckDeploymentStrategyExists(resourceName string) resource.TestChec
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn(ctx)
 
 		input := &appconfig.GetDeploymentStrategyInput{
 			DeploymentStrategyId: aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.GetDeploymentStrategy(input)
+		output, err := conn.GetDeploymentStrategyWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error getting Appconfig Deployment Strategy (%s): %w", rs.Primary.ID, err)

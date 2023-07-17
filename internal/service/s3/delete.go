@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -120,7 +123,7 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.S3, bucket string,
 		}
 
 		// Attempt to remove any legal hold on the object.
-		if force && code == ErrCodeAccessDenied {
+		if force && code == errCodeAccessDenied {
 			key := aws.StringValue(v.Key)
 			versionID := aws.StringValue(v.VersionId)
 

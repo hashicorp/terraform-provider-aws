@@ -83,4 +83,3 @@ data "aws_pricing_product" "example" {
 ## Attributes Reference
 
 * `result` - Set to the product returned from the API.
-

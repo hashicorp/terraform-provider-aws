@@ -1,19 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_backup_framework")
 func DataSourceFramework() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFrameworkRead,
+		ReadWithoutTimeout: dataSourceFrameworkRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -96,17 +102,18 @@ func DataSourceFramework() *schema.Resource {
 	}
 }
 
-func dataSourceFrameworkRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func dataSourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
 
-	resp, err := conn.DescribeFramework(&backup.DescribeFrameworkInput{
+	resp, err := conn.DescribeFrameworkWithContext(ctx, &backup.DescribeFrameworkInput{
 		FrameworkName: aws.String(name),
 	})
 	if err != nil {
-		return fmt.Errorf("Error getting Backup Framework: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting Backup Framework: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.FrameworkName))
@@ -118,22 +125,22 @@ func dataSourceFrameworkRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", resp.FrameworkStatus)
 
 	if err := d.Set("creation_time", resp.CreationTime.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting creation_time: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
 	}
 
-	if err := d.Set("control", flattenFrameworkControls(resp.FrameworkControls)); err != nil {
-		return fmt.Errorf("error setting control: %w", err)
+	if err := d.Set("control", flattenFrameworkControls(ctx, resp.FrameworkControls)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting control: %s", err)
 	}
 
-	tags, err := ListTags(conn, aws.StringValue(resp.FrameworkArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(resp.FrameworkArn))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Backup Framework (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Framework (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

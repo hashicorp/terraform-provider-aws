@@ -1,7 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 	"time"
@@ -9,22 +12,27 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_db_proxy_endpoint", name="DB Proxy Endpoint")
+// @Tags(identifierAttribute="arn")
 func ResourceProxyEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceProxyEndpointCreate,
-		Read:   resourceProxyEndpointRead,
-		Delete: resourceProxyEndpointDelete,
-		Update: resourceProxyEndpointUpdate,
+		CreateWithoutTimeout: resourceProxyEndpointCreate,
+		ReadWithoutTimeout:   resourceProxyEndpointRead,
+		DeleteWithoutTimeout: resourceProxyEndpointDelete,
+		UpdateWithoutTimeout: resourceProxyEndpointUpdate,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Timeouts: &schema.ResourceTimeout{
@@ -58,8 +66,8 @@ func ResourceProxyEndpoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -87,72 +95,68 @@ func ResourceProxyEndpoint() *schema.Resource {
 	}
 }
 
-func resourceProxyEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbProxyName := d.Get("db_proxy_name").(string)
 	dbProxyEndpointName := d.Get("db_proxy_endpoint_name").(string)
-
-	params := rds.CreateDBProxyEndpointInput{
+	input := rds.CreateDBProxyEndpointInput{
 		DBProxyName:         aws.String(dbProxyName),
 		DBProxyEndpointName: aws.String(dbProxyEndpointName),
 		TargetRole:          aws.String(d.Get("target_role").(string)),
 		VpcSubnetIds:        flex.ExpandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
-		Tags:                Tags(tags.IgnoreAWS()),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
-		params.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+		input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
-	_, err := conn.CreateDBProxyEndpoint(&params)
-
+	_, err := conn.CreateDBProxyEndpointWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("error Creating RDS DB Proxy Endpoint (%s/%s): %w", dbProxyName, dbProxyEndpointName, err)
+		return sdkdiag.AppendErrorf(diags, "Creating RDS DB Proxy Endpoint (%s/%s): %s", dbProxyName, dbProxyEndpointName, err)
 	}
 
 	d.SetId(strings.Join([]string{dbProxyName, dbProxyEndpointName}, "/"))
 
-	if _, err := waitDBProxyEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for RDS DB Proxy Endpoint (%s) to become available: %w", d.Id(), err)
+	if _, err := waitDBProxyEndpointAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Proxy Endpoint (%s) to become available: %s", d.Id(), err)
 	}
 
-	return resourceProxyEndpointRead(d, meta)
+	return append(diags, resourceProxyEndpointRead(ctx, d, meta)...)
 }
 
-func resourceProxyEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceProxyEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	dbProxyEndpoint, err := FindDBProxyEndpoint(conn, d.Id())
+	dbProxyEndpoint, err := FindDBProxyEndpoint(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 		log.Printf("[WARN] RDS DB Proxy Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
 		log.Printf("[WARN] RDS DB Proxy Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS DB Proxy Endpoint (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy Endpoint (%s): %s", d.Id(), err)
 	}
 
 	if dbProxyEndpoint == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading RDS DB Proxy Endpoint (%s): not found after creation", d.Id())
+			return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy Endpoint (%s): not found after creation", d.Id())
 		}
 
 		log.Printf("[WARN] RDS DB Proxy Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	endpointArn := aws.StringValue(dbProxyEndpoint.DBProxyEndpointArn)
@@ -167,28 +171,12 @@ func resourceProxyEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_subnet_ids", flex.FlattenStringSet(dbProxyEndpoint.VpcSubnetIds))
 	d.Set("vpc_security_group_ids", flex.FlattenStringSet(dbProxyEndpoint.VpcSecurityGroupIds))
 
-	tags, err := ListTags(conn, endpointArn)
-
-	if err != nil {
-		return fmt.Errorf("Error listing tags for RDS DB Proxy Endpoint (%s): %w", endpointArn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceProxyEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceProxyEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	if d.HasChange("vpc_security_group_ids") {
 		params := rds.ModifyDBProxyEndpointInput{
@@ -196,50 +184,42 @@ func resourceProxyEndpointUpdate(d *schema.ResourceData, meta interface{}) error
 			VpcSecurityGroupIds: flex.ExpandStringSet(d.Get("vpc_security_group_ids").(*schema.Set)),
 		}
 
-		_, err := conn.ModifyDBProxyEndpoint(&params)
+		_, err := conn.ModifyDBProxyEndpointWithContext(ctx, &params)
 		if err != nil {
-			return fmt.Errorf("Error updating DB Proxy Endpoint: %w", err)
+			return sdkdiag.AppendErrorf(diags, "updating DB Proxy Endpoint: %s", err)
 		}
 
-		if _, err := waitDBProxyEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for RDS DB Proxy Endpoint (%s) to become modified: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("Error updating RDS DB Proxy Endpoint (%s) tags: %w", d.Get("arn").(string), err)
+		if _, err := waitDBProxyEndpointAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Proxy Endpoint (%s) to become modified: %s", d.Id(), err)
 		}
 	}
 
-	return resourceProxyEndpointRead(d, meta)
+	return append(diags, resourceProxyEndpointRead(ctx, d, meta)...)
 }
 
-func resourceProxyEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceProxyEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	params := rds.DeleteDBProxyEndpointInput{
 		DBProxyEndpointName: aws.String(d.Get("db_proxy_endpoint_name").(string)),
 	}
 
 	log.Printf("[DEBUG] Delete DB Proxy Endpoint: %#v", params)
-	_, err := conn.DeleteDBProxyEndpoint(&params)
-
+	_, err := conn.DeleteDBProxyEndpointWithContext(ctx, &params)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) || tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Error Deleting DB Proxy Endpoint: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Deleting DB Proxy Endpoint: %s", err)
 	}
 
-	if _, err := waitDBProxyEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitDBProxyEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) || tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error waiting for RDS DB Proxy Endpoint (%s) to become deleted: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Proxy Endpoint (%s) to become deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

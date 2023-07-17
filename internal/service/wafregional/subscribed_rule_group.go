@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional
 
 import (
@@ -16,6 +19,7 @@ const (
 	DSNameSubscribedRuleGroup = "Subscribed Rule Group Data Source"
 )
 
+// @SDKDataSource("aws_wafregional_subscribed_rule_group")
 func DataSourceSubscribedRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubscribedRuleGroupRead,
@@ -34,7 +38,7 @@ func DataSourceSubscribedRuleGroup() *schema.Resource {
 }
 
 func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	name, nameOk := d.Get("name").(string)
 	metricName, metricNameOk := d.Get("metric_name").(string)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -21,12 +24,13 @@ import (
 
 const BucketACLSeparator = ","
 
+// @SDKResource("aws_s3_bucket_acl")
 func ResourceBucketACL() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketACLCreate,
-		ReadContext:   resourceBucketACLRead,
-		UpdateContext: resourceBucketACLUpdate,
-		DeleteContext: resourceBucketACLDelete,
+		CreateWithoutTimeout: resourceBucketACLCreate,
+		ReadWithoutTimeout:   resourceBucketACLRead,
+		UpdateWithoutTimeout: resourceBucketACLUpdate,
+		DeleteWithoutTimeout: resourceBucketACLDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -127,7 +131,7 @@ func ResourceBucketACL() *schema.Resource {
 }
 
 func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -149,12 +153,12 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.AccessControlPolicy = expandBucketACLAccessControlPolicy(v.([]interface{}))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketAclWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating S3 bucket ACL for %s: %w", bucket, err))
+		return diag.Errorf("creating S3 bucket ACL for %s: %s", bucket, err)
 	}
 
 	d.SetId(BucketACLCreateResourceID(bucket, expectedBucketOwner, acl))
@@ -163,7 +167,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, acl, err := BucketACLParseResourceID(d.Id())
 	if err != nil {
@@ -187,25 +191,25 @@ func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting S3 bucket ACL (%s): %w", d.Id(), err))
+		return diag.Errorf("getting S3 bucket ACL (%s): %s", d.Id(), err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error getting S3 bucket ACL (%s): empty output", d.Id()))
+		return diag.Errorf("getting S3 bucket ACL (%s): empty output", d.Id())
 	}
 
 	d.Set("acl", acl)
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	if err := d.Set("access_control_policy", flattenBucketACLAccessControlPolicy(output)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting access_control_policy: %w", err))
+		return diag.Errorf("setting access_control_policy: %s", err)
 	}
 
 	return nil
 }
 
 func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, acl, err := BucketACLParseResourceID(d.Id())
 	if err != nil {
@@ -232,7 +236,7 @@ func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	_, err = conn.PutBucketAclWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating S3 bucket ACL (%s): %w", d.Id(), err))
+		return diag.Errorf("updating S3 bucket ACL (%s): %s", d.Id(), err)
 	}
 
 	if d.HasChange("acl") {

@@ -1,14 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -16,19 +20,20 @@ import (
 )
 
 func TestAccVPCDHCPOptions_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var d ec2.DhcpOptions
 	resourceName := "aws_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDHCPOptionsDestroy,
+		CheckDestroy:             testAccCheckDHCPOptionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDHCPOptionsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDHCPOptionsExists(resourceName, &d),
+					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dhcp-options/dopt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.#", "0"),
@@ -49,21 +54,22 @@ func TestAccVPCDHCPOptions_basic(t *testing.T) {
 }
 
 func TestAccVPCDHCPOptions_full(t *testing.T) {
+	ctx := acctest.Context(t)
 	var d ec2.DhcpOptions
 	resourceName := "aws_vpc_dhcp_options.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDHCPOptionsDestroy,
+		CheckDestroy:             testAccCheckDHCPOptionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDHCPOptionsConfig_full(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDHCPOptionsExists(resourceName, &d),
+					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dhcp-options/dopt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.#", "2"),
@@ -89,19 +95,20 @@ func TestAccVPCDHCPOptions_full(t *testing.T) {
 }
 
 func TestAccVPCDHCPOptions_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var d ec2.DhcpOptions
 	resourceName := "aws_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDHCPOptionsDestroy,
+		CheckDestroy:             testAccCheckDHCPOptionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDHCPOptionsConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDHCPOptionsExists(resourceName, &d),
+					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -114,7 +121,7 @@ func TestAccVPCDHCPOptions_tags(t *testing.T) {
 			{
 				Config: testAccVPCDHCPOptionsConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDHCPOptionsExists(resourceName, &d),
+					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -123,7 +130,7 @@ func TestAccVPCDHCPOptions_tags(t *testing.T) {
 			{
 				Config: testAccVPCDHCPOptionsConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDHCPOptionsExists(resourceName, &d),
+					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -133,20 +140,21 @@ func TestAccVPCDHCPOptions_tags(t *testing.T) {
 }
 
 func TestAccVPCDHCPOptions_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var d ec2.DhcpOptions
 	resourceName := "aws_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDHCPOptionsDestroy,
+		CheckDestroy:             testAccCheckDHCPOptionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDHCPOptionsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDHCPOptionsExists(resourceName, &d),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCDHCPOptions(), resourceName),
+					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCDHCPOptions(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -154,31 +162,33 @@ func TestAccVPCDHCPOptions_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDHCPOptionsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckDHCPOptionsDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_vpc_dhcp_options" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_vpc_dhcp_options" {
+				continue
+			}
+
+			_, err := tfec2.FindDHCPOptionsByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EC2 DHCP Options Set %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfec2.FindDHCPOptionsByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EC2 DHCP Options Set %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDHCPOptionsExists(n string, v *ec2.DhcpOptions) resource.TestCheckFunc {
+func testAccCheckDHCPOptionsExists(ctx context.Context, n string, v *ec2.DhcpOptions) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -189,9 +199,9 @@ func testAccCheckDHCPOptionsExists(n string, v *ec2.DhcpOptions) resource.TestCh
 			return fmt.Errorf("No EC2 DHCP Options Set ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
-		output, err := tfec2.FindDHCPOptionsByID(conn, rs.Primary.ID)
+		output, err := tfec2.FindDHCPOptionsByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -1,34 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package athena_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfathena "github.com/hashicorp/terraform-provider-aws/internal/service/athena"
 )
 
 func TestAccAthenaDataCatalog_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataCatalogDestroy,
+		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCatalogExists(resourceName),
+					testAccCheckDataCatalogExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("datacatalog/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "LAMBDA"),
@@ -49,20 +54,21 @@ func TestAccAthenaDataCatalog_basic(t *testing.T) {
 }
 
 func TestAccAthenaDataCatalog_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataCatalogDestroy,
+		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCatalogExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfathena.ResourceDataCatalog(), resourceName),
+					testAccCheckDataCatalogExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfathena.ResourceDataCatalog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,19 +77,20 @@ func TestAccAthenaDataCatalog_disappears(t *testing.T) {
 }
 
 func TestAccAthenaDataCatalog_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataCatalogDestroy,
+		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCatalogExists(resourceName),
+					testAccCheckDataCatalogExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -97,7 +104,7 @@ func TestAccAthenaDataCatalog_tags(t *testing.T) {
 			{
 				Config: testAccDataCatalogConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCatalogExists(resourceName),
+					testAccCheckDataCatalogExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -106,7 +113,7 @@ func TestAccAthenaDataCatalog_tags(t *testing.T) {
 			{
 				Config: testAccDataCatalogConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCatalogExists(resourceName),
+					testAccCheckDataCatalogExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -116,19 +123,20 @@ func TestAccAthenaDataCatalog_tags(t *testing.T) {
 }
 
 func TestAccAthenaDataCatalog_type_lambda(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataCatalogDestroy,
+		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogConfig_typeLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCatalogExists(resourceName),
+					testAccCheckDataCatalogExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Lambda"),
 					resource.TestCheckResourceAttr(resourceName, "type", "LAMBDA"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
@@ -147,19 +155,20 @@ func TestAccAthenaDataCatalog_type_lambda(t *testing.T) {
 }
 
 func TestAccAthenaDataCatalog_type_hive(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataCatalogDestroy,
+		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogConfig_typeHive(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCatalogExists(resourceName),
+					testAccCheckDataCatalogExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Hive"),
 					resource.TestCheckResourceAttr(resourceName, "type", "HIVE"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
@@ -177,19 +186,20 @@ func TestAccAthenaDataCatalog_type_hive(t *testing.T) {
 }
 
 func TestAccAthenaDataCatalog_type_glue(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataCatalogDestroy,
+		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogConfig_typeGlue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCatalogExists(resourceName),
+					testAccCheckDataCatalogExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Glue"),
 					resource.TestCheckResourceAttr(resourceName, "type", "GLUE"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
@@ -207,19 +217,20 @@ func TestAccAthenaDataCatalog_type_glue(t *testing.T) {
 }
 
 func TestAccAthenaDataCatalog_parameters(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_athena_data_catalog.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataCatalogDestroy,
+		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogConfig_parameters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCatalogExists(resourceName),
+					testAccCheckDataCatalogExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.function", "arn:aws:lambda:us-east-1:123456789012:function:test-function-1"), //lintignore:AWSAT003,AWSAT005
 				),
@@ -233,7 +244,7 @@ func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 			{
 				Config: testAccDataCatalogConfig_parametersUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCatalogExists(resourceName),
+					testAccCheckDataCatalogExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.metadata-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function-2"), //lintignore:AWSAT003,AWSAT005
 					resource.TestCheckResourceAttr(resourceName, "parameters.record-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function-2"),   //lintignore:AWSAT003,AWSAT005
@@ -243,7 +254,7 @@ func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 	})
 }
 
-func testAccCheckDataCatalogExists(n string) resource.TestCheckFunc {
+func testAccCheckDataCatalogExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -254,46 +265,48 @@ func testAccCheckDataCatalogExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Athena Data Catalog name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn(ctx)
 
 		input := &athena.GetDataCatalogInput{
 			Name: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.GetDataCatalog(input)
+		_, err := conn.GetDataCatalogWithContext(ctx, input)
 
 		return err
 	}
 }
 
-func testAccCheckDataCatalogDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
+func testAccCheckDataCatalogDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_athena_data_catalog" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_athena_data_catalog" {
+				continue
+			}
+
+			input := &athena.GetDataCatalogInput{
+				Name: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.GetDataCatalogWithContext(ctx, input)
+
+			if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, "was not found") {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if output.DataCatalog != nil {
+				return fmt.Errorf("Athena Data Catalog (%s) found", rs.Primary.ID)
+			}
 		}
 
-		input := &athena.GetDataCatalogInput{
-			Name: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.GetDataCatalog(input)
-
-		if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, "was not found") {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if output.DataCatalog != nil {
-			return fmt.Errorf("Athena Data Catalog (%s) found", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccDataCatalogConfig_basic(rName string) string {

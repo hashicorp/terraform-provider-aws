@@ -35,7 +35,6 @@ data "aws_rds_orderable_db_instance" "test" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:

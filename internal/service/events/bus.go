@@ -1,34 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudwatch_event_bus", name="Event Bus")
+// @Tags(identifierAttribute="arn")
 func ResourceBus() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBusCreate,
-		Read:   resourceBusRead,
-		Update: resourceBusUpdate,
-		Delete: resourceBusDelete,
+		CreateWithoutTimeout: resourceBusCreate,
+		ReadWithoutTimeout:   resourceBusRead,
+		UpdateWithoutTimeout: resourceBusUpdate,
+		DeleteWithoutTimeout: resourceBusDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validCustomEventBusName,
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"event_source_name": {
 				Type:         schema.TypeString,
@@ -36,156 +46,137 @@ func ResourceBus() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validSourceName,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validCustomEventBusName,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceBusCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName := d.Get("name").(string)
 	input := &eventbridge.CreateEventBusInput{
 		Name: aws.String(eventBusName),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("event_source_name"); ok {
 		input.EventSourceName = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
+	output, err := conn.CreateEventBusWithContext(ctx, input)
 
-	log.Printf("[DEBUG] Creating EventBridge event bus: %v", input)
-
-	output, err := conn.CreateEventBus(input)
-
-	// Some partitions may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] EventBridge Bus (%s) create failed (%s) with tags. Trying create without tags.", eventBusName, err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
-		output, err = conn.CreateEventBus(input)
+
+		output, err = conn.CreateEventBusWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("Creating EventBridge event bus (%s) failed: %w", eventBusName, err)
+		return sdkdiag.AppendErrorf(diags, "creating EventBridge Event Bus (%s): %s", eventBusName, err)
 	}
 
 	d.SetId(eventBusName)
 
-	log.Printf("[INFO] EventBridge event bus (%s) created", d.Id())
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, aws.StringValue(output.EventBusArn), tags)
 
-	// Post-create tagging supported in some partitions
-	if input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(conn, aws.StringValue(output.EventBusArn), nil, tags)
-
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] error adding tags after create for EventBridge Bus (%s): %s", d.Id(), err)
-			return resourceBusRead(d, meta)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+			return append(diags, resourceBusRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating EventBridge Bus (%s) tags: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting EventBridge Event Bus (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceBusRead(d, meta)
+	return append(diags, resourceBusRead(ctx, d, meta)...)
 }
 
-func resourceBusRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
-	input := &eventbridge.DescribeEventBusInput{
-		Name: aws.String(d.Id()),
-	}
+	output, err := FindEventBusByName(ctx, conn, d.Id())
 
-	output, err := conn.DescribeEventBus(input)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] EventBridge event bus (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EventBridge Event Bus (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
+
 	if err != nil {
-		return fmt.Errorf("error reading EventBridge event bus: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge Event Bus (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.Arn)
 	d.Set("name", output.Name)
 
-	tags, err := ListTags(conn, aws.StringValue(output.Arn))
-
-	// ISO partitions may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] Unable to list tags for EventBridge Bus %s: %s", d.Id(), err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for EventBridge event bus (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceBusUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		err := UpdateTags(conn, arn, o, n)
-
-		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] Unable to update tags for EventBridge Bus %s: %s", d.Id(), err)
-			return resourceBusRead(d, meta)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error updating EventBridge Bus tags: %w", err)
-		}
-	}
-
-	return resourceBusRead(d, meta)
+	return append(diags, resourceBusRead(ctx, d, meta)...)
 }
 
-func resourceBusDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
-	log.Printf("[INFO] Deleting EventBridge event bus (%s)", d.Id())
-	_, err := conn.DeleteEventBus(&eventbridge.DeleteEventBusInput{
+func resourceBusDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
+
+	log.Printf("[INFO] Deleting EventBridge Event Bus: %s", d.Id())
+	_, err := conn.DeleteEventBusWithContext(ctx, &eventbridge.DeleteEventBusInput{
 		Name: aws.String(d.Id()),
 	})
-	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] EventBridge event bus (%s) not found", d.Id())
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("Error deleting EventBridge event bus (%s): %w", d.Id(), err)
-	}
-	log.Printf("[INFO] EventBridge event bus (%s) deleted", d.Id())
 
-	return nil
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting EventBridge Event Bus (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func FindEventBusByName(ctx context.Context, conn *eventbridge.EventBridge, name string) (*eventbridge.DescribeEventBusOutput, error) {
+	input := &eventbridge.DescribeEventBusInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.DescribeEventBusWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

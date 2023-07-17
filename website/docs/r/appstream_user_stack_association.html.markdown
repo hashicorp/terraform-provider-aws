@@ -41,13 +41,11 @@ The following arguments are optional:
 
 * `send_email_notification` - (Optional) Whether a welcome email is sent to a user after the user is created in the user pool.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Unique ID of the appstream User Stack association.
-
 
 ## Import
 

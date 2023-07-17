@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -9,14 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 )
 
 func testAccFilter_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2 guardduty.GetFilterOutput
 	resourceName := "aws_guardduty_filter.test"
 	detectorResourceName := "aws_guardduty_detector.test"
@@ -25,15 +30,15 @@ func testAccFilter_basic(t *testing.T) {
 	endDate := "2020-02-01T00:00:00Z"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFilterDestroy,
+		CheckDestroy:             testAccCheckFilterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(resourceName, &v1),
+					testAccCheckFilterExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "action", "ARCHIVE"),
@@ -69,7 +74,7 @@ func testAccFilter_basic(t *testing.T) {
 			{
 				Config: testAccFilterConfig_noopfull(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(resourceName, &v2),
+					testAccCheckFilterExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "action", "NOOP"),
@@ -84,6 +89,7 @@ func testAccFilter_basic(t *testing.T) {
 }
 
 func testAccFilter_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2 guardduty.GetFilterOutput
 	resourceName := "aws_guardduty_filter.test"
 
@@ -91,15 +97,15 @@ func testAccFilter_update(t *testing.T) {
 	endDate := "2020-02-01T00:00:00Z"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFilterDestroy,
+		CheckDestroy:             testAccCheckFilterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(resourceName, &v1),
+					testAccCheckFilterExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 				),
@@ -107,7 +113,7 @@ func testAccFilter_update(t *testing.T) {
 			{
 				Config: testAccFilterConfig_update(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(resourceName, &v2),
+					testAccCheckFilterExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
@@ -128,6 +134,7 @@ func testAccFilter_update(t *testing.T) {
 }
 
 func testAccFilter_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2, v3 guardduty.GetFilterOutput
 	resourceName := "aws_guardduty_filter.test"
 
@@ -135,15 +142,15 @@ func testAccFilter_tags(t *testing.T) {
 	endDate := "2020-02-01T00:00:00Z"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFilterDestroy,
+		CheckDestroy:             testAccCheckFilterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterConfig_multipleTags(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(resourceName, &v1),
+					testAccCheckFilterExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Value"),
@@ -152,7 +159,7 @@ func testAccFilter_tags(t *testing.T) {
 			{
 				Config: testAccFilterConfig_updateTags(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(resourceName, &v2),
+					testAccCheckFilterExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Updated"),
 				),
@@ -160,7 +167,7 @@ func testAccFilter_tags(t *testing.T) {
 			{
 				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(resourceName, &v3),
+					testAccCheckFilterExists(ctx, resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -169,6 +176,7 @@ func testAccFilter_tags(t *testing.T) {
 }
 
 func testAccFilter_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v guardduty.GetFilterOutput
 	resourceName := "aws_guardduty_filter.test"
 
@@ -176,16 +184,16 @@ func testAccFilter_disappears(t *testing.T) {
 	endDate := "2020-02-01T00:00:00Z"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckACMPCACertificateAuthorityDestroy,
+		CheckDestroy:             testAccCheckACMPCACertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfguardduty.ResourceFilter(), resourceName),
+					testAccCheckFilterExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfguardduty.ResourceFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -193,39 +201,41 @@ func testAccFilter_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckFilterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+func testAccCheckFilterDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_guardduty_filter" {
-			continue
-		}
-
-		detectorID, filterName, err := tfguardduty.FilterParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &guardduty.GetFilterInput{
-			DetectorId: aws.String(detectorID),
-			FilterName: aws.String(filterName),
-		}
-
-		_, err = conn.GetFilter(input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_guardduty_filter" {
+				continue
 			}
-			return err
+
+			detectorID, filterName, err := tfguardduty.FilterParseID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			input := &guardduty.GetFilterInput{
+				DetectorId: aws.String(detectorID),
+				FilterName: aws.String(filterName),
+			}
+
+			_, err = conn.GetFilterWithContext(ctx, input)
+			if err != nil {
+				if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+					return nil
+				}
+				return err
+			}
+
+			return fmt.Errorf("Expected GuardDuty Filter to be destroyed, %s found", rs.Primary.Attributes["filter_name"])
 		}
 
-		return fmt.Errorf("Expected GuardDuty Filter to be destroyed, %s found", rs.Primary.Attributes["filter_name"])
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckFilterExists(name string, filter *guardduty.GetFilterOutput) resource.TestCheckFunc {
+func testAccCheckFilterExists(ctx context.Context, name string, filter *guardduty.GetFilterOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -241,12 +251,12 @@ func testAccCheckFilterExists(name string, filter *guardduty.GetFilterOutput) re
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
 		input := guardduty.GetFilterInput{
 			DetectorId: aws.String(detectorID),
 			FilterName: aws.String(name),
 		}
-		filter, err = conn.GetFilter(&input)
+		filter, err = conn.GetFilterWithContext(ctx, &input)
 
 		return err
 	}
@@ -409,31 +419,33 @@ resource "aws_guardduty_detector" "test" {
 `
 }
 
-func testAccCheckACMPCACertificateAuthorityDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
+func testAccCheckACMPCACertificateAuthorityDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_acmpca_certificate_authority" {
-			continue
-		}
-
-		input := &acmpca.DescribeCertificateAuthorityInput{
-			CertificateAuthorityArn: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribeCertificateAuthority(input)
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_acmpca_certificate_authority" {
+				continue
 			}
-			return err
+
+			input := &acmpca.DescribeCertificateAuthorityInput{
+				CertificateAuthorityArn: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.DescribeCertificateAuthorityWithContext(ctx, input)
+
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+					return nil
+				}
+				return err
+			}
+
+			if output != nil && output.CertificateAuthority != nil && aws.StringValue(output.CertificateAuthority.Arn) == rs.Primary.ID && aws.StringValue(output.CertificateAuthority.Status) != acmpca.CertificateAuthorityStatusDeleted {
+				return fmt.Errorf("ACM PCA Certificate Authority %q still exists in non-DELETED state: %s", rs.Primary.ID, aws.StringValue(output.CertificateAuthority.Status))
+			}
 		}
 
-		if output != nil && output.CertificateAuthority != nil && aws.StringValue(output.CertificateAuthority.Arn) == rs.Primary.ID && aws.StringValue(output.CertificateAuthority.Status) != acmpca.CertificateAuthorityStatusDeleted {
-			return fmt.Errorf("ACM PCA Certificate Authority %q still exists in non-DELETED state: %s", rs.Primary.ID, aws.StringValue(output.CertificateAuthority.Status))
-		}
+		return nil
 	}
-
-	return nil
 }

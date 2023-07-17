@@ -22,6 +22,8 @@ management of the VPC Peering Connection and allows options to be set correctly 
 VPC Peering Connections use the `aws_vpc_peering_connection` resource to manage the requester's side of the
 connection and use the `aws_vpc_peering_connection_accepter` resource to manage the accepter's side of the connection.
 
+-> **Note:** Creating multiple `aws_vpc_peering_connection` resources with the same `peer_vpc_id` and `vpc_id` will not produce an error. Instead, AWS will return the connection `id` that already exists, resulting in multiple `aws_vpc_peering_connection` resources with the same `id`.
+
 ## Example Usage
 
 ```terraform
@@ -75,7 +77,6 @@ resource "aws_vpc" "bar" {
 
 Basic usage with region:
 
-
 ```terraform
 resource "aws_vpc_peering_connection" "foo" {
   peer_owner_id = var.peer_owner_id
@@ -124,12 +125,6 @@ must have support for the DNS hostnames enabled. This can be done using the [`en
 
 * `allow_remote_vpc_dns_resolution` - (Optional) Allow a local VPC to resolve public DNS hostnames to
 private IP addresses when queried from instances in the peer VPC.
-* `allow_classic_link_to_remote_vpc` - (Optional) Allow a local linked EC2-Classic instance to communicate
-with instances in a peer VPC. This enables an outbound communication from the local ClassicLink connection
-to the remote VPC.
-* `allow_vpc_to_remote_classic_link` - (Optional) Allow a local VPC to communicate with a linked EC2-Classic
-instance in a peer VPC. This enables an outbound communication from the local VPC to the remote ClassicLink
-connection.
 
 ## Attributes Reference
 
@@ -145,10 +140,9 @@ If both VPCs are not in the same AWS account and region do not enable the `auto_
 The accepter can manage its side of the connection using the `aws_vpc_peering_connection_accepter` resource
 or accept the connection manually using the AWS Management Console, AWS CLI, through SDKs, etc.
 
-
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `1m`)
 - `update` - (Default `1m`)

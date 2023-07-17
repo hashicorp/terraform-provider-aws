@@ -12,7 +12,7 @@ This resource can be useful for getting back a set of subnet IDs.
 
 ## Example Usage
 
-The following shows outputing all CIDR blocks for every subnet ID in a VPC.
+The following shows outputting all CIDR blocks for every subnet ID in a VPC.
 
 ```terraform
 data "aws_subnets" "example" {
@@ -49,7 +49,7 @@ data "aws_subnets" "private" {
 }
 
 resource "aws_instance" "app" {
-  for_each      = toset(data.aws_subnets.example.ids)
+  for_each      = toset(data.aws_subnets.private.ids)
   ami           = var.ami
   instance_type = "t2.micro"
   subnet_id     = each.value
@@ -87,6 +87,6 @@ data "aws_subnets" "selected" {
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

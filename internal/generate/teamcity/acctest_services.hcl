@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 service "appautoscaling" {
   vpc_lock = true
 }
@@ -27,6 +30,10 @@ service "comprehend" {
   parallelism = 10
 }
 
+service "cur" {
+  region = "us-east-1"
+}
+
 service "datasync" {
   vpc_lock = true
 }
@@ -49,6 +56,10 @@ service "ds" {
 
 service "ec2" {
   vpc_lock = true
+}
+
+service "ecrpublic" {
+  region = "us-east-1"
 }
 
 service "efs" {
@@ -83,6 +94,10 @@ service "emr" {
   vpc_lock = true
 }
 
+service "fms" {
+  region = "us-east-1"
+}
+
 service "fsx" {
   vpc_lock = true
 }
@@ -91,8 +106,24 @@ service "kafka" {
   vpc_lock = true
 }
 
+service "kendra" {
+  skip = true
+}
+
+service "kinesisanalytics" {
+  skip = true
+}
+
+service "kinesisanalyticsv2" {
+  skip = true
+}
+
 service "lambda" {
   vpc_lock = true
+}
+
+service "lightsail" {
+  region = "us-east-1"
 }
 
 service "mq" {
@@ -109,6 +140,10 @@ service "networkfirewall" {
 
 service "opsworks" {
   vpc_lock = true
+}
+
+service "pricing" {
+  region = "us-east-1"
 }
 
 service "rds" {
@@ -151,6 +186,11 @@ service "transfer" {
   vpc_lock = true
 }
 
+service "waf" {
+  region = "us-east-1"
+}
+
 service "workspaces" {
+  # Needed for logging configuration tests
   vpc_lock = true
 }

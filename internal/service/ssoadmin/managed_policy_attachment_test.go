@@ -1,35 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssoadmin_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 )
 
 func TestAccSSOAdminManagedPolicyAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_managed_policy_attachment.test"
 	permissionSetResourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedPolicyAttachmentDestroy,
+		CheckDestroy:             testAccCheckManagedPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentExists(resourceName),
+					testAccCheckManagedPolicyAttachmentExists(ctx, resourceName),
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "managed_policy_arn", regexp.MustCompile(`policy/AlexaForBusinessDeviceSetup`)),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_name", "AlexaForBusinessDeviceSetup"),
@@ -47,26 +52,27 @@ func TestAccSSOAdminManagedPolicyAttachment_basic(t *testing.T) {
 }
 
 func TestAccSSOAdminManagedPolicyAttachment_forceNew(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_managed_policy_attachment.test"
 	permissionSetResourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedPolicyAttachmentDestroy,
+		CheckDestroy:             testAccCheckManagedPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentExists(resourceName),
+					testAccCheckManagedPolicyAttachmentExists(ctx, resourceName),
 				),
 			},
 			{
 				Config: testAccManagedPolicyAttachmentConfig_forceNew(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentExists(resourceName),
+					testAccCheckManagedPolicyAttachmentExists(ctx, resourceName),
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "managed_policy_arn", regexp.MustCompile(`policy/AmazonCognitoReadOnly`)),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_name", "AmazonCognitoReadOnly"),
@@ -84,20 +90,21 @@ func TestAccSSOAdminManagedPolicyAttachment_forceNew(t *testing.T) {
 }
 
 func TestAccSSOAdminManagedPolicyAttachment_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_managed_policy_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedPolicyAttachmentDestroy,
+		CheckDestroy:             testAccCheckManagedPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourceManagedPolicyAttachment(), resourceName),
+					testAccCheckManagedPolicyAttachmentExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourceManagedPolicyAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -106,21 +113,22 @@ func TestAccSSOAdminManagedPolicyAttachment_disappears(t *testing.T) {
 }
 
 func TestAccSSOAdminManagedPolicyAttachment_Disappears_permissionSet(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_managed_policy_attachment.test"
 	permissionSetResourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedPolicyAttachmentDestroy,
+		CheckDestroy:             testAccCheckManagedPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
+					testAccCheckManagedPolicyAttachmentExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,28 +137,29 @@ func TestAccSSOAdminManagedPolicyAttachment_Disappears_permissionSet(t *testing.
 }
 
 func TestAccSSOAdminManagedPolicyAttachment_multipleManagedPolicies(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_managed_policy_attachment.test"
 	otherResourceName := "aws_ssoadmin_managed_policy_attachment.other"
 	permissionSetResourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedPolicyAttachmentDestroy,
+		CheckDestroy:             testAccCheckManagedPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentExists(resourceName),
+					testAccCheckManagedPolicyAttachmentExists(ctx, resourceName),
 				),
 			},
 			{
 				Config: testAccManagedPolicyAttachmentConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentExists(resourceName),
-					testAccCheckManagedPolicyAttachmentExists(otherResourceName),
+					testAccCheckManagedPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckManagedPolicyAttachmentExists(ctx, otherResourceName),
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(otherResourceName, "managed_policy_arn", regexp.MustCompile(`policy/AmazonDynamoDBReadOnlyAccess`)),
 					resource.TestCheckResourceAttr(otherResourceName, "managed_policy_name", "AmazonDynamoDBReadOnlyAccess"),
@@ -167,41 +176,42 @@ func TestAccSSOAdminManagedPolicyAttachment_multipleManagedPolicies(t *testing.T
 	})
 }
 
-func testAccCheckManagedPolicyAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+func testAccCheckManagedPolicyAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ssoadmin_managed_policy_attachment" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ssoadmin_managed_policy_attachment" {
+				continue
+			}
+
+			managedPolicyArn, permissionSetArn, instanceArn, err := tfssoadmin.ParseManagedPolicyAttachmentID(rs.Primary.ID)
+			if err != nil {
+				return fmt.Errorf("error parsing SSO Managed Policy Attachment ID (%s): %w", rs.Primary.ID, err)
+			}
+
+			policy, err := tfssoadmin.FindManagedPolicy(ctx, conn, managedPolicyArn, permissionSetArn, instanceArn)
+
+			if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if policy == nil {
+				continue
+			}
+
+			return fmt.Errorf("Managed Policy (%s) for SSO Permission Set (%s) still exists", managedPolicyArn, permissionSetArn)
 		}
 
-		managedPolicyArn, permissionSetArn, instanceArn, err := tfssoadmin.ParseManagedPolicyAttachmentID(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("error parsing SSO Managed Policy Attachment ID (%s): %w", rs.Primary.ID, err)
-		}
-
-		policy, err := tfssoadmin.FindManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
-
-		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if policy == nil {
-			continue
-		}
-
-		return fmt.Errorf("Managed Policy (%s) for SSO Permission Set (%s) still exists", managedPolicyArn, permissionSetArn)
-
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckManagedPolicyAttachmentExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckManagedPolicyAttachmentExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -218,9 +228,9 @@ func testAccCheckManagedPolicyAttachmentExists(resourceName string) resource.Tes
 			return fmt.Errorf("error parsing SSO Managed Policy Attachment ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
 
-		policy, err := tfssoadmin.FindManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
+		policy, err := tfssoadmin.FindManagedPolicy(ctx, conn, managedPolicyArn, permissionSetArn, instanceArn)
 
 		if err != nil {
 			return err

@@ -1,13 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-func FindEndpointByID(conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
+func FindEndpointByID(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
 	clusterId, endpointId, err := readClusterEndpointID(id)
 	if err != nil {
 		return nil, err
@@ -17,11 +22,11 @@ func FindEndpointByID(conn *neptune.Neptune, id string) (*neptune.DBClusterEndpo
 		DBClusterEndpointIdentifier: aws.String(endpointId),
 	}
 
-	output, err := conn.DescribeDBClusterEndpoints(input)
+	output, err := conn.DescribeDBClusterEndpointsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterEndpointNotFoundFault) ||
 		tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -32,7 +37,7 @@ func FindEndpointByID(conn *neptune.Neptune, id string) (*neptune.DBClusterEndpo
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -40,7 +45,7 @@ func FindEndpointByID(conn *neptune.Neptune, id string) (*neptune.DBClusterEndpo
 
 	endpoints := output.DBClusterEndpoints
 	if len(endpoints) == 0 {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}

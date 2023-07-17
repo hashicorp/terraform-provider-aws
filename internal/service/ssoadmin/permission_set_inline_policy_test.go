@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssoadmin_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -8,29 +12,30 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 )
 
 func TestAccSSOAdminPermissionSetInlinePolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_permission_set_inline_policy.test"
 	permissionSetResourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy,
+		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetInlinePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionSetInlinePolicyExists(resourceName),
+					testAccCheckPermissionSetInlinePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, "arn"),
 					resource.TestMatchResourceAttr(resourceName, "inline_policy", regexp.MustCompile("s3:ListAllMyBuckets")),
@@ -47,25 +52,26 @@ func TestAccSSOAdminPermissionSetInlinePolicy_basic(t *testing.T) {
 }
 
 func TestAccSSOAdminPermissionSetInlinePolicy_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_permission_set_inline_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy,
+		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetInlinePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionSetInlinePolicyExists(resourceName),
+					testAccCheckPermissionSetInlinePolicyExists(ctx, resourceName),
 				),
 			},
 			{
 				Config: testAccPermissionSetInlinePolicyConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionSetInlinePolicyExists(resourceName),
+					testAccCheckPermissionSetInlinePolicyExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "inline_policy", regexp.MustCompile("s3:ListAllMyBuckets")),
 				),
 			},
@@ -79,20 +85,21 @@ func TestAccSSOAdminPermissionSetInlinePolicy_update(t *testing.T) {
 }
 
 func TestAccSSOAdminPermissionSetInlinePolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_permission_set_inline_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy,
+		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetInlinePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionSetInlinePolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSetInlinePolicy(), resourceName),
+					testAccCheckPermissionSetInlinePolicyExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourcePermissionSetInlinePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,21 +108,22 @@ func TestAccSSOAdminPermissionSetInlinePolicy_disappears(t *testing.T) {
 }
 
 func TestAccSSOAdminPermissionSetInlinePolicy_Disappears_permissionSet(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_permission_set_inline_policy.test"
 	permissionSetResourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy,
+		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetInlinePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionSetInlinePolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
+					testAccCheckPermissionSetInlinePolicyExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -123,50 +131,52 @@ func TestAccSSOAdminPermissionSetInlinePolicy_Disappears_permissionSet(t *testin
 	})
 }
 
-func testAccCheckPermissionSetInlinePolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+func testAccCheckPermissionSetInlinePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ssoadmin_permission_set_inline_policy" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ssoadmin_permission_set_inline_policy" {
+				continue
+			}
+
+			permissionSetArn, instanceArn, err := tfssoadmin.ParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return fmt.Errorf("error parsing SSO Permission Set Inline Policy ID (%s): %w", rs.Primary.ID, err)
+			}
+
+			input := &ssoadmin.GetInlinePolicyForPermissionSetInput{
+				InstanceArn:      aws.String(instanceArn),
+				PermissionSetArn: aws.String(permissionSetArn),
+			}
+
+			output, err := conn.GetInlinePolicyForPermissionSetWithContext(ctx, input)
+			if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if output == nil {
+				continue
+			}
+
+			// SSO API returns empty string when removed from Permission Set
+			if aws.StringValue(output.InlinePolicy) == "" {
+				continue
+			}
+
+			return fmt.Errorf("Inline Policy for SSO PermissionSet (%s) still exists", permissionSetArn)
 		}
 
-		permissionSetArn, instanceArn, err := tfssoadmin.ParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("error parsing SSO Permission Set Inline Policy ID (%s): %w", rs.Primary.ID, err)
-		}
-
-		input := &ssoadmin.GetInlinePolicyForPermissionSetInput{
-			InstanceArn:      aws.String(instanceArn),
-			PermissionSetArn: aws.String(permissionSetArn),
-		}
-
-		output, err := conn.GetInlinePolicyForPermissionSet(input)
-		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if output == nil {
-			continue
-		}
-
-		// SSO API returns empty string when removed from Permission Set
-		if aws.StringValue(output.InlinePolicy) == "" {
-			continue
-		}
-
-		return fmt.Errorf("Inline Policy for SSO PermissionSet (%s) still exists", permissionSetArn)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckPermissionSetInlinePolicyExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckPermissionSetInlinePolicyExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -183,14 +193,14 @@ func testAccCheckPermissionSetInlinePolicyExists(resourceName string) resource.T
 			return fmt.Errorf("error parsing SSO Permission Set Inline Policy ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
 
 		input := &ssoadmin.GetInlinePolicyForPermissionSetInput{
 			InstanceArn:      aws.String(instanceArn),
 			PermissionSetArn: aws.String(permissionSetArn),
 		}
 
-		output, err := conn.GetInlinePolicyForPermissionSet(input)
+		output, err := conn.GetInlinePolicyForPermissionSetWithContext(ctx, input)
 		if err != nil {
 			return err
 		}

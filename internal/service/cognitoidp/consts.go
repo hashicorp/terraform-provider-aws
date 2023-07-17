@@ -1,6 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	ResNameIdentityProvider  = "Identity Provider"

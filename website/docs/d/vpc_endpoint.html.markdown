@@ -53,7 +53,8 @@ In addition to all arguments above except `filter`, the following attributes are
 
 * `arn` - ARN of the VPC endpoint.
 * `cidr_blocks` - List of CIDR blocks for the exposed AWS service. Applicable for endpoints of type `Gateway`.
-* `dns_entry` - DNS entries for the VPC Endpoint. Applicable for endpoints of type `Interface`. DNS blocks are documented below.
+* `dns_entry` - DNS entries for the VPC Endpoint. Applicable for endpoints of type `Interface`. [DNS entry blocks are documented below](#dns_entry-block).
+* `dns_options` - DNS options for the VPC Endpoint. [DNS options blocks are documented below](#dns_options-block).
 * `network_interface_ids` - One or more network interfaces for the VPC Endpoint. Applicable for endpoints of type `Interface`.
 * `owner_id` - ID of the AWS account that owns the VPC endpoint.
 * `policy` - Policy document associated with the VPC Endpoint. Applicable for endpoints of type `Gateway`.
@@ -65,13 +66,22 @@ In addition to all arguments above except `filter`, the following attributes are
 * `subnet_ids` - One or more subnets in which the VPC Endpoint is located. Applicable for endpoints of type `Interface`.
 * `vpc_endpoint_type` - VPC Endpoint type, `Gateway` or `Interface`.
 
+### `dns_entry` Block
+
 DNS blocks (for `dns_entry`) support the following attributes:
 
 * `dns_name` - DNS name.
 * `hosted_zone_id` - ID of the private hosted zone.
 
+### `dns_options` Block
+
+DNS options (for `dns_options`) support the following attributes:
+
+* `dns_record_ip_type` - The DNS records created for the endpoint.
+* `private_dns_only_for_inbound_resolver_endpoint` - Indicates whether to enable private DNS only for inbound endpoints.
+
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

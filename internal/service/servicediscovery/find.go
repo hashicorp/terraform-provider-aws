@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicediscovery
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -19,7 +22,7 @@ func FindInstanceByServiceIDAndInstanceID(ctx context.Context, conn *servicedisc
 	output, err := conn.GetInstanceWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeInstanceNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -85,7 +88,7 @@ func findNamespaceByNameAndType(ctx context.Context, conn *servicediscovery.Serv
 		}
 	}
 
-	return nil, &resource.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
 func FindNamespaceByID(ctx context.Context, conn *servicediscovery.ServiceDiscovery, id string) (*servicediscovery.Namespace, error) {
@@ -96,7 +99,7 @@ func FindNamespaceByID(ctx context.Context, conn *servicediscovery.ServiceDiscov
 	output, err := conn.GetNamespaceWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeNamespaceNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -121,7 +124,7 @@ func FindOperationByID(ctx context.Context, conn *servicediscovery.ServiceDiscov
 	output, err := conn.GetOperationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeOperationNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -187,7 +190,7 @@ func findServiceByNameAndNamespaceID(ctx context.Context, conn *servicediscovery
 		}
 	}
 
-	return nil, &resource.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
 func FindServiceByID(ctx context.Context, conn *servicediscovery.ServiceDiscovery, id string) (*servicediscovery.Service, error) {
@@ -198,7 +201,7 @@ func FindServiceByID(ctx context.Context, conn *servicediscovery.ServiceDiscover
 	output, err := conn.GetServiceWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeServiceNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

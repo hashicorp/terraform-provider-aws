@@ -1,20 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/locationservice"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_location_tracker")
 func DataSourceTracker() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTrackerRead,
+		ReadWithoutTimeout: dataSourceTrackerRead,
 		Schema: map[string]*schema.Schema{
 			"create_time": {
 				Type:     schema.TypeString,
@@ -50,21 +56,22 @@ func DataSourceTracker() *schema.Resource {
 	}
 }
 
-func dataSourceTrackerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+func dataSourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DescribeTrackerInput{
 		TrackerName: aws.String(d.Get("tracker_name").(string)),
 	}
 
-	output, err := conn.DescribeTracker(input)
+	output, err := conn.DescribeTrackerWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error getting Location Service Tracker: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting Location Service Tracker: %s", err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting Location Service Tracker: empty response")
+		return sdkdiag.AppendErrorf(diags, "getting Location Service Tracker: empty response")
 	}
 
 	d.SetId(aws.StringValue(output.TrackerName))
@@ -72,10 +79,10 @@ func dataSourceTrackerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", output.Description)
 	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("position_filtering", output.PositionFiltering)
-	d.Set("tags", KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 	d.Set("tracker_arn", output.TrackerArn)
 	d.Set("tracker_name", output.TrackerName)
 	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
 
-	return nil
+	return diags
 }

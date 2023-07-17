@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 import (
@@ -5,6 +8,8 @@ import (
 )
 
 func TestValidEndpointID(t *testing.T) {
+	t.Parallel()
+
 	validIds := []string{
 		"tf-test-endpoint-1",
 		"tfTestEndpoint",
@@ -36,6 +41,8 @@ func TestValidEndpointID(t *testing.T) {
 }
 
 func TestValidReplicationInstanceID(t *testing.T) {
+	t.Parallel()
+
 	validIds := []string{
 		"tf-test-replication-instance-1",
 		"tfTestReplicaitonInstance",
@@ -67,6 +74,8 @@ func TestValidReplicationInstanceID(t *testing.T) {
 }
 
 func TestValidReplicationSubnetGroupID(t *testing.T) {
+	t.Parallel()
+
 	validIds := []string{
 		"tf-test-replication-subnet-group-1",
 		"tf_test_replication_subnet_group_1",
@@ -97,6 +106,8 @@ func TestValidReplicationSubnetGroupID(t *testing.T) {
 }
 
 func TestValidReplicationTaskID(t *testing.T) {
+	t.Parallel()
+
 	validIds := []string{
 		"tf-test-replication-task-1",
 		"tfTestReplicationTask",

@@ -1,18 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cloudwatch_event_source")
 func DataSourceSource() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSourceRead,
+		ReadWithoutTimeout: dataSourceSourceRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -39,8 +45,9 @@ func DataSourceSource() *schema.Resource {
 	}
 }
 
-func dataSourceSourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func dataSourceSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.ListEventSourcesInput{}
 	if v, ok := d.GetOk("name_prefix"); ok {
@@ -49,16 +56,16 @@ func dataSourceSourceRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Listing EventBridge sources: %s", input)
 
-	resp, err := conn.ListEventSources(input)
+	resp, err := conn.ListEventSourcesWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error listing EventBridge sources: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing EventBridge sources: %s", err)
 	}
 
 	if resp == nil || len(resp.EventSources) == 0 {
-		return fmt.Errorf("no matching partner event source")
+		return sdkdiag.AppendErrorf(diags, "no matching partner event source")
 	}
 	if len(resp.EventSources) > 1 {
-		return fmt.Errorf("multiple event sources matched; use additional constraints to reduce matches to a single event source")
+		return sdkdiag.AppendErrorf(diags, "multiple event sources matched; use additional constraints to reduce matches to a single event source")
 	}
 
 	es := resp.EventSources[0]
@@ -69,5 +76,5 @@ func dataSourceSourceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", es.Name)
 	d.Set("state", es.State)
 
-	return nil
+	return diags
 }

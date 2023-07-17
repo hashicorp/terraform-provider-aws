@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tags
 
 import (
@@ -5,6 +8,8 @@ import (
 )
 
 func TestGetResourceID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Description        string
 		ResourceIdentifier string
@@ -50,8 +55,9 @@ func TestGetResourceID(t *testing.T) {
 
 	for _, testCase := range testCases {
 		testCase := testCase
-
 		t.Run(testCase.Description, func(t *testing.T) {
+			t.Parallel()
+
 			gotIdentifier, gotKey, err := GetResourceID(testCase.ResourceIdentifier)
 
 			if err != nil && !testCase.ExpectedError(err) {
@@ -78,6 +84,8 @@ func TestGetResourceID(t *testing.T) {
 }
 
 func TestSetResourceId(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Description                string
 		Identifier                 string
@@ -94,8 +102,9 @@ func TestSetResourceId(t *testing.T) {
 
 	for _, testCase := range testCases {
 		testCase := testCase
-
 		t.Run(testCase.Description, func(t *testing.T) {
+			t.Parallel()
+
 			got := SetResourceID(testCase.Identifier, testCase.Key)
 
 			if got != testCase.ExpectedResourceIdentifier {

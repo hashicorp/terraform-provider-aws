@@ -1,10 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -14,9 +19,9 @@ const (
 	ConfigStatusExists   = "Exists"
 )
 
-func statusUpgradeStatus(conn *opensearchservice.OpenSearchService, name string) resource.StateRefreshFunc {
+func statusUpgradeStatus(ctx context.Context, conn *opensearchservice.OpenSearchService, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := conn.GetUpgradeStatus(&opensearchservice.GetUpgradeStatusInput{
+		out, err := conn.GetUpgradeStatusWithContext(ctx, &opensearchservice.GetUpgradeStatusInput{
 			DomainName: aws.String(name),
 		})
 		if err != nil {
@@ -34,9 +39,9 @@ func statusUpgradeStatus(conn *opensearchservice.OpenSearchService, name string)
 	}
 }
 
-func domainConfigStatus(conn *opensearchservice.OpenSearchService, name string) resource.StateRefreshFunc {
+func domainConfigStatus(ctx context.Context, conn *opensearchservice.OpenSearchService, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := conn.DescribeDomainConfig(&opensearchservice.DescribeDomainConfigInput{
+		out, err := conn.DescribeDomainConfigWithContext(ctx, &opensearchservice.DescribeDomainConfigInput{
 			DomainName: aws.String(name),
 		})
 

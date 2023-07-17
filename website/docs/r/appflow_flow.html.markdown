@@ -14,33 +14,34 @@ Provides an AppFlow flow resource.
 
 ```terraform
 resource "aws_s3_bucket" "example_source" {
-  bucket = "example_source"
+  bucket = "example-source"
+}
+
+data "aws_iam_policy_document" "example_source" {
+  statement {
+    sid    = "AllowAppFlowSourceActions"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["appflow.amazonaws.com"]
+    }
+
+    actions = [
+      "s3:ListBucket",
+      "s3:GetObject",
+    ]
+
+    resources = [
+      "arn:aws:s3:::example_source",
+      "arn:aws:s3:::example_source/*",
+    ]
+  }
 }
 
 resource "aws_s3_bucket_policy" "example_source" {
   bucket = aws_s3_bucket.example_source.id
-  policy = <<EOF
-{
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Sid": "AllowAppFlowSourceActions",
-            "Principal": {
-                "Service": "appflow.amazonaws.com"
-            },
-            "Action": [
-                "s3:ListBucket",
-                "s3:GetObject"
-            ],
-            "Resource": [
-                "arn:aws:s3:::example_source",
-                "arn:aws:s3:::example_source/*"
-            ]
-        }
-    ],
-	"Version": "2012-10-17"
-}
-EOF
+  policy = data.aws_iam_policy_document.example_source.json
 }
 
 resource "aws_s3_object" "example" {
@@ -50,38 +51,38 @@ resource "aws_s3_object" "example" {
 }
 
 resource "aws_s3_bucket" "example_destination" {
-  bucket = "example_destination"
+  bucket = "example-destination"
+}
+
+data "aws_iam_policy_document" "example_destination" {
+  statement {
+    sid    = "AllowAppFlowDestinationActions"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["appflow.amazonaws.com"]
+    }
+
+    actions = [
+      "s3:PutObject",
+      "s3:AbortMultipartUpload",
+      "s3:ListMultipartUploadParts",
+      "s3:ListBucketMultipartUploads",
+      "s3:GetBucketAcl",
+      "s3:PutObjectAcl",
+    ]
+
+    resources = [
+      "arn:aws:s3:::example_destination",
+      "arn:aws:s3:::example_destination/*",
+    ]
+  }
 }
 
 resource "aws_s3_bucket_policy" "example_destination" {
   bucket = aws_s3_bucket.example_destination.id
-  policy = <<EOF
-
-{
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Sid": "AllowAppFlowDestinationActions",
-            "Principal": {
-                "Service": "appflow.amazonaws.com"
-            },
-            "Action": [
-                "s3:PutObject",
-                "s3:AbortMultipartUpload",
-                "s3:ListMultipartUploadParts",
-                "s3:ListBucketMultipartUploads",
-                "s3:GetBucketAcl",
-                "s3:PutObjectAcl"
-            ],
-            "Resource": [
-                "arn:aws:s3:::example_destination",
-                "arn:aws:s3:::example_destination/*"
-            ]
-        }
-    ],
-	"Version": "2012-10-17"
-}
-EOF
+  policy = data.aws_iam_policy_document.example_destination.json
 }
 
 resource "aws_appflow_flow" "example" {
@@ -202,6 +203,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 * `aggregation_config` - (Optional) Aggregation settings that you can use to customize the output format of your flow data. See [Aggregation Config](#aggregation-config) for more details.
 * `file_type` - (Optional) File type that Amazon AppFlow places in the Amazon S3 bucket. Valid values are `CSV`, `JSON`, and `PARQUET`.
 * `prefix_config` - (Optional) Determines the prefix that Amazon AppFlow applies to the folder name in the Amazon S3 bucket. You can name folders according to the flow frequency and date. See [Prefix Config](#prefix-config) for more details.
+* `preserve_source_data_typing` - (Optional, Boolean) Whether the data types from the source system need to be preserved (Only valid for `Parquet` file type)
 
 ##### Salesforce Destination Properties
 
@@ -319,7 +321,7 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 
 ##### SAPOData Source Properties
 
-* `object_path` - (Optional) Object path specified in the SAPOData flow source.
+* `object_path` - (Required) Object path specified in the SAPOData flow source.
 
 ##### Veeva Source Properties
 

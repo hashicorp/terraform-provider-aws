@@ -1,12 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloud9
 
 import (
+	"context"
 	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -15,15 +19,15 @@ const (
 	EnvironmentDeletedTimeout = 20 * time.Minute
 )
 
-func waitEnvironmentReady(conn *cloud9.Cloud9, id string) (*cloud9.Environment, error) {
-	stateConf := &resource.StateChangeConf{
+func waitEnvironmentReady(ctx context.Context, conn *cloud9.Cloud9, id string) (*cloud9.Environment, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{cloud9.EnvironmentLifecycleStatusCreating},
 		Target:  []string{cloud9.EnvironmentLifecycleStatusCreated},
-		Refresh: statusEnvironmentStatus(conn, id),
+		Refresh: statusEnvironmentStatus(ctx, conn, id),
 		Timeout: EnvironmentReadyTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloud9.Environment); ok {
 		if lifecycle := output.Lifecycle; aws.StringValue(lifecycle.Status) == cloud9.EnvironmentLifecycleStatusCreateFailed {
@@ -36,15 +40,15 @@ func waitEnvironmentReady(conn *cloud9.Cloud9, id string) (*cloud9.Environment, 
 	return nil, err
 }
 
-func waitEnvironmentDeleted(conn *cloud9.Cloud9, id string) (*cloud9.Environment, error) {
-	stateConf := &resource.StateChangeConf{
+func waitEnvironmentDeleted(ctx context.Context, conn *cloud9.Cloud9, id string) (*cloud9.Environment, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{cloud9.EnvironmentLifecycleStatusDeleting},
 		Target:  []string{},
-		Refresh: statusEnvironmentStatus(conn, id),
+		Refresh: statusEnvironmentStatus(ctx, conn, id),
 		Timeout: EnvironmentDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloud9.Environment); ok {
 		if lifecycle := output.Lifecycle; aws.StringValue(lifecycle.Status) == cloud9.EnvironmentLifecycleStatusDeleteFailed {

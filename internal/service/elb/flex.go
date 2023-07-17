@@ -1,7 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb
 
 import (
-	"fmt"
+	"errors"
 	"sort"
 	"strings"
 
@@ -124,7 +127,7 @@ func ExpandListeners(configured []interface{}) ([]*elb.Listener, error) {
 		if valid {
 			listeners = append(listeners, l)
 		} else {
-			return nil, fmt.Errorf("ELB Listener: ssl_certificate_id may be set only when protocol is 'https' or 'ssl'")
+			return nil, errors.New(`"ssl_certificate_id" may be set only when "protocol" is "https" or "ssl"`)
 		}
 	}
 
@@ -166,7 +169,6 @@ func ExpandPolicyAttributes(configured []interface{}) []*elb.PolicyAttribute {
 		}
 
 		attributes = append(attributes, a)
-
 	}
 
 	return attributes

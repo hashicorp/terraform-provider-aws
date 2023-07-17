@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds
 
 import (
@@ -5,13 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusDirectoryStage(conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
+func statusDirectoryStage(ctx context.Context, conn *directoryservice.DirectoryService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDirectoryByID(conn, id)
+		output, err := FindDirectoryByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -25,9 +28,9 @@ func statusDirectoryStage(conn *directoryservice.DirectoryService, id string) re
 	}
 }
 
-func statusDirectoryShareStatus(conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
+func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.DirectoryService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDirectoryByID(conn, id)
+		output, err := FindDirectoryByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -41,9 +44,9 @@ func statusDirectoryShareStatus(conn *directoryservice.DirectoryService, id stri
 	}
 }
 
-func statusDomainController(conn *directoryservice.DirectoryService, directoryID, domainControllerID string) resource.StateRefreshFunc {
+func statusDomainController(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, domainControllerID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDomainController(conn, directoryID, domainControllerID)
+		output, err := FindDomainController(ctx, conn, directoryID, domainControllerID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -57,9 +60,9 @@ func statusDomainController(conn *directoryservice.DirectoryService, directoryID
 	}
 }
 
-func statusRadius(_ context.Context, conn *directoryservice.DirectoryService, directoryID string) resource.StateRefreshFunc {
+func statusRadius(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDirectoryByID(conn, directoryID)
+		output, err := FindDirectoryByID(ctx, conn, directoryID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -73,7 +76,7 @@ func statusRadius(_ context.Context, conn *directoryservice.DirectoryService, di
 	}
 }
 
-func statusRegion(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string) resource.StateRefreshFunc {
+func statusRegion(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindRegion(ctx, conn, directoryID, regionName)
 
@@ -89,7 +92,7 @@ func statusRegion(ctx context.Context, conn *directoryservice.DirectoryService, 
 	}
 }
 
-func statusSharedDirectory(ctx context.Context, conn *directoryservice.DirectoryService, ownerDirectoryID, sharedDirectoryID string) resource.StateRefreshFunc {
+func statusSharedDirectory(ctx context.Context, conn *directoryservice.DirectoryService, ownerDirectoryID, sharedDirectoryID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSharedDirectory(ctx, conn, ownerDirectoryID, sharedDirectoryID)
 

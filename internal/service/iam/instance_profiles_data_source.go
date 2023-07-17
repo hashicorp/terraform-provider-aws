@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -10,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_iam_instance_profiles")
 func DataSourceInstanceProfiles() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceProfilesRead,
@@ -40,7 +44,7 @@ func DataSourceInstanceProfiles() *schema.Resource {
 }
 
 func dataSourceInstanceProfilesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	roleName := d.Get("role_name").(string)
 	input := &iam.ListInstanceProfilesForRoleInput{

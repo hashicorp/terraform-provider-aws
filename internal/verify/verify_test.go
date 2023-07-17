@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package verify
 
 import (
@@ -5,6 +8,8 @@ import (
 )
 
 func TestCheckYAMLString(t *testing.T) {
+	t.Parallel()
+
 	var err error
 	var actual string
 

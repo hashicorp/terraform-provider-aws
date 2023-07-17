@@ -47,6 +47,6 @@ $ terraform import aws_route53recoveryreadiness_readiness_check.my-cw-alarm-chec
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `delete` - (Default `5m`)

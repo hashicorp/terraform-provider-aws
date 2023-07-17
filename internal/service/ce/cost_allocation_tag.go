@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ce
 
 import (
@@ -14,12 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ce_cost_allocation_tag")
 func ResourceCostAllocationTag() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCostAllocationTagUpdate,
-		ReadContext:   resourceCostAllocationTagRead,
-		UpdateContext: resourceCostAllocationTagUpdate,
-		DeleteContext: resourceCostAllocationTagDelete,
+		CreateWithoutTimeout: resourceCostAllocationTagUpdate,
+		ReadWithoutTimeout:   resourceCostAllocationTagRead,
+		UpdateWithoutTimeout: resourceCostAllocationTagUpdate,
+		DeleteWithoutTimeout: resourceCostAllocationTagDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -43,7 +47,7 @@ func ResourceCostAllocationTag() *schema.Resource {
 }
 
 func resourceCostAllocationTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	costAllocTag, err := FindCostAllocationTagByKey(ctx, conn, d.Id())
 
@@ -79,7 +83,7 @@ func resourceCostAllocationTagDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func updateTagStatus(ctx context.Context, d *schema.ResourceData, meta interface{}, delete bool) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	key := d.Get("tag_key").(string)
 	tagStatus := &costexplorer.CostAllocationTagStatusEntry{

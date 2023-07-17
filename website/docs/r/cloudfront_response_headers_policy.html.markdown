@@ -93,6 +93,7 @@ The following arguments are supported:
 * `comment` - (Optional) A comment to describe the response headers policy. The comment cannot be longer than 128 characters.
 * `cors_config` - (Optional) A configuration for a set of HTTP response headers that are used for Cross-Origin Resource Sharing (CORS). See [Cors Config](#cors-config) for more information.
 * `custom_headers_config` - (Optional) Object that contains an attribute `items` that contains a list of custom headers. See [Custom Header](#custom-header) for more information.
+* `remove_headers_config` - (Optional) A configuration for a set of HTTP headers to remove from the HTTP response. Object that contains an attribute `items` that contains a list of headers. See [Remove Header](#remove-header) for more information.
 * `security_headers_config` - (Optional) A configuration for a set of security-related HTTP response headers. See [Security Headers Config](#security-headers-config) for more information.
 * `server_timing_headers_config` - (Optional) A configuration for enabling the Server-Timing header in HTTP responses sent from CloudFront. See [Server Timing Headers Config](#server-timing-headers-config) for more information.
 
@@ -101,9 +102,9 @@ The following arguments are supported:
 * `access_control_allow_credentials` - (Required) A Boolean value that CloudFront uses as the value for the `Access-Control-Allow-Credentials` HTTP response header.
 * `access_control_allow_headers` - (Required) Object that contains an attribute `items` that contains a list of HTTP header names that CloudFront includes as values for the `Access-Control-Allow-Headers` HTTP response header.
 * `access_control_allow_methods` - (Required) Object that contains an attribute `items` that contains a list of HTTP methods that CloudFront includes as values for the `Access-Control-Allow-Methods` HTTP response header. Valid values: `GET` | `POST` | `OPTIONS` | `PUT` | `DELETE` | `HEAD` | `ALL`
-* `access_control_allow_origins` - (Optional) Object that contains an attribute `items` that contains a list of origins that CloudFront can use as the value for the `Access-Control-Allow-Origin` HTTP response header.
+* `access_control_allow_origins` - (Required) Object that contains an attribute `items` that contains a list of origins that CloudFront can use as the value for the `Access-Control-Allow-Origin` HTTP response header.
 * `access_control_expose_headers` - (Optional) Object that contains an attribute `items` that contains a list of HTTP headers that CloudFront includes as values for the `Access-Control-Expose-Headers` HTTP response header.
-* `access_control_max_age_sec` - (Required) A number that CloudFront uses as the value for the `Access-Control-Max-Age` HTTP response header.
+* `access_control_max_age_sec` - (Optional) A number that CloudFront uses as the value for the `Access-Control-Max-Age` HTTP response header.
 * `origin_override` - (Required) A Boolean value that determines how CloudFront behaves for the HTTP response header.
 
 ### Custom Header
@@ -111,6 +112,10 @@ The following arguments are supported:
 * `header` - (Required) The HTTP response header name.
 * `override` - (Required) Whether CloudFront overrides a response header with the same name received from the origin with the header specifies here.
 * `value` - (Required) The value for the HTTP response header.
+
+### Remove Header
+
+* `header` - (Required) The HTTP header name.
 
 ### Security Headers Config
 
@@ -149,7 +154,7 @@ The following arguments are supported:
 
 ### XSS Protection
 
-* `mode_block` - (Required) Whether CloudFront includes the `mode=block` directive in the `X-XSS-Protection` header.
+* `mode_block` - (Optional) Whether CloudFront includes the `mode=block` directive in the `X-XSS-Protection` header.
 * `override` - (Required) Whether CloudFront overrides the `X-XSS-Protection` HTTP response header received from the origin with the one specified in this response headers policy.
 * `protection` - (Required) A Boolean value that determines the value of the `X-XSS-Protection` HTTP response header. When this setting is `true`, the value of the `X-XSS-Protection` header is `1`. When this setting is `false`, the value of the `X-XSS-Protection` header is `0`.
 * `report_uri` - (Optional) A reporting URI, which CloudFront uses as the value of the report directive in the `X-XSS-Protection` header. You cannot specify a `report_uri` when `mode_block` is `true`.

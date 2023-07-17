@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_sqs_queue_redrive_policy
+```
+
+```release-note:new-resource
+aws_sqs_queue_redrive_allow_policy
+```
