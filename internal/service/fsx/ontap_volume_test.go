@@ -284,6 +284,47 @@ func TestAccFSxOntapVolume_size(t *testing.T) {
 	})
 }
 
+func TestAccFSxOntapVolume_snapshotPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var volume1, volume2 fsx.Volume
+	resourceName := "aws_fsx_ontap_volume.test"
+	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+	policy1 := "default"
+	policy2 := "none"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapVolumeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccONTAPVolumeConfig_snapshotPolicy(rName, policy1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOntapVolumeExists(ctx, resourceName, &volume1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", fmt.Sprint(policy1)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_backup"},
+			},
+			{
+				Config: testAccONTAPVolumeConfig_snapshotPolicy(rName, policy2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOntapVolumeExists(ctx, resourceName, &volume2),
+					testAccCheckOntapVolumeNotRecreated(&volume1, &volume2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", fmt.Sprint(policy2)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFSxOntapVolume_storageEfficiency(t *testing.T) {
 	ctx := acctest.Context(t)
 	var volume1, volume2 fsx.Volume
@@ -563,6 +604,19 @@ resource "aws_fsx_ontap_volume" "test" {
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
 `, rName, securityStyle))
+}
+
+func testAccONTAPVolumeConfig_snapshotPolicy(rName string, snapshotPolicy string) string {
+	return acctest.ConfigCompose(testAccOntapVolumeConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_volume" "test" {
+  name                       = %[1]q
+  junction_path              = "/%[1]s"
+  size_in_megabytes          = 1024
+  snapshot_policy            = %[2]q
+  storage_efficiency_enabled = true
+  storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
+}
+`, rName, snapshotPolicy))
 }
 
 func testAccONTAPVolumeConfig_size(rName string, size int) string {
