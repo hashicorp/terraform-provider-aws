@@ -1283,7 +1283,7 @@ func expandComparisonConfiguration(tfList []interface{}) *quicksight.ComparisonC
 
 	config := &quicksight.ComparisonConfiguration{}
 
-	if v, ok := tfMap["config"].(string); ok && v != "" {
+	if v, ok := tfMap["comparison_method"].(string); ok && v != "" {
 		config.ComparisonMethod = aws.String(v)
 	}
 	if v, ok := tfMap["comparison_format"].([]interface{}); ok && len(v) > 0 {

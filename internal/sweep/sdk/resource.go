@@ -74,7 +74,7 @@ func deleteResource(ctx context.Context, resource *schema.Resource, d *schema.Re
 	return resource.Delete(d, meta)
 }
 
-// Deprecated: Create a list of Sweepables and pass them to SweepOrchestratorWithContext instead
+// Deprecated: Create a list of Sweepables and pass them to SweepOrchestrator instead
 func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta *conns.AWSClient) error {
 	return deleteResource(ctx, resource, d, meta)
 }

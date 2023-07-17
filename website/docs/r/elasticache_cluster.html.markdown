@@ -182,6 +182,15 @@ The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09
 * `subnet_group_name` – (Optional, VPC only) Name of the subnet group to be used for the cache cluster. Changing this value will re-create the resource.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
+### Log Delivery Configuration
+
+The `log_delivery_configuration` block allows the streaming of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) to CloudWatch Logs or Kinesis Data Firehose. Max of 2 blocks.
+
+* `destination` - Name of either the CloudWatch Logs LogGroup or Kinesis Data Firehose resource.
+* `destination_type` - For CloudWatch Logs use `cloudwatch-logs` or for Kinesis Data Firehose use `kinesis-firehose`.
+* `log_format` - Valid values are `json` or `text`
+* `log_type` - Valid values are  `slow-log` or `engine-log`. Max 1 of each.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -192,15 +201,6 @@ In addition to all arguments above, the following attributes are exported:
 * `cluster_address` - (Memcached only) DNS name of the cache cluster without the port appended.
 * `configuration_endpoint` - (Memcached only) Configuration endpoint to allow host discovery.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
-### Log Delivery Configuration
-
-The `log_delivery_configuration` block allows the streaming of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) to CloudWatch Logs or Kinesis Data Firehose. Max of 2 blocks.
-
-* `destination` - Name of either the CloudWatch Logs LogGroup or Kinesis Data Firehose resource.
-* `destination_type` - For CloudWatch Logs use `cloudwatch-logs` or for Kinesis Data Firehose use `kinesis-firehose`.
-* `log_format` - Valid values are `json` or `text`
-* `log_type` - Valid values are  `slow-log` or `engine-log`. Max 1 of each.
 
 ## Timeouts
 

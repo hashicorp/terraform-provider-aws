@@ -2309,7 +2309,7 @@ func flattenBodyContains(apiObject *wafv2.ResponseInspectionBodyContains) []inte
 
 	m := map[string]interface{}{
 		"failure_strings": flex.FlattenStringSet(apiObject.FailureStrings),
-		"succeed_strings": flex.FlattenStringSet(apiObject.SuccessStrings),
+		"success_strings": flex.FlattenStringSet(apiObject.SuccessStrings),
 	}
 
 	return []interface{}{m}
@@ -2322,7 +2322,7 @@ func flattenHeader(apiObject *wafv2.ResponseInspectionHeader) []interface{} {
 
 	m := map[string]interface{}{
 		"failure_values": flex.FlattenStringSet(apiObject.FailureValues),
-		"succeed_values": flex.FlattenStringSet(apiObject.SuccessValues),
+		"success_values": flex.FlattenStringSet(apiObject.SuccessValues),
 	}
 
 	return []interface{}{m}
@@ -2336,7 +2336,7 @@ func flattenResponseInspectionJSON(apiObject *wafv2.ResponseInspectionJson) []in
 	m := map[string]interface{}{
 		"failure_values": flex.FlattenStringSet(apiObject.FailureValues),
 		"identifier":     aws.StringValue(apiObject.Identifier),
-		"succeed_values": flex.FlattenStringSet(apiObject.SuccessValues),
+		"success_values": flex.FlattenStringSet(apiObject.SuccessValues),
 	}
 
 	return []interface{}{m}

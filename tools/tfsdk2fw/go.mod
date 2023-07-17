@@ -16,7 +16,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
-	github.com/aws/aws-sdk-go v1.44.297 // indirect
+	github.com/aws/aws-sdk-go v1.44.299 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.18.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.18.27 // indirect
@@ -32,7 +32,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.25.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.2.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.14 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.21.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.22.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.24.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.3 // indirect
@@ -54,7 +54,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.3.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.37.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.27.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.31.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/oam v1.1.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.8 // indirect
