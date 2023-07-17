@@ -14,7 +14,11 @@ Manages API Gateway Stage Method Settings. For example, CloudWatch logging and m
 
 ## Example Usage
 
+### End-to-end
+
 An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
+
+### Basic Usage
 
 ```terraform
 resource "aws_api_gateway_rest_api" "example" {
@@ -78,6 +82,72 @@ resource "aws_api_gateway_method_settings" "path_specific" {
   settings {
     metrics_enabled = true
     logging_level   = "INFO"
+  }
+}
+```
+
+### CloudWatch Logging and Tracing
+
+The AWS Console API Gateway Editor displays multiple options for CloudWatch Logs that don't directly map to the options in the AWS API and Terraform. These examples show the `settings` blocks that are equivalent to the options the AWS Console gives for CloudWatch Logs.
+
+#### Off
+
+```terraform
+resource "aws_api_gateway_method_settings" "path_specific" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  stage_name  = aws_api_gateway_stage.example.stage_name
+  method_path = "path1/GET"
+
+  settings {
+    logging_level = "OFF"
+  }
+}
+```
+
+#### Errors Only
+
+```terraform
+resource "aws_api_gateway_method_settings" "path_specific" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  stage_name  = aws_api_gateway_stage.example.stage_name
+  method_path = "path1/GET"
+
+  settings {
+    logging_level      = "ERROR"
+    metrics_enabled    = true
+    data_trace_enabled = false
+  }
+}
+```
+
+#### Errors and Info Logs
+
+```terraform
+resource "aws_api_gateway_method_settings" "path_specific" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  stage_name  = aws_api_gateway_stage.example.stage_name
+  method_path = "path1/GET"
+
+  settings {
+    logging_level      = "INFO"
+    metrics_enabled    = true
+    data_trace_enabled = false
+  }
+}
+```
+
+#### Full Request and Response Logs
+
+```terraform
+resource "aws_api_gateway_method_settings" "path_specific" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  stage_name  = aws_api_gateway_stage.example.stage_name
+  method_path = "path1/GET"
+
+  settings {
+    logging_level      = "INFO"
+    metrics_enabled    = true
+    data_trace_enabled = true
   }
 }
 ```
