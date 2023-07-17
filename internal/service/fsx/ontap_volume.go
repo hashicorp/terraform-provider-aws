@@ -96,8 +96,8 @@ func ResourceOntapVolume() *schema.Resource {
 			"snapshot_policy": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      false,
-				ValidateFunc: validation.StringInSlice([]string{"default", "default-1weekly", "none"}, false),
+				Computed:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"storage_efficiency_enabled": {
 				Type:     schema.TypeBool,

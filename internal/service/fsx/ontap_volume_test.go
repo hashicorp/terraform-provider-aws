@@ -44,6 +44,7 @@ func TestAccFSxOntapVolume_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_style", ""),
 					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "false"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", "default"),
 					resource.TestCheckResourceAttr(resourceName, "storage_efficiency_enabled", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "storage_virtual_machine_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
