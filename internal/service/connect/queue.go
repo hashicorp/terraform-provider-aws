@@ -29,9 +29,7 @@ func ResourceQueue() *schema.Resource {
 		CreateWithoutTimeout: resourceQueueCreate,
 		ReadWithoutTimeout:   resourceQueueRead,
 		UpdateWithoutTimeout: resourceQueueUpdate,
-		// Queues do not support deletion today. NoOp the Delete method.
-		// Users can rename their queues manually if they want.
-		DeleteWithoutTimeout: schema.NoopContext,
+		DeleteWithoutTimeout: resourceQueueDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -344,6 +342,27 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return resourceQueueRead(ctx, d, meta)
+}
+
+func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+
+	instanceID, queueID, err := QueueParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	_, err = conn.DeleteQueueWithContext(ctx, &connect.DeleteQueueInput{
+		InstanceId: aws.String(instanceID),
+		QueueId:    aws.String(queueID),
+	})
+
+	if err != nil {
+		return diag.Errorf("deleting Queue (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }
 
 func expandOutboundCallerConfig(outboundCallerConfig []interface{}) *connect.OutboundCallerConfig {
