@@ -95,7 +95,7 @@ func sweepTables(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading DynamoDB Tables: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DynamoDB Tables for %s: %w", region, err))
 	}
 
@@ -151,7 +151,7 @@ func sweepBackups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("reading DynamoDB Backups: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping DynamoDB Backups for %s: %w", region, err))
 	}
 

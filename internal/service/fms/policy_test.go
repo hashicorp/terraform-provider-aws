@@ -157,6 +157,47 @@ func testAccPolicy_update(t *testing.T) {
 	})
 }
 
+func testAccPolicy_policyOption(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fms_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_policyOption(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName),
+					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "arn", "fms", "policy/.+"),
+					resource.TestCheckResourceAttr(resourceName, "delete_unused_fm_managed_resources", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.policy_option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.policy_option.0.network_firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.policy_option.0.network_firewall_policy.0.firewall_deployment_model", "CENTRALIZED"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.policy_option.0.third_party_firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.policy_option.0.third_party_firewall_policy.0.firewall_deployment_model", "DISTRIBUTED"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"policy_update_token", "delete_all_policy_resources"},
+			},
+		},
+	})
+}
+
 func testAccPolicy_resourceTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -298,6 +339,43 @@ resource "aws_fms_policy" "test" {
   security_service_policy_data {
     type                 = "WAF"
     managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+  }
+
+  depends_on = [aws_fms_admin_account.test]
+}
+
+resource "aws_wafregional_rule_group" "test" {
+  metric_name = "MyTest"
+  name        = %[2]q
+}
+`, policyName, ruleGroupName))
+}
+
+func testAccPolicyConfig_policyOption(policyName, ruleGroupName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfig_baseOrgMgmtAccount, fmt.Sprintf(`
+resource "aws_fms_policy" "test" {
+  exclude_resource_tags = false
+  name                  = %[1]q
+  remediation_enabled   = false
+  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+
+  exclude_map {
+    account = [data.aws_caller_identity.current.account_id]
+  }
+
+  security_service_policy_data {
+    type                 = "WAF"
+    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+
+    policy_option {
+      network_firewall_policy {
+        firewall_deployment_model = "CENTRALIZED"
+      }
+
+      third_party_firewall_policy {
+        firewall_deployment_model = "DISTRIBUTED"
+      }
+    }
   }
 
   depends_on = [aws_fms_admin_account.test]

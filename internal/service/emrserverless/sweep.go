@@ -62,7 +62,7 @@ func sweepApplications(region string) error {
 		return fmt.Errorf("error listing EMR Serverless Applications (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EMR Serverless Applications (%s): %w", region, err)

@@ -119,7 +119,7 @@ func sweepApplication(region string) error {
 		}
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 func sweepInstance(region string) error {
@@ -172,7 +172,7 @@ func sweepInstance(region string) error {
 		}
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 func sweepRDSDBInstance(region string) error {
@@ -225,7 +225,7 @@ func sweepRDSDBInstance(region string) error {
 		}
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 func sweepStacks(region string) error {
@@ -268,7 +268,7 @@ func sweepStacks(region string) error {
 		sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 func sweepLayers(region string) error {
@@ -330,7 +330,7 @@ func sweepLayers(region string) error {
 		}
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 func sweepUserProfiles(region string) error {
@@ -360,7 +360,7 @@ func sweepUserProfiles(region string) error {
 		sweepResources = append(sweepResources, newUserProfileSweeper(r, d, client))
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 type userProfileSweeper struct {

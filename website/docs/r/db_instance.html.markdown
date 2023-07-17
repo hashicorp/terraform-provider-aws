@@ -407,7 +407,6 @@ in a Route 53 Alias record).
 * `maintenance_window` - The instance maintenance window.
 * `master_user_secret` - A block that specifies the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret).
 * `multi_az` - If the RDS instance is multi AZ enabled.
-* `name` - The database name.
 * `port` - The database port.
 * `resource_id` - The RDS Resource ID of this instance.
 * `status` - The RDS instance status.

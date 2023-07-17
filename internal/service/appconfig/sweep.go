@@ -94,7 +94,7 @@ func sweepApplications(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Applications for %s: %w", region, err))
 	}
 
@@ -171,7 +171,7 @@ func sweepConfigurationProfiles(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Configuration Profiles for %s: %w", region, err))
 	}
 
@@ -230,7 +230,7 @@ func sweepDeploymentStrategies(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Deployment Strategies: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Deployment Strategies for %s: %w", region, err))
 	}
 
@@ -303,7 +303,7 @@ func sweepEnvironments(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Environments for %s: %w", region, err))
 	}
 
@@ -405,7 +405,7 @@ func sweepHostedConfigurationVersions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Hosted Configuration Versions for %s: %w", region, err))
 	}
 

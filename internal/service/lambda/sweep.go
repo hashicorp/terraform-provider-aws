@@ -69,7 +69,7 @@ func sweepFunctions(region string) error {
 		return fmt.Errorf("error listing Lambda Functions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Lambda Functions (%s): %w", region, err)
@@ -139,7 +139,7 @@ func sweepLayerVersions(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Lambda Layers (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Lambda Layer Versions (%s): %w", region, err))

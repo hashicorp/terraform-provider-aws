@@ -141,7 +141,7 @@ func sweepCachePolicies(region string) error {
 		return fmt.Errorf("error listing CloudFront Cache Policies (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront Cache Policies (%s): %w", region, err)
@@ -199,7 +199,7 @@ func sweepDistributions(region string) error {
 		return fmt.Errorf("error listing CloudFront Distributions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront Distributions (%s): %w", region, err)
@@ -259,7 +259,7 @@ func sweepFunctions(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudFront Functions: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping CloudFront Functions: %w", err))
 	}
 
@@ -416,7 +416,7 @@ func sweepRealtimeLogsConfig(region string) error {
 		input.Marker = output.RealtimeLogConfigs.NextMarker
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping CloudFront Real-time Log Configs: %w", err))
 	}
 
@@ -472,7 +472,7 @@ func sweepFieldLevelEncryptionConfigs(region string) error {
 		return fmt.Errorf("error listing CloudFront Field-level Encryption Configs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront Field-level Encryption Configs (%s): %w", region, err)
@@ -530,7 +530,7 @@ func sweepFieldLevelEncryptionProfiles(region string) error {
 		return fmt.Errorf("error listing CloudFront Field-level Encryption Profiles (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront Field-level Encryption Profiles (%s): %w", region, err)
@@ -590,7 +590,7 @@ func sweepOriginRequestPolicies(region string) error {
 		return fmt.Errorf("error listing CloudFront Origin Request Policies (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront Origin Request Policies (%s): %w", region, err)
@@ -650,7 +650,7 @@ func sweepResponseHeadersPolicies(region string) error {
 		return fmt.Errorf("error listing CloudFront Response Headers Policies (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront Response Headers Policies (%s): %w", region, err)
@@ -708,7 +708,7 @@ func sweepOriginAccessControls(region string) error {
 		return fmt.Errorf("error listing CloudFront Origin Access Controls (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront Origin Access Controls (%s): %w", region, err)

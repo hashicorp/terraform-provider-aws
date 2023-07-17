@@ -3,7 +3,7 @@ module github.com/hashicorp/terraform-provider-aws/tools
 go 1.20
 
 require (
-	github.com/YakDriver/tfproviderdocs v0.4.0
+	github.com/YakDriver/tfproviderdocs v0.5.0
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint v1.53.3
 	github.com/hashicorp/copywrite v0.16.4
@@ -138,7 +138,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.17.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.17.2 // indirect
-	github.com/hashicorp/terraform-json v0.16.0 // indirect
+	github.com/hashicorp/terraform-json v0.17.1 // indirect
 	github.com/hashicorp/terraform-registry-address v0.2.0 // indirect
 	github.com/hashicorp/terraform-svchost v0.0.1 // indirect
 	github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d // indirect
