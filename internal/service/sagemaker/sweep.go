@@ -1032,7 +1032,7 @@ func sweepPipelines(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Pipelines: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("sweeping SageMaker Pipelines: %w", err))
 	}
 
