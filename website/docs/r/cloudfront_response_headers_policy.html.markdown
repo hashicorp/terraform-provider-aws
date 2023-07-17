@@ -154,7 +154,7 @@ The following arguments are supported:
 
 ### XSS Protection
 
-* `mode_block` - (Required) Whether CloudFront includes the `mode=block` directive in the `X-XSS-Protection` header.
+* `mode_block` - (Optional) Whether CloudFront includes the `mode=block` directive in the `X-XSS-Protection` header.
 * `override` - (Required) Whether CloudFront overrides the `X-XSS-Protection` HTTP response header received from the origin with the one specified in this response headers policy.
 * `protection` - (Required) A Boolean value that determines the value of the `X-XSS-Protection` HTTP response header. When this setting is `true`, the value of the `X-XSS-Protection` header is `1`. When this setting is `false`, the value of the `X-XSS-Protection` header is `0`.
 * `report_uri` - (Optional) A reporting URI, which CloudFront uses as the value of the report directive in the `X-XSS-Protection` header. You cannot specify a `report_uri` when `mode_block` is `true`.
