@@ -11,8 +11,6 @@ description: |-
 Provides an Amazon Connect Queue resource. For more information see
 [Amazon Connect: Getting Started](https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-get-started.html)
 
-~> **NOTE:** Due to The behaviour of Amazon Connect you cannot delete queues.
-
 ## Example Usage
 
 ### Basic
