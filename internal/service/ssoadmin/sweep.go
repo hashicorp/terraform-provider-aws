@@ -53,14 +53,11 @@ func sweepAccountAssignments(region string) error {
 	ds := DataSourceInstances()
 	dsData := ds.Data(nil)
 
-	err = sdk.ReadResource(ctx, ds, dsData, client)
-
-	if accessDenied.MatchString(err.Error()) {
-		log.Printf("[WARN] Skipping SSO Account Assignment sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
+	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
+		if accessDenied.MatchString(err.Error()) {
+			log.Printf("[WARN] Skipping SSO Account Assignment sweep for %s: %s", region, err)
+			return nil
+		}
 		return err
 	}
 
@@ -160,14 +157,11 @@ func sweepPermissionSets(region string) error {
 	ds := DataSourceInstances()
 	dsData := ds.Data(nil)
 
-	err = sdk.ReadResource(ctx, ds, dsData, client)
-
-	if accessDenied.MatchString(err.Error()) {
-		log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
+	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
+		if accessDenied.MatchString(err.Error()) {
+			log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)
+			return nil
+		}
 		return err
 	}
 
