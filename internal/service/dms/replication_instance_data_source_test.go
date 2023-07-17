@@ -31,6 +31,10 @@ func TestAccDMSReplicationInstanceDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "replication_instance_id", resourceName, "replication_instance_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "replication_instance_arn", resourceName, "replication_instance_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "replication_instance_class", resourceName, "replication_instance_class"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "replication_instance_private_ips.#", resourceName, "replication_instance_private_ips.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "replication_instance_public_ips.#", resourceName, "replication_instance_public_ips.#"),
 				),
 			},
 		},
