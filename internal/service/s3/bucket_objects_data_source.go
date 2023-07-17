@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 // WARNING: This code is DEPRECATED and will be removed in a future release!!
@@ -74,7 +77,7 @@ func DataSourceBucketObjects() *schema.Resource {
 
 func dataSourceBucketObjectsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	prefix := d.Get("prefix").(string)

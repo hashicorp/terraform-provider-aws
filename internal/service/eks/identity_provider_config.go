@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks
 
 import (
@@ -128,7 +131,7 @@ func ResourceIdentityProviderConfig() *schema.Resource {
 }
 
 func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName := d.Get("cluster_name").(string)
 	configName, oidc := expandOIDCIdentityProviderConfigRequest(d.Get("oidc").([]interface{})[0].(map[string]interface{}))
@@ -137,7 +140,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 		ClientRequestToken: aws.String(id.UniqueId()),
 		ClusterName:        aws.String(clusterName),
 		Oidc:               oidc,
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	_, err := conn.AssociateIdentityProviderConfigWithContext(ctx, input)
@@ -158,7 +161,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, configName, err := IdentityProviderConfigParseResourceID(d.Id())
 
@@ -187,7 +190,7 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set("status", oidc.Status)
 
-	SetTagsOut(ctx, oidc.Tags)
+	setTagsOut(ctx, oidc.Tags)
 
 	return nil
 }
@@ -198,7 +201,7 @@ func resourceIdentityProviderConfigUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, configName, err := IdentityProviderConfigParseResourceID(d.Id())
 

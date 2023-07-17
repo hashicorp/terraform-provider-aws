@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -123,7 +126,7 @@ func ResourceInstance() *schema.Resource {
 }
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	input := &connect.CreateInstanceInput{
 		ClientToken:            aws.String(id.UniqueId()),
@@ -162,7 +165,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instance, err := FindInstanceByID(ctx, conn, d.Id())
 
@@ -213,7 +216,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	for attributeType, key := range InstanceAttributeMapping() {
 		if !d.HasChange(key) {
@@ -229,7 +232,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Connect Instance: %s", d.Id())
 	_, err := conn.DeleteInstanceWithContext(ctx, &connect.DeleteInstanceInput{

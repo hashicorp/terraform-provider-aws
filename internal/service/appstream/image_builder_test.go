@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream_test
 
 import (
@@ -236,7 +239,7 @@ func testAccCheckImageBuilderExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("No AppStream ImageBuilder ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		_, err := tfappstream.FindImageBuilderByName(ctx, conn, rs.Primary.ID)
 
@@ -246,7 +249,7 @@ func testAccCheckImageBuilderExists(ctx context.Context, n string) resource.Test
 
 func testAccCheckImageBuilderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_image_builder" {

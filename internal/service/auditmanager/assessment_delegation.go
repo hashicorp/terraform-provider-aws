@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager
 
 import (
@@ -18,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -99,7 +102,7 @@ func (r *resourceAssessmentDelegation) Schema(ctx context.Context, req resource.
 }
 
 func (r *resourceAssessmentDelegation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan resourceAssessmentDelegationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -182,7 +185,7 @@ func (r *resourceAssessmentDelegation) Create(ctx context.Context, req resource.
 }
 
 func (r *resourceAssessmentDelegation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceAssessmentDelegationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -212,7 +215,7 @@ func (r *resourceAssessmentDelegation) Update(ctx context.Context, req resource.
 }
 
 func (r *resourceAssessmentDelegation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceAssessmentDelegationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

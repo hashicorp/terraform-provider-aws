@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chimesdkvoice_test
 
 import (
@@ -118,7 +121,7 @@ func testAccCheckGlobalSettingsDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 			input := &chimesdkvoice.GetGlobalSettingsInput{}
 
 			const retryTimeout = 10 * time.Second

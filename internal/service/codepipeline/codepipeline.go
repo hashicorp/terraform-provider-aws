@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codepipeline
 
 import (
@@ -213,7 +216,7 @@ func ResourcePipeline() *schema.Resource {
 }
 
 func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	pipeline, err := expandPipelineDeclaration(d)
 
@@ -224,7 +227,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	name := d.Get("name").(string)
 	input := &codepipeline.CreatePipelineInput{
 		Pipeline: pipeline,
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
@@ -241,7 +244,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	output, err := FindPipelineByName(ctx, conn, d.Id())
 
@@ -281,7 +284,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		pipeline, err := expandPipelineDeclaration(d)
@@ -303,7 +306,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	log.Printf("[INFO] Deleting CodePipeline: %s", d.Id())
 	_, err := conn.DeletePipelineWithContext(ctx, &codepipeline.DeletePipelineInput{

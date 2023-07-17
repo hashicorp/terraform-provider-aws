@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync_test
 
 import (
@@ -615,7 +618,7 @@ func testAccDataSource_Type_none(t *testing.T) {
 
 func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_datasource" {
 				continue
@@ -661,7 +664,7 @@ func testAccCheckExistsDataSource(ctx context.Context, name string) resource.Tes
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 
 		_, err = tfappsync.FindDataSourceByTwoPartKey(ctx, conn, apiID, name)
 

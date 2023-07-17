@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb
 
 import (
@@ -113,7 +116,7 @@ func ResourceGlobalCluster() *schema.Resource {
 }
 
 func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	input := &docdb.CreateGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(d.Get("global_cluster_identifier").(string)),
@@ -158,7 +161,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	globalCluster, err := FindGlobalClusterById(ctx, conn, d.Id())
 
@@ -202,7 +205,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	input := &docdb.ModifyGlobalClusterInput{
 		DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
@@ -235,7 +238,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	for _, globalClusterMemberRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
 		globalClusterMember, ok := globalClusterMemberRaw.(map[string]interface{})

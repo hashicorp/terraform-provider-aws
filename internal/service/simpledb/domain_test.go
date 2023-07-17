@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package simpledb_test
 
 import (
@@ -99,7 +102,7 @@ func TestAccSimpleDBDomain_MigrateFromPluginSDK(t *testing.T) {
 
 func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_simpledb_domain" {
@@ -134,7 +137,7 @@ func testAccCheckDomainExists(ctx context.Context, n string) resource.TestCheckF
 			return fmt.Errorf("No SimpleDB Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn(ctx)
 
 		_, err := tfsimpledb.FindDomainByName(ctx, conn, rs.Primary.ID)
 

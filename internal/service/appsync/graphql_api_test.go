@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync_test
 
 import (
@@ -1207,7 +1210,7 @@ func testAccGraphQLAPI_visibility(t *testing.T) {
 
 func testAccCheckGraphQLAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_graphql_api" {
 				continue
@@ -1240,7 +1243,7 @@ func testAccCheckGraphQLAPIExists(ctx context.Context, n string, v *appsync.Grap
 			return fmt.Errorf("No AppSync GraphQL API ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 
 		output, err := tfappsync.FindGraphQLAPIByID(ctx, conn, rs.Primary.ID)
 
@@ -1261,7 +1264,7 @@ func testAccCheckGraphQLAPITypeExists(ctx context.Context, n, typeName string) r
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 
 		_, err := tfappsync.FindTypeByThreePartKey(ctx, conn, rs.Primary.ID, appsync.OutputTypeSdl, typeName)
 

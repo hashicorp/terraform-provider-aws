@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks
 
 import (
@@ -37,7 +40,7 @@ func DataSourceAddonVersion() *schema.Resource {
 }
 
 func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	addonName := d.Get("addon_name").(string)
 	kubernetesVersion := d.Get("kubernetes_version").(string)

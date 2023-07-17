@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const policyTypeStatusDisabled = "DISABLED"
@@ -172,7 +176,7 @@ func ResourceOrganization() *schema.Resource {
 
 func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	createOpts := &organizations.CreateOrganizationInput{
 		FeatureSet: aws.String(d.Get("feature_set").(string)),
@@ -233,7 +237,7 @@ func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	log.Printf("[INFO] Reading Organization: %s", d.Id())
 	org, err := conn.DescribeOrganizationWithContext(ctx, &organizations.DescribeOrganizationInput{})
@@ -331,7 +335,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	if d.HasChange("aws_service_access_principals") {
 		oldRaw, newRaw := d.GetChange("aws_service_access_principals")
@@ -419,7 +423,7 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	log.Printf("[INFO] Deleting Organization: %s", d.Id())
 
@@ -429,6 +433,50 @@ func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	return diags
+}
+
+func FindOrganization(ctx context.Context, conn *organizations.Organizations) (*organizations.Organization, error) {
+	input := &organizations.DescribeOrganizationInput{}
+
+	output, err := conn.DescribeOrganizationWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Organization == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Organization, nil
+}
+
+func findAccounts(ctx context.Context, conn *organizations.Organizations) ([]*organizations.Account, error) {
+	input := &organizations.ListAccountsInput{}
+	var output []*organizations.Account
+
+	err := conn.ListAccountsPagesWithContext(ctx, input, func(page *organizations.ListAccountsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Accounts...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func flattenAccounts(accounts []*organizations.Account) []map[string]interface{} {

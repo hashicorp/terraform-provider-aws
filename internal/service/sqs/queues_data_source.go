@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sqs
 
 import (
@@ -36,7 +39,7 @@ const (
 )
 
 func dataSourceQueuesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn()
+	conn := meta.(*conns.AWSClient).SQSConn(ctx)
 
 	input := &sqs.ListQueuesInput{}
 

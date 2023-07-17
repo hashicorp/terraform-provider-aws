@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs_test
 
 import (
@@ -144,7 +147,7 @@ func TestAccEFSMountTarget_IPAddress_emptyString(t *testing.T) {
 
 func testAccCheckMountTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_efs_mount_target" {
 				continue
@@ -178,7 +181,7 @@ func testAccCheckMountTargetExists(ctx context.Context, n string, v *efs.MountTa
 			return fmt.Errorf("No EFS Mount Target ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
 
 		output, err := tfefs.FindMountTargetByID(ctx, conn, rs.Primary.ID)
 

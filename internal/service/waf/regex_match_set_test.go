@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf_test
 
 import (
@@ -206,7 +209,7 @@ func computeRegexMatchSetTuple(patternSet *waf.RegexPatternSet, fieldToMatch *wa
 
 func testAccCheckRegexMatchSetDisappears(ctx context.Context, set *waf.RegexMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 
 		wr := tfwaf.NewRetryer(conn)
 		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -254,7 +257,7 @@ func testAccCheckRegexMatchSetExists(ctx context.Context, n string, v *waf.Regex
 			return fmt.Errorf("No WAF Regex Match Set ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 		resp, err := conn.GetRegexMatchSetWithContext(ctx, &waf.GetRegexMatchSetInput{
 			RegexMatchSetId: aws.String(rs.Primary.ID),
 		})
@@ -279,7 +282,7 @@ func testAccCheckRegexMatchSetDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 			resp, err := conn.GetRegexMatchSetWithContext(ctx, &waf.GetRegexMatchSetInput{
 				RegexMatchSetId: aws.String(rs.Primary.ID),
 			})

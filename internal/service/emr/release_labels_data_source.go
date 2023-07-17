@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
@@ -44,7 +47,7 @@ func DataSourceReleaseLabels() *schema.Resource {
 }
 
 func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	input := &emr.ListReleaseLabelsInput{}
 

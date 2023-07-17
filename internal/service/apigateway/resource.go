@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -63,7 +66,7 @@ func ResourceResource() *schema.Resource {
 
 func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	input := &apigateway.CreateResourceInput{
 		ParentId:  aws.String(d.Get("parent_id").(string)),
@@ -84,7 +87,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	resource, err := FindResourceByTwoPartKey(ctx, conn, d.Id(), d.Get("rest_api_id").(string))
 
@@ -127,7 +130,7 @@ func resourceResourceUpdateOperations(d *schema.ResourceData) []*apigateway.Patc
 
 func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	input := &apigateway.UpdateResourceInput{
 		ResourceId:      aws.String(d.Id()),
@@ -146,7 +149,7 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Resource: %s", d.Id())
 	_, err := conn.DeleteResourceWithContext(ctx, &apigateway.DeleteResourceInput{

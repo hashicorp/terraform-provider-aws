@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks
 
 import (
@@ -290,7 +293,7 @@ func ResourceNodeGroup() *schema.Resource {
 }
 
 func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName := d.Get("cluster_name").(string)
 	nodeGroupName := create.Name(d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
@@ -301,7 +304,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		NodegroupName:      aws.String(nodeGroupName),
 		NodeRole:           aws.String(d.Get("node_role_arn").(string)),
 		Subnets:            flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("ami_type"); ok {
@@ -370,7 +373,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 
@@ -449,13 +452,13 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("version", nodeGroup.Version)
 
-	SetTagsOut(ctx, nodeGroup.Tags)
+	setTagsOut(ctx, nodeGroup.Tags)
 
 	return nil
 }
 
 func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 
@@ -558,7 +561,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 

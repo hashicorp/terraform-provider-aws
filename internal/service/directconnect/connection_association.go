@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -39,7 +42,7 @@ func ResourceConnectionAssociation() *schema.Resource {
 
 func resourceConnectionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	connectionID := d.Get("connection_id").(string)
 	lagID := d.Get("lag_id").(string)
@@ -62,7 +65,7 @@ func resourceConnectionAssociationCreate(ctx context.Context, d *schema.Resource
 
 func resourceConnectionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	lagID := d.Get("lag_id").(string)
 	err := FindConnectionAssociationExists(ctx, conn, d.Id(), lagID)
@@ -82,7 +85,7 @@ func resourceConnectionAssociationRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceConnectionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	if err := deleteConnectionLAGAssociation(ctx, conn, d.Id(), d.Get("lag_id").(string)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
@@ -30,6 +33,7 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "automated_snapshot_retention_period"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_identifier"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_namespace_arn", resourceName, "cluster_namespace_arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_parameter_group_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_public_key"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_revision_number"),

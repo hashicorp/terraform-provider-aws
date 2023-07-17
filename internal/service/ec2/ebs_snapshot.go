@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -108,7 +111,7 @@ func ResourceEBSSnapshot() *schema.Resource {
 
 func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	volumeID := d.Get("volume_id").(string)
 	input := &ec2.CreateSnapshotInput{
@@ -169,7 +172,7 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	snapshot, err := FindSnapshotByID(ctx, conn, d.Id())
 
@@ -201,14 +204,14 @@ func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("volume_id", snapshot.VolumeId)
 	d.Set("volume_size", snapshot.VolumeSize)
 
-	SetTagsOut(ctx, snapshot.Tags)
+	setTagsOut(ctx, snapshot.Tags)
 
 	return diags
 }
 
 func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("storage_tier") {
 		if tier := d.Get("storage_tier").(string); tier == ec2.TargetStorageTierArchive {
@@ -251,7 +254,7 @@ func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceEBSSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EBS Snapshot: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {

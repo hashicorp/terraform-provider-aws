@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb
 
 import (
@@ -77,14 +80,14 @@ func ResourceSubnetGroup() *schema.Resource {
 }
 
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &memorydb.CreateSubnetGroupInput{
 		Description:     aws.String(d.Get("description").(string)),
 		SubnetGroupName: aws.String(name),
 		SubnetIds:       flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating MemoryDB Subnet Group: %s", input)
@@ -100,7 +103,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &memorydb.UpdateSubnetGroupInput{
@@ -121,7 +124,7 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	group, err := FindSubnetGroupByName(ctx, conn, d.Id())
 
@@ -151,7 +154,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB Subnet Group: (%s)", d.Id())
 	_, err := conn.DeleteSubnetGroupWithContext(ctx, &memorydb.DeleteSubnetGroupInput{

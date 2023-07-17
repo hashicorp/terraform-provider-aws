@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager
 
 import (
@@ -135,14 +138,14 @@ func ResourceSecret() *schema.Resource {
 
 func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	secretName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &secretsmanager.CreateSecretInput{
 		Description:                 aws.String(d.Get("description").(string)),
 		ForceOverwriteReplicaSecret: aws.Bool(d.Get("force_overwrite_replica_secret").(bool)),
 		Name:                        aws.String(secretName),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
@@ -215,7 +218,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
 		return FindSecretByID(ctx, conn, d.Id())
@@ -280,14 +283,14 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("policy", "")
 	}
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
 func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	if d.HasChange("replica") {
 		o, n := d.GetChange("replica")
@@ -365,7 +368,7 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSecretDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	if v, ok := d.GetOk("replica"); ok && v.(*schema.Set).Len() > 0 {
 		err := removeSecretReplicas(ctx, conn, d.Id(), v.(*schema.Set).List())

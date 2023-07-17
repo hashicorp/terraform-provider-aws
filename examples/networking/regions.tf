@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 module "us-east-1" {
   source          = "./region"
   region          = "us-east-1"

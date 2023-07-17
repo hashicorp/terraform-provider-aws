@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudsearch
 
 import (
@@ -57,7 +60,7 @@ func ResourceDomainServiceAccessPolicy() *schema.Resource {
 
 func resourceDomainServiceAccessPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn()
+	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
 
 	domainName := d.Get("domain_name").(string)
 	input := &cloudsearch.UpdateServiceAccessPoliciesInput{
@@ -93,7 +96,7 @@ func resourceDomainServiceAccessPolicyPut(ctx context.Context, d *schema.Resourc
 
 func resourceDomainServiceAccessPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn()
+	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
 
 	accessPolicy, err := FindAccessPolicyByName(ctx, conn, d.Id())
 
@@ -121,7 +124,7 @@ func resourceDomainServiceAccessPolicyRead(ctx context.Context, d *schema.Resour
 
 func resourceDomainServiceAccessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn()
+	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
 
 	input := &cloudsearch.UpdateServiceAccessPoliciesInput{
 		AccessPolicies: aws.String(""),

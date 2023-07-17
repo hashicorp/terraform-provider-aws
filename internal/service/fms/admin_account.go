@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fms
 
 import (
@@ -41,7 +44,7 @@ func ResourceAdminAccount() *schema.Resource {
 
 func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FMSConn()
+	conn := meta.(*conns.AWSClient).FMSConn(ctx)
 
 	// Ensure there is not an existing FMS Admin Account
 	output, err := conn.GetAdminAccountWithContext(ctx, &fms.GetAdminAccountInput{})
@@ -116,7 +119,7 @@ func associateAdminAccountRefreshFunc(ctx context.Context, conn *fms.FMS, accoun
 
 func resourceAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FMSConn()
+	conn := meta.(*conns.AWSClient).FMSConn(ctx)
 
 	output, err := conn.GetAdminAccountWithContext(ctx, &fms.GetAdminAccountInput{})
 
@@ -147,7 +150,7 @@ func resourceAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FMSConn()
+	conn := meta.(*conns.AWSClient).FMSConn(ctx)
 
 	_, err := conn.DisassociateAdminAccountWithContext(ctx, &fms.DisassociateAdminAccountInput{})
 

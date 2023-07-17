@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package shield_test
 
 import (
@@ -75,7 +78,7 @@ func TestAccShieldProtectionHealthCheckAssociation_disappears(t *testing.T) {
 
 func testAccCheckProtectionHealthCheckAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_shield_protection_health_check_association" {
@@ -128,7 +131,7 @@ func testAccCheckProtectionHealthCheckAssociationExists(ctx context.Context, res
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
 
 		input := &shield.DescribeProtectionInput{
 			ProtectionId: aws.String(protectionId),

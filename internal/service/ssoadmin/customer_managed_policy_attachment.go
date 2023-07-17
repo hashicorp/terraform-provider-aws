@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssoadmin
 
 import (
@@ -76,7 +79,7 @@ func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 
 func resourceCustomerManagedPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	tfMap := d.Get("customer_managed_policy_reference").([]interface{})[0].(map[string]interface{})
 	policyName := tfMap["name"].(string)
@@ -111,7 +114,7 @@ func resourceCustomerManagedPolicyAttachmentCreate(ctx context.Context, d *schem
 
 func resourceCustomerManagedPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	policyName, policyPath, permissionSetARN, instanceARN, err := CustomerManagedPolicyAttachmentParseResourceID(d.Id())
 
@@ -142,7 +145,7 @@ func resourceCustomerManagedPolicyAttachmentRead(ctx context.Context, d *schema.
 
 func resourceCustomerManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	policyName, policyPath, permissionSetARN, instanceARN, err := CustomerManagedPolicyAttachmentParseResourceID(d.Id())
 

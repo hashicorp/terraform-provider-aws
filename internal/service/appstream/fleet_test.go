@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream_test
 
 import (
@@ -312,7 +315,7 @@ func testAccCheckFleetExists(ctx context.Context, resourceName string, appStream
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 		resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{Names: []*string{aws.String(rs.Primary.ID)}})
 
 		if err != nil {
@@ -331,7 +334,7 @@ func testAccCheckFleetExists(ctx context.Context, resourceName string, appStream
 
 func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_fleet" {

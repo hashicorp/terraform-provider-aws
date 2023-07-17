@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafkaconnect
 
 import (
@@ -102,7 +105,7 @@ func ResourceCustomPlugin() *schema.Resource {
 }
 
 func resourceCustomPluginCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn()
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &kafkaconnect.CreateCustomPluginInput{
@@ -134,7 +137,7 @@ func resourceCustomPluginCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn()
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	plugin, err := FindCustomPluginByARN(ctx, conn, d.Id())
 
@@ -173,7 +176,7 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceCustomPluginDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn()
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MSK Connect Custom Plugin: %s", d.Id())
 	_, err := conn.DeleteCustomPluginWithContext(ctx, &kafkaconnect.DeleteCustomPluginInput{

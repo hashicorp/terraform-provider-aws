@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -140,7 +143,7 @@ func ResourceDefaultRouteTable() *schema.Resource {
 
 func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	routeTableID := d.Get("default_route_table_id").(string)
 
@@ -233,7 +236,7 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EC2 Default Route Table (%s) tags: %s", d.Id(), err)
 	}
 
@@ -249,7 +252,7 @@ func resourceDefaultRouteTableRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDefaultRouteTableImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	routeTable, err := FindMainRouteTableByVPCID(ctx, conn, d.Id())
 

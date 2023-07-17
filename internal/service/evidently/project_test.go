@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package evidently_test
 
 import (
@@ -359,7 +362,7 @@ func TestAccEvidentlyProject_disappears(t *testing.T) {
 
 func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_evidently_project" {
 				continue
@@ -394,7 +397,7 @@ func testAccCheckProjectExists(ctx context.Context, n string, v *cloudwatchevide
 			return fmt.Errorf("No CloudWatch Evidently Project ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn(ctx)
 
 		output, err := tfcloudwatchevidently.FindProjectByNameOrARN(ctx, conn, rs.Primary.ID)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package identitystore
 
 import (
@@ -260,7 +263,7 @@ const (
 )
 
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient()
+	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	identityStoreID := d.Get("identity_store_id").(string)
 

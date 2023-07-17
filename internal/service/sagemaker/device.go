@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -78,7 +81,7 @@ func ResourceDevice() *schema.Resource {
 
 func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("device_fleet_name").(string)
 	input := &sagemaker.RegisterDevicesInput{
@@ -98,7 +101,7 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	deviceFleetName, deviceName, err := DecodeDeviceId(d.Id())
 	if err != nil {
@@ -129,7 +132,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	deviceFleetName, _, err := DecodeDeviceId(d.Id())
 	if err != nil {
@@ -152,7 +155,7 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	deviceFleetName, deviceName, err := DecodeDeviceId(d.Id())
 	if err != nil {

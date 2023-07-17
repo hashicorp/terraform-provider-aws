@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53domains
 
 import (
@@ -245,7 +248,7 @@ func ResourceRegisteredDomain() *schema.Resource {
 }
 
 func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
-	conn := meta.(*conns.AWSClient).Route53DomainsClient()
+	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
 	domainName := d.Get("domain_name").(string)
 	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
@@ -310,18 +313,18 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return diag.Errorf("listing tags for Route 53 Domains Domain (%s): %s", d.Id(), err)
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := KeyValueTags(ctx, GetTagsIn(ctx))
+	newTags := KeyValueTags(ctx, getTagsIn(ctx))
 	oldTags := tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
-		if err := UpdateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
+		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
 			return diag.Errorf("updating Route 53 Domains Domain (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -330,7 +333,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsClient()
+	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
 	domainDetail, err := findDomainDetailByName(ctx, conn, d.Id())
 
@@ -402,7 +405,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsClient()
+	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
 	if d.HasChanges("admin_contact", "registrant_contact", "tech_contact") {
 		var adminContact, registrantContact, techContact *types.ContactDetail

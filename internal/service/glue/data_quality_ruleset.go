@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -75,13 +78,12 @@ func ResourceDataQualityRuleset() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						// not found in SDK
-						// "catalog_id": {
-						// 	Type:         schema.TypeString,
-						// 	Optional:     true,
-						// 	ForceNew:     true,
-						// 	ValidateFunc: validation.StringLenBetween(1, 255),
-						// },
+						"catalog_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(1, 255),
+						},
 						"database_name": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -103,14 +105,14 @@ func ResourceDataQualityRuleset() *schema.Resource {
 
 func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	name := d.Get("name").(string)
 
 	input := &glue.CreateDataQualityRulesetInput{
 		Name:    aws.String(name),
 		Ruleset: aws.String(d.Get("ruleset").(string)),
-		Tags:    GetTagsIn(ctx),
+		Tags:    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -133,7 +135,7 @@ func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	name := d.Id()
 
@@ -173,7 +175,7 @@ func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceDataQualityRulesetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	if d.HasChanges("description", "ruleset") {
 		name := d.Id()
@@ -200,7 +202,7 @@ func resourceDataQualityRulesetUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceDataQualityRulesetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Glue Data Quality Ruleset: %s", d.Id())
 	_, err := conn.DeleteDataQualityRulesetWithContext(ctx, &glue.DeleteDataQualityRulesetInput{
@@ -223,6 +225,10 @@ func expandTargetTable(tfMap map[string]interface{}) *glue.DataQualityTargetTabl
 		TableName:    aws.String(tfMap["table_name"].(string)),
 	}
 
+	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+		apiObject.CatalogId = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -234,6 +240,10 @@ func flattenTargetTable(apiObject *glue.DataQualityTargetTable) []interface{} {
 	tfMap := map[string]interface{}{
 		"database_name": aws.StringValue(apiObject.DatabaseName),
 		"table_name":    aws.StringValue(apiObject.TableName),
+	}
+
+	if v := apiObject.CatalogId; v != nil {
+		tfMap["catalog_id"] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}

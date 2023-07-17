@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit
 
 import (
@@ -51,7 +54,7 @@ func DataSourceRepository() *schema.Resource {
 
 func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	repositoryName := d.Get("repository_name").(string)
 	input := &codecommit.GetRepositoryInput{

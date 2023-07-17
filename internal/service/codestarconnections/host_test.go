@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codestarconnections_test
 
 import (
@@ -130,7 +133,7 @@ func testAccCheckHostExists(ctx context.Context, n string, v *codestarconnection
 			return errors.New("No CodeStar Connections Host ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 		output, err := tfcodestarconnections.FindHostByARN(ctx, conn, rs.Primary.ID)
 
@@ -146,7 +149,7 @@ func testAccCheckHostExists(ctx context.Context, n string, v *codestarconnection
 
 func testAccCheckHostDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codestarconnections_host" {

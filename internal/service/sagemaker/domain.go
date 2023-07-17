@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -681,7 +684,7 @@ func ResourceDomain() *schema.Resource {
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.CreateDomainInput{
 		DomainName:           aws.String(d.Get("domain_name").(string)),
@@ -690,7 +693,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		AppNetworkAccessType: aws.String(d.Get("app_network_access_type").(string)),
 		SubnetIds:            flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		DefaultUserSettings:  expandDomainDefaultUserSettings(d.Get("default_user_settings").([]interface{})),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("app_security_group_management"); ok {
@@ -732,7 +735,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	domain, err := FindDomainByName(ctx, conn, d.Id())
 	if err != nil {
@@ -778,7 +781,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateDomainInput{
@@ -813,7 +816,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.DeleteDomainInput{
 		DomainId: aws.String(d.Id()),

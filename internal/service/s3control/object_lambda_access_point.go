@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control
 
 import (
@@ -124,7 +127,7 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 }
 
 func resourceObjectLambdaAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
@@ -154,7 +157,7 @@ func resourceObjectLambdaAccessPointCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 
@@ -193,7 +196,7 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceObjectLambdaAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 
@@ -220,7 +223,7 @@ func resourceObjectLambdaAccessPointUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceObjectLambdaAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 

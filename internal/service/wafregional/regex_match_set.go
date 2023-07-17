@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional
 
 import (
@@ -77,7 +80,7 @@ func ResourceRegexMatchSet() *schema.Resource {
 
 func resourceRegexMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Creating WAF Regional Regex Match Set: %s", d.Get("name").(string))
@@ -102,7 +105,7 @@ func resourceRegexMatchSetCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRegexMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
 	set, err := FindRegexMatchSetByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
@@ -122,7 +125,7 @@ func resourceRegexMatchSetRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceRegexMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("regex_match_tuple") {
@@ -139,7 +142,7 @@ func resourceRegexMatchSetUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRegexMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	err := DeleteRegexMatchSetResource(ctx, conn, region, "global", d.Id(), getRegexMatchTuplesFromResourceData(d))

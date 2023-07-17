@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidentity
 
 import (
@@ -109,7 +112,7 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 
 func resourcePoolRolesAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
@@ -145,7 +148,7 @@ func resourcePoolRolesAttachmentCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourcePoolRolesAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 	log.Printf("[DEBUG] Reading Cognito Identity Pool Roles Association: %s", d.Id())
 
 	ip, err := conn.GetIdentityPoolRolesWithContext(ctx, &cognitoidentity.GetIdentityPoolRolesInput{
@@ -176,7 +179,7 @@ func resourcePoolRolesAttachmentRead(ctx context.Context, d *schema.ResourceData
 
 func resourcePoolRolesAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
@@ -220,7 +223,7 @@ func resourcePoolRolesAttachmentUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourcePoolRolesAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool Roles Association: %s", d.Id())
 
 	_, err := conn.SetIdentityPoolRolesWithContext(ctx, &cognitoidentity.SetIdentityPoolRolesInput{

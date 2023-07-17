@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx_test
 
 import (
@@ -386,7 +389,7 @@ func testAccFileCache_tags(t *testing.T) {
 
 func testAccCheckFileCacheDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_file_cache" {
@@ -421,7 +424,7 @@ func testAccCheckFileCacheExists(ctx context.Context, name string, filecache *fs
 			return create.Error(names.FSx, create.ErrActionCheckingExistence, tffsx.ResNameFileCache, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		resp, err := conn.DescribeFileCachesWithContext(ctx, &fsx.DescribeFileCachesInput{
 			FileCacheIds: []*string{aws.String(rs.Primary.ID)},

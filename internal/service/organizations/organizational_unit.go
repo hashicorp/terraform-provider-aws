@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
@@ -83,13 +86,13 @@ func ResourceOrganizationalUnit() *schema.Resource {
 
 func resourceOrganizationalUnitCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	// Create the organizational unit
 	createOpts := &organizations.CreateOrganizationalUnitInput{
 		Name:     aws.String(d.Get("name").(string)),
 		ParentId: aws.String(d.Get("parent_id").(string)),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 
 	var err error
@@ -123,7 +126,7 @@ func resourceOrganizationalUnitCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	describeOpts := &organizations.DescribeOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(d.Id()),
@@ -189,7 +192,7 @@ func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceOrganizationalUnitUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	if d.HasChange("name") {
 		updateOpts := &organizations.UpdateOrganizationalUnitInput{
@@ -208,7 +211,7 @@ func resourceOrganizationalUnitUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceOrganizationalUnitDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	input := &organizations.DeleteOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(d.Id()),

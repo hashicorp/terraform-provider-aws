@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schemas_test
 
 import (
@@ -130,7 +133,7 @@ func testAccCheckRegistryPolicyExists(ctx context.Context, name string, v *schem
 			return fmt.Errorf("No EventBridge Schemas Registry ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn(ctx)
 		output, err := tfschemas.FindRegistryPolicyByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -144,7 +147,7 @@ func testAccCheckRegistryPolicyExists(ctx context.Context, name string, v *schem
 
 func testAccCheckRegistryPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_schemas_registry_policy" {
@@ -202,7 +205,7 @@ func testAccCheckRegistryPolicy(ctx context.Context, name string, expectedSid st
 			]
 		}`, expectedSid, partition, region, account_id, rs.Primary.ID)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn(ctx)
 		policy, err := tfschemas.FindRegistryPolicyByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

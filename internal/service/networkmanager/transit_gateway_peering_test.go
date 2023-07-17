@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager_test
 
 import (
@@ -134,7 +137,7 @@ func testAccCheckTransitGatewayPeeringExists(ctx context.Context, n string, v *n
 			return fmt.Errorf("No Network Manager Transit Gateway Peering ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
 		output, err := tfnetworkmanager.FindTransitGatewayPeeringByID(ctx, conn, rs.Primary.ID)
 
@@ -150,7 +153,7 @@ func testAccCheckTransitGatewayPeeringExists(ctx context.Context, n string, v *n
 
 func testAccCheckTransitGatewayPeeringDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_transit_gateway_peering" {
@@ -200,11 +203,15 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_core_network" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
-  policy_document   = data.aws_networkmanager_core_network_policy_document.test.json
 
   tags = {
     Name = %[1]q
   }
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 
 data "aws_networkmanager_core_network_policy_document" "test" {

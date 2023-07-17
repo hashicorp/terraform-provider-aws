@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -136,7 +139,7 @@ func ResourceQuickConnect() *schema.Resource {
 }
 
 func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -145,7 +148,7 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 		QuickConnectConfig: quickConnectConfig,
 		InstanceId:         aws.String(instanceID),
 		Name:               aws.String(name),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -169,7 +172,7 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 
@@ -206,13 +209,13 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("arn", resp.QuickConnect.QuickConnectARN)
 	d.Set("quick_connect_id", resp.QuickConnect.QuickConnectId)
 
-	SetTagsOut(ctx, resp.QuickConnect.Tags)
+	setTagsOut(ctx, resp.QuickConnect.Tags)
 
 	return nil
 }
 
 func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 
@@ -261,7 +264,7 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceQuickConnectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 

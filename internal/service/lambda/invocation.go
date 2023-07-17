@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -161,7 +164,7 @@ func isCreateOnlyScope(d *schema.ResourceData) bool {
 
 func invoke(ctx context.Context, action string, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)

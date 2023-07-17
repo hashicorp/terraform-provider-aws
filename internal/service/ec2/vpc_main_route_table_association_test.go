@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -45,7 +48,7 @@ func TestAccVPCMainRouteTableAssociation_basic(t *testing.T) {
 
 func testAccCheckMainRouteTableAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_main_route_table_association" {
@@ -80,7 +83,7 @@ func testAccCheckMainRouteTableAssociationExists(ctx context.Context, n string, 
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		association, err := tfec2.FindMainRouteTableAssociationByID(ctx, conn, rs.Primary.ID)
 

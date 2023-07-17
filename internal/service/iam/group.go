@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -66,7 +69,7 @@ func ResourceGroup() *schema.Resource {
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &iam.CreateGroupInput{
@@ -95,7 +98,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	group, err := FindGroupByName(ctx, conn, d.Id())
 
@@ -119,7 +122,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	o, n := d.GetChange("name")
 	input := &iam.UpdateGroupInput{
@@ -141,7 +144,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Group: %s", d.Id())
 	_, err := conn.DeleteGroupWithContext(ctx, &iam.DeleteGroupInput{

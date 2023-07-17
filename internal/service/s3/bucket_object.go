@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 // WARNING: This code is DEPRECATED and will be removed in a future release!!
@@ -201,7 +204,7 @@ func resourceBucketObjectCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -274,7 +277,7 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): unable to convert tags", bucket, key)
 	}
 
-	SetTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
@@ -285,7 +288,7 @@ func resourceBucketObjectUpdate(ctx context.Context, d *schema.ResourceData, met
 		return append(diags, resourceBucketObjectUpload(ctx, d, meta)...)
 	}
 
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -353,7 +356,7 @@ func resourceBucketObjectUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBucketObjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -397,7 +400,7 @@ func resourceBucketObjectImport(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 	uploader := s3manager.NewUploaderWithClient(conn)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
@@ -523,7 +526,7 @@ func resourceBucketObjectSetKMS(ctx context.Context, d *schema.ResourceData, met
 	// Only set non-default KMS key ID (one that doesn't match default)
 	if sseKMSKeyId != nil {
 		// retrieve S3 KMS Default Master Key
-		conn := meta.(*conns.AWSClient).KMSConn()
+		conn := meta.(*conns.AWSClient).KMSConn(ctx)
 		keyMetadata, err := kms.FindKeyByID(ctx, conn, DefaultKMSKeyAlias)
 		if err != nil {
 			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", DefaultKMSKeyAlias, err)

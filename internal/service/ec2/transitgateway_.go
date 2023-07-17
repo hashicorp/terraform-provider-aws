@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -139,7 +142,7 @@ func ResourceTransitGateway() *schema.Resource {
 
 func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateTransitGatewayInput{
 		Options: &ec2.TransitGatewayRequestOptions{
@@ -183,7 +186,7 @@ func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGateway, err := FindTransitGatewayByID(ctx, conn, d.Id())
 
@@ -211,14 +214,14 @@ func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("transit_gateway_cidr_blocks", aws.StringValueSlice(transitGateway.Options.TransitGatewayCidrBlocks))
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
-	SetTagsOut(ctx, transitGateway.Tags)
+	setTagsOut(ctx, transitGateway.Tags)
 
 	return diags
 }
 
 func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyTransitGatewayInput{
@@ -281,7 +284,7 @@ func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceTransitGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, TransitGatewayIncorrectStateTimeout, func() (interface{}, error) {

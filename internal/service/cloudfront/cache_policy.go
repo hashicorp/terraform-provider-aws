@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
@@ -161,7 +164,7 @@ func ResourceCachePolicy() *schema.Resource {
 
 func resourceCachePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	name := d.Get("name").(string)
 	apiObject := &cloudfront.CachePolicyConfig{
@@ -197,7 +200,7 @@ func resourceCachePolicyCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	output, err := FindCachePolicyByID(ctx, conn, d.Id())
 
@@ -231,7 +234,7 @@ func resourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceCachePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	//
 	// https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateCachePolicy.html:
@@ -270,7 +273,7 @@ func resourceCachePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceCachePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Cache Policy: (%s)", d.Id())
 	_, err := conn.DeleteCachePolicyWithContext(ctx, &cloudfront.DeleteCachePolicyInput{

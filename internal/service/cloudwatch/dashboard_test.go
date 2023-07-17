@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudwatch_test
 
 import (
@@ -123,7 +126,7 @@ func testAccCheckDashboardExists(ctx context.Context, n string, dashboard *cloud
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 		params := cloudwatch.GetDashboardInput{
 			DashboardName: aws.String(rs.Primary.ID),
 		}
@@ -141,7 +144,7 @@ func testAccCheckDashboardExists(ctx context.Context, n string, dashboard *cloud
 
 func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_dashboard" {
@@ -167,7 +170,7 @@ func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckDashboardDestroyPrevious(ctx context.Context, dashboardName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 
 		params := cloudwatch.GetDashboardInput{
 			DashboardName: aws.String(dashboardName),
@@ -254,7 +257,7 @@ func testAccCheckDashboardBodyIsExpected(ctx context.Context, resourceName, expe
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 		params := cloudwatch.GetDashboardInput{
 			DashboardName: aws.String(rs.Primary.ID),
 		}

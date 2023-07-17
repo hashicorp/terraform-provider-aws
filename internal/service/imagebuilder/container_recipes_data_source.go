@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
@@ -40,7 +43,7 @@ func DataSourceContainerRecipes() *schema.Resource {
 
 func dataSourceContainerRecipesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.ListContainerRecipesInput{}
 

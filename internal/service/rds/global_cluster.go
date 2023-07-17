@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -133,7 +136,7 @@ func ResourceGlobalCluster() *schema.Resource {
 
 func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.CreateGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(d.Get("global_cluster_identifier").(string)),
@@ -186,7 +189,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	globalCluster, err := DescribeGlobalCluster(ctx, conn, d.Id())
 
@@ -244,7 +247,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.ModifyGlobalClusterInput{
 		DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
@@ -277,7 +280,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutDelete))
 
 	if d.Get("force_destroy").(bool) {
@@ -580,7 +583,7 @@ func waitForGlobalClusterRemoval(ctx context.Context, conn *rds.RDS, dbClusterId
 }
 
 func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{}, clusterID string, engineVersion string, timeout time.Duration) error {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.ModifyGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(clusterID),
@@ -675,7 +678,7 @@ func ClusterIDRegionFromARN(arnID string) (string, string, error) {
 }
 
 func globalClusterUpgradeMinorEngineVersion(ctx context.Context, meta interface{}, clusterMembers *schema.Set, clusterID, engineVersion string, timeout time.Duration) error {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	log.Printf("[INFO] Performing RDS Global Cluster (%s) minor version (%s) upgrade", clusterID, engineVersion)
 

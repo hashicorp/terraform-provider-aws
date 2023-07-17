@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr_test
 
 import (
@@ -166,7 +169,7 @@ func TestAccECRRepositoryPolicy_Disappears_repository(t *testing.T) {
 
 func testAccCheckRepositoryPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecr_repository_policy" {

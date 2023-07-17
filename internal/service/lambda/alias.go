@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -82,7 +85,7 @@ func ResourceAlias() *schema.Resource {
 // CreateAlias in the API / SDK
 func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName := d.Get("function_name").(string)
 	aliasName := d.Get("name").(string)
@@ -111,7 +114,7 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 // GetAlias in the API / SDK
 func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	log.Printf("[DEBUG] Fetching Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
 
@@ -149,7 +152,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 // DeleteAlias in the API / SDK
 func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	log.Printf("[INFO] Deleting Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
 
@@ -170,7 +173,7 @@ func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta inter
 // UpdateAlias in the API / SDK
 func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	log.Printf("[DEBUG] Updating Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
 

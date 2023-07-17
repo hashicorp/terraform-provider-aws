@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -161,7 +164,7 @@ func testAccCheckEIPAssociationExists(ctx context.Context, n string, v *ec2.Addr
 			return fmt.Errorf("No EC2 EIP Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindEIPByAssociationID(ctx, conn, rs.Primary.ID)
 
@@ -177,7 +180,7 @@ func testAccCheckEIPAssociationExists(ctx context.Context, n string, v *ec2.Addr
 
 func testAccCheckEIPAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eip_association" {

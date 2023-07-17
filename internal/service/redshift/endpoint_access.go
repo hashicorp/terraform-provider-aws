@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -114,7 +117,7 @@ func ResourceEndpointAccess() *schema.Resource {
 
 func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	createOpts := redshift.CreateEndpointAccessInput{
 		EndpointName:    aws.String(d.Get("endpoint_name").(string)),
@@ -150,7 +153,7 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	endpoint, err := FindEndpointAccessByName(ctx, conn, d.Id())
 
@@ -181,7 +184,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	if d.HasChanges("vpc_security_group_ids") {
 		_, n := d.GetChange("vpc_security_group_ids")
@@ -214,7 +217,7 @@ func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceEndpointAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	_, err := conn.DeleteEndpointAccessWithContext(ctx, &redshift.DeleteEndpointAccessInput{
 		EndpointName: aws.String(d.Id()),

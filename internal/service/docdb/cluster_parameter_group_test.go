@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb_test
 
 import (
@@ -295,7 +298,7 @@ func TestAccDocDBClusterParameterGroup_tags(t *testing.T) {
 
 func testAccCheckClusterParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_cluster_parameter_group" {
@@ -327,7 +330,7 @@ func testAccCheckClusterParameterGroupDestroy(ctx context.Context) resource.Test
 
 func testAccCheckClusterParameterGroupDisappears(ctx context.Context, group *docdb.DBClusterParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 		params := &docdb.DeleteDBClusterParameterGroupInput{
 			DBClusterParameterGroupName: group.DBClusterParameterGroupName,
@@ -367,7 +370,7 @@ func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *d
 			return errors.New("No DocumentDB Cluster Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 		opts := docdb.DescribeDBClusterParameterGroupsInput{
 			DBClusterParameterGroupName: aws.String(rs.Primary.ID),

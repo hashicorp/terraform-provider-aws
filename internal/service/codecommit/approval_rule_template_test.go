@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit_test
 
 import (
@@ -163,7 +166,7 @@ func testAccCheckApprovalRuleTemplateExists(ctx context.Context, name string) re
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn(ctx)
 
 		_, err := conn.GetApprovalRuleTemplateWithContext(ctx, &codecommit.GetApprovalRuleTemplateInput{
 			ApprovalRuleTemplateName: aws.String(rs.Primary.ID),
@@ -175,7 +178,7 @@ func testAccCheckApprovalRuleTemplateExists(ctx context.Context, name string) re
 
 func testAccCheckApprovalRuleTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codecommit_approval_rule_template" {

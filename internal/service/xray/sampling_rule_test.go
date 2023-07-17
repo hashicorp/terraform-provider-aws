@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package xray_test
 
 import (
@@ -197,7 +200,7 @@ func testAccCheckSamplingRuleExists(ctx context.Context, n string, v *types.Samp
 			return fmt.Errorf("No XRay Sampling Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
 
 		output, err := tfxray.FindSamplingRuleByName(ctx, conn, rs.Primary.ID)
 
@@ -218,7 +221,7 @@ func testAccCheckSamplingRuleDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
 
 			_, err := tfxray.FindSamplingRuleByName(ctx, conn, rs.Primary.ID)
 
@@ -238,7 +241,7 @@ func testAccCheckSamplingRuleDestroy(ctx context.Context) resource.TestCheckFunc
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
 
 	input := &xray.GetSamplingRulesInput{}
 

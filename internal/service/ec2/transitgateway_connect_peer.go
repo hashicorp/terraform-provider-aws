@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -111,7 +114,7 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 }
 
 func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateTransitGatewayConnectPeerInput{
 		InsideCidrBlocks:           flex.ExpandStringSet(d.Get("inside_cidr_blocks").(*schema.Set)),
@@ -153,7 +156,7 @@ func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGatewayConnectPeer, err := FindTransitGatewayConnectPeerByID(ctx, conn, d.Id())
 
@@ -186,7 +189,7 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 	d.Set("transit_gateway_address", transitGatewayConnectPeer.ConnectPeerConfiguration.TransitGatewayAddress)
 	d.Set("transit_gateway_attachment_id", transitGatewayConnectPeer.TransitGatewayAttachmentId)
 
-	SetTagsOut(ctx, transitGatewayConnectPeer.Tags)
+	setTagsOut(ctx, transitGatewayConnectPeer.Tags)
 
 	return nil
 }
@@ -197,7 +200,7 @@ func resourceTransitGatewayConnectPeerUpdate(ctx context.Context, d *schema.Reso
 }
 
 func resourceTransitGatewayConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Connect Peer: %s", d.Id())
 	_, err := conn.DeleteTransitGatewayConnectPeerWithContext(ctx, &ec2.DeleteTransitGatewayConnectPeerInput{

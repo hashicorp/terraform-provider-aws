@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless_test
 
 import (
@@ -217,7 +220,7 @@ func TestAccRedshiftServerlessNamespace_withWorkgroup(t *testing.T) {
 
 func testAccCheckNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshiftserverless_namespace" {
@@ -251,7 +254,7 @@ func testAccCheckNamespaceExists(ctx context.Context, name string) resource.Test
 			return fmt.Errorf("Redshift Serverless Namespace is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 		_, err := tfredshiftserverless.FindNamespaceByName(ctx, conn, rs.Primary.ID)
 

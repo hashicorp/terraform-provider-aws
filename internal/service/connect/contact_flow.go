@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -91,7 +94,7 @@ func ResourceContactFlow() *schema.Resource {
 }
 
 func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -99,7 +102,7 @@ func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &connect.CreateContactFlowInput{
 		Name:       aws.String(name),
 		InstanceId: aws.String(instanceID),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 		Type:       aws.String(d.Get("type").(string)),
 	}
 
@@ -139,7 +142,7 @@ func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, contactFlowID, err := ContactFlowParseID(d.Id())
 
@@ -174,13 +177,13 @@ func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("type", resp.ContactFlow.Type)
 	d.Set("content", resp.ContactFlow.Content)
 
-	SetTagsOut(ctx, resp.ContactFlow.Tags)
+	setTagsOut(ctx, resp.ContactFlow.Tags)
 
 	return nil
 }
 
 func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, contactFlowID, err := ContactFlowParseID(d.Id())
 
@@ -236,7 +239,7 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, contactFlowID, err := ContactFlowParseID(d.Id())
 

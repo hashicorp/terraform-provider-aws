@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb_test
 
 import (
@@ -839,7 +842,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_cluster" {
@@ -886,7 +889,7 @@ func testAccCheckClusterExistsProvider(ctx context.Context, n string, v *docdb.D
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 		resp, err := conn.DescribeDBClustersWithContext(ctx, &docdb.DescribeDBClustersInput{
 			DBClusterIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -927,7 +930,7 @@ func testAccCheckClusterSnapshot(ctx context.Context, rInt int) resource.TestChe
 			snapshot_identifier := fmt.Sprintf("tf-acctest-docdbcluster-snapshot-%d", rInt)
 
 			awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-			conn := awsClient.DocDBConn()
+			conn := awsClient.DocDBConn(ctx)
 
 			log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
 			_, snapDeleteErr := conn.DeleteDBClusterSnapshotWithContext(ctx, &docdb.DeleteDBClusterSnapshotInput{

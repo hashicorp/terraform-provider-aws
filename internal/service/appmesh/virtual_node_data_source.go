@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh
 
 import (
@@ -56,7 +59,7 @@ func DataSourceVirtualNode() *schema.Resource {
 
 func dataSourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	virtualNodeName := d.Get("name").(string)
@@ -86,7 +89,7 @@ func dataSourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta
 	var tags tftags.KeyValueTags
 
 	if meshOwner == meta.(*conns.AWSClient).AccountID {
-		tags, err = ListTags(ctx, conn, arn)
+		tags, err = listTags(ctx, conn, arn)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Virtual Node (%s): %s", arn, err)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -56,7 +59,7 @@ func ResourceClusterRoleAssociation() *schema.Resource {
 
 func resourceClusterRoleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbClusterID := d.Get("db_cluster_identifier").(string)
 	roleARN := d.Get("role_arn").(string)
@@ -97,7 +100,7 @@ func resourceClusterRoleAssociationCreate(ctx context.Context, d *schema.Resourc
 
 func resourceClusterRoleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbClusterID, roleARN, err := ClusterRoleAssociationParseResourceID(d.Id())
 	if err != nil {
@@ -125,7 +128,7 @@ func resourceClusterRoleAssociationRead(ctx context.Context, d *schema.ResourceD
 
 func resourceClusterRoleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbClusterID, roleARN, err := ClusterRoleAssociationParseResourceID(d.Id())
 	if err != nil {

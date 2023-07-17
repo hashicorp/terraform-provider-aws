@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -21,10 +24,6 @@ func FindConfigRule(ctx context.Context, conn *configservice.ConfigService, name
 			LastError:   err,
 			LastRequest: input,
 		}
-	}
-
-	if output == nil {
-		return nil, nil
 	}
 
 	if output == nil || output.ConfigRules == nil || len(output.ConfigRules) == 0 || output.ConfigRules[0] == nil {

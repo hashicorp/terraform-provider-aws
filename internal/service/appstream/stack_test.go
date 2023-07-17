@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream_test
 
 import (
@@ -358,7 +361,7 @@ func testAccCheckStackExists(ctx context.Context, n string, v *appstream.Stack) 
 			return fmt.Errorf("No Appstream Stack ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		output, err := tfappstream.FindStackByName(ctx, conn, rs.Primary.ID)
 
@@ -374,7 +377,7 @@ func testAccCheckStackExists(ctx context.Context, n string, v *appstream.Stack) 
 
 func testAccCheckStackDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_stack" {

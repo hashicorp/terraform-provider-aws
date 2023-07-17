@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -112,13 +115,13 @@ func ResourceEventSubscription() *schema.Resource {
 
 func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	request := &redshift.CreateEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Get("name").(string)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("event_categories"); ok && v.(*schema.Set).Len() > 0 {
@@ -151,7 +154,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	sub, err := FindEventSubscriptionByName(ctx, conn, d.Id())
 
@@ -182,14 +185,14 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("source_type", sub.SourceType)
 	d.Set("status", sub.Status)
 
-	SetTagsOut(ctx, sub.Tags)
+	setTagsOut(ctx, sub.Tags)
 
 	return diags
 }
 
 func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		req := &redshift.ModifyEventSubscriptionInput{
@@ -214,7 +217,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 	deleteOpts := redshift.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
 	}

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream
 
 import (
@@ -201,12 +204,12 @@ func ResourceFleet() *schema.Resource {
 }
 
 func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 	input := &appstream.CreateFleetInput{
 		Name:            aws.String(d.Get("name").(string)),
 		InstanceType:    aws.String(d.Get("instance_type").(string)),
 		ComputeCapacity: expandComputeCapacity(d.Get("compute_capacity").([]interface{})),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -306,7 +309,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{Names: []*string{aws.String(d.Id())}})
 
@@ -377,7 +380,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 	input := &appstream.UpdateFleetInput{
 		Name: aws.String(d.Id()),
 	}
@@ -479,7 +482,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	// Stop fleet workflow
 	log.Printf("[DEBUG] Stopping AppStream Fleet: (%s)", d.Id())

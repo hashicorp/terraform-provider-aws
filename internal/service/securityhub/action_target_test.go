@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub_test
 
 import (
@@ -142,7 +145,7 @@ func testAccCheckActionTargetExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("No Security Hub custom action ARN is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		action, err := tfsecurityhub.ActionTargetCheckExists(ctx, conn, rs.Primary.ID)
 
@@ -160,7 +163,7 @@ func testAccCheckActionTargetExists(ctx context.Context, n string) resource.Test
 
 func testAccCheckActionTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_action_target" {

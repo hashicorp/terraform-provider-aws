@@ -1,7 +1,9 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmincidents_test
 
 import (
-	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,8 +18,7 @@ func testReplicationSetDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssmincidents_replication_set.test"
 	resourceName := "aws_ssmincidents_replication_set.test"
 
@@ -28,12 +29,10 @@ func testReplicationSetDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationSetDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(dataSourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_by", dataSourceName, "created_by"),
 					resource.TestCheckResourceAttrPair(resourceName, "deletion_protected", dataSourceName, "deletion_protected"),

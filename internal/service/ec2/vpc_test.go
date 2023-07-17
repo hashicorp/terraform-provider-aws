@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -91,7 +94,7 @@ func TestAccVPC_disappears(t *testing.T) {
 
 func TestAccVPC_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vpc ec2.Vpc
+	var vpc1, vpc2, vpc3 ec2.Vpc
 	resourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -103,7 +106,7 @@ func TestAccVPC_tags(t *testing.T) {
 			{
 				Config: testAccVPCConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -116,7 +119,8 @@ func TestAccVPC_tags(t *testing.T) {
 			{
 				Config: testAccVPCConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc2),
+					testAccCheckVPCIDsEqual(&vpc2, &vpc1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -125,7 +129,8 @@ func TestAccVPC_tags(t *testing.T) {
 			{
 				Config: testAccVPCConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, resourceName, &vpc3),
+					testAccCheckVPCIDsEqual(&vpc3, &vpc2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -1100,7 +1105,7 @@ func TestAccVPC_IPAMIPv6(t *testing.T) {
 
 func testAccCheckVPCDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc" {
@@ -1126,7 +1131,7 @@ func testAccCheckVPCDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckVPCUpdateTags(ctx context.Context, vpc *ec2.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		return tfec2.UpdateTags(ctx, conn, aws.StringValue(vpc.VpcId), oldTags, newTags)
 	}

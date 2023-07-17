@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package account_test
 
 import (
@@ -144,7 +147,7 @@ func testAccAlternateContact_accountID(t *testing.T) { // nosemgrep:ci.account-i
 
 func testAccCheckAlternateContactDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_account_alternate_contact" {
@@ -191,7 +194,7 @@ func testAccCheckAlternateContactExists(ctx context.Context, n string) resource.
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient(ctx)
 
 		_, err = tfaccount.FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 
@@ -231,7 +234,7 @@ resource "aws_account_alternate_contact" "test" {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient(ctx)
 
 	_, err := tfaccount.FindAlternateContactByTwoPartKey(ctx, conn, "", string(types.AlternateContactTypeOperations))
 

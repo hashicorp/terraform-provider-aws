@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight_test
 
 import (
@@ -196,7 +199,7 @@ func TestAccQuickSightDashboard_dashboardSpecificConfig(t *testing.T) {
 
 func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_dashboard" {
@@ -231,7 +234,7 @@ func testAccCheckDashboardExists(ctx context.Context, name string, dashboard *qu
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameDashboard, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		output, err := tfquicksight.FindDashboardByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {

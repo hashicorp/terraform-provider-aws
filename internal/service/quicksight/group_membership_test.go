@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight_test
 
 import (
@@ -69,7 +72,7 @@ func TestAccQuickSightGroupMembership_disappears(t *testing.T) {
 
 func testAccCheckGroupMembershipDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_group_membership" {
@@ -114,7 +117,7 @@ func testAccCheckGroupMembershipExists(ctx context.Context, resourceName string)
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		listInput := &quicksight.ListGroupMembershipsInput{
 			AwsAccountId: aws.String(awsAccountID),

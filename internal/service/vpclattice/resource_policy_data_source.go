@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice
 
 import (
@@ -35,7 +38,7 @@ const (
 )
 
 func dataSourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	resourceArn := d.Get("resource_arn").(string)
 

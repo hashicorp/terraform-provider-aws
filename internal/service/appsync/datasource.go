@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync
 
 import (
@@ -278,7 +281,7 @@ func ResourceDataSource() *schema.Resource {
 
 func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	name := d.Get("name").(string)
@@ -337,7 +340,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID, name, err := DecodeID(d.Id())
 
@@ -390,7 +393,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	apiID, name, err := DecodeID(d.Id())
@@ -448,7 +451,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID, name, err := DecodeID(d.Id())
 

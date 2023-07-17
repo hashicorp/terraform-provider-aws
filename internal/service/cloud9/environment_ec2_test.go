@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloud9_test
 
 import (
@@ -186,7 +189,7 @@ func testAccCheckEnvironmentEC2Exists(ctx context.Context, n string, v *cloud9.E
 			return fmt.Errorf("No Cloud9 Environment EC2 ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn(ctx)
 
 		output, err := tfcloud9.FindEnvironmentByID(ctx, conn, rs.Primary.ID)
 
@@ -202,7 +205,7 @@ func testAccCheckEnvironmentEC2Exists(ctx context.Context, n string, v *cloud9.E
 
 func testAccCheckEnvironmentEC2Destroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloud9_environment_ec2" {

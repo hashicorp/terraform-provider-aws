@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2_test
 
 import (
@@ -2281,7 +2284,7 @@ func TestAccELBV2TargetGroup_Name_noDuplicates(t *testing.T) {
 
 func testAccCheckTargetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_target_group" && rs.Type != "aws_alb_target_group" {
@@ -2316,7 +2319,7 @@ func testAccCheckTargetGroupExists(ctx context.Context, n string, v *elbv2.Targe
 			return errors.New("No ELBv2 Target Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 
 		output, err := tfelbv2.FindTargetGroupByARN(ctx, conn, rs.Primary.ID)
 

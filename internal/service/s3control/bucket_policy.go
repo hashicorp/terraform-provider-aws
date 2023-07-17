@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control
 
 import (
@@ -53,7 +56,7 @@ func resourceBucketPolicy() *schema.Resource {
 }
 
 func resourceBucketPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	bucket := d.Get("bucket").(string)
 
@@ -79,7 +82,7 @@ func resourceBucketPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -120,7 +123,7 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceBucketPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
@@ -142,7 +145,7 @@ func resourceBucketPolicyUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
 

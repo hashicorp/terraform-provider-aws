@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner
 
 import (
@@ -74,12 +77,12 @@ func ResourceObservabilityConfiguration() *schema.Resource {
 }
 
 func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	name := d.Get("observability_configuration_name").(string)
 	input := &apprunner.CreateObservabilityConfigurationInput{
 		ObservabilityConfigurationName: aws.String(name),
-		Tags:                           GetTagsIn(ctx),
+		Tags:                           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("trace_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -106,7 +109,7 @@ func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.DescribeObservabilityConfigurationInput{
 		ObservabilityConfigurationArn: aws.String(d.Id()),
@@ -159,7 +162,7 @@ func resourceObservabilityConfigurationUpdate(ctx context.Context, d *schema.Res
 }
 
 func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.DeleteObservabilityConfigurationInput{
 		ObservabilityConfigurationArn: aws.String(d.Id()),

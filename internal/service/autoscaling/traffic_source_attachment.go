@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
 import (
@@ -65,7 +68,7 @@ func ResourceTrafficSourceAttachment() *schema.Resource {
 
 func resourceTrafficSourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	asgName := d.Get("autoscaling_group_name").(string)
 	trafficSource := expandTrafficSourceIdentifier(d.Get("traffic_source").([]interface{})[0].(map[string]interface{}))
@@ -94,7 +97,7 @@ func resourceTrafficSourceAttachmentCreate(ctx context.Context, d *schema.Resour
 
 func resourceTrafficSourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	asgName, trafficSourceType, trafficSourceID, err := TrafficSourceAttachmentParseResourceID(d.Id())
 
@@ -119,7 +122,7 @@ func resourceTrafficSourceAttachmentRead(ctx context.Context, d *schema.Resource
 
 func resourceTrafficSourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	asgName, trafficSourceType, trafficSourceID, err := TrafficSourceAttachmentParseResourceID(d.Id())
 

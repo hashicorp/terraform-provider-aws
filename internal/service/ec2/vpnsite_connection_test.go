@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -1678,7 +1681,7 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 
 func testAccCheckVPNConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpn_connection" {
@@ -1713,7 +1716,7 @@ func testAccVPNConnectionExists(ctx context.Context, n string, v *ec2.VpnConnect
 			return fmt.Errorf("No EC2 VPN Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindVPNConnectionByID(ctx, conn, rs.Primary.ID)
 

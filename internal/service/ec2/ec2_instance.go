@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -540,7 +543,7 @@ func ResourceInstance() *schema.Resource {
 						"http_endpoint": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Computed:     true,
+							Default:      ec2.InstanceMetadataEndpointStateEnabled,
 							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataEndpointState_Values(), false),
 						},
 						"http_put_response_hop_limit": {
@@ -839,7 +842,7 @@ func ResourceInstance() *schema.Resource {
 				_, ok := diff.GetOk("launch_template")
 
 				if diff.Id() != "" && diff.HasChange("launch_template.0.version") && ok {
-					conn := meta.(*conns.AWSClient).EC2Conn()
+					conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 					stateVersion := diff.Get("launch_template.0.version")
 
@@ -918,7 +921,7 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instanceOpts, err := buildInstanceOpts(ctx, d, meta)
 	if err != nil {
@@ -967,7 +970,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Instance: %s", input)
-	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.RunInstancesWithContext(ctx, input)
 		},
@@ -1053,7 +1056,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instance, err := FindInstanceByID(ctx, conn, d.Id())
 
@@ -1258,7 +1261,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("monitoring", monitoringState == ec2.MonitoringStateEnabled || monitoringState == ec2.MonitoringStatePending)
 	}
 
-	SetTagsOut(ctx, instance.Tags)
+	setTagsOut(ctx, instance.Tags)
 
 	if _, ok := d.GetOk("volume_tags"); ok && !blockDeviceTagsDefined(d) {
 		volumeTags, err := readVolumeTags(ctx, conn, d.Id())
@@ -1441,7 +1444,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("volume_tags") && !d.IsNewResource() {
 		volumeIds, err := getInstanceVolumeIDs(ctx, conn, d.Id())
@@ -1452,7 +1455,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		o, n := d.GetChange("volume_tags")
 
 		for _, volumeId := range volumeIds {
-			if err := UpdateTags(ctx, conn, volumeId, o, n); err != nil {
+			if err := updateTags(ctx, conn, volumeId, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating volume_tags (%s): %s", volumeId, err)
 			}
 		}
@@ -1504,7 +1507,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 							return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): %s", d.Id(), err)
 						}
 					} else {
-						err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+						err := retry.RetryContext(ctx, iamPropagationTimeout, func() *retry.RetryError {
 							_, err := conn.ReplaceIamInstanceProfileAssociationWithContext(ctx, input)
 							if err != nil {
 								if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
@@ -1922,7 +1925,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("root_block_device.0.tags") {
 			o, n := d.GetChange("root_block_device.0.tags")
 
-			if err := UpdateTags(ctx, conn, volumeID, o, n); err != nil {
+			if err := updateTags(ctx, conn, volumeID, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating tags for volume (%s): %s", volumeID, err)
 			}
 		}
@@ -1988,7 +1991,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if err := disableInstanceAPITermination(ctx, conn, d.Id(), false); err != nil {
 		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
@@ -2074,7 +2077,7 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.EC2, in
 	}
 
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433.
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout,
 		func() (interface{}, error) {
 			return conn.StartInstancesWithContext(ctx, &ec2.StartInstancesInput{
 				InstanceIds: aws.StringSlice([]string{id}),
@@ -2153,7 +2156,7 @@ func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn 
 			Name: aws.String(d.Get("iam_instance_profile").(string)),
 		},
 	}
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := retry.RetryContext(ctx, iamPropagationTimeout, func() *retry.RetryError {
 		_, err := conn.AssociateIamInstanceProfileWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
@@ -2726,7 +2729,7 @@ type instanceOpts struct {
 }
 
 func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interface{}) (*instanceOpts, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	opts := &instanceOpts{
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),

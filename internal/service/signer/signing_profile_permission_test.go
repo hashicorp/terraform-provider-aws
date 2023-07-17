@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package signer_test
 
 import (
@@ -255,7 +258,7 @@ func testAccCheckSigningProfilePermissionExists(ctx context.Context, res, profil
 			return fmt.Errorf("Signing Profile with that ARN does not exist")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn(ctx)
 
 		params := &signer.ListProfilePermissionsInput{
 			ProfileName: aws.String(profileName),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
@@ -196,7 +199,7 @@ func TestAccSageMakerCodeRepository_disappears(t *testing.T) {
 
 func testAccCheckCodeRepositoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_code_repository" {
@@ -233,7 +236,7 @@ func testAccCheckCodeRepositoryExists(ctx context.Context, n string, codeRepo *s
 			return fmt.Errorf("No sagmaker Code Repository ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 		resp, err := tfsagemaker.FindCodeRepositoryByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

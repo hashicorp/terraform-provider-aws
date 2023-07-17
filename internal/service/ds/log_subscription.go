@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds
 
 import (
@@ -39,7 +42,7 @@ func ResourceLogSubscription() *schema.Resource {
 
 func resourceLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryId := d.Get("directory_id")
 	logGroupName := d.Get("log_group_name")
@@ -61,7 +64,7 @@ func resourceLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryId := d.Id()
 
@@ -89,7 +92,7 @@ func resourceLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceLogSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryId := d.Id()
 

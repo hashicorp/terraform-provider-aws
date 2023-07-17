@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acmpca
 
 import (
@@ -130,7 +133,7 @@ func ResourceCertificate() *schema.Resource {
 
 func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	certificateAuthorityARN := d.Get("certificate_authority_arn").(string)
 	input := &acmpca.IssueCertificateInput{
@@ -194,7 +197,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	getCertificateInput := &acmpca.GetCertificateInput{
 		CertificateArn:          aws.String(d.Id()),
@@ -228,7 +231,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	block, _ := pem.Decode([]byte(d.Get("certificate").(string)))
 	if block == nil {

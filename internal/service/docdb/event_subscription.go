@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb
 
 import (
@@ -96,14 +99,14 @@ func ResourceEventSubscription() *schema.Resource {
 }
 
 func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &docdb.CreateEventSubscriptionInput{
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
 		SubscriptionName: aws.String(name),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("event_categories"); ok && v.(*schema.Set).Len() > 0 {
@@ -134,7 +137,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	output, err := FindEventSubscriptionByID(ctx, conn, d.Id())
 
@@ -162,7 +165,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all", "source_ids") {
 		input := &docdb.ModifyEventSubscriptionInput{
@@ -242,7 +245,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Event Subscription: %s", d.Id())
 	_, err := conn.DeleteEventSubscriptionWithContext(ctx, &docdb.DeleteEventSubscriptionInput{

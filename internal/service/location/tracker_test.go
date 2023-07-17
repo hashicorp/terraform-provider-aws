@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location_test
 
 import (
@@ -215,7 +218,7 @@ func TestAccLocationTracker_tags(t *testing.T) {
 
 func testAccCheckTrackerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_location_tracker" {
@@ -253,7 +256,7 @@ func testAccCheckTrackerExists(ctx context.Context, resourceName string) resourc
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn(ctx)
 
 		input := &locationservice.DescribeTrackerInput{
 			TrackerName: aws.String(rs.Primary.ID),

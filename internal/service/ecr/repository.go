@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
 import (
@@ -113,14 +116,14 @@ func ResourceRepository() *schema.Resource {
 
 func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &ecr.CreateRepositoryInput{
 		EncryptionConfiguration: expandRepositoryEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
 		ImageTagMutability:      aws.String(d.Get("image_tag_mutability").(string)),
 		RepositoryName:          aws.String(name),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("image_scanning_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -146,7 +149,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId(aws.StringValue(output.Repository.RepositoryName))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(output.Repository.RepositoryArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -164,7 +167,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindRepositoryByName(ctx, conn, d.Id())
@@ -199,7 +202,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	if d.HasChange("image_tag_mutability") {
 		input := &ecr.PutImageTagMutabilityInput{
@@ -239,7 +242,7 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	log.Printf("[DEBUG] Deleting ECR Repository: %s", d.Id())
 	_, err := conn.DeleteRepositoryWithContext(ctx, &ecr.DeleteRepositoryInput{

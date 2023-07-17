@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns_test
 
 import (
@@ -691,7 +694,7 @@ func TestAccSNSTopicSubscription_Disappears_topic(t *testing.T) {
 
 func testAccCheckTopicSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sns_topic_subscription" {
@@ -730,7 +733,7 @@ func testAccCheckTopicSubscriptionExists(ctx context.Context, n string, v *map[s
 			return fmt.Errorf("No SNS Topic Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
 
 		output, err := tfsns.FindSubscriptionAttributesByARN(ctx, conn, rs.Primary.ID)
 
@@ -1315,11 +1318,6 @@ resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "private"
-}
-
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "firehose_role" {
@@ -1344,9 +1342,9 @@ EOF
 
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   name        = %[1]q
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.firehose_role.arn
     bucket_arn = aws_s3_bucket.bucket.arn
   }

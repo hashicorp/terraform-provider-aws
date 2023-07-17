@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh
 
 import (
@@ -650,13 +653,13 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 
 func resourceVirtualGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &appmesh.CreateVirtualGatewayInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandVirtualGatewaySpec(d.Get("spec").([]interface{})),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		VirtualGatewayName: aws.String(name),
 	}
 
@@ -677,7 +680,7 @@ func resourceVirtualGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindVirtualGatewayByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("name").(string))
@@ -712,7 +715,7 @@ func resourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceVirtualGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateVirtualGatewayInput{
@@ -737,7 +740,7 @@ func resourceVirtualGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVirtualGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Gateway: %s", d.Id())
 	input := &appmesh.DeleteVirtualGatewayInput{
@@ -771,7 +774,7 @@ func resourceVirtualGatewayImport(ctx context.Context, d *schema.ResourceData, m
 	meshName := parts[0]
 	name := parts[1]
 
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	virtualGateway, err := FindVirtualGatewayByThreePartKey(ctx, conn, meshName, "", name)
 

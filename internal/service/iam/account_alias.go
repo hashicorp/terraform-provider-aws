@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -35,7 +38,7 @@ func ResourceAccountAlias() *schema.Resource {
 
 func resourceAccountAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	account_alias := d.Get("account_alias").(string)
 
@@ -56,7 +59,7 @@ func resourceAccountAliasCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceAccountAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	params := &iam.ListAccountAliasesInput{}
 
@@ -81,7 +84,7 @@ func resourceAccountAliasRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAccountAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	account_alias := d.Get("account_alias").(string)
 

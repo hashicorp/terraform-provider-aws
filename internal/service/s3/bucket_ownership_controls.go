@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -56,7 +59,7 @@ func ResourceBucketOwnershipControls() *schema.Resource {
 
 func resourceBucketOwnershipControlsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 
@@ -80,7 +83,7 @@ func resourceBucketOwnershipControlsCreate(ctx context.Context, d *schema.Resour
 
 func resourceBucketOwnershipControlsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	input := &s3.GetBucketOwnershipControlsInput{
 		Bucket: aws.String(d.Id()),
@@ -123,7 +126,7 @@ func resourceBucketOwnershipControlsRead(ctx context.Context, d *schema.Resource
 
 func resourceBucketOwnershipControlsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	input := &s3.PutBucketOwnershipControlsInput{
 		Bucket: aws.String(d.Id()),
@@ -143,7 +146,7 @@ func resourceBucketOwnershipControlsUpdate(ctx context.Context, d *schema.Resour
 
 func resourceBucketOwnershipControlsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	input := &s3.DeleteBucketOwnershipControlsInput{
 		Bucket: aws.String(d.Id()),

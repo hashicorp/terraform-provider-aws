@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync
 
 import (
@@ -178,7 +181,7 @@ func ResourceResolver() *schema.Resource {
 
 func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	input := &appsync.CreateResolverInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
@@ -242,7 +245,7 @@ func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 
@@ -301,7 +304,7 @@ func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	input := &appsync.UpdateResolverInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
@@ -366,7 +369,7 @@ func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceResolverDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 

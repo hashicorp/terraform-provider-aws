@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -89,7 +92,7 @@ func ResourceCodeSigningConfig() *schema.Resource {
 
 func resourceCodeSigningConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	log.Printf("[DEBUG] Creating Lambda code signing config")
 
@@ -121,7 +124,7 @@ func resourceCodeSigningConfigCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	configOutput, err := conn.GetCodeSigningConfigWithContext(ctx, &lambda.GetCodeSigningConfigInput{
 		CodeSigningConfigArn: aws.String(d.Id()),
@@ -171,7 +174,7 @@ func resourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceCodeSigningConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	configInput := &lambda.UpdateCodeSigningConfigInput{
 		CodeSigningConfigArn: aws.String(d.Id()),
@@ -209,7 +212,7 @@ func resourceCodeSigningConfigUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceCodeSigningConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	_, err := conn.DeleteCodeSigningConfigWithContext(ctx, &lambda.DeleteCodeSigningConfigInput{
 		CodeSigningConfigArn: aws.String(d.Id()),

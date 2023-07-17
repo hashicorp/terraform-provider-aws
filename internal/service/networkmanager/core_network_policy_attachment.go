@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -70,7 +73,7 @@ func resourceCoreNetworkPolicyAttachmentCreate(ctx context.Context, d *schema.Re
 }
 
 func resourceCoreNetworkPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetwork, err := FindCoreNetworkByID(ctx, conn, d.Id())
 
@@ -108,7 +111,7 @@ func resourceCoreNetworkPolicyAttachmentRead(ctx context.Context, d *schema.Reso
 }
 
 func resourceCoreNetworkPolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChange("policy_document") {
 		err := PutAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), d.Get("policy_document").(string))

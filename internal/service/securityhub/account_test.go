@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub_test
 
 import (
@@ -160,7 +163,7 @@ func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheck
 			return fmt.Errorf("No Security Hub Account ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		_, err := tfsecurityhub.FindStandardsSubscriptions(ctx, conn, &securityhub.GetEnabledStandardsInput{})
 
@@ -170,7 +173,7 @@ func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheck
 
 func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_account" {

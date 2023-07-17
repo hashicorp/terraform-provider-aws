@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq_test
 
 import (
@@ -197,7 +200,7 @@ func testAccCheckConfigurationExists(ctx context.Context, n string) resource.Tes
 			return fmt.Errorf("No MQ Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn(ctx)
 
 		_, err := tfmq.FindConfigurationByID(ctx, conn, rs.Primary.ID)
 

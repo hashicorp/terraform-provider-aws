@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2
 
 import (
@@ -104,11 +107,11 @@ func ResourceCustomDataIdentifier() *schema.Resource {
 }
 
 func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.CreateCustomDataIdentifierInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("regex"); ok {
@@ -157,7 +160,7 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.GetCustomDataIdentifierInput{
 		Id: aws.String(d.Id()),
@@ -188,7 +191,7 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("description", resp.Description)
 	d.Set("maximum_match_distance", resp.MaximumMatchDistance)
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	if aws.BoolValue(resp.Deleted) {
 		log.Printf("[WARN] Macie CustomDataIdentifier (%s) is soft deleted, removing from state", d.Id())
@@ -202,7 +205,7 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceCustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DeleteCustomDataIdentifierInput{
 		Id: aws.String(d.Id()),

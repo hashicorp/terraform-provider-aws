@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation
 
 import (
@@ -381,7 +384,7 @@ func ResourcePermissions() *schema.Resource {
 
 func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.GrantPermissionsInput{
 		Permissions: flex.ExpandStringList(d.Get("permissions").([]interface{})),
@@ -472,7 +475,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &lakeformation.DataLakePrincipal{
@@ -684,7 +687,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.RevokePermissionsInput{
 		Permissions:                flex.ExpandStringList(d.Get("permissions").([]interface{})),

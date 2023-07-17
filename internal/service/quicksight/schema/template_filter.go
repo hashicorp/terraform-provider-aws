@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -482,7 +485,7 @@ func filterScopeConfigurationSchema() *schema.Schema {
 											Optional: true,
 											MinItems: 1,
 											MaxItems: 50,
-											Elem:     schema.TypeString,
+											Elem:     &schema.Schema{Type: schema.TypeString},
 										},
 									},
 								},

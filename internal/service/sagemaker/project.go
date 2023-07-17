@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -106,13 +109,13 @@ func ResourceProject() *schema.Resource {
 
 func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("project_name").(string)
 	input := &sagemaker.CreateProjectInput{
 		ProjectName:                       aws.String(name),
 		ServiceCatalogProvisioningDetails: expandProjectServiceCatalogProvisioningDetails(d.Get("service_catalog_provisioning_details").([]interface{})),
-		Tags:                              GetTagsIn(ctx),
+		Tags:                              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("project_description"); ok {
@@ -137,7 +140,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	project, err := FindProjectByName(ctx, conn, d.Id())
 	if err != nil {
@@ -164,7 +167,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &sagemaker.UpdateProjectInput{
@@ -195,7 +198,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.DeleteProjectInput{
 		ProjectName: aws.String(d.Id()),

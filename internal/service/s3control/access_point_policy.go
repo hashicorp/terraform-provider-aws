@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control
 
 import (
@@ -56,7 +59,7 @@ func resourceAccessPointPolicy() *schema.Resource {
 }
 
 func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	resourceID, err := AccessPointCreateResourceID(d.Get("access_point_arn").(string))
 
@@ -93,7 +96,7 @@ func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID, name, err := AccessPointParseResourceID(d.Id())
 
@@ -130,7 +133,7 @@ func resourceAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID, name, err := AccessPointParseResourceID(d.Id())
 
@@ -159,7 +162,7 @@ func resourceAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAccessPointPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID, name, err := AccessPointParseResourceID(d.Id())
 

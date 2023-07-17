@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package grafana
 
 import (
@@ -187,14 +190,14 @@ func ResourceWorkspace() *schema.Resource {
 
 func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	input := &managedgrafana.CreateWorkspaceInput{
 		AccountAccessType:       aws.String(d.Get("account_access_type").(string)),
 		AuthenticationProviders: flex.ExpandStringList(d.Get("authentication_providers").([]interface{})),
 		ClientToken:             aws.String(id.UniqueId()),
 		PermissionType:          aws.String(d.Get("permission_type").(string)),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("configuration"); ok {
@@ -263,7 +266,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	workspace, err := FindWorkspaceByID(ctx, conn, d.Id())
 
@@ -309,7 +312,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting network_access_control: %s", err)
 	}
 
-	SetTagsOut(ctx, workspace.Tags)
+	setTagsOut(ctx, workspace.Tags)
 
 	input := &managedgrafana.DescribeWorkspaceConfigurationInput{
 		WorkspaceId: aws.String(d.Id()),
@@ -328,7 +331,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	if d.HasChangesExcept("configuration", "tags", "tags_all") {
 		input := &managedgrafana.UpdateWorkspaceInput{
@@ -428,7 +431,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Grafana Workspace: %s", d.Id())
 	_, err := conn.DeleteWorkspaceWithContext(ctx, &managedgrafana.DeleteWorkspaceInput{

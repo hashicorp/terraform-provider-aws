@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codeartifact_test
 
 import (
@@ -175,7 +178,7 @@ func testAccCheckDomainPermissionsExists(ctx context.Context, n string) resource
 			return fmt.Errorf("no CodeArtifact domain set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn(ctx)
 
 		domainOwner, domainName, err := tfcodeartifact.DecodeDomainID(rs.Primary.ID)
 		if err != nil {
@@ -198,7 +201,7 @@ func testAccCheckDomainPermissionsDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn(ctx)
 
 			domainOwner, domainName, err := tfcodeartifact.DecodeDomainID(rs.Primary.ID)
 			if err != nil {

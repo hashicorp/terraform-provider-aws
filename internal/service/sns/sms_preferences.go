@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns
 
 import (
@@ -138,7 +141,7 @@ func ResourceSMSPreferences() *schema.Resource {
 }
 
 func resourceSMSPreferencesSet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	attributes, err := SMSPreferencesAttributeMap.ResourceDataToAPIAttributesCreate(d)
 
@@ -162,7 +165,7 @@ func resourceSMSPreferencesSet(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceSMSPreferencesGet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	output, err := conn.GetSMSAttributesWithContext(ctx, &sns.GetSMSAttributesInput{})
 
@@ -174,7 +177,7 @@ func resourceSMSPreferencesGet(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceSMSPreferencesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	// Reset the attributes to their default value.
 	attributes := make(map[string]string)

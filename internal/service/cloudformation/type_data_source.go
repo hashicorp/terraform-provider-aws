@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
@@ -107,7 +110,7 @@ func DataSourceType() *schema.Resource {
 }
 
 func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	input := &cloudformation.DescribeTypeInput{}
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package medialive
 
 import (
@@ -24,8 +27,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -154,7 +157,7 @@ func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaReques
 }
 
 func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := m.Meta().MediaLiveClient()
+	conn := m.Meta().MediaLiveClient(ctx)
 
 	var plan resourceMultiplexProgramData
 	diags := req.Plan.Get(ctx, &plan)
@@ -212,7 +215,7 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 }
 
 func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := m.Meta().MediaLiveClient()
+	conn := m.Meta().MediaLiveClient(ctx)
 
 	var state resourceMultiplexProgramData
 	diags := req.State.Get(ctx, &state)
@@ -262,7 +265,7 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := m.Meta().MediaLiveClient()
+	conn := m.Meta().MediaLiveClient(ctx)
 
 	var plan resourceMultiplexProgramData
 	diags := req.Plan.Get(ctx, &plan)
@@ -327,7 +330,7 @@ func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateReques
 }
 
 func (m *multiplexProgram) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := m.Meta().MediaLiveClient()
+	conn := m.Meta().MediaLiveClient(ctx)
 
 	var state resourceMultiplexProgramData
 	diags := req.State.Get(ctx, &state)

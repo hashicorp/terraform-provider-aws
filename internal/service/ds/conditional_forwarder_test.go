@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds_test
 
 import (
@@ -59,7 +62,7 @@ func TestAccDSConditionalForwarder_Condition_basic(t *testing.T) {
 
 func testAccCheckConditionalForwarderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_conditional_forwarder" {
@@ -109,7 +112,7 @@ func testAccCheckConditionalForwarderExists(ctx context.Context, name string, dn
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
 		res, err := conn.DescribeConditionalForwardersWithContext(ctx, &directoryservice.DescribeConditionalForwardersInput{
 			DirectoryId:       aws.String(directoryId),

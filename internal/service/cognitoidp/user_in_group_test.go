@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp_test
 
 import (
@@ -104,7 +107,7 @@ func testAccCheckUserInGroupExists(ctx context.Context, resourceName string) res
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		groupName := rs.Primary.Attributes["group_name"]
 		userPoolId := rs.Primary.Attributes["user_pool_id"]
@@ -126,7 +129,7 @@ func testAccCheckUserInGroupExists(ctx context.Context, resourceName string) res
 
 func testAccCheckUserInGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_user_in_group" {

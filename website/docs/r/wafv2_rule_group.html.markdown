@@ -504,10 +504,10 @@ You can't nest a `rate_based_statement`, for example for use inside a `not_state
 
 The `rate_based_statement` block supports the following arguments:
 
-* `aggregate_key_type` - (Optional) Setting that indicates how to aggregate the request counts. Valid values include: `FORWARDED_IP` or `IP`. Default: `IP`.
+* `aggregate_key_type` - (Optional) Setting that indicates how to aggregate the request counts. Valid values include: `CONSTANT`, `FORWARDED_IP` or `IP`. Default: `IP`.
 * `forwarded_ip_config` - (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. If `aggregate_key_type` is set to `FORWARDED_IP`, this block is required. See [Forwarded IP Config](#forwarded-ip-config) below for details.
 * `limit` - (Required) The limit on requests per 5-minute period for a single originating IP address.
-* `scope_down_statement` - (Optional) An optional nested statement that narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [Statement](#statement) above for details.
+* `scope_down_statement` - (Optional) An optional nested statement that narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [Statement](#statement) above for details. If `aggregate_key_type` is set to `CONSTANT`, this block is required.
 
 ### Regex Match Statement
 

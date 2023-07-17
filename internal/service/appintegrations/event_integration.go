@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appintegrations
 
 import (
@@ -75,7 +78,7 @@ func ResourceEventIntegration() *schema.Resource {
 }
 
 func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &appintegrationsservice.CreateEventIntegrationInput{
@@ -83,7 +86,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 		EventBridgeBus: aws.String(d.Get("eventbridge_bus").(string)),
 		EventFilter:    expandEventFilter(d.Get("event_filter").([]interface{})),
 		Name:           aws.String(name),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -108,7 +111,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
 
@@ -139,13 +142,13 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("setting event_filter: %s", err)
 	}
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	return nil
 }
 
 func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
 
@@ -164,7 +167,7 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appintegrations
 
 import (
@@ -104,7 +107,7 @@ func ResourceDataIntegration() *schema.Resource {
 }
 
 func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &appintegrationsservice.CreateDataIntegrationInput{
@@ -113,7 +116,7 @@ func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, 
 		Name:           aws.String(name),
 		ScheduleConfig: expandScheduleConfig(d.Get("schedule_config").([]interface{})),
 		SourceURI:      aws.String(d.Get("source_uri").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -132,7 +135,7 @@ func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	output, err := conn.GetDataIntegrationWithContext(ctx, &appintegrationsservice.GetDataIntegrationInput{
 		Identifier: aws.String(d.Id()),
@@ -157,13 +160,13 @@ func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	d.Set("source_uri", output.SourceURI)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return nil
 }
 
 func resourceDataIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	if d.HasChanges("description", "name") {
 		_, err := conn.UpdateDataIntegrationWithContext(ctx, &appintegrationsservice.UpdateDataIntegrationInput{
@@ -181,7 +184,7 @@ func resourceDataIntegrationUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDataIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	_, err := conn.DeleteDataIntegrationWithContext(ctx, &appintegrationsservice.DeleteDataIntegrationInput{
 		DataIntegrationIdentifier: aws.String(d.Id()),

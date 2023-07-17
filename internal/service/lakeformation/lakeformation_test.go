@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation_test
 
 import (
@@ -62,11 +65,13 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"valuesOverFifty": testAccLFTag_Values_overFifty,
 		},
 		"ResourceLFTags": {
-			"basic":            testAccResourceLFTags_basic,
-			"database":         testAccResourceLFTags_database,
-			"databaseMultiple": testAccResourceLFTags_databaseMultiple,
-			"table":            testAccResourceLFTags_table,
-			"tableWithColumns": testAccResourceLFTags_tableWithColumns,
+			"basic":                testAccResourceLFTags_basic,
+			"database":             testAccResourceLFTags_database,
+			"databaseMultipleTags": testAccResourceLFTags_databaseMultipleTags,
+			"disappears":           testAccResourceLFTags_disappears,
+			"hierarchy":            testAccResourceLFTags_hierarchy,
+			"table":                testAccResourceLFTags_table,
+			"tableWithColumns":     testAccResourceLFTags_tableWithColumns,
 		},
 	}
 

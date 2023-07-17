@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs
 
 import (
@@ -49,7 +52,7 @@ func resourceStream() *schema.Resource {
 }
 
 func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloudwatchlogs.CreateLogStreamInput{
@@ -77,7 +80,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	ls, err := FindLogStreamByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
 
@@ -98,7 +101,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Log Stream: %s", d.Id())
 	_, err := conn.DeleteLogStreamWithContext(ctx, &cloudwatchlogs.DeleteLogStreamInput{

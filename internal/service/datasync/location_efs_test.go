@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync_test
 
 import (
@@ -191,7 +194,7 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 
 func testAccCheckLocationEFSDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datasync_location_efs" {
@@ -224,7 +227,7 @@ func testAccCheckLocationEFSExists(ctx context.Context, resourceName string, loc
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 		input := &datasync.DescribeLocationEfsInput{
 			LocationArn: aws.String(rs.Primary.ID),
 		}

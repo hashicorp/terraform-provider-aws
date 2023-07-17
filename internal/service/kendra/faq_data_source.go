@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra
 
 import (
@@ -101,7 +104,7 @@ func DataSourceFaq() *schema.Resource {
 }
 
 func dataSourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("faq_id").(string)
@@ -142,7 +145,7 @@ func dataSourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
+	tags, err := listTags(ctx, conn, arn)
 	if err != nil {
 		return diag.Errorf("listing tags for resource (%s): %s", arn, err)
 	}

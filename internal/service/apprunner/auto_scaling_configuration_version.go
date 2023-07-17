@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner
 
 import (
@@ -81,12 +84,12 @@ func ResourceAutoScalingConfigurationVersion() *schema.Resource {
 }
 
 func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	name := d.Get("auto_scaling_configuration_name").(string)
 	input := &apprunner.CreateAutoScalingConfigurationInput{
 		AutoScalingConfigurationName: aws.String(name),
-		Tags:                         GetTagsIn(ctx),
+		Tags:                         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("max_concurrency"); ok {
@@ -121,7 +124,7 @@ func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.DescribeAutoScalingConfigurationInput{
 		AutoScalingConfigurationArn: aws.String(d.Id()),
@@ -173,7 +176,7 @@ func resourceAutoScalingConfigurationUpdate(ctx context.Context, d *schema.Resou
 }
 
 func resourceAutoScalingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.DeleteAutoScalingConfigurationInput{
 		AutoScalingConfigurationArn: aws.String(d.Id()),

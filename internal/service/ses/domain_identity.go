@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
@@ -47,7 +50,7 @@ func ResourceDomainIdentity() *schema.Resource {
 
 func resourceDomainIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Get("domain").(string)
 
@@ -67,7 +70,7 @@ func resourceDomainIdentityCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Id()
 	d.Set("domain", domainName)
@@ -104,7 +107,7 @@ func resourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceDomainIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Get("domain").(string)
 

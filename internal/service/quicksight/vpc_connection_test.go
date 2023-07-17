@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight_test
 
 import (
@@ -136,7 +139,7 @@ func testAccCheckVPCConnectionExists(ctx context.Context, resourceName string, v
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		output, err := tfquicksight.FindVPCConnectionByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameVPCConnection, rs.Primary.ID, err)
@@ -150,7 +153,7 @@ func testAccCheckVPCConnectionExists(ctx context.Context, resourceName string, v
 
 func testAccCheckVPCConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_vpc_connection" {
 				continue

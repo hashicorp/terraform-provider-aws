@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
@@ -67,7 +70,7 @@ func ResourceUsageLimit() *schema.Resource {
 
 func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	input := redshiftserverless.CreateUsageLimitInput{
 		Amount:      aws.Int64(int64(d.Get("amount").(int))),
@@ -96,7 +99,7 @@ func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	out, err := FindUsageLimitByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -121,7 +124,7 @@ func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceUsageLimitUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	input := &redshiftserverless.UpdateUsageLimitInput{
 		UsageLimitId: aws.String(d.Id()),
@@ -145,7 +148,7 @@ func resourceUsageLimitUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceUsageLimitDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Usage Limit: %s", d.Id())
 	_, err := conn.DeleteUsageLimitWithContext(ctx, &redshiftserverless.DeleteUsageLimitInput{

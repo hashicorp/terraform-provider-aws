@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package grafana
 
 import (
@@ -107,7 +110,7 @@ func DataSourceWorkspace() *schema.Resource {
 
 func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	workspaceID := d.Get("workspace_id").(string)

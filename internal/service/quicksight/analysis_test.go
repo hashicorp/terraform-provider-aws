@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight_test
 
 import (
@@ -224,7 +227,7 @@ func TestAccQuickSightAnalysis_forceDelete(t *testing.T) {
 
 func testAccCheckAnalysisDestroy(ctx context.Context, forceDelete bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_analysis" {
@@ -259,7 +262,7 @@ func testAccCheckAnalysisExists(ctx context.Context, name string, analysis *quic
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameAnalysis, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		output, err := tfquicksight.FindAnalysisByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {

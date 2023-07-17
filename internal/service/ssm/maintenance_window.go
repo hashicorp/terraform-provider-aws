@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
@@ -90,7 +93,7 @@ func ResourceMaintenanceWindow() *schema.Resource {
 
 func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &ssm.CreateMaintenanceWindowInput{
@@ -99,7 +102,7 @@ func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData
 		Duration:                 aws.Int64(int64(d.Get("duration").(int))),
 		Name:                     aws.String(name),
 		Schedule:                 aws.String(d.Get("schedule").(string)),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -148,7 +151,7 @@ func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceMaintenanceWindowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	output, err := FindMaintenanceWindowByID(ctx, conn, d.Id())
 
@@ -179,7 +182,7 @@ func resourceMaintenanceWindowRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceMaintenanceWindowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		// Replace must be set otherwise its not possible to remove optional attributes, e.g.
@@ -227,7 +230,7 @@ func resourceMaintenanceWindowUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceMaintenanceWindowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[INFO] Deleting SSM Maintenance Window: %s", d.Id())
 	_, err := conn.DeleteMaintenanceWindowWithContext(ctx, &ssm.DeleteMaintenanceWindowInput{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup_test
 
 import (
@@ -250,7 +253,7 @@ func TestAccBackupSelection_updateTag(t *testing.T) {
 
 func testAccCheckSelectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_selection" {
 				continue
@@ -281,7 +284,7 @@ func testAccCheckSelectionExists(ctx context.Context, name string, selection *ba
 			return fmt.Errorf("not found: %s, %v", name, s.RootModule().Resources)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
 
 		input := &backup.GetBackupSelectionInput{
 			BackupPlanId: aws.String(rs.Primary.Attributes["plan_id"]),

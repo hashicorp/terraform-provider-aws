@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
@@ -373,7 +376,7 @@ func TestAccS3BucketLogging_migrate_loggingWithChange(t *testing.T) {
 
 func testAccCheckBucketLoggingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_logging" {
@@ -423,7 +426,7 @@ func testAccCheckBucketLoggingExists(ctx context.Context, resourceName string) r
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 		if err != nil {

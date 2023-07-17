@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package signer
 
 import (
@@ -89,7 +92,7 @@ func DataSourceSigningProfile() *schema.Resource {
 
 func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
+	conn := meta.(*conns.AWSClient).SignerConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	profileName := d.Get("name").(string)

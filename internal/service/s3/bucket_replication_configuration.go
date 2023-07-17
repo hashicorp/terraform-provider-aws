@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -307,7 +310,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 
 func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 
@@ -359,7 +362,7 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 
 func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	output, err := FindBucketReplicationConfigurationByID(ctx, conn, d.Id())
 
@@ -386,7 +389,7 @@ func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.R
 
 func resourceBucketReplicationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	rc := &s3.ReplicationConfiguration{
 		Role:  aws.String(d.Get("role").(string)),
@@ -426,7 +429,7 @@ func resourceBucketReplicationConfigurationUpdate(ctx context.Context, d *schema
 
 func resourceBucketReplicationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	input := &s3.DeleteBucketReplicationInput{
 		Bucket: aws.String(d.Id()),

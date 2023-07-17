@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chime_test
 
 import (
@@ -107,7 +110,7 @@ func testAccCheckVoiceConnectorTerminationCredentialsExists(ctx context.Context,
 			return fmt.Errorf("no Chime Voice Connector termination credentials ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn(ctx)
 		input := &chime.ListVoiceConnectorTerminationCredentialsInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
@@ -131,7 +134,7 @@ func testAccCheckVoiceConnectorTerminationCredentialsDestroy(ctx context.Context
 			if rs.Type != "aws_chime_voice_connector_termination_credentials" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn(ctx)
 			input := &chime.ListVoiceConnectorTerminationCredentialsInput{
 				VoiceConnectorId: aws.String(rs.Primary.ID),
 			}

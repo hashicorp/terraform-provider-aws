@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
@@ -1530,7 +1533,7 @@ func testAccRecordOverwriteExpectErrorCheck(t *testing.T) resource.ErrorCheckFun
 
 func testAccCheckRecordDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_record" {
@@ -1570,7 +1573,7 @@ func testAccCheckRecordExists(ctx context.Context, n string, v *route53.Resource
 			return fmt.Errorf("No Route 53 Record ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		parts := tfroute53.ParseRecordID(rs.Primary.ID)
 		zone := parts[0]
@@ -1591,7 +1594,7 @@ func testAccCheckRecordExists(ctx context.Context, n string, v *route53.Resource
 
 func testAccCheckRecordDoesNotExist(ctx context.Context, zoneResourceName string, recordName string, recordType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 		zoneResource, ok := s.RootModule().Resources[zoneResourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", zoneResourceName)

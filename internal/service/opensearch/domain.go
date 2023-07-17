@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch
 
 import (
@@ -50,7 +53,7 @@ func ResourceDomain() *schema.Resource {
 				newVersion := d.Get("engine_version").(string)
 				domainName := d.Get("domain_name").(string)
 
-				conn := meta.(*conns.AWSClient).OpenSearchConn()
+				conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 				resp, err := conn.GetCompatibleVersionsWithContext(ctx, &opensearchservice.GetCompatibleVersionsInput{
 					DomainName: aws.String(domainName),
 				})
@@ -598,7 +601,7 @@ func resourceDomainImport(ctx context.Context,
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	// The API doesn't check for duplicate names
 	// so w/out this check Create would act as upsert
@@ -610,7 +613,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	input := &opensearchservice.CreateDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
-		TagList:    GetTagsIn(ctx),
+		TagList:    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("engine_version"); ok {
@@ -804,7 +807,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
 
@@ -936,7 +939,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := opensearchservice.UpdateDomainConfigInput{
@@ -1087,7 +1090,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 	domainName := d.Get("domain_name").(string)
 
 	log.Printf("[DEBUG] Deleting OpenSearch Domain: %q", domainName)
@@ -1378,7 +1381,7 @@ func EBSVolumeTypePermitsIopsInput(volumeType string) bool {
 	return false
 }
 
-// EBSVolumeTypePermitsIopsInput returns true if the volume type supports the Throughput input
+// EBSVolumeTypePermitsThroughputInput returns true if the volume type supports the Throughput input
 //
 // This check prevents a ValidationException when updating EBS volume types from a value
 // that supports Throughput (ex. gp3) to one that doesn't (ex. gp2).

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog_test
 
 import (
@@ -214,7 +217,7 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 
 func testAccCheckProductDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_product" {
@@ -252,7 +255,7 @@ func testAccCheckProductExists(ctx context.Context, resourceName string) resourc
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		input := &servicecatalog.DescribeProductAsAdminInput{
 			Id: aws.String(rs.Primary.ID),

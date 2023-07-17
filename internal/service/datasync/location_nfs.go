@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync
 
 import (
@@ -106,13 +109,13 @@ func ResourceLocationNFS() *schema.Resource {
 
 func resourceLocationNFSCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.CreateLocationNfsInput{
 		OnPremConfig:   expandOnPremConfig(d.Get("on_prem_config").([]interface{})),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("mount_options"); ok {
@@ -132,7 +135,7 @@ func resourceLocationNFSCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.DescribeLocationNfsInput{
 		LocationArn: aws.String(d.Id()),
@@ -151,7 +154,7 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location NFS (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
+	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location NFS (%s): %s", d.Id(), err)
@@ -175,7 +178,7 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceLocationNFSUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &datasync.UpdateLocationNfsInput{
@@ -199,7 +202,7 @@ func resourceLocationNFSUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceLocationNFSDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),

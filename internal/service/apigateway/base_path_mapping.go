@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -55,7 +58,7 @@ func ResourceBasePathMapping() *schema.Resource {
 
 func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 	input := &apigateway.CreateBasePathMappingInput{
 		RestApiId:  aws.String(d.Get("api_id").(string)),
 		DomainName: aws.String(d.Get("domain_name").(string)),
@@ -93,7 +96,7 @@ func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceBasePathMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	operations := make([]*apigateway.PatchOperation, 0)
 
@@ -152,7 +155,7 @@ func resourceBasePathMappingUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceBasePathMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	domainName, basePath, err := DecodeBasePathMappingID(d.Id())
 	if err != nil {
@@ -189,7 +192,7 @@ func resourceBasePathMappingRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceBasePathMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	domainName, basePath, err := DecodeBasePathMappingID(d.Id())
 	if err != nil {

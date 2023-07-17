@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
@@ -66,7 +69,7 @@ func ResourceUserGroup() *schema.Resource {
 
 func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	params := &cognitoidentityprovider.CreateGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -99,7 +102,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	params := &cognitoidentityprovider.GetGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -128,7 +131,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	params := &cognitoidentityprovider.UpdateGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -159,7 +162,7 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	params := &cognitoidentityprovider.DeleteGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),

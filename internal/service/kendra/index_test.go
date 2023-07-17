@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra_test
 
 import (
@@ -21,7 +24,7 @@ import (
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	acctest.PreCheckPartitionHasService(t, names.KendraEndpointID)
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient(ctx)
 
 	input := &kendra.ListIndicesInput{}
 
@@ -1387,7 +1390,7 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 
 func testAccCheckIndexDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kendra_index" {
@@ -1419,7 +1422,7 @@ func testAccCheckIndexExists(ctx context.Context, name string, index *kendra.Des
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient(ctx)
 		input := &kendra.DescribeIndexInput{
 			Id: aws.String(rs.Primary.ID),
 		}

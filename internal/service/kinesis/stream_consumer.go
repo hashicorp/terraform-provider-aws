@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesis
 
 import (
@@ -54,7 +57,7 @@ func ResourceStreamConsumer() *schema.Resource {
 
 func resourceStreamConsumerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisConn()
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &kinesis.RegisterStreamConsumerInput{
@@ -80,7 +83,7 @@ func resourceStreamConsumerCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisConn()
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 
 	consumer, err := FindStreamConsumerByARN(ctx, conn, d.Id())
 
@@ -104,7 +107,7 @@ func resourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceStreamConsumerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisConn()
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 
 	log.Printf("[DEBUG] Deregistering Kinesis Stream Consumer: (%s)", d.Id())
 	_, err := conn.DeregisterStreamConsumerWithContext(ctx, &kinesis.DeregisterStreamConsumerInput{

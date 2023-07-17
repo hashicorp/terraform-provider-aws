@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb
 
 import (
@@ -70,7 +73,7 @@ func ResourcePolicy() *schema.Resource {
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName := d.Get("load_balancer_name").(string)
 	policyName := d.Get("policy_name").(string)
@@ -98,7 +101,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName, policyName, err := PolicyParseResourceID(d.Id())
 
@@ -130,7 +133,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 	reassignments := Reassignment{}
 
 	lbName, policyName, err := PolicyParseResourceID(d.Id())
@@ -182,7 +185,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName, policyName, err := PolicyParseResourceID(d.Id())
 

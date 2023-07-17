@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -57,7 +60,7 @@ func testAccAccountAlias_basic(t *testing.T) {
 
 func testAccCheckAccountAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_account_alias" {
@@ -92,7 +95,7 @@ func testAccCheckAccountAliasExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 		params := &iam.ListAccountAliasesInput{}
 
 		resp, err := conn.ListAccountAliasesWithContext(ctx, params)

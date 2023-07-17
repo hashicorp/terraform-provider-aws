@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling_test
 
 import (
@@ -180,7 +183,7 @@ func testAccCheckTrafficSourceAttachmentExists(ctx context.Context, n string) re
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 
 		_, err = tfautoscaling.FindTrafficSourceAttachmentByThreePartKey(ctx, conn, asgName, trafficSourceType, trafficSourceID)
 
@@ -190,7 +193,7 @@ func testAccCheckTrafficSourceAttachmentExists(ctx context.Context, n string) re
 
 func testAccCheckTrafficSourceAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_autoscaling_traffic_source_attachment" {

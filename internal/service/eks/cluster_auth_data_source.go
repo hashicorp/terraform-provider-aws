@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks
 
 import (
@@ -33,7 +36,7 @@ func DataSourceClusterAuth() *schema.Resource {
 
 func dataSourceClusterAuthRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).STSConn()
+	conn := meta.(*conns.AWSClient).STSConn(ctx)
 	name := d.Get("name").(string)
 	generator, err := NewGenerator(false, false)
 	if err != nil {

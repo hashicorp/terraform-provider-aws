@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datapipeline
 
 import (
@@ -109,7 +112,7 @@ func DataSourcePipelineDefinition() *schema.Resource {
 }
 
 func dataSourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DataPipelineConn()
+	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 
 	pipelineID := d.Get("pipeline_id").(string)
 	input := &datapipeline.GetPipelineDefinitionInput{
