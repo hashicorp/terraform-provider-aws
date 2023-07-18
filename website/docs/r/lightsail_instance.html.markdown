@@ -67,7 +67,7 @@ resource "aws_lightsail_instance" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Lightsail Instance. Names be unique within each AWS Region in your Lightsail account.
 * `availability_zone` - (Required) The Availability Zone in which to create your

@@ -44,7 +44,7 @@ resource "aws_lightsail_disk_attachment" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `disk_name` - (Required) The name of the Lightsail Disk.
 * `instance_name` - (Required) The name of the Lightsail Instance to attach to.

@@ -31,7 +31,7 @@ resource "aws_lightsail_lb_certificate" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) The domain name (e.g., example.com) for your SSL/TLS certificate.
 * `lb_name` - (Required) The load balancer name where you want to create the SSL/TLS certificate.
