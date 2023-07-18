@@ -50,7 +50,7 @@ resource "aws_athena_named_query" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Plain language name for the query. Maximum length of 128.
 * `workgroup` - (Optional) Workgroup to which the query belongs. Defaults to `primary`
