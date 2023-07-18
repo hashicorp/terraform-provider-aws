@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Amplify webhook can be imported using a webhook ID, e.g.,
+Import Amplify webhook using a webhook ID. For example:
 
 ```
 $ terraform import aws_amplify_webhook.master a26b22a0-748b-4b57-b9a0-ae7e601fe4b1
