@@ -41,7 +41,7 @@ resource "aws_api_gateway_usage_plan_key" "main" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `key_id` - (Required) Identifier of the API key resource.
 * `key_type` - (Required) Type of the API key resource. Currently, the valid key type is API_KEY.

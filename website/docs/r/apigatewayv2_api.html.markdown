@@ -35,7 +35,7 @@ resource "aws_apigatewayv2_api" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the API. Must be less than or equal to 128 characters in length.
 * `protocol_type` - (Required) API protocol. Valid values: `HTTP`, `WEBSOCKET`.
