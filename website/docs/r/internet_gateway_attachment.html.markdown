@@ -47,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Internet Gateway Attachments using the `id`, e.g.
+Import Internet Gateway Attachments using the `id`. For example:
 
 ```
 $ terraform import aws_internet_gateway_attachment.example igw-c0a643a9:vpc-123456
