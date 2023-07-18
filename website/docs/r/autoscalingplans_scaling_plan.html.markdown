@@ -130,7 +130,7 @@ resource "aws_autoscalingplans_scaling_plan" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the scaling plan. Names cannot contain vertical bars, colons, or forward slashes.
 * `application_source` - (Required) CloudFormation stack or set of tags. You can create one scaling plan per application source.
