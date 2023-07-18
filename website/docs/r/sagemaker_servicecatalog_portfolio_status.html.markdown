@@ -26,9 +26,9 @@ The following arguments are supported:
 
 * `status` - (Required) Whether Service Catalog is enabled or disabled in SageMaker. Valid values are `Enabled` and `Disabled`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The AWS Region the Servicecatalog portfolio status resides in.
 
