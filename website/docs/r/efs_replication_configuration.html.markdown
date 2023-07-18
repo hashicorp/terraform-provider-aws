@@ -44,7 +44,7 @@ resource "aws_efs_replication_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `source_file_system_id` - (Required) The ID of the file system that is to be replicated.
 * `destination` - (Required) A destination configuration block (documented below).
