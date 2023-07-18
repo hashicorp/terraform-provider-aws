@@ -59,7 +59,7 @@ resource "tls_cert_request" "csr" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `certificate_authority_arn` - (Required) ARN of the certificate authority.
 * `certificate_signing_request` - (Required) Certificate Signing Request in PEM format.
