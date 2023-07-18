@@ -44,7 +44,7 @@ resource "aws_workspaces_workspace" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `directory_id` - (Required) The ID of the directory for the WorkSpace.
 * `bundle_id` - (Required) The ID of the bundle for the WorkSpace.

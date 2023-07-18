@@ -23,7 +23,7 @@ resource "aws_worklink_website_certificate_authority_association" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `fleet_arn` - (Required, ForceNew) The ARN of the fleet.
 * `certificate` - (Required, ForceNew) The root certificate of the Certificate Authority.

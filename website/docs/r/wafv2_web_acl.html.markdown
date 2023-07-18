@@ -347,7 +347,7 @@ resource "aws_wafv2_web_acl" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `custom_response_body` - (Optional) Defines custom response bodies that can be referenced by `custom_response` actions. See [`custom_response_body`](#custom_response_body-block) below for details.
 * `default_action` - (Required) Action to perform if none of the `rules` contained in the WebACL match. See [`default_action`](#default_action-block) below for details.

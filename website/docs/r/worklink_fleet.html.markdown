@@ -47,7 +47,7 @@ resource "aws_worklink_fleet" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A region-unique name for the AMI.
 * `audit_stream_arn` - (Optional) The ARN of the Amazon Kinesis data stream that receives the audit events. Kinesis data stream name must begin with `"AmazonWorkLink-"`.
