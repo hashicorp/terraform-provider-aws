@@ -126,7 +126,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-The Trust relationsiop can be imported using the directory ID and remote domain name, separated by a `/`, e.g.,
+Import The Trust relationsiop using the directory ID and remote domain name, separated by a `/`. For example:
 
 ```
 $ terraform import aws_directory_service_trust.example d-926724cf57/directory.example.com
