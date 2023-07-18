@@ -39,7 +39,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Route53 Recovery Readiness readiness checks can be imported via the readiness check name, e.g.,
+Import Route53 Recovery Readiness readiness checks using the readiness check name. For example:
 
 ```
 $ terraform import aws_route53recoveryreadiness_readiness_check.my-cw-alarm-check
