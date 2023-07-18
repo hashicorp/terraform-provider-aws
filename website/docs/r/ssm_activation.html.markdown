@@ -47,7 +47,7 @@ resource "aws_ssm_activation" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The default name of the registered managed instance.
 * `description` - (Optional) The description of the resource that you want to register.
