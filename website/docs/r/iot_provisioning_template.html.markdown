@@ -79,7 +79,7 @@ resource "aws_iot_provisioning_template" "fleet" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the fleet provisioning template.
 * `description` - (Optional) The description of the fleet provisioning template.
