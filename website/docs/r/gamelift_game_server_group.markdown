@@ -199,7 +199,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-GameLift Game Server Group can be imported using the `name`, e.g.
+Import GameLift Game Server Group using the `name`, e.g.
 
 ```
 $ terraform import aws_gamelift_game_server_group.example example
