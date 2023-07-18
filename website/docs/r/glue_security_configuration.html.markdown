@@ -35,7 +35,7 @@ resource "aws_glue_security_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `encryption_configuration` – (Required) Configuration block containing encryption configuration. Detailed below.
 * `name` – (Required) Name of the security configuration.

@@ -105,7 +105,7 @@ resource "aws_glue_trigger" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `actions` – (Required) List of actions initiated by this trigger when it fires. See [Actions](#actions) Below.
 * `description` – (Optional) A description of the new trigger.

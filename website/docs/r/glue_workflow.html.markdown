@@ -49,7 +49,7 @@ resource "aws_glue_trigger" "example-inner" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` – (Required) The name you assign to this workflow.
 * `default_run_properties` – (Optional) A map of default run properties for this workflow. These properties are passed to all jobs associated to the workflow.
