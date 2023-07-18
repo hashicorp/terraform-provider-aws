@@ -44,7 +44,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-MSK Connect Worker Configuration can be imported using the plugin's `arn`, e.g.,
+Import MSK Connect Worker Configuration using the plugin's `arn`. For example:
 
 ```
 $ terraform import aws_mskconnect_worker_configuration.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:worker-configuration/example/8848493b-7fcc-478c-a646-4a52634e3378-4'

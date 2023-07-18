@@ -194,7 +194,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-MSK Connect Connector can be imported using the connector's `arn`, e.g.,
+Import MSK Connect Connector using the connector's `arn`. For example:
 
 ```
 $ terraform import aws_mskconnect_connector.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:connector/example/264edee4-17a3-412e-bd76-6681cfc93805-3'

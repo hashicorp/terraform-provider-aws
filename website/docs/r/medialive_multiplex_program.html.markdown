@@ -94,7 +94,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-MediaLive MultiplexProgram can be imported using the `id`, or a combination of "`program_name`/`multiplex_id`" e.g.,
+Import MediaLive MultiplexProgram using the `id`, or a combination of "`program_name`/`multiplex_id`" e.g.,
 
 ```
 $ terraform import aws_medialive_multiplex_program.example example_program/1234567

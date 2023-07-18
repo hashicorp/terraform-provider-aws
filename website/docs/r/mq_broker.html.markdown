@@ -181,7 +181,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-MQ Brokers can be imported using their broker id, e.g.,
+Import MQ Brokers using their broker id. For example:
 
 ```
 $ terraform import aws_mq_broker.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
