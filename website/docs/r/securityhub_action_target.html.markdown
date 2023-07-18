@@ -39,7 +39,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Security Hub custom action using the action target ARN e.g.,
+Import Security Hub custom action using the action target ARN. For example:
 
 ```sh
 $ terraform import aws_securityhub_action_target.example arn:aws:securityhub:eu-west-1:312940875350:action/custom/a
