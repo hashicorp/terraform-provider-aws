@@ -26,6 +26,8 @@ data "aws_organizations_organizational_units" "ou" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `children` - List of child organizational units, which have the following attributes:
     * `arn` - ARN of the organizational unit
     * `name` - Name of the organizational unit

@@ -24,6 +24,8 @@ data "aws_organizations_delegated_administrators" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `delegated_administrators` - The list of delegated administrators in your organization, which have the following attributes:
     * `arn` - The ARN of the delegated administrator's account.
     * `delegation_enabled_date` - The date when the account was made a delegated administrator.
