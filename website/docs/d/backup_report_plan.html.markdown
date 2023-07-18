@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the backup report plan.
 * `creation_time` - Date and time that a report plan is created, in Unix format and Coordinated Universal Time (UTC).

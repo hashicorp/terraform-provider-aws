@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the backup framework.
 * `control` - One or more control blocks that make up the framework. Each control in the list has a name, input parameters, and scope. Detailed below.
