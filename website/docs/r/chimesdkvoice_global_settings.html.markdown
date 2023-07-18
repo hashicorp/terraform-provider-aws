@@ -34,9 +34,9 @@ The Amazon Chime SDK Voice Connector settings. Includes any Amazon S3 buckets de
 
 * `cdr_bucket` - (Optional) The S3 bucket that stores the Voice Connector's call detail records.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - AWS account ID for which the settings are applied.
 
