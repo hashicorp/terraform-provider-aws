@@ -458,7 +458,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-App Mesh virtual nodes can be imported using `mesh_name` together with the virtual node's `name`,
+Import App Mesh virtual nodes using `mesh_name` together with the virtual node's `name`,
 e.g.,
 
 ```

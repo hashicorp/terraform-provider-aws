@@ -77,7 +77,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-App Mesh virtual routers can be imported using `mesh_name` together with the virtual router's `name`,
+Import App Mesh virtual routers using `mesh_name` together with the virtual router's `name`,
 e.g.,
 
 ```

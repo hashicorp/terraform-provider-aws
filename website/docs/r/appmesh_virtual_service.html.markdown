@@ -86,7 +86,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-App Mesh virtual services can be imported using `mesh_name` together with the virtual service's `name`,
+Import App Mesh virtual services using `mesh_name` together with the virtual service's `name`,
 e.g.,
 
 ```

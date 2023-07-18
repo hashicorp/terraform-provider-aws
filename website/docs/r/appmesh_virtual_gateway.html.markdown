@@ -274,7 +274,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-App Mesh virtual gateway can be imported using `mesh_name` together with the virtual gateway's `name`,
+Import App Mesh virtual gateway using `mesh_name` together with the virtual gateway's `name`,
 e.g.,
 
 ```
