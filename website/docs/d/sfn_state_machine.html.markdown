@@ -24,7 +24,7 @@ data "aws_sfn_state_machine" "example" {
 
 * `name` - (Required) Friendly name of the state machine to match.
 
-## Attributes Reference
+## Attribute Reference
 
 * `id` - Set to the ARN of the found state machine, suitable for referencing in other resources that support State Machines.
 * `arn` - Set to the arn of the state function.
