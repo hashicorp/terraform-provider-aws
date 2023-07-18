@@ -32,7 +32,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import The current Account Alias using the `account_alias`. For example:
+Import the current Account Alias using the `account_alias`. For example:
 
 ```
 $ terraform import aws_iam_account_alias.alias my-account-alias

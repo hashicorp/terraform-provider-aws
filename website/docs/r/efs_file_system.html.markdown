@@ -81,7 +81,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import The EFS file systems using the `id`. For example:
+Import the EFS file systems using the `id`. For example:
 
 ```
 $ terraform import aws_efs_file_system.foo fs-6fa144c6

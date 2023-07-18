@@ -43,7 +43,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import The prometheus rule group namespace using the arn. For example:
+Import the prometheus rule group namespace using the arn. For example:
 
 ```
 $ terraform import aws_prometheus_rule_group_namespace.demo arn:aws:aps:us-west-2:123456789012:rulegroupsnamespace/IDstring/namespace_name

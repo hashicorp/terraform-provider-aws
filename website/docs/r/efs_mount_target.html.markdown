@@ -66,7 +66,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import The EFS mount targets using the `id`. For example:
+Import the EFS mount targets using the `id`. For example:
 
 ```
 $ terraform import aws_efs_mount_target.alpha fsmt-52a643fb
