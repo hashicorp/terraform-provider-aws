@@ -28,7 +28,7 @@ The following arguments are required:
 
 ## Attribute Reference
 
-In addition to the preceding arguments, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `name` - The name of the response plan.
 * `tags` - The tags applied to the response plan.
