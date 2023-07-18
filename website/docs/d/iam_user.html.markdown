@@ -24,7 +24,7 @@ data "aws_iam_user" "example" {
 
 * `user_name` - (Required) Friendly IAM user name to match.
 
-## Attributes Reference
+## Attribute Reference
 
 * `arn` - ARN assigned by AWS for this user.
 * `path` - Path in which this user was created.

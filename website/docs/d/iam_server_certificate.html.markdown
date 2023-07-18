@@ -38,7 +38,7 @@ resource "aws_elb" "elb" {
 * `name` - exact name of the cert to lookup
 * `latest` - sort results by expiration date. returns the certificate with expiration date in furthest in the future.
 
-## Attributes Reference
+## Attribute Reference
 
 * `id` is set to the unique id of the IAM Server Certificate
 * `arn` is set to the ARN of the IAM Server Certificate
