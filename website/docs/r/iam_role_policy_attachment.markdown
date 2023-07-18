@@ -62,9 +62,9 @@ The following arguments are supported:
 * `role`  (Required) - The name of the IAM role to which the policy should be applied
 * `policy_arn` (Required) - The ARN of the policy you want to apply
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

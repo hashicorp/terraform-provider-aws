@@ -306,9 +306,9 @@ The `range` object supports the following:
 * `end` - (Required) End of the range.
 * `start` - (Requited) Start of the range.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the route.
 * `arn` - ARN of the route.

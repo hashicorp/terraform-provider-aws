@@ -46,9 +46,9 @@ balancer.
 * `cookie_expiration_period` - (Optional) The time period after which
   the session cookie should be considered stale, expressed in seconds.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the policy.
 * `name` - The name of the stickiness policy.

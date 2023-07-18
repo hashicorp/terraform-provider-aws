@@ -58,9 +58,9 @@ The following arguments are optional:
 * `transport_stream_reserved_bitrate` - (Optional) Transport stream reserved bit rate.
 * `maximum_video_buffer_delay_milliseconds` - (Optional) Maximum video buffer delay.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Multiplex.
 

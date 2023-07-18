@@ -109,9 +109,9 @@ The following arguments are supported:
 * `policy_type_name` - (Required) The policy type.
 * `policy_attribute` - (Optional) Policy attribute to apply to the policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the policy.
 * `policy_name` - The name of the stickiness policy.

@@ -34,7 +34,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier for the reservation. Same as `offering_id`.
 * `currency_code` - Currency code for the reserved DB instance.

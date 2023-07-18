@@ -41,9 +41,9 @@ The following arguments are supported:
 * `require_symbols` - (Optional) Whether to require symbols for user passwords.
 * `require_uppercase_characters` - (Optional) Whether to require uppercase characters for user passwords.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `expire_passwords` - Indicates whether passwords in the account expire. Returns `true` if `max_password_age` contains a value greater than `0`. Returns `false` if it is `0` or _not present_.
 

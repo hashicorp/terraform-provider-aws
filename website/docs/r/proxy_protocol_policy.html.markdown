@@ -47,9 +47,9 @@ The following arguments are supported:
 * `instance_ports` - (Required) List of instance ports to which the policy
   should be applied. This can be specified if the protocol is SSL or TCP.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the policy.
 * `load_balancer` - The load balancer to which the policy is attached.

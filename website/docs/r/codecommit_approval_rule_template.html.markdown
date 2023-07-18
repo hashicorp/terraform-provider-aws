@@ -37,9 +37,9 @@ The following arguments are supported:
 * `name` - (Required) The name for the approval rule template. Maximum of 100 characters.
 * `description` - (Optional) The description of the approval rule template. Maximum of 1000 characters.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `approval_rule_template_id` - The ID of the approval rule template
 * `creation_date` - The date the approval rule template was created, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).

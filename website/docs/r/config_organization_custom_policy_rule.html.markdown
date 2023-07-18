@@ -62,9 +62,9 @@ The following arguments are optional:
 * `tag_key_scope` - (Optional, Required if `tag_value_scope` is configured) Tag key of AWS resources to evaluate
 * `tag_value_scope` - (Optional) Tag value of AWS resources to evaluate
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the rule
 

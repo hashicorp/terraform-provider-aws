@@ -61,9 +61,9 @@ The following arguments are supported:
 * `scope_name` - (Required) The scope name.
 * `scope_description` - (Required) The scope description.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `scope_identifiers` - A list of all scopes configured for this resource server in the format identifier/scope_name.
 

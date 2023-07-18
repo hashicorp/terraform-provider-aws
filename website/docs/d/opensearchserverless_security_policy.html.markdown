@@ -26,9 +26,9 @@ The following arguments are supported:
 * `name` - (Required) Name of the policy
 * `type` - (Required) Type of security policy. One of `encryption` or `network`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `created_date` - The date the security policy was created.
 * `description` - Description of the security policy.

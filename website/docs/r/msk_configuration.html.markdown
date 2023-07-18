@@ -33,9 +33,9 @@ The following arguments are supported:
 * `name` - (Required) Name of the configuration.
 * `description` - (Optional) Description of the configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the configuration.
 * `latest_revision` - Latest revision of the configuration.

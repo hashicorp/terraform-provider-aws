@@ -54,9 +54,9 @@ resource "aws_iot_thing_group" "example" {
 
 * `attributes` - (Optional) Key-value map.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the Thing Group.
 * `id` - The Thing Group ID.

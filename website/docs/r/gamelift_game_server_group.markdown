@@ -182,9 +182,9 @@ You can specify the template using either the template name or ID.
 * `name` - (Optional) A readable identifier for an existing EC2 launch template.
 * `version` - (Optional) The version of the EC2 launch template to use. If none is set, the default is the first version created.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the GameLift Game Server Group.
 * `arn` - The ARN of the GameLift Game Server Group.

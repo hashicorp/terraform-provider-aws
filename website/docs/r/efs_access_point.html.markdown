@@ -48,9 +48,9 @@ If the `path` specified does not exist, EFS creates the root directory using the
 * `owner_uid` - (Required) POSIX user ID to apply to the `root_directory`.
 * `permissions` - (Required) POSIX permissions to apply to the RootDirectory, in the format of an octal number representing the file's mode bits.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the access point.
 * `file_system_arn` - ARN of the file system.

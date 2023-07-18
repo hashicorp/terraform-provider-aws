@@ -40,9 +40,9 @@ The following arguments are supported:
 * `content_type` - (Required) Content type of the model
 * `schema` - (Required) Schema of the model in a JSON form
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the model
 

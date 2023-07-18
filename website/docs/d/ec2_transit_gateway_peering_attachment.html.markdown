@@ -50,7 +50,7 @@ which take the following arguments:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `peer_account_id` - Identifier of the peer AWS account
 * `peer_region` - Identifier of the peer AWS region

@@ -75,9 +75,9 @@ The `cors_configuration` object supports the following:
 * `expose_headers` - (Optional) Set of exposed HTTP headers.
 * `max_age` - (Optional) Number of seconds that the browser should cache preflight request results.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - API identifier.
 * `api_endpoint` - URI of the API, of the form `https://{api-id}.execute-api.{region}.amazonaws.com` for HTTP APIs and `wss://{api-id}.execute-api.{region}.amazonaws.com` for WebSocket APIs.

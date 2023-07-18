@@ -86,8 +86,8 @@ Each `secret` supports the following arguments:
 For more information on `context` and `grant_tokens` see the [KMS
 Concepts](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `plaintext` - Map containing each `secret` `name` as the key with its decrypted plaintext value

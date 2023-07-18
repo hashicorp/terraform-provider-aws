@@ -30,9 +30,9 @@ The following arguments are required:
 * `ip` - (Required) Dedicated IP address.
 * `destination_pool_name` - (Required) Dedicated IP address.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A comma-separated string made up of `ip` and `destination_pool_name`.
 

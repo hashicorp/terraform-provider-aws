@@ -142,9 +142,9 @@ The following arguments are supported:
 * `event_bus_name` - (Optional) The name of the event bus to set the permissions on.
   If you omit this, the permissions are set on the `default` event bus.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the EventBridge event bus.
 

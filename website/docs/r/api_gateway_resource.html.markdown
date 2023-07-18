@@ -33,9 +33,9 @@ The following arguments are supported:
 * `parent_id` - (Required) ID of the parent API resource
 * `path_part` - (Required) Last path segment of this API resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Resource's identifier.
 * `path` - Complete path for this API resource, including all parent paths.

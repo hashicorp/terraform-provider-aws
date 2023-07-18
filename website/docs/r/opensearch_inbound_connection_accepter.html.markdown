@@ -44,9 +44,9 @@ The following arguments are supported:
 
 * `connection_id` - (Required, Forces new resource) Specifies the ID of the connection to accept.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Id of the connection to accept.
 * `connection_status` - Status of the connection request.

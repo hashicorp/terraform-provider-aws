@@ -34,6 +34,6 @@ The following arguments are supported:
 * `elb` - (Required) The name of the ELB.
 * `instance` - (Required) Instance ID to place in the ELB pool.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.

@@ -41,9 +41,9 @@ The following arguments are supported:
 * `lb_name` - (Required) The name of the load balancer to which you want to associate the SSL/TLS certificate.
 * `certificate_name` - (Required) The name of your SSL/TLS certificate.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A combination of attributes to create a unique id: `lb_name`,`certificate_name`
 

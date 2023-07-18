@@ -78,9 +78,9 @@ pizza should have. The slot type could include the values: thick, thin, stuffed.
 * `update` - (Default `1m`)
 * `delete` - (Default `5m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `checksum` - Checksum identifying the version of the slot type that was created. The checksum is
 not included as an argument because the resource will add it automatically when updating the slot type.

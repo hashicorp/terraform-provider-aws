@@ -404,9 +404,9 @@ The `launch_template` block supports the following:
 * `name` - Name of the launch template. Conflicts with `id`.
 * `version` - Template version. Can be a specific version number, `$Latest` or `$Default`. The default value is `$Default`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the instance.
 * `capacity_reservation_specification` - Capacity reservation specification of the instance.

@@ -84,9 +84,9 @@ The following arguments are supported:
 
 * `external_connection_name` - (Required) The name of the external connection associated with a repository.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the repository.
 * `arn` - The ARN of the repository.

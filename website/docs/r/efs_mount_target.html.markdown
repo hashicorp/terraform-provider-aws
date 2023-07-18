@@ -40,13 +40,13 @@ which the file system may be mounted via the mount target.
 * `security_groups` - (Optional) A list of up to 5 VPC security group IDs (that must
 be for the same VPC as subnet specified) in effect for the mount target.
 
-## Attributes Reference
+## Attribute Reference
 
 ~> **Note:** The `dns_name` and `mount_target_dns_name` attributes are only useful if the mount target is in a VPC that has
 support for DNS hostnames enabled. See [Using DNS with Your VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-dns.html)
 and [VPC resource](/docs/providers/aws/r/vpc.html#enable_dns_hostnames) in Terraform for more information.
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the mount target.
 * `dns_name` - The DNS name for the EFS file system.

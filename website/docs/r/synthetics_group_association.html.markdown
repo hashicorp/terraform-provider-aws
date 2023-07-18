@@ -28,9 +28,9 @@ The following arguments are required:
 * `group_name` - (Required) Name of the group that the canary will be associated with.
 * `canary_arn` - (Required) ARN of the canary.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `group_name` - Name of the Group.
 * `group_id` - ID of the Group.

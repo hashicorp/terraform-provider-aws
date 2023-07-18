@@ -101,9 +101,9 @@ You can specify inclusions or exclusions, but not both. If you specify an `inclu
 
 * `firewall_deployment_model` - (Optional) Defines the deployment model to use for the third-party firewall policy. Valid values are `CENTRALIZED` and `DISTRIBUTED`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The AWS account ID of the AWS Firewall Manager administrator account.
 * `policy_update_token` - A unique identifier for each update to the policy.

@@ -38,9 +38,9 @@ The following arguments are optional:
 
 * `intended_use` - (Optional) Specifies how the results of an operation will be stored by the caller. Valid values: `SingleUse`, `Storage`. Default: `SingleUse`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `create_time` - The timestamp for when the place index resource was created in ISO 8601 format.
 * `index_arn` - The Amazon Resource Name (ARN) for the place index resource. Used to specify a resource across AWS.

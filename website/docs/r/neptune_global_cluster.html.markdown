@@ -118,9 +118,9 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 * `update` - (Defaults to 120 mins) Used when updating the Global Cluster members (time is per member)
 * `delete` - (Defaults to 5 mins) Used when deleting the Global Cluster members (time is per member)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Global Cluster Amazon Resource Name (ARN)
 * `global_cluster_members` - Set of objects containing Global Cluster members.

@@ -35,9 +35,9 @@ The following arguments are supported:
 * `ipam_resource_discovery_id` - (Required) The ID of the Resource Discovery to associate.
 * `tags` - (Optional) A map of tags to add to the IPAM resource discovery association resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of IPAM Resource Discovery Association.
 * `id` - The ID of the IPAM Resource Discovery Association.

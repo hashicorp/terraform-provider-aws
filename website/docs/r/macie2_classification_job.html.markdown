@@ -124,9 +124,9 @@ The `tag_scope_term` object supports the following:
 * `key` -  (Required) The tag key to use in the condition. The only valid value is `TAG`.
 * `target` -  (Required) The type of object to apply the condition to. The only valid value is `S3_OBJECT`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the macie classification job.
 * `created_at` -  The date and time, in UTC and extended RFC 3339 format, when the job was created.

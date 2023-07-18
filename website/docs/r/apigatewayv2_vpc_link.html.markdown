@@ -36,9 +36,9 @@ The following arguments are supported:
 * `subnet_ids` - (Required) Subnet IDs for the VPC Link.
 * `tags` - (Optional) Map of tags to assign to the VPC Link. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - VPC Link identifier.
 * `arn` - VPC Link ARN.

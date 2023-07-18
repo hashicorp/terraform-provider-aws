@@ -94,9 +94,9 @@ The following arguments are supported for `metadata_configuration` configuration
 
 * `storage_capacity` - (Required) The storage capacity of the Lustre MDT (Metadata Target) storage volume in gibibytes (GiB). The only supported value is `2400` GiB.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) for the resource.
 * `data_repository_association_ids` - A list of IDs of data repository associations that are associated with this cache.

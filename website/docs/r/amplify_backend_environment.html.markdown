@@ -35,9 +35,9 @@ The following arguments are supported:
 * `deployment_artifacts` - (Optional) Name of deployment artifacts.
 * `stack_name` - (Optional) AWS CloudFormation stack name of a backend environment.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN for a backend environment that is part of an Amplify app.
 * `id` - Unique ID of the Amplify backend environment.

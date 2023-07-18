@@ -31,9 +31,9 @@ The following arguments are supported:
 * `permissions_mode` - (Required) The permissions mode for the QLDB ledger instance. Specify either `ALLOW_ALL` or `STANDARD`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Name of the QLDB Ledger
 * `arn` - The ARN of the QLDB Ledger

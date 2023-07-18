@@ -49,9 +49,9 @@ The following arguments are optional:
 
 * `id` - (Required) Unique identifier of the control.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the framework.
 * `control_sets[*].id` - Unique identifier for the framework control set.

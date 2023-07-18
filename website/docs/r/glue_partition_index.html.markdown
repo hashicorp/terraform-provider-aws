@@ -121,9 +121,9 @@ The following arguments are required:
 * `index_name` - (Required) Name of the partition index.
 * `keys` - (Required) Keys for the partition index.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Catalog ID, Database name, table name, and index name.
 

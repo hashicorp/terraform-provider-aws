@@ -24,9 +24,9 @@ The following arguments are supported:
 
 * `replication_group_id` – (Required) Identifier for the replication group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `description` - Description of the replication group.
 * `arn` - ARN of the created ElastiCache Replication Group.

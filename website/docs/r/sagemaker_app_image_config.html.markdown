@@ -68,9 +68,9 @@ The following arguments are supported:
 * `name` - (Required) The name of the kernel.
 * `display_name` - (Optional) The display name of the kernel.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the App Image Config.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this App Image Config.

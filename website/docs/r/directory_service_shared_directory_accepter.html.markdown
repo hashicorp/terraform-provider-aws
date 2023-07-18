@@ -37,9 +37,9 @@ The following arguments are required:
 
 * `shared_directory_id` - (Required) Identifier of the directory that is stored in the directory consumer account that corresponds to the shared directory in the owner account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of the shared directory.
 * `method` - Method used when sharing a directory (i.e., `ORGANIZATIONS` or `HANDSHAKE`).

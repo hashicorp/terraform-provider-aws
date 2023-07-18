@@ -49,9 +49,9 @@ See supported entity types for each field in the [official docs](https://docs.aw
 * `status_code` - (Optional) HTTP status code of a response. The default value is `*` for any status code.
 * `type` - (Required) Type of API entity to which the documentation content appliesE.g., `API`, `METHOD` or `REQUEST_BODY`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique ID of the Documentation Part
 

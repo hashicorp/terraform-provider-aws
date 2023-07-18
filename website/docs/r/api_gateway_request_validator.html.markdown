@@ -30,9 +30,9 @@ The following argument is supported:
 * `validate_request_body` - (Optional) Boolean whether to validate request body. Defaults to `false`.
 * `validate_request_parameters` - (Optional) Boolean whether to validate request parameters. Defaults to `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique ID of the request validator
 

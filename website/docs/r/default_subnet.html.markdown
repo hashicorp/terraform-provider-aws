@@ -41,9 +41,9 @@ The following additional arguments are supported:
 
 * `force_destroy` - (Optional) Whether destroying the resource deletes the default subnet. Default: `false`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `availability_zone_id` - The AZ ID of the subnet
 * `cidr_block` - The IPv4 CIDR block assigned to the subnet

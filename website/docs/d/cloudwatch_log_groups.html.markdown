@@ -24,9 +24,9 @@ The following arguments are supported:
 
 * `log_group_name_prefix` - (Optional) Group prefix of the Cloudwatch log groups to list
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arns` - Set of ARNs of the Cloudwatch log groups
 * `log_group_names` - Set of names of the Cloudwatch log groups

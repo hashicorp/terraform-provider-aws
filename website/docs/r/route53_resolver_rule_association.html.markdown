@@ -27,9 +27,9 @@ The following arguments are supported:
 * `vpc_id` - (Required) The ID of the VPC that you want to associate the resolver rule with.
 * `name` - (Optional) A name for the association that you're creating between a resolver rule and a VPC.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the resolver rule association.
 

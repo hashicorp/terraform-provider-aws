@@ -80,9 +80,9 @@ The following arguments are supported:
 * `vpc_id` - (Required) ID of the VPC to associate.
 * `vpc_region` - (Optional) Region of the VPC to associate. Defaults to AWS provider region.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Hosted Zone.
 * `zone_id` - The Hosted Zone ID. This can be referenced by zone records.

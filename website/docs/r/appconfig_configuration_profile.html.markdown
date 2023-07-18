@@ -50,9 +50,9 @@ The `validator` block supports the following:
 * `content` - (Optional, Required when `type` is `LAMBDA`) Either the JSON Schema content or the ARN of an AWS Lambda function.
 * `type` - (Optional) Type of validator. Valid values: `JSON_SCHEMA` and `LAMBDA`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the AppConfig Configuration Profile.
 * `configuration_profile_id` - The configuration profile ID.

@@ -46,9 +46,9 @@ The following arguments are supported:
   This is the two-letter country code, e.g., `US`, `CA`, `RU`, `CN`, etc.
   See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_GeoMatchConstraint.html) for all supported values.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF Regional Geo Match Set.
 

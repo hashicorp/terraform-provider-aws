@@ -60,9 +60,9 @@ The following arguments are supported:
 * `health_check_arn` - (Required) The ARN (Amazon Resource Name) of the Route53 Health Check resource which will be associated to the protected resource.
 * `shield_protection_id` - (Required) The ID of the protected resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) for the Protection object that is created.
 

@@ -67,9 +67,9 @@ A subset of currently available products (remember to replace `${var.region}` as
 * `arn:aws:securityhub:${var.region}::product/turbot/turbot`
 * `arn:aws:securityhub:${var.region}::product/twistlock/twistlock-enterprise`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of a resource that represents your subscription to the product that generates the findings that you want to import into Security Hub.
 

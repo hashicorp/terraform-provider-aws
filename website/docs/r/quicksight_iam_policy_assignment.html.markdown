@@ -44,9 +44,9 @@ The following arguments are optional:
 * `groups` - (Optional) Array of Quicksight group names to assign the policy to.
 * `user` - (Optional) Array of Quicksight user names to assign the policy to.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `assignment_id` - Assignment ID.
 * `id` - A comma-delimited string joining AWS account ID, namespace, and assignment name.

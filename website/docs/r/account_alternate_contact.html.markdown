@@ -35,9 +35,9 @@ The following arguments are supported:
 * `phone_number` - (Required) Phone number for the alternate contact.
 * `title` - (Required) Title for the alternate contact.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Timeouts
 

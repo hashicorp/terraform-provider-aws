@@ -47,7 +47,7 @@ The following arguments are supported:
 * `load_balancer_arn` - (Optional) ARN of the load balancer. Required if `arn` is not set.
 * `port` - (Optional) Port of the listener. Required if `arn` is not set.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [LB Listener Resource](/docs/providers/aws/r/lb_listener.html) for details on the returned attributes - they are identical.
 

@@ -74,9 +74,9 @@ The following arguments are supported:
 * `database_name` - (Required, Forces new resource) Name of the database where the AWS Glue table exists.
 * `table_name` - (Required, Forces new resource) Name of the AWS Glue table.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Glue Data Quality Ruleset.
 * `created_on` - The time and date that this data quality ruleset was created.

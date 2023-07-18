@@ -101,9 +101,9 @@ home_directory_mappings {
 * `uid` - (Required) The POSIX user ID used for all EFS operations by this user.
 * `secondary_gids` - (Optional) The secondary POSIX group IDs used for all EFS operations by this user.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of Transfer User
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

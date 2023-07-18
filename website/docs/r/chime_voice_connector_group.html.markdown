@@ -56,9 +56,9 @@ For Amazon Chime Voice Connector groups, the Amazon Chime Voice Connectors to wh
 * `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
 * `priority` - (Required) The priority associated with the Amazon Chime Voice Connector, with 1 being the highest priority. Higher priority Amazon Chime Voice Connectors are attempted first.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Chime Voice Connector group ID.
 

@@ -116,9 +116,9 @@ The Cognito Identity Pool Roles Attachment argument layout is a structure compos
 * `role_arn` (Required) - The role ARN.
 * `value` (Required) - A brief string that the claim must match, for example, "paid" or "yes".
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identity pool ID.
 

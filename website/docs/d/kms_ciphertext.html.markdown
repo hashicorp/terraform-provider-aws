@@ -44,7 +44,7 @@ The following arguments are supported:
 * `key_id` - (Required) Globally unique key ID for the customer master key.
 * `context` - (Optional) An optional mapping that makes up the encryption context.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes are also exported as result attributes.
 

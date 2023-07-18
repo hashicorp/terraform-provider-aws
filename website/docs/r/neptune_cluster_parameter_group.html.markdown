@@ -42,9 +42,9 @@ Parameter blocks support the following:
 * `value` - (Required) The value of the neptune parameter.
 * `apply_method` - (Optional) Valid values are `immediate` and `pending-reboot`. Defaults to `pending-reboot`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The neptune cluster parameter group name.
 * `arn` - The ARN of the neptune cluster parameter group.

@@ -165,9 +165,9 @@ A Bundle Id can have the following infix added in order to use the HA option of 
 
 A Bundle ID ends with one of the following suffix: `1_0`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the Lightsail instance (matches `arn`).
 * `arn` - The ARN of the Lightsail instance (matches `id`).

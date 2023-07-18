@@ -55,9 +55,9 @@ The following arguments are supported:
   a user with non-Terraform-managed access keys and login profile will fail to be destroyed.
 * `tags` - Key-value map of tags for the IAM user. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN assigned by AWS for this user.
 * `name` - The user's name.

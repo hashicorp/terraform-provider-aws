@@ -27,9 +27,9 @@ The following arguments are supported:
 * `description` - (Optional)  A description of the Domain Name.
 * `domain_name` - (Required) Domain name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Appsync Domain Name.
 * `appsync_domain_name` - Domain name that AppSync provides.

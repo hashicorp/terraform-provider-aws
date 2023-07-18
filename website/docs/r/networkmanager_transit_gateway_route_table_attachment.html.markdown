@@ -27,9 +27,9 @@ The following arguments are supported:
 * `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transit_gateway_route_table_arn` - (Required) The ARN of the transit gateway route table for the attachment.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Attachment Amazon Resource Name (ARN).
 * `attachment_policy_rule_number` - The policy rule number associated with the attachment.

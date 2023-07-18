@@ -72,9 +72,9 @@ The following arguments are supported:
 * `type` - (Required) The type of identity provider.
 * `saml_metadata` - (Required) The SAML metadata document provided by the customer’s identity provider.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the created WorkLink Fleet.
 * `arn` - The ARN of the created WorkLink Fleet.

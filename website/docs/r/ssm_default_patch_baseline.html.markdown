@@ -49,9 +49,9 @@ The following arguments are required:
   `UBUNTU`, and
   `WINDOWS`.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

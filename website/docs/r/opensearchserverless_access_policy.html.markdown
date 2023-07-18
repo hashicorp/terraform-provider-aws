@@ -58,9 +58,9 @@ The following arguments are optional:
 
 * `description` - (Optional) Description of the policy. Typically used to store information about the permissions defined in the policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `policy_version` - Version of the policy.
 

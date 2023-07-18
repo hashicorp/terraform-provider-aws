@@ -27,9 +27,9 @@ The following arguments are supported:
 * `key` - (Required) Key-name for the tag.
 * `values` - (Required) List of possible values an attribute can take.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Catalog ID and key-name of the tag
 

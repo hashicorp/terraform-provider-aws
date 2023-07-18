@@ -47,9 +47,9 @@ The following arguments are supported:
 
 * `endpoint_id` - (Optional) An ID for the endpoint. For custom routing accelerators, this is the virtual private cloud (VPC) subnet ID.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the custom routing endpoint group.
 * `arn` - The Amazon Resource Name (ARN) of the custom routing endpoint group.

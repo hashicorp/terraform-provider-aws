@@ -30,9 +30,9 @@ The following arguments are supported:
 * `global_network_id` - (Required) The ID of the global network.
 * `link_id` - (Required) The ID of the link.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

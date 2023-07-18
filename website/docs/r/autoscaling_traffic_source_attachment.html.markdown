@@ -43,6 +43,6 @@ The following arguments are supported:
   `elbv2` if `identifier` is the ARN of an Application Load Balancer, Gateway Load Balancer, or Network Load Balancer target group.
   `vpc-lattice` if `identifier` is the ARN of a VPC Lattice target group.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.

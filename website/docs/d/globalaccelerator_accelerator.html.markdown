@@ -38,7 +38,7 @@ The following arguments are supported:
 
 ~> **NOTE:** When both `arn` and `name` are specified, `arn` takes precedence.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [`aws_globalaccelerator_accelerator` resource](/docs/providers/aws/r/globalaccelerator_accelerator.html) for details on the
 returned attributes - they are identical.

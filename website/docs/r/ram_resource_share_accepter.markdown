@@ -57,9 +57,9 @@ The following arguments are supported:
 
 * `share_arn` - (Required) The ARN of the resource share.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `invitation_arn` - The ARN of the resource share invitation.
 * `share_id` - The ID of the resource share as displayed in the console.

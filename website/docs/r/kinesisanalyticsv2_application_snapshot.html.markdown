@@ -27,9 +27,9 @@ The following arguments are supported:
 * `application_name` - (Required) The name of an existing  [Kinesis Analytics v2 Application](/docs/providers/aws/r/kinesisanalyticsv2_application.html). Note that the application must be running for a snapshot to be created.
 * `snapshot_name` - (Required) The name of the application snapshot.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The application snapshot identifier.
 * `application_version_id` - The current application version ID when the snapshot was created.

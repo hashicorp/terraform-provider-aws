@@ -41,9 +41,9 @@ The following arguments are supported:
 * `semantic_version` - (Optional) The version of the application to deploy. If not supplied, deploys the latest version.
 * `tags` - (Optional) A list of tags to associate with this stack. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A unique identifier of the stack.
 * `outputs` - A map of outputs from the stack.

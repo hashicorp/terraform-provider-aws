@@ -26,9 +26,9 @@ The following arguments are required:
 
 * `admin_account_id` - (Required) Identifier for the organization administrator account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier for the organization administrator account.
 * `organization_id` - Identifier for the organization.

@@ -30,9 +30,9 @@ The following arguments are supported:
 * `database_name` - (Required) The name of the database that receives data from the partner.
 * `partner_name` - (Required) The name of the partner that is authorized to send data.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier of the Redshift partner, `account_id`, `cluster_identifier`, `database_name`, `partner_name` separated by a colon (`:`).
 * `status` - (Optional) The partner integration status.

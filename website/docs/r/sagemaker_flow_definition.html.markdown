@@ -157,9 +157,9 @@ The following arguments are supported:
 * `s3_output_path` - (Required) The Amazon S3 path where the object containing human output will be made available.
 * `kms_key_id` - (Optional) The Amazon Key Management Service (KMS) key ARN for server-side encryption.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Flow Definition.
 * `id` - The name of the Flow Definition.

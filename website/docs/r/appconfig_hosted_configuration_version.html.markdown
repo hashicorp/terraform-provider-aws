@@ -89,9 +89,9 @@ The following arguments are supported:
 * `content_type` - (Required, Forces new resource) Standard MIME type describing the format of the configuration content. For more information, see [Content-Type](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17).
 * `description` - (Optional, Forces new resource) Description of the configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the AppConfig  hosted configuration version.
 * `id` - AppConfig application ID, configuration profile ID, and version number separated by a slash (`/`).

@@ -91,9 +91,9 @@ The `lex_bot` configuration block supports the following:
 * `name` - (Required) The name of the Amazon Lex (V1) bot.
 * `lex_region` - (Optional) The Region that the Amazon Lex (V1) bot was created in. Defaults to current region.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Connect instance ID, Lex (V1) bot name, and Lex (V1) bot region separated by colons (`:`).
 

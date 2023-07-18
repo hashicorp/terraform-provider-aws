@@ -125,9 +125,9 @@ The following arguments are supported:
 
 * `lambda_conflict_handler_arn` - (Optional) ARN for the Lambda function to use as the Conflict Handler.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - API Function ID (Formatted as ApiId-FunctionId)
 * `arn` - ARN of the Function object.

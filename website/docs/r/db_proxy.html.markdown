@@ -61,9 +61,9 @@ The following arguments are supported:
 * `secret_arn` - (Optional) The Amazon Resource Name (ARN) representing the secret that the proxy uses to authenticate to the RDS DB instance or Aurora DB cluster. These secrets are stored within Amazon Secrets Manager.
 * `username` - (Optional) The name of the database user to which the proxy connects.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) for the proxy.
 * `arn` - The Amazon Resource Name (ARN) for the proxy.

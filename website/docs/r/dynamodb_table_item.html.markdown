@@ -55,9 +55,9 @@ The following arguments are supported:
 * `range_key` - (Optional) Range key to use for lookups and identification of the item. Required if there is range key defined in the table.
 * `table_name` - (Required) Name of the table to contain the item.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 ## Import
 

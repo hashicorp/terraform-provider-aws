@@ -50,9 +50,9 @@ The following arguments are supported:
 * `instance_name` - (Required) The name of the Lightsail Instance to attach to.
 * `disk_path` - (Required) The disk path to expose to the instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A combination of attributes to create a unique id: `disk_name`,`instance_name`
 

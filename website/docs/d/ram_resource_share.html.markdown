@@ -45,9 +45,9 @@ The following Arguments are supported
     * `name` - (Required) Name of the tag key to filter on.
     * `values` - (Required) Value of the tag key.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the resource share.
 * `id` - ARN of the resource share.

@@ -49,9 +49,9 @@ but Terraform cannot destroy it. Removing this resource from your configuration
 will remove it from your statefile and management, but will not destroy the DHCP Options Set.
 You can resume managing the DHCP Options Set via the AWS Console.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the DHCP Options Set.
 * `arn` - The ARN of the DHCP Options Set.
