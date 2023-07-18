@@ -47,6 +47,8 @@ which take the following arguments:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `arn` - ARN of the Internet Gateway.
 
 All of the argument attributes except `filter` block are also exported as
