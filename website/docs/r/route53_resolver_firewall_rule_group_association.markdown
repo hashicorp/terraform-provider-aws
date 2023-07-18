@@ -27,7 +27,7 @@ resource "aws_route53_resolver_firewall_rule_group_association" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name that lets you identify the rule group association, to manage and use it.
 * `firewall_rule_group_id` - (Required) The unique identifier of the firewall rule group.

@@ -21,7 +21,7 @@ resource "aws_route53_resolver_rule_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resolver_rule_id` - (Required) The ID of the resolver rule that you want to associate with the VPC.
 * `vpc_id` - (Required) The ID of the VPC that you want to associate the resolver rule with.

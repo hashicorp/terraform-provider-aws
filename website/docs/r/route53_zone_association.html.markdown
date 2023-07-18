@@ -54,7 +54,7 @@ resource "aws_route53_zone_association" "secondary" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `zone_id` - (Required) The private hosted zone to associate.
 * `vpc_id` - (Required) The VPC to associate with the private hosted zone.

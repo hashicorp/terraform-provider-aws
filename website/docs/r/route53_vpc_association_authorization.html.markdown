@@ -64,7 +64,7 @@ resource "aws_route53_zone_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `zone_id` - (Required) The ID of the private hosted zone that you want to authorize associating a VPC with.
 * `vpc_id` - (Required) The VPC to authorize for association with the private hosted zone.

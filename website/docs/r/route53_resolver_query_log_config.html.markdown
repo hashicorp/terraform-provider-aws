@@ -25,7 +25,7 @@ resource "aws_route53_resolver_query_log_config" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `destination_arn` - (Required) The ARN of the resource that you want Route 53 Resolver to send query logs.
 You can send query logs to an [S3 bucket](s3_bucket.html), a [CloudWatch Logs log group](cloudwatch_log_group.html), or a [Kinesis Data Firehose delivery stream](kinesis_firehose_delivery_stream.html).
