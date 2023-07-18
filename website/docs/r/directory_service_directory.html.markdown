@@ -150,9 +150,9 @@ The following arguments are supported:
 * `subnet_ids` - (Required) The identifiers of the subnets for the directory servers (2 subnets in 2 different AZs).
 * `vpc_id` - (Required) The identifier of the VPC that the directory is in.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The directory identifier.
 * `access_url` - The access URL for the directory, such as `http://alias.awsapps.com`.
