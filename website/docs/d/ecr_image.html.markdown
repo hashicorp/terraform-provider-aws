@@ -21,7 +21,7 @@ data "aws_ecr_image" "service_image" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `registry_id` - (Optional) ID of the Registry where the repository resides.
 * `repository_name` - (Required) Name of the ECR Repository.
