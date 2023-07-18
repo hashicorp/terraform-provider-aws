@@ -26,5 +26,7 @@ data "aws_servicequotas_service" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - Code of the service.
 * `service_code` - Code of the service.
