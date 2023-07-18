@@ -40,7 +40,7 @@ resource "aws_storagegateway_smb_file_share" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `gateway_arn` - (Required) Amazon Resource Name (ARN) of the file gateway.
 * `location_arn` - (Required) The ARN of the backed storage used for storing file data.

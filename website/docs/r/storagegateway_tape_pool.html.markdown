@@ -21,7 +21,7 @@ resource "aws_storagegateway_tape_pool" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `pool_name` - (Required) The name of the new custom tape pool.
 * `storage_class` - (Required) The storage class that is associated with the new custom pool. When you use your backup application to eject the tape, the tape is archived directly into the storage class that corresponds to the pool. Possible values are `DEEP_ARCHIVE` or `GLACIER`.

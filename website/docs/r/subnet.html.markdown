@@ -46,7 +46,7 @@ resource "aws_subnet" "in_secondary_cidr" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `assign_ipv6_address_on_creation` - (Optional) Specify true to indicate
     that network interfaces created in the specified subnet should be
