@@ -36,7 +36,7 @@ resource "aws_macie2_invitation_accepter" "member" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `administrator_account_id` - (Required) The AWS account ID for the account that sent the invitation.
 

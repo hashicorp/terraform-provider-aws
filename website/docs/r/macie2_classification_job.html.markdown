@@ -30,7 +30,7 @@ resource "aws_macie2_classification_job" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `schedule_frequency` -  (Optional) The recurrence pattern for running the job. To run the job only once, don't specify a value for this property and set the value for the `job_type` property to `ONE_TIME`. (documented below)
 * `custom_data_identifier_ids` -  (Optional) The custom data identifiers to use for data analysis and classification.

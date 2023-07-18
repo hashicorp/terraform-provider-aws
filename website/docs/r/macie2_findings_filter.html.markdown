@@ -32,7 +32,7 @@ resource "aws_macie2_findings_filter" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `finding_criteria` - (Required) The criteria to use to filter findings.
 * `name` - (Optional) A custom name for the filter. The name must contain at least 3 characters and can contain as many as 64 characters. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
