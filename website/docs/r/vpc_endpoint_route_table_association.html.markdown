@@ -34,8 +34,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import VPC Endpoint Route Table Associations using `vpc_endpoint_id` together with `route_table_id`,
-e.g.,
+Import VPC Endpoint Route Table Associations using `vpc_endpoint_id` together with `route_table_id`. For example:
 
 ```
 $ terraform import aws_vpc_endpoint_route_table_association.example vpce-aaaaaaaa/rtb-bbbbbbbb
