@@ -42,7 +42,7 @@ resource "aws_ebs_snapshot_copy" "example_copy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) A description of what the snapshot is.
 * `encrypted` - Whether the snapshot is encrypted.
