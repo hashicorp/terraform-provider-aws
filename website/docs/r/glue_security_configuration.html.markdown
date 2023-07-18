@@ -69,7 +69,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Glue Security Configurations can be imported using `name`, e.g.,
+Import Glue Security Configurations using `name`. For example:
 
 ```
 $ terraform import aws_glue_security_configuration.example example

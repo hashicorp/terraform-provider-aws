@@ -172,7 +172,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Glue ML Transforms can be imported using `id`, e.g.,
+Import Glue ML Transforms using `id`. For example:
 
 ```
 $ terraform import aws_glue_ml_transform.example tfm-c2cafbe83b1c575f49eaca9939220e2fcd58e2d5

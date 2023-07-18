@@ -86,7 +86,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Glue Data Quality Ruleset can be imported using the `name`, e.g.,
+Import Glue Data Quality Ruleset using the `name`. For example:
 
 ```
 $ terraform import aws_glue_data_quality_ruleset.example exampleName

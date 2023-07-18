@@ -36,7 +36,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Glue Registries can be imported using `arn`, e.g.,
+Import Glue Registries using `arn`. For example:
 
 ```
 $ terraform import aws_glue_registry.example arn:aws:glue:us-west-2:123456789012:registry/example
