@@ -52,7 +52,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Amazon AppIntegrations Event Integrations can be imported using the `name` e.g.,
+Import Amazon AppIntegrations Event Integrations using the `name` e.g.,
 
 ```
 $ terraform import aws_appintegrations_event_integration.example example-name

@@ -58,7 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Amazon AppIntegrations Data Integrations can be imported using the `id` e.g.,
+Import Amazon AppIntegrations Data Integrations using the `id` e.g.,
 
 ```
 $ terraform import aws_appintegrations_data_integration.example 12345678-1234-1234-1234-123456789123

@@ -65,7 +65,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ApplicationInsights Applications can be imported using the `resource_group_name`, e.g.,
+Import ApplicationInsights Applications using the `resource_group_name`. For example:
 
 ```
 $ terraform import aws_applicationinsights_application.some some-application

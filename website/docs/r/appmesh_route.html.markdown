@@ -319,7 +319,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-App Mesh virtual routes can be imported using `mesh_name` and `virtual_router_name` together with the route's `name`,
+Import App Mesh virtual routes using `mesh_name` and `virtual_router_name` together with the route's `name`,
 e.g.,
 
 ```
