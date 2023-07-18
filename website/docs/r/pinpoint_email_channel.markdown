@@ -81,7 +81,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Pinpoint Email Channel can be imported using the `application-id`, e.g.,
+Import Pinpoint Email Channel using the `application-id`. For example:
 
 ```
 $ terraform import aws_pinpoint_email_channel.email application-id

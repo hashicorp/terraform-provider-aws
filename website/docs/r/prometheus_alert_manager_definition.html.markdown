@@ -41,7 +41,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-The prometheus alert manager definition can be imported using the workspace identifier, e.g.,
+Import The prometheus alert manager definition using the workspace identifier. For example:
 
 ```
 $ terraform import aws_prometheus_alert_manager_definition.demo ws-C6DCB907-F2D7-4D96-957B-66691F865D8B
