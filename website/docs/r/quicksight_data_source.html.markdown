@@ -217,7 +217,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import A QuickSight data source using the AWS account ID, and data source ID separated by a slash (`/`). For example:
+Import a QuickSight data source using the AWS account ID, and data source ID separated by a slash (`/`). For example:
 
 ```
 $ terraform import aws_quicksight_data_source.example 123456789123/my-data-source-id

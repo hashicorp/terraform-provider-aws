@@ -80,7 +80,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import A Glue Development Endpoint using the `name`. For example:
+Import a Glue Development Endpoint using the `name`. For example:
 
 ```
 $ terraform import aws_glue_dev_endpoint.example foo

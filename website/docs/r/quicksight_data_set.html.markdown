@@ -398,7 +398,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import A QuickSight Data Set using the AWS account ID and data set ID separated by a comma (`,`). For example:
+Import a QuickSight Data Set using the AWS account ID and data set ID separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_quicksight_data_set.example 123456789012,example-id

@@ -37,7 +37,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import A Spot Datafeed Subscription using the word `spot-datafeed-subscription`. For example:
+Import a Spot Datafeed Subscription using the word `spot-datafeed-subscription`. For example:
 
 ```
 $ terraform import aws_spot_datafeed_subscription.mysubscription spot-datafeed-subscription

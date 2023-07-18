@@ -102,7 +102,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import A QuickSight folder using the AWS account ID and folder ID name separated by a comma (`,`). For example:
+Import a QuickSight folder using the AWS account ID and folder ID name separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_quicksight_folder.example 123456789012,example-id
