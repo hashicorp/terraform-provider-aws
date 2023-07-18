@@ -139,7 +139,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-WAF Web ACL can be imported using the `id`, e.g.,
+Import WAF Web ACL using the `id`. For example:
 
 ```
 $ terraform import aws_waf_web_acl.main 0c8e583e-18f3-4c13-9e2a-67c4805d2f94
