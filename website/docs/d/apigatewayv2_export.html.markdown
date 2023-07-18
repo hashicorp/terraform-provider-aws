@@ -22,7 +22,7 @@ data "aws_apigatewayv2_export" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `specification` - (Required) Version of the API specification to use. `OAS30`, for OpenAPI 3.0, is the only supported value.
