@@ -35,9 +35,9 @@ The following arguments are optional:
 
 * `description` - (Optional) A summary description of the worker configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - the Amazon Resource Name (ARN) of the worker configuration.
 * `latest_revision` - an ID of the latest successfully created revision of the worker configuration.

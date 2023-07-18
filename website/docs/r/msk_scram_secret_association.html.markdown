@@ -82,9 +82,9 @@ The following arguments are supported:
 * `cluster_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the MSK cluster.
 * `secret_arn_list` - (Required) List of AWS Secrets Manager secret ARNs.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the MSK cluster.
 
