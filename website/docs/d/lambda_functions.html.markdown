@@ -20,9 +20,9 @@ data "aws_lambda_functions" "all" {}
 
 The resource does not support any arguments.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `function_names` - A list of Lambda Function names.
 * `function_arns` - A list of Lambda Function ARNs.

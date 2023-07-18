@@ -40,6 +40,6 @@ output "result_entry" {
 * `qualifier` - (Optional) Qualifier (a.k.a version) of the lambda function. Defaults
  to `$LATEST`.
 
-## Attributes Reference
+## Attribute Reference
 
 * `result` - String result of the lambda function invocation.
