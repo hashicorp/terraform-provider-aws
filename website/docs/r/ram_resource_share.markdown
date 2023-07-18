@@ -25,7 +25,7 @@ resource "aws_ram_resource_share" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the resource share.
 * `allow_external_principals` - (Optional) Indicates whether principals outside your organization can be associated with a resource share.
