@@ -24,7 +24,7 @@ data "aws_kinesis_firehose_delivery_stream" "stream" {
 
 * `name` - (Required) Name of the Kinesis Stream.
 
-## Attributes Reference
+## Attribute Reference
 
 `id` is set to the ARN of the Kinesis Stream. In addition, the following attributes
 are exported:

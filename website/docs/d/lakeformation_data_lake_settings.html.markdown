@@ -24,7 +24,7 @@ The following arguments are optional:
 
 * `catalog_id` – (Optional) Identifier for the Data Catalog. By default, the account ID.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to arguments above, the following attributes are exported.
 

@@ -25,7 +25,7 @@ data "aws_kms_custom_key_store" "keystore" {
 * `custom_key_store_id` - (Optional) The ID for the custom key store.
 * `custom_key_store_name` - (Optional) The user-specified friendly name for the custom key store.
 
-## Attributes Reference
+## Attribute Reference
 
 * `id` - The ID for the custom key store.
 * `cloudhsm_cluster_id` - ID for the CloudHSM cluster that is associated with the custom key store.
