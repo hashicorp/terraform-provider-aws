@@ -93,7 +93,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_imagebuilder_infrastructure_configuration` can be imported using the Amazon Resource Name (ARN), e.g.,
+Import `aws_imagebuilder_infrastructure_configuration` using the Amazon Resource Name (ARN). For example:
 
 ```
 $ terraform import aws_imagebuilder_infrastructure_configuration.example arn:aws:imagebuilder:us-east-1:123456789012:infrastructure-configuration/example
