@@ -37,4 +37,6 @@ The following arguments are required:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `ids` - List of all the policy ids found.
