@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Hosts can be imported using the host `id`, e.g.,
+Import Hosts using the host `id`. For example:
 
 ```
 $ terraform import aws_ec2_host.example h-0385a99d0e4b20cbb
