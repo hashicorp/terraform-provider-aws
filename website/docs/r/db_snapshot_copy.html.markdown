@@ -81,7 +81,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_db_snapshot_copy` can be imported by using the snapshot identifier, e.g.,
+Import `aws_db_snapshot_copy` using the snapshot identifier. For example:
 
 ```
 $ terraform import aws_db_snapshot_copy.example my-snapshot
