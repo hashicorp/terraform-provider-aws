@@ -24,4 +24,6 @@ data "aws_cognito_user_pool_signing_certificate" "sc" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `certificate` - Certificate string

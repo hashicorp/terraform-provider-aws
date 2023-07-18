@@ -35,5 +35,7 @@ resource "aws_api_gateway_authorizer" "cognito" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `ids` - Set of cognito user pool ids.
 * `arns` - Set of cognito user pool Amazon Resource Names (ARNs).
