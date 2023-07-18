@@ -37,7 +37,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudWatch Synthetics Group Association can be imported in the form `canary_arn,group_name`, e.g.,
+CloudWatch Synthetics Group Association can be imported using the `canary_arn,group_name`, e.g.,
 
 ```
 $ terraform import aws_synthetics_group_association.example arn:aws:synthetics:us-west-2:123456789012:canary:tf-acc-test-abcd1234,examplename
