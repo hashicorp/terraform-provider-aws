@@ -30,7 +30,7 @@ resource "aws_networkfirewall_firewall" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `delete_protection` - (Optional) A boolean flag indicating whether it is possible to delete the firewall. Defaults to `false`.
 

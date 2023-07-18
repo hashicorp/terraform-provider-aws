@@ -39,7 +39,7 @@ resource "aws_network_acl_rule" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `network_acl_id` - (Required) The ID of the network ACL.
 * `rule_number` - (Required) The rule number for the entry (for example, 100). ACL entries are processed in ascending order by rule number.

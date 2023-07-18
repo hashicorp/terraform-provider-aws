@@ -66,7 +66,7 @@ resource "aws_networkfirewall_logging_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `firewall_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Network Firewall firewall.
 
