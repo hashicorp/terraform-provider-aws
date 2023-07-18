@@ -79,7 +79,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Glue Partitions can be imported with their catalog ID (usually AWS account ID), database name, table name and partition values e.g.,
+Import Glue Partitions using the catalog ID (usually AWS account ID), database name, table name and partition values e.g.,
 
 ```
 $ terraform import aws_glue_partition.part 123456789012:MyDatabase:MyTable:val1#val2

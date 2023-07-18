@@ -136,7 +136,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Glue Partition Indexes can be imported with their catalog ID (usually AWS account ID), database name, table name, and index name, e.g.,
+Import Glue Partition Indexes using the catalog ID (usually AWS account ID), database name, table name, and index name, e.g.,
 
 ```
 $ terraform import aws_glue_partition_index.example 123456789012:MyDatabase:MyTable:index-name
