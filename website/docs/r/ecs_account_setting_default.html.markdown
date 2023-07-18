@@ -25,7 +25,7 @@ resource "aws_ecs_account_setting_default" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the account setting to set. Valid values are `serviceLongArnFormat`, `taskLongArnFormat`, `containerInstanceLongArnFormat`, `awsvpcTrunking` and `containerInsights`.
 * `value` - (Required) State of the setting. Valid values are `enabled` and `disabled`.

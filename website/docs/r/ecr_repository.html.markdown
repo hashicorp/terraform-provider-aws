@@ -25,7 +25,7 @@ resource "aws_ecr_repository" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the repository.
 * `encryption_configuration` - (Optional) Encryption configuration for the repository. See [below for schema](#encryption_configuration).

@@ -79,7 +79,7 @@ resource "aws_ecr_replication_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `replication_configuration` - (Required) Replication configuration for a registry. See [Replication Configuration](#replication-configuration).
 

@@ -56,7 +56,7 @@ resource "aws_ecr_repository_policy" "foopolicy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `repository` - (Required) Name of the repository to apply the policy.
 * `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)

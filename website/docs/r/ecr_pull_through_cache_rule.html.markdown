@@ -24,7 +24,7 @@ resource "aws_ecr_pull_through_cache_rule" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `ecr_repository_prefix` - (Required, Forces new resource) The repository name prefix to use when caching images from the source registry.
 * `upstream_registry_url` - (Required, Forces new resource) The registry URL of the upstream public registry to use as the source.
