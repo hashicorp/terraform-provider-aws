@@ -46,7 +46,7 @@ resource "aws_guardduty_filter" "MyFilter" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `detector_id` - (Required) ID of a GuardDuty detector, attached to your account.
 * `name` - (Required) The name of your filter.

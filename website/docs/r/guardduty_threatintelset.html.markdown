@@ -45,7 +45,7 @@ resource "aws_guardduty_threatintelset" "MyThreatIntelSet" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `activate` - (Required) Specifies whether GuardDuty is to start using the uploaded ThreatIntelSet.
 * `detector_id` - (Required) The detector ID of the GuardDuty.

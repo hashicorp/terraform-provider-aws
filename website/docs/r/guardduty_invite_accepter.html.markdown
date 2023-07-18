@@ -48,7 +48,7 @@ resource "aws_guardduty_detector" "member" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `detector_id` - (Required) The detector ID of the member GuardDuty account.
 * `master_account_id` - (Required) AWS account ID for primary account.

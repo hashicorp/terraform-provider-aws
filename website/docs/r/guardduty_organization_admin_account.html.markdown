@@ -29,7 +29,7 @@ resource "aws_guardduty_organization_admin_account" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `admin_account_id` - (Required) AWS account identifier to designate as a delegated administrator for GuardDuty.
 
