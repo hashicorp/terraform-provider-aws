@@ -43,7 +43,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_networkmanager_transit_gateway_peering` using the peering ID, e.g.
+Import `aws_networkmanager_transit_gateway_peering` using the peering ID. For example:
 
 ```
 $ terraform import aws_networkmanager_transit_gateway_peering.example peering-444555aaabbb11223
