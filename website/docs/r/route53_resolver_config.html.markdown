@@ -32,9 +32,9 @@ The following argument is supported:
 * `resource_id` - (Required) The ID of the VPC that the configuration is for.
 * `autodefined_reverse_flag` - (Required) Indicates whether or not the Resolver will create autodefined rules for reverse DNS lookups. Valid values: `ENABLE`, `DISABLE`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the resolver configuration.
 * `owner_id` - The AWS account ID of the owner of the VPC that this resolver configuration applies to.
