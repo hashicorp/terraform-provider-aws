@@ -82,7 +82,7 @@ resource "aws_s3_bucket_object_lock_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
