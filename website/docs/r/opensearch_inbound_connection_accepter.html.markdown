@@ -53,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AWS Opensearch Inbound Connection Accepters can be imported by using the Inbound Connection ID, e.g.,
+Import AWS Opensearch Inbound Connection Accepters using the Inbound Connection ID. For example:
 
 ```
 $ terraform import aws_opensearch_inbound_connection_accepter.foo connection-id
