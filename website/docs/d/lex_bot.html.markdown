@@ -26,7 +26,7 @@ The following arguments are supported:
 * `name` - (Required) Name of the bot. The name is case sensitive.
 * `version` - (Optional) Version or alias of the bot.
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported.
 

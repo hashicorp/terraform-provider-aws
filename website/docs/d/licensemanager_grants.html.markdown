@@ -49,6 +49,6 @@ data "aws_licensemanager_grants" "selected" {
 
 * `values` - (Required) Set of values that are accepted for the given field.
 
-## Attributes Reference
+## Attribute Reference
 
 * `arns` - List of all the license grant ARNs found.

@@ -26,7 +26,7 @@ The following arguments are supported:
 * `name` - (Required) Name of the slot type. The name is case sensitive.
 * `version` - (Optional) Version of the slot type.
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported.
 

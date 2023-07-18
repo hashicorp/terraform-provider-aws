@@ -35,6 +35,6 @@ resource "aws_route53_record" "www" {
 
 * `load_balancer_type` - (Optional) Type of load balancer to create. Possible values are `application` or `network`. The default value is `application`.
 
-## Attributes Reference
+## Attribute Reference
 
 * `id` - ID of the AWS ELB HostedZoneId in the selected region.
