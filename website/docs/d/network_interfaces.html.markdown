@@ -67,6 +67,8 @@ which take the following arguments:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - AWS Region.
 * `ids` - List of all the network interface ids found.
 
