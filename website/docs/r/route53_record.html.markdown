@@ -190,7 +190,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Route53 Records can be imported using ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`)E.g.,
+Import Route53 Records using ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`)E.g.,
 
 ```
 $ terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev.example.com_NS
