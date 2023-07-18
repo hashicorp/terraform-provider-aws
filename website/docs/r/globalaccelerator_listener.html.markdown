@@ -51,9 +51,9 @@ The following arguments are supported:
 * `from_port` - (Optional) The first port in the range of ports, inclusive.
 * `to_port` - (Optional) The last port in the range of ports, inclusive.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the listener.
 

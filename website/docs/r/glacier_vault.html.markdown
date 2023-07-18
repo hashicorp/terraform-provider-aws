@@ -69,9 +69,9 @@ The following arguments are supported:
 * `events` - (Required) You can configure a vault to publish a notification for `ArchiveRetrievalCompleted` and `InventoryRetrievalCompleted` events.
 * `sns_topic` - (Required) The SNS Topic ARN.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `location` - The URI of the vault that was created.
 * `arn` - The ARN of the vault.
