@@ -22,7 +22,7 @@ resource "aws_ses_receipt_filter" "filter" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the filter
 * `cidr` - (Required) The IP address or address range to filter, in CIDR notation

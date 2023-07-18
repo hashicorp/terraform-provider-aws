@@ -38,7 +38,7 @@ resource "aws_ses_identity_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `identity` - (Required) Name or Amazon Resource Name (ARN) of the SES Identity.
 * `name` - (Required) Name of the policy.

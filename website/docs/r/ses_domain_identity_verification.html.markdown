@@ -40,7 +40,7 @@ resource "aws_ses_domain_identity_verification" "example_verification" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain` - (Required) The domain name of the SES domain identity to verify.
 
