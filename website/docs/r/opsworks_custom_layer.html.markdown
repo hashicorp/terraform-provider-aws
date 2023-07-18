@@ -111,7 +111,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-OpsWorks Custom Layers can be imported using the `id`, e.g.,
+Import OpsWorks Custom Layers using the `id`. For example:
 
 ```
 $ terraform import aws_opsworks_custom_layer.bar 00000000-0000-0000-0000-000000000000

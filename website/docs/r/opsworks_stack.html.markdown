@@ -83,7 +83,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-OpsWorks stacks can be imported using the `id`, e.g.,
+Import OpsWorks stacks using the `id`. For example:
 
 ```
 $ terraform import aws_opsworks_stack.bar 00000000-0000-0000-0000-000000000000

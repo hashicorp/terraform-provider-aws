@@ -139,7 +139,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Opsworks Instances can be imported using the `instance id`, e.g.,
+Import Opsworks Instances using the `instance id`. For example:
 
 ```
 $ terraform import aws_opsworks_instance.my_instance 4d6d1710-ded9-42a1-b08e-b043ad7af1e2
