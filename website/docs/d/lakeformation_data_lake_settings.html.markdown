@@ -26,7 +26,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-In addition to arguments above, the following attributes are exported.
+This data source exports the following attributes in addition to the arguments above:
 
 * `admins` – List of ARNs of AWS Lake Formation principals (IAM users or roles).
 * `create_database_default_permissions` - Up to three configuration blocks of principal permissions for default create database permissions. Detailed below.
