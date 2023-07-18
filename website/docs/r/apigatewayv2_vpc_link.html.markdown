@@ -29,7 +29,7 @@ resource "aws_apigatewayv2_vpc_link" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the VPC Link. Must be between 1 and 128 characters in length.
 * `security_group_ids` - (Required) Security group IDs for the VPC Link.
