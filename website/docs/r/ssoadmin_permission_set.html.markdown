@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SSO Permission Sets using the `arn` and `instance_arn` separated by a comma (`,`) e.g.,
+Import SSO Permission Sets using the `arn` and `instance_arn` separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_ssoadmin_permission_set.example arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
