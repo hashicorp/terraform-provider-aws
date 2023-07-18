@@ -61,7 +61,7 @@ resource "aws_rolesanywhere_trust_anchor" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `enabled` - (Optional) Whether or not the Trust Anchor should be enabled.
 * `name` - (Required) The name of the Trust Anchor.
