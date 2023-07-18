@@ -28,7 +28,7 @@ resource "aws_customer_gateway" "main" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bgp_asn` - (Required) The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
 * `certificate_arn` - (Optional) The Amazon Resource Name (ARN) for the customer gateway certificate.

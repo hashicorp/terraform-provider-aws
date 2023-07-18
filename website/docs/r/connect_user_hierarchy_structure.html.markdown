@@ -59,7 +59,7 @@ resource "aws_connect_user_hierarchy_structure" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `hierarchy_structure` - (Required) A block that defines the hierarchy structure's levels. The `hierarchy_structure` block is documented below.
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
