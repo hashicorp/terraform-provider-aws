@@ -138,7 +138,7 @@ resource "aws_route53_record" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * Creating an Amazon issued certificate
     * `domain_name` - (Required) Domain name for which the certificate should be issued
