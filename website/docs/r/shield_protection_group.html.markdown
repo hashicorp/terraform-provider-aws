@@ -80,7 +80,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Shield protection group resources can be imported by specifying their protection group id.
+Import Shield protection group resources using specifying their protection group id.
 
 ```
 $ terraform import aws_shield_protection_group.example example
