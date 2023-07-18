@@ -36,7 +36,7 @@ resource "aws_redshift_parameter_group" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Redshift parameter group.
 * `family` - (Required) The family of the Redshift parameter group.

@@ -89,7 +89,7 @@ resource "aws_redshift_scheduled_action" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The scheduled action name.
 * `description` - (Optional) The description of the scheduled action.

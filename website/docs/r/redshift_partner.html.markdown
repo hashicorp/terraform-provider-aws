@@ -23,7 +23,7 @@ resource "aws_redshift_partner" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Required) The Amazon Web Services account ID that owns the cluster.
 * `cluster_identifier` - (Required) The cluster identifier of the cluster that receives data from the partner.
