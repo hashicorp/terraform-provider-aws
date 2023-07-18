@@ -26,6 +26,8 @@ data "aws_iam_group" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `arn` - Group ARN.
 * `group_id` - Stable and unique string identifying the group.
 * `path` - Path to the group.

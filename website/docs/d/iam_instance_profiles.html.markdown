@@ -26,6 +26,8 @@ data "aws_iam_instance_profiles" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `arns` - Set of ARNs of instance profiles.
 * `names` - Set of IAM instance profile names.
 * `paths` - Set of IAM instance profile paths.
