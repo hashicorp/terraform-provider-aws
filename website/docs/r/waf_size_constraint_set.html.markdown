@@ -30,7 +30,7 @@ resource "aws_waf_size_constraint_set" "size_constraint_set" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name or description of the Size Constraint Set.
 * `size_constraints` - (Optional) Specifies the parts of web requests that you want to inspect the size of.
