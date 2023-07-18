@@ -40,9 +40,9 @@ The following arguments are supported:
 * `cluster_identifier` - (Required, Forces new resource) The cluster identifier.
 * `schedule_identifier` - (Required, Forces new resource) The snapshot schedule identifier.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

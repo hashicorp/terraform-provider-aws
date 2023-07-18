@@ -28,9 +28,9 @@ The following arguments are supported:
 * `force_delete` - (Optional) Indicates whether to force the revoke action. If true, the Redshift-managed VPC endpoints associated with the endpoint authorization are also deleted. Default value is `false`.
 * `vpc_ids` - (Optional) The virtual private cloud (VPC) identifiers to grant access to. If none are specified all VPCs in shared account are allowed.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `allowed_all_vpcs` - Indicates whether all VPCs in the grantee account are allowed access to the cluster.
 * `id` - The identifier of the Redshift Endpoint Authorization, `account`, and `cluster_identifier` separated by a colon (`:`).
