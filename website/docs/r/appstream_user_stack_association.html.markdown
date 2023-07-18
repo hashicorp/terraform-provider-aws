@@ -49,7 +49,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AppStream User Stack Association can be imported by using the `user_name`, `authentication_type`, and `stack_name`, separated by a slash (`/`), e.g.,
+Import AppStream User Stack Association using the `user_name`, `authentication_type`, and `stack_name`, separated by a slash (`/`). For example:
 
 ```
 $ terraform import aws_appstream_user_stack_association.example userName/auhtenticationType/stackName
