@@ -39,6 +39,8 @@ The following arguments are supported:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `description` – The description of the bundle.
 * `bundle_id` – The ID of the bundle.
 * `name` – The name of the bundle.

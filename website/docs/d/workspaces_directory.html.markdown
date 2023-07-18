@@ -24,6 +24,8 @@ data "aws_workspaces_directory" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - WorkSpaces directory identifier.
 * `alias` - Directory alias.
 * `customer_user_name` - User name for the service account.
