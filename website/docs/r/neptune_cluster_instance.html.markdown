@@ -39,7 +39,7 @@ resource "aws_neptune_cluster_instance" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `apply_immediately` - (Optional) Specifies whether any instance modifications
   are applied immediately, or during the next maintenance window. Default is`false`.
