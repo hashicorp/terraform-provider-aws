@@ -37,7 +37,7 @@ The following arguments are supported:
 * `owner` – (Optional) Owner of the bundles. You have to leave it blank for own bundles. You cannot combine this parameter with `bundle_id`.
 * `name` – (Optional) Name of the bundle. You cannot combine this parameter with `bundle_id`.
 
-## Attributes Reference
+## Attribute Reference
 
 * `description` – The description of the bundle.
 * `bundle_id` – The ID of the bundle.

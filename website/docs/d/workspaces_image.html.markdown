@@ -24,7 +24,7 @@ The following arguments are supported:
 
 * `image_id` – (Required) ID of the image.
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
 
