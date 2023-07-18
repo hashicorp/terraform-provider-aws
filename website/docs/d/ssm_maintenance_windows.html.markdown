@@ -32,6 +32,6 @@ The following arguments are supported by the `filter` configuration block:
 * `name` - (Required) Name of the filter field. Valid values can be found in the [SSM DescribeMaintenanceWindows API Reference](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_DescribeMaintenanceWindows.html#API_DescribeMaintenanceWindows_RequestSyntax).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
-## Attributes Reference
+## Attribute Reference
 
 * `ids` - List of window IDs of the matched SSM maintenance windows.

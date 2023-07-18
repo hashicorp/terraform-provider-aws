@@ -25,7 +25,7 @@ data "aws_ssmincidents_replication_set" "example" {}
 
 No arguments are required.
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
 

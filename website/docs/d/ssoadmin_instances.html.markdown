@@ -28,7 +28,7 @@ output "identity_store_id" {
 
 There are no arguments available for this data source.
 
-## Attributes Reference
+## Attribute Reference
 
 * `arns` - Set of Amazon Resource Names (ARNs) of the SSO Instances.
 * `id` - AWS Region.
