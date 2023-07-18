@@ -151,7 +151,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ELBs can be imported using the `name`, e.g.,
+Import ELBs using the `name`. For example:
 
 ```
 $ terraform import aws_elb.bar elb-production-12345

@@ -247,7 +247,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ElastiCache Replication Groups can be imported using the `replication_group_id`, e.g.,
+Import ElastiCache Replication Groups using the `replication_group_id`. For example:
 
 ```
 $ terraform import aws_elasticache_replication_group.my_replication_group replication-group-1
