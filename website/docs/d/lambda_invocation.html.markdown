@@ -42,4 +42,6 @@ output "result_entry" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `result` - String result of the lambda function invocation.
