@@ -319,8 +319,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import App Mesh virtual routes using `mesh_name` and `virtual_router_name` together with the route's `name`,
-e.g.,
+Import App Mesh virtual routes using `mesh_name` and `virtual_router_name` together with the route's `name`. For example:
 
 ```
 $ terraform import aws_appmesh_route.serviceb simpleapp/serviceB/serviceB-route
