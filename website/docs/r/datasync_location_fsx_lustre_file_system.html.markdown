@@ -21,7 +21,7 @@ resource "aws_datasync_location_fsx_lustre_file_system" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `fsx_filesystem_arn` - (Required) The Amazon Resource Name (ARN) for the FSx for Lustre file system.
 * `security_group_arns` - (Optional) The Amazon Resource Names (ARNs) of the security groups that are to use to configure the FSx for Lustre file system.
