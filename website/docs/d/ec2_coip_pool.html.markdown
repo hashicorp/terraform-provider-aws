@@ -55,7 +55,7 @@ result attributes. This data source will complete the data by populating
 any fields that are not included in the configuration with the data for
 the selected COIP Pool.
 
-In addition, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the COIP pool
 * `pool_cidrs` - Set of CIDR blocks in pool
