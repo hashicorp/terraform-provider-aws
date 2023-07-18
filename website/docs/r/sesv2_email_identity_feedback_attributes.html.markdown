@@ -38,7 +38,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-SESv2 (Simple Email V2) Email Identity Feedback Attributes can be imported using the `email_identity`, e.g.,
+Import SESv2 (Simple Email V2) Email Identity Feedback Attributes using the `email_identity`. For example:
 
 ```
 $ terraform import aws_sesv2_email_identity_feedback_attributes.example example.com

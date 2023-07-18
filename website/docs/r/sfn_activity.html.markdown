@@ -36,7 +36,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Activities can be imported using the `arn`, e.g.,
+Import Activities using the `arn`. For example:
 
 ```
 $ terraform import aws_sfn_activity.foo arn:aws:states:eu-west-1:123456789098:activity:bar

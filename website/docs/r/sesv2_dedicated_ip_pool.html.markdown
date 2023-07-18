@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SESv2 (Simple Email V2) Dedicated IP Pool can be imported using the `pool_name`, e.g.,
+Import SESv2 (Simple Email V2) Dedicated IP Pool using the `pool_name`. For example:
 
 ```
 $ terraform import aws_sesv2_dedicated_ip_pool.example my-pool

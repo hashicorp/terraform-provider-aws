@@ -65,7 +65,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SFN (Step Functions) Alias can be imported using the `arn`, e.g.,
+Import SFN (Step Functions) Alias using the `arn`. For example:
 
 ```
 $ terraform import aws_sfn_alias.foo arn:aws:states:us-east-1:123456789098:stateMachine:myStateMachine:foo
