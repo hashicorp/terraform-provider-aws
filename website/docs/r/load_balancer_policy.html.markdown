@@ -102,7 +102,7 @@ resource "aws_load_balancer_listener_policy" "wu-tang-listener-policies-443" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `load_balancer_name` - (Required) The load balancer on which the policy is defined.
 * `policy_name` - (Required) The name of the load balancer policy.
