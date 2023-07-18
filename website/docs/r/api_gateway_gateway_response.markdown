@@ -42,9 +42,9 @@ The following arguments are supported:
 * `response_templates` - (Optional) Map of templates used to transform the response body.
 * `response_parameters` - (Optional) Map of parameters (paths, query strings and headers) of the Gateway Response.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
