@@ -22,7 +22,7 @@ data "aws_api_gateway_domain_name" "example" {
 
 * `domain_name` - (Required) Fully-qualified domain name to look up. If no domain name is found, an error will be returned.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to the arguments, the following attributes are exported:
 
