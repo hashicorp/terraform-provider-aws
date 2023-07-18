@@ -159,9 +159,9 @@ The `video_codec_options` map supports the following:
 * `ChromaSubsampling` - The sampling pattern for the chroma (color) channels of the output video. Valid values are `yuv420p` and `yuv422p`.
 * `LoopCount` - The number of times you want the output gif to loop (Gif only)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Elastic Transcoder Preset.
 
