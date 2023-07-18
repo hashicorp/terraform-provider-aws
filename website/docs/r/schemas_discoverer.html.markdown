@@ -27,7 +27,7 @@ resource "aws_schemas_discoverer" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `source_arn` - (Required) The ARN of the event bus to discover event schemas on.
 * `description` - (Optional) The description of the discoverer. Maximum of 256 characters.

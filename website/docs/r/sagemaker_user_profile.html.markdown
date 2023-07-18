@@ -23,7 +23,7 @@ resource "aws_sagemaker_user_profile" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `user_profile_name` - (Required) The name for the User Profile.
 * `domain_id` - (Required) The ID of the associated Domain.
