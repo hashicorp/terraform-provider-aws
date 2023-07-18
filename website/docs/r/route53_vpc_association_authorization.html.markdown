@@ -70,9 +70,9 @@ The following arguments are supported:
 * `vpc_id` - (Required) The VPC to authorize for association with the private hosted zone.
 * `vpc_region` - (Optional) The VPC's region. Defaults to the region of the AWS provider.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The calculated unique identifier for the association.
 
