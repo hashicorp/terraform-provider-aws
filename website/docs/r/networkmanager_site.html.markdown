@@ -45,7 +45,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_networkmanager_site` can be imported using the site ARN, e.g.
+Import `aws_networkmanager_site` using the site ARN, e.g.
 
 ```
 $ terraform import aws_networkmanager_site.example arn:aws:networkmanager::123456789012:site/global-network-0d47f6t230mz46dy4/site-444555aaabbb11223

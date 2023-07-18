@@ -58,7 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_networkmanager_vpc_attachment` can be imported using the attachment ID, e.g.
+Import `aws_networkmanager_vpc_attachment` using the attachment ID, e.g.
 
 ```
 $ terraform import aws_networkmanager_vpc_attachment.example attachment-0f8fa60d2238d1bd8

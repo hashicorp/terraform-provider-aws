@@ -40,7 +40,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-`aws_networkmanager_transit_gateway_registration` can be imported using the global network ID and transit gateway ARN, e.g.
+Import `aws_networkmanager_transit_gateway_registration` using the global network ID and transit gateway ARN, e.g.
 
 ```
 $ terraform import aws_networkmanager_transit_gateway_registration.example global-network-0d47f6t230mz46dy4,arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-123abc05e04123abc
