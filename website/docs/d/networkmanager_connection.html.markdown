@@ -24,9 +24,9 @@ data "aws_networkmanager_connection" "example" {
 * `global_network_id` - (Required) ID of the Global Network of the connection to retrieve.
 * `connection_id` - (Required) ID of the specific connection to retrieve.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the connection.
 * `connected_device_id` - ID of the second device in the connection.

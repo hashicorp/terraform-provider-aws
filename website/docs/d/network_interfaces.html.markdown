@@ -65,7 +65,7 @@ which take the following arguments:
 
 * `values` - (Required) Set of values that are accepted for the given field.
 
-## Attributes Reference
+## Attribute Reference
 
 * `id` - AWS Region.
 * `ids` - List of all the network interface ids found.

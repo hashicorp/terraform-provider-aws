@@ -42,7 +42,7 @@ The following arguments are supported:
 * `host_instance_type` - (Optional) Filter response by host instance type.
 * `storage_type` - (Optional) Filter response by storage type.
 
-## Attributes Reference
+## Attribute Reference
 
 * `broker_instance_options` -  Option for host instance type. See Broker Instance Options below.
 
