@@ -27,6 +27,8 @@ data "aws_kms_custom_key_store" "keystore" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - The ID for the custom key store.
 * `cloudhsm_cluster_id` - ID for the CloudHSM cluster that is associated with the custom key store.
 * `connection_state` - Indicates whether the custom key store is connected to its CloudHSM cluster.

@@ -44,6 +44,8 @@ data "aws_kms_key" "by_key_arn" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id`: The globally unique identifier for the key
 * `arn`: The ARN of the key
 * `aws_account_id`: The twelve-digit account ID of the AWS account that owns the key
