@@ -206,9 +206,9 @@ The following arguments are optional:
 * `behavior` - (Required) The cache behavior for the specified path.
 * `path` - (Required) The path to a directory or file to cached, or not cache. Use an asterisk symbol to specify wildcard directories (path/to/assets/\*), and file types (\*.html, \*jpg, \*js). Directories and file paths are case-sensitive.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `alternative_domain_names` - The alternate domain names of the distribution.
 * `arn` - The Amazon Resource Name (ARN) of the distribution.

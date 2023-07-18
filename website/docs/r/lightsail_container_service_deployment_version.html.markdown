@@ -90,9 +90,9 @@ The `health_check` configuration block supports the following arguments:
 * `path` - (Optional) The path on the container on which to perform the health check. Defaults to "/".
 * `success_codes` - (Optional) The HTTP codes to use when checking for a successful response from a container. You can specify values between 200 and 499. Defaults to "200-499".
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `service_name` and `version` separation by a slash (`/`).
 * `created_at` - The timestamp when the deployment was created.
