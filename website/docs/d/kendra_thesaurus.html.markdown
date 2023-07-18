@@ -21,7 +21,7 @@ data "aws_kendra_thesaurus" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `index_id` - (Required) Identifier of the index that contains the Thesaurus.
 * `thesaurus_id` - (Required) Identifier of the Thesaurus.
