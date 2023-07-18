@@ -104,9 +104,9 @@ The following arguments are required:
 
 * `uninstall_after_build` - Whether to remove the Systems Manager Agent after the image has been built. Defaults to `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - (Required) Amazon Resource Name (ARN) of the image recipe.
 * `date_created` - Date the image recipe was created.
