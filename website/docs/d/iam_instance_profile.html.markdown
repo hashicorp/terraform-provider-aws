@@ -24,7 +24,7 @@ data "aws_iam_instance_profile" "example" {
 
 * `name` - (Required) Friendly IAM instance profile name to match.
 
-## Attributes Reference
+## Attribute Reference
 
 * `arn` - ARN.
 * `create_date` - String representation of the date the instance profile was created.

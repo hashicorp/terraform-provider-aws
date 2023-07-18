@@ -24,7 +24,7 @@ data "aws_iam_instance_profiles" "example" {
 
 * `role_name` - (Required) IAM role name.
 
-## Attributes Reference
+## Attribute Reference
 
 * `arns` - Set of ARNs of instance profiles.
 * `names` - Set of IAM instance profile names.

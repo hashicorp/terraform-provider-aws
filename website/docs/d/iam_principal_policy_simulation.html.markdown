@@ -195,7 +195,7 @@ The following arguments are all required in each `context` block:
 
 * `values` (Required) - A set of one or more values for this context entry.
 
-## Attributes Reference
+## Attribute Reference
 
 The following attribute is exported:
 
