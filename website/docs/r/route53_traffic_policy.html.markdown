@@ -53,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Route53 Traffic Policy can be imported using the `id` and `version`, e.g.
+Import Route53 Traffic Policy using the `id` and `version`, e.g.
 
 ```
 $ terraform import aws_route53_traffic_policy.example 01a52019-d16f-422a-ae72-c306d2b6df7e/1
