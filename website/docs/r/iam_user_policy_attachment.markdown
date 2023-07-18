@@ -44,7 +44,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-IAM user policy attachments can be imported using the user name and policy arn separated by `/`.
+Import IAM user policy attachments using the user name and policy arn separated by `/`.
 
 ```
 $ terraform import aws_iam_user_policy_attachment.test-attach test-user/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy

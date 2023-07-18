@@ -42,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM Service Specific Credentials can be imported using the `service_name:user_name:service_specific_credential_id`, e.g.
+Import IAM Service Specific Credentials using the `service_name:user_name:service_specific_credential_id`, e.g.
 
 ```
 $ terraform import aws_iam_service_specific_credential.default `codecommit.amazonaws.com:example:some-id`

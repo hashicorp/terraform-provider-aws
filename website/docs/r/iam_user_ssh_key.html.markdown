@@ -43,7 +43,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SSH public keys can be imported using the `username`, `ssh_public_key_id`, and `encoding` e.g.,
+Import SSH public keys using the `username`, `ssh_public_key_id`, and `encoding` e.g.,
 
 ```
 $ terraform import aws_iam_user_ssh_key.user user:APKAJNCNNJICVN7CFKCA:SSH
