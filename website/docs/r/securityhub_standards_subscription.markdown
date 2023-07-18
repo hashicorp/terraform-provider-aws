@@ -52,7 +52,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Security Hub standards subscriptions can be imported using the standards subscription ARN, e.g.,
+Import Security Hub standards subscriptions using the standards subscription ARN. For example:
 
 ```
 $ terraform import aws_securityhub_standards_subscription.cis arn:aws:securityhub:eu-west-1:123456789012:subscription/cis-aws-foundations-benchmark/v/1.2.0

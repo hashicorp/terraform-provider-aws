@@ -124,7 +124,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Service Discovery Service can be imported using the service ID, e.g.,
+Import Service Discovery Service using the service ID. For example:
 
 ```
 $ terraform import aws_service_discovery_service.example 0123456789
