@@ -49,7 +49,7 @@ resource "aws_amplify_domain_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `app_id` - (Required) Unique ID for an Amplify app.
 * `domain_name` - (Required) Domain name for the domain association.

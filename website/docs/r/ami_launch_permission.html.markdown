@@ -43,7 +43,7 @@ resource "aws_ami_launch_permission" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) AWS account ID for the launch permission.
 * `group` - (Optional) Name of the group for the launch permission. Valid values: `"all"`.
