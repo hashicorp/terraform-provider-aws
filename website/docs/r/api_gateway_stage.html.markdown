@@ -145,7 +145,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_api_gateway_stage` can be imported using `REST-API-ID/STAGE-NAME`, e.g.,
+Import `aws_api_gateway_stage` using `REST-API-ID/STAGE-NAME`. For example:
 
 ```
 $ terraform import aws_api_gateway_stage.example 12345abcde/example
