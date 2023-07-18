@@ -30,7 +30,7 @@ data "aws_cloudfront_origin_request_policy" "ua_referer" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - Unique name to identify the origin request policy.
 * `id` - Identifier for the origin request policy.
