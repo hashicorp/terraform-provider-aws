@@ -79,7 +79,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudWatch Evidently Segment can be imported using the `arn`, e.g.,
+Import CloudWatch Evidently Segment using the `arn`. For example:
 
 ```
 $ terraform import aws_evidently_segment.example arn:aws:evidently:us-west-2:123456789012:segment/example
