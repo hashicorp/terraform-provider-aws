@@ -35,7 +35,7 @@ resource "aws_msk_serverless_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `client_authentication` - (Required) Specifies client authentication information for the serverless cluster. See below.
 * `cluster_name` - (Required) The name of the serverless cluster.
