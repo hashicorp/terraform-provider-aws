@@ -108,7 +108,7 @@ resource "aws_sagemaker_flow_definition" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `flow_definition_name` - (Required) The name of your flow definition.
 * `human_loop_config` - (Required)  An object containing information about the tasks the human reviewers will perform. See [Human Loop Config](#human-loop-config) details below.
