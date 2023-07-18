@@ -88,9 +88,20 @@ func ResourceSigningProfile() *schema.Resource {
 				Computed: true,
 			},
 			"signing_material": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Computed: true,
 				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"certificate_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
 			},
 			"platform_display_name": {
 				Type:     schema.TypeString,
@@ -157,11 +168,8 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	if v, exists := d.GetOk("signing_material"); exists {
-		signingMaterial := v.(string)
-		signingProfileInput.SigningMaterial = &signer.SigningMaterial{
-			CertificateArn: &signingMaterial,
-		}
+	if v, ok := d.Get("signing_material").([]interface{}); ok && len(v) > 0 {
+		signingProfileInput.SigningMaterial = expandSigningMaterial(v)
 	}
 
 	_, err := conn.PutSigningProfileWithContext(ctx, signingProfileInput)
@@ -230,7 +238,7 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile status: %s", err)
 	}
 	if signingProfileOutput.SigningMaterial != nil {
-		if err := d.Set("signing_material", signingProfileOutput.SigningMaterial.CertificateArn); err != nil {
+		if err := d.Set("signing_material", flattenSigningMaterial(signingProfileOutput.SigningMaterial)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting signer signing profile material: %s", err)
 		}
 	}
@@ -269,6 +277,33 @@ func resourceSigningProfileDelete(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Signer signing profile %q canceled", d.Id())
 	return diags
+}
+
+func expandSigningMaterial(in []interface{}) *signer.SigningMaterial {
+	if len(in) == 0 {
+		return nil
+	}
+
+	m := in[0].(map[string]interface{})
+	var out signer.SigningMaterial
+
+	if v, ok := m["certificate_arn"].(string); ok && v != "" {
+		out.CertificateArn = aws.String(v)
+	}
+
+	return &out
+}
+
+func flattenSigningMaterial(apiObject *signer.SigningMaterial) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"certificate_arn": aws.StringValue(apiObject.CertificateArn),
+	}
+
+	return []interface{}{m}
 }
 
 func flattenSigningProfileRevocationRecord(apiObject *signer.SigningProfileRevocationRecord) interface{} {
