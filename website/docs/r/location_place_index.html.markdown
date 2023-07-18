@@ -49,7 +49,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_location_place_index` resources using the place index name, e.g.:
+Import `aws_location_place_index` resources using the place index name. For example:
 
 ```
 $ terraform import aws_location_place_index.example example
