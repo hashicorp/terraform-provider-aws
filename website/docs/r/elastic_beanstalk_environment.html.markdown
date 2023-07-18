@@ -132,7 +132,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Elastic Beanstalk Environments can be imported using the `id`, e.g.,
+Import Elastic Beanstalk Environments using the `id`. For example:
 
 ```
 $ terraform import aws_elastic_beanstalk_environment.prodenv e-rpqsewtp2j

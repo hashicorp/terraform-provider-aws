@@ -212,7 +212,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EKS Node Groups can be imported using the `cluster_name` and `node_group_name` separated by a colon (`:`), e.g.,
+Import EKS Node Groups using the `cluster_name` and `node_group_name` separated by a colon (`:`). For example:
 
 ```
 $ terraform import aws_eks_node_group.my_node_group my_cluster:my_node_group
