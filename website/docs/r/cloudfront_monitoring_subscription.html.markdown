@@ -47,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudFront monitoring subscription can be imported using the id, e.g.,
+Import CloudFront monitoring subscription using the id. For example:
 
 ```
 $ terraform import aws_cloudfront_monitoring_subscription.example E3QYSUHO4VYRGB

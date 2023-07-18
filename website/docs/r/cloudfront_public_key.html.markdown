@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudFront Public Key can be imported using the `id`, e.g.,
+Import CloudFront Public Key using the `id`. For example:
 
 ```
 $ terraform import aws_cloudfront_public_key.example K3D5EWEUDCCXON

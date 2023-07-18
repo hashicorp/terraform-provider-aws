@@ -52,7 +52,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudFront Functions can be imported using the `name`, e.g.,
+Import CloudFront Functions using the `name`. For example:
 
 ```
 $ terraform import aws_cloudfront_function.test my_test_function

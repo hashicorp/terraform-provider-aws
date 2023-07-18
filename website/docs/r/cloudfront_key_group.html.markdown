@@ -43,7 +43,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudFront Key Group can be imported using the `id`, e.g.,
+Import CloudFront Key Group using the `id`. For example:
 
 ```
 $ terraform import aws_cloudfront_key_group.example 4b4f2r1c-315d-5c2e-f093-216t50jed10f
