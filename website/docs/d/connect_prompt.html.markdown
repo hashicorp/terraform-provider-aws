@@ -30,7 +30,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Prompt.
 * `prompt_id` - Identifier for the prompt.

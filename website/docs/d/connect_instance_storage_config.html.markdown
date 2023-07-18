@@ -30,7 +30,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier of the hosting Amazon Connect Instance, `association_id`, and `resource_type` separated by a colon (`:`).
 * `storage_config` - Specifies the storage configuration options for the Connect Instance. [Documented below](#storage_config).
