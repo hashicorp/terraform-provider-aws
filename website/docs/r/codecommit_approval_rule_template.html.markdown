@@ -49,7 +49,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import CodeCommit approval rule templates using the `name`, e.g.
+Import CodeCommit approval rule templates using the `name`. For example:
 
 ```
 $ terraform import aws_codecommit_approval_rule_template.imported ExistingApprovalRuleTemplateName
