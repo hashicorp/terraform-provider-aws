@@ -33,7 +33,7 @@ resource "aws_ebs_snapshot" "example_snapshot" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `volume_id` - (Required) The Volume ID of which to make a snapshot.
 * `description` - (Optional) A description of what the snapshot is.
