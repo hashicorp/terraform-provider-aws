@@ -43,7 +43,7 @@ resource "aws_codeartifact_domain_permissions_policy" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain` - (Required) The name of the domain on which to set the resource policy.
 * `policy_document` - (Required) A JSON policy string to be set as the access control resource policy on the provided domain.

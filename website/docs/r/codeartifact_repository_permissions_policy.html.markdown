@@ -49,7 +49,7 @@ resource "aws_codeartifact_repository_permissions_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `repository` - (Required) The name of the repository to set the resource policy on.
 * `domain` - (Required) The name of the domain on which to set the resource policy.
