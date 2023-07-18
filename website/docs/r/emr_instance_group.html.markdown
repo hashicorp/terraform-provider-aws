@@ -28,7 +28,7 @@ resource "aws_emr_instance_group" "task" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` (Required) Human friendly name given to the instance group. Changing this forces a new resource to be created.
 * `cluster_id` (Required) ID of the EMR Cluster to attach to. Changing this forces a new resource to be created.
@@ -70,9 +70,9 @@ EOF
 * `type` - (Optional) The volume type. Valid options are 'gp2', 'io1' and 'standard'.
 * `volumes_per_instance` - (Optional) The number of EBS Volumes to attach per instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The EMR Instance ID
 * `running_instance_count` The number of instances currently running in this instance group.

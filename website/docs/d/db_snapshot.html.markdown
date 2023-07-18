@@ -21,7 +21,7 @@ resource "aws_db_instance" "prod" {
   engine               = "mysql"
   engine_version       = "5.6.17"
   instance_class       = "db.t2.micro"
-  name                 = "mydb"
+  db_name              = "mydb"
   username             = "foo"
   password             = "bar"
   db_subnet_group_name = "my_database_subnet_group"
@@ -29,14 +29,14 @@ resource "aws_db_instance" "prod" {
 }
 
 data "aws_db_snapshot" "latest_prod_snapshot" {
-  db_instance_identifier = aws_db_instance.prod.id
+  db_instance_identifier = aws_db_instance.prod.identifier
   most_recent            = true
 }
 
 # Use the latest production snapshot to create a dev instance.
 resource "aws_db_instance" "dev" {
   instance_class      = "db.t2.micro"
-  name                = "mydbdev"
+  db_name             = "mydbdev"
   snapshot_identifier = data.aws_db_snapshot.latest_prod_snapshot.id
 
   lifecycle {
@@ -49,7 +49,7 @@ resource "aws_db_instance" "dev" {
 
 ~> **NOTE:** One of either `db_instance_identifier` or `db_snapshot_identifier` is required.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent Snapshot.
@@ -69,9 +69,9 @@ The default is `false`.
 * `include_public` - (Optional) Set this value to true to include manual DB snapshots that are public and can be
 copied or restored by any AWS account, otherwise set this value to false. The default is `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Snapshot ID.
 * `allocated_storage` - Allocated storage size in gigabytes (GB).

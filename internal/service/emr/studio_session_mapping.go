@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
@@ -65,7 +68,7 @@ func ResourceStudioSessionMapping() *schema.Resource {
 
 func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	var id string
 	studioId := d.Get("studio_id").(string)
@@ -98,7 +101,7 @@ func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	studioId, identityType, identityId, err := readStudioSessionMapping(d.Id())
 	if err != nil {
@@ -122,7 +125,7 @@ func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceStudioSessionMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	mapping, err := FindStudioSessionMappingByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -146,7 +149,7 @@ func resourceStudioSessionMappingRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceStudioSessionMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 	studioId, identityType, identityId, err := readStudioSessionMapping(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EMR Studio Session Mapping (%s): %s", d.Id(), err)

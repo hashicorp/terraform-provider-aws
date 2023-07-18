@@ -39,7 +39,7 @@ resource "aws_route53_resolver_endpoint" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `direction` - (Required) The direction of DNS queries to or from the Route 53 Resolver endpoint.
 Valid values are `INBOUND` (resolver forwards DNS queries to the DNS service for a VPC from your network or another VPC)
@@ -55,9 +55,9 @@ The `ip_address` object supports the following:
 * `subnet_id` - (Required) The ID of the subnet that contains the IP address.
 * `ip` - (Optional) The IP address in the subnet that you want to use for DNS queries.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Route 53 Resolver endpoint.
 * `arn` - The ARN of the Route 53 Resolver endpoint.

@@ -31,15 +31,15 @@ resource "aws_cloud9_environment_membership" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `environment_id` - (Required) The ID of the environment that contains the environment member you want to add.
 * `permissions` - (Required) The type of environment member permissions you want to associate with this environment member. Allowed values are `read-only` and `read-write` .
 * `user_arn` - (Required) The Amazon Resource Name (ARN) of the environment member you want to add.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the environment membership.
 * `user_id` - he user ID in AWS Identity and Access Management (AWS IAM) of the environment member.

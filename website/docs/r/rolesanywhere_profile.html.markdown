@@ -43,7 +43,7 @@ resource "aws_rolesanywhere_profile" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `duration_seconds` - (Optional) The number of seconds the vended session credentials are valid for. Defaults to 3600.
 * `enabled` - (Optional) Whether or not the Profile is enabled.
@@ -54,9 +54,9 @@ The following arguments are supported:
 * `session_policy` - (Optional) A session policy that applies to the trust boundary of the vended session credentials.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Profile
 * `id` - The Profile ID.

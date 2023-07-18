@@ -41,15 +41,15 @@ resource "aws_identitystore_group_membership" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `member_id` - (Required) The identifier for a user in the Identity Store.
 * `group_id` - (Required)  The identifier for a group in the Identity Store.
 * `identity_store_id` - (Required) Identity Store ID associated with the Single Sign-On Instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `membership_id` - The identifier of the newly created group membership in the Identity Store.
 

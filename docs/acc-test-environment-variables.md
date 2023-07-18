@@ -74,6 +74,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `GRAFANA_SSO_USER_ID` | AWS SSO user ID for Grafana testing. |
 | `MACIE_MEMBER_ACCOUNT_ID` | Identifier of AWS Account for Macie Member testing. **DEPRECATED:** Should be replaced with standard alternate account handling for tests. |
 | `QUICKSIGHT_NAMESPACE` | QuickSight namespace name for testing. |
+| `QUICKSIGHT_ATHENA_TESTING_ENABLED` | Enable QuickSight tests dependent on Amazon Athena resources. |
 | `ROUTE53DOMAINS_DOMAIN_NAME` | Registered domain for Route 53 Domains testing. |
 | `SAGEMAKER_IMAGE_VERSION_BASE_IMAGE` | SageMaker base image to use for tests. |
 | `SERVICEQUOTAS_INCREASE_ON_CREATE_QUOTA_CODE` | Quota Code for Service Quotas testing (submits support case). |

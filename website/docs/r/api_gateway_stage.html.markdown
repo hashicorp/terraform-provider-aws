@@ -101,7 +101,7 @@ resource "aws_cloudwatch_log_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) ID of the associated REST API
 * `stage_name` - (Required) Name of the stage
@@ -129,9 +129,9 @@ For more information on configuring the log format rules visit the AWS [document
 * `stage_variable_overrides` - (Optional) Map of overridden stage `variables` (including new variables) for the canary deployment.
 * `use_stage_cache` - (Optional) Whether the canary deployment uses the stage cache. Defaults to false.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN
 * `id` - ID of the stage

@@ -97,9 +97,9 @@ The value is either a dynamic (resource) value or a static value. You must selec
 * `static_value` - (Optional) Value is static and does not change at run-time.
 * `static_values` - (Optional) List of static values.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Config Remediation Configuration.
 

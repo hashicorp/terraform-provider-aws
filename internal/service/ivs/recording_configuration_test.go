@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivs_test
 
 import (
@@ -10,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ivs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -217,7 +220,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 
 func testAccCheckRecordingConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ivs_recording_configuration" {
@@ -253,7 +256,7 @@ func testAccCheckRecordingConfigurationExists(ctx context.Context, name string, 
 			return create.Error(names.IVS, create.ErrActionCheckingExistence, tfivs.ResNameRecordingConfiguration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn(ctx)
 
 		resp, err := tfivs.FindRecordingConfigurationByID(ctx, conn, rs.Primary.ID)
 
@@ -278,7 +281,7 @@ func testAccCheckRecordingConfigurationRecreated(before, after *ivs.RecordingCon
 }
 
 func testAccRecordingConfigurationPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn(ctx)
 
 	input := &ivs.ListRecordingConfigurationsInput{}
 	_, err := conn.ListRecordingConfigurationsWithContext(ctx, input)

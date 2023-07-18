@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
@@ -617,11 +620,11 @@ func ResourceUserPool() *schema.Resource {
 
 func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	input := &cognitoidentityprovider.CreateUserPoolInput{
 		PoolName:     aws.String(d.Get("name").(string)),
-		UserPoolTags: GetTagsIn(ctx),
+		UserPoolTags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("admin_create_user_config"); ok {
@@ -844,7 +847,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	params := &cognitoidentityprovider.DescribeUserPoolInput{
 		UserPoolId: aws.String(d.Id()),
@@ -937,7 +940,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("last_modified_date", userPool.LastModifiedDate.Format(time.RFC3339))
 	d.Set("name", userPool.Name)
 
-	SetTagsOut(ctx, userPool.UserPoolTags)
+	setTagsOut(ctx, userPool.UserPoolTags)
 
 	input := &cognitoidentityprovider.GetUserPoolMfaConfigInput{
 		UserPoolId: aws.String(d.Id()),
@@ -966,7 +969,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	// Multi-Factor Authentication updates
 	if d.HasChanges(
@@ -1049,7 +1052,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	) {
 		input := &cognitoidentityprovider.UpdateUserPoolInput{
 			UserPoolId:   aws.String(d.Id()),
-			UserPoolTags: GetTagsIn(ctx),
+			UserPoolTags: getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("admin_create_user_config"); ok {
@@ -1232,7 +1235,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceUserPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	params := &cognitoidentityprovider.DeleteUserPoolInput{
 		UserPoolId: aws.String(d.Id()),

@@ -48,16 +48,16 @@ resource "aws_cognito_identity_pool_provider_principal_tag" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `identity_pool_id` (Required) - An identity pool ID.
 * `identity_provider_name` (Required) - The name of the identity provider.
 * `principal_tags`: (Optional: []) - String to string map of variables.
 * `use_defaults`: (Optional: true) use default (username and clientID) attribute mappings.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

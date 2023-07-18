@@ -145,7 +145,7 @@ resource "aws_workspaces_ip_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `directory_id` - (Required) The directory identifier for registration in WorkSpaces service.
 * `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
@@ -184,9 +184,9 @@ The following arguments are supported:
 * `enable_maintenance_mode` – (Optional) Indicates whether maintenance mode is enabled for your WorkSpaces. For more information, see [WorkSpace Maintenance](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspace-maintenance.html)..
 * `user_enabled_as_local_administrator` – (Optional) Indicates whether users are local administrators of their WorkSpaces.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The WorkSpaces directory identifier.
 * `alias` - The directory alias.

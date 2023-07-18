@@ -23,7 +23,7 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_eip" "example" {
-  vpc = true
+  domain = "vpc"
   tags = {
     Name = "example"
   }
@@ -55,14 +55,14 @@ resource "aws_shield_protection_health_check_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `health_check_arn` - (Required) The ARN (Amazon Resource Name) of the Route53 Health Check resource which will be associated to the protected resource.
 * `shield_protection_id` - (Required) The ID of the protected resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) for the Protection object that is created.
 

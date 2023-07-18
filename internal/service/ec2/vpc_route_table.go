@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -19,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,7 +38,6 @@ var routeTableValidTargets = []string{
 	"core_network_arn",
 	"egress_only_gateway_id",
 	"gateway_id",
-	"instance_id",
 	"local_gateway_id",
 	"nat_gateway_id",
 	"network_interface_id",
@@ -119,11 +122,6 @@ func ResourceRouteTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"instance_id": {
-							Type:       schema.TypeString,
-							Optional:   true,
-							Deprecated: "Use network_interface_id instead",
-						},
 						"local_gateway_id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -167,7 +165,7 @@ func ResourceRouteTable() *schema.Resource {
 
 func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateRouteTableInput{
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
@@ -211,9 +209,11 @@ func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	routeTable, err := FindRouteTableByID(ctx, conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+		return FindRouteTableByID(ctx, conn, d.Id())
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table (%s) not found, removing from state", d.Id())
@@ -225,6 +225,7 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", d.Id(), err)
 	}
 
+	routeTable := outputRaw.(*ec2.RouteTable)
 	ownerID := aws.StringValue(routeTable.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -248,14 +249,14 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("vpc_id", routeTable.VpcId)
 
 	// Ignore the AmazonFSx service tag in addition to standard ignores.
-	SetTagsOut(ctx, Tags(KeyValueTags(ctx, routeTable.Tags).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))))
+	setTagsOut(ctx, Tags(KeyValueTags(ctx, routeTable.Tags).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))))
 
 	return diags
 }
 
 func resourceRouteTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("propagating_vgws") {
 		o, n := d.GetChange("propagating_vgws")
@@ -346,7 +347,7 @@ func resourceRouteTableUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	routeTable, err := FindRouteTableByID(ctx, conn, d.Id())
 
@@ -391,7 +392,7 @@ func resourceRouteTableHash(v interface{}) int {
 	}
 
 	if v, ok := m["ipv6_cidr_block"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", verify.CanonicalCIDRBlock(v.(string))))
+		buf.WriteString(fmt.Sprintf("%s-", itypes.CanonicalCIDRBlock(v.(string))))
 	}
 
 	if v, ok := m["cidr_block"]; ok {
@@ -424,12 +425,6 @@ func resourceRouteTableHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
-	instanceSet := false
-	if v, ok := m["instance_id"]; ok {
-		instanceSet = v.(string) != ""
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-
 	if v, ok := m["transit_gateway_id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
@@ -446,7 +441,7 @@ func resourceRouteTableHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
-	if v, ok := m["network_interface_id"]; ok && !(instanceSet || natGatewaySet) {
+	if v, ok := m["network_interface_id"]; ok && !natGatewaySet {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
@@ -665,10 +660,6 @@ func expandCreateRouteInput(tfMap map[string]interface{}) *ec2.CreateRouteInput 
 		apiObject.GatewayId = aws.String(v)
 	}
 
-	if v, ok := tfMap["instance_id"].(string); ok && v != "" {
-		apiObject.InstanceId = aws.String(v)
-	}
-
 	if v, ok := tfMap["local_gateway_id"].(string); ok && v != "" {
 		apiObject.LocalGatewayId = aws.String(v)
 	}
@@ -729,10 +720,6 @@ func expandReplaceRouteInput(tfMap map[string]interface{}) *ec2.ReplaceRouteInpu
 
 	if v, ok := tfMap["gateway_id"].(string); ok && v != "" {
 		apiObject.GatewayId = aws.String(v)
-	}
-
-	if v, ok := tfMap["instance_id"].(string); ok && v != "" {
-		apiObject.InstanceId = aws.String(v)
 	}
 
 	if v, ok := tfMap["local_gateway_id"].(string); ok && v != "" {
@@ -799,10 +786,6 @@ func flattenRoute(apiObject *ec2.Route) map[string]interface{} {
 		} else {
 			tfMap["gateway_id"] = aws.StringValue(v)
 		}
-	}
-
-	if v := apiObject.InstanceId; v != nil {
-		tfMap["instance_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.LocalGatewayId; v != nil {

@@ -36,7 +36,7 @@ These will map planned Terraform state to the AWS API call, or an AWS API respon
 
 ### Register Resource to the provider
 
-Resources use a self registration process that adds them to the provider using the `@SDKResource()` annotation in the resource's comments. Run `make servicepackages` to register the resource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+Resources use a self registration process that adds them to the provider using the `@SDKResource()` annotation in the resource's comments. Run `make gen` to register the resource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
 
 ```
 package something

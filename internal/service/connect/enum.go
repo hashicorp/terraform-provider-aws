@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -44,9 +47,15 @@ const (
 	// ListSecurityProfilesMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
 	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListSecurityProfiles.html
 	ListSecurityProfilesMaxResults = 60
+	// ListUsersMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
+	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListUsers.html
+	ListUsersMaxResults = 60
 	// ListUserHierarchyGroupsMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
 	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListUserHierarchyGroups.html
 	ListUserHierarchyGroupsMaxResults = 60
+	// SearchVocabulariesMaxResults Valid Range: Minimum value of 1. Maximum value of 100.
+	// https://docs.aws.amazon.com/connect/latest/APIReference/API_SearchVocabularies.html#connect-SearchVocabularies-request-MaxResults
+	SearchVocabulariesMaxResults = 60
 )
 
 func InstanceAttributeMapping() map[string]string {

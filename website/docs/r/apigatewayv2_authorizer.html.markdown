@@ -40,7 +40,7 @@ resource "aws_apigatewayv2_authorizer" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `authorizer_type` - (Required) Authorizer type. Valid values: `JWT`, `REQUEST`.
@@ -70,9 +70,9 @@ The `jwt_configuration` object supports the following:
 * `audience` - (Optional) List of the intended recipients of the JWT. A valid JWT must provide an aud that matches at least one entry in this list.
 * `issuer` - (Optional) Base domain of the identity provider that issues JSON Web Tokens, such as the `endpoint` attribute of the [`aws_cognito_user_pool`](/docs/providers/aws/r/cognito_user_pool.html) resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Authorizer identifier.
 

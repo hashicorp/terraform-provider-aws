@@ -64,14 +64,14 @@ resource "aws_acmpca_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_arn` - (Required) ARN of the private CA to associate with the policy.
 * `policy` - (Required) JSON-formatted IAM policy to attach to the specified private CA resource.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

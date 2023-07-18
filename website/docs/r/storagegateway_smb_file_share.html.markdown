@@ -40,7 +40,7 @@ resource "aws_storagegateway_smb_file_share" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `gateway_arn` - (Required) Amazon Resource Name (ARN) of the file gateway.
 * `location_arn` - (Required) The ARN of the backed storage used for storing file data.
@@ -74,9 +74,9 @@ The following arguments are supported:
  TTL is the length of time since the last refresh after which access to the directory would cause the file gateway
   to first refresh that directory's contents from the Amazon S3 bucket. Valid Values: 300 to 2,592,000 seconds (5 minutes to 30 days)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the SMB File Share.
 * `arn` - Amazon Resource Name (ARN) of the SMB File Share.

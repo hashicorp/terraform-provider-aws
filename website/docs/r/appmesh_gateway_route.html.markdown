@@ -42,7 +42,7 @@ resource "aws_appmesh_gateway_route" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name to use for the gateway route. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the gateway route. Must be between 1 and 255 characters in length.
@@ -147,9 +147,9 @@ The `query_parameter`'s `match` object supports the following:
 
 * `exact` - (Optional) The exact query parameter to match on.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the gateway route.
 * `arn` - ARN of the gateway route.

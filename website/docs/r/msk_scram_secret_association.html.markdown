@@ -77,14 +77,14 @@ resource "aws_secretsmanager_secret_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the MSK cluster.
 * `secret_arn_list` - (Required) List of AWS Secrets Manager secret ARNs.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the MSK cluster.
 

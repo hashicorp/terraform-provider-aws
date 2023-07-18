@@ -21,14 +21,14 @@ resource "aws_organizations_delegated_administrator" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Required) The account ID number of the member account in the organization to register as a delegated administrator.
 * `service_principal` - (Required) The service principal of the AWS service for which you want to make the member account a delegated administrator.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the delegated administrator.
 * `arn` - The Amazon Resource Name (ARN) of the delegated administrator's account.

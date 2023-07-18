@@ -28,9 +28,9 @@ resource "aws_iot_thing" "example" {
 * `attributes` - (Optional) Map of attributes of the thing.
 * `thing_type_name` - (Optional) The thing type name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `default_client_id` - The default client ID.
 * `version` - The current version of the thing record in the registry.

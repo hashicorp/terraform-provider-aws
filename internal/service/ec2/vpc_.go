@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -90,18 +93,6 @@ func ResourceVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enable_classiclink": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: `With the retirement of EC2-Classic the enable_classiclink attribute has been deprecated and will be removed in a future version.`,
-			},
-			"enable_classiclink_dns_support": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: `With the retirement of EC2-Classic the enable_classiclink_dns_support attribute has been deprecated and will be removed in a future version.`,
-			},
 			"enable_dns_hostnames": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -184,11 +175,7 @@ func ResourceVPC() *schema.Resource {
 
 func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-
-	if _, ok := d.GetOk("enable_classiclink"); ok {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new VPCs can be created with ClassicLink enabled`)
-	}
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateVpcInput{
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
@@ -224,7 +211,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Ipv6NetmaskLength = aws.Int64(int64(v.(int)))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return conn.CreateVpcWithContext(ctx, input)
 		// "UnsupportedOperation: The operation AllocateIpamPoolCidr is not supported. Account 123456789012 is not monitored by IPAM ipam-07b079e3392782a55."
 	}, errCodeUnsupportedOperation, "is not monitored by IPAM")
@@ -255,8 +242,6 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	vpcInfo := vpcInfo{
 		vpc:                              vpc,
-		enableClassicLink:                false,
-		enableClassicLinkDNSSupport:      false,
 		enableDnsHostnames:               false,
 		enableDnsSupport:                 true,
 		enableNetworkAddressUsageMetrics: false,
@@ -271,9 +256,9 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindVPCByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -303,39 +288,25 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
 	d.Set("owner_id", ownerID)
 
-	if v, err := FindVPCClassicLinkEnabled(ctx, conn, d.Id()); err != nil {
-		if tfresource.NotFound(err) {
-			d.Set("enable_classiclink", nil)
-		} else {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) ClassicLinkEnabled: %s", d.Id(), err)
-		}
-	} else {
-		d.Set("enable_classiclink", v)
-	}
-
-	if v, err := FindVPCClassicLinkDNSSupported(ctx, conn, d.Id()); err != nil {
-		if tfresource.NotFound(err) {
-			d.Set("enable_classiclink_dns_support", nil)
-		} else {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) ClassicLinkDnsSupported: %s", d.Id(), err)
-		}
-	} else {
-		d.Set("enable_classiclink_dns_support", v)
-	}
-
-	if v, err := FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableDnsHostnames); err != nil {
+	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+		return FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableDnsHostnames)
+	}, d.IsNewResource()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), ec2.VpcAttributeNameEnableDnsHostnames, err)
 	} else {
 		d.Set("enable_dns_hostnames", v)
 	}
 
-	if v, err := FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableDnsSupport); err != nil {
+	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+		return FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableDnsSupport)
+	}, d.IsNewResource()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), ec2.VpcAttributeNameEnableDnsSupport, err)
 	} else {
 		d.Set("enable_dns_support", v)
 	}
 
-	if v, err := FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
+	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+		return FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics)
+	}, d.IsNewResource()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 	} else {
 		d.Set("enable_network_address_usage_metrics", v)
@@ -402,14 +373,14 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		}
 	}
 
-	SetTagsOut(ctx, vpc.Tags)
+	setTagsOut(ctx, vpc.Tags)
 
 	return diags
 }
 
 func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("enable_dns_hostnames") {
 		if err := modifyVPCDNSHostnames(ctx, conn, d.Id(), d.Get("enable_dns_hostnames").(bool)); err != nil {
@@ -425,18 +396,6 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if d.HasChange("enable_network_address_usage_metrics") {
 		if err := modifyVPCNetworkAddressUsageMetrics(ctx, conn, d.Id(), d.Get("enable_network_address_usage_metrics").(bool)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("enable_classiclink") {
-		if err := modifyVPCClassicLink(ctx, conn, d.Id(), d.Get("enable_classiclink").(bool)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("enable_classiclink_dns_support") {
-		if err := modifyVPCClassicLinkDNSSupport(ctx, conn, d.Id(), d.Get("enable_classiclink_dns_support").(bool)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC (%s): %s", d.Id(), err)
 		}
 	}
@@ -484,7 +443,7 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DeleteVpcInput{
 		VpcId: aws.String(d.Id()),
@@ -512,9 +471,14 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	// If the VPC's CIDR block was allocated from an IPAM pool, wait for the allocation to disappear.
-	ipamPoolID := d.Get("ipv4_ipam_pool_id").(string)
+	var ipamPoolID string
+	if v, ok := d.GetOk("ipv4_ipam_pool_id"); ok {
+		ipamPoolID = v.(string)
+	}
 	if ipamPoolID == "" {
-		ipamPoolID = d.Get("ipv6_ipam_pool_id").(string)
+		if v, ok := d.GetOk("ipv6_ipam_pool_id"); ok {
+			ipamPoolID = v.(string)
+		}
 	}
 	if ipamPoolID != "" && ipamPoolID != amazonIPv6PoolID {
 		const (
@@ -540,10 +504,10 @@ func resourceVPCImport(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceVPCCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if diff.HasChange("assign_generated_ipv6_cidr_block") {
 		if err := diff.SetNewComputed("ipv6_association_id"); err != nil {
-			return fmt.Errorf("error setting ipv6_association_id to computed: %s", err)
+			return fmt.Errorf("setting ipv6_association_id to computed: %s", err)
 		}
 		if err := diff.SetNewComputed("ipv6_cidr_block"); err != nil {
-			return fmt.Errorf("error setting ipv6_cidr_block to computed: %s", err)
+			return fmt.Errorf("setting ipv6_cidr_block to computed: %s", err)
 		}
 	}
 
@@ -595,8 +559,6 @@ func defaultIPv6CIDRBlockAssociation(vpc *ec2.Vpc, associationID string) *ec2.Vp
 
 type vpcInfo struct {
 	vpc                              *ec2.Vpc
-	enableClassicLink                bool
-	enableClassicLinkDNSSupport      bool
 	enableDnsHostnames               bool
 	enableDnsSupport                 bool
 	enableNetworkAddressUsageMetrics bool
@@ -620,62 +582,6 @@ func modifyVPCAttributesOnCreate(ctx context.Context, conn *ec2.EC2, d *schema.R
 	if new, old := d.Get("enable_network_address_usage_metrics").(bool), vpcInfo.enableNetworkAddressUsageMetrics; old != new {
 		if err := modifyVPCNetworkAddressUsageMetrics(ctx, conn, d.Id(), new); err != nil {
 			return err
-		}
-	}
-
-	if new, old := d.Get("enable_classiclink").(bool), vpcInfo.enableClassicLink; old != new {
-		if err := modifyVPCClassicLink(ctx, conn, d.Id(), new); err != nil {
-			return err
-		}
-	}
-
-	if new, old := d.Get("enable_classiclink_dns_support").(bool), vpcInfo.enableClassicLinkDNSSupport; old != new {
-		if err := modifyVPCClassicLinkDNSSupport(ctx, conn, d.Id(), new); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func modifyVPCClassicLink(ctx context.Context, conn *ec2.EC2, vpcID string, v bool) error {
-	if v {
-		input := &ec2.EnableVpcClassicLinkInput{
-			VpcId: aws.String(vpcID),
-		}
-
-		if _, err := conn.EnableVpcClassicLinkWithContext(ctx, input); err != nil {
-			return fmt.Errorf("enabling EnableDnsHostnames: %w", err)
-		}
-	} else {
-		input := &ec2.DisableVpcClassicLinkInput{
-			VpcId: aws.String(vpcID),
-		}
-
-		if _, err := conn.DisableVpcClassicLinkWithContext(ctx, input); err != nil {
-			return fmt.Errorf("disabling EnableDnsHostnames: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func modifyVPCClassicLinkDNSSupport(ctx context.Context, conn *ec2.EC2, vpcID string, v bool) error {
-	if v {
-		input := &ec2.EnableVpcClassicLinkDnsSupportInput{
-			VpcId: aws.String(vpcID),
-		}
-
-		if _, err := conn.EnableVpcClassicLinkDnsSupportWithContext(ctx, input); err != nil {
-			return fmt.Errorf("enabling ClassicLinkDnsSupport: %w", err)
-		}
-	} else {
-		input := &ec2.DisableVpcClassicLinkDnsSupportInput{
-			VpcId: aws.String(vpcID),
-		}
-
-		if _, err := conn.DisableVpcClassicLinkDnsSupportWithContext(ctx, input); err != nil {
-			return fmt.Errorf("disabling ClassicLinkDnsSupport: %w", err)
 		}
 	}
 

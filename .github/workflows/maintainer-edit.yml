@@ -7,6 +7,8 @@ jobs:
   community_check:
     uses: ./.github/workflows/community-check.yml
     secrets: inherit
+    with:
+      username: ${{ github.event.pull_request.user.login }}
 
   PermissionsCheck:
     needs: community_check
@@ -14,7 +16,7 @@ jobs:
     steps:
       - name: Comment if maintainers cannot edit
         if: (!github.event.pull_request.maintainer_can_modify && needs.community_check.outputs.maintainer == 'false')
-        uses: peter-evans/create-or-update-comment@3383acd359705b10cb1eeef05c0e88c056ea4666
+        uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |

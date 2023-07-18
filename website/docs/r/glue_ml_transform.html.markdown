@@ -121,7 +121,7 @@ resource "aws_glue_catalog_table" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` – (Required) The name you assign to this ML Transform. It must be unique in your account.
 * `input_record_tables` - (Required)  A list of AWS Glue table definitions used by the transform. see [Input Record Tables](#input_record_tables).
@@ -155,9 +155,9 @@ The following arguments are supported:
 * `precision_recall_trade_off` - (Optional) The value selected when tuning your transform for a balance between precision and recall.
 * `primary_key_column_name` - (Optional) The name of a column that uniquely identifies rows in the source table.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of Glue ML Transform.
 * `id` - Glue ML Transform ID.

@@ -49,15 +49,15 @@ resource "aws_cloudwatch_log_destination_policy" "test_destination_policy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `destination_name` - (Required) A name for the subscription filter
 * `access_policy` - (Required) The policy document. This is a JSON formatted string.
 * `force_update` - (Optional) Specify true if you are updating an existing destination policy to grant permission to an organization ID instead of granting permission to individual AWS accounts.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

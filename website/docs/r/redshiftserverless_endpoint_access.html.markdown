@@ -21,16 +21,16 @@ resource "aws_redshiftserverless_endpoint_access" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `endpoint_name` - (Required) The name of the endpoint.
 * `subnet_ids` - (Required) An array of VPC subnet IDs to associate with the endpoint.
 * `vpc_security_group_ids` - (Optional) An array of security group IDs to associate with the workgroup.
 * `workgroup_name` - (Required) The name of the workgroup.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Endpoint Access.
 * `id` - The Redshift Endpoint Access Name.

@@ -85,7 +85,7 @@ EOT
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required, Forces new resource) The name of the organization conformance pack. Must begin with a letter and contain from 1 to 128 alphanumeric characters and hyphens.
 * `delivery_s3_bucket` - (Optional) Amazon S3 bucket where AWS Config stores conformance pack templates. Delivery bucket must begin with `awsconfigconforms` prefix. Maximum length of 63.
@@ -102,9 +102,9 @@ The `input_parameter` configuration block supports the following arguments:
 * `parameter_name` - (Required) The input key.
 * `parameter_value` - (Required) The input value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the organization conformance pack.
 * `id` - The name of the organization conformance pack.

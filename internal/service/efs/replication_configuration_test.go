@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs_test
 
 import (
@@ -7,9 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
@@ -137,7 +140,7 @@ func testAccCheckReplicationConfigurationExists(ctx context.Context, n string) r
 			return fmt.Errorf("No EFS Replication Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
 
 		_, err := tfefs.FindReplicationConfigurationByID(ctx, conn, rs.Primary.ID)
 
@@ -147,7 +150,7 @@ func testAccCheckReplicationConfigurationExists(ctx context.Context, n string) r
 
 func testAccCheckReplicationConfigurationDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).EFSConn()
+		conn := provider.Meta().(*conns.AWSClient).EFSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_efs_replication_configuration" {

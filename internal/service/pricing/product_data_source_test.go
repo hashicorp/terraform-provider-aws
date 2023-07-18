@@ -1,15 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pricing_test
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/pricing"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccPricingProductDataSource_ec2(t *testing.T) {
@@ -21,13 +21,13 @@ func TestAccPricingProductDataSource_ec2(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApSouth1RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, pricing.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PricingEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProductDataSourceConfig_ec2,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrWith(dataSourceName, "result", testAccCheckValueIsJSON),
+					acctest.CheckResourceAttrIsJSONString(dataSourceName, "result"),
 				),
 			},
 		},
@@ -43,13 +43,13 @@ func TestAccPricingProductDataSource_redshift(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApSouth1RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, pricing.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PricingEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProductDataSourceConfig_redshift,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrWith(dataSourceName, "result", testAccCheckValueIsJSON),
+					acctest.CheckResourceAttrIsJSONString(dataSourceName, "result"),
 				),
 			},
 		},
@@ -129,17 +129,3 @@ data "aws_pricing_product" "test" {
   }
 }
 `
-
-func testAccCheckValueIsJSON(v string) error {
-	var m map[string]*json.RawMessage
-
-	if err := json.Unmarshal([]byte(v), &m); err != nil {
-		return fmt.Errorf("parsing JSON: %s", err)
-	}
-
-	if len(m) == 0 {
-		return errors.New(`empty JSON`)
-	}
-
-	return nil
-}

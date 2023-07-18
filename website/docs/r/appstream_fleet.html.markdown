@@ -78,9 +78,9 @@ The following arguments are optional:
 * `security_group_ids` - Identifiers of the security groups for the fleet or image builder.
 * `subnet_ids` - Identifiers of the subnets to which a network interface is attached from the fleet instance or image builder instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier (ID) of the appstream fleet.
 * `arn` - ARN of the appstream fleet.

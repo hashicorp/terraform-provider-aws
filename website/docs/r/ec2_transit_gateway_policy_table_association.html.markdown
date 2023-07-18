@@ -21,14 +21,14 @@ resource "aws_ec2_transit_gateway_policy_table_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `transit_gateway_attachment_id` - (Required) Identifier of EC2 Transit Gateway Attachment.
 * `transit_gateway_policy_table_id` - (Required) Identifier of EC2 Transit Gateway Policy Table.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway Policy Table identifier combined with EC2 Transit Gateway Attachment identifier
 * `resource_id` - Identifier of the resource

@@ -372,6 +372,7 @@ provider "aws" {
   <li><code>transcribestreaming</code> (or <code>transcribestreamingservice</code>)</li>
   <li><code>transfer</code></li>
   <li><code>translate</code></li>
+  <li><code>verifiedpermissions</code></li>
   <li><code>voiceid</code></li>
   <li><code>vpclattice</code></li>
   <li><code>waf</code></li>
@@ -433,7 +434,7 @@ An example provider configuration:
 provider "aws" {
   access_key                  = "mock_access_key"
   region                      = "us-east-1"
-  s3_force_path_style         = true
+  s3_use_path_style           = true
   secret_key                  = "mock_secret_key"
   skip_credentials_validation = true
   skip_metadata_api_check     = true

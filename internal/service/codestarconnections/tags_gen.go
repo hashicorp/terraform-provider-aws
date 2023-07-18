@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists codestarconnections service tags.
+// listTags lists codestarconnections service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn codestarconnectionsiface.CodeStarConnectionsAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn codestarconnectionsiface.CodeStarConnectionsAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &codestarconnections.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn codestarconnectionsiface.CodeStarConnect
 // ListTags lists codestarconnections service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).CodeStarConnectionsConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).CodeStarConnectionsConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -76,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*codestarconnections.Tag) tftags.K
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns codestarconnections service tags from Context.
+// getTagsIn returns codestarconnections service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*codestarconnections.Tag {
+func getTagsIn(ctx context.Context) []*codestarconnections.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,17 +88,17 @@ func GetTagsIn(ctx context.Context) []*codestarconnections.Tag {
 	return nil
 }
 
-// SetTagsOut sets codestarconnections service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*codestarconnections.Tag) {
+// setTagsOut sets codestarconnections service tags in Context.
+func setTagsOut(ctx context.Context, tags []*codestarconnections.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates codestarconnections service tags.
+// updateTags updates codestarconnections service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn codestarconnectionsiface.CodeStarConnectionsAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn codestarconnectionsiface.CodeStarConnectionsAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -138,5 +138,5 @@ func UpdateTags(ctx context.Context, conn codestarconnectionsiface.CodeStarConne
 // UpdateTags updates codestarconnections service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).CodeStarConnectionsConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).CodeStarConnectionsConn(ctx), identifier, oldTags, newTags)
 }

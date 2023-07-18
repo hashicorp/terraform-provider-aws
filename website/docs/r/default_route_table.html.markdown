@@ -88,9 +88,9 @@ One of the following target arguments must be supplied:
 
 Note that the default route, mapping the VPC's CIDR block to "local", is created implicitly and cannot be specified.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the route table.
 * `arn` - The ARN of the route table.

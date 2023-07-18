@@ -29,7 +29,7 @@ resource "aws_globalaccelerator_custom_routing_accelerator" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of a custom routing accelerator.
 * `ip_address_type` - (Optional) The IP address type that an accelerator supports. For a custom routing accelerator, the value must be `"IPV4"`.
@@ -38,15 +38,15 @@ The following arguments are supported:
 * `attributes` - (Optional) The attributes of the accelerator. Fields documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-**attributes** supports the following attributes:
+`attributes` supports the following arguments:
 
 * `flow_logs_enabled` - (Optional) Indicates whether flow logs are enabled. Defaults to `false`. Valid values: `true`, `false`.
 * `flow_logs_s3_bucket` - (Optional) The name of the Amazon S3 bucket for the flow logs. Required if `flow_logs_enabled` is `true`.
 * `flow_logs_s3_prefix` - (Optional) The prefix for the location in the Amazon S3 bucket for the flow logs. Required if `flow_logs_enabled` is `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the custom accelerator.
 * `dns_name` - The DNS name of the accelerator. For example, `a5d53ff5ee6bca4ce.awsglobalaccelerator.com`.

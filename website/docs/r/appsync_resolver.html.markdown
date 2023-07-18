@@ -126,7 +126,7 @@ resource "aws_appsync_resolver" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API ID for the GraphQL API.
 * `code` - (Optional) The function code that contains the request and response functions. When code is used, the runtime is required. The runtime value must be APPSYNC_JS.
@@ -166,9 +166,9 @@ The following arguments are supported:
 * `name` - (Optional) The name of the runtime to use. Currently, the only allowed value is `APPSYNC_JS`.
 * `runtime_version` - (Optional) The version of the runtime to use. Currently, the only allowed version is `1.0.0`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN
 

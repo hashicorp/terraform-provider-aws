@@ -124,7 +124,7 @@ resource "aws_mwaa_environment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `airflow_configuration_options` - (Optional) The `airflow_configuration_options` parameter specifies airflow override options. Check the [Official documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-env-variables.html#configuring-env-variables-reference) for all possible configuration options.
 * `airflow_version` - (Optional) Airflow version of your environment, will be set by default to the latest version that MWAA supports.
@@ -173,9 +173,9 @@ The `network_configuration` block supports the following arguments. More informa
 * `security_group_ids` - (Required) Security groups IDs for the environment. At least one of the security group needs to allow MWAA resources to talk to each other, otherwise MWAA cannot be provisioned.
 * `subnet_ids` - (Required)  The private subnet IDs in which the environment should be created. MWAA requires two subnets.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the MWAA Environment
 * `created_at` - The Created At date of the MWAA Environment

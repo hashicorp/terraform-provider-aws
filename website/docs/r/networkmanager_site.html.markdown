@@ -23,7 +23,7 @@ resource "aws_networkmanager_site" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `global_network_id` - (Required) The ID of the Global Network to create the site in.
 * `description` - (Optional) Description of the Site.
@@ -36,9 +36,9 @@ The `location` object supports the following:
 * `latitude` - (Optional) Latitude of the location.
 * `longitude` - (Optional) Longitude of the location.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Site Amazon Resource Name (ARN)
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

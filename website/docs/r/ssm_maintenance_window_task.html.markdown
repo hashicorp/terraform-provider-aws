@@ -131,7 +131,7 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `window_id` - (Required) The Id of the maintenance window to register the task with.
 * `max_concurrency` - (Optional) The maximum number of targets this task can be run for in parallel.
@@ -198,9 +198,9 @@ The following arguments are supported:
 * `name` - (Required) The parameter name.
 * `values` - (Required) The array of strings.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the maintenance window task.
 * `id` - The ID of the maintenance window task.

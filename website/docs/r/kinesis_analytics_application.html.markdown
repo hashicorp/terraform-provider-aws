@@ -144,7 +144,7 @@ resource "aws_kinesis_analytics_application" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the Kinesis Analytics Application.
 * `code` - (Optional) SQL Code to transform input data, and generate output.
@@ -340,9 +340,9 @@ The `s3` blcok supports the following:
 * `file_key` - (Required) The File Key name containing reference data.
 * `role_arn` - (Required) The IAM Role ARN to read the data.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the Kinesis Analytics Application.
 * `arn` - The ARN of the Kinesis Analytics Appliation.

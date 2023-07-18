@@ -107,7 +107,7 @@ resource "aws_evidently_feature" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `default_variation` - (Optional) The name of the variation to use as the default variation. The default variation is served to users who are not allocated to any ongoing launches or experiments of this feature. This variation must also be listed in the `variations` structure. If you omit `default_variation`, the first variation listed in the `variations` structure is used as the default variation.
 * `description` - (Optional) Specifies the description of the feature.
@@ -144,9 +144,9 @@ The `value` block supports the following arguments:
 * `delete` - (Default `2m`)
 * `update` - (Default `2m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the feature.
 * `created_time` - The date and time that the feature is created.

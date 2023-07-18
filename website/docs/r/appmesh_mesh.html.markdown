@@ -36,7 +36,7 @@ resource "aws_appmesh_mesh" "simple" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name to use for the service mesh. Must be between 1 and 255 characters in length.
 * `spec` - (Optional) Service mesh specification to apply.
@@ -51,9 +51,9 @@ The `egress_filter` object supports the following:
 * `type` - (Optional) Egress filter type. By default, the type is `DROP_ALL`.
 Valid values are `ALLOW_ALL` and `DROP_ALL`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the service mesh.
 * `arn` - ARN of the service mesh.

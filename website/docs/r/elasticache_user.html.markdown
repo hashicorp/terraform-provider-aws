@@ -73,11 +73,19 @@ The following arguments are optional:
 * `passwords` - (Optional) Specifies the passwords to use for authentication if `type` is set to `password`.
 * `type` - (Required) Specifies the authentication type. Possible options are: `password`, `no-password-required` or `iam`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the created ElastiCache User.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `5m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `5m`)
 
 ## Import
 

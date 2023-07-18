@@ -53,7 +53,7 @@ resource "aws_connect_user_hierarchy_group" "child" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
 * `name` - (Required) The name of the user hierarchy group. Must not be more than 100 characters.
@@ -61,9 +61,9 @@ The following arguments are supported:
 * `tags` - (Optional) Tags to apply to the hierarchy group. If configured with a provider
 [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the hierarchy group.
 * `hierarchy_group_id` - The identifier for the hierarchy group.

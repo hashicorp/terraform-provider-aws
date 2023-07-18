@@ -39,13 +39,13 @@ The arguments of an `aws_default_vpc` differ slightly from those of [`aws_vpc`](
 * The `cidr_block` and `instance_tenancy` arguments become computed attributes
 * The default value for `enable_dns_hostnames` is `true`
 
-The following additional arguments are supported:
+This resource supports the following additional arguments:
 
 * `force_destroy` - (Optional) Whether destroying the resource deletes the default VPC. Default: `false`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `cidr_block` - The primary IPv4 CIDR block for the VPC
 * `instance_tenancy` - The allowed tenancy of instances launched into the VPC

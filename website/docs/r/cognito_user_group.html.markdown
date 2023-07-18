@@ -58,7 +58,7 @@ resource "aws_cognito_user_group" "main" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the user group.
 * `user_pool_id` - (Required) The user pool ID.
@@ -66,9 +66,9 @@ The following arguments are supported:
 * `precedence` - (Optional) The precedence of the user group.
 * `role_arn` - (Optional) The ARN of the IAM role to be associated with the user group.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

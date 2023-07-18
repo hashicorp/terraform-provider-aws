@@ -77,7 +77,7 @@ The following arguments are optional:
 
 ### self_managed_active_directory
 
-The following arguments are supported for `self_managed_active_directory` configuration block:
+The `self_managed_active_directory` configuration block supports the following arguments:
 
 * `dns_ips` - (Required) A list of up to two IP addresses of DNS servers or domain controllers in the self-managed AD directory. The IP addresses need to be either in the same VPC CIDR range as the file system or in the private IP version 4 (IPv4) address ranges as specified in [RFC 1918](https://tools.ietf.org/html/rfc1918).
 * `domain_name` - (Required) The fully qualified domain name of the self-managed AD directory. For example, `corp.example.com`.
@@ -92,9 +92,9 @@ The following arguments are supported for `self_managed_active_directory` config
 * `file_access_audit_log_level` - (Optional) Sets which attempt type is logged by Amazon FSx for file and folder accesses. Valid values are `SUCCESS_ONLY`, `FAILURE_ONLY`, `SUCCESS_AND_FAILURE`, and `DISABLED`. Default value is `DISABLED`.
 * `file_share_access_audit_log_level` - (Optional) Sets which attempt type is logged by Amazon FSx for file share accesses. Valid values are `SUCCESS_ONLY`, `FAILURE_ONLY`, `SUCCESS_AND_FAILURE`, and `DISABLED`. Default value is `DISABLED`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the file system.
 * `dns_name` - DNS name for the file system, e.g., `fs-12345678.corp.example.com` (domain name matching the Active Directory domain name)

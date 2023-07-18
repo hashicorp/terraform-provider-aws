@@ -44,22 +44,22 @@ resource "aws_efs_replication_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `source_file_system_id` - (Required) The ID of the file system that is to be replicated.
 * `destination` - (Required) A destination configuration block (documented below).
 
 ### Destination Arguments
 
-For **destination** the following attributes are supported:
+`destination` supports the following arguments:
 
 * `availability_zone_name` - (Optional) The availability zone in which the replica should be created. If specified, the replica will be created with One Zone storage. If omitted, regional storage will be used.
 * `kms_key_id` - (Optional) The Key ID, ARN, alias, or alias ARN of the KMS key that should be used to encrypt the replica file system. If omitted, the default KMS key for EFS `/aws/elasticfilesystem` will be used.
 * `region` - (Optional) The region in which the replica should be created.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `creation_time` - When the replication configuration was created.
 * `original_source_file_system_arn` - The Amazon Resource Name (ARN) of the original source Amazon EFS file system in the replication configuration.

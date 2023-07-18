@@ -20,7 +20,7 @@ resource "aws_redshiftserverless_namespace" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `admin_user_password` - (Optional) The password of the administrator for the first database created in the namespace.
 * `admin_username` - (Optional) The username of the administrator for the first database created in the namespace.
@@ -32,9 +32,9 @@ The following arguments are supported:
 * `namespace_name` - (Required) The name of the namespace.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Namespace.
 * `id` - The Redshift Namespace Name.

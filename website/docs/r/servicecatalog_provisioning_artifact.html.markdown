@@ -47,12 +47,13 @@ The following arguments are optional:
 * `name` - (Optional) Name of the provisioning artifact (for example, `v1`, `v2beta`). No spaces are allowed.
 * `type` - (Optional) Type of provisioning artifact. See [AWS Docs](https://docs.aws.amazon.com/servicecatalog/latest/dg/API_ProvisioningArtifactProperties.html) for valid list of values.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `created_time` - Time when the provisioning artifact was created.
-* `id` - Provisioning Artifact identifier and product identifier separated by a colon.
+* `id` - Provisioning artifact identifier and product identifier separated by a colon.
+* `provisioning_artifact_id` - Provisioning artifact identifier.
 * `status` - Status of the provisioning artifact.
 
 ## Timeouts

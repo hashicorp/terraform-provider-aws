@@ -36,7 +36,7 @@ resource "aws_wafregional_rule" "wafrule" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name or description of the rule.
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule.
@@ -57,9 +57,9 @@ See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/
 
 ## Remarks
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF Regional Rule.
 * `arn` - The ARN of the WAF Regional Rule.

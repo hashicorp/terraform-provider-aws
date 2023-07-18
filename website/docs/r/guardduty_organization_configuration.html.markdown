@@ -20,7 +20,8 @@ resource "aws_guardduty_detector" "example" {
 }
 
 resource "aws_guardduty_organization_configuration" "example" {
-  auto_enable = true
+  auto_enable_organization_members = "ALL"
+
   detector_id = aws_guardduty_detector.example.id
 
   datasources {
@@ -45,9 +46,12 @@ resource "aws_guardduty_organization_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+~> **NOTE:** One of `auto_enable` or `auto_enable_organization_members` must be specified.
 
-* `auto_enable` - (Required) When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s GuardDuty delegated administrator and GuardDuty is enabled in that AWS Region.
+This argument supports the following arguments:
+
+* `auto_enable` - (Optional) *Deprecated:* Use `auto_enable_organization_members` instead. When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s GuardDuty delegated administrator and GuardDuty is enabled in that AWS Region.
+* `auto_enable_organization_members` - (Optional) Indicates the auto-enablement configuration of GuardDuty for the member accounts in the organization. Valid values are `ALL`, `NEW`, `NONE`.
 * `detector_id` - (Required) The detector ID of the GuardDuty account.
 * `datasources` - (Optional) Configuration for the collected datasources.
 
@@ -98,9 +102,9 @@ The `ebs_volumes` block supports the following:
 * `auto_enable` - (Required) If true, enables [Malware Protection](https://docs.aws.amazon.com/guardduty/latest/ug/malware-protection.html) for all new accounts joining the organization.
   Defaults to `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of the GuardDuty Detector.
 

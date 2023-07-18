@@ -32,9 +32,9 @@ The following arguments are optional:
 
 * `description` - (Optional) Description of the assessment report.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `author` - Name of the user who created the assessment report.
 * `id` - Unique identifier for the assessment report.

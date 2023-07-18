@@ -44,7 +44,7 @@ resource "aws_s3_object" "MyIPSet" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `activate` - (Required) Specifies whether GuardDuty is to start using the uploaded IPSet.
 * `detector_id` - (Required) The detector ID of the GuardDuty.
@@ -53,9 +53,9 @@ The following arguments are supported:
 * `name` - (Required) The friendly name to identify the IPSet.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the GuardDuty IPSet.
 * `id` - The ID of the GuardDuty IPSet.

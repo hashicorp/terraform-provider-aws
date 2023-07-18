@@ -34,7 +34,7 @@ resource "aws_inspector_assessment_template" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the assessment template.
 * `target_arn` - (Required) The assessment target ARN to attach the template to.
@@ -50,9 +50,9 @@ The event subscription configuration block supports the following arguments:
 * `event` - (Required) The event for which you want to receive SNS notifications. Valid values are `ASSESSMENT_RUN_STARTED`, `ASSESSMENT_RUN_COMPLETED`, `ASSESSMENT_RUN_STATE_CHANGED`, and `FINDING_REPORTED`.
 * `topic_arn` - (Required) The ARN of the SNS topic to which notifications are sent.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The template assessment ARN.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

@@ -158,15 +158,17 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the patch baseline.
 * `description` - (Optional) The description of the patch baseline.
 * `operating_system` - (Optional) The operating system the patch baseline applies to.
   Valid values are
+  `ALMA_LINUX`,
   `AMAZON_LINUX`,
   `AMAZON_LINUX_2`,
   `AMAZON_LINUX_2022`,
+  `AMAZON_LINUX_2023`,
   `CENTOS`,
   `DEBIAN`,
   `MACOS`,
@@ -233,9 +235,9 @@ The `source` block supports:
 * `products` - (Required) The specific operating system versions a patch repository applies to, such as `"Ubuntu16.04"`, `"AmazonLinux2016.09"`, `"RedhatEnterpriseLinux7.2"` or `"Suse12.7"`.
   For lists of supported product values, see [PatchFilter](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_PatchFilter.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the patch baseline.
 * `arn` - The ARN of the patch baseline.

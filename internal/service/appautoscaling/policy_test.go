@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appautoscaling_test
 
 import (
@@ -10,9 +13,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
@@ -448,6 +451,99 @@ func TestAccAppAutoScalingPolicy_ResourceID_forceNew(t *testing.T) {
 	})
 }
 
+func TestAccAppAutoScalingPolicy_TargetTrack_metricMath(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy applicationautoscaling.ScalingPolicy
+	appAutoscalingTargetResourceName := "aws_appautoscaling_target.test"
+	resourceName := "aws_appautoscaling_policy.metric_math_test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_targetTrackingMetricMath(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_id", appAutoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", appAutoscalingTargetResourceName, "scalable_dimension"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", appAutoscalingTargetResourceName, "service_namespace"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_scaling_policy_configuration.0.target_value", "12.3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccPolicyConfig_targetTrackingMetricMath(rName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfig_basic(rName), fmt.Sprintf(`
+resource "aws_appautoscaling_policy" "metric_math_test" {
+  name               = "%[1]s-tracking"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.test.resource_id
+  scalable_dimension = aws_appautoscaling_target.test.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.test.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    customized_metric_specification {
+      metrics {
+        id          = "m1"
+        expression  = "TIME_SERIES(20)"
+        return_data = false
+      }
+      metrics {
+        id = "m2"
+        metric_stat {
+          metric {
+            namespace   = "foo"
+            metric_name = "bar"
+          }
+          unit = "Percent"
+          stat = "Sum"
+        }
+        return_data = false
+      }
+      metrics {
+        id = "m3"
+        metric_stat {
+          metric {
+            namespace   = "foo"
+            metric_name = "bar"
+            dimensions {
+              name  = "x"
+              value = "y"
+            }
+            dimensions {
+              name  = "y"
+              value = "x"
+            }
+          }
+          unit = "Percent"
+          stat = "Sum"
+        }
+        return_data = false
+      }
+      metrics {
+        id          = "e1"
+        expression  = "m1 + m2 + m3"
+        return_data = true
+      }
+    }
+    target_value = 12.3
+  }
+}
+`, rName))
+}
+
 func testAccCheckPolicyExists(ctx context.Context, n string, policy *applicationautoscaling.ScalingPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -455,7 +551,7 @@ func testAccCheckPolicyExists(ctx context.Context, n string, policy *application
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn(ctx)
 		params := &applicationautoscaling.DescribeScalingPoliciesInput{
 			PolicyNames:       []*string{aws.String(rs.Primary.ID)},
 			ResourceId:        aws.String(rs.Primary.Attributes["resource_id"]),
@@ -478,7 +574,7 @@ func testAccCheckPolicyExists(ctx context.Context, n string, policy *application
 
 func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			params := applicationautoscaling.DescribeScalingPoliciesInput{

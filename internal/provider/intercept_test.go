@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -17,21 +20,21 @@ func TestInterceptorsWhy(t *testing.T) {
 	interceptors = append(interceptors, interceptorItem{
 		when: Before,
 		why:  Create,
-		interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+		interceptor: interceptorFunc(func(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 			return ctx, diags
 		}),
 	})
 	interceptors = append(interceptors, interceptorItem{
 		when: After,
 		why:  Delete,
-		interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+		interceptor: interceptorFunc(func(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 			return ctx, diags
 		}),
 	})
 	interceptors = append(interceptors, interceptorItem{
 		when: Before,
 		why:  Create,
-		interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+		interceptor: interceptorFunc(func(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 			return ctx, diags
 		}),
 	})
@@ -58,21 +61,21 @@ func TestInterceptedHandler(t *testing.T) {
 	interceptors = append(interceptors, interceptorItem{
 		when: Before,
 		why:  Create,
-		interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+		interceptor: interceptorFunc(func(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 			return ctx, diags
 		}),
 	})
 	interceptors = append(interceptors, interceptorItem{
 		when: After,
 		why:  Delete,
-		interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+		interceptor: interceptorFunc(func(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 			return ctx, diags
 		}),
 	})
 	interceptors = append(interceptors, interceptorItem{
 		when: Before,
 		why:  Create,
-		interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+		interceptor: interceptorFunc(func(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 			return ctx, diags
 		}),
 	})

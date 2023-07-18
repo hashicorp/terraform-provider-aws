@@ -35,7 +35,7 @@ To enable automatic secret rotation, the Secrets Manager service requires usage 
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `secret_id` - (Required) Specifies the secret to which you want to add a new version. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret. The secret must already exist.
 * `rotation_lambda_arn` - (Required) Specifies the ARN of the Lambda function that can rotate the secret.
@@ -47,9 +47,9 @@ The following arguments are supported:
 * `duration` - (Optional) - The length of the rotation window in hours. For example, `3h` for a three hour window.
 * `schedule_expression` - (Optional) A `cron()` or `rate()` expression that defines the schedule for rotating your secret. Either `automatically_after_days` or `schedule_expression` must be specified.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the secret.
 * `arn` - Amazon Resource Name (ARN) of the secret.

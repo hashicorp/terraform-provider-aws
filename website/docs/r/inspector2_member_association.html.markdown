@@ -26,9 +26,9 @@ The following argument is required:
 
 * `account_id` - (Required) ID of the account to associate
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `delegated_admin_account_id` - Account ID of the delegated administrator account
 * `relationship_status` - Status of the member relationship

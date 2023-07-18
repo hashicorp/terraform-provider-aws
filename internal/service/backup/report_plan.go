@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
@@ -142,14 +145,14 @@ func ResourceReportPlan() *schema.Resource {
 
 func resourceReportPlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &backup.CreateReportPlanInput{
 		IdempotencyToken:      aws.String(id.UniqueId()),
 		ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]interface{})),
 		ReportPlanName:        aws.String(name),
-		ReportPlanTags:        GetTagsIn(ctx),
+		ReportPlanTags:        getTagsIn(ctx),
 		ReportSetting:         expandReportSetting(d.Get("report_setting").([]interface{})),
 	}
 
@@ -175,7 +178,7 @@ func resourceReportPlanCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	reportPlan, err := FindReportPlanByName(ctx, conn, d.Id())
 
@@ -208,7 +211,7 @@ func resourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceReportPlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &backup.UpdateReportPlanInput{
@@ -236,7 +239,7 @@ func resourceReportPlanUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceReportPlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Report Plan: %s", d.Id())
 	_, err := conn.DeleteReportPlanWithContext(ctx, &backup.DeleteReportPlanInput{

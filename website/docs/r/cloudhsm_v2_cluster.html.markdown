@@ -62,16 +62,16 @@ resource "aws_cloudhsm_v2_cluster" "cloudhsm_v2_cluster" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `source_backup_identifier` - (Optional) ID of Cloud HSM v2 cluster backup to be restored.
 * `hsm_type` - (Required) The type of HSM module in the cluster. Currently, only `hsm1.medium` is supported.
 * `subnet_ids` - (Required) The IDs of subnets in which cluster will operate.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `cluster_id` - The id of the CloudHSM cluster.
 * `cluster_state` - The state of the CloudHSM cluster.

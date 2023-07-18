@@ -21,14 +21,14 @@ resource "aws_route53_resolver_query_log_config_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resolver_query_log_config_id` - (Required) The ID of the [Route 53 Resolver query logging configuration](route53_resolver_query_log_config.html) that you want to associate a VPC with.
 * `resource_id` - (Required) The ID of a VPC that you want this query logging configuration to log queries for.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` -The ID of the Route 53 Resolver query logging configuration association.
 

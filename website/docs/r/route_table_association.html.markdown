@@ -31,15 +31,15 @@ resource "aws_route_table_association" "b" {
 
 ~> **NOTE:** Please note that one of either `subnet_id` or `gateway_id` is required.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `subnet_id` - (Optional) The subnet ID to create an association. Conflicts with `gateway_id`.
 * `gateway_id` - (Optional) The gateway ID to create an association. Conflicts with `subnet_id`.
 * `route_table_id` - (Required) The ID of the routing table to associate with.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the association
 

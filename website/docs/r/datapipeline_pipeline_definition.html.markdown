@@ -109,9 +109,9 @@ The following arguments are optional:
 * `id` - (Required) ID of the parameter value.
 * `string_value` - (Required) Field value, expressed as a String.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique ID of the datapipeline definition.
 

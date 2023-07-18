@@ -30,7 +30,7 @@ resource "aws_glue_data_catalog_encryption_settings" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `data_catalog_encryption_settings` – (Required) The security configuration to set. see [Data Catalog Encryption Settings](#data_catalog_encryption_settings).
 * `catalog_id` – (Optional) The ID of the Data Catalog to set the security configuration for. If none is provided, the AWS account ID is used by default.
@@ -50,9 +50,9 @@ The following arguments are supported:
 * `catalog_encryption_mode` - (Required) The encryption-at-rest mode for encrypting Data Catalog data. Valid values are `DISABLED` and `SSE-KMS`.
 * `sse_aws_kms_key_id` - (Optional) The ARN of the AWS KMS key to use for encryption at rest.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Data Catalog to set the security configuration for.
 

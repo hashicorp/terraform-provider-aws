@@ -40,7 +40,7 @@ resource "aws_ebs_volume" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `device_name` - (Required) The device name to expose to the instance (for
 example, `/dev/sdh` or `xvdh`).  See [Device Naming on Linux Instances][1] and [Device Naming on Windows Instances][2] for more information.
@@ -58,9 +58,9 @@ means attached.
 * `stop_instance_before_detaching` - (Optional, Boolean) Set this to true to ensure that the target instance is stopped
 before trying to detach the volume. Stops the instance, if it is not already stopped.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `device_name` - The device name exposed to the instance
 * `instance_id` - ID of the Instance

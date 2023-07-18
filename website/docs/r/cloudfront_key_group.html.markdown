@@ -28,15 +28,15 @@ resource "aws_cloudfront_key_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `comment` - (Optional) A comment to describe the key group..
 * `items` - (Required) A list of the identifiers of the public keys in the key group.
 * `name` - (Required) A name to identify the key group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `etag` - The identifier for this version of the key group.
 * `id` - The identifier for the key group.

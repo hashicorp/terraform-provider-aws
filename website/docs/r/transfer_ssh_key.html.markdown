@@ -73,15 +73,15 @@ resource "aws_iam_role_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `server_id` - (Requirement) The Server ID of the Transfer Server (e.g., `s-12345678`)
 * `user_name` - (Requirement) The name of the user account that is assigned to one or more servers.
 * `body` - (Requirement) The public key portion of an SSH key pair.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

@@ -20,13 +20,13 @@ resource "aws_licensemanager_grant_accepter" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `grant_arn` - (Required) The ARN of the grant to accept.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The grant ARN (Same as `arn`).
 * `arn` - The grant ARN.

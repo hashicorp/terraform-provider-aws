@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appflow
 
 import (
@@ -1216,13 +1219,13 @@ func ResourceFlow() *schema.Resource {
 }
 
 func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn()
+	conn := meta.(*conns.AWSClient).AppFlowConn(ctx)
 
 	in := &appflow.CreateFlowInput{
 		FlowName:                  aws.String(d.Get(names.AttrName).(string)),
 		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").(*schema.Set).List()),
 		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
-		Tags:                      GetTagsIn(ctx),
+		Tags:                      getTagsIn(ctx),
 		Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
 		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]interface{})[0].(map[string]interface{})),
 	}
@@ -1251,7 +1254,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn()
+	conn := meta.(*conns.AWSClient).AppFlowConn(ctx)
 
 	out, err := FindFlowByARN(ctx, conn, d.Id())
 
@@ -1280,26 +1283,26 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrDescription, out2.Description)
 
 	if err := d.Set("destination_flow_config", flattenDestinationFlowConfigs(out2.DestinationFlowConfigList)); err != nil {
-		return diag.Errorf("error setting destination_flow_config: %s", err)
+		return diag.Errorf("setting destination_flow_config: %s", err)
 	}
 
 	d.Set("kms_arn", out2.KmsArn)
 
 	if out2.SourceFlowConfig != nil {
 		if err := d.Set("source_flow_config", []interface{}{flattenSourceFlowConfig(out2.SourceFlowConfig)}); err != nil {
-			return diag.Errorf("error setting source_flow_config: %s", err)
+			return diag.Errorf("setting source_flow_config: %s", err)
 		}
 	} else {
 		d.Set("source_flow_config", nil)
 	}
 
 	if err := d.Set("task", flattenTasks(out2.Tasks)); err != nil {
-		return diag.Errorf("error setting task: %s", err)
+		return diag.Errorf("setting task: %s", err)
 	}
 
 	if out2.TriggerConfig != nil {
 		if err := d.Set("trigger_config", []interface{}{flattenTriggerConfig(out2.TriggerConfig)}); err != nil {
-			return diag.Errorf("error setting trigger_config: %s", err)
+			return diag.Errorf("setting trigger_config: %s", err)
 		}
 	} else {
 		d.Set("trigger_config", nil)
@@ -1309,7 +1312,7 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn()
+	conn := meta.(*conns.AWSClient).AppFlowConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &appflow.UpdateFlowInput{
@@ -1336,7 +1339,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn()
+	conn := meta.(*conns.AWSClient).AppFlowConn(ctx)
 
 	out, _ := FindFlowByARN(ctx, conn, d.Id())
 
@@ -3396,7 +3399,7 @@ func flattenTasks(tasks []*appflow.Task) []interface{} {
 }
 
 func flattenTask(task *appflow.Task) map[string]interface{} {
-	if task == nil {
+	if task == nil || (task == (&appflow.Task{})) {
 		return nil
 	}
 

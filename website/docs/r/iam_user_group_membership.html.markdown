@@ -55,14 +55,14 @@ resource "aws_iam_group" "group3" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `user` - (Required) The name of the [IAM User][2] to add to groups
 * `groups` - (Required) A list of [IAM Groups][1] to add the user to
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 [1]: /docs/providers/aws/r/iam_group.html
 [2]: /docs/providers/aws/r/iam_user.html

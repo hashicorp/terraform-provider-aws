@@ -22,7 +22,7 @@ resource "aws_s3outposts_endpoint" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `outpost_id` - (Required) Identifier of the Outpost to contain this endpoint.
 * `security_group_id` - (Required) Identifier of the EC2 Security Group.
@@ -30,9 +30,9 @@ The following arguments are supported:
 * `access_type` - (Optional) Type of access for the network connectivity. Valid values are `Private` or `CustomerOwnedIp`.
 * `customer_owned_ipv4_pool` - (Optional) The ID of a Customer Owned IP Pool. For more on customer owned IP addresses see the [User Guide](https://docs.aws.amazon.com/outposts/latest/userguide/local-rack.html#local-gateway-subnet).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the endpoint.
 * `cidr_block` - VPC CIDR block of the endpoint.

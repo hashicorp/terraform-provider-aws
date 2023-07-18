@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -41,6 +44,7 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "hosted_zone_id", resourceName, "hosted_zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "iops", resourceName, "iops"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, "username"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "max_allocated_storage", resourceName, "max_allocated_storage"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az", resourceName, "multi_az"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "port", resourceName, "port"),
@@ -113,10 +117,11 @@ resource "aws_db_instance" "test" {
   engine_version          = data.aws_rds_engine_version.default.version
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  name                    = "test"
+  db_name                 = "test"
   password                = "avoid-plaintext-passwords"
   skip_final_snapshot     = true
   username                = "tfacctest"
+  max_allocated_storage   = 100
 
   enabled_cloudwatch_logs_exports = [
     "audit",
@@ -148,7 +153,7 @@ resource "aws_db_instance" "test" {
   identifier                  = %[1]q
   instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
   manage_master_user_password = true
-  name                        = "test"
+  db_name                     = "test"
   skip_final_snapshot         = true
   username                    = "tfacctest"
 

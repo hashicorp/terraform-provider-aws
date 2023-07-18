@@ -103,7 +103,7 @@ can be done using the [`auto_accept`](vpc_peering_connection.html#auto_accept) a
 Connection has to be made active manually using other means. See [notes](vpc_peering_connection.html#notes) below for
 more information.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `peer_owner_id` - (Optional) The AWS account ID of the owner of the peer VPC.
    Defaults to the account ID the [AWS provider][1] is currently connected to.
@@ -125,16 +125,10 @@ must have support for the DNS hostnames enabled. This can be done using the [`en
 
 * `allow_remote_vpc_dns_resolution` - (Optional) Allow a local VPC to resolve public DNS hostnames to
 private IP addresses when queried from instances in the peer VPC.
-* `allow_classic_link_to_remote_vpc` - (Optional) Allow a local linked EC2-Classic instance to communicate
-with instances in a peer VPC. This enables an outbound communication from the local ClassicLink connection
-to the remote VPC.
-* `allow_vpc_to_remote_classic_link` - (Optional) Allow a local VPC to communicate with a linked EC2-Classic
-instance in a peer VPC. This enables an outbound communication from the local VPC to the remote ClassicLink
-connection.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC Peering Connection.
 * `accept_status` - The status of the VPC Peering Connection request.

@@ -90,7 +90,7 @@ resource "aws_kinesis_stream" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
 * `data_retention`  - (Required) The retention period, in hours, for the Amazon Kinesis data.
@@ -103,9 +103,9 @@ The following arguments are supported:
 * `disabled` - (Optional) When `true`, the media insights configuration is not enabled. Defaults to `false`.
 * `configuration_arn` - (Optional) The media insights configuration that will be invoked by the Voice Connector.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Chime Voice Connector ID.
 

@@ -268,7 +268,7 @@ resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "my_
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Configuration name.
 * `resource_access_role_arn` - (Required) ARN of IAM Role used by service to invoke processors and sinks specified by configuration elements.
@@ -340,9 +340,9 @@ The following arguments are supported:
         * `time_period` - (Optional) Analysis interval.
 * `disabled` - (Optional) Disables real time alert rules.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Media Insights Pipeline Configuration.
 * `id` - Unique ID of the Media Insights Pipeline Configuration.

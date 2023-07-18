@@ -38,12 +38,12 @@ The following arguments are optional:
 
 ### Config Parameter
 
-* `parameter_key` - (Required) The key of the parameter. The options are `datestyle`, `enable_user_activity_logging`, `query_group`, `search_path`, and `max_query_execution_time`.
+* `parameter_key` - (Required) The key of the parameter. The options are `auto_mv`, `datestyle`, `enable_case_sensitive_identifier`, `enable_user_activity_logging`, `query_group`, `search_path` and [query monitoring metrics](https://docs.aws.amazon.com/redshift/latest/dg/cm-c-wlm-query-monitoring-rules.html#cm-c-wlm-query-monitoring-metrics-serverless) that let you define performance boundaries: `max_query_cpu_time`, `max_query_blocks_read`, `max_scan_row_count`, `max_query_execution_time`, `max_query_queue_time`, `max_query_cpu_usage_percent`, `max_query_temp_blocks_to_disk`, `max_join_row_count` and `max_nested_loop_join_row_count`.
 * `parameter_value` - (Required) The value of the parameter to set.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Workgroup.
 * `id` - The Redshift Workgroup Name.
@@ -69,6 +69,14 @@ In addition to all arguments above, the following attributes are exported:
 * `network_interface_id` - The unique identifier of the network interface.
 * `private_ip_address` - The IPv4 address of the network interface within the subnet.
 * `subnet_id` - The unique identifier of the subnet.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `20m`)
+- `update` - (Default `20m`)
+- `delete` - (Default `20m`)
 
 ## Import
 

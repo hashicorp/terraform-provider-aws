@@ -56,7 +56,7 @@ resource "aws_glacier_vault" "my_archive" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Vault. Names can be between 1 and 255 characters long and the valid characters are a-z, A-Z, 0-9, '_' (underscore), '-' (hyphen), and '.' (period).
 * `access_policy` - (Optional) The policy document. This is a JSON formatted string.
@@ -69,9 +69,9 @@ The following arguments are supported:
 * `events` - (Required) You can configure a vault to publish a notification for `ArchiveRetrievalCompleted` and `InventoryRetrievalCompleted` events.
 * `sns_topic` - (Required) The SNS Topic ARN.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `location` - The URI of the vault that was created.
 * `arn` - The ARN of the vault.

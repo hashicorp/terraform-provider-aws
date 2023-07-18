@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -79,7 +82,7 @@ func DataSourceRole() *schema.Resource {
 
 func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -130,4 +133,19 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.SetId(name)
 
 	return diags
+}
+
+func flattenRoleLastUsed(apiObject *iam.RoleLastUsed) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"region": aws.StringValue(apiObject.Region),
+	}
+
+	if apiObject.LastUsedDate != nil {
+		tfMap["last_used_date"] = apiObject.LastUsedDate.Format(time.RFC3339)
+	}
+	return []interface{}{tfMap}
 }

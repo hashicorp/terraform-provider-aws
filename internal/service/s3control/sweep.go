@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -11,8 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -43,12 +45,12 @@ func init() {
 
 func sweepAccessPoints(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).S3ControlConn()
-	accountID := client.(*conns.AWSClient).AccountID
+	conn := client.S3ControlConn(ctx)
+	accountID := client.AccountID
 	input := &s3control.ListAccessPointsInput{
 		AccountId: aws.String(accountID),
 	}
@@ -85,7 +87,7 @@ func sweepAccessPoints(region string) error {
 		return fmt.Errorf("error listing S3 Access Points (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping S3 Access Points (%s): %w", region, err))
@@ -101,12 +103,12 @@ func sweepMultiRegionAccessPoints(region string) error {
 		return nil
 	}
 
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).S3ControlConn()
-	accountID := client.(*conns.AWSClient).AccountID
+	conn := client.S3ControlConn(ctx)
+	accountID := client.AccountID
 	input := &s3control.ListMultiRegionAccessPointsInput{
 		AccountId: aws.String(accountID),
 	}
@@ -137,7 +139,7 @@ func sweepMultiRegionAccessPoints(region string) error {
 		return fmt.Errorf("error listing S3 Multi-Region Access Points (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping S3 Multi-Region Access Points (%s): %w", region, err)
@@ -148,12 +150,12 @@ func sweepMultiRegionAccessPoints(region string) error {
 
 func sweepObjectLambdaAccessPoints(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).S3ControlConn()
-	accountID := client.(*conns.AWSClient).AccountID
+	conn := client.S3ControlConn(ctx)
+	accountID := client.AccountID
 	input := &s3control.ListAccessPointsForObjectLambdaInput{
 		AccountId: aws.String(accountID),
 	}
@@ -184,7 +186,7 @@ func sweepObjectLambdaAccessPoints(region string) error {
 		return fmt.Errorf("error listing S3 Object Lambda Access Points (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping S3 Object Lambda Access Points (%s): %w", region, err)
@@ -195,12 +197,12 @@ func sweepObjectLambdaAccessPoints(region string) error {
 
 func sweepStorageLensConfigurations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).S3ControlConn()
-	accountID := client.(*conns.AWSClient).AccountID
+	conn := client.S3ControlConn(ctx)
+	accountID := client.AccountID
 	input := &s3control.ListStorageLensConfigurationsInput{
 		AccountId: aws.String(accountID),
 	}
@@ -237,7 +239,7 @@ func sweepStorageLensConfigurations(region string) error {
 		return fmt.Errorf("error listing S3 Storage Lens Configurations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping S3 Storage Lens Configurations (%s): %w", region, err)

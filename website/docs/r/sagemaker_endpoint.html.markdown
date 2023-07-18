@@ -27,7 +27,7 @@ resource "aws_sagemaker_endpoint" "e" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `endpoint_config_name` - (Required) The name of the endpoint configuration to use.
 * `deployment_config` - (Optional) The deployment configuration for an endpoint, which contains the desired deployment strategy and rollback configurations. See [Deployment Config](#deployment-config).
@@ -70,9 +70,9 @@ The following arguments are supported:
 
 * `alarm_name` - (Required) The name of a CloudWatch alarm in your account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this endpoint.
 * `name` - The name of the endpoint.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appautoscaling
 
 import (
@@ -15,21 +18,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appautoscaling_target")
+// @SDKResource("aws_appautoscaling_target", name="Target")
+// @Tags(identifierAttribute="arn")
 func ResourceTarget() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceTargetPut,
+		CreateWithoutTimeout: resourceTargetCreate,
 		ReadWithoutTimeout:   resourceTargetRead,
-		UpdateWithoutTimeout: resourceTargetPut,
+		UpdateWithoutTimeout: resourceTargetUpdate,
 		DeleteWithoutTimeout: resourceTargetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceTargetImport,
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"max_capacity": {
 				Type:     schema.TypeInt,
 				Required: true,
@@ -58,59 +70,46 @@ func ResourceTarget() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceTargetPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
-	var targetOpts applicationautoscaling.RegisterScalableTargetInput
-
-	targetOpts.MaxCapacity = aws.Int64(int64(d.Get("max_capacity").(int)))
-	targetOpts.MinCapacity = aws.Int64(int64(d.Get("min_capacity").(int)))
-	targetOpts.ResourceId = aws.String(d.Get("resource_id").(string))
-	targetOpts.ScalableDimension = aws.String(d.Get("scalable_dimension").(string))
-	targetOpts.ServiceNamespace = aws.String(d.Get("service_namespace").(string))
-
-	if roleArn, exists := d.GetOk("role_arn"); exists {
-		targetOpts.RoleARN = aws.String(roleArn.(string))
+	resourceID := d.Get("resource_id").(string)
+	input := &applicationautoscaling.RegisterScalableTargetInput{
+		MaxCapacity:       aws.Int64(int64(d.Get("max_capacity").(int))),
+		MinCapacity:       aws.Int64(int64(d.Get("min_capacity").(int))),
+		ResourceId:        aws.String(resourceID),
+		ScalableDimension: aws.String(d.Get("scalable_dimension").(string)),
+		ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
+		Tags:              getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Application autoscaling target create configuration %s", targetOpts)
-	var err error
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		_, err = conn.RegisterScalableTargetWithContext(ctx, &targetOpts)
-
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeValidationException, "Unable to assume IAM role") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeValidationException, "ECS service doesn't exist") {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.RegisterScalableTargetWithContext(ctx, &targetOpts)
+	if v, ok := d.GetOk("role_arn"); ok {
+		input.RoleARN = aws.String(v.(string))
 	}
+
+	err := registerScalableTarget(ctx, conn, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Application AutoScaling Target: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Application AutoScaling Target (%s): %s", resourceID, err)
 	}
 
-	d.SetId(d.Get("resource_id").(string))
+	d.SetId(resourceID)
 
 	return append(diags, resourceTargetRead(ctx, d, meta)...)
 }
 
 func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, 2*time.Minute,
 		func() (interface{}, error) {
@@ -131,6 +130,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	t := outputRaw.(*applicationautoscaling.ScalableTarget)
 
+	d.Set("arn", t.ScalableTargetARN)
 	d.Set("max_capacity", t.MaxCapacity)
 	d.Set("min_capacity", t.MinCapacity)
 	d.Set("resource_id", t.ResourceId)
@@ -141,9 +141,36 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
+func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
+
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &applicationautoscaling.RegisterScalableTargetInput{
+			MaxCapacity:       aws.Int64(int64(d.Get("max_capacity").(int))),
+			MinCapacity:       aws.Int64(int64(d.Get("min_capacity").(int))),
+			ResourceId:        aws.String(d.Id()),
+			ScalableDimension: aws.String(d.Get("scalable_dimension").(string)),
+			ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
+		}
+
+		if v, ok := d.GetOk("role_arn"); ok {
+			input.RoleARN = aws.String(v.(string))
+		}
+
+		err := registerScalableTarget(ctx, conn, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Application AutoScaling Target (%s): %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceTargetRead(ctx, d, meta)...)
+}
+
 func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 	input := &applicationautoscaling.DeregisterScalableTargetInput{
 		ResourceId:        aws.String(d.Id()),
@@ -239,4 +266,25 @@ func resourceTargetImport(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(resourceId)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func registerScalableTarget(ctx context.Context, conn *applicationautoscaling.ApplicationAutoScaling, input *applicationautoscaling.RegisterScalableTargetInput) error {
+	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.RegisterScalableTargetWithContext(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeValidationException, "Unable to assume IAM role") {
+				return true, err
+			}
+
+			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeValidationException, "ECS service doesn't exist") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	return err
 }

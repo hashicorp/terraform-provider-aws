@@ -31,7 +31,7 @@ resource "aws_waf_byte_match_set" "byte_set" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name or description of the Byte Match Set.
 * `byte_match_tuples` - Specifies the bytes (typically a string that corresponds
@@ -72,9 +72,9 @@ The following arguments are supported:
 
 ## Remarks
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF Byte Match Set.
 

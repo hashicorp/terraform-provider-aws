@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -91,7 +94,7 @@ func ResourceBucketVersioning() *schema.Resource {
 }
 
 func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -121,7 +124,7 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 		}, s3.ErrCodeNoSuchBucket)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error creating S3 bucket versioning for %s: %w", bucket, err))
+			return diag.Errorf("creating S3 bucket versioning for %s: %s", bucket, err)
 		}
 	} else {
 		log.Printf("[DEBUG] Creating S3 bucket versioning for unversioned bucket: %s", bucket)
@@ -133,7 +136,7 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 
@@ -151,20 +154,20 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting S3 bucket versioning (%s): %s", d.Id(), err)
+		return diag.Errorf("getting S3 bucket versioning (%s): %s", d.Id(), err)
 	}
 
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	if err := d.Set("versioning_configuration", flattenBucketVersioningConfiguration(output)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting versioning_configuration: %w", err))
+		return diag.Errorf("setting versioning_configuration: %s", err)
 	}
 
 	return nil
 }
 
 func resourceBucketVersioningUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -187,14 +190,14 @@ func resourceBucketVersioningUpdate(ctx context.Context, d *schema.ResourceData,
 	_, err = conn.PutBucketVersioningWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating S3 bucket versioning (%s): %w", d.Id(), err))
+		return diag.Errorf("updating S3 bucket versioning (%s): %s", d.Id(), err)
 	}
 
 	return resourceBucketVersioningRead(ctx, d, meta)
 }
 
 func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	if v := expandBucketVersioningConfiguration(d.Get("versioning_configuration").([]interface{})); v != nil && aws.StringValue(v.Status) == BucketVersioningStatusDisabled {
 		log.Printf("[DEBUG] Removing S3 bucket versioning for unversioned bucket (%s) from state", d.Id())
@@ -231,7 +234,7 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting S3 bucket versioning (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting S3 bucket versioning (%s): %s", d.Id(), err)
 	}
 
 	return nil

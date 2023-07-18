@@ -1,10 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty_test
 
 import (
+	"context"
 	"os"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccGuardDuty_serial(t *testing.T) {
@@ -38,10 +44,11 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"basic": testAccOrganizationAdminAccount_basic,
 		},
 		"OrganizationConfiguration": {
-			"basic":             testAccOrganizationConfiguration_basic,
-			"s3Logs":            testAccOrganizationConfiguration_s3logs,
-			"kubernetes":        testAccOrganizationConfiguration_kubernetes,
-			"malwareProtection": testAccOrganizationConfiguration_malwareprotection,
+			"basic":                         testAccOrganizationConfiguration_basic,
+			"autoEnableOrganizationMembers": testAccOrganizationConfiguration_autoEnableOrganizationMembers,
+			"s3Logs":                        testAccOrganizationConfiguration_s3logs,
+			"kubernetes":                    testAccOrganizationConfiguration_kubernetes,
+			"malwareProtection":             testAccOrganizationConfiguration_malwareprotection,
 		},
 		"ThreatIntelSet": {
 			"basic": testAccThreatIntelSet_basic,
@@ -78,4 +85,22 @@ func testAccMemberFromEnv(t *testing.T) (string, string) {
 				"a valid email associated with the AWS_GUARDDUTY_MEMBER_ACCOUNT_ID must be provided.")
 	}
 	return accountID, email
+}
+
+// testAccPreCheckDetectorExists verifies the current account has a single active
+// GuardDuty detector configured.
+func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+
+	out, err := conn.ListDetectorsWithContext(ctx, &guardduty.ListDetectorsInput{})
+	if out == nil || len(out.DetectorIds) == 0 {
+		t.Skip("this AWS account must have an existing GuardDuty detector configured")
+	}
+	if len(out.DetectorIds) > 1 {
+		t.Skipf("this AWS account must have a single existing GuardDuty detector configured. Found %d.", len(out.DetectorIds))
+	}
+
+	if err != nil {
+		t.Fatalf("listing GuardDuty Detectors: %s", err)
+	}
 }

@@ -52,7 +52,7 @@ resource "aws_appconfig_extension" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name for the extension. Each extension name in your account must be unique. Extension versions use the same name.
 * `description` - (Optional) Information about the extension.
@@ -84,9 +84,9 @@ The `parameter` configuration block supports configuring any number of the follo
 * `required` - (Required) Determines if a parameter value must be specified in the extension association.
 * `description` - (Optional) Information about the parameter.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the AppConfig Extension.
 * `id` - AppConfig Extension ID.

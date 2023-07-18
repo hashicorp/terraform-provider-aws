@@ -27,7 +27,7 @@ provider "aws" {
 }
 
 data "aws_region" "replica" {
-  provider = "aws.replica"
+  provider = aws.replica
 }
 
 data "aws_region" "current" {}
@@ -41,7 +41,7 @@ resource "aws_dynamodb_table" "example" {
 }
 
 resource "aws_dynamodb_tag" "test" {
-  provider = "aws.replica"
+  provider = aws.replica
 
   resource_arn = replace(aws_dynamodb_table.test.arn, data.aws_region.current.name, data.aws_region.replica.name)
   key          = "testkey"
@@ -51,15 +51,15 @@ resource "aws_dynamodb_tag" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_arn` - (Required) Amazon Resource Name (ARN) of the DynamoDB resource to tag.
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - DynamoDB resource identifier and key, separated by a comma (`,`)
 

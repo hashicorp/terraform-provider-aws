@@ -218,7 +218,7 @@ resource "aws_iam_role_policy_attachment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Required) A description for the DLM lifecycle policy.
 * `execution_role_arn` - (Required) The ARN of an IAM role that is able to be assumed by the DLM service.
@@ -336,9 +336,9 @@ The following arguments are supported:
 * `interval` - (Required) The amount of time to retain each snapshot. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days.
 * `interval_unit` - (Required) The unit of time for time-based retention. Valid values: `DAYS`, `WEEKS`, `MONTHS`, or `YEARS`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the DLM Lifecycle Policy.
 * `id` - Identifier of the DLM Lifecycle Policy.

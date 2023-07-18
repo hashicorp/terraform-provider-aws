@@ -34,7 +34,7 @@ resource "aws_glue_user_defined_function" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the function.
 * `catalog_id` - (Optional) ID of the Glue Catalog to create the function in. If omitted, this defaults to the AWS Account ID.
@@ -49,9 +49,9 @@ The following arguments are supported:
 * `resource_type` - (Required) The type of the resource. can be one of `JAR`, `FILE`, and `ARCHIVE`.
 * `uri` - (Required) The URI for accessing the resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id`- The id of the Glue User Defined Function.
 * `arn`- The ARN of the Glue User Defined Function.

@@ -79,7 +79,7 @@ resource "aws_s3_bucket_inventory" "test-prefix" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the source bucket that inventory lists the objects for.
 * `name` - (Required) Unique identifier of the inventory configuration for the bucket.
@@ -119,9 +119,9 @@ The `sse_kms` configuration supports the following:
 
 * `key_id` - (Required) ARN of the KMS customer master key (CMK) used to encrypt the inventory file.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

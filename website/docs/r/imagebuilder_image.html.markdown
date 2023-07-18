@@ -42,9 +42,9 @@ The following arguments are optional:
 * `image_tests_enabled` - (Optional) Whether image tests are enabled. Defaults to `true`.
 * `timeout_minutes` - (Optional) Number of minutes before image tests time out. Valid values are between `60` and `1440`. Defaults to `720`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the image.
 * `date_created` - Date the image was created.

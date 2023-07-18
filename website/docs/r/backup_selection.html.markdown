@@ -128,7 +128,7 @@ resource "aws_backup_selection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The display name of a resource selection document.
 * `plan_id` - (Required) The backup plan ID to be associated with the selection of resources.
@@ -144,9 +144,9 @@ Tag conditions (`selection_tag`) support the following:
 * `key` - (Required) The key in a key-value pair.
 * `value` - (Required) The value in a key-value pair.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Backup Selection identifier
 

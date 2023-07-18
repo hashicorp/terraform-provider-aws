@@ -31,16 +31,16 @@ resource "aws_lightsail_disk" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Lightsail load balancer.
 * `size_in_gb` - (Required) The instance port the load balancer will connect.
 * `availability_zone` - (Required) The Availability Zone in which to create your disk.
 * `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the disk  (matches `name`).
 * `arn` - The ARN of the Lightsail load balancer.

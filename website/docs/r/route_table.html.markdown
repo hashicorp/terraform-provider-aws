@@ -67,7 +67,7 @@ resource "aws_route_table" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_id` - (Required) The VPC ID.
 * `route` - (Optional) A list of route objects. Their keys are documented below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
@@ -91,7 +91,6 @@ One of the following target arguments must be supplied:
 * `core_network_arn` - (Optional) The Amazon Resource Name (ARN) of a core network.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
 * `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway.
-* `instance_id` - (Optional, **Deprecated** use `network_interface_id` instead) Identifier of an EC2 instance.
 * `local_gateway_id` - (Optional) Identifier of a Outpost local gateway.
 * `nat_gateway_id` - (Optional) Identifier of a VPC NAT gateway.
 * `network_interface_id` - (Optional) Identifier of an EC2 network interface.
@@ -101,9 +100,9 @@ One of the following target arguments must be supplied:
 
 Note that the default route, mapping the VPC's CIDR block to "local", is created implicitly and cannot be specified.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 ~> **NOTE:** Only the target that is entered is exported as a readable
 attribute once the route resource is created.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
@@ -10,10 +13,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
@@ -525,7 +528,7 @@ func TestAccRDSCluster_availabilityZones(t *testing.T) {
 	})
 }
 
-func TestAccRDSCluster_storageType(t *testing.T) {
+func TestAccRDSCluster_storageTypeIo1(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -542,10 +545,105 @@ func TestAccRDSCluster_storageType(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_storageType(rName),
+				Config: testAccClusterConfig_storageTypeIo1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "io1"),
+				),
+			},
+		},
+	})
+}
+
+// For backwards compatibility, the control plane should always return a blank string even if sending "aurora" as the storage type
+func TestAccRDSCluster_storageTypeAuroraReturnsBlank(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster1 rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	storageTypeAurora := "aurora"
+	storageTypeEmpty := ""
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeAurora),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeEmpty),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_storageTypeAuroraIopt1(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	storageType := "aurora-iopt1"
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_auroraStorageType(rName, storageType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", storageType),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_storageTypeAuroraUpdateAuroraIopt1(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster1, dbCluster2 rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	storageTypeEmpty := ""
+	storageTypeAuroraIOPT1 := "aurora-iopt1"
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_auroraStorageTypeNotDefined(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeEmpty),
+				),
+			},
+			{
+				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeAuroraIOPT1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeAuroraIOPT1),
 				),
 			},
 		},
@@ -573,6 +671,45 @@ func TestAccRDSCluster_allocatedStorage(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "100"),
+				),
+			},
+		},
+	})
+}
+
+// Verify storage_type from aurora-iopt1 to aurora
+func TestAccRDSCluster_storageTypeAuroraIopt1UpdateAurora(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster1, dbCluster2 rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	storageTypeAuroraIOPT1 := "aurora-iopt1"
+	storageTypeAurora := "aurora"
+	storageTypeEmpty := ""
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeAuroraIOPT1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeAuroraIOPT1),
+				),
+			},
+			{
+				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeAurora),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeEmpty),
 				),
 			},
 		},
@@ -623,10 +760,17 @@ func TestAccRDSCluster_dbClusterInstanceClass(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_dbClusterInstanceClass(rName),
+				Config: testAccClusterConfig_dbClusterInstanceClass(rName, "db.m5d.2xlarge"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "db_cluster_instance_class", "db.r6gd.xlarge"),
+					resource.TestCheckResourceAttr(resourceName, "db_cluster_instance_class", "db.m5d.2xlarge"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_dbClusterInstanceClass(rName, "db.r6gd.4xlarge"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "db_cluster_instance_class", "db.r6gd.4xlarge"),
 				),
 			},
 		},
@@ -2396,7 +2540,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster" {
@@ -2422,7 +2566,7 @@ func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestChe
 
 func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster" {
@@ -2475,7 +2619,7 @@ func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *rds
 			return fmt.Errorf("No RDS Cluster ID is set")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).RDSConn()
+		conn := providerF().Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		output, err := tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -2492,6 +2636,16 @@ func testAccCheckClusterRecreated(i, j *rds.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.TimeValue(i.ClusterCreateTime).Equal(aws.TimeValue(j.ClusterCreateTime)) {
 			return errors.New("RDS Cluster was not recreated")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckClusterNotRecreated(i, j *rds.DBCluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !aws.TimeValue(i.ClusterCreateTime).Equal(aws.TimeValue(j.ClusterCreateTime)) {
+			return errors.New("RDS Cluster was recreated")
 		}
 
 		return nil
@@ -2801,7 +2955,7 @@ resource "aws_rds_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_storageType(rName string) string {
+func testAccClusterConfig_storageTypeIo1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
@@ -2852,12 +3006,12 @@ resource "aws_rds_cluster" "test" {
 `, rName)
 }
 
-func testAccClusterConfig_dbClusterInstanceClass(rName string) string {
+func testAccClusterConfig_dbClusterInstanceClass(rName, instanceClass string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
   cluster_identifier        = %[1]q
-  db_cluster_instance_class = "db.r6gd.xlarge"
+  db_cluster_instance_class = %[2]q
   engine                    = "mysql"
   storage_type              = "io1"
   allocated_storage         = 100
@@ -2866,7 +3020,7 @@ resource "aws_rds_cluster" "test" {
   master_username           = "test"
   skip_final_snapshot       = true
 }
-`, rName)
+`, rName, instanceClass)
 }
 
 func testAccClusterConfig_backtrackWindow(backtrackWindow int) string {
@@ -4491,6 +4645,59 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot             = true
 }
 `, n, f)
+}
+
+func testAccClusterConfig_auroraStorageType(rName, storageType string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine             = "aurora-postgresql"
+  preferred_versions = ["14.7", "15.2"]
+}
+
+data "aws_rds_orderable_db_instance" "default" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = ["db.m6g.large", "db.m5.large", "db.r5.large", "db.c5.large"]
+}
+
+resource "aws_rds_cluster" "test" {
+  apply_immediately   = true
+  cluster_identifier  = %[1]q
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
+  skip_final_snapshot = true
+  storage_type        = %[2]q
+}
+
+`, rName, storageType)
+}
+
+func testAccClusterConfig_auroraStorageTypeNotDefined(rName string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine             = "aurora-postgresql"
+  preferred_versions = ["14.7", "15.2"]
+}
+
+data "aws_rds_orderable_db_instance" "default" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = ["db.m6g.large", "db.m5.large", "db.r5.large", "db.c5.large"]
+}
+
+resource "aws_rds_cluster" "test" {
+  apply_immediately   = true
+  cluster_identifier  = %[1]q
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
+  skip_final_snapshot = true
+}
+
+`, rName)
 }
 
 func testAccClusterConfig_enableHTTPEndpoint(rName string, enableHttpEndpoint bool) string {

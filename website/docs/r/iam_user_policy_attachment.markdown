@@ -33,14 +33,14 @@ resource "aws_iam_user_policy_attachment" "test-attach" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `user`        (Required) - The user the policy should be applied to
 * `policy_arn`  (Required) - The ARN of the policy you want to apply
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

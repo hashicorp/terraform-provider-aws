@@ -24,7 +24,7 @@ resource "aws_codestarconnections_host" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the host to be created. The name must be unique in the calling AWS account.
 * `provider_endpoint` - (Required) The endpoint of the infrastructure to be represented by the host after it is created.
@@ -38,9 +38,9 @@ A `vpc_configuration` block supports the following arguments:
 * `tls_certificate` - (Optional) The value of the Transport Layer Security (TLS) certificate associated with the infrastructure where your provider type is installed.
 * `vpc_id` - (Required) The ID of the Amazon VPC connected to the infrastructure where your provider type is installed.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The CodeStar Host ARN.
 * `arn` - The CodeStar Host ARN.

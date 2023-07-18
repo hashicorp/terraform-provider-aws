@@ -26,7 +26,7 @@ resource "aws_account_alternate_contact" "operations" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) ID of the target account when managing member accounts. Will manage current user's account by default if omitted.
 * `alternate_contact_type` - (Required) Type of the alternate contact. Allowed values are: `BILLING`, `OPERATIONS`, `SECURITY`.
@@ -35,9 +35,9 @@ The following arguments are supported:
 * `phone_number` - (Required) Phone number for the alternate contact.
 * `title` - (Required) Title for the alternate contact.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Timeouts
 

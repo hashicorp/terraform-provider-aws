@@ -37,14 +37,14 @@ resource "aws_lb_listener_certificate" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `listener_arn` - (Required, Forces New Resource) The ARN of the listener to which to attach the certificate.
 * `certificate_arn` - (Required, Forces New Resource) The ARN of the certificate to attach to the listener.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `listener_arn` and `certificate_arn` separated by a `_`.
 

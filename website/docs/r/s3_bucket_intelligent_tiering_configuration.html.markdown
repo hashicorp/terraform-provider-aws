@@ -65,7 +65,7 @@ resource "aws_s3_bucket" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket this intelligent tiering configuration is associated with.
 * `name` - (Required) Unique name used to identify the S3 Intelligent-Tiering configuration for the bucket.
@@ -83,9 +83,9 @@ The `tiering` configuration supports the following:
 * `access_tier` - (Required) S3 Intelligent-Tiering access tier. Valid values: `ARCHIVE_ACCESS`, `DEEP_ARCHIVE_ACCESS`.
 * `days` - (Required) Number of consecutive days of no access after which an object will be eligible to be transitioned to the corresponding tier.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

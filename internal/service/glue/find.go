@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -58,6 +61,55 @@ func FindJobByName(ctx context.Context, conn *glue.Glue, name string) (*glue.Job
 	}
 
 	return output.Job, nil
+}
+
+func FindDatabaseByName(ctx context.Context, conn *glue.Glue, catalogID, name string) (*glue.GetDatabaseOutput, error) {
+	input := &glue.GetDatabaseInput{
+		CatalogId: aws.String(catalogID),
+		Name:      aws.String(name),
+	}
+
+	output, err := conn.GetDatabaseWithContext(ctx, input)
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindDataQualityRulesetByName(ctx context.Context, conn *glue.Glue, name string) (*glue.GetDataQualityRulesetOutput, error) {
+	input := &glue.GetDataQualityRulesetInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.GetDataQualityRulesetWithContext(ctx, input)
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 // FindTableByName returns the Table corresponding to the specified name.

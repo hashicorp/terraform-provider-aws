@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka_test
 
 import (
@@ -9,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
@@ -180,7 +183,7 @@ func TestAccKafkaConfiguration_serverProperties(t *testing.T) {
 
 func testAccCheckConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_msk_configuration" {
@@ -221,7 +224,7 @@ func testAccCheckConfigurationExists(ctx context.Context, resourceName string, c
 			return fmt.Errorf("Resource ID not set: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn(ctx)
 
 		input := &kafka.DescribeConfigurationInput{
 			Arn: aws.String(rs.Primary.ID),

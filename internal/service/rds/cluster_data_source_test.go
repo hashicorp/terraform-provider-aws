@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -91,11 +94,12 @@ resource "aws_db_subnet_group" "test" {
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = %[1]q
   database_name                   = "test"
-  db_cluster_parameter_group_name = "default.aurora5.6"
-  db_subnet_group_name            = aws_db_subnet_group.test.name
-  master_password                 = "avoid-plaintext-passwords"
+  engine                          = "aurora-mysql"
   master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
+  db_cluster_parameter_group_name = "default.aurora-mysql5.7"
   skip_final_snapshot             = true
+  db_subnet_group_name            = aws_db_subnet_group.test.name
 
   tags = {
     Name = %[1]q
