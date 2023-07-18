@@ -69,7 +69,7 @@ The following argument is supported:
 
 ## Attribute Reference
 
-The following attribute is exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `throttle_settings` - Account-Level throttle settings. See exported fields below.
 
