@@ -20,7 +20,7 @@ data "aws_outposts_outpost" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `id` - (Optional) Identifier of the Outpost.
 * `name` - (Optional) Name of the Outpost.
