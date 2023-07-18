@@ -128,7 +128,7 @@ resource "aws_backup_selection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The display name of a resource selection document.
 * `plan_id` - (Required) The backup plan ID to be associated with the selection of resources.

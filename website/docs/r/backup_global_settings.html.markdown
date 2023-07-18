@@ -22,7 +22,7 @@ resource "aws_backup_global_settings" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `global_settings` - (Required) A list of resources along with the opt-in preferences for the account.
 

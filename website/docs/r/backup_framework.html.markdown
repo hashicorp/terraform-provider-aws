@@ -113,7 +113,7 @@ resource "aws_backup_framework" "Example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `control` - (Required) One or more control blocks that make up the framework. Each control in the list has a name, input parameters, and scope. Detailed below.
 * `description` - (Optional) The description of the framework with a maximum of 1,024 characters
