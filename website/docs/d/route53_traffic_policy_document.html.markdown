@@ -209,7 +209,7 @@ The following arguments are optional:
 * `endpoint_reference` - (Optional) References to an endpoint.
 * `health_check` - (Optional) If you want to associate a health check with the endpoint or rule.
 
-## Attributes Reference
+## Attribute Reference
 
 The following attribute is exported:
 

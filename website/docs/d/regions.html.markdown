@@ -54,9 +54,9 @@ The following arguments are supported by the `filter` configuration block:
 * `name` - (Required) Name of the filter field. Valid values can be found in the [describe-regions AWS CLI Reference][1].
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of the current partition (e.g., `aws` in AWS Commercial, `aws-cn` in AWS China).
 * `names` - Names of regions that meets the criteria.

@@ -32,9 +32,9 @@ The given filters must match exactly one resolver rule whose data will be export
 * `resolver_rule_id` (Optional) ID of the desired resolver rule. Conflicts with `domain_name`, `name`, `resolver_endpoint_id` and `rule_type`.
 * `rule_type` - (Optional) Rule type of the desired resolver rule. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`. Conflicts with `resolver_rule_id`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the resolver rule.
 * `arn` - ARN (Amazon Resource Name) for the resolver rule.
