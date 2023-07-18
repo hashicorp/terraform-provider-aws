@@ -102,7 +102,7 @@ Note: S3 access points only support secure access by HTTPS. HTTP isn't supported
 
 ## Import
 
-For Access Points associated with an AWS Partition S3 Bucket, this resource can be imported using the `account_id` and `name` separated by a colon (`:`), e.g.,
+Import For Access Points associated with an AWS Partition S3 Bucket, this resource using the `account_id` and `name` separated by a colon (`:`). For example:
 
 ```
 $ terraform import aws_s3_access_point.example 123456789012:example
