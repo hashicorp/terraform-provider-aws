@@ -44,7 +44,7 @@ resource "aws_iam_role_policy_attachment" "example-AWSGlueServiceRole" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `arguments` - (Optional) A map of arguments used to configure the endpoint.
 * `extra_jars_s3_path` - (Optional) Path to one or more Java Jars in an S3 bucket that should be loaded in this endpoint.

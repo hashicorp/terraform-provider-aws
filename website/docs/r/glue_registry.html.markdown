@@ -20,7 +20,7 @@ resource "aws_glue_registry" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `registry_name` – (Required) The Name of the registry.
 * `description` – (Optional) A description of the registry.
