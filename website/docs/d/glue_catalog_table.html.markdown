@@ -21,7 +21,7 @@ data "aws_glue_catalog_table" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the table.
 * `database_name` - (Required) Name of the metadata database where the table metadata resides.

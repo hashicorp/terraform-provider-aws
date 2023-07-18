@@ -31,7 +31,7 @@ data "aws_globalaccelerator_accelerator" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Optional) Full ARN of the Global Accelerator.
 * `name` - (Optional) Unique name of the Global Accelerator.
