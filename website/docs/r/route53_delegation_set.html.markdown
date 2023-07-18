@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Route53 Delegation Sets can be imported using the `delegation set id`, e.g.,
+Import Route53 Delegation Sets using the `delegation set id`. For example:
 
 ```
 $ terraform import aws_route53_delegation_set.set1 N1PA6795SAMPLE

@@ -90,7 +90,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_rolesanywhere_trust_anchor` can be imported using its `id`, e.g.
+Import `aws_rolesanywhere_trust_anchor` using its `id`, e.g.
 
 ```
 $ terraform import aws_rolesanywhere_trust_anchor.example 92b2fbbb-984d-41a3-a765-e3cbdb69ebb1
