@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all of the argument above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `hierarchy_structure` - Block that defines the hierarchy structure's levels. The `hierarchy_structure` block is documented below.
 
