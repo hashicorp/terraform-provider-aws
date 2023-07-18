@@ -42,7 +42,7 @@ POLICIES
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) Name of the domain.
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain
