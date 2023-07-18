@@ -21,7 +21,7 @@ resource "aws_organizations_organizational_unit" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - The name for the organizational unit
 * `parent_id` - ID of the parent organizational unit, which may be the root
