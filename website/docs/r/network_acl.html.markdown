@@ -94,7 +94,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Network ACLs can be imported using the `id`, e.g.,
+Import Network ACLs using the `id`. For example:
 
 ```
 $ terraform import aws_network_acl.main acl-7aaabd18

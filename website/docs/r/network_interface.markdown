@@ -89,7 +89,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Network Interfaces can be imported using the `id`, e.g.,
+Import Network Interfaces using the `id`. For example:
 
 ```
 $ terraform import aws_network_interface.test eni-e5aa89a3

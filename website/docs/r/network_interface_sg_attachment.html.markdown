@@ -95,7 +95,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-Network Interface Security Group attachments can be imported using the associated network interface ID and security group ID, separated by an underscore (`_`).
+Import Network Interface Security Group attachments using the associated network interface ID and security group ID, separated by an underscore (`_`).
 
 For example:
 
