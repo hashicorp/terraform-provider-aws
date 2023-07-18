@@ -51,7 +51,7 @@ resource "aws_cloudformation_stack" "network" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Stack name.
 * `template_body` - (Optional) Structure containing the template body (max size: 51,200 bytes).
