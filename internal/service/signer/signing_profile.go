@@ -39,12 +39,10 @@ func ResourceSigningProfile() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"platform_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"AWSLambda-SHA384-ECDSA", "Notation-OCI-SHA384-ECDSA", "AWSIoTDeviceManagement-SHA256-ECDSA", "AmazonFreeRTOS-TI-CC3220SF", "AmazonFreeRTOS-Default"},
-					false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(PlatformID_Values(), false),
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -293,4 +291,13 @@ func flattenSigningProfileRevocationRecord(apiObject *signer.SigningProfileRevoc
 	}
 
 	return []interface{}{tfMap}
+}
+
+func PlatformID_Values() []string {
+	return []string{
+		"AWSLambda-SHA384-ECDSA",
+		"Notation-OCI-SHA384-ECDSA",
+		"AWSIoTDeviceManagement-SHA256-ECDSA",
+		"AmazonFreeRTOS-TI-CC3220SF",
+		"AmazonFreeRTOS-Default"}
 }
