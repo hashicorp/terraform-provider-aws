@@ -62,7 +62,7 @@ resource "aws_ses_event_destination" "sns" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the event destination
 * `configuration_set_name` - (Required) The name of the configuration set

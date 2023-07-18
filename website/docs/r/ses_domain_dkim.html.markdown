@@ -14,7 +14,7 @@ Domain ownership needs to be confirmed first using [ses_domain_identity Resource
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain` - (Required) Verified domain name to generate DKIM tokens for.
 
