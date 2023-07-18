@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-WAFv2 IP Sets can be imported using `ID/name/scope`
+Import WAFv2 IP Sets using `ID/name/scope`
 
 ```
 $ terraform import aws_wafv2_ip_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
