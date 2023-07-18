@@ -26,7 +26,7 @@ resource "aws_detective_member" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Required) AWS account ID for the account.
 * `email_address` - (Required) Email address for the account.
