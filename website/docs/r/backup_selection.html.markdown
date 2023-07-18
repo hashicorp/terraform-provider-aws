@@ -144,9 +144,9 @@ Tag conditions (`selection_tag`) support the following:
 * `key` - (Required) The key in a key-value pair.
 * `value` - (Required) The value in a key-value pair.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Backup Selection identifier
 
