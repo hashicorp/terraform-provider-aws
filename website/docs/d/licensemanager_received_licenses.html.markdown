@@ -49,4 +49,6 @@ data "aws_licensemanager_received_licenses" "selected" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `arns` - List of all the license ARNs found.
