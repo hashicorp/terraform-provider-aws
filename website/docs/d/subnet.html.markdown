@@ -76,7 +76,7 @@ The following arguments are required:
 
 ## Attribute Reference
 
-In addition to the attributes above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the subnet.
 * `assign_ipv6_address_on_creation` - Whether an IPv6 address is assigned on creation.
