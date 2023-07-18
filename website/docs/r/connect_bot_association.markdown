@@ -79,7 +79,7 @@ resource "aws_connect_bot_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `instance_id` - (Required) The identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
 * `lex_bot` - (Required) Configuration information of an Amazon Lex (V1) bot. Detailed below.
