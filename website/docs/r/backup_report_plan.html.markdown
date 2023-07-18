@@ -47,7 +47,7 @@ This resource supports the following arguments:
 
 ### Report Delivery Channel Arguments
 
-For **report_delivery_channel** the following attributes are supported:
+**report_delivery_channel** supports the following attributes:
 
 * `formats` - (Optional) A list of the format of your reports: CSV, JSON, or both. If not specified, the default format is CSV.
 * `s3_bucket_name` - (Required) The unique name of the S3 bucket that receives your reports.
@@ -55,7 +55,7 @@ For **report_delivery_channel** the following attributes are supported:
 
 ### Report Setting Arguments
 
-For **report_setting** the following attributes are supported:
+**report_setting** supports the following attributes:
 
 * `accounts` - (Optional) Specifies the list of accounts a report covers.
 * `framework_arns` - (Optional) Specifies the Amazon Resource Names (ARNs) of the frameworks a report covers.

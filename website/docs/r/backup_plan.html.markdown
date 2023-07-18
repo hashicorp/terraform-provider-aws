@@ -46,7 +46,7 @@ This resource supports the following arguments:
 
 ### Rule Arguments
 
-For **rule** the following attributes are supported:
+**rule** supports the following attributes:
 
 * `rule_name` - (Required) An display name for a backup rule.
 * `target_vault_name` - (Required) The name of a logical container where backups are stored.
@@ -60,14 +60,14 @@ For **rule** the following attributes are supported:
 
 ### Lifecycle Arguments
 
-For **lifecycle** the following attributes are supported:
+**lifecycle** supports the following attributes:
 
 * `cold_storage_after` - (Optional) Specifies the number of days after creation that a recovery point is moved to cold storage.
 * `delete_after` - (Optional) Specifies the number of days after creation that a recovery point is deleted. Must be 90 days greater than `cold_storage_after`.
 
 ### Copy Action Arguments
 
-For **copy_action** the following attributes are supported:
+**copy_action** supports the following attributes:
 
 * `lifecycle` - (Optional) The lifecycle defines when a protected resource is copied over to a backup vault and when it expires.  Fields documented above.
 * `destination_vault_arn` - (Required) An Amazon Resource Name (ARN) that uniquely identifies the destination backup vault for the copied backup.

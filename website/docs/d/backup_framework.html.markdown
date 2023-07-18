@@ -39,7 +39,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### Control Attributes
 
-For **control** the following attributes are supported:
+**control** supports the following attributes:
 
 * `input_parameter` - One or more input parameter blocks. An example of a control with two parameters is: "backup plan frequency is at least daily and the retention period is at least 1 year". The first parameter is daily. The second parameter is 1 year. Detailed below.
 * `name` - Name of a control.
@@ -47,14 +47,14 @@ For **control** the following attributes are supported:
 
 ### Input Parameter Attributes
 
-For **input_parameter** the following attributes are supported:
+**input_parameter** supports the following attributes:
 
 * `name` - Name of a parameter, for example, BackupPlanFrequency.
 * `value` - Value of parameter, for example, hourly.
 
 ### Scope Attributes
 
-For **scope** the following attributes are supported:
+**scope** supports the following attributes:
 
 * `compliance_resource_ids` - The ID of the only AWS resource that you want your control scope to contain.
 * `compliance_resource_types` - Describes whether the control scope includes one or more types of resources, such as EFS or RDS.

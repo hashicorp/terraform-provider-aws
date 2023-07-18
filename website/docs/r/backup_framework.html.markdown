@@ -122,7 +122,7 @@ This resource supports the following arguments:
 
 ### Control Arguments
 
-For **control** the following attributes are supported:
+**control** supports the following attributes:
 
 * `input_parameter` - (Optional) One or more input parameter blocks. An example of a control with two parameters is: "backup plan frequency is at least daily and the retention period is at least 1 year". The first parameter is daily. The second parameter is 1 year. Detailed below.
 * `name` - (Required) The name of a control. This name is between 1 and 256 characters.
@@ -130,14 +130,14 @@ For **control** the following attributes are supported:
 
 ### Input Parameter Arguments
 
-For **input_parameter** the following attributes are supported:
+**input_parameter** supports the following attributes:
 
 * `name` - (Optional) The name of a parameter, for example, BackupPlanFrequency.
 * `value` - (Optional) The value of parameter, for example, hourly.
 
 ### Scope Arguments
 
-For **scope** the following attributes are supported:
+**scope** supports the following attributes:
 
 * `compliance_resource_ids` - (Optional) The ID of the only AWS resource that you want your control scope to contain. Minimum number of 1 item. Maximum number of 100 items.
 * `compliance_resource_types` - (Optional) Describes whether the control scope includes one or more types of resources, such as EFS or RDS.

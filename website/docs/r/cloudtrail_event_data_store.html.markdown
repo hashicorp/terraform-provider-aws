@@ -89,14 +89,14 @@ This resource supports the following arguments:
 
 ### Advanced Event Selector Arguments
 
-For **advanced_event_selector** the following attributes are supported.
+**advanced_event_selector** supports the following attributes.
 
 - `name` (Optional) - Specifies the name of the advanced event selector.
 - `field_selector` (Required) - Specifies the selector statements in an advanced event selector. Fields documented below.
 
 #### Field Selector Arguments
 
-For **field_selector** the following attributes are supported.
+**field_selector** supports the following attributes.
 
 - `field` (Required) - Specifies a field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resources.type`, `resources.ARN`.
 - `equals` (Optional) - A list of values that includes events that match the exact value of the event record field specified as the value of `field`. This is the only valid operator that you can use with the `readOnly`, `eventCategory`, and `resources.type` fields.
