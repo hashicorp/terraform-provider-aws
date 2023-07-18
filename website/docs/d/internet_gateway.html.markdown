@@ -45,7 +45,7 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   An Internet Gateway will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
 * `arn` - ARN of the Internet Gateway.
 

@@ -24,7 +24,7 @@ The following arguments are supported:
 
 * `id` - (Required) Returns information on a specific Index by id.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all of the arguments above, the following attributes are exported:
 

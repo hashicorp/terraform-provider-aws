@@ -26,7 +26,7 @@ The following arguments are supported:
 * `index_id` - (Required) Identifier of the index that contains the block list.
 * `query_suggestions_block_list_id` - (Required) Identifier of the block list.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all of the arguments above, the following attributes are exported:
 

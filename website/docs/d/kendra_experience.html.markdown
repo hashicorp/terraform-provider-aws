@@ -26,7 +26,7 @@ The following arguments are supported:
 * `experience_id` - (Required) Identifier of the Experience.
 * `index_id` - (Required) Identifier of the index that contains the Experience.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all of the arguments above, the following attributes are exported:
 

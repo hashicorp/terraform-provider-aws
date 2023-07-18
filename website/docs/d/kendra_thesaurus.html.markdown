@@ -26,7 +26,7 @@ The following arguments are supported:
 * `index_id` - (Required) Identifier of the index that contains the Thesaurus.
 * `thesaurus_id` - (Required) Identifier of the Thesaurus.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all of the arguments above, the following attributes are exported:
 
