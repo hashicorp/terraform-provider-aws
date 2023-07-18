@@ -228,7 +228,7 @@ resource "aws_s3_bucket_replication_configuration" "west_to_east" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the source S3 bucket you want Amazon S3 to monitor.
 * `role` - (Required) ARN of the IAM role for Amazon S3 to assume when replicating the objects.
