@@ -39,7 +39,7 @@ provider "kubernetes" {
 
 * `name` - (Required) Name of the cluster
 
-## Attributes Reference
+## Attribute Reference
 
 * `id` - Name of the cluster.
 * `token` - Token to use to authenticate with the cluster.

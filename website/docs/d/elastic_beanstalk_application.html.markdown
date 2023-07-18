@@ -30,7 +30,7 @@ output "description" {
 
 * `name` - (Required) Name of the application
 
-## Attributes Reference
+## Attribute Reference
 
 * `id` - Name of the application
 * `arn` - ARN of the application.

@@ -33,7 +33,7 @@ AWS documentation for reference solution stack names.
 Terraform will fail. Ensure that your search is specific enough to return
 a single solution stack, or use `most_recent` to choose the most recent one.
 
-## Attributes Reference
+## Attribute Reference
 
 * `name` - Name of the solution stack.
 
