@@ -25,7 +25,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `storage_capacity` - (Optional) The storage capacity (GiB) of the file system. Valid values between `1024` and `196608`.
 * `subnet_ids` - (Required) A list of IDs for the subnets that the file system will be accessible from. Upto 2 subnets can be provided.
