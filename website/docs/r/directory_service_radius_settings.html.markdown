@@ -28,7 +28,7 @@ resource "aws_directory_service_radius_settings" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `authentication_protocol` - (Optional) The protocol specified for your RADIUS endpoints. Valid values: `PAP`, `CHAP`, `MS-CHAPv1`, `MS-CHAPv2`.
 * `directory_id` - (Required) The identifier of the directory for which you want to manager RADIUS settings.
