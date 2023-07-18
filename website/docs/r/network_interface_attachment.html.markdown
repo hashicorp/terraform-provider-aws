@@ -28,9 +28,9 @@ The following arguments are supported:
 * `network_interface_id` - (Required) ENI ID to attach.
 * `device_index` - (Required) Network interface index (int).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `instance_id` - Instance ID.
 * `network_interface_id` - Network interface ID.

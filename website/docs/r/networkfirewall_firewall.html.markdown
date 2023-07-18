@@ -66,9 +66,9 @@ The `subnet_mapping` block supports the following arguments:
 * `ip_address_type` - (Optional) The subnet's IP address type. Valida values: `"DUALSTACK"`, `"IPV4"`.
 * `subnet_id` - (Required) The unique identifier for the subnet.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) that identifies the firewall.
 
