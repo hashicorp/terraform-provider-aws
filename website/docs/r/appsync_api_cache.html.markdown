@@ -28,7 +28,7 @@ resource "aws_appsync_api_cache" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) GraphQL API ID.
 * `api_caching_behavior` - (Required) Caching behavior. Valid values are `FULL_REQUEST_CACHING` and `PER_RESOLVER_CACHING`.
