@@ -80,9 +80,9 @@ The following arguments are supported:
 
 * `route` - (Required) The name of the secondary Region.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the endpoint that was created.
 * `endpoint_url` - The URL of the endpoint that was created.

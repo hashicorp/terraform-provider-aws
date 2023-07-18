@@ -572,9 +572,9 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 * `message_group_id` - (Optional) The FIFO message group ID to use as the target.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
