@@ -249,6 +249,6 @@ The following arguments are available:
 
 ## Attribute Reference
 
-The following attribute is exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `json` - Standard JSON policy document rendered based on the arguments above.
