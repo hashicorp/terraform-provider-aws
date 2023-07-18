@@ -24,7 +24,7 @@ resource "aws_lex_bot_alias" "order_flowers_prod" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bot_name` - (Required) The name of the bot.
 * `bot_version` - (Required) The name of the bot.

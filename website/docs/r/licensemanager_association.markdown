@@ -43,7 +43,7 @@ resource "aws_licensemanager_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `license_configuration_arn` - (Required) ARN of the license configuration.
 * `resource_arn` - (Required) ARN of the resource associated with the license configuration.
