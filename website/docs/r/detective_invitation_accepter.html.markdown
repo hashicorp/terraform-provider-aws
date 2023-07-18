@@ -32,7 +32,7 @@ resource "aws_detective_invitation_accepter" "member" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `graph_arn` - (Required) ARN of the behavior graph that the member account is accepting the invitation for.
 
