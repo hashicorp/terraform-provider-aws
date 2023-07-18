@@ -159,9 +159,9 @@ the custom OCSP responder endpoint. Defined below.
 * `enabled` - (Required) Boolean value that specifies whether a custom OCSP responder is enabled.
 * `ocsp_custom_cname` - (Optional) CNAME specifying a customized OCSP domain. Note: The value of the CNAME must not include a protocol prefix such as "http://" or "https://".
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ARN of the certificate authority.
 * `arn` - ARN of the certificate authority.
