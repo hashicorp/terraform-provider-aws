@@ -21,7 +21,7 @@ resource "aws_opsworks_ganglia_layer" "monitor" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `stack_id` - (Required) ID of the stack the layer will belong to.
 * `password` - (Required) The password to use for Ganglia.

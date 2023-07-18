@@ -24,7 +24,7 @@ resource "aws_opsworks_permission" "my_stack_permission" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `allow_ssh` - (Optional) Whether the user is allowed to use SSH to communicate with the instance
 * `allow_sudo` - (Optional) Whether the user is allowed to use sudo to elevate privileges

@@ -22,7 +22,7 @@ resource "aws_opsworks_custom_layer" "custlayer" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A human-readable name for the layer.
 * `short_name` - (Required) A short, machine-readable name for the layer, which will be used to identify it in the Chef node JSON.
