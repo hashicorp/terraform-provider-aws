@@ -55,7 +55,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-The Systems Manager Default Patch Baseline can be imported using the patch baseline ID, patch baseline ARN, or the operating system value, e.g.,
+Import The Systems Manager Default Patch Baseline using the patch baseline ID, patch baseline ARN, or the operating system value. For example:
 
 ```
 $ terraform import aws_ssm_default_patch_baseline.example pb-1234567890abcdef1

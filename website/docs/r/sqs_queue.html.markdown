@@ -116,7 +116,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SQS Queues can be imported using the `queue url`, e.g.,
+Import SQS Queues using the `queue url`. For example:
 
 ```
 $ terraform import aws_sqs_queue.public_queue https://queue.amazonaws.com/80398EXAMPLE/MyQueue

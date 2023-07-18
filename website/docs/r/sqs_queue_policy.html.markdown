@@ -58,7 +58,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-SQS Queue Policies can be imported using the queue URL, e.g.,
+Import SQS Queue Policies using the queue URL. For example:
 
 ```
 $ terraform import aws_sqs_queue_policy.test https://queue.amazonaws.com/0123456789012/myqueue

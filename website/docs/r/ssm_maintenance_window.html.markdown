@@ -47,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SSM  Maintenance Windows can be imported using the `maintenance window id`, e.g.,
+Import SSM  Maintenance Windows using the `maintenance window id`. For example:
 
 ```
 $ terraform import aws_ssm_maintenance_window.imported-window mw-0123456789
