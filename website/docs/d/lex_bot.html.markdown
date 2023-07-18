@@ -28,7 +28,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following attributes are exported.
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the bot.
 * `checksum` - Checksum of the bot used to identify a specific revision of the bot's `$LATEST` version.

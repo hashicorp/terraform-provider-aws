@@ -28,7 +28,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following attributes are exported.
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Lex intent.
 * `checksum` - Checksum identifying the version of the intent that was created. The checksum is not
