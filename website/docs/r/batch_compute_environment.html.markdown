@@ -208,9 +208,9 @@ resource "aws_batch_compute_environment" "sample" {
 * `eks_cluster_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon EKS cluster.
 * `kubernetes_namespace` - (Required) The namespace of the Amazon EKS cluster. AWS Batch manages pods in this namespace.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the compute environment.
 * `ecs_cluster_arn` - The Amazon Resource Name (ARN) of the underlying Amazon ECS cluster used by the compute environment.
