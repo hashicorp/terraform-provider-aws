@@ -34,6 +34,6 @@ resource "aws_route53_record" "www" {
 * `region` - (Optional) Name of the region whose AWS ELB HostedZoneId is desired.
   Defaults to the region from the AWS provider configuration.
 
-## Attributes Reference
+## Attribute Reference
 
 * `id` - ID of the AWS ELB HostedZoneId in the selected region.

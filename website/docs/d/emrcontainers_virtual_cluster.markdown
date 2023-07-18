@@ -30,7 +30,7 @@ output "arn" {
 
 * `virtual_cluster_id` - (Required) ID of the cluster.
 
-## Attributes Reference
+## Attribute Reference
 
 * `id` - ID of the cluster.
 * `name` - Name of the cluster.

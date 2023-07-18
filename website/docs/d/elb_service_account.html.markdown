@@ -69,7 +69,7 @@ resource "aws_elb" "bar" {
 * `region` - (Optional) Name of the region whose AWS ELB account ID is desired.
   Defaults to the region from the AWS provider configuration.
 
-## Attributes Reference
+## Attribute Reference
 
 * `id` - ID of the AWS ELB service account in the selected region.
 * `arn` - ARN of the AWS ELB service account in the selected region.
