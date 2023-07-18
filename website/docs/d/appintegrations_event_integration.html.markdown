@@ -37,6 +37,6 @@ This data source exports the following attributes in addition to the arguments a
 
 ### Event Filter Attributes
 
-**event_filter** supports the following attributes:
+`event_filter` has the following attributes:
 
 * `source` - The source of the events.

@@ -37,13 +37,13 @@ This resource supports the following arguments:
 * `endpoint_configuration` - (Optional) The list of endpoint objects. Fields documented below.
 * `endpoint_group_region` (Optional) - The name of the AWS Region where the custom routing endpoint group is located.
 
-**destination_configuration** supports the following attributes:
+`destination_configuration` supports the following arguments:
 
 * `from_port` - (Required) The first port, inclusive, in the range of ports for the endpoint group that is associated with a custom routing accelerator.
 * `protocols` - (Required) The protocol for the endpoint group that is associated with a custom routing accelerator. The protocol can be either `"TCP"` or `"UDP"`.
 * `to_port` - (Required) The last port, inclusive, in the range of ports for the endpoint group that is associated with a custom routing accelerator.
 
-**endpoint_configuration** supports the following attributes:
+`endpoint_configuration` supports the following arguments:
 
 * `endpoint_id` - (Optional) An ID for the endpoint. For custom routing accelerators, this is the virtual private cloud (VPC) subnet ID.
 

@@ -42,7 +42,7 @@ This resource supports the following arguments:
 * `accelerator_arn` - (Required) The Amazon Resource Name (ARN) of a custom routing accelerator.
 * `port_range` - (Optional) The list of port ranges for the connections from clients to the accelerator. Fields documented below.
 
-**port_range** supports the following attributes:
+`port_range` supports the following arguments:
 
 * `from_port` - (Optional) The first port in the range of ports, inclusive.
 * `to_port` - (Optional) The last port in the range of ports, inclusive.

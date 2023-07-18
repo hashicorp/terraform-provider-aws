@@ -46,7 +46,7 @@ This resource supports the following arguments:
 
 ### Rule Arguments
 
-**rule** supports the following attributes:
+`rule` supports the following attributes:
 
 * `rule_name` - (Required) An display name for a backup rule.
 * `target_vault_name` - (Required) The name of a logical container where backups are stored.
@@ -60,21 +60,21 @@ This resource supports the following arguments:
 
 ### Lifecycle Arguments
 
-**lifecycle** supports the following attributes:
+`lifecycle` supports the following attributes:
 
 * `cold_storage_after` - (Optional) Specifies the number of days after creation that a recovery point is moved to cold storage.
 * `delete_after` - (Optional) Specifies the number of days after creation that a recovery point is deleted. Must be 90 days greater than `cold_storage_after`.
 
 ### Copy Action Arguments
 
-**copy_action** supports the following attributes:
+`copy_action` supports the following attributes:
 
 * `lifecycle` - (Optional) The lifecycle defines when a protected resource is copied over to a backup vault and when it expires.  Fields documented above.
 * `destination_vault_arn` - (Required) An Amazon Resource Name (ARN) that uniquely identifies the destination backup vault for the copied backup.
 
 ### Advanced Backup Setting Arguments
 
-For `advanced_backup_setting` the following attibutes are supported:
+`advanced_backup_setting` supports the following arguments:
 
 * `backup_options` - (Required) Specifies the backup option for a selected resource. This option is only available for Windows VSS backup jobs. Set to `{ WindowsVSS = "enabled" }` to enable Windows VSS backup option and create a VSS Windows backup.
 * `resource_type` - (Required) The type of AWS resource to be backed up. For VSS Windows backups, the only supported resource type is Amazon EC2. Valid values: `EC2`.

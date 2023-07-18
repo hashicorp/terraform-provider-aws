@@ -38,7 +38,7 @@ This resource supports the following arguments:
 * `attributes` - (Optional) The attributes of the accelerator. Fields documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-**attributes** supports the following attributes:
+`attributes` supports the following arguments:
 
 * `flow_logs_enabled` - (Optional) Indicates whether flow logs are enabled. Defaults to `false`. Valid values: `true`, `false`.
 * `flow_logs_s3_bucket` - (Optional) The name of the Amazon S3 bucket for the flow logs. Required if `flow_logs_enabled` is `true`.

@@ -47,7 +47,7 @@ The following arguments are required:
 * `description` - (Optional) Description of the alias.
 * `routing_configuration` - (Required) The StateMachine alias' route configuration settings. Fields documented below
 
-**routing_configuration** supports the following attributes:
+`routing_configuration` supports the following arguments:
 
 * `state_machine_version_arn` - (Required) A version of the state machine.
 * `weight` - (Required) Percentage of traffic routed to the state machine version.

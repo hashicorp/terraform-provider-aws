@@ -39,7 +39,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### Report Delivery Channel Attributes
 
-**report_delivery_channel** supports the following attributes:
+`report_delivery_channel` has the following attributes:
 
 * `formats` - List of the format of your reports: CSV, JSON, or both.
 * `s3_bucket_name` - Unique name of the S3 bucket that receives your reports.
@@ -47,7 +47,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### Report Setting Attributes
 
-**report_setting** supports the following attributes:
+`report_setting` has the following attributes:
 
 * `accounts` - (Optional) Specifies the list of accounts a report covers.
 * `framework_arns` - ARNs of the frameworks a report covers.
