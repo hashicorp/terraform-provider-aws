@@ -110,9 +110,9 @@ The `composite_partition_key` block supports the following arguments:
 * `name` - (Optional) The name of the attribute used for a dimension key.
 * `type` - (Required) The type of the partition key. Valid values: `DIMENSION`, `MEASURE`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `table_name` and `database_name` separated by a colon (`:`).
 * `arn` - The ARN that uniquely identifies this table.
