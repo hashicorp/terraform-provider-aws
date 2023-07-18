@@ -31,7 +31,7 @@ resource "aws_lightsail_disk" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Lightsail load balancer.
 * `size_in_gb` - (Required) The instance port the load balancer will connect.

@@ -33,7 +33,7 @@ resource "aws_lightsail_bucket_resource_access" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket_name` - (Required) The name of the bucket to grant access to.
 * `resource_name` - (Required) The name of the resource to be granted bucket access.

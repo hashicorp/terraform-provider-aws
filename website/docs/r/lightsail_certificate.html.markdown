@@ -22,7 +22,7 @@ resource "aws_lightsail_certificate" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Lightsail load balancer.
 * `domain_name` - (Required) A domain name for which the certificate should be issued.
