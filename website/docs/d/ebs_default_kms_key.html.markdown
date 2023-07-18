@@ -23,7 +23,7 @@ resource "aws_ebs_volume" "example" {
 }
 ```
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
 

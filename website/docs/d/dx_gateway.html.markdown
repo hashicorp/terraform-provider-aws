@@ -22,7 +22,7 @@ data "aws_dx_gateway" "example" {
 
 * `name` - (Required) Name of the gateway to retrieve.
 
-## Attributes Reference
+## Attribute Reference
 
 * `amazon_side_asn` - ASN on the Amazon side of the connection.
 * `id` - ID of the gateway.
