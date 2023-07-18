@@ -21,7 +21,7 @@ resource "aws_rum_app_monitor" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the log stream.
 * `domain` - (Required) The top-level internet domain name for which your application has administrative authority.
