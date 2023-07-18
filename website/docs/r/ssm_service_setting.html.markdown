@@ -26,9 +26,9 @@ The following arguments are supported:
 * `setting_id` - (Required) ID of the service setting.
 * `setting_value` - (Required) Value of the service setting.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the service setting.
 * `status` - Status of the service setting. Value can be `Default`, `Customized` or `PendingUpdate`.

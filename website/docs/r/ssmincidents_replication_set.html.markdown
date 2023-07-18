@@ -97,7 +97,7 @@ The following arguments are optional:
 
 For information about the maximum allowed number of Regions and tag value constraints, see [CreateReplicationSet in the *AWS Systems Manager Incident Manager API Reference*](https://docs.aws.amazon.com/incident-manager/latest/APIReference/API_CreateReplicationSet.html).
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to the preceding arguments, the following attributes are exported:
 
