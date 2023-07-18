@@ -30,6 +30,8 @@ The following arguments are supported:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `time_unit` - Frequency on which report data are measured and displayed.
 * `format` - Preferred compression format for report.
 * `compression` - Preferred format for report.
