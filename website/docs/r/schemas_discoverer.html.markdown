@@ -43,7 +43,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EventBridge discoverers can be imported using the `id`, e.g.,
+Import EventBridge discoverers using the `id`. For example:
 
 ```console
 $ terraform import aws_schemas_discoverer.test 123
