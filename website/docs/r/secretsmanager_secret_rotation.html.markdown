@@ -57,7 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_secretsmanager_secret_rotation` can be imported by using the secret Amazon Resource Name (ARN), e.g.,
+Import `aws_secretsmanager_secret_rotation` using the secret Amazon Resource Name (ARN). For example:
 
 ```
 $ terraform import aws_secretsmanager_secret_rotation.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456

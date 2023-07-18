@@ -76,7 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_secretsmanager_secret_version` can be imported by using the secret ID and version ID, e.g.,
+Import `aws_secretsmanager_secret_version` using the secret ID and version ID. For example:
 
 ```
 $ terraform import aws_secretsmanager_secret_version.example 'arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx'
