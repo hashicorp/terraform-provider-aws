@@ -144,9 +144,9 @@ Information to join the gateway to an Active Directory domain for Server Message
 * `domain_controllers` - (Optional) List of IPv4 addresses, NetBIOS names, or host names of your domain server.
  If you need to specify the port number include it after the colon (“:”). For example, `mydc.mydomain.com:389`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the gateway.
 * `arn` - Amazon Resource Name (ARN) of the gateway.

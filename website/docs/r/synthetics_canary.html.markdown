@@ -83,9 +83,9 @@ If this canary tests an endpoint in a VPC, this structure contains information a
 * `subnet_ids` - (Required) IDs of the subnets where this canary is to run.
 * `security_group_ids` - (Required) IDs of the security groups for this canary.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Canary.
 * `engine_arn` - ARN of the Lambda function that is used as your canary's engine.
