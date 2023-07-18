@@ -175,7 +175,7 @@ resource "aws_wafregional_web_acl_association" "association" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `web_acl_id` - (Required) The ID of the WAF Regional WebACL to create an association.
 * `resource_arn` - (Required) ARN of the resource to associate with. For example, an Application Load Balancer or API Gateway Stage.

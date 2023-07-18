@@ -29,7 +29,7 @@ resource "aws_wafv2_ip_set" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A friendly name of the IP set.
 * `description` - (Optional) A friendly description of the IP set.
