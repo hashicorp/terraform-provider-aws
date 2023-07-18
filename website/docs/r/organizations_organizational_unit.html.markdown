@@ -42,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AWS Organizations Organizational Units can be imported by using the `id`, e.g.,
+Import AWS Organizations Organizational Units using the `id`. For example:
 
 ```
 $ terraform import aws_organizations_organizational_unit.example ou-1234567

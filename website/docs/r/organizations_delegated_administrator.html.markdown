@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_organizations_delegated_administrator` can be imported by using the account ID and its service principal, e.g.,
+Import `aws_organizations_delegated_administrator` using the account ID and its service principal. For example:
 
 ```
 $ terraform import aws_organizations_delegated_administrator.example 123456789012/config.amazonaws.com

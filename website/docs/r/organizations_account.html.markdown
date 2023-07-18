@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-The AWS member account can be imported by using the `account_id`, e.g.,
+Import The AWS member account using the `account_id`. For example:
 
 ```
 $ terraform import aws_organizations_account.my_account 111111111111

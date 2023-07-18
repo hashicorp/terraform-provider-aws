@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_organizations_policy` can be imported by using the policy ID, e.g.,
+Import `aws_organizations_policy` using the policy ID. For example:
 
 ```
 $ terraform import aws_organizations_policy.example p-12345678
