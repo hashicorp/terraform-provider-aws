@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IPAMs using the `ipam resource discovery association id`, e.g.
+Import IPAMs using the `ipam resource discovery association id`. For example:
 
 ```
 $ terraform import aws_vpc_ipam_resource_discovery_association.example ipam-res-disco-assoc-0178368ad2146a492

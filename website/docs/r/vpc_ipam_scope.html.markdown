@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IPAMs using the `scope_id`, e.g.
+Import IPAMs using the `scope_id`. For example:
 
 ```
 $ terraform import aws_vpc_ipam_scope.example ipam-scope-0513c69f283d11dfb

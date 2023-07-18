@@ -84,7 +84,7 @@ IP space. The public scope is intended for all internet-routable IP space.
 
 ## Import
 
-Import IPAMs using the `ipam id`, e.g.
+Import IPAMs using the `ipam id`. For example:
 
 ```
 $ terraform import aws_vpc_ipam.example ipam-0178368ad2146a492
