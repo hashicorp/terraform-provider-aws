@@ -26,9 +26,9 @@ The following arguments are required:
 
 * `configuration_set_name` - (Required) The name of the configuration set.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `delivery_options` - An object that defines the dedicated IP pool that is used to send emails that you send using the configuration set.
     * `sending_pool_name` - The name of the dedicated IP pool to associate with the configuration set.

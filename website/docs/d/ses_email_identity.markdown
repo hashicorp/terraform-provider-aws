@@ -18,7 +18,7 @@ data "aws_ses_email_identity" "example" {
 }
 ```
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
 

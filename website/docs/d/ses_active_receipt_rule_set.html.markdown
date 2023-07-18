@@ -16,7 +16,7 @@ Retrieve the active SES receipt rule set
 data "aws_ses_active_receipt_rule_set" "main" {}
 ```
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
 
