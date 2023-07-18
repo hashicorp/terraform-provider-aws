@@ -71,6 +71,6 @@ The `custom_field` and `managed_field` configuration blocks supports the followi
 * `name` - (Optional) The name of the field.
 * `type` - (Optional) The data type of the field. Valid values: `Number`, `String`, `Boolean`.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.

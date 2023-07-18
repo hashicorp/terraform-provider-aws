@@ -44,6 +44,6 @@ The following arguments are supported:
 * `policy` - (Required) The name of the policy to attach.
 * `target` - (Required) The identity to which the policy is attached.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
