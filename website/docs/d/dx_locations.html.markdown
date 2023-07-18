@@ -25,4 +25,6 @@ There are no arguments available for this data source.
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `location_codes` - Code for the locations.
