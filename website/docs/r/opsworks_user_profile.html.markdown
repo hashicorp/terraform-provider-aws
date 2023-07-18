@@ -28,8 +28,8 @@ The following arguments are supported:
 * `ssh_username` - (Required) The ssh username, with witch this user wants to log in
 * `ssh_public_key` - (Optional) The users public key
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Same value as `user_arn`
