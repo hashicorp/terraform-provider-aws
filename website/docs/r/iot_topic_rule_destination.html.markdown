@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IoT topic rule destinations can be imported using the `arn`, e.g.,
+Import IoT topic rule destinations using the `arn`. For example:
 
 ```
 $ terraform import aws_iot_topic_rule_destination.example arn:aws:iot:us-west-2:123456789012:ruledestination/vpc/2ce781c8-68a6-4c52-9c62-63fe489ecc60

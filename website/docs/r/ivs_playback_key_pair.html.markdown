@@ -49,7 +49,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IVS (Interactive Video) Playback Key Pair can be imported using the ARN, e.g.,
+Import IVS (Interactive Video) Playback Key Pair using the ARN. For example:
 
 ```
 $ terraform import aws_ivs_playback_key_pair.example arn:aws:ivs:us-west-2:326937407773:playback-key/KDJRJNQhiQzA
