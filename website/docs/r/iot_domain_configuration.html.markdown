@@ -24,7 +24,6 @@ resource "aws_iot_domain_configuration" "iot" {
 }
 ```
 
-
 ## Argument Reference
 
 * `authorizer_config` = (Optional) an object that specifies the authorization service for a domain. See Below.
