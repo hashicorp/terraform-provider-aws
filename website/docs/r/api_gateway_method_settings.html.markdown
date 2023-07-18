@@ -104,9 +104,9 @@ The following arguments are supported:
 * `require_authorization_for_cache_control` - (Optional) Whether authorization is required for a cache invalidation request.
 * `unauthorized_cache_control_header_strategy` - (Optional) How to handle unauthorized requests for cache invalidation. The available values are `FAIL_WITH_403`, `SUCCEED_WITH_RESPONSE_HEADER`, `SUCCEED_WITHOUT_RESPONSE_HEADER`.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
