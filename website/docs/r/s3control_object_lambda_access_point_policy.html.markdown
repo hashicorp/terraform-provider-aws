@@ -65,9 +65,9 @@ The following arguments are supported:
 * `name` - (Required) The name of the Object Lambda Access Point.
 * `policy` - (Required) The Object Lambda Access Point resource policy document.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `has_public_access_policy` - Indicates whether this access point currently has a policy that allows public access.
 * `id` - The AWS account ID and access point name separated by a colon (`:`).
