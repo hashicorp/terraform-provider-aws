@@ -46,7 +46,7 @@ resource "aws_route" "r" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `route_table_id` - (Required) The ID of the routing table.
 

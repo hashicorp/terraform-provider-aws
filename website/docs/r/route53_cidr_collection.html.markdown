@@ -20,7 +20,7 @@ resource "aws_route53_cidr_collection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Unique name for the CIDR collection.
 
