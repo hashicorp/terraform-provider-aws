@@ -126,7 +126,7 @@ resource "aws_guardduty_publishing_destination" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `detector_id` - (Required) The detector ID of the GuardDuty.
 * `destination_arn` - (Required) The bucket arn and prefix under which the findings get exported. Bucket-ARN is required, the prefix is optional and will be `AWSLogs/[Account-ID]/GuardDuty/[Region]/` if not provided
