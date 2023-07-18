@@ -131,7 +131,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CodeDeploy Deployment Configurations can be imported using the `deployment_config_name`, e.g.,
+Import CodeDeploy Deployment Configurations using the `deployment_config_name`. For example:
 
 ```
 $ terraform import aws_codedeploy_deployment_config.example my-deployment-config

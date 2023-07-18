@@ -61,7 +61,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CodeDeploy Applications can be imported using the `name`, e.g.,
+Import CodeDeploy Applications using the `name`. For example:
 
 ```
 $ terraform import aws_codedeploy_app.example my-application

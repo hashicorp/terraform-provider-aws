@@ -86,7 +86,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CodeDeploy CustomActionType can be imported using the `id`, e.g.
+Import CodeDeploy CustomActionType using the `id`, e.g.
 
 ```
 $ terraform import aws_codepipeline_custom_action_type.example Build:terraform:1
