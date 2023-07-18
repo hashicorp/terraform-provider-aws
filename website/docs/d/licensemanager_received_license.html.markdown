@@ -26,6 +26,8 @@ data "aws_licensemanager_received_license" "test" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - The received license ARN (Same as: `license_arn`).
 * `beneficiary` - Granted license beneficiary. This is in the form of the ARN of the root user of the account.
 * `consumption_configuration` - Configuration for consumption of the license. [Detailed below](#consumption_configuration)

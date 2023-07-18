@@ -37,4 +37,6 @@ resource "aws_route53_record" "www" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - ID of the AWS ELB HostedZoneId in the selected region.
