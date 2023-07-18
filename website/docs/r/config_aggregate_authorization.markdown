@@ -21,7 +21,7 @@ resource "aws_config_aggregate_authorization" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Required) Account ID
 * `region` - (Required) Region

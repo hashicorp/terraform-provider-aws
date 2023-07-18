@@ -34,7 +34,7 @@ resource "aws_inspector_assessment_template" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the assessment template.
 * `target_arn` - (Required) The assessment target ARN to attach the template to.

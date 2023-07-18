@@ -36,7 +36,7 @@ resource "aws_waf_xss_match_set" "xss_match_set" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name or description of the SizeConstraintSet.
 * `xss_match_tuples` - (Optional) The parts of web requests that you want to inspect for cross-site scripting attacks.

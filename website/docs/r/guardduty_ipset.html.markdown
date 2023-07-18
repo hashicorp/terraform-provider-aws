@@ -44,7 +44,7 @@ resource "aws_s3_object" "MyIPSet" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `activate` - (Required) Specifies whether GuardDuty is to start using the uploaded IPSet.
 * `detector_id` - (Required) The detector ID of the GuardDuty.

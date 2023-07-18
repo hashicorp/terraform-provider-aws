@@ -157,7 +157,7 @@ resource "aws_{service}_tag" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_arn` - (Required) ARN of the {SERVICE} resource to tag.
 * `key` - (Required) Tag name.

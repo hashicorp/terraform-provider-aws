@@ -38,7 +38,7 @@ resource "aws_route53_record" "example_amazonses_verification_record" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain` - (Required) The domain name to assign to SES
 

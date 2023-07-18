@@ -74,7 +74,7 @@ resource "aws_mskconnect_connector" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `capacity` - (Required) Information about the capacity allocated to the connector. See below.
 * `connector_configuration` - (Required) A map of keys to values that represent the configuration for the connector.

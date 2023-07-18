@@ -32,7 +32,7 @@ provider "aws" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `delegated_admin_account_id` - (Required)
 

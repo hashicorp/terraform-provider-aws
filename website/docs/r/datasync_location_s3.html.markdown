@@ -25,7 +25,7 @@ resource "aws_datasync_location_s3" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `agent_arns` - (Optional) A list of DataSync Agent ARNs with which this location will be associated.
 * `s3_bucket_arn` - (Required) Amazon Resource Name (ARN) of the S3 Bucket.
@@ -36,7 +36,7 @@ The following arguments are supported:
 
 ### s3_config Argument Reference
 
-The following arguments are supported inside the `s3_config` configuration block:
+The `s3_config` configuration block supports the following arguments:
 
 * `bucket_access_role_arn` - (Required) ARN of the IAM Role used to connect to the S3 Bucket.
 

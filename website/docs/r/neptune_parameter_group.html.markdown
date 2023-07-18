@@ -26,7 +26,7 @@ resource "aws_neptune_parameter_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required, Forces new resource) The name of the Neptune parameter group.
 * `family` - (Required) The family of the Neptune parameter group.

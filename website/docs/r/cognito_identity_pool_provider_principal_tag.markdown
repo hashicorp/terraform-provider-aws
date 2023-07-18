@@ -48,7 +48,7 @@ resource "aws_cognito_identity_pool_provider_principal_tag" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `identity_pool_id` (Required) - An identity pool ID.
 * `identity_provider_name` (Required) - The name of the identity provider.

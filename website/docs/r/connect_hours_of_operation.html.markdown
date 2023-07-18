@@ -56,7 +56,7 @@ resource "aws_connect_hours_of_operation" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `config` - (Required) One or more config blocks which define the configuration information for the hours of operation: day, start time, and end time . Config blocks are documented below.
 * `description` - (Optional) Specifies the description of the Hours of Operation.

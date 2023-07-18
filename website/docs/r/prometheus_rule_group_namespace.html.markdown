@@ -31,7 +31,7 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the rule group namespace
 * `workspace_id` - (Required) ID of the prometheus workspace the rule group namespace should be linked to

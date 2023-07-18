@@ -23,7 +23,7 @@ resource "aws_backup_vault_lock_configuration" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `backup_vault_name` - (Required) Name of the backup vault to add a lock configuration for.
 * `changeable_for_days` - (Optional) The number of days before the lock date. If omitted creates a vault lock in `governance` mode, otherwise it will create a vault lock in `compliance` mode.

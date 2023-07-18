@@ -20,7 +20,7 @@ data "aws_codecommit_approval_rule_template" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name for the approval rule template. This needs to be less than 100 characters.
 

@@ -36,7 +36,7 @@ resource "aws_transfer_tag" "hostname" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_arn` - (Required) Amazon Resource Name (ARN) of the Transfer Family resource to tag.
 * `key` - (Required) Tag name.

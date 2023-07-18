@@ -56,7 +56,7 @@ resource "aws_glacier_vault" "my_archive" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Vault. Names can be between 1 and 255 characters long and the valid characters are a-z, A-Z, 0-9, '_' (underscore), '-' (hyphen), and '.' (period).
 * `access_policy` - (Optional) The policy document. This is a JSON formatted string.

@@ -24,7 +24,7 @@ data "aws_cloudfront_function" "existing" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the CloudFront function.
 * `stage` - (Required) Function’s stage, either `DEVELOPMENT` or `LIVE`.

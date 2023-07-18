@@ -41,7 +41,7 @@ resource "aws_storagegateway_stored_iscsi_volume" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `gateway_arn` - (Required) The Amazon Resource Name (ARN) of the gateway.
 * `network_interface_id` - (Required) The network interface of the gateway on which to expose the iSCSI target. Only IPv4 addresses are accepted.

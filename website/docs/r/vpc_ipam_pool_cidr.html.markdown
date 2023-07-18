@@ -72,7 +72,7 @@ resource "aws_vpc_ipam_pool_cidr" "ipv6_test_public" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cidr` - (Optional) The CIDR you want to assign to the pool. Conflicts with `netmask_length`.
 * `cidr_authorization_context` - (Optional) A signed document that proves that you are authorized to bring the specified IP address range to Amazon using BYOIP. This is not stored in the state file. See [cidr_authorization_context](#cidr_authorization_context) for more information.

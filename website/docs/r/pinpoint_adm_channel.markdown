@@ -28,7 +28,7 @@ resource "aws_pinpoint_adm_channel" "channel" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `application_id` - (Required) The application ID.
 * `client_id` - (Required) Client ID (part of OAuth Credentials) obtained via Amazon Developer Account.

@@ -71,7 +71,7 @@ resource "aws_glue_classifier" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `csv_classifier` - (Optional) A classifier for Csv content. Defined below.
 * `grok_classifier` – (Optional) A classifier that uses grok patterns. Defined below.

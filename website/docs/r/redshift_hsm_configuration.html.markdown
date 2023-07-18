@@ -25,7 +25,7 @@ resource "aws_redshift_hsm_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Required, Forces new resource) A text description of the HSM configuration to be created.
 * `hsm_configuration_identifier` - (Required, Forces new resource) The identifier to be assigned to the new Amazon Redshift HSM configuration.

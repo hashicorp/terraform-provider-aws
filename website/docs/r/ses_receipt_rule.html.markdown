@@ -36,7 +36,7 @@ resource "aws_ses_receipt_rule" "store" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the rule
 * `rule_set_name` - (Required) The name of the rule set

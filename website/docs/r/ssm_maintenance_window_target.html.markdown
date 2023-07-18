@@ -60,7 +60,7 @@ resource "aws_ssm_maintenance_window_target" "target1" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `window_id` - (Required) The Id of the maintenance window to register the target with.
 * `name` - (Optional) The name of the maintenance window target.

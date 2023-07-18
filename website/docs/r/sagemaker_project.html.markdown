@@ -26,7 +26,7 @@ resource "aws_sagemaker_project" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `project_name` - (Required) The name of the Project.
 * `project_description` - (Optional) A description for the project.

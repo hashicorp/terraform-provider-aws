@@ -42,7 +42,7 @@ resource "aws_chime_voice_connector_termination_credentials" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `voice_connector_id` - (Required) Amazon Chime Voice Connector ID.
 * `credentials` - (Required) List of termination SIP credentials.

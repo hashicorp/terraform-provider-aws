@@ -81,7 +81,7 @@ resource "aws_vpc_ipam" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cidr` - (Optional) The CIDR you want to assign to the pool.
 * `description` - (Optional) The description for the allocation.

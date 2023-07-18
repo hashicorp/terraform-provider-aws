@@ -90,7 +90,7 @@ resource "aws_kinesis_stream" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
 * `data_retention`  - (Required) The retention period, in hours, for the Amazon Kinesis data.

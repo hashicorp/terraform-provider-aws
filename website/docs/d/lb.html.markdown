@@ -37,7 +37,7 @@ data "aws_lb" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Optional) Full ARN of the load balancer.
 * `name` - (Optional) Unique name of the load balancer.

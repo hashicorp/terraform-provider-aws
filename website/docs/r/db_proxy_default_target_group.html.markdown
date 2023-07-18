@@ -53,7 +53,7 @@ resource "aws_db_proxy_default_target_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `db_proxy_name` - (Required) Name of the RDS DB Proxy.
 * `connection_pool_config` - (Optional) The settings that determine the size and behavior of the connection pool for the target group.

@@ -41,7 +41,7 @@ data "aws_lb_listener" "selected443" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Optional) ARN of the listener. Required if `load_balancer_arn` and `port` is not set.
 * `load_balancer_arn` - (Optional) ARN of the load balancer. Required if `arn` is not set.

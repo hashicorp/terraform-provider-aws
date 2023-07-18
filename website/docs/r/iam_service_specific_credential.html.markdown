@@ -25,7 +25,7 @@ resource "aws_iam_service_specific_credential" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `service_name` - (Required) The name of the AWS service that is to be associated with the credentials. The service you specify here is the only service that can be accessed using these credentials.
 * `user_name` - (Required) The name of the IAM user that is to be associated with the credentials. The new service-specific credentials have the same permissions as the associated user except that they can be used only to access the specified service.

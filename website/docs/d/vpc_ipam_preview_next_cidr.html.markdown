@@ -38,7 +38,7 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `disallowed_cidrs` - (Optional) Exclude a particular CIDR range from being returned by the pool.
 * `ipam_pool_id` - (Required) ID of the pool to which you want to assign a CIDR.

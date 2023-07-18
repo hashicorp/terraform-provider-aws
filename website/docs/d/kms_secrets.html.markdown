@@ -68,7 +68,7 @@ data "aws_kms_secrets" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `secret` - (Required) One or more encrypted payload definitions from the KMS service. See the Secret Definitions below.
 

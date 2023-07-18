@@ -42,7 +42,7 @@ resource "aws_sesv2_configuration_set" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `configuration_set_name` - (Required) The name of the configuration set.
 * `delivery_options` - (Optional) An object that defines the dedicated IP pool that is used to send emails that you send using the configuration set.
@@ -55,20 +55,20 @@ The following arguments are supported:
 
 ### delivery_options
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `sending_pool_name` - (Optional) The name of the dedicated IP pool to associate with the configuration set.
 * `tls_policy` - (Optional) Specifies whether messages that use the configuration set are required to use Transport Layer Security (TLS). Valid values: `REQUIRE`, `OPTIONAL`.
 
 ### reputation_options
 
-The following arguments are supported;
+This argument supports the following arguments:
 
 * `reputation_metrics_enabled` - (Optional) If `true`, tracking of reputation metrics is enabled for the configuration set. If `false`, tracking of reputation metrics is disabled for the configuration set.
 
 ### sending_options
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `sending_enabled` - (Optional) If `true`, email sending is enabled for the configuration set. If `false`, email sending is disabled for the configuration set.
 

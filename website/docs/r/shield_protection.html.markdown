@@ -36,7 +36,7 @@ resource "aws_shield_protection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A friendly name for the Protection you are creating.
 * `resource_arn` - (Required) The ARN (Amazon Resource Name) of the resource to be protected.

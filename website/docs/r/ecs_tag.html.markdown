@@ -32,7 +32,7 @@ resource "aws_ecs_tag" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_arn` - (Required) Amazon Resource Name (ARN) of the ECS resource to tag.
 * `key` - (Required) Tag name.

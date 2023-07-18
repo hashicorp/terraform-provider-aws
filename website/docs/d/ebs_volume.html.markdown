@@ -31,7 +31,7 @@ data "aws_ebs_volume" "ebs_volume" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent Volume.

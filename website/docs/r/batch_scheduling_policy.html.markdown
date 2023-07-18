@@ -39,7 +39,7 @@ resource "aws_batch_scheduling_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `fairshare_policy` - (Optional) A fairshare policy block specifies the `compute_reservation`, `share_delay_seconds`, and `share_distribution` of the scheduling policy. The `fairshare_policy` block is documented below.
 * `name` - (Required) Specifies the name of the scheduling policy.

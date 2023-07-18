@@ -22,7 +22,7 @@ resource "aws_placement_group" "web" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the placement group.
 * `partition_count` - (Optional) The number of partitions to create in the

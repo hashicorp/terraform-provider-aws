@@ -30,7 +30,7 @@ resource "aws_dax_parameter_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` – (Required) The name of the parameter group.
 

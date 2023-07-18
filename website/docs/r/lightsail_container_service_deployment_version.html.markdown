@@ -55,7 +55,7 @@ resource "aws_lightsail_container_service_deployment_version" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `service_name` - (Required) The name for the container service.
 * `container` - (Required) A set of configuration blocks that describe the settings of the containers that will be launched on the container service. Maximum of 53. [Detailed below](#container).

@@ -41,7 +41,7 @@ resource "aws_identitystore_group_membership" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `member_id` - (Required) The identifier for a user in the Identity Store.
 * `group_id` - (Required)  The identifier for a group in the Identity Store.

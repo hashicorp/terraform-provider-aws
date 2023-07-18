@@ -39,7 +39,7 @@ resource "aws_kms_replica_key" "replica" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bypass_policy_lockout_safety_check` - (Optional) A flag to indicate whether to bypass the key policy lockout safety check.
 Setting this value to true increases the risk that the KMS key becomes unmanageable. Do not set this value to true indiscriminately.

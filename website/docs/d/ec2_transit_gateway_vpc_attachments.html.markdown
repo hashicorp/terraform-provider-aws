@@ -30,7 +30,7 @@ data "aws_ec2_transit_gateway_vpc_attachment" "unit" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 

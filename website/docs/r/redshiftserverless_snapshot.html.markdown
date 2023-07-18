@@ -21,7 +21,7 @@ resource "aws_redshiftserverless_snapshot" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `namespace_name` - (Required) The namespace to create a snapshot for.
 * `snapshot_name` - (Required) The name of the snapshot.

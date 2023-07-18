@@ -25,7 +25,7 @@ resource "aws_cloudwatch_log_subscription_filter" "test_lambdafunction_logfilter
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name for the subscription filter
 * `destination_arn` - (Required) The ARN of the destination to deliver matching log events to. Kinesis stream or Lambda function ARN.

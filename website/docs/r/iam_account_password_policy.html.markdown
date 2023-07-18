@@ -29,7 +29,7 @@ resource "aws_iam_account_password_policy" "strict" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `allow_users_to_change_password` - (Optional) Whether to allow users to change their own password
 * `hard_expiry` - (Optional) Whether users are prevented from setting a new password after their password has expired (i.e., require administrator reset)

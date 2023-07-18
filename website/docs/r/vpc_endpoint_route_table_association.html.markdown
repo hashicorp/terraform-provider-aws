@@ -21,7 +21,7 @@ resource "aws_vpc_endpoint_route_table_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `route_table_id` - (Required) Identifier of the EC2 Route Table to be associated with the VPC Endpoint.
 * `vpc_endpoint_id` - (Required) Identifier of the VPC Endpoint with which the EC2 Route Table will be associated.

@@ -30,7 +30,7 @@ resource "aws_route53_zone" "secondary" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `reference_name` - (Optional) This is a reference name used in Caller Reference
   (helpful for identifying single delegation set amongst others)

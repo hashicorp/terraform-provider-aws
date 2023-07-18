@@ -34,7 +34,7 @@ resource "aws_sagemaker_feature_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `feature_group_name` - (Required) The name of the Feature Group. The name must be unique within an AWS Region in an AWS account.
 * `record_identifier_feature_name` - (Required) The name of the Feature whose value uniquely identifies a Record defined in the Feature Store. Only the latest record per identifier value will be stored in the Online Store.

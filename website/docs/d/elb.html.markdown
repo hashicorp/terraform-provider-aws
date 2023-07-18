@@ -31,7 +31,7 @@ data "aws_elb" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Unique name of the load balancer.
 

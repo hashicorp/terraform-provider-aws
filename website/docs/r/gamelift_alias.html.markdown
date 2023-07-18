@@ -26,7 +26,7 @@ resource "aws_gamelift_alias" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the alias.
 * `description` - (Optional) Description of the alias.

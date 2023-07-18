@@ -26,7 +26,7 @@ resource "aws_lightsail_domain" "domain_test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) The name of the Lightsail domain to manage
 

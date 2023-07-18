@@ -24,7 +24,7 @@ A full example of how to create a VPN Gateway in one AWS account, create a Direc
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `associated_gateway_id` - (Required) The ID of the VGW or transit gateway with which to associate the Direct Connect gateway.
 * `dx_gateway_id` - (Required) Direct Connect Gateway identifier.

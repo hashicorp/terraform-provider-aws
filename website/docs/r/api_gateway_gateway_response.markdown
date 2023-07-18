@@ -34,7 +34,7 @@ resource "aws_api_gateway_gateway_response" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) String identifier of the associated REST API.
 * `response_type` - (Required) Response type of the associated GatewayResponse.

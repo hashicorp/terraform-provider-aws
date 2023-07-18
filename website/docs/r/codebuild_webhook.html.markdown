@@ -66,7 +66,7 @@ resource "github_repository_webhook" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `project_name` - (Required) The name of the build project.
 * `build_type` - (Optional) The type of build this webhook will trigger. Valid values for this parameter are: `BUILD`, `BUILD_BATCH`.

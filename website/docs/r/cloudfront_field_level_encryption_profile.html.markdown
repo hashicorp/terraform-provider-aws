@@ -38,7 +38,7 @@ resource "aws_cloudfront_field_level_encryption_profile" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Field Level Encryption Profile.
 * `comment` - (Optional) An optional comment about the Field Level Encryption Profile.

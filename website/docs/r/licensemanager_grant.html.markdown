@@ -30,7 +30,7 @@ resource "aws_licensemanager_grant" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The Name of the grant.
 * `allowed_operations` - (Required) A list of the allowed operations for the grant. This is a subset of the allowed operations on the license.

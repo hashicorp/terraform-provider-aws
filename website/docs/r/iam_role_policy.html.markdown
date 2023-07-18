@@ -56,7 +56,7 @@ resource "aws_iam_role" "test_role" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The name of the role policy. If omitted, Terraform will
 assign a random, unique name.

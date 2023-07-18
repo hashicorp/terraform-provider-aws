@@ -56,7 +56,7 @@ resource "aws_transfer_workflow" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) A textual description for the workflow.
 * `on_exception_steps` - (Optional) Specifies the steps (actions) to take if errors are encountered during execution of the workflow. See Workflow Steps below.

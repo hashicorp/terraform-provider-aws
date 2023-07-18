@@ -53,7 +53,7 @@ resource "aws_ram_resource_share_accepter" "receiver_accept" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `share_arn` - (Required) The ARN of the resource share.
 

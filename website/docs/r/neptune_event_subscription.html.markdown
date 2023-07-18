@@ -62,7 +62,7 @@ resource "aws_neptune_event_subscription" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `enabled` - (Optional) A boolean flag to enable/disable the subscription. Defaults to true.
 * `event_categories` - (Optional) A list of event categories for a `source_type` that you want to subscribe to. Run `aws neptune describe-event-categories` to find all the event categories.

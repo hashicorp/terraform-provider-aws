@@ -86,7 +86,7 @@ resource "aws_waf_web_acl" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `default_action` - (Required) Configuration block with action that you want AWS WAF to take when a request doesn't match the criteria in any of the rules that are associated with the web ACL. Detailed below.
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this web ACL.

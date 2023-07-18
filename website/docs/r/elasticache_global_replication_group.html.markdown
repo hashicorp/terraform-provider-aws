@@ -98,7 +98,7 @@ resource "aws_elasticache_replication_group" "secondary" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `automatic_failover_enabled` - (Optional) Specifies whether read-only replicas will be automatically promoted to read/write primary if the existing primary fails.
   When creating, by default the Global Replication Group inherits the automatic failover setting of the primary replication group.

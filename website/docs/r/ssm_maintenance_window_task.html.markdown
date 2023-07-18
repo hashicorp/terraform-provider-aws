@@ -131,7 +131,7 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `window_id` - (Required) The Id of the maintenance window to register the task with.
 * `max_concurrency` - (Optional) The maximum number of targets this task can be run for in parallel.

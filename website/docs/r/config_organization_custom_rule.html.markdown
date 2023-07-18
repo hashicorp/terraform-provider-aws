@@ -43,7 +43,7 @@ resource "aws_config_organization_custom_rule" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `lambda_function_arn` - (Required) Amazon Resource Name (ARN) of the rule Lambda Function
 * `name` - (Required) The name of the rule

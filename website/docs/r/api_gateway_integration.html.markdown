@@ -198,7 +198,7 @@ resource "aws_api_gateway_integration" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) ID of the associated REST API.
 * `resource_id` - (Required) API resource ID.

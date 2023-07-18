@@ -68,7 +68,7 @@ resource "aws_ssm_resource_data_sync" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name for the configuration.
 * `s3_destination` - (Required) Amazon S3 configuration details for the sync.

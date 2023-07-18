@@ -23,7 +23,7 @@ resource "aws_networkmanager_connection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `connected_device_id` - (Required) The ID of the second device in the connection.
 * `connected_link_id` - (Optional) The ID of the link for the second device.

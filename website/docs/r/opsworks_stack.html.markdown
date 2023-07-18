@@ -35,7 +35,7 @@ EOT
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the stack.
 * `region` - (Required) The name of the region where the stack will exist.

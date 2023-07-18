@@ -29,7 +29,7 @@ resource "aws_autoscaling_traffic_source_attachment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 - `autoscaling_group_name` - (Required) The name of the Auto Scaling group.
 - `traffic_source` - (Required) The unique identifiers of a traffic sources.

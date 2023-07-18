@@ -37,7 +37,7 @@ resource "aws_lb_listener_certificate" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `listener_arn` - (Required, Forces New Resource) The ARN of the listener to which to attach the certificate.
 * `certificate_arn` - (Required, Forces New Resource) The ARN of the certificate to attach to the listener.

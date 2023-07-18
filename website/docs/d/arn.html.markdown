@@ -20,7 +20,7 @@ data "aws_arn" "db_instance" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Required) ARN to parse.
 

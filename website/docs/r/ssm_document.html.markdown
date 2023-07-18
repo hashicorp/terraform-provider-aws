@@ -68,7 +68,7 @@ DOC
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the document.
 * `attachments_source` - (Optional) One or more configuration blocks describing attachments sources to a version of a document. Defined below.

@@ -23,7 +23,7 @@ resource "aws_storagegateway_nfs_file_share" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `client_list` - (Required) The list of clients that are allowed to access the file gateway. The list must contain either valid IP addresses or valid CIDR blocks. Set to `["0.0.0.0/0"]` to not limit access. Minimum 1 item. Maximum 100 items.
 * `gateway_arn` - (Required) Amazon Resource Name (ARN) of the file gateway.

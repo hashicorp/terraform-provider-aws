@@ -22,7 +22,7 @@ data "aws_codeartifact_repository_endpoint" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `domain` - (Required) Name of the domain that contains the repository.
 * `repository` - (Required) Name of the repository.

@@ -54,7 +54,7 @@ resource "aws_s3control_access_point_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `access_point_arn` - (Required) The ARN of the access point that you want to associate with the specified policy.
 * `policy` - (Required) The policy that you want to apply to the specified access point.

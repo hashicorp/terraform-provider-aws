@@ -23,7 +23,7 @@ resource "aws_sagemaker_space" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `space_name` - (Required) The name of the space.
 * `domain_id` - (Required) The ID of the associated Domain.

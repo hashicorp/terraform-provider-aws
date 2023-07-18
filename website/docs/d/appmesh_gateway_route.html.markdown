@@ -22,7 +22,7 @@ data "aws_appmesh_gateway_route" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the gateway route.
 * `mesh_name` - (Required) Name of the service mesh in which the virtual gateway exists.

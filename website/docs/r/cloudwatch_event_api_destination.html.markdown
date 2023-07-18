@@ -27,7 +27,7 @@ resource "aws_cloudwatch_event_api_destination" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the new API Destination. The name must be unique for your account. Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_.
 * `description` - (Optional) The description of the new API Destination. Maximum of 512 characters.

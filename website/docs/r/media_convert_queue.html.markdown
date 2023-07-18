@@ -20,7 +20,7 @@ resource "aws_media_convert_queue" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A unique identifier describing the queue
 * `description` - (Optional) A description of the queue

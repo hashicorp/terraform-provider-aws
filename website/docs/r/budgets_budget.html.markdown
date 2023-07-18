@@ -171,7 +171,7 @@ resource "aws_budgets_budget" "cost" {
 For more detailed documentation about each argument, refer to the [AWS official
 documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-budget.html).
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `account_id` - (Optional) The ID of the target account for budget. Will use current user's account_id by default if omitted.
 * `auto_adjust_data` - (Optional) Object containing [AutoAdjustData] which determines the budget amount for an auto-adjusting budget.

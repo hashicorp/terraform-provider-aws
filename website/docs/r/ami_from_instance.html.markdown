@@ -37,7 +37,7 @@ resource "aws_ami_from_instance" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Region-unique name for the AMI.
 * `source_instance_id` - (Required) ID of the instance to use as the basis of the AMI.

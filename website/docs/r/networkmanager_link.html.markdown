@@ -28,7 +28,7 @@ resource "aws_networkmanager_link" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bandwidth` - (Required) The upload speed and download speed in Mbps. Documented below.
 * `description` - (Optional) A description of the link.

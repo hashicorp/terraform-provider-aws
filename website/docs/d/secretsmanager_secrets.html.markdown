@@ -27,7 +27,7 @@ data "aws_secretsmanager_secrets" "example" {
 
 ## filter Configuration Block
 
-The following arguments are supported by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the [Secrets Manager ListSecrets API Reference](https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_ListSecrets.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.

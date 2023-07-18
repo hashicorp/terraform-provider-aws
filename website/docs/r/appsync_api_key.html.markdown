@@ -26,7 +26,7 @@ resource "aws_appsync_api_key" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) ID of the associated AppSync API
 * `description` - (Optional) API key description. Defaults to "Managed by Terraform".

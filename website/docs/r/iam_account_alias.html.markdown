@@ -22,7 +22,7 @@ resource "aws_iam_account_alias" "alias" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_alias` - (Required) The account alias
 

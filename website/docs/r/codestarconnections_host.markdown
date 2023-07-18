@@ -24,7 +24,7 @@ resource "aws_codestarconnections_host" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the host to be created. The name must be unique in the calling AWS account.
 * `provider_endpoint` - (Required) The endpoint of the infrastructure to be represented by the host after it is created.

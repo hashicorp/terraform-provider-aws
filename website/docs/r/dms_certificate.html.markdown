@@ -30,7 +30,7 @@ resource "aws_dms_certificate" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `certificate_id` - (Required) The certificate identifier.
 

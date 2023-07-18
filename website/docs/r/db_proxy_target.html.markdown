@@ -57,7 +57,7 @@ resource "aws_db_proxy_target" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `db_proxy_name` - (Required, Forces new resource) The name of the DB proxy.
 * `target_group_name` - (Required, Forces new resource) The name of the target group.

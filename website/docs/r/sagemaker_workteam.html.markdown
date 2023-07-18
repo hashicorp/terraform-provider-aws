@@ -48,7 +48,7 @@ resource "aws_sagemaker_workteam" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Required) A description of the work team.
 * `workforce_name` - (Required) The name of the Workteam (must be unique).

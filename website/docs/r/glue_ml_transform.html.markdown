@@ -121,7 +121,7 @@ resource "aws_glue_catalog_table" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` – (Required) The name you assign to this ML Transform. It must be unique in your account.
 * `input_record_tables` - (Required)  A list of AWS Glue table definitions used by the transform. see [Input Record Tables](#input_record_tables).

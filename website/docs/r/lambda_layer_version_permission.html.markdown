@@ -28,7 +28,7 @@ resource "aws_lambda_layer_version_permission" "lambda_layer_permission" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `action` - (Required) Action, which will be allowed. `lambda:GetLayerVersion` value is suggested by AWS documantation.
 * `layer_name` (Required) The name or ARN of the Lambda Layer, which you want to grant access to.

@@ -29,7 +29,7 @@ resource "aws_vpc_endpoint_security_group_association" "sg_ec2" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `security_group_id` - (Required) The ID of the security group to be associated with the VPC endpoint.
 * `vpc_endpoint_id` - (Required) The ID of the VPC endpoint with which the security group will be associated.

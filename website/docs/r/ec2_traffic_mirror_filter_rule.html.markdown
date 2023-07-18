@@ -55,7 +55,7 @@ resource "aws_ec2_traffic_mirror_filter_rule" "rulein" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Description of the traffic mirror filter rule.
 * `traffic_mirror_filter_id`  - (Required) ID of the traffic mirror filter to which this rule should be added

@@ -23,7 +23,7 @@ resource "aws_ram_resource_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_arn` - (Required) Amazon Resource Name (ARN) of the resource to associate with the RAM Resource Share.
 * `resource_share_arn` - (Required) Amazon Resource Name (ARN) of the RAM Resource Share.

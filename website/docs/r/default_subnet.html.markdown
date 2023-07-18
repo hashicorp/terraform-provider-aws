@@ -37,7 +37,7 @@ The arguments of an `aws_default_subnet` differ slightly from those of [`aws_sub
 * The `availability_zone_id`, `cidr_block` and `vpc_id` arguments become computed attributes
 * The default value for `map_public_ip_on_launch` is `true`
 
-The following additional arguments are supported:
+This resource supports the following additional arguments:
 
 * `force_destroy` - (Optional) Whether destroying the resource deletes the default subnet. Default: `false`
 

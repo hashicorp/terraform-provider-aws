@@ -29,7 +29,7 @@ resource "aws_sesv2_email_identity_mail_from_attributes" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `email_identity` - (Required) The verified email identity.
 * `behavior_on_mx_failure` - (Optional) The action to take if the required MX record isn't found when you send an email. Valid values: `USE_DEFAULT_VALUE`, `REJECT_MESSAGE`.

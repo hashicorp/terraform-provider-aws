@@ -24,7 +24,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `deployment_type` - (Required) - The filesystem deployment type. Valid values: `SINGLE_AZ_1` and `SINGLE_AZ_2`.
 * `storage_capacity` - (Required) The storage capacity (GiB) of the file system. Valid values between `64` and `524288`.

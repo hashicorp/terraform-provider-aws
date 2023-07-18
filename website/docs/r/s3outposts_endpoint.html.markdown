@@ -22,7 +22,7 @@ resource "aws_s3outposts_endpoint" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `outpost_id` - (Required) Identifier of the Outpost to contain this endpoint.
 * `security_group_id` - (Required) Identifier of the EC2 Security Group.

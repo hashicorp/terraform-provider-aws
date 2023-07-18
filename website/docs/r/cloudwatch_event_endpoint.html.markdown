@@ -46,7 +46,7 @@ resource "aws_cloudwatch_event_endpoint" "this" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) A description of the global endpoint.
 * `event_bus` - (Required) The event buses to use. The names of the event buses must be identical in each Region. Exactly two event buses are required. Documented below.
