@@ -91,9 +91,9 @@ The following arguments are supported:
 
 * `region_name` - (Required) AWS region name of replica DynamoDB TableE.g., `us-east-1`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the DynamoDB Global Table
 * `arn` - The ARN of the DynamoDB Global Table
