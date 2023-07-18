@@ -123,8 +123,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Direct Connect gateway associations using `dx_gateway_id` together with `associated_gateway_id`,
-e.g.,
+Import Direct Connect gateway associations using `dx_gateway_id` together with `associated_gateway_id`. For example:
 
 ```
 $ terraform import aws_dx_gateway_association.example 345508c3-7215-4aef-9832-07c125d5bd0f/vgw-98765432
