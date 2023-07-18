@@ -173,7 +173,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Cloudfront Response Headers Policies using the `id`, e.g.
+Import Cloudfront Response Headers Policies using the `id`. For example:
 
 ```
 $ terraform import aws_cloudfront_response_headers_policy.policy 658327ea-f89d-4fab-a63d-7e88639e58f9
