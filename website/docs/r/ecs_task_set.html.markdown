@@ -116,9 +116,9 @@ The `scale` configuration block supports the following:
 * `container_port` - (Optional) The port value, already specified in the task definition, to be used for your service discovery service.
 * `container_name` - (Optional) The container name value, already specified in the task definition, to be used for your service discovery service.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `task_set_id`, `service` and `cluster` separated by commas (`,`).
 * `arn` - The Amazon Resource Name (ARN) that identifies the task set.
