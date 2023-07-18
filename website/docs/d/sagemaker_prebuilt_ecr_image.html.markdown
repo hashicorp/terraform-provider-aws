@@ -32,7 +32,7 @@ The following arguments are supported:
 * `image_tag` - (Optional) Image tag for the Docker image. If not specified, the AWS provider sets the value to `1`, which for many repositories indicates the latest version. Some repositories, such as XGBoost, do not support `1` or `latest` and specific version must be used.
 * `region` (Optional) - Region to use in the registry path. If not specified, the AWS provider sets it to the current region.
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
 
