@@ -71,5 +71,7 @@ resource "aws_elb" "bar" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - ID of the AWS ELB service account in the selected region.
 * `arn` - ARN of the AWS ELB service account in the selected region.

@@ -35,6 +35,8 @@ a single solution stack, or use `most_recent` to choose the most recent one.
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `name` - Name of the solution stack.
 
 [beanstalk-platforms]: http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html "AWS Elastic Beanstalk Supported Platforms documentation"

@@ -22,6 +22,8 @@ data "aws_elastic_beanstalk_hosted_zone" "current" {}
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - ID of the hosted zone.
 
 * `region` - Region of the hosted zone.
