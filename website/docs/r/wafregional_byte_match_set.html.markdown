@@ -31,7 +31,7 @@ resource "aws_wafregional_byte_match_set" "byte_set" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name or description of the ByteMatchSet.
 * `byte_match_tuples` - (Optional)Settings for the ByteMatchSet, such as the bytes (typically a string that corresponds with ASCII characters) that you want AWS WAF to search for in web requests. ByteMatchTuple documented below.
