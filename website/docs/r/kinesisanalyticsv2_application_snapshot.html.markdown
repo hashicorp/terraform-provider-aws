@@ -22,7 +22,7 @@ resource "aws_kinesisanalyticsv2_application_snapshot" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `application_name` - (Required) The name of an existing  [Kinesis Analytics v2 Application](/docs/providers/aws/r/kinesisanalyticsv2_application.html). Note that the application must be running for a snapshot to be created.
 * `snapshot_name` - (Required) The name of the application snapshot.
