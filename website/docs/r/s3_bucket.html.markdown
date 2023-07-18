@@ -338,9 +338,9 @@ The `website` configuration block supports the following arguments:
 * `routing_rules` - (Optional) JSON array containing [routing rules](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-websiteconfiguration-routingrules.html)
   describing redirect behavior and when redirects are applied.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the bucket.
 * `arn` - ARN of the bucket. Will be of format `arn:aws:s3:::bucketname`.

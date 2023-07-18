@@ -119,9 +119,9 @@ The `sse_kms` configuration supports the following:
 
 * `key_id` - (Required) ARN of the KMS customer master key (CMK) used to encrypt the inventory file.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

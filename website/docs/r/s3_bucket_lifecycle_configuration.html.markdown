@@ -450,9 +450,9 @@ The `tag` configuration block supports the following arguments:
 * `key` - (Required) Name of the object key.
 * `value` - (Required) Value of the tag.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
