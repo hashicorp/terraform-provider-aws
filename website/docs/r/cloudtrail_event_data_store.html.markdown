@@ -106,9 +106,9 @@ For **field_selector** the following attributes are supported.
 - `ends_with` (Optional) - A list of values that includes events that match the last few characters of the event record field specified as the value of `field`.
 - `not_ends_with` (Optional) - A list of values that excludes events that match the last few characters of the event record field specified as the value of `field`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 - `arn` - ARN of the event data store.
 - `id` - Name of the event data store.
