@@ -96,7 +96,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CodeBuild Webhooks can be imported using the CodeBuild Project name, e.g.,
+Import CodeBuild Webhooks using the CodeBuild Project name. For example:
 
 ```
 $ terraform import aws_codebuild_webhook.example MyProjectName

@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AppConfig Applications can be imported using their application ID, e.g.,
+Import AppConfig Applications using their application ID. For example:
 
 ```
 $ terraform import aws_appconfig_application.example 71rxuzt

@@ -134,7 +134,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudFormation StackSets can be imported using the `name`, e.g.,
+Import CloudFormation StackSets using the `name`. For example:
 
 ```
 $ terraform import aws_cloudformation_stack_set.example example

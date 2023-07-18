@@ -61,7 +61,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-CloudWatch Logs destination policies can be imported using the `destination_name`, e.g.,
+Import CloudWatch Logs destination policies using the `destination_name`. For example:
 
 ```
 $ terraform import aws_cloudwatch_log_destination_policy.test_destination_policy test_destination

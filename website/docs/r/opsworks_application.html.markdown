@@ -101,7 +101,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Opsworks Application can be imported using the `id`, e.g.,
+Import Opsworks Application using the `id`. For example:
 
 ```
 $ terraform import aws_opsworks_application.test <id>

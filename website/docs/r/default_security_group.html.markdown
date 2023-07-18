@@ -111,7 +111,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Security Groups can be imported using the `security group id`, e.g.,
+Import Security Groups using the `security group id`. For example:
 
 ```
 $ terraform import aws_default_security_group.default_sg sg-903004f8

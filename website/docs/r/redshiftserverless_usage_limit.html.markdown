@@ -44,7 +44,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Serverless Usage Limits can be imported using the `id`, e.g.,
+Import Redshift Serverless Usage Limits using the `id`. For example:
 
 ```
 $ terraform import aws_redshiftserverless_usage_limit.example example-id

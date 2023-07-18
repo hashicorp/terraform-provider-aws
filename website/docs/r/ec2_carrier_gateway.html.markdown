@@ -40,8 +40,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ec2_carrier_gateway` can be imported using the carrier gateway's ID,
-e.g.,
+Import `aws_ec2_carrier_gateway` using the carrier gateway's ID. For example:
 
 ```
 $ terraform import aws_ec2_carrier_gateway.example cgw-12345

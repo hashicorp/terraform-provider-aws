@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_servicecatalog_tag_option_resource_association` can be imported using the tag option ID and resource ID, e.g.,
+Import `aws_servicecatalog_tag_option_resource_association` using the tag option ID and resource ID. For example:
 
 ```
 $ terraform import aws_servicecatalog_tag_option_resource_association.example tag-pjtvyakdlyo3m:prod-dnigbtea24ste

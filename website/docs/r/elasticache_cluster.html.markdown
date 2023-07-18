@@ -212,7 +212,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ElastiCache Clusters can be imported using the `cluster_id`, e.g.,
+Import ElastiCache Clusters using the `cluster_id`. For example:
 
 ```
 $ terraform import aws_elasticache_cluster.my_cluster my_cluster

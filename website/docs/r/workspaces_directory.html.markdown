@@ -202,7 +202,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Workspaces directory can be imported using the directory ID, e.g.,
+Import Workspaces directory using the directory ID. For example:
 
 ```
 $ terraform import aws_workspaces_directory.main d-4444444444

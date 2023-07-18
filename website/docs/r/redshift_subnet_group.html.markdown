@@ -66,7 +66,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift subnet groups can be imported using the `name`, e.g.,
+Import Redshift subnet groups using the `name`. For example:
 
 ```
 $ terraform import aws_redshift_subnet_group.testgroup1 test-cluster-subnet-group

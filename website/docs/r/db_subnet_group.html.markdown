@@ -47,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DB Subnet groups can be imported using the `name`, e.g.,
+Import DB Subnet groups using the `name`. For example:
 
 ```
 $ terraform import aws_db_subnet_group.default production-subnet-group

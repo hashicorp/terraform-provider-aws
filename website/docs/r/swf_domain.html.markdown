@@ -42,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SWF Domains can be imported using the `name`, e.g.,
+Import SWF Domains using the `name`. For example:
 
 ```
 $ terraform import aws_swf_domain.foo test-domain

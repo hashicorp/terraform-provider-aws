@@ -60,7 +60,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-NAT Gateways can be imported using the `id`, e.g.,
+Import NAT Gateways using the `id`. For example:
 
 ```
 $ terraform import aws_nat_gateway.private_gw nat-05dba92075d71c408

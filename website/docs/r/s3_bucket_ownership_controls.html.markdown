@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-S3 Bucket Ownership Controls can be imported using S3 Bucket name, e.g.,
+Import S3 Bucket Ownership Controls using S3 Bucket name. For example:
 
 ```
 $ terraform import aws_s3_bucket_ownership_controls.example my-bucket

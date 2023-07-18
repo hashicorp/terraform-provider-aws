@@ -74,7 +74,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AWS WAF Size Constraint Set can be imported using their ID, e.g.,
+Import AWS WAF Size Constraint Set using their ID. For example:
 
 ```
 $ terraform import aws_waf_size_constraint_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

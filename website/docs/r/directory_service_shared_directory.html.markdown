@@ -67,7 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Directory Service Shared Directories can be imported using the owner directory ID/shared directory ID, e.g.,
+Import Directory Service Shared Directories using the owner directory ID/shared directory ID. For example:
 
 ```
 $ terraform import aws_directory_service_shared_directory.example d-1234567890/d-9267633ece

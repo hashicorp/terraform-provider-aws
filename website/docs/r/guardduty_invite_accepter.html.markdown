@@ -67,7 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_guardduty_invite_accepter` can be imported using the member GuardDuty detector ID, e.g.,
+Import `aws_guardduty_invite_accepter` using the member GuardDuty detector ID. For example:
 
 ```
 $ terraform import aws_guardduty_invite_accepter.member 00b00fd5aecc0ab60a708659477e9617

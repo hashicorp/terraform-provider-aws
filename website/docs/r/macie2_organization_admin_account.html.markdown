@@ -35,7 +35,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_macie2_organization_admin_account` can be imported using the id, e.g.,
+Import `aws_macie2_organization_admin_account` using the id. For example:
 
 ```
 $ terraform import aws_macie2_organization_admin_account.example abcd1

@@ -42,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Serverless Snapshots can be imported using the `snapshot_name`, e.g.,
+Import Redshift Serverless Snapshots using the `snapshot_name`. For example:
 
 ```
 $ terraform import aws_redshiftserverless_snapshot.example example

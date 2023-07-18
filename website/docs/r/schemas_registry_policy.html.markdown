@@ -60,7 +60,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-EventBridge Schema Registry Policy can be imported using the `registry_name`, e.g.,
+Import EventBridge Schema Registry Policy using the `registry_name`. For example:
 
 ```
 $ terraform import aws_schemas_registry_policy.example example

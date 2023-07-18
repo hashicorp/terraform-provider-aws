@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Audit Manager Assessment Delegation can be imported using the `id`, e.g.,
+Import Audit Manager Assessment Delegation using the `id`. For example:
 
 ```
 $ terraform import aws_auditmanager_assessment_delegation.example abcdef-123456,arn:aws:iam::012345678901:role/example,example

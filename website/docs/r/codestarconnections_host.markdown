@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CodeStar Host can be imported using the ARN, e.g.,
+Import CodeStar Host using the ARN. For example:
 
 ```
 $ terraform import aws_codestarconnections_host.example-host arn:aws:codestar-connections:us-west-1:0123456789:host/79d4d357-a2ee-41e4-b350-2fe39ae59448

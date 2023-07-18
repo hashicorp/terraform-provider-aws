@@ -62,7 +62,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPC Endpoint Policies can be imported using the `id`, e.g.
+Import VPC Endpoint Policies using the `id`. For example:
 
 ```
 $ terraform import aws_vpc_endpoint_policy.example vpce-3ecf2a57

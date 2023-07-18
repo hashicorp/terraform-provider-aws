@@ -131,7 +131,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_appstream_stack` can be imported using the id, e.g.,
+Import `aws_appstream_stack` using the id. For example:
 
 ```
 $ terraform import aws_appstream_stack.example stackID

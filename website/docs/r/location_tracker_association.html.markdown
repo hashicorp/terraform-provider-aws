@@ -47,7 +47,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-Location Tracker Association can be imported using the `tracker_name|consumer_arn`, e.g.,
+Import Location Tracker Association using the `tracker_name|consumer_arn`. For example:
 
 ```
 $ terraform import aws_location_tracker_association.example "tracker_name|consumer_arn"

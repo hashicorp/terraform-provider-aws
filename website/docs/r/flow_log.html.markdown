@@ -217,7 +217,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Flow Logs can be imported using the `id`, e.g.,
+Import Flow Logs using the `id`. For example:
 
 ```
 $ terraform import aws_flow_log.test_flow_log fl-1a2b3c4d

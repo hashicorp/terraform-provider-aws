@@ -40,7 +40,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Codecommit repository can be imported using repository name, e.g.,
+Import Codecommit repository using repository name. For example:
 
 ```
 $ terraform import aws_codecommit_repository.imported ExistingRepo

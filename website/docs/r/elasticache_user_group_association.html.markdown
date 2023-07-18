@@ -60,7 +60,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-ElastiCache user group associations can be imported using the `user_group_id` and `user_id`, e.g.,
+Import ElastiCache user group associations using the `user_group_id` and `user_id`. For example:
 
 ```
 $ terraform import aws_elasticache_user_group_association.example userGoupId1,userId

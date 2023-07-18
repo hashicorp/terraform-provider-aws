@@ -192,7 +192,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Config Rule can be imported using the name, e.g.,
+Import Config Rule using the name. For example:
 
 ```
 $ terraform import aws_config_config_rule.foo example

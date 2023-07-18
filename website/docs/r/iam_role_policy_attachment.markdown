@@ -68,7 +68,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-IAM role policy attachments can be imported using the role name and policy arn separated by `/`.
+Import IAM role policy attachments using the role name and policy arn separated by `/`.
 
 ```
 $ terraform import aws_iam_role_policy_attachment.test-attach test-role/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy

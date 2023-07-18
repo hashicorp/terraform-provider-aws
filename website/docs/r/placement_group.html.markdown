@@ -44,7 +44,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Placement groups can be imported using the `name`, e.g.,
+Import Placement groups using the `name`. For example:
 
 ```
 $ terraform import aws_placement_group.prod_pg production-placement-group

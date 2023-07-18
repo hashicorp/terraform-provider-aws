@@ -45,7 +45,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Transfer AS2 Certificate can be imported using the `certificate_id`, e.g.,
+Import Transfer AS2 Certificate using the `certificate_id`. For example:
 
 ```
 $ terraform import aws_transfer_certificate.example c-4221a88afd5f4362a

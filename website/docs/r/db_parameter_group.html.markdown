@@ -104,7 +104,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DB Parameter groups can be imported using the `name`, e.g.,
+Import DB Parameter groups using the `name`. For example:
 
 ```
 $ terraform import aws_db_parameter_group.rds_pg rds-pg

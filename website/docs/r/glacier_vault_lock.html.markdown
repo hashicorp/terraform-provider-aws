@@ -71,7 +71,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Glacier Vault Locks can be imported using the Glacier Vault name, e.g.,
+Import Glacier Vault Locks using the Glacier Vault name. For example:
 
 ```
 $ terraform import aws_glacier_vault_lock.example example-vault

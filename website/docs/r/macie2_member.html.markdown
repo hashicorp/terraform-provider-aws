@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_macie2_member` can be imported using the account ID of the member account, e.g.,
+Import `aws_macie2_member` using the account ID of the member account. For example:
 
 ```
 $ terraform import aws_macie2_member.example 123456789012

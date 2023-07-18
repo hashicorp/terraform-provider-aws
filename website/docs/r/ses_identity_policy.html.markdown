@@ -50,7 +50,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-SES Identity Policies can be imported using the identity and policy name, separated by a pipe character (`|`), e.g.,
+Import SES Identity Policies using the identity and policy name, separated by a pipe character (`|`). For example:
 
 ```
 $ terraform import aws_ses_identity_policy.example 'example.com|example'

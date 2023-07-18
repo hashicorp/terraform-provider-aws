@@ -54,7 +54,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPC Lattice Service Network Service Association can be imported using the `id`, e.g.,
+Import VPC Lattice Service Network Service Association using the `id`. For example:
 
 ```
 $ terraform import aws_vpclattice_service_network_service_association.example snsa-05e2474658a88f6ba

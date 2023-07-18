@@ -70,7 +70,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ECR Repository Policy can be imported using the repository name, e.g.,
+Import ECR Repository Policy using the repository name. For example:
 
 ```
 $ terraform import aws_ecr_repository_policy.example example

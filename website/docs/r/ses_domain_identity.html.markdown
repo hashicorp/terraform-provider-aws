@@ -58,7 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SES domain identities can be imported using the domain name.
+Import SES domain identities using the domain name.
 
 ```
 $ terraform import aws_ses_domain_identity.example example.com

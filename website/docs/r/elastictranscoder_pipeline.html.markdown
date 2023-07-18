@@ -102,7 +102,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Elastic Transcoder pipelines can be imported using the `id`, e.g.,
+Import Elastic Transcoder pipelines using the `id`. For example:
 
 ```
 $ terraform import aws_elastictranscoder_pipeline.basic_pipeline 1407981661351-cttk8b

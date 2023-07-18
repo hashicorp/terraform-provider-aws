@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-GuardDuty Organization Admin Account can be imported using the AWS account ID, e.g.,
+Import GuardDuty Organization Admin Account using the AWS account ID. For example:
 
 ```
 $ terraform import aws_guardduty_organization_admin_account.example 123456789012

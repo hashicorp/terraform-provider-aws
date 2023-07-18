@@ -32,7 +32,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SimpleDB Domains can be imported using the `name`, e.g.,
+Import SimpleDB Domains using the `name`. For example:
 
 ```
 $ terraform import aws_simpledb_domain.users users

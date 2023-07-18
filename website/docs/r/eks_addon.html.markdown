@@ -169,7 +169,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EKS add-on can be imported using the `cluster_name` and `addon_name` separated by a colon (`:`), e.g.,
+Import EKS add-on using the `cluster_name` and `addon_name` separated by a colon (`:`). For example:
 
 ```
 $ terraform import aws_eks_addon.my_eks_addon my_cluster_name:my_addon_name

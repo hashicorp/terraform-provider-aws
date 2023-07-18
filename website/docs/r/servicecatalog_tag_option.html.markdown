@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_servicecatalog_tag_option` can be imported using the tag option ID, e.g.,
+Import `aws_servicecatalog_tag_option` using the tag option ID. For example:
 
 ```
 $ terraform import aws_servicecatalog_tag_option.example tag-pjtvagohlyo3m

@@ -58,7 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-XRay Sampling Rules can be imported using the name, e.g.,
+Import XRay Sampling Rules using the name. For example:
 
 ```
 $ terraform import aws_xray_sampling_rule.example example

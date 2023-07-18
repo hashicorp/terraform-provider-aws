@@ -44,7 +44,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EventBridge API Destinations can be imported using the `name`, e.g.,
+Import EventBridge API Destinations using the `name`. For example:
 
 ```console
 $ terraform import aws_cloudwatch_event_api_destination.test api-destination

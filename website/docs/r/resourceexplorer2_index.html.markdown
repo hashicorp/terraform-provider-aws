@@ -42,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Resource Explorer indexes can be imported using the `arn`, e.g.
+Import Resource Explorer indexes using the `arn`. For example:
 
 ```
 $ terraform import aws_resourceexplorer2_index.example arn:aws:resource-explorer-2:us-east-1:123456789012:index/6047ac4e-207e-4487-9bcf-cb53bb0ff5cc

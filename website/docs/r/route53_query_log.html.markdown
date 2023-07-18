@@ -89,7 +89,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Route53 query logging configurations can be imported using their ID, e.g.,
+Import Route53 query logging configurations using their ID. For example:
 
 ```
 $ terraform import aws_route53_query_log.example_com xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx

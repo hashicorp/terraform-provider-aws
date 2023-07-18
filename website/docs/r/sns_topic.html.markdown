@@ -110,7 +110,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SNS Topics can be imported using the `topic arn`, e.g.,
+Import SNS Topics using the `topic arn`. For example:
 
 ```
 $ terraform import aws_sns_topic.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic

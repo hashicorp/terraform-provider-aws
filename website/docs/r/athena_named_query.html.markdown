@@ -66,7 +66,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Athena Named Query can be imported using the query ID, e.g.,
+Import Athena Named Query using the query ID. For example:
 
 ```
 $ terraform import aws_athena_named_query.example 0123456789

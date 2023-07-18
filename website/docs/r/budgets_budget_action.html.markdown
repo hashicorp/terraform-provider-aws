@@ -148,6 +148,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Budgets can be imported using `AccountID:ActionID:BudgetName`, e.g.,
+Import Budgets using `AccountID:ActionID:BudgetName`. For example:
 
 `$ terraform import aws_budgets_budget_action.myBudget 123456789012:some-id:myBudget`

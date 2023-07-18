@@ -89,7 +89,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-RBin Rule can be imported using the `id`, e.g.,
+Import RBin Rule using the `id`. For example:
 
 ```
 $ terraform import aws_rbin_rule.example examplerule

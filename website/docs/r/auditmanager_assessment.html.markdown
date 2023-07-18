@@ -90,7 +90,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Audit Manager Assessments can be imported using the assessment `id`, e.g.,
+Import Audit Manager Assessments using the assessment `id`. For example:
 
 ```
 $ terraform import aws_auditmanager_assessment.example abc123-de45

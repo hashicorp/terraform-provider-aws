@@ -218,7 +218,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudWatch metric streams can be imported using the `name`, e.g.,
+Import CloudWatch metric streams using the `name`. For example:
 
 ```
 $ terraform import aws_cloudwatch_metric_stream.sample sample-stream-name

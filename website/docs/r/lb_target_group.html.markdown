@@ -141,7 +141,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Target Groups can be imported using their ARN, e.g.,
+Import Target Groups using their ARN. For example:
 
 ```
 $ terraform import aws_lb_target_group.app_front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:targetgroup/app-front-end/20cfe21448b66314

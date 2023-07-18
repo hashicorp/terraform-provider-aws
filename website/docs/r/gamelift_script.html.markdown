@@ -53,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-GameLift Scripts can be imported using the ID, e.g.,
+Import GameLift Scripts using the ID. For example:
 
 ```
 $ terraform import aws_gamelift_script.example <script-id>

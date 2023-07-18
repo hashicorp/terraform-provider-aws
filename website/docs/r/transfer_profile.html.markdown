@@ -39,7 +39,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Transfer AS2 Profile can be imported using the `profile_id`, e.g.,
+Import Transfer AS2 Profile using the `profile_id`. For example:
 
 ```
 $ terraform import aws_transfer_profile.example p-4221a88afd5f4362a

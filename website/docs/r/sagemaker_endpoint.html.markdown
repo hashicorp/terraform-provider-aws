@@ -80,7 +80,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Endpoints can be imported using the `name`, e.g.,
+Import Endpoints using the `name`. For example:
 
 ```
 $ terraform import aws_sagemaker_endpoint.test_endpoint my-endpoint

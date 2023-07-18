@@ -57,7 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudWatch Log Metric Filter can be imported using the `log_group_name:name`, e.g.,
+Import CloudWatch Log Metric Filter using the `log_group_name:name`. For example:
 
 ```
 $ terraform import aws_cloudwatch_log_metric_filter.test /aws/lambda/function:test

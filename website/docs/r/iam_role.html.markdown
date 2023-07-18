@@ -213,7 +213,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM Roles can be imported using the `name`, e.g.,
+Import IAM Roles using the `name`. For example:
 
 ```
 $ terraform import aws_iam_role.developer developer_name

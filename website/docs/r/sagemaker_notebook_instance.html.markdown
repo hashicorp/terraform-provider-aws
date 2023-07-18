@@ -87,7 +87,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Notebook Instances can be imported using the `name`, e.g.,
+Import SageMaker Notebook Instances using the `name`. For example:
 
 ```
 $ terraform import aws_sagemaker_notebook_instance.test_notebook_instance my-notebook-instance

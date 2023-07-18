@@ -38,7 +38,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Existing CIDR reservations can be imported using `SUBNET_ID:RESERVATION_ID`, e.g.,
+Import Existing CIDR reservations using `SUBNET_ID:RESERVATION_ID`. For example:
 
 ```
 $ terraform import aws_ec2_subnet_cidr_reservation.example subnet-01llsxvsxabqiymcz:scr-4mnvz6wb7otksjcs9

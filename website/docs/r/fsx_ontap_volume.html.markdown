@@ -87,7 +87,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-FSx ONTAP volume can be imported using the `id`, e.g.,
+Import FSx ONTAP volume using the `id`. For example:
 
 ```
 $ terraform import aws_fsx_ontap_volume.example fsvol-12345678abcdef123

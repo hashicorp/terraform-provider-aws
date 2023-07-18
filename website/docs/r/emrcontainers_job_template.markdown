@@ -100,7 +100,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EKS job templates can be imported using the `id`, e.g.
+Import EKS job templates using the `id`. For example:
 
 ```
 $ terraform import aws_emrcontainers_job_template.example a1b2c3d4e5f6g7h8i9j10k11l

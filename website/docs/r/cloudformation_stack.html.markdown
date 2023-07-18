@@ -90,7 +90,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Cloudformation Stacks can be imported using the `name`, e.g.,
+Import Cloudformation Stacks using the `name`. For example:
 
 ```
 $ terraform import aws_cloudformation_stack.stack networking-stack

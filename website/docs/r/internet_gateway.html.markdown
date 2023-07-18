@@ -62,7 +62,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Internet Gateways can be imported using the `id`, e.g.,
+Import Internet Gateways using the `id`. For example:
 
 ```
 $ terraform import aws_internet_gateway.gw igw-c0a643a9

@@ -90,7 +90,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudHSM v2 Clusters can be imported using the `cluster id`, e.g.,
+Import CloudHSM v2 Clusters using the `cluster id`. For example:
 
 ```
 $ terraform import aws_cloudhsm_v2_cluster.test_cluster cluster-aeb282a201

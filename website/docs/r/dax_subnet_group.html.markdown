@@ -36,7 +36,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DAX Subnet Group can be imported using the `name`, e.g.,
+Import DAX Subnet Group using the `name`. For example:
 
 ```
 $ terraform import aws_dax_subnet_group.example my_dax_sg

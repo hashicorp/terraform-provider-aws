@@ -38,7 +38,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Service Discovery Public DNS Namespace can be imported using the namespace ID, e.g.,
+Import Service Discovery Public DNS Namespace using the namespace ID. For example:
 
 ```
 $ terraform import aws_service_discovery_public_dns_namespace.example 0123456789

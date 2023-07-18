@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Backup Region Settings can be imported using the `region`, e.g.,
+Import Backup Region Settings using the `region`. For example:
 
 ```
 $ terraform import aws_backup_region_settings.test us-west-2

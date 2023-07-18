@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Direct Connect LAGs can be imported using the `lag id`, e.g.,
+Import Direct Connect LAGs using the `lag id`. For example:
 
 ```
 $ terraform import aws_dx_lag.test_lag dxlag-fgnsp5rq

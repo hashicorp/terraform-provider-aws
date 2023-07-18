@@ -68,7 +68,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Bot aliases can be imported using an ID with the format `bot_name:bot_alias_name`.
+Import Bot aliases using an ID with the format `bot_name:bot_alias_name`.
 
 ```
 $ terraform import aws_lex_bot_alias.order_flowers_prod OrderFlowers:OrderFlowersProd

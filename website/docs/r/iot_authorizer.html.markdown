@@ -44,7 +44,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IOT Authorizers can be imported using the name, e.g.,
+Import IOT Authorizers using the name. For example:
 
 ```
 $ terraform import aws_iot_authorizer.example example

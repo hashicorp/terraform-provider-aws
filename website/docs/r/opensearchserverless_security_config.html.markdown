@@ -51,5 +51,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-OpenSearchServerless Access Policy can be imported using the `name` argument prefixed with the string `saml/account_id/` e.g
+Import OpenSearchServerless Access Policy using the `name` argument prefixed with the string `saml/account_id/`. For example:
+
+```console
 $ terraform import aws_opensearchserverless_security_config.example saml/123456789012/example
+```

@@ -81,7 +81,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SNS Topic Policy can be imported using the topic ARN, e.g.,
+Import SNS Topic Policy using the topic ARN. For example:
 
 ```
 $ terraform import aws_sns_topic_policy.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic

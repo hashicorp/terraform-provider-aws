@@ -236,7 +236,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Lightsail Distribution can be imported using the `id`, e.g.,
+Import Lightsail Distribution using the `id`. For example:
 
 ```
 $ terraform import aws_lightsail_distribution.example rft-8012925589

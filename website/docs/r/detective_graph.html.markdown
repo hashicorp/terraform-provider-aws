@@ -36,7 +36,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_detective_graph` can be imported using the ARN, e.g.
+Import `aws_detective_graph` using the ARN. For example:
 
 ```
 $ terraform import aws_detective_graph.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d

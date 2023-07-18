@@ -106,7 +106,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Workforces can be imported using the `workforce_name`, e.g.,
+Import SageMaker Workforces using the `workforce_name`. For example:
 
 ```
 $ terraform import aws_sagemaker_workforce.example example

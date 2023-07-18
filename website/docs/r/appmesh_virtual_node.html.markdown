@@ -458,8 +458,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-App Mesh virtual nodes can be imported using `mesh_name` together with the virtual node's `name`,
-e.g.,
+Import App Mesh virtual nodes using `mesh_name` together with the virtual node's `name`. For example:
 
 ```
 $ terraform import aws_appmesh_virtual_node.serviceb1 simpleapp/serviceBv1

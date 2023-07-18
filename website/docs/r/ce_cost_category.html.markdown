@@ -126,7 +126,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ce_cost_category` can be imported using the id, e.g.
+Import `aws_ce_cost_category` using the id. For example:
 
 ```
 $ terraform import aws_ce_cost_category.example costCategoryARN

@@ -40,7 +40,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Traffic mirror filter can be imported using the `id`, e.g.,
+Import Traffic mirror filter using the `id`. For example:
 
 ```
 $ terraform import aws_ec2_traffic_mirror_filter.foo tmf-0fbb93ddf38198f64

@@ -417,7 +417,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Spot Fleet Requests can be imported using `id`, e.g.,
+Import Spot Fleet Requests using `id`. For example:
 
 ```
 $ terraform import aws_spot_fleet_request.fleet sfr-005e9ec8-5546-4c31-b317-31a62325411e

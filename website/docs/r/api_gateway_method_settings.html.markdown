@@ -110,7 +110,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-`aws_api_gateway_method_settings` can be imported using `REST-API-ID/STAGE-NAME/METHOD-PATH`, e.g.,
+Import `aws_api_gateway_method_settings` using `REST-API-ID/STAGE-NAME/METHOD-PATH`. For example:
 
 ```
 $ terraform import aws_api_gateway_method_settings.example 12345abcde/example/test/GET

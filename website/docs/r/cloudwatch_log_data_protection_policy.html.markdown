@@ -71,7 +71,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-This resource can be imported using the `log_group_name`. For example:
+Import This resource using the `log_group_name`. For example:
 
 ```
 $ terraform import aws_cloudwatch_log_data_protection_policy.example my-log-group

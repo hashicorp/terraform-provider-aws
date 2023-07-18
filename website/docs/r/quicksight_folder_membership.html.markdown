@@ -42,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-QuickSight Folder Membership can be imported using the AWS account ID, folder ID, member type, and member ID separated by commas (`,`) e.g.,
+Import QuickSight Folder Membership using the AWS account ID, folder ID, member type, and member ID separated by commas (`,`). For example:
 
 ```
 $ terraform import aws_quicksight_folder_membership.example 123456789012,example-folder,DATASET,example-dataset

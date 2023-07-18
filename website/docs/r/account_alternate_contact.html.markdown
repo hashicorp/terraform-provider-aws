@@ -49,7 +49,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-The Alternate Contact for the current account can be imported using the `alternate_contact_type`, e.g.,
+Import the Alternate Contact for the current account using the `alternate_contact_type`. For example:
 
 ```
 $ terraform import aws_account_alternate_contact.operations OPERATIONS

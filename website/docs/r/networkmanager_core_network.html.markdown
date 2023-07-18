@@ -242,7 +242,7 @@ The `segments` configuration block supports the following arguments:
 
 ## Import
 
-`aws_networkmanager_core_network` can be imported using the core network ID, e.g.
+Import `aws_networkmanager_core_network` using the core network ID. For example:
 
 ```
 $ terraform import aws_networkmanager_core_network.example core-network-0d47f6t230mz46dy4

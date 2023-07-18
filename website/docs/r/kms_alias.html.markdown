@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-KMS aliases can be imported using the `name`, e.g.,
+Import KMS aliases using the `name`. For example:
 
 ```
 $ terraform import aws_kms_alias.a alias/my-key-alias

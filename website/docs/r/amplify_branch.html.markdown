@@ -186,7 +186,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Amplify branch can be imported using `app_id` and `branch_name`, e.g.,
+Import Amplify branch using `app_id` and `branch_name`. For example:
 
 ```
 $ terraform import aws_amplify_branch.master d2ypk4k47z8u6/master

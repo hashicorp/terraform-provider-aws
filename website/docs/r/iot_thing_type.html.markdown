@@ -36,7 +36,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IOT Thing Types can be imported using the name, e.g.,
+Import IOT Thing Types using the name. For example:
 
 ```
 $ terraform import aws_iot_thing_type.example example

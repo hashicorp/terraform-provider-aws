@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_api_gateway_model` can be imported using `REST-API-ID/NAME`, e.g.,
+Import `aws_api_gateway_model` using `REST-API-ID/NAME`. For example:
 
 ```
 $ terraform import aws_api_gateway_model.example 12345abcde/example

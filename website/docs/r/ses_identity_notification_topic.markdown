@@ -36,7 +36,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-Identity Notification Topics can be imported using the ID of the record. The ID is made up as `IDENTITY|TYPE` where `IDENTITY` is the SES Identity and `TYPE` is the Notification Type.
+Import Identity Notification Topics using the ID of the record. The ID is made up as `IDENTITY|TYPE` where `IDENTITY` is the SES Identity and `TYPE` is the Notification Type.
 
 ```
 $ terraform import aws_ses_identity_notification_topic.test 'example.com|Bounce'

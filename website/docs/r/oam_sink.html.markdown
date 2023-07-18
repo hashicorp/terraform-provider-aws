@@ -51,7 +51,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudWatch Observability Access Manager Sink can be imported using the `arn`, e.g.,
+Import CloudWatch Observability Access Manager Sink using the `arn`. For example:
 
 ```
 $ terraform import aws_oam_sink.example arn:aws:oam:us-west-2:123456789012:sink/sink-id

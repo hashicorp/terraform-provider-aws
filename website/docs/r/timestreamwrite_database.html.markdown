@@ -53,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Timestream databases can be imported using the `database_name`, e.g.,
+Import Timestream databases using the `database_name`. For example:
 
 ```
 $ terraform import aws_timestreamwrite_database.example example

@@ -167,7 +167,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Flow Definitions can be imported using the `flow_definition_name`, e.g.,
+Import SageMaker Flow Definitions using the `flow_definition_name`. For example:
 
 ```
 $ terraform import aws_sagemaker_flow_definition.example example

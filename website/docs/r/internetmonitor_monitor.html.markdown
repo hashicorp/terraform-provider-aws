@@ -51,7 +51,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Internet Monitor Monitors can be imported using the `monitor_name`, e.g.,
+Import Internet Monitor Monitors using the `monitor_name`. For example:
 
 ```
 $ terraform import aws_internetmonitor_monitor.some some-monitor

@@ -111,7 +111,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-GuardDuty detectors can be imported using the detector ID, e.g.,
+Import GuardDuty detectors using the detector ID. For example:
 
 ```
 $ terraform import aws_guardduty_detector.MyDetector 00b00fd5aecc0ab60a708659477e9617

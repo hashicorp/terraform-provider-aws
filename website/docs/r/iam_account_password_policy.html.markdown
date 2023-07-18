@@ -49,7 +49,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM Account Password Policy can be imported using the word `iam-account-password-policy`, e.g.,
+Import IAM Account Password Policy using the word `iam-account-password-policy`. For example:
 
 ```
 $ terraform import aws_iam_account_password_policy.strict iam-account-password-policy

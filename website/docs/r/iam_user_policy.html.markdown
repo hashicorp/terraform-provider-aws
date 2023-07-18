@@ -61,7 +61,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM User Policies can be imported using the `user_name:user_policy_name`, e.g.,
+Import IAM User Policies using the `user_name:user_policy_name`. For example:
 
 ```
 $ terraform import aws_iam_user_policy.mypolicy user_of_mypolicy_name:mypolicy_name

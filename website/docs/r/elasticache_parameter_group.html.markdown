@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ElastiCache Parameter Groups can be imported using the `name`, e.g.,
+Import ElastiCache Parameter Groups using the `name`. For example:
 
 ```
 $ terraform import aws_elasticache_parameter_group.default redis-params

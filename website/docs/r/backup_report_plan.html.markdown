@@ -76,7 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Backup Report Plan can be imported using the `id` which corresponds to the name of the Backup Report Plan, e.g.,
+Import Backup Report Plan using the `id` which corresponds to the name of the Backup Report Plan. For example:
 
 ```
 $ terraform import aws_backup_report_plan.test <id>

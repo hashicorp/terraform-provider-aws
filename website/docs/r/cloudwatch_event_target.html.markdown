@@ -578,7 +578,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-EventBridge Targets can be imported using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used).
+Import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used).
 
  ```
 $ terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id

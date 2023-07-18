@@ -67,7 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DocumentDB Event Subscriptions can be imported using the `name`, e.g.,
+Import DocumentDB Event Subscriptions using the `name`. For example:
 
 ```
 $ terraform import aws_docdb_event_subscription.example event-sub

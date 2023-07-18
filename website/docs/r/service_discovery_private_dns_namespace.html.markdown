@@ -44,7 +44,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Service Discovery Private DNS Namespace can be imported using the namespace ID and VPC ID, e.g.,
+Import Service Discovery Private DNS Namespace using the namespace ID and VPC ID. For example:
 
 ```
 $ terraform import aws_service_discovery_private_dns_namespace.example 0123456789:vpc-123345

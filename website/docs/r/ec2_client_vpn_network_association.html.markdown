@@ -44,7 +44,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AWS Client VPN network associations can be imported using the endpoint ID and the association ID. Values are separated by a `,`.
+Import AWS Client VPN network associations using the endpoint ID and the association ID. Values are separated by a `,`.
 
 ```
 $ terraform import aws_ec2_client_vpn_network_association.example cvpn-endpoint-0ac3a1abbccddd666,vpn-assoc-0b8db902465d069ad

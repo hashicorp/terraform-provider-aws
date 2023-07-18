@@ -82,7 +82,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-FSx File Systems can be imported using the `id`, e.g.,
+Import FSx File Systems using the `id`. For example:
 
 ```
 $ terraform import aws_fsx_ontap_file_system.example fs-543ab12b1ca672f33

@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Chime Voice Connector Logging can be imported using the `voice_connector_id`, e.g.,
+Import Chime Voice Connector Logging using the `voice_connector_id`. For example:
 
 ```
 $ terraform import aws_chime_voice_connector_logging.default abcdef1ghij2klmno3pqr4

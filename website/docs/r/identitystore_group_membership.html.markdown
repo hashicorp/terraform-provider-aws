@@ -55,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_identitystore_group_membership` can be imported using the `identity_store_id/membership_id`, e.g.,
+Import `aws_identitystore_group_membership` using the `identity_store_id/membership_id`. For example:
 
 ```
 $ terraform import aws_identitystore_group_membership.example d-0000000000/00000000-0000-0000-0000-000000000000

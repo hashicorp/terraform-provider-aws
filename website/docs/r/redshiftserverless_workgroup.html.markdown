@@ -80,7 +80,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Serverless Workgroups can be imported using the `workgroup_name`, e.g.,
+Import Redshift Serverless Workgroups using the `workgroup_name`. For example:
 
 ```
 $ terraform import aws_redshiftserverless_workgroup.example example

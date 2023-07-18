@@ -86,7 +86,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Athena Workgroups can be imported using their name, e.g.,
+Import Athena Workgroups using their name. For example:
 
 ```
 $ terraform import aws_athena_workgroup.example example

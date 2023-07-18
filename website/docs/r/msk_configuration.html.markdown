@@ -42,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-MSK configurations can be imported using the configuration ARN, e.g.,
+Import MSK configurations using the configuration ARN. For example:
 
 ```
 $ terraform import aws_msk_configuration.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3

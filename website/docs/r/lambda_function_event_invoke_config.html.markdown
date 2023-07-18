@@ -117,7 +117,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Lambda Function Event Invoke Configs can be imported using the fully qualified Function name or Amazon Resource Name (ARN), e.g.,
+Import Lambda Function Event Invoke Configs using the fully qualified Function name or Amazon Resource Name (ARN). For example:
 
 ARN without qualifier (all versions and aliases):
 

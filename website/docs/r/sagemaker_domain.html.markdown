@@ -220,7 +220,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Domains can be imported using the `id`, e.g.,
+Import SageMaker Domains using the `id`. For example:
 
 ```
 $ terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8

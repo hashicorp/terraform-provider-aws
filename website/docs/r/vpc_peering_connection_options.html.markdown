@@ -155,7 +155,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPC Peering Connection Options can be imported using the `vpc peering id`, e.g.,
+Import VPC Peering Connection Options using the `vpc peering id`. For example:
 
 ```
 $ terraform import aws_vpc_peering_connection_options.foo pcx-111aaa111

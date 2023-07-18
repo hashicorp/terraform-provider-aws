@@ -418,7 +418,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CodeBuild Project can be imported using the `name`, e.g.,
+Import CodeBuild Project using the `name`. For example:
 
 ```
 $ terraform import aws_codebuild_project.name project-name

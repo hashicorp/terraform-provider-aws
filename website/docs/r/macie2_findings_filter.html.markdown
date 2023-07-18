@@ -66,7 +66,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_macie2_findings_filter` can be imported using the id, e.g.,
+Import `aws_macie2_findings_filter` using the id. For example:
 
 ```
 $ terraform import aws_macie2_findings_filter.example abcd1

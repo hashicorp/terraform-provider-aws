@@ -115,7 +115,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudWatch Evidently Project can be imported using the `arn`, e.g.,
+Import CloudWatch Evidently Project using the `arn`. For example:
 
 ```
 $ terraform import aws_evidently_project.example arn:aws:evidently:us-east-1:123456789012:segment/example

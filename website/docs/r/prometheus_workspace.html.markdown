@@ -61,7 +61,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AMP Workspaces can be imported using the identifier, e.g.,
+Import AMP Workspaces using the identifier. For example:
 
 ```
 $ terraform import aws_prometheus_workspace.demo ws-C6DCB907-F2D7-4D96-957B-66691F865D8B

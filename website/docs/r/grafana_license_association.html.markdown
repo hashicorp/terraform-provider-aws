@@ -61,7 +61,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Grafana workspace license association can be imported using the workspace's `id`, e.g.,
+Import Grafana workspace license association using the workspace's `id`. For example:
 
 ```
 $ terraform import aws_grafana_license_association.example g-2054c75a02

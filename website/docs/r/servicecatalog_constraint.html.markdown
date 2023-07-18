@@ -95,7 +95,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_servicecatalog_constraint` can be imported using the constraint ID, e.g.,
+Import `aws_servicecatalog_constraint` using the constraint ID. For example:
 
 ```
 $ terraform import aws_servicecatalog_constraint.example cons-nmdkb6cgxfcrs

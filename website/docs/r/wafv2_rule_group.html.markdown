@@ -696,7 +696,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-WAFv2 Rule Group can be imported using `ID/name/scope` e.g.,
+Import WAFv2 Rule Group using `ID/name/scope`. For example:
 
 ```
 $ terraform import aws_wafv2_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL

@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Access Analyzer Analyzers can be imported using the `analyzer_name`, e.g.,
+Import Access Analyzer Analyzers using the `analyzer_name`. For example:
 
 ```
 $ terraform import aws_accessanalyzer_analyzer.example example

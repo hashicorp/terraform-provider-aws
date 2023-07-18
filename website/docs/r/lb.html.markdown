@@ -163,7 +163,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-LBs can be imported using their ARN, e.g.,
+Import LBs using their ARN. For example:
 
 ```
 $ terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188

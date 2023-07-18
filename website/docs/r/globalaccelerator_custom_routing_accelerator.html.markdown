@@ -72,7 +72,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Global Accelerator custom routing accelerators can be imported using the `arn`, e.g.,
+Import Global Accelerator custom routing accelerators using the `arn`. For example:
 
 ```
 $ terraform import aws_globalaccelerator_custom_routing_accelerator.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx

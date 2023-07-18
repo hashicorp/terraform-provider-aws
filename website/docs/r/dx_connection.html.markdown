@@ -81,7 +81,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Direct Connect connections can be imported using the `connection id`, e.g.,
+Import Direct Connect connections using the `connection id`. For example:
 
 ```
 $ terraform import aws_dx_connection.test_connection dxcon-ffre0ec3

@@ -122,7 +122,7 @@ attribute once the route resource is created.
 
 ## Import
 
-Route Tables can be imported using the route table `id`. For example, to import
+Import Route Tables using the route table `id`. For example, to import
 route table `rtb-4e616f6d69`, use this command:
 
 ```

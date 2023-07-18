@@ -85,7 +85,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_appstream_image_builder` can be imported using the `name`, e.g.,
+Import `aws_appstream_image_builder` using the `name`. For example:
 
 ```
 $ terraform import aws_appstream_image_builder.example imageBuilderExample

@@ -160,7 +160,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPC Lattice Listener Rule can be imported using the `example_id_arg`, e.g.,
+Import VPC Lattice Listener Rule using the `example_id_arg`. For example:
 
 ```
 $ terraform import aws_vpclattice_listener_rule.example rft-8012925589

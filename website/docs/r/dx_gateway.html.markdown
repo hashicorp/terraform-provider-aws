@@ -42,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Direct Connect Gateways can be imported using the `gateway id`, e.g.,
+Import Direct Connect Gateways using the `gateway id`. For example:
 
 ```
 $ terraform import aws_dx_gateway.test abcd1234-dcba-5678-be23-cdef9876ab45

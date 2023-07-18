@@ -37,7 +37,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_appsync_domain_name` can be imported using the AppSync domain name, e.g.,
+Import `aws_appsync_domain_name` using the AppSync domain name. For example:
 
 ```
 $ terraform import aws_appsync_domain_name.example example.com

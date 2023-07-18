@@ -217,7 +217,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-A QuickSight Dashboard can be imported using the AWS account ID and dashboard ID separated by a comma (`,`) e.g.,
+Import a QuickSight Dashboard using the AWS account ID and dashboard ID separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_quicksight_dashboard.example 123456789012,example-id

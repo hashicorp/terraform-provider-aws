@@ -89,7 +89,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Cognito Risk Configurations can be imported using the `id`, e.g.,
+Import Cognito Risk Configurations using the `id`. For example:
 
 ```
 $ terraform import aws_cognito_risk_configuration.main example

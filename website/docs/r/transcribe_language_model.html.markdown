@@ -114,7 +114,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Transcribe LanguageModel can be imported using the `model_name`, e.g.,
+Import Transcribe LanguageModel using the `model_name`. For example:
 
 ```
 $ terraform import aws_transcribe_language_model.example example-name
