@@ -51,7 +51,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Report Definitions can be imported using the `report_name`, e.g.,
+Import Report Definitions using the `report_name`. For example:
 
 ```
 $ terraform import aws_cur_report_definition.example_cur_report_definition example-cur-report-definition
