@@ -30,7 +30,7 @@ resource "aws_globalaccelerator_custom_routing_endpoint_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `listener_arn` - (Required) The Amazon Resource Name (ARN) of the custom routing listener.
 * `destination_configuration` - (Required) The port ranges and protocols for all endpoints in a custom routing endpoint group to accept client traffic on. Fields documented below.

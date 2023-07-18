@@ -29,7 +29,7 @@ resource "aws_globalaccelerator_custom_routing_accelerator" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of a custom routing accelerator.
 * `ip_address_type` - (Optional) The IP address type that an accelerator supports. For a custom routing accelerator, the value must be `"IPV4"`.
