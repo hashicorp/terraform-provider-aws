@@ -47,7 +47,7 @@ output "example" {
 * `version_id` - (Optional) Specifies the unique identifier of the version of the secret that you want to retrieve. Overrides `version_stage`.
 * `version_stage` - (Optional) Specifies the secret version that you want to retrieve by the staging label attached to the version. Defaults to `AWSCURRENT`.
 
-## Attributes Reference
+## Attribute Reference
 
 * `arn` - ARN of the secret.
 * `id` - Unique identifier of this version of the secret.
