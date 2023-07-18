@@ -99,7 +99,7 @@ For information about the maximum allowed number of Regions and tag value constr
 
 ## Attribute Reference
 
-In addition to the preceding arguments, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the replication set.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
