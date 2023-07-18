@@ -58,7 +58,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) A friendly description of the firewall policy.
 
