@@ -54,7 +54,7 @@ resource "aws_ecr_registry_scanning_configuration" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 - `scan_type` - (Required) the scanning type to set for the registry. Can be either `ENHANCED` or `BASIC`.
 - `rule` - (Optional) One or multiple blocks specifying scanning rules to determine which repository filters are used and at what frequency scanning will occur. See [below for schema](#rule).

@@ -44,7 +44,7 @@ resource "aws_ecs_capacity_provider" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `auto_scaling_group_provider` - (Required) Configuration block for the provider for the ECS auto scaling group. Detailed below.
 * `name` - (Required) Name of the capacity provider.

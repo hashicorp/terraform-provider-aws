@@ -42,7 +42,7 @@ resource "aws_ecrpublic_repository" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `repository_name` - (Required) Name of the repository.
 * `catalog_data` - (Optional) Catalog data configuration for the repository. See [below for schema](#catalog_data).
