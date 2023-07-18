@@ -123,7 +123,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Direct Connect gateway associations can be imported using `dx_gateway_id` together with `associated_gateway_id`,
+Import Direct Connect gateway associations using `dx_gateway_id` together with `associated_gateway_id`,
 e.g.,
 
 ```
