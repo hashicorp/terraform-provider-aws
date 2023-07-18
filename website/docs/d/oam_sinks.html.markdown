@@ -21,6 +21,6 @@ data "aws_oam_sinks" "example" {
 
 ## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arns` - Set of ARN of the Sinks.

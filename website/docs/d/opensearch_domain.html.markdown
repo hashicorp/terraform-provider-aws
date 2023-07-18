@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `access_policies` – Policy document attached to the domain.
 * `advanced_options` - Key-value string pairs to specify advanced configuration options.
