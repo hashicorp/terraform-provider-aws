@@ -21,7 +21,7 @@ resource "aws_quicksight_group_membership" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `group_name` - (Required) The name of the group in which the member will be added.
 * `member_name` - (Required) The name of the member to add to the group.
