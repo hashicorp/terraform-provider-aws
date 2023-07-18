@@ -39,7 +39,7 @@ resource "aws_elasticache_subnet_group" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` – (Required) Name for the cache subnet group. ElastiCache converts this name to lowercase.
 * `description` – (Optional) Description for the cache subnet group. Defaults to "Managed by Terraform".

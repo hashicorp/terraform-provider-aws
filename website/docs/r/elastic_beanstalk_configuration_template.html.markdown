@@ -29,7 +29,7 @@ resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A unique name for this Template.
 * `application` – (Required) name of the application to associate with this configuration template
