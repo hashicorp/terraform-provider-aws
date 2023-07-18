@@ -20,7 +20,7 @@ resource "aws_redshiftserverless_namespace" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `admin_user_password` - (Optional) The password of the administrator for the first database created in the namespace.
 * `admin_username` - (Optional) The username of the administrator for the first database created in the namespace.

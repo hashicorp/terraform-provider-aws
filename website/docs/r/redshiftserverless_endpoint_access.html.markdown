@@ -21,7 +21,7 @@ resource "aws_redshiftserverless_endpoint_access" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `endpoint_name` - (Required) The name of the endpoint.
 * `subnet_ids` - (Required) An array of VPC subnet IDs to associate with the endpoint.
