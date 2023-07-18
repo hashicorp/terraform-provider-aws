@@ -80,7 +80,7 @@ resource "aws_dynamodb_global_table" "myTable" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the global table. Must match underlying DynamoDB Table names in all regions.
 * `replica` - (Required) Underlying DynamoDB Table. At least 1 replica must be defined. See below.

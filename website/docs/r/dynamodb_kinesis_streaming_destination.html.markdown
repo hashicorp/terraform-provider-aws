@@ -36,7 +36,7 @@ resource "aws_dynamodb_kinesis_streaming_destination" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `stream_arn` - (Required) The ARN for a Kinesis data stream. This must exist in the same account and region as the DynamoDB table.
   
