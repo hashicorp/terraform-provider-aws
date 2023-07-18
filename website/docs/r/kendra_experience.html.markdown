@@ -93,7 +93,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Kendra Experience using the unique identifiers of the experience and index separated by a slash (`/`) e.g.,
+Import Kendra Experience using the unique identifiers of the experience and index separated by a slash (`/`). For example:
 
 ```
 $ terraform import aws_kendra_experience.example 1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f
