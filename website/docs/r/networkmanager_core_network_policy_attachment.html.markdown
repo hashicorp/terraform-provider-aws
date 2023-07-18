@@ -174,7 +174,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_networkmanager_core_network_policy_attachment` can be imported using the core network ID, e.g.
+Import `aws_networkmanager_core_network_policy_attachment` using the core network ID, e.g.
 
 ```
 $ terraform import aws_networkmanager_core_network_policy_attachment.example core-network-0d47f6t230mz46dy4

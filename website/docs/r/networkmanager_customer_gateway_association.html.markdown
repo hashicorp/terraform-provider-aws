@@ -73,7 +73,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-`aws_networkmanager_customer_gateway_association` can be imported using the global network ID and customer gateway ARN, e.g.
+Import `aws_networkmanager_customer_gateway_association` using the global network ID and customer gateway ARN, e.g.
 
 ```
 $ terraform import aws_networkmanager_customer_gateway_association.example global-network-0d47f6t230mz46dy4,arn:aws:ec2:us-west-2:123456789012:customer-gateway/cgw-123abc05e04123abc

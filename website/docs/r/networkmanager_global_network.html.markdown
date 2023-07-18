@@ -34,7 +34,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_networkmanager_global_network` can be imported using the global network ID, e.g.
+Import `aws_networkmanager_global_network` using the global network ID, e.g.
 
 ```
 $ terraform import aws_networkmanager_global_network.example global-network-0d47f6t230mz46dy4
