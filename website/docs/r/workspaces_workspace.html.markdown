@@ -63,9 +63,9 @@ The following arguments are supported:
 * `running_mode_auto_stop_timeout_in_minutes` – (Optional) The time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
 * `user_volume_size_gib` – (Optional) The size of the user storage.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The workspaces ID.
 * `ip_address` - The IP address of the WorkSpace.
