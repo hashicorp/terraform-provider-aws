@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_location_route_calculator` can be imported using the route calculator name, e.g.,
+Import `aws_location_route_calculator` using the route calculator name. For example:
 
 ```
 $ terraform import aws_location_route_calculator.example example

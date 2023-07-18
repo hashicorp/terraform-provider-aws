@@ -49,7 +49,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_macie2_invitation_accepter` can be imported using the admin account ID, e.g.,
+Import `aws_macie2_invitation_accepter` using the admin account ID. For example:
 
 ```
 $ terraform import aws_macie2_invitation_accepter.example 123456789012

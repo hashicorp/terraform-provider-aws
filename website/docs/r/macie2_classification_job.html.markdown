@@ -134,7 +134,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_macie2_classification_job` can be imported using the id, e.g.,
+Import `aws_macie2_classification_job` using the id. For example:
 
 ```
 $ terraform import aws_macie2_classification_job.example abcd1
