@@ -49,7 +49,7 @@ This data source supports the following arguments:
 
 ### filter Configuration Block
 
-This argument supports the following arguments:by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the [describe-regions AWS CLI Reference][1].
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.

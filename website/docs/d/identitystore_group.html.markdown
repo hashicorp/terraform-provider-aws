@@ -46,7 +46,7 @@ The following arguments are optional:
 
 ### `alternate_identifier` Configuration Block
 
-This argument supports the following arguments:by the `alternate_identifier` configuration block:
+The `alternate_identifier` configuration block supports the following arguments:
 
 * `external_id` - (Optional) Configuration block for filtering by the identifier issued by an external identity provider. Detailed below.
 * `unique_attribute` - (Optional) An entity attribute that's unique to a specific entity. Detailed below.
@@ -55,14 +55,14 @@ This argument supports the following arguments:by the `alternate_identifier` con
 
 ### `external_id` Configuration Block
 
-This argument supports the following arguments:by the `external_id` configuration block:
+The `external_id` configuration block supports the following arguments:
 
 * `id` - (Required) The identifier issued to this resource by an external identity provider.
 * `issuer` - (Required) The issuer for an external identifier.
 
 ### `unique_attribute` Configuration Block
 
-This argument supports the following arguments:by the `unique_attribute` configuration block:
+The `unique_attribute` configuration block supports the following arguments:
 
 * `attribute_path` - (Required) Attribute path that is used to specify which attribute name to search. For example: `DisplayName`. Refer to the [Group data type](https://docs.aws.amazon.com/singlesignon/latest/IdentityStoreAPIReference/API_Group.html).
 * `attribute_value` - (Required) Value for an attribute.

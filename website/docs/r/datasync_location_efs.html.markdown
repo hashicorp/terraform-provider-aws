@@ -41,7 +41,7 @@ This resource supports the following arguments:
 
 ### ec2_config Argument Reference
 
-This argument supports the following arguments:inside the `ec2_config` configuration block:
+The `ec2_config` configuration block supports the following arguments:
 
 * `security_group_arns` - (Required) List of Amazon Resource Names (ARNs) of the EC2 Security Groups that are associated with the EFS Mount Target.
 * `subnet_arn` - (Required) Amazon Resource Name (ARN) of the EC2 Subnet that is associated with the EFS Mount Target.

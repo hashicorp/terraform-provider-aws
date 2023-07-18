@@ -37,13 +37,13 @@ This resource supports the following arguments:
 
 ### mount_options Argument Reference
 
-This argument supports the following arguments:inside the `mount_options` configuration block:
+The `mount_options` configuration block supports the following arguments:
 
 * `version` - (Optional) The specific NFS version that you want DataSync to use for mounting your NFS share. Valid values: `AUTOMATIC`, `NFS3`, `NFS4_0` and `NFS4_1`. Default: `AUTOMATIC`
 
 ### on_prem_config Argument Reference
 
-This argument supports the following arguments:inside the `on_prem_config` configuration block:
+The `on_prem_config` configuration block supports the following arguments:
 
 * `agent_arns` - (Required) List of Amazon Resource Names (ARNs) of the DataSync Agents used to connect to the NFS server.
 

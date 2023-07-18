@@ -36,7 +36,7 @@ This resource supports the following arguments:
 
 ### s3_config Argument Reference
 
-This argument supports the following arguments:inside the `s3_config` configuration block:
+The `s3_config` configuration block supports the following arguments:
 
 * `bucket_access_role_arn` - (Required) ARN of the IAM Role used to connect to the S3 Bucket.
 

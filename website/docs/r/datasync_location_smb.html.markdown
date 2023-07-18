@@ -41,7 +41,7 @@ This resource supports the following arguments:
 
 ### mount_options Argument Reference
 
-This argument supports the following arguments:inside the `mount_options` configuration block:
+The `mount_options` configuration block supports the following arguments:
 
 * `version` - (Optional) The specific SMB version that you want DataSync to use for mounting your SMB share. Valid values: `AUTOMATIC`, `SMB2`, and `SMB3`. Default: `AUTOMATIC`
 

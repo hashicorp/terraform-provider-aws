@@ -43,7 +43,7 @@ This resource supports the following arguments:
 
 ### logging_config
 
-This argument supports the following arguments:in the `logging_config` configuration block:
+The `logging_config` configuration block supports the following arguments:
 
 * `log_group_name` - (Required) Name of the CloudWatch Log Group where CloudFormation sends error logging information when invoking the type's handlers.
 * `log_role_arn` - (Required) Amazon Resource Name (ARN) of the IAM Role CloudFormation assumes when sending error logging information to CloudWatch Logs.
