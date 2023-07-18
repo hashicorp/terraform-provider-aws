@@ -103,7 +103,7 @@ consisting of a DNS name and a port number
 
 ## Import
 
-DAX Clusters can be imported using the `cluster_name`, e.g.,
+Import DAX Clusters using the `cluster_name`. For example:
 
 ```
 $ terraform import aws_dax_cluster.my_cluster my_cluster
