@@ -26,7 +26,7 @@ data "aws_api_gateway_vpc_link" "my_api_gateway_vpc_link" {
 * `name` - (Required) Name of the API Gateway VPC Link to look up. If no API Gateway VPC Link is found with this name, an error will be returned.
  If multiple API Gateway VPC Links are found with this name, an error will be returned.
 
-## Attributes Reference
+## Attribute Reference
 
 * `id` - Set to the ID of the found API Gateway VPC Link.
 * `description` - Description of the VPC link.
