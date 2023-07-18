@@ -26,7 +26,7 @@ The following arguments are required:
 
 ## Attribute Reference
 
-In addition, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the ACL.
 * `arn` - ARN of the ACL.
