@@ -163,7 +163,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Data quality job definitions can be imported using the `name`, e.g.,
+Import Data quality job definitions using the `name`. For example:
 
 ```
 $ terraform import aws_sagemaker_data_quality_job_definition.test_data_quality_job_definition data-quality-job-definition-foo

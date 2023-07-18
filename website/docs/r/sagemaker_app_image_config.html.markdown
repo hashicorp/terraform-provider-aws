@@ -78,7 +78,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker App Image Configs can be imported using the `name`, e.g.,
+Import SageMaker App Image Configs using the `name`. For example:
 
 ```
 $ terraform import aws_sagemaker_app_image_config.example example
