@@ -84,7 +84,7 @@ resource "aws_budgets_budget" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) The ID of the target account for budget. Will use current user's account_id by default if omitted.
 * `budget_name` - (Required) The name of a budget.

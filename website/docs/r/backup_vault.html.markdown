@@ -21,7 +21,7 @@ resource "aws_backup_vault" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `force_destroy` - (Optional, Default: `false`) A boolean that indicates that all recovery points stored in the vault are deleted so that the vault can be destroyed without error.
 * `kms_key_arn` - (Optional) The server-side encryption key that is used to protect your backups.
