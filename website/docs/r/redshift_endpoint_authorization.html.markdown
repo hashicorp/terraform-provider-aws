@@ -21,7 +21,7 @@ resource "aws_redshift_endpoint_authorization" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account` - (Required) The Amazon Web Services account ID to grant access to.
 * `cluster_identifier` - (Required) The cluster identifier of the cluster to grant access to.
