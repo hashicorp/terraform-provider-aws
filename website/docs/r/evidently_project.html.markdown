@@ -66,7 +66,7 @@ resource "aws_evidently_project" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `data_delivery` - (Optional) A block that contains information about where Evidently is to store evaluation events for longer term storage, if you choose to do so. If you choose not to store these events, Evidently deletes them after using them to produce metrics and other experiment results that you can view. See below.
 * `description` - (Optional) Specifies the description of the project.

@@ -107,7 +107,7 @@ resource "aws_evidently_feature" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `default_variation` - (Optional) The name of the variation to use as the default variation. The default variation is served to users who are not allocated to any ongoing launches or experiments of this feature. This variation must also be listed in the `variations` structure. If you omit `default_variation`, the first variation listed in the `variations` structure is used as the default variation.
 * `description` - (Optional) Specifies the description of the feature.

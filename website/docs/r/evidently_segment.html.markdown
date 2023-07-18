@@ -58,7 +58,7 @@ resource "aws_evidently_segment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional, Forces new resource) Specifies the description of the segment.
 * `name` - (Required, Forces new resource) A name for the segment.
