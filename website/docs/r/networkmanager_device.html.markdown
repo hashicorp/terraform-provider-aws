@@ -22,7 +22,7 @@ resource "aws_networkmanager_device" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `aws_location` - (Optional) The AWS location of the device. Documented below.
 * `description` - (Optional) A description of the device.
