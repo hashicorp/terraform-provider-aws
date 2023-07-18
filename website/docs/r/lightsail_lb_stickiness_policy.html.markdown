@@ -31,7 +31,7 @@ resource "aws_lightsail_lb_stickiness_policy" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `lb_name` - (Required) The name of the load balancer to which you want to enable session stickiness.
 * `cookie_duration` - (Required) The cookie duration in seconds. This determines the length of the session stickiness.
