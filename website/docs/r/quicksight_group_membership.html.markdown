@@ -28,9 +28,9 @@ The following arguments are supported:
 * `aws_account_id` - (Optional) The ID for the AWS account that the group is in. Currently, you use the ID for the AWS account that contains your Amazon QuickSight account.
 * `namespace` - (Required) The namespace that you want the user to be a part of. Defaults to `default`.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

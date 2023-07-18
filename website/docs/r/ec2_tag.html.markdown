@@ -46,9 +46,9 @@ The following arguments are supported:
 * `key` - (Required) The tag name.
 * `value` - (Required) The value of the tag.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 resource identifier and key, separated by a comma (`,`)
 

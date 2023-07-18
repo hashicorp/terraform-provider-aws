@@ -177,9 +177,9 @@ Supported nested arguments for the `validation_option` configuration block:
 * `domain_name` - (Required) Fully qualified domain name (FQDN) in the certificate.
 * `validation_domain` - (Required) Domain name that you want ACM to use to send you validation emails. This domain name is the suffix of the email addresses that you want ACM to use. This must be the same as the `domain_name` value or a superdomain of the `domain_name` value. For example, if you request a certificate for `"testing.example.com"`, you can specify `"example.com"` for this value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ARN of the certificate
 * `arn` - ARN of the certificate

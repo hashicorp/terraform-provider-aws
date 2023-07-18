@@ -421,9 +421,9 @@ The `sse_kms_encrypted_objects` configuration block supports the following argum
 
 * `status` - (Required) Whether the existing objects should be replicated. Either `"Enabled"` or `"Disabled"`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - S3 source bucket name.
 

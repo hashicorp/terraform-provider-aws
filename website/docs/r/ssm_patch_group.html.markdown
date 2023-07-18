@@ -31,8 +31,8 @@ The following arguments are supported:
 * `baseline_id` - (Required) The ID of the patch baseline to register the patch group with.
 * `patch_group` - (Required) The name of the patch group that should be registered with the patch baseline.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the patch group and ID of the patch baseline separated by a comma (`,`).

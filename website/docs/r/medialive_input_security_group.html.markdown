@@ -40,9 +40,9 @@ The following arguments are optional:
 
 * `cidr` (Required) - The IPv4 CIDR that's whitelisted.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - InputSecurityGroup Id.
 * `arn` - ARN of the InputSecurityGroup.

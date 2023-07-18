@@ -26,9 +26,9 @@ The following arguments are supported:
 
 * `arn` - (Required) ARN of the code signing configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `allowed_publishers` - List of allowed publishers as signing profiles for this code signing configuration.
 * `config_id` - Unique identifier for the code signing configuration.

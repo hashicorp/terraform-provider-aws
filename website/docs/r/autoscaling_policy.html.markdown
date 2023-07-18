@@ -406,9 +406,9 @@ The following arguments are supported:
 * `name` - (Required) Name of the dimension.
 * `value` - (Required) Value of the dimension.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN assigned by AWS to the scaling policy.
 * `name` - Scaling policy's name.

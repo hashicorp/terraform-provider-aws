@@ -48,9 +48,9 @@ The following arguments are supported:
 * `idp_identifiers` (Optional) - The list of identity providers.
 * `provider_details` (Optional) - The map of identity details, such as access token
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

@@ -89,9 +89,9 @@ The following arguments are supported:
 * `ipam_pool_id` - (Required) The ID of the pool to which you want to assign a CIDR.
 * `netmask_length` - (Optional) The netmask length of the CIDR you would like to allocate to the IPAM pool. Valid Values: `0-128`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the allocation.
 * `resource_id` - The ID of the resource.

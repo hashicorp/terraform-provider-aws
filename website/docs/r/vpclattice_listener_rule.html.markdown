@@ -142,9 +142,9 @@ path match match (`match`) supports the following:
 * `exact` - (Optional) Specifies an exact type match.
 * `prefix` - (Optional) Specifies a prefix type match. Matches the value with the prefix.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the target group.
 * `rule_id` - Unique identifier for the target group.

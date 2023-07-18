@@ -280,9 +280,9 @@ The following arguments are optional:
 * `security_groups` - (Optional) List of security groups. A group name can be used relative to the default VPC. Otherwise, group ID.
 * `self` - (Optional) Whether the security group itself will be added as a source to this egress rule.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the security group.
 * `id` - ID of the security group.

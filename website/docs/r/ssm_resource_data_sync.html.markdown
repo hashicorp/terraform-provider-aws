@@ -83,9 +83,9 @@ The following arguments are supported:
 * `prefix` - (Optional) Prefix for the bucket.
 * `sync_format` - (Optional) A supported sync format. Only JsonSerDe is currently supported. Defaults to JsonSerDe.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

@@ -84,9 +84,9 @@ This block is used to define a range of TCP ports that should form exceptions to
 * `min_range` - (Required) The first port in the range of TCP ports.
 * `max_range` - (Required) The final port in the range of TCP ports.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

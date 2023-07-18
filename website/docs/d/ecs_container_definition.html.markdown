@@ -27,9 +27,9 @@ The following arguments are supported:
 * `task_definition` - (Required) ARN of the task definition which contains the container
 * `container_name` - (Required) Name of the container definition
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `image` - Docker image in use, including the digest
 * `image_digest` - Digest of the docker image in use

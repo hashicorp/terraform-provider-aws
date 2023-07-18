@@ -34,9 +34,9 @@ The following arguments are supported:
 * `public_key` - (Required) The SSH public key. The public key must be encoded in ssh-rsa format or PEM format.
 * `status` - (Optional) The status to assign to the SSH public key. Active means the key can be used for authentication with an AWS CodeCommit repository. Inactive means the key cannot be used. Default is `active`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `ssh_public_key_id` - The unique identifier for the SSH public key.
 * `fingerprint` - The MD5 message digest of the SSH public key.

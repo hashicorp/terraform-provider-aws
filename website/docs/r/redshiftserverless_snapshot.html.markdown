@@ -27,9 +27,9 @@ The following arguments are supported:
 * `snapshot_name` - (Required) The name of the snapshot.
 * `retention_period` - (Optional) How long to retain the created snapshot. Default value is `-1`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `accounts_with_provisioned_restore_access` - All of the Amazon Web Services accounts that have access to restore a snapshot to a provisioned cluster.
 * `accounts_with_restore_access` - All of the Amazon Web Services accounts that have access to restore a snapshot to a namespace.

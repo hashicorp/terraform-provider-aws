@@ -67,9 +67,9 @@ The following arguments are supported by the `unique_attribute` configuration bl
 * `attribute_path` - (Required) Attribute path that is used to specify which attribute name to search. For example: `DisplayName`. Refer to the [Group data type](https://docs.aws.amazon.com/singlesignon/latest/IdentityStoreAPIReference/API_Group.html).
 * `attribute_value` - (Required) Value for an attribute.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of the group in the Identity Store.
 * `description` - Description of the specified group.

@@ -37,9 +37,9 @@ The following arguments are supported:
 * `renewal_type` - (Required) Specifies whether the term of your reserved queue pricing plan. Valid values are `AUTO_RENEW` or `EXPIRE`.
 * `reserved_slots` - (Required) Specifies the number of reserved transcode slots (RTS) for queue.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The same as `name`
 * `arn` - The Arn of the queue

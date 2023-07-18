@@ -32,7 +32,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `availability_zones` - Availability zones where the instance is available.
 * `max_iops_per_db_instance` - Maximum total provisioned IOPS for a DB instance.

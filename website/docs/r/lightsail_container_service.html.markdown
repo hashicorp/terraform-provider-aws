@@ -129,9 +129,9 @@ The `ecr_image_puller_role` blocks supports the following arguments:
 
 * `is_active` - (Optional) A Boolean value that indicates whether to activate the role. The default is `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the container service.
 * `availability_zone` - The Availability Zone. Follows the format us-east-2a (case-sensitive).

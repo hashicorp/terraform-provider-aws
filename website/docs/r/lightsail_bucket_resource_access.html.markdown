@@ -38,9 +38,9 @@ The following arguments are supported:
 * `bucket_name` - (Required) The name of the bucket to grant access to.
 * `resource_name` - (Required) The name of the resource to be granted bucket access.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A combination of attributes separated by a `,` to create a unique id: `bucket_name`,`resource_name`
 

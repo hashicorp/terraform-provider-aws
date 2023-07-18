@@ -57,9 +57,9 @@ The following arguments are supported:
 * `type` - (Required) Type of condition. Value values: `StringEquals`.
 * `value` - (Required) Value for the key.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The statement ID of the EventBridge permission.
 

@@ -81,9 +81,9 @@ The following arguments are supported:
   The IP range is in CIDR notation.
   Can contain a maximum of 200 items.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The user pool ID. or The user pool ID and Client Id separated by a `:` if the configuration is client specific.
 

@@ -63,9 +63,9 @@ The following arguments are supported:
 * `skip_destroy` - (Optional) Set to true if you do not wish the connection to be deleted at destroy time, and instead just removed from the Terraform state.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the connection.
 * `aws_device` - The Direct Connect endpoint on which the physical connection terminates.

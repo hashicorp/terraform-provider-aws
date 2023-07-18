@@ -28,9 +28,9 @@ The following arguments are required:
 * `group_name` - (Required) Name of the Availability Zone Group.
 * `opt_in_status` - (Required) Indicates whether to enable or disable Availability Zone Group. Valid values: `opted-in` or `not-opted-in`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the Availability Zone Group.
 

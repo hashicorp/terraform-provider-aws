@@ -37,9 +37,9 @@ The following arguments are supported:
 * `device_name` - (Optional) The name of the device.
 * `iot_thing_name` - (Optional) Amazon Web Services Internet of Things (IoT) object name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The id is constructed from `device-fleet-name/device-name`.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Device.

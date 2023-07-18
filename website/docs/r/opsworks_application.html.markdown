@@ -93,9 +93,9 @@ A `ssl_configuration` block supports the following arguments (can only be define
 * `certificate` - (Required) The contents of the certificate's domain.crt file.
 * `chain` - (Optional)  Can be used to specify an intermediate certificate authority key or client authentication.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The id of the application.
 

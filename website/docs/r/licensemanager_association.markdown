@@ -48,9 +48,9 @@ The following arguments are supported:
 * `license_configuration_arn` - (Required) ARN of the license configuration.
 * `resource_arn` - (Required) ARN of the resource associated with the license configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The license configuration ARN.
 

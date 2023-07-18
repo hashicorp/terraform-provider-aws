@@ -29,9 +29,9 @@ The following arguments are supported:
 * `virtual_gateway_name` - (Required) Name of the virtual gateway in which the route exists.
 * `mesh_owner` - (Optional) AWS account ID of the service mesh's owner.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the gateway route.
 * `created_date` - Creation date of the gateway route.

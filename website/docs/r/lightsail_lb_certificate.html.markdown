@@ -39,9 +39,9 @@ The following arguments are supported:
 * `name` - (Required) The SSL/TLS certificate name.
 * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. `domain_name` attribute is automatically added as a Subject Alternative Name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A combination of attributes to create a unique id: `lb_name`,`name`
 * `arn` - The ARN of the lightsail certificate.

@@ -90,9 +90,9 @@ The following arguments are required:
 * `entry_point_arguments` - (Optional) The arguments for job application.
 * `spark_submit_parameters` - (Optional) The Spark submit parameters that are used for job runs.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the job template.
 * `id` - The ID of the job template.

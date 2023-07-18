@@ -170,9 +170,9 @@ The following arguments are supported:
 * `region` - (Optional) AWS Region for RDS HTTP endpoint. Defaults to current region.
 * `schema` - (Optional) Logical schema name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN
 

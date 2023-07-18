@@ -49,9 +49,9 @@ The `kinesis_configuration` block supports the following arguments:
 * `aggregation_enabled` - (Optional) Enables QLDB to publish multiple data records in a single Kinesis Data Streams record, increasing the number of records sent per API call. Default: `true`.
 * `stream_arn` - (Required) The Amazon Resource Name (ARN) of the Kinesis Data Streams resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the QLDB Stream.
 * `arn` - The ARN of the QLDB Stream.

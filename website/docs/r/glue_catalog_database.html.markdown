@@ -62,9 +62,9 @@ The following arguments are supported:
 
 * `data_lake_principal_identifier` - (Optional) An identifier for the Lake Formation principal.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Glue Catalog Database.
 * `id` - Catalog ID and name of the database.

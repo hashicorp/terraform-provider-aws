@@ -29,8 +29,8 @@ The following arguments are supported:
 Removing an `aws_dx_connection_confirmation` resource from your configuration will remove it
 from your statefile and management, **but will not destroy the Hosted Connection.**
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the connection.

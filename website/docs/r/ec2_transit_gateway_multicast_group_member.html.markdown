@@ -29,8 +29,8 @@ The following arguments are supported:
 * `network_interface_id` - (Required) The group members' network interface ID to register with the transit gateway multicast group.
 * `transit_gateway_multicast_domain_id` - (Required) The ID of the transit gateway multicast domain.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway Multicast Group Member identifier.

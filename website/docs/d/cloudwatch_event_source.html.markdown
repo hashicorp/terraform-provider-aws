@@ -26,9 +26,9 @@ The following arguments are supported:
 
 * `name_prefix` - (Optional) Specifying this limits the results to only those partner event sources with names that start with the specified prefix
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the partner event source
 * `created_by` - Name of the SaaS partner that created the event source

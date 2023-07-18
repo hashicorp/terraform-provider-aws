@@ -46,8 +46,8 @@ The following arguments are supported (at least one needs to be specified):
 * `name` - (Optional) Name of the WAF rule group.
 * `metric_name` - (Optional) Name of the WAF rule group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the WAF rule group.

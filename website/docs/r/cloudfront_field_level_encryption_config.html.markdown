@@ -69,9 +69,9 @@ The following arguments are supported:
 * `profile_id` - (Required) ID of profile to use for field-level encryption query argument-profile mapping
 * `query_arg` - (Required) Query argument for field-level encryption query argument-profile mapping.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `caller_reference` - Internal value used by CloudFront to allow future updates to the Field Level Encryption Config.
 * `etag` - The current version of the Field Level Encryption Config. For example: `E2QWRUHAPOMQZL`.

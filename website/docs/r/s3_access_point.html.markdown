@@ -87,9 +87,9 @@ The following arguments are required:
 
 * `vpc_id` - (Required)  This access point will only allow connections from the specified VPC ID.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `alias` - Alias of the S3 Access Point.
 * `arn` - ARN of the S3 Access Point.

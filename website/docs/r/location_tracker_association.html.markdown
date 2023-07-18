@@ -34,9 +34,9 @@ The following arguments are required:
 * `consumer_arn` - (Required) The Amazon Resource Name (ARN) for the geofence collection to be associated to tracker resource. Used when you need to specify a resource across all AWS.
 * `tracker_name` - (Required) The name of the tracker resource to be associated with a geofence collection.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Timeouts
 

@@ -58,9 +58,9 @@ The `target_ip` object supports the following:
 * `ip` - (Required) One IP address that you want to forward DNS queries to. You can specify only IPv4 addresses.
 * `port` - (Optional) The port at `ip` that you want to forward DNS queries to. Default value is `53`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the resolver rule.
 * `arn` - The ARN (Amazon Resource Name) for the resolver rule.

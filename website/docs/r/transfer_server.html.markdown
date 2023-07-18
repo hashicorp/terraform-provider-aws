@@ -138,9 +138,9 @@ The following arguments are supported:
 * `execution_role` - (Required) Includes the necessary permissions for S3, EFS, and Lambda operations that Transfer can assume, so that all workflow steps can operate on the required resources.
 * `workflow_id` - (Required)  A unique identifier for the workflow.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of Transfer Server
 * `id`  - The Server ID of the Transfer Server (e.g., `s-12345678`)

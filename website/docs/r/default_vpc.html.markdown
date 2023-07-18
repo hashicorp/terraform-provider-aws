@@ -43,9 +43,9 @@ The following additional arguments are supported:
 
 * `force_destroy` - (Optional) Whether destroying the resource deletes the default VPC. Default: `false`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `cidr_block` - The primary IPv4 CIDR block for the VPC
 * `instance_tenancy` - The allowed tenancy of instances launched into the VPC

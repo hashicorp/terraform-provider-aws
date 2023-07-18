@@ -95,9 +95,9 @@ The following arguments are supported:
 * `subnets` - (Optional) The ID of the subnets in the VPC that you want to connect.
 * `vpc_id` - (Optional) The ID of the VPC that the workforce uses for communication.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Workforce.
 * `id` - The name of the Workforce.

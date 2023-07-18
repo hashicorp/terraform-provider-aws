@@ -45,9 +45,9 @@ The following arguments are supported:
 * `vpc_id` - (Required) The ID of the VPC.
 * `vpn_gateway_id` - (Required) The ID of the Virtual Private Gateway.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `vpc_id` - The ID of the VPC that Virtual Private Gateway is attached to.
 * `vpn_gateway_id` - The ID of the Virtual Private Gateway.

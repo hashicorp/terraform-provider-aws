@@ -57,9 +57,9 @@ The following arguments are supported:
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - DynamoDB resource identifier and key, separated by a comma (`,`)
 

@@ -132,9 +132,9 @@ The following arguments are supported:
 * `subnet_ids` - (Required) The identifiers of the subnets for the directory servers.
 * `vpc_id` - (Optional) The identifier of the VPC in which to create the directory.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 

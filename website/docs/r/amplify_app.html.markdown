@@ -179,9 +179,9 @@ A `custom_rule` block supports the following arguments:
 * `status` - (Optional) Status code for a URL rewrite or redirect rule. Valid values: `200`, `301`, `302`, `404`, `404-200`.
 * `target` - (Required) Target pattern for a URL rewrite or redirect rule.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Amplify app.
 * `default_domain` - Default domain for the Amplify app.

@@ -38,9 +38,9 @@ The following arguments are supported:
 
 * `source_type` - (Optional) Type of source that will be generating the events. Valid options are db-instance, db-security-group, db-parameter-group, db-snapshot, db-cluster or db-cluster-snapshot.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `event_categories` - List of the event categories.
 * `id` - Region of the event categories.

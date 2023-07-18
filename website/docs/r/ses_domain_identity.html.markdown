@@ -42,9 +42,9 @@ The following arguments are supported:
 
 * `domain` - (Required) The domain name to assign to SES
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the domain identity.
 * `verification_token` - A code which when added to the domain as a TXT record

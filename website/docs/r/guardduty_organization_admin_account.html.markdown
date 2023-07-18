@@ -33,9 +33,9 @@ The following arguments are supported:
 
 * `admin_account_id` - (Required) AWS account identifier to designate as a delegated administrator for GuardDuty.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - AWS account identifier.
 

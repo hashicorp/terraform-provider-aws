@@ -54,9 +54,9 @@ The following arguments are supported:
 * `rule_id` - (Required) The ID of a [rule](/docs/providers/aws/r/waf_rule.html)
 * `type` - (Optional) The rule type, either [`REGULAR`](/docs/providers/aws/r/waf_rule.html), [`RATE_BASED`](/docs/providers/aws/r/waf_rate_based_rule.html), or `GROUP`. Defaults to `REGULAR`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF rule group.
 * `arn` - The ARN of the WAF rule group.

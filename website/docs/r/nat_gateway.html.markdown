@@ -48,9 +48,9 @@ The following arguments are supported:
 * `subnet_id` - (Required) The Subnet ID of the subnet in which to place the gateway.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `association_id` - The association ID of the Elastic IP address that's associated with the NAT gateway. Only available when `connectivity_type` is `public`.
 * `id` - The ID of the NAT Gateway.

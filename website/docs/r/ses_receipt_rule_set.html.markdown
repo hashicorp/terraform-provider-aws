@@ -24,9 +24,9 @@ The following arguments are supported:
 
 * `rule_set_name` - (Required) Name of the rule set.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - SES receipt rule set ARN.
 * `id` - SES receipt rule set name.

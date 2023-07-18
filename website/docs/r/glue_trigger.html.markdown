@@ -150,9 +150,9 @@ The following arguments are supported:
 * `batch_size` - (Required)Number of events that must be received from Amazon EventBridge before EventBridge  event trigger fires.
 * `batch_window` - (Optional) Window of time in seconds after which EventBridge event trigger fires. Window starts when first event is received. Default value is `900`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of Glue Trigger
 * `id` - Trigger name

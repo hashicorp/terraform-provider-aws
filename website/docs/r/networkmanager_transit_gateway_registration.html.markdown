@@ -34,9 +34,9 @@ The following arguments are supported:
 * `global_network_id` - (Required) The ID of the Global Network to register to.
 * `transit_gateway_arn` - (Required) The ARN of the Transit Gateway to register.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

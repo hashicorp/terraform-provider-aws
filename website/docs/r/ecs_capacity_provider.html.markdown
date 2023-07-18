@@ -64,9 +64,9 @@ The following arguments are supported:
 * `status` - (Optional) Whether auto scaling is managed by ECS. Valid values are `ENABLED` and `DISABLED`.
 * `target_capacity` - (Optional) Target utilization for the capacity provider. A number between 1 and 100.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN that identifies the capacity provider.
 * `id` - ARN that identifies the capacity provider.

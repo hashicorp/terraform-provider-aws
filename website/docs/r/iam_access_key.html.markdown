@@ -65,9 +65,9 @@ The following arguments are supported:
 * `status` - (Optional) Access key status to apply. Defaults to `Active`. Valid values are `Active` and `Inactive`.
 * `user` - (Required) IAM user to associate with this access key.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `create_date` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the access key was created.
 * `encrypted_secret` - Encrypted secret, base64 encoded, if `pgp_key` was specified. This attribute is not available for imported resources. The encrypted secret may be decrypted using the command line, for example: `terraform output -raw encrypted_secret | base64 --decode | keybase pgp decrypt`.

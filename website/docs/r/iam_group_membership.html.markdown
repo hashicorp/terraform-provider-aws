@@ -52,9 +52,9 @@ The following arguments are supported:
 * `users` - (Required) A list of IAM User names to associate with the Group
 * `group` – (Required) The IAM Group name to attach the list of `users` to
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `name` - The name to identify the Group Membership
 * `users` - list of IAM User names

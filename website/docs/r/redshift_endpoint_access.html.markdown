@@ -30,9 +30,9 @@ The following arguments are supported:
 * `subnet_group_name` - (Required) The subnet group from which Amazon Redshift chooses the subnet to deploy the endpoint.
 * `vpc_security_group_ids` - (Optional) The security group that defines the ports, protocols, and sources for inbound traffic that you are authorizing into your endpoint.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `address` - The DNS address of the endpoint.
 * `id` - The Redshift-managed VPC endpoint name.

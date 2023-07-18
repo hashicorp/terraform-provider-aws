@@ -27,9 +27,9 @@ The following arguments are supported:
 * `description` - (Optional) A description for the group.
 * `namespace` - (Optional) The namespace. Currently, you should set this to `default`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of group
 

@@ -691,9 +691,9 @@ This configuration block supports the following:
 
 - `reuse_on_scale_in` - (Optional) Whether instances in the Auto Scaling group can be returned to the warm pool on scale in.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 - `id` - Auto Scaling Group id.
 - `arn` - ARN for this Auto Scaling Group

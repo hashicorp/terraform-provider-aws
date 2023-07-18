@@ -63,9 +63,9 @@ The following arguments are supported:
 * `cidr` - (Required) CIDR block of this entry.
 * `description` - (Optional) Description of this entry. Due to API limitations, updating only the description of an existing entry requires temporarily removing and re-adding the entry.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the prefix list.
 * `id` - ID of the prefix list.

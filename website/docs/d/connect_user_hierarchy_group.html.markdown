@@ -40,9 +40,9 @@ The following arguments are supported:
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific hierarchy group by name
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the hierarchy group.
 * `hierarchy_path` - Block that contains information about the levels in the hierarchy group. The `hierarchy_path` block is documented below.

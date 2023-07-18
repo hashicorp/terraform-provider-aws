@@ -24,9 +24,9 @@ The following arguments are supported:
 
 * `cluster_id` – (Required) Group identifier.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `node_type` – The cluster node type.
 * `num_cache_nodes` – The number of cache nodes that the cache cluster has.

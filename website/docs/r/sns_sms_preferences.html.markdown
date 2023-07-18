@@ -27,6 +27,6 @@ The following arguments are supported:
 * `default_sms_type` - (Optional) The type of SMS message that you will send by default. Possible values are: Promotional, Transactional
 * `usage_report_s3_bucket` - (Optional) The name of the Amazon S3 bucket to receive daily SMS usage reports from Amazon SNS.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.

@@ -43,9 +43,9 @@ The following arguments are supported:
 * `role_arn` - (Required) The identity of the role to which the alias refers.
 * `credential_duration` - (Optional) The duration of the credential, in seconds. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 900 seconds (15 minutes) to 43200 seconds (12 hours).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN assigned by AWS to this role alias.
 

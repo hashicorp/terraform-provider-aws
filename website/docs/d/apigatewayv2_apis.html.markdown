@@ -27,8 +27,8 @@ The following arguments are supported:
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired APIs.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `ids` - Set of API identifiers.

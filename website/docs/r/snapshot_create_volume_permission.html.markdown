@@ -35,8 +35,8 @@ The following arguments are supported:
 * `snapshot_id` - (Required) A snapshot ID
 * `account_id` - (Required) An AWS Account ID to add create volume permissions. The AWS Account cannot be the snapshot's owner
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A combination of "`snapshot_id`-`account_id`".

@@ -28,9 +28,9 @@ The following arguments are supported:
 * `image_name` - (Required) The name of the image. Must be unique to your account.
 * `base_image` - (Required) The registry path of the container image on which this image version is based.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the Image.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Image Version.

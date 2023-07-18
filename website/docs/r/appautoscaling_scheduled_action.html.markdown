@@ -81,8 +81,8 @@ The following arguments are supported:
 * `max_capacity` - (Optional) Maximum capacity. At least one of `max_capacity` or `min_capacity` must be set.
 * `min_capacity` - (Optional) Minimum capacity. At least one of `min_capacity` or `max_capacity` must be set.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the scheduled action.

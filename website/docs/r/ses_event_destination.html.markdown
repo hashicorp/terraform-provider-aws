@@ -89,9 +89,9 @@ The following arguments are supported:
 
 * `topic_arn` - (Required) The ARN of the SNS topic
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The SES event destination name.
 * `arn` - The SES event destination ARN.

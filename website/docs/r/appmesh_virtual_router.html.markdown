@@ -64,9 +64,9 @@ The `port_mapping` object supports the following:
 * `port` - (Required) Port used for the port mapping.
 * `protocol` - (Required) Protocol used for the port mapping. Valid values are `http`,`http2`, `tcp` and `grpc`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the virtual router.
 * `arn` - ARN of the virtual router.

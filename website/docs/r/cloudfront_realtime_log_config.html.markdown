@@ -90,9 +90,9 @@ The `kinesis_stream_config` object supports the following:
 See the [AWS documentation](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/real-time-logs.html#understand-real-time-log-config-iam-role) for more information.
 * `stream_arn` - (Required) The ARN of the [Kinesis data stream](kinesis_stream.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the CloudFront real-time log configuration.
 * `arn` - The ARN (Amazon Resource Name) of the CloudFront real-time log configuration.

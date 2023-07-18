@@ -54,9 +54,9 @@ The following arguments are required:
 * `user_group_id` - (Required) ID of the user group.
 * `user_id` - (Required) ID of the user to associated with the user group.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

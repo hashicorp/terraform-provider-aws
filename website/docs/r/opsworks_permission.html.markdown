@@ -32,8 +32,8 @@ The following arguments are supported:
 * `level` - (Optional) The users permission level. Mus be one of `deny`, `show`, `deploy`, `manage`, `iam_only`
 * `stack_id` - (Required) The stack to set the permissions for
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The computed id of the permission. Please note that this is only used internally to identify the permission. This value is not used in aws.

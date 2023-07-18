@@ -54,9 +54,9 @@ The SIP credentials used to authenticate requests to your Amazon Chime Voice Con
 * `username` - (Required) RFC2617 compliant username associated with the SIP credentials.
 * `password` - (Required) RFC2617 compliant password associated with the SIP credentials.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Chime Voice Connector ID.
 

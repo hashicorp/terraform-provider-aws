@@ -24,9 +24,9 @@ The following arguments are supported:
 
 * `user_id` – (Required) Identifier for the user.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `user_id` - Identifier for the user.
 * `user_name` - User name of the user.

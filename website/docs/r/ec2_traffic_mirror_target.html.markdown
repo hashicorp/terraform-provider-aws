@@ -44,9 +44,9 @@ The following arguments are supported:
 
 **NOTE:** Either `network_interface_id` or `network_load_balancer_arn` should be specified and both should not be specified together
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Traffic Mirror target.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

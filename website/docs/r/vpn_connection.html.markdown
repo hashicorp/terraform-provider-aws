@@ -192,9 +192,9 @@ The `cloudwatch_log_options` blocks supports the following arguments:
 * `log_group_arn` - (Optional) The Amazon Resource Name (ARN) of the CloudWatch log group to send logs to.
 * `log_output_format` - (Optional) Set log format. Default format is json. Possible values are: `json` and `text`. The default is `json`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the VPN Connection.
 * `id` - The amazon-assigned ID of the VPN connection.

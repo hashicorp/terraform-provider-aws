@@ -55,9 +55,9 @@ Amazon has guidelines for specifying the Stream size that should be referenced w
 
 * `stream_mode` - (Required) Specifies the capacity mode of the stream. Must be either `PROVISIONED` or `ON_DEMAND`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique Stream id
 * `name` - The unique Stream name

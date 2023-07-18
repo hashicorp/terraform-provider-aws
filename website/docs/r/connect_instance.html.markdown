@@ -63,9 +63,9 @@ The following arguments are supported:
 * `outbound_calls_enabled` - (Required) Specifies whether outbound calls are enabled.
 <!-- * `use_custom_tts_voices` - (Optional) Whether use custom tts voices is enabled. Defaults to `false` -->
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier of the instance.
 * `arn` - Amazon Resource Name (ARN) of the instance.

@@ -43,9 +43,9 @@ The following arguments are supported:
 * `username_claim` - (Optional) The JWT claim that the provider will use as the username.
 * `username_prefix` - (Optional) A prefix that is prepended to username claims.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the EKS Identity Provider Configuration.
 * `id` - EKS Cluster name and EKS Identity Provider Configuration name separated by a colon (`:`).

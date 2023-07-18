@@ -66,9 +66,9 @@ The following arguments are supported:
 
 **NOTE:** Either `db_instance_identifier` or `db_cluster_identifier` should be specified and both should not be specified together
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `endpoint` - Hostname for the target RDS DB Instance. Only returned for `RDS_INSTANCE` type.
 * `id` - Identifier of  `db_proxy_name`, `target_group_name`, target type (e.g., `RDS_INSTANCE` or `TRACKED_CLUSTER`), and resource identifier separated by forward slashes (`/`).

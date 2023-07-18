@@ -49,9 +49,9 @@ The settings for conversation logs.
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) of the CloudWatch Logs log group or S3 bucket where the logs are delivered. Must be less than or equal to 2048 characters in length.
 * `resource_prefix` - (Computed) The prefix of the S3 object key for `AUDIO` logs or the log stream name for `TEXT` logs.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the bot alias.
 * `checksum` - Checksum of the bot alias.

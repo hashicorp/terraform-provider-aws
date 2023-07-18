@@ -71,9 +71,9 @@ The `user_identity_configuration` configuration block supports the following arg
 
 * `identity_attribute_name` - (Required) The AWS SSO field name that contains the identifiers of your users, such as their emails.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifiers of the experience and index separated by a slash (`/`).
 * `arn` - ARN of the Experience.

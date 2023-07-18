@@ -29,9 +29,9 @@ The following arguments are supported:
 * `subnet_id` - (Required) The ID of the subnet to create the reservation for.
 * `description` - (Optional) A brief description of the reservation.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the CIDR reservation.
 * `owner_id` - ID of the AWS account that owns this CIDR reservation.

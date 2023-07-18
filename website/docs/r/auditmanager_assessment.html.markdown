@@ -79,9 +79,9 @@ The following arguments are optional:
 
 * `service_name` - (Required) Name of the Amazon Web Service.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the assessment.
 * `id` - Unique identifier for the assessment.

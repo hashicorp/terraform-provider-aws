@@ -45,9 +45,9 @@ The following arguments are supported:
 * `state_or_region` - (Optional) The state or region of the primary contact address. This field is required in selected countries.
 * `website_url` - (Optional) The URL of the website associated with the primary contact information, if any.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

@@ -55,9 +55,9 @@ The `ip_address` object supports the following:
 * `subnet_id` - (Required) The ID of the subnet that contains the IP address.
 * `ip` - (Optional) The IP address in the subnet that you want to use for DNS queries.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Route 53 Resolver endpoint.
 * `arn` - The ARN of the Route 53 Resolver endpoint.

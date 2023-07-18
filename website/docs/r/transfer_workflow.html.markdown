@@ -125,9 +125,9 @@ The following arguments are supported:
 * `key` - (Required) The name assigned to the tag that you create.
 * `value` - (Required) The value that corresponds to the key.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Workflow ARN.
 * `id` - The Workflow id.

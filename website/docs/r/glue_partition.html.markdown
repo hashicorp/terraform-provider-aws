@@ -68,9 +68,9 @@ The following arguments are supported:
 * `skewed_column_value_location_maps` - (Optional) A list of values that appear so frequently as to be considered skewed.
 * `skewed_column_values` - (Optional) A map of skewed values to the columns that contain them.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - partition id.
 * `creation_time` - The time at which the partition was created.

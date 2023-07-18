@@ -35,9 +35,9 @@ The following arguments are supported:
 * `client_secret` - (Required) Client Secret (part of OAuth Credentials) obtained via Amazon Developer Account.
 * `enabled` - (Optional) Specifies whether to enable the channel. Defaults to `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

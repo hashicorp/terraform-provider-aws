@@ -36,9 +36,9 @@ The following arguments are optional:
 
 * `comment` - (Optional) Comment describing the delegation request.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `delegation_id` - Unique identifier for the delegation.
 * `id` - Unique identifier for the resource. This is a comma-separated string containing `assessment_id`, `role_arn`, and `control_set_id`.

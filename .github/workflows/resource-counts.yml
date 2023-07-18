@@ -10,6 +10,13 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     steps:
+      - name: Generate Token
+        id: generate_token
+        uses: tibdex/github-app-token@b62528385c34dbc9f38e5f4225ac829252d1ea92 # v1.8.0
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          installation_id: ${{ secrets.INSTALLATION_ID }}
+          private_key: ${{secrets.APP_PEM }}
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       - run: |
           touch main.tf
@@ -34,6 +41,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@153407881ec5c347639a548ade7d8ad1d6740e38 # v5.0.2
         with:
+          token: ${{ steps.generate_token.outputs.token }}
           branch: "resource-counts"
           commit-message: "docs: update resource counts"
           title: "docs: update resource counts"

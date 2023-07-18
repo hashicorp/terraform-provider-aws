@@ -129,9 +129,9 @@ For more information on configuring the log format rules visit the AWS [document
 * `stage_variable_overrides` - (Optional) Map of overridden stage `variables` (including new variables) for the canary deployment.
 * `use_stage_cache` - (Optional) Whether the canary deployment uses the stage cache. Defaults to false.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN
 * `id` - ID of the stage

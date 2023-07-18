@@ -37,9 +37,9 @@ The following arguments are supported:
 * `cookie_duration` - (Required) The cookie duration in seconds. This determines the length of the session stickiness.
 * `enabled` - (Required) - The Session Stickiness state of the load balancer. `true` to activate session stickiness or `false` to deactivate session stickiness.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name used for this load balancer (matches `lb_name`).
 

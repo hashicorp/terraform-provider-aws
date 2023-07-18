@@ -38,9 +38,9 @@ The following arguments are supported:
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) of the account to create or update a resource policy for.
 * `policy` - (Required) The policy to create or update. For example, the following policy grants a user authorization to restore a snapshot.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the account to create or update a resource policy for.
 
