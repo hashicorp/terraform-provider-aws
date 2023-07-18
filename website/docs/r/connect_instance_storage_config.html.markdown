@@ -168,7 +168,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Amazon Connect Instance Storage Configs can be imported using the `instance_id`, `association_id`, and `resource_type` separated by a colon (`:`), e.g.,
+Import Amazon Connect Instance Storage Configs using the `instance_id`, `association_id`, and `resource_type` separated by a colon (`:`). For example:
 
 ```
 $ terraform import aws_connect_instance_storage_config.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5:CHAT_TRANSCRIPTS
