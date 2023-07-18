@@ -18,7 +18,7 @@ data "aws_ebs_encryption_by_default" "current" {}
 
 ## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `enabled` - Whether or not default EBS encryption is enabled. Returns as `true` or `false`.
 * `id` - Region of default EBS encryption.
