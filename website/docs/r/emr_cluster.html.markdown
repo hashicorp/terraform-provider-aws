@@ -835,7 +835,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EMR clusters can be imported using the `id`, e.g.,
+Import EMR clusters using the `id`. For example:
 
 ```
 $ terraform import aws_emr_cluster.cluster j-123456ABCDEF
