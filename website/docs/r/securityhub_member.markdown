@@ -25,7 +25,7 @@ resource "aws_securityhub_member" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Required) The ID of the member AWS account.
 * `email` - (Optional) The email of the member AWS account.
