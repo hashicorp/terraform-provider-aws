@@ -106,7 +106,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Config Conformance Packs can be imported using the `name`, e.g.,
+Import Config Conformance Packs using the `name`. For example:
 
 ```
 $ terraform import aws_config_conformance_pack.example example
