@@ -25,7 +25,7 @@ resource "aws_appconfig_application" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name for the application. Must be between 1 and 64 characters in length.
 * `description` - (Optional) Description of the application. Can be at most 1024 characters.

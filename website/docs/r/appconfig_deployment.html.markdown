@@ -29,7 +29,7 @@ resource "aws_appconfig_deployment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `application_id` - (Required, Forces new resource) Application ID. Must be between 4 and 7 characters in length.
 * `configuration_profile_id` - (Required, Forces new resource) Configuration profile ID. Must be between 4 and 7 characters in length.

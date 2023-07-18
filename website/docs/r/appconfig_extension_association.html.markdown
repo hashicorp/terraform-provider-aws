@@ -61,7 +61,7 @@ resource "aws_appconfig_extension_association" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `extension_arn` - (Required) The ARN of the extension defined in the association.
 * `resource_arn` - (Optional) The ARN of the application, configuration profile, or environment to associate with the extension.

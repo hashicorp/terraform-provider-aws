@@ -40,7 +40,7 @@ resource "aws_appconfig_application" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `application_id` - (Required, Forces new resource) AppConfig application ID. Must be between 4 and 7 characters in length.
 * `name` - (Required) Name for the environment. Must be between 1 and 64 characters in length.
