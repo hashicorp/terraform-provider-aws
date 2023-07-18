@@ -72,9 +72,9 @@ The following arguments are supported:
 
 ## Remarks
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF Byte Match Set.
 
