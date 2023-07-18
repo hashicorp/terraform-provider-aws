@@ -89,7 +89,7 @@ See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigate
 
 ## Import
 
-`aws_apigatewayv2_api` can be imported by using the API identifier, e.g.,
+Import `aws_apigatewayv2_api` using the API identifier. For example:
 
 ```
 $ terraform import aws_apigatewayv2_api.example aabbccddee
