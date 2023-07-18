@@ -61,7 +61,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AppConfig Configuration Profiles can be imported by using the configuration profile ID and application ID separated by a colon (`:`), e.g.,
+Import AppConfig Configuration Profiles using the configuration profile ID and application ID separated by a colon (`:`). For example:
 
 ```
 $ terraform import aws_appconfig_configuration_profile.example 71abcde:11xxxxx
