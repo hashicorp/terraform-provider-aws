@@ -34,4 +34,6 @@ The following arguments are supported by the `filter` configuration block:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `ids` - List of window IDs of the matched SSM maintenance windows.

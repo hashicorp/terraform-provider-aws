@@ -26,6 +26,8 @@ data "aws_sqs_queue" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `arn` - ARN of the queue.
 * `url` - URL of the queue.
 * `tags` - Map of tags for the resource.
