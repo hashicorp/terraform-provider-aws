@@ -21,7 +21,7 @@ resource "aws_ssm_service_setting" "test_setting" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `setting_id` - (Required) ID of the service setting.
 * `setting_value` - (Required) Value of the service setting.
