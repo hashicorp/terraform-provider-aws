@@ -46,9 +46,9 @@ Parameter blocks support the following:
 * `name` - (Required) The name of the ElastiCache parameter.
 * `value` - (Required) The value of the ElastiCache parameter.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ElastiCache parameter group name.
 * `arn` - The AWS ARN associated with the parameter group.

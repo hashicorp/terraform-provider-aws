@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -144,7 +147,7 @@ func ResourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -153,7 +156,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		PhoneConfig:        expandPhoneConfig(d.Get("phone_config").([]interface{})),
 		RoutingProfileId:   aws.String(d.Get("routing_profile_id").(string)),
 		SecurityProfileIds: flex.ExpandStringSet(d.Get("security_profile_ids").(*schema.Set)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		Username:           aws.String(name),
 	}
 
@@ -176,11 +179,11 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := conn.CreateUserWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect User (%s): %w", name, err))
+		return diag.Errorf("creating Connect User (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect User (%s): empty output", name))
+		return diag.Errorf("creating Connect User (%s): empty output", name)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.UserId)))
@@ -189,7 +192,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userID, err := UserParseID(d.Id())
 
@@ -209,11 +212,11 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect User (%s): %w", d.Id(), err))
+		return diag.Errorf("getting Connect User (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.User == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect User (%s): empty response", d.Id()))
+		return diag.Errorf("getting Connect User (%s): empty response", d.Id())
 	}
 
 	user := resp.User
@@ -228,20 +231,20 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("user_id", user.Id)
 
 	if err := d.Set("identity_info", flattenIdentityInfo(user.IdentityInfo)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting identity_info: %w", err))
+		return diag.Errorf("setting identity_info: %s", err)
 	}
 
 	if err := d.Set("phone_config", flattenPhoneConfig(user.PhoneConfig)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting phone_config: %w", err))
+		return diag.Errorf("setting phone_config: %s", err)
 	}
 
-	SetTagsOut(ctx, resp.User.Tags)
+	setTagsOut(ctx, resp.User.Tags)
 
 	return nil
 }
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userID, err := UserParseID(d.Id())
 
@@ -270,7 +273,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserHierarchyWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating User hierarchy_group_id (%s): %w", d.Id(), err))
+			return diag.Errorf("updating User hierarchy_group_id (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -285,7 +288,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserIdentityInfoWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating User identity_info (%s): %w", d.Id(), err))
+			return diag.Errorf("updating User identity_info (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -300,7 +303,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserPhoneConfigWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating User phone_config (%s): %w", d.Id(), err))
+			return diag.Errorf("updating User phone_config (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -315,7 +318,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserRoutingProfileWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating User routing_profile_id (%s): %w", d.Id(), err))
+			return diag.Errorf("updating User routing_profile_id (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -330,7 +333,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserSecurityProfilesWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating User security_profile_ids (%s): %w", d.Id(), err))
+			return diag.Errorf("updating User security_profile_ids (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -338,7 +341,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userID, err := UserParseID(d.Id())
 
@@ -352,7 +355,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting User (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting User (%s): %s", d.Id(), err)
 	}
 
 	return nil

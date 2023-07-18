@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -108,7 +110,7 @@ func DataSourceType() *schema.Resource {
 }
 
 func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	input := &cloudformation.DescribeTypeInput{}
 
@@ -131,11 +133,11 @@ func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := conn.DescribeTypeWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading CloudFormation Type: %w", err))
+		return diag.Errorf("reading CloudFormation Type: %s", err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error reading CloudFormation Type: empty response"))
+		return diag.Errorf("reading CloudFormation Type: empty response")
 	}
 
 	d.SetId(aws.StringValue(output.Arn))
@@ -149,7 +151,7 @@ func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("is_default_version", output.IsDefaultVersion)
 	if output.LoggingConfig != nil {
 		if err := d.Set("logging_config", []interface{}{flattenLoggingConfig(output.LoggingConfig)}); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting logging_config: %w", err))
+			return diag.Errorf("setting logging_config: %s", err)
 		}
 	} else {
 		d.Set("logging_config", nil)

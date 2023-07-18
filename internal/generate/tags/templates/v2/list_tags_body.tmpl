@@ -44,13 +44,14 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
+	return {{ .KeyValueTagsFunc }}(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
 }
 
-// {{ .ListTagsFunc }} lists {{ .ServicePackage }} service tags and set them in Context.
+{{- if .IsDefaultListTags }}
+// {{ .ListTagsFunc | Title }} lists {{ .ServicePackage }} service tags and set them in Context.
 // It is called from outside this package.
-func (p *servicePackage) {{ .ListTagsFunc }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) error {
-	tags, err :=  {{ .ListTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(), identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+func (p *servicePackage) {{ .ListTagsFunc | Title }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) error {
+	tags, err :=  {{ .ListTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(ctx), identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 
 	if err != nil {
 		return err
@@ -62,3 +63,4 @@ func (p *servicePackage) {{ .ListTagsFunc }}(ctx context.Context, meta any, iden
 
 	return nil
 }
+{{- end }}

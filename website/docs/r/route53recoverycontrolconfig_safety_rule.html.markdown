@@ -64,9 +64,9 @@ The following arguments are optional:
 * `threshold` - (Required) Number of controls that must be set when you specify an `ATLEAST` type rule.
 * `type` - (Required) Rule type. Valid values are `ATLEAST`, `AND`, and `OR`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the safety rule.
 * `status` - Status of the safety rule. `PENDING` when it is being created/updated, `PENDING_DELETION` when it is being deleted, and `DEPLOYED` otherwise.

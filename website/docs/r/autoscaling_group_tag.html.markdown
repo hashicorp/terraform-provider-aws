@@ -55,9 +55,9 @@ The `tag` block supports the following arguments:
 * `value` - (Required) Tag value.
 * `propagate_at_launch` - (Required) Whether to propagate the tags to instances launched by the ASG.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ASG name and key, separated by a comma (`,`)
 

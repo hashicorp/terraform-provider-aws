@@ -31,9 +31,9 @@ The following arguments are supported:
 * `identifier` - (Required) The ID for the custom action target.
 * `description` - (Required) The name of the custom action target.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Security Hub custom action target.
 

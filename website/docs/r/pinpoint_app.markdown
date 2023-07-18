@@ -56,9 +56,9 @@ The following arguments are supported:
 * `end` - (Optional) The default end time for quiet time in ISO 8601 format. Required if `start` is set
 * `start` - (Optional) The default start time for quiet time in ISO 8601 format. Required if `end` is set
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `application_id` - The Application ID of the Pinpoint App.
 * `arn` - Amazon Resource Name (ARN) of the PinPoint Application

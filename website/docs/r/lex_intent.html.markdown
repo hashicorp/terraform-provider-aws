@@ -240,9 +240,9 @@ Attributes are documented under [message](#message). Must contain between 1 and 
 slot values into the response card. For more information, see
 [Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html). Must be less than or equal to 50000 characters in length.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the Lex intent.
 * `checksum` - Checksum identifying the version of the intent that was created. The checksum is not

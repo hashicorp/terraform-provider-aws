@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -91,7 +94,7 @@ func ResourceIntegrationResponse() *schema.Resource {
 
 func resourceIntegrationResponsePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	input := &apigateway.PutIntegrationResponseInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
@@ -131,7 +134,7 @@ func resourceIntegrationResponsePut(ctx context.Context, d *schema.ResourceData,
 
 func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	integrationResponse, err := FindIntegrationResponseByFourPartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string), d.Get("status_code").(string))
 
@@ -160,7 +163,7 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 
 func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Integration Response: %s", d.Id())
 	_, err := conn.DeleteIntegrationResponseWithContext(ctx, &apigateway.DeleteIntegrationResponseInput{

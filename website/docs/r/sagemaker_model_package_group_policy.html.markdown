@@ -45,9 +45,9 @@ The following arguments are supported:
 
 * `model_package_group_name` - (Required) The name of the model package group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the Model Package Package Group.
 

@@ -62,9 +62,9 @@ The `sub_domain` configuration block supports the following arguments:
 * `branch_name` - (Required) Branch name setting for the subdomain.
 * `prefix` - (Required) Prefix setting for the subdomain.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN for the domain association.
 * `certificate_verification_dns_record` - The DNS record for certificate verification.

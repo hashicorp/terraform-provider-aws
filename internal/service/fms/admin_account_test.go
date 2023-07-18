@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fms_test
 
 import (
@@ -41,7 +44,7 @@ func testAccAdminAccount_basic(t *testing.T) {
 
 func testAccCheckAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fms_admin_account" {

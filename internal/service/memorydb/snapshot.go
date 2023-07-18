@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb
 
 import (
@@ -145,13 +148,13 @@ func ResourceSnapshot() *schema.Resource {
 }
 
 func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &memorydb.CreateSnapshotInput{
 		ClusterName:  aws.String(d.Get("cluster_name").(string)),
 		SnapshotName: aws.String(name),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {
@@ -162,11 +165,11 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 	_, err := conn.CreateSnapshotWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating MemoryDB Snapshot (%s): %s", name, err)
+		return diag.Errorf("creating MemoryDB Snapshot (%s): %s", name, err)
 	}
 
 	if err := waitSnapshotAvailable(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for MemoryDB Snapshot (%s) to be created: %s", name, err)
+		return diag.Errorf("waiting for MemoryDB Snapshot (%s) to be created: %s", name, err)
 	}
 
 	d.SetId(name)
@@ -180,7 +183,7 @@ func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	snapshot, err := FindSnapshotByName(ctx, conn, d.Id())
 
@@ -191,7 +194,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading MemoryDB Snapshot (%s): %s", d.Id(), err)
+		return diag.Errorf("reading MemoryDB Snapshot (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", snapshot.ARN)
@@ -208,7 +211,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB Snapshot: (%s)", d.Id())
 	_, err := conn.DeleteSnapshotWithContext(ctx, &memorydb.DeleteSnapshotInput{
@@ -220,11 +223,11 @@ func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting MemoryDB Snapshot (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting MemoryDB Snapshot (%s): %s", d.Id(), err)
 	}
 
 	if err := waitSnapshotDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("error waiting for MemoryDB Snapshot (%s) to be deleted: %s", d.Id(), err)
+		return diag.Errorf("waiting for MemoryDB Snapshot (%s) to be deleted: %s", d.Id(), err)
 	}
 
 	return nil

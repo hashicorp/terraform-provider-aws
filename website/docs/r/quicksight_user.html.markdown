@@ -36,9 +36,9 @@ The following arguments are supported:
 * `namespace`  - (Optional) The Amazon Quicksight namespace to create the user in. Defaults to `default`.
 * `session_name` - (Optional) The name of the IAM session to use when assuming roles that can embed QuickSight dashboards. Only valid for registering users using an assumed IAM role. Additionally, if registering multiple users using the same IAM role, each user needs to have a unique session name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the user
 

@@ -41,8 +41,8 @@ The following arguments are supported:
 * `principal` - (Required) AWS service or identity that receives the permission. At this time, the only valid principal is `acm.amazonaws.com`.
 * `source_account` - (Optional) ID of the calling account
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `policy` - IAM policy that is associated with the permission.

@@ -32,9 +32,9 @@ The following arguments are supported:
 * `image_tag` - (Optional) Image tag for the Docker image. If not specified, the AWS provider sets the value to `1`, which for many repositories indicates the latest version. Some repositories, such as XGBoost, do not support `1` or `latest` and specific version must be used.
 * `region` (Optional) - Region to use in the registry path. If not specified, the AWS provider sets it to the current region.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `registry_id` - Account ID containing the image. For example, `469771592824`.
 * `registry_path` - Docker image URL. For example, `341280168497.dkr.ecr.ca-central-1.amazonaws.com/sagemaker-sparkml-serving:2.4`.

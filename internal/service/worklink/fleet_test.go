@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package worklink_test
 
 import (
@@ -288,7 +291,7 @@ func testAccCheckFleetDisappears(ctx context.Context, resourceName string) resou
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn(ctx)
 
 		input := &worklink.DeleteFleetInput{
 			FleetArn: aws.String(rs.Primary.ID),
@@ -315,7 +318,7 @@ func testAccCheckFleetDisappears(ctx context.Context, resourceName string) resou
 
 func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_worklink_fleet" {
@@ -352,7 +355,7 @@ func testAccCheckFleetExists(ctx context.Context, n string) resource.TestCheckFu
 			return fmt.Errorf("No Worklink Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn(ctx)
 		_, err := conn.DescribeFleetMetadataWithContext(ctx, &worklink.DescribeFleetMetadataInput{
 			FleetArn: aws.String(rs.Primary.ID),
 		})
@@ -362,7 +365,7 @@ func testAccCheckFleetExists(ctx context.Context, n string) resource.TestCheckFu
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn(ctx)
 
 	input := &worklink.ListFleetsInput{
 		MaxResults: aws.Int64(1),

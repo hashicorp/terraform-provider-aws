@@ -40,9 +40,9 @@ The following arguments are required:
 
 * `style` - (Required) Specifies the map style selected from an available data provider. Valid values can be found in the [Location Service CreateMap API Reference](https://docs.aws.amazon.com/location/latest/APIReference/API_CreateMap.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `create_time` - The timestamp for when the map resource was created in ISO 8601 format.
 * `map_arn` - The Amazon Resource Name (ARN) for the map resource. Used to specify a resource across all AWS.

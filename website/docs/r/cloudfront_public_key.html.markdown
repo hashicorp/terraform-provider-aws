@@ -31,9 +31,9 @@ The following arguments are supported:
 
 **NOTE:** When setting `encoded_key` value, there needs a newline at the end of string. Otherwise, multiple runs of terraform will want to recreate the `aws_cloudfront_public_key` resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `caller_reference` - Internal value used by CloudFront to allow future updates to the public key configuration.
 * `etag` - The current version of the public key. For example: `E2QWRUHAPOMQZL`.

@@ -30,9 +30,9 @@ The following arguments are supported:
 
 * `domain_name` - (Required) The name of the Lightsail domain to manage
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name used for this domain
 * `arn` - The ARN of the Lightsail domain

@@ -36,9 +36,9 @@ The following arguments are supported:
 
 * `graph_arn` - (Required) ARN of the behavior graph that the member account is accepting the invitation for.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier (ID) of the Detective invitation accepter.
 

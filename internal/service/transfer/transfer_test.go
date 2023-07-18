@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer_test
 
 import (
@@ -15,6 +18,11 @@ func TestAccTransfer_serial(t *testing.T) {
 			"EFSBasic":   testAccAccess_efs_basic,
 			"S3Basic":    testAccAccess_s3_basic,
 			"S3Policy":   testAccAccess_s3_policy,
+		},
+		"Agreement": {
+			"basic":      testAccAgreement_basic,
+			"disappears": testAccAgreement_disappears,
+			"tags":       testAccAgreement_tags,
 		},
 		"Server": {
 			"basic":                         testAccServer_basic,

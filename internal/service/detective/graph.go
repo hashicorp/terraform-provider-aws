@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package detective
 
 import (
@@ -45,10 +48,10 @@ func ResourceGraph() *schema.Resource {
 }
 
 func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	input := &detective.CreateGraphInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	var output *detective.CreateGraphOutput
@@ -71,7 +74,7 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.Errorf("error creating detective Graph: %s", err)
+		return diag.Errorf("creating detective Graph: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.GraphArn))
@@ -80,7 +83,7 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	resp, err := FindGraphByARN(ctx, conn, d.Id())
 
@@ -89,7 +92,7 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return nil
 	}
 	if err != nil {
-		return diag.Errorf("error reading detective Graph (%s): %s", d.Id(), err)
+		return diag.Errorf("reading detective Graph (%s): %s", d.Id(), err)
 	}
 
 	d.Set("created_time", aws.TimeValue(resp.CreatedTime).Format(time.RFC3339))
@@ -104,7 +107,7 @@ func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	input := &detective.DeleteGraphInput{
 		GraphArn: aws.String(d.Id()),
@@ -115,7 +118,7 @@ func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.Errorf("error deleting detective Graph (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting detective Graph (%s): %s", d.Id(), err)
 	}
 
 	return nil

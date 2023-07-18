@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -202,14 +205,14 @@ func ResourceSpace() *schema.Resource {
 
 func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	domainId := d.Get("domain_id").(string)
 	spaceName := d.Get("space_name").(string)
 	input := &sagemaker.CreateSpaceInput{
 		SpaceName: aws.String(spaceName),
 		DomainId:  aws.String(domainId),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("space_settings"); ok && len(v.([]interface{})) > 0 {
@@ -233,7 +236,7 @@ func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	domainID, name, err := decodeSpaceName(d.Id())
 	if err != nil {
@@ -265,7 +268,7 @@ func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	if d.HasChange("space_settings") {
 		domainID := d.Get("domain_id").(string)
@@ -293,7 +296,7 @@ func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceSpaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("space_name").(string)
 	domainID := d.Get("domain_id").(string)

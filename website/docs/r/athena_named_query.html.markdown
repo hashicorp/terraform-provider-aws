@@ -58,9 +58,9 @@ The following arguments are supported:
 * `query` - (Required) Text of the query itself. In other words, all query statements. Maximum length of 262144.
 * `description` - (Optional) Brief explanation of the query. Maximum length of 1024.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique ID of the query.
 

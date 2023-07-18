@@ -36,9 +36,9 @@ The following arguments are supported:
 * `invocation_rate_limit_per_second` - (Optional) Enter the maximum number of invocations per second to allow for this destination. Enter a value greater than 0 (default 300).
 * `connection_arn` - (Required) ARN of the EventBridge Connection to use for the API Destination.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the event API Destination.
 

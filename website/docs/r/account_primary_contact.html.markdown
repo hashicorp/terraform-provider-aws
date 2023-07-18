@@ -45,6 +45,14 @@ The following arguments are supported:
 * `state_or_region` - (Optional) The state or region of the primary contact address. This field is required in selected countries.
 * `website_url` - (Optional) The URL of the website associated with the primary contact information, if any.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
+
+## Import
+
+The Primary Contact can be imported using the `account_id`, e.g.,
+
+```
+$ terraform import aws_account_primary_contact.test 1234567890
+```

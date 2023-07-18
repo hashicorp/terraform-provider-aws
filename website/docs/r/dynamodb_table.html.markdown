@@ -239,9 +239,9 @@ Optional arguments:
 * `enabled` - (Required) Whether TTL is enabled.
 * `attribute_name` - (Required) Name of the table attribute to store the TTL timestamp in.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the table
 * `id` - Name of the table

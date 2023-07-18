@@ -26,9 +26,9 @@ The following arguments are supported:
 * `route_table_id` - (Required) Identifier of the EC2 Route Table to be associated with the VPC Endpoint.
 * `vpc_endpoint_id` - (Required) Identifier of the VPC Endpoint with which the EC2 Route Table will be associated.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A hash of the EC2 Route Table and VPC Endpoint identifiers.
 

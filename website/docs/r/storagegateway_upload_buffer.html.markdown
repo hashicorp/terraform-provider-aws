@@ -50,9 +50,9 @@ The following arguments are supported:
 * `disk_path` - (Optional) Local disk path. For example, `/dev/nvme1n1`.
 * `gateway_arn` - (Required) The Amazon Resource Name (ARN) of the gateway.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Combined gateway Amazon Resource Name (ARN) and local disk identifier.
 

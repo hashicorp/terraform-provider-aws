@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -27,7 +30,7 @@ func TestAccVPCSubnetsDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_subnets.selected", "ids.#", "4"),
 					resource.TestCheckResourceAttr("data.aws_subnets.private", "ids.#", "2"),
-					acctest.CheckResourceAttrGreaterThanValue("data.aws_subnets.all", "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_subnets.all", "ids.#", 0),
 					resource.TestCheckResourceAttr("data.aws_subnets.none", "ids.#", "0"),
 				),
 			},

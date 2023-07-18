@@ -109,9 +109,9 @@ Targets specify what instance IDs or tags to apply the document to and has these
 * `key` - (Required) Either `InstanceIds` or `tag:Tag Name` to specify an EC2 tag.
 * `values` - (Required) A list of instance IDs or tag values. AWS currently limits this list size to one value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the SSM association
 * `association_id` - The ID of the SSM association.

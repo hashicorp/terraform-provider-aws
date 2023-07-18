@@ -33,9 +33,9 @@ resource "aws_devicefarm_upload" "example" {
 * `project_arn` - (Required) The ARN of the project for the upload.
 * `type` - (Required) The upload's upload type. See [AWS Docs](https://docs.aws.amazon.com/devicefarm/latest/APIReference/API_CreateUpload.html#API_CreateUpload_RequestSyntax) for valid list of values.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name of this upload.
 * `url` - The presigned Amazon S3 URL that was used to store a file using a PUT request.

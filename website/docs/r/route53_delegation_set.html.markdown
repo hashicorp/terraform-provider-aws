@@ -35,9 +35,9 @@ The following arguments are supported:
 * `reference_name` - (Optional) This is a reference name used in Caller Reference
   (helpful for identifying single delegation set amongst others)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Delegation Set.
 * `id` - The delegation set ID

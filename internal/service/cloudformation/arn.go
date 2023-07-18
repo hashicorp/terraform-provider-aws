@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
@@ -22,7 +25,7 @@ func TypeVersionARNToTypeARNAndVersionID(inputARN string) (string, string, error
 	parsedARN, err := arn.Parse(inputARN)
 
 	if err != nil {
-		return "", "", fmt.Errorf("error parsing ARN (%s): %w", inputARN, err)
+		return "", "", fmt.Errorf("parsing ARN (%s): %w", inputARN, err)
 	}
 
 	if actual, expected := parsedARN.Service, ARNService; actual != expected {

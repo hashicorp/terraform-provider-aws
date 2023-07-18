@@ -118,9 +118,9 @@ slot values into the response card. For more information, see
 * `update` - (Default `5m`)
 * `delete` - (Default `5m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `checksum` - Checksum identifying the version of the bot that was created. The checksum is not
 included as an argument because the resource will add it automatically when updating the bot.

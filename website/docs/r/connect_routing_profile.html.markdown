@@ -63,9 +63,9 @@ A `queue_configs` block supports the following arguments:
 * `priority` - (Required) Specifies the order in which contacts are to be handled for the queue.
 * `queue_id` - (Required) Specifies the identifier for the queue.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Routing Profile.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Routing Profile separated by a colon (`:`).

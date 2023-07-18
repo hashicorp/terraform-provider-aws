@@ -24,9 +24,9 @@ data "aws_iam_saml_provider" "example" {
 
 * `arn` - (Required) ARN assigned by AWS for the provider.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `create_date` - Creation date of the SAML provider in RFC1123 format, e.g. `Mon, 02 Jan 2006 15:04:05 MST`.
 * `name` - Name of the provider.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -36,7 +39,7 @@ func DataSourceDevices() *schema.Resource {
 }
 
 func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -51,7 +54,7 @@ func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := FindDevices(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("error listing Network Manager Devices: %s", err)
+		return diag.Errorf("listing Network Manager Devices: %s", err)
 	}
 
 	var deviceIDs []string

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmcontacts_test
 
 import (
@@ -326,7 +329,7 @@ func testContactChannel_type(t *testing.T) {
 
 func testAccCheckContactChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssmcontacts_contact_channel" {
@@ -371,7 +374,7 @@ func testAccCheckContactChannelExists(ctx context.Context, name string) resource
 			return create.Error(names.SSMContacts, create.ErrActionCheckingExistence, tfssmcontacts.ResNameContactChannel, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient(ctx)
 		_, err := conn.GetContactChannel(ctx, &ssmcontacts.GetContactChannelInput{
 			ContactChannelId: aws.String(rs.Primary.ID),
 		})

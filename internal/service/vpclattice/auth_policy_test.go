@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice_test
 
 import (
@@ -85,7 +88,7 @@ func TestAccVPCLatticeAuthPolicy_disappears(t *testing.T) {
 
 func testAccCheckAuthPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_auth_policy" {
@@ -123,7 +126,7 @@ func testAccCheckAuthPolicyExists(ctx context.Context, name string, authpolicy *
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameAuthPolicy, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 		resp, err := conn.GetAuthPolicy(ctx, &vpclattice.GetAuthPolicyInput{
 			ResourceIdentifier: aws.String(rs.Primary.ID),
 		})

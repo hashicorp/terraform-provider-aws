@@ -45,7 +45,7 @@ The following arguments are supported:
 
 ~> **NOTE:** When both `arn` and `name` are specified, `arn` takes precedence. `tags` has lowest precedence.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [LB Resource](/docs/providers/aws/r/lb.html) for details on the
 returned attributes - they are identical.

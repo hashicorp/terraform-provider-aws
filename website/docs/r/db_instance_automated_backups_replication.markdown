@@ -61,14 +61,14 @@ resource "aws_db_instance" "default" {
 resource "aws_kms_key" "default" {
   description = "Encryption key for automated backups"
 
-  provider = "aws.replica"
+  provider = aws.replica
 }
 
 resource "aws_db_instance_automated_backups_replication" "default" {
   source_db_instance_arn = aws_db_instance.default.arn
   kms_key_id             = aws_kms_key.default.arn
 
-  provider = "aws.replica"
+  provider = aws.replica
 }
 ```
 
@@ -81,9 +81,9 @@ The following arguments are supported:
 * `retention_period` - (Optional, Forces new resource) The retention period for the replicated automated backups, defaults to `7`.
 * `source_db_instance_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the source DB instance for the replicated automated backups, for example, `arn:aws:rds:us-west-2:123456789012:db:mydatabase`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the replicated automated backups.
 

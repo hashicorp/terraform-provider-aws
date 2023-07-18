@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fwprovider
 
 import (
@@ -83,6 +86,10 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 			"region": schema.StringAttribute{
 				Optional:    true,
 				Description: "The region where AWS operations will take place. Examples\nare us-east-1, us-west-2, etc.", // lintignore:AWSAT003
+			},
+			"retry_mode": schema.StringAttribute{
+				Optional:    true,
+				Description: "Specifies how retries are attempted. Valid values are `standard` and `adaptive`. Can also be configured using the `AWS_RETRY_MODE` environment variable.",
 			},
 			"s3_use_path_style": schema.BoolAttribute{
 				Optional:    true,

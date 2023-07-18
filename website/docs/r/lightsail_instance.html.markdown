@@ -141,9 +141,9 @@ A Bundle ID ends with one of the following suffixes depending on Availability Zo
 - us-east-2: `2_0`
 - us-west-2: `2_0`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the Lightsail instance (matches `arn`).
 * `arn` - The ARN of the Lightsail instance (matches `id`).

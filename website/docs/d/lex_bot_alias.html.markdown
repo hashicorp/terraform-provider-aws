@@ -26,9 +26,9 @@ The following arguments are supported:
 * `bot_name` - (Required) Name of the bot.
 * `name` - (Required) Name of the bot alias. The name is case sensitive.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported.
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the bot alias.
 * `bot_name` - Name of the bot.

@@ -50,9 +50,9 @@ assign a random, unique name.
   prefix. Conflicts with `name`.
 * `group` - (Required) The IAM group to attach to the policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The group policy ID.
 * `group` - The group to which this policy applies.

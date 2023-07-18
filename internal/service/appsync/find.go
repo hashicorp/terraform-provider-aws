@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync
 
 import (
@@ -82,13 +85,14 @@ func FindDomainNameAPIAssociationByID(ctx context.Context, conn *appsync.AppSync
 	return out.ApiAssociation, nil
 }
 
-func FindTypeByID(ctx context.Context, conn *appsync.AppSync, apiID, format, name string) (*appsync.Type, error) {
+func FindTypeByThreePartKey(ctx context.Context, conn *appsync.AppSync, apiID, format, name string) (*appsync.Type, error) {
 	input := &appsync.GetTypeInput{
 		ApiId:    aws.String(apiID),
 		Format:   aws.String(format),
 		TypeName: aws.String(name),
 	}
-	out, err := conn.GetTypeWithContext(ctx, input)
+
+	output, err := conn.GetTypeWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 		return nil, &retry.NotFoundError{
@@ -101,9 +105,9 @@ func FindTypeByID(ctx context.Context, conn *appsync.AppSync, apiID, format, nam
 		return nil, err
 	}
 
-	if out == nil {
+	if output == nil || output.Type == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.Type, nil
+	return output.Type, nil
 }

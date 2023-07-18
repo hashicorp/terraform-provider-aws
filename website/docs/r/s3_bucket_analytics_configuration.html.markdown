@@ -95,9 +95,9 @@ The `s3_bucket_destination` configuration supports the following:
 * `format` - (Optional) Output format of exported analytics data. Allowed values: `CSV`. Default value: `CSV`.
 * `prefix` - (Optional) Prefix to append to exported analytics data.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

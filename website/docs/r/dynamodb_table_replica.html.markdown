@@ -30,7 +30,7 @@ provider "aws" {
 }
 
 resource "aws_dynamodb_table" "example" {
-  provider         = "aws.main"
+  provider         = aws.main
   name             = "TestTable"
   hash_key         = "BrodoBaggins"
   billing_mode     = "PAY_PER_REQUEST"
@@ -48,7 +48,7 @@ resource "aws_dynamodb_table" "example" {
 }
 
 resource "aws_dynamodb_table_replica" "example" {
-  provider         = "aws.alt"
+  provider         = aws.alt
   global_table_arn = aws_dynamodb_table.example.arn
 
   tags = {
@@ -71,9 +71,9 @@ Optional arguments:
 * `table_class_override` - (Optional, Forces new resource) Storage class of the table replica. Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`. If not used, the table replica will use the same class as the global table.
 * `tags` - (Optional) Map of tags to populate on the created table. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the table replica.
 * `id` - Name of the table and region of the main global table joined with a semicolon (_e.g._, `TableName:us-east-1`).

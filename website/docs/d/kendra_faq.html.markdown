@@ -26,9 +26,9 @@ The following arguments are supported:
 * `faq_id` - (Required) Identifier of the FAQ.
 * `index_id` - (Required) Identifier of the index that contains the FAQ.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the FAQ.
 * `created_at` - Unix datetime that the faq was created.

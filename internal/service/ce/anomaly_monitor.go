@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ce
 
 import (
@@ -72,14 +75,14 @@ func ResourceAnomalyMonitor() *schema.Resource {
 }
 
 func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	input := &costexplorer.CreateAnomalyMonitorInput{
 		AnomalyMonitor: &costexplorer.AnomalyMonitor{
 			MonitorName: aws.String(d.Get("name").(string)),
 			MonitorType: aws.String(d.Get("monitor_type").(string)),
 		},
-		ResourceTags: GetTagsIn(ctx),
+		ResourceTags: getTagsIn(ctx),
 	}
 	switch d.Get("monitor_type").(string) {
 	case costexplorer.MonitorTypeDimensional:
@@ -93,7 +96,7 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 			expression := costexplorer.Expression{}
 
 			if err := json.Unmarshal([]byte(v.(string)), &expression); err != nil {
-				return diag.Errorf("Error parsing specification: %s", err)
+				return diag.Errorf("parsing specification: %s", err)
 			}
 
 			input.AnomalyMonitor.MonitorSpecification = &expression
@@ -105,7 +108,7 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 	resp, err := conn.CreateAnomalyMonitorWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("Error creating Anomaly Monitor: %s", err)
+		return diag.Errorf("creating Anomaly Monitor: %s", err)
 	}
 
 	if resp == nil || resp.MonitorArn == nil {
@@ -118,7 +121,7 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	monitor, err := FindAnomalyMonitorByARN(ctx, conn, d.Id())
 
@@ -135,7 +138,7 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 	if monitor.MonitorSpecification != nil {
 		specificationToJson, err := json.Marshal(monitor.MonitorSpecification)
 		if err != nil {
-			return diag.Errorf("Error parsing specification response: %s", err)
+			return diag.Errorf("parsing specification response: %s", err)
 		}
 		specificationToSet, err := structure.NormalizeJsonString(string(specificationToJson))
 
@@ -155,7 +158,7 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 	requestUpdate := false
 
 	input := &costexplorer.UpdateAnomalyMonitorInput{
@@ -179,7 +182,7 @@ func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceAnomalyMonitorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	_, err := conn.DeleteAnomalyMonitorWithContext(ctx, &costexplorer.DeleteAnomalyMonitorInput{MonitorArn: aws.String(d.Id())})
 

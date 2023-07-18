@@ -177,9 +177,9 @@ The following arguments are supported:
 * `arn` - (Required) The Amazon Resource Name (ARN) of the worker configuration.
 * `revision` - (Required) The revision of the worker configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the connector.
 * `version` - The current version of the connector.

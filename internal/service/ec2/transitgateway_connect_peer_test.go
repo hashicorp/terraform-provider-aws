@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -33,6 +36,8 @@ func testAccTransitGatewayConnectPeer_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", "64512"),
+					resource.TestCheckResourceAttrSet(resourceName, "bgp_peer_address"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "bgp_transit_gateway_addresses.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "peer_address", "1.1.1.1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -206,7 +211,7 @@ func testAccCheckTransitGatewayConnectPeerExists(ctx context.Context, n string, 
 			return fmt.Errorf("No EC2 Transit Gateway Connect Peer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindTransitGatewayConnectPeerByID(ctx, conn, rs.Primary.ID)
 
@@ -222,7 +227,7 @@ func testAccCheckTransitGatewayConnectPeerExists(ctx context.Context, n string, 
 
 func testAccCheckTransitGatewayConnectPeerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_transit_gateway_connect_peer" {

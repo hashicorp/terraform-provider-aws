@@ -45,9 +45,9 @@ The following arguments are supported:
   prefix. Conflicts with `name`.
 * `configuration` - (Required) A JSON formatted Security Configuration
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the EMR Security Configuration (Same as the `name`)
 * `name` - The Name of the EMR Security Configuration

@@ -49,7 +49,7 @@ several valid keys, for a full reference, check out
 Terraform will fail. Ensure that your search is specific enough to return
 a single Instance ID only.
 
-## Attributes Reference
+## Attribute Reference
 
 `id` is set to the ID of the found Instance. In addition, the following attributes
 are exported:

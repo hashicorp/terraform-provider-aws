@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
@@ -48,7 +51,7 @@ func ResourcePatchGroup() *schema.Resource {
 
 func resourcePatchGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	baselineId := d.Get("baseline_id").(string)
 	patchGroup := d.Get("patch_group").(string)
@@ -70,7 +73,7 @@ func resourcePatchGroupCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
 	if err != nil {
@@ -106,7 +109,7 @@ func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePatchGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
 	if err != nil {

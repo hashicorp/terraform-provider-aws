@@ -127,9 +127,9 @@ A `filter` block supports the following arguments:
 * `json_path` - (Required) The [JSON path](https://github.com/json-path/JsonPath) to filter on.
 * `match_equals` - (Required) The value to match on (e.g., `refs/heads/{Branch}`). See [AWS docs](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_WebhookFilterRule.html) for details.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The CodePipeline webhook's ARN.
 * `id` - The CodePipeline webhook's ARN.

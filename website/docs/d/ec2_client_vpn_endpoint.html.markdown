@@ -50,7 +50,7 @@ The following arguments are required:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` -  The ARN of the Client VPN endpoint.
 * `authentication_options` - Information about the authentication method used by the Client VPN endpoint.

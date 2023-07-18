@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds_test
 
 import (
@@ -41,7 +44,7 @@ func TestAccDSDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "edition", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", domainName),
@@ -172,7 +175,7 @@ func TestAccDSDirectory_microsoft(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "2"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "edition", "Enterprise"),
 					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", domainName),
@@ -220,7 +223,7 @@ func TestAccDSDirectory_microsoftStandard(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "2"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "edition", "Standard"),
 					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", domainName),
@@ -270,12 +273,12 @@ func TestAccDSDirectory_connector(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "alias"),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "1"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "connect_settings.0.customer_dns_ips.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "connect_settings.0.customer_dns_ips.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.0.customer_username", "Administrator"),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "edition", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", domainName),
@@ -327,7 +330,7 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "edition", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", domainName),
@@ -389,7 +392,7 @@ func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "2"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "edition", "Enterprise"),
 					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", domainName),
@@ -431,7 +434,7 @@ func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 
 func testAccCheckDirectoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_directory" {
@@ -466,7 +469,7 @@ func testAccCheckDirectoryExists(ctx context.Context, n string, v *directoryserv
 			return fmt.Errorf("No Directory Service Directory ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
 		output, err := tfds.FindDirectoryByID(ctx, conn, rs.Primary.ID)
 

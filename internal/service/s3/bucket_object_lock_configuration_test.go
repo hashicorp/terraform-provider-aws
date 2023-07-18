@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
@@ -209,7 +212,7 @@ func TestAccS3BucketObjectLockConfiguration_noRule(t *testing.T) {
 
 func testAccCheckBucketObjectLockConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_object_lock_configuration" {
@@ -256,7 +259,7 @@ func testAccCheckBucketObjectLockConfigurationExists(ctx context.Context, resour
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		_, err = tfs3.FindObjectLockConfiguration(ctx, conn, bucket, expectedBucketOwner)
 

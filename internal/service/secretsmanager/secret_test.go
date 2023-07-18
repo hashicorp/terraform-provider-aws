@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager_test
 
 import (
@@ -341,7 +344,7 @@ func TestAccSecretsManagerSecret_policy(t *testing.T) {
 
 func testAccCheckSecretDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_secretsmanager_secret" {
@@ -376,7 +379,7 @@ func testAccCheckSecretExists(ctx context.Context, n string, v *secretsmanager.D
 			return fmt.Errorf("No Secrets Manager Secret ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
 
 		output, err := tfsecretsmanager.FindSecretByID(ctx, conn, rs.Primary.ID)
 
@@ -391,7 +394,7 @@ func testAccCheckSecretExists(ctx context.Context, n string, v *secretsmanager.D
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	input := &secretsmanager.ListSecretsInput{}
 

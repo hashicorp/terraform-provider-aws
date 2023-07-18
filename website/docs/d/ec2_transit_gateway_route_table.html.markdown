@@ -50,7 +50,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - EC2 Transit Gateway Route Table ARN.
 * `default_association_route_table` - Boolean whether this is the default association route table for the EC2 Transit Gateway

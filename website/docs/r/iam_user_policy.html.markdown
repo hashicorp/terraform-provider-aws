@@ -52,9 +52,9 @@ The following arguments are supported:
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `user` - (Required) IAM user to which to attach this policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The user policy ID, in the form of `user_name:user_policy_name`.
 * `name` - The name of the policy (always set).

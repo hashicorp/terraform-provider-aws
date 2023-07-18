@@ -36,9 +36,9 @@ The following arguments are supported:
 
 * `delegated_admin_account_id` - (Required)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Organizations ARN for the delegate account.
 * `id` - The Organizations member account ID that you want to enable as the IPAM account.

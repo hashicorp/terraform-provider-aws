@@ -67,9 +67,9 @@ The following arguments are optional:
 * `org_assertion` - (Optional) The org assertion.
 * `role_assertion` - (Optional) The role assertion.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `status` - The status of the SAML configuration.
 

@@ -212,9 +212,9 @@ The following arguments are supported:
 * `delete` - (Default `30m`)
 * `update` - (Default `30m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Core Network Amazon Resource Name (ARN).
 * `created_at` - Timestamp when a core network was created.

@@ -41,9 +41,9 @@ The following arguments are supported:
 * `message` - (Optional) Message text to be used with the `TERMINAL` routing strategy.
 * `type` - (Required) Type of routing strategyE.g., `SIMPLE` or `TERMINAL`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Alias ID.
 * `arn` - Alias ARN.

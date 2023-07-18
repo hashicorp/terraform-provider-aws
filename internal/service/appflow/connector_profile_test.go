@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appflow_test
 
 import (
@@ -122,7 +125,7 @@ func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
 
 func testAccCheckConnectorProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appflow_connector_profile" {
@@ -148,7 +151,7 @@ func testAccCheckConnectorProfileDestroy(ctx context.Context) resource.TestCheck
 
 func testAccCheckConnectorProfileExists(ctx context.Context, n string, res *appflow.DescribeConnectorProfilesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

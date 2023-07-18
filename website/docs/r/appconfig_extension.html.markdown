@@ -84,9 +84,9 @@ The `parameter` configuration block supports configuring any number of the follo
 * `required` - (Required) Determines if a parameter value must be specified in the extension association.
 * `description` - (Optional) Information about the parameter.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the AppConfig Extension.
 * `id` - AppConfig Extension ID.

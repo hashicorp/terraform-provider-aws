@@ -28,9 +28,9 @@ The following arguments are supported:
 * `model_package_group_description` - (Optional) A description for the model group.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the Model Package Group.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Model Package Group.

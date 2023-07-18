@@ -49,9 +49,9 @@ The following arguments are supported:
 * `source` - (Required) The IP address range, in CIDR notation, e.g., `10.0.0.0/16`
 * `description` - (Optional) The description.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The IP group identifier.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

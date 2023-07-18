@@ -56,9 +56,9 @@ The following arguments are supported:
 
 ~> **NOTE:** One of `vpc_endpoint_service_id` or `vpc_endpoint_id` must be specified.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC connection notification.
 * `state` - The state of the notification.

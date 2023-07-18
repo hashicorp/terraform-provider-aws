@@ -40,9 +40,9 @@ For **backup_policy** the following attributes are supported:
 
 * `status` - (Required) A status of the backup policy. Valid values: `ENABLED`, `DISABLED`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID that identifies the file system (e.g., fs-ccfc0d65).
 

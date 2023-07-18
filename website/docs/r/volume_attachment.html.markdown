@@ -58,9 +58,9 @@ means attached.
 * `stop_instance_before_detaching` - (Optional, Boolean) Set this to true to ensure that the target instance is stopped
 before trying to detach the volume. Stops the instance, if it is not already stopped.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `device_name` - The device name exposed to the instance
 * `instance_id` - ID of the Instance

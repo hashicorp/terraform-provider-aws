@@ -76,9 +76,9 @@ Each level block supports the following arguments:
 
 * `name` - (Required) The name of the user hierarchy level. Must not be more than 50 characters.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `hierarchy_structure` - In addition to the arguments defined initially, there are attributes added to the levels created. These additional attributes are documented below.
 * `id` - The identifier of the hosting Amazon Connect Instance.

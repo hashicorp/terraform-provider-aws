@@ -124,9 +124,9 @@ The following arguments are supported:
 
 * `cluster_identifier` - (Required) The identifier of the cluster to be resumed.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Redshift Scheduled Action name.
 

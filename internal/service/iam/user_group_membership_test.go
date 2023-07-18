@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -114,7 +117,7 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 
 func testAccCheckUserGroupMembershipDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type == "aws_iam_user_group_membership" {
@@ -146,7 +149,7 @@ func testAccCheckUserGroupMembershipDestroy(ctx context.Context) resource.TestCh
 
 func testAccUserGroupMembershipCheckGroupListForUser(ctx context.Context, userName string, groups []string, groupsNeg []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		// get list of groups for user
 		userGroupList, err := conn.ListGroupsForUserWithContext(ctx, &iam.ListGroupsForUserInput{

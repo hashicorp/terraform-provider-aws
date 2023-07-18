@@ -52,9 +52,9 @@ Parameter blocks support the following:
     engines can't apply some parameters without a reboot, and you will need to
     specify "pending-reboot" here.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The db cluster parameter group name.
 * `arn` - The ARN of the db cluster parameter group.

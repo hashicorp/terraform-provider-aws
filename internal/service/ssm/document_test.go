@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
@@ -673,7 +676,7 @@ func testAccCheckDocumentExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("No SSM Document ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		_, err := tfssm.FindDocumentByName(ctx, conn, rs.Primary.ID)
 
@@ -683,7 +686,7 @@ func testAccCheckDocumentExists(ctx context.Context, n string) resource.TestChec
 
 func testAccCheckDocumentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_document" {

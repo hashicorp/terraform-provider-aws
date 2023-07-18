@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx_test
 
 import (
@@ -846,7 +849,7 @@ func testAccCheckWindowsFileSystemExists(ctx context.Context, n string, v *fsx.F
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		output, err := tffsx.FindFileSystemByID(ctx, conn, rs.Primary.ID)
 
@@ -862,7 +865,7 @@ func testAccCheckWindowsFileSystemExists(ctx context.Context, n string, v *fsx.F
 
 func testAccCheckWindowsFileSystemDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_windows_file_system" {

@@ -24,9 +24,9 @@ The following arguments are supported:
 
 * `name` - (Required) Name of the target signing profile.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN for the signing profile.
 * `platform_display_name` - A human-readable name for the signing platform associated with the signing profile.

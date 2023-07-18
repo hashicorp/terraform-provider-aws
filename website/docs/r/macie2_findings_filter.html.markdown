@@ -57,9 +57,9 @@ The `criterion` object supports the following:
 * `gt` - (Optional) The value for the property is greater than the specified value.
 * `gte` - (Optional) The value for the property is greater than or equal to the specified value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the macie Findings Filter.
 * `arn` - The Amazon Resource Name (ARN) of the Findings Filter.

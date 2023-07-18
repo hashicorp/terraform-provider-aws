@@ -48,9 +48,9 @@ The following arguments are supported in the `logging_config` configuration bloc
 * `log_group_name` - (Required) Name of the CloudWatch Log Group where CloudFormation sends error logging information when invoking the type's handlers.
 * `log_role_arn` - (Required) Amazon Resource Name (ARN) of the IAM Role CloudFormation assumes when sending error logging information to CloudWatch Logs.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - (Optional) Amazon Resource Name (ARN) of the CloudFormation Type version. See also `type_arn`.
 * `default_version_id` - Identifier of the CloudFormation Type default version.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package athena_test
 
 import (
@@ -262,7 +265,7 @@ func testAccCheckDataCatalogExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("No Athena Data Catalog name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn(ctx)
 
 		input := &athena.GetDataCatalogInput{
 			Name: aws.String(rs.Primary.ID),
@@ -276,7 +279,7 @@ func testAccCheckDataCatalogExists(ctx context.Context, n string) resource.TestC
 
 func testAccCheckDataCatalogDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_athena_data_catalog" {

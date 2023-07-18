@@ -78,9 +78,9 @@ The following arguments are supported:
 
 * `kms_key_id` - (Optional) The ID of the AWS Key Management Service (AWS KMS) key that SageMaker Feature Store uses to encrypt the Amazon S3 objects at rest using Amazon S3 server-side encryption.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `name` - The name of the Feature Group.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this feature_group.

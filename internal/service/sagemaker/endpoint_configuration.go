@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -341,6 +344,12 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.IntInSlice([]int{1024, 2048, 3072, 4096, 5120, 6144}),
 									},
+									"provisioned_concurrency": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntBetween(1, 200),
+									},
 								},
 							},
 						},
@@ -458,6 +467,12 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.IntInSlice([]int{1024, 2048, 3072, 4096, 5120, 6144}),
 									},
+									"provisioned_concurrency": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntBetween(1, 200),
+									},
 								},
 							},
 						},
@@ -486,14 +501,14 @@ func ResourceEndpointConfiguration() *schema.Resource {
 
 func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
 	createOpts := &sagemaker.CreateEndpointConfigInput{
 		EndpointConfigName: aws.String(name),
 		ProductionVariants: expandProductionVariants(d.Get("production_variants").([]interface{})),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {
@@ -524,7 +539,7 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 
 func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	endpointConfig, err := FindEndpointConfigByName(ctx, conn, d.Id())
 
@@ -572,7 +587,7 @@ func resourceEndpointConfigurationUpdate(ctx context.Context, d *schema.Resource
 
 func resourceEndpointConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	deleteOpts := &sagemaker.DeleteEndpointConfigInput{
 		EndpointConfigName: aws.String(d.Id()),
@@ -918,6 +933,10 @@ func expandServerlessConfig(configured []interface{}) *sagemaker.ProductionVaria
 		c.MemorySizeInMB = aws.Int64(int64(v))
 	}
 
+	if v, ok := m["provisioned_concurrency"].(int); ok && v > 0 {
+		c.ProvisionedConcurrency = aws.Int64(int64(v))
+	}
+
 	return c
 }
 
@@ -1032,6 +1051,10 @@ func flattenServerlessConfig(config *sagemaker.ProductionVariantServerlessConfig
 
 	if config.MemorySizeInMB != nil {
 		cfg["memory_size_in_mb"] = aws.Int64Value(config.MemorySizeInMB)
+	}
+
+	if config.ProvisionedConcurrency != nil {
+		cfg["provisioned_concurrency"] = aws.Int64Value(config.ProvisionedConcurrency)
 	}
 
 	return []map[string]interface{}{cfg}

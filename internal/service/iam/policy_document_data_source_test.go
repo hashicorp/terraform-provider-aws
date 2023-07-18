@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -46,6 +49,25 @@ func TestAccIAMPolicyDocumentDataSource_singleConditionValue(t *testing.T) {
 				Config: testAccPolicyDocumentDataSourceConfig_singleConditionValue,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "json", testAccPolicyDocumentConfig_SingleConditionValue_ExpectedJSON),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMPolicyDocumentDataSource_multipleConditionKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_iam_policy_document.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyDocumentDataSourceConfig_multipleConditionKeys,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "json", testAccPolicyDocumentConfig_multipleConditionKeys_ExpectedJSON),
 				),
 			},
 		},
@@ -587,6 +609,58 @@ const testAccPolicyDocumentConfig_SingleConditionValue_ExpectedJSON = `{
     }
   ]
 }`
+
+const testAccPolicyDocumentDataSourceConfig_multipleConditionKeys = `
+data "aws_iam_policy_document" "test" {
+  statement {
+    sid = "AWSCloudTrailWrite20150319"
+
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+    }
+
+    actions = ["s3:PutObject"]
+
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "s3:x-amz-acl"
+      values   = ["bucket-owner-full-control"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceArn"
+      values   = ["some-other-value"]
+    }
+  }
+}
+`
+
+var testAccPolicyDocumentConfig_multipleConditionKeys_ExpectedJSON = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailWrite20150319",
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "*",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control",
+          "aws:SourceArn": "some-other-value"
+        }
+      }
+    }
+  ]
+}
+`
 
 var testAccPolicyDocumentDataSourceConfig_deprecated = `
 data "aws_partition" "current" {}

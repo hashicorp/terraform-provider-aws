@@ -40,9 +40,9 @@ The following arguments are supported:
 * `name` - (Optional) Returns information on a specific User by name
 * `user_id` - (Optional) Returns information on a specific User by User id
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the User.
 * `directory_user_id` - The identifier of the user account in the directory used for identity management.

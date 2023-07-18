@@ -103,9 +103,9 @@ The following arguments are supported:
 * `disabled` - (Optional) When `true`, the media insights configuration is not enabled. Defaults to `false`.
 * `configuration_arn` - (Optional) The media insights configuration that will be invoked by the Voice Connector.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Chime Voice Connector ID.
 

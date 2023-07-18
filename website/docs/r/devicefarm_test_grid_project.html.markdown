@@ -39,9 +39,9 @@ resource "aws_devicefarm_test_grid_project" "example" {
 * `subnet_ids` - (Required) A list of VPC subnet IDs in your Amazon VPC.
 * `vpc_id` - (Required) The ID of the Amazon VPC.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name of this Test Grid Project.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

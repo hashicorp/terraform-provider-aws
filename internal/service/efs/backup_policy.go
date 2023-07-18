@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs
 
 import (
@@ -57,7 +60,7 @@ func ResourceBackupPolicy() *schema.Resource {
 
 func resourceBackupPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	fsID := d.Get("file_system_id").(string)
 
@@ -72,7 +75,7 @@ func resourceBackupPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBackupPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	output, err := FindBackupPolicyByID(ctx, conn, d.Id())
 
@@ -97,7 +100,7 @@ func resourceBackupPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceBackupPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	if err := backupPolicyPut(ctx, conn, d.Id(), d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EFS Backup Policy (%s): %s", d.Id(), err)
@@ -108,7 +111,7 @@ func resourceBackupPolicyUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBackupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	err := backupPolicyPut(ctx, conn, d.Id(), map[string]interface{}{
 		"status": efs.StatusDisabled,
@@ -137,16 +140,16 @@ func backupPolicyPut(ctx context.Context, conn *efs.EFS, fsID string, tfMap map[
 	_, err := conn.PutBackupPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error putting EFS Backup Policy (%s): %w", fsID, err)
+		return fmt.Errorf("putting EFS Backup Policy (%s): %w", fsID, err)
 	}
 
 	if aws.StringValue(input.BackupPolicy.Status) == efs.StatusEnabled {
 		if _, err := waitBackupPolicyEnabled(ctx, conn, fsID); err != nil {
-			return fmt.Errorf("error waiting for EFS Backup Policy (%s) to enable: %w", fsID, err)
+			return fmt.Errorf("waiting for EFS Backup Policy (%s) to enable: %w", fsID, err)
 		}
 	} else {
 		if _, err := waitBackupPolicyDisabled(ctx, conn, fsID); err != nil {
-			return fmt.Errorf("error waiting for EFS Backup Policy (%s) to disable: %w", fsID, err)
+			return fmt.Errorf("waiting for EFS Backup Policy (%s) to disable: %w", fsID, err)
 		}
 	}
 

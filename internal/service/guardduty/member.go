@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty
 
 import (
@@ -76,7 +79,7 @@ func ResourceMember() *schema.Resource {
 
 func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 	accountID := d.Get("account_id").(string)
 	detectorID := d.Get("detector_id").(string)
 
@@ -123,7 +126,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {
@@ -171,7 +174,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {
@@ -220,7 +223,7 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {
@@ -254,7 +257,7 @@ func inviteMemberWaiter(ctx context.Context, accountID, detectorID string, timeo
 		out, err = conn.GetMembersWithContext(ctx, &input)
 
 		if err != nil {
-			return retry.NonRetryableError(fmt.Errorf("error reading GuardDuty Member %q: %s", accountID, err))
+			return retry.NonRetryableError(fmt.Errorf("reading GuardDuty Member %q: %s", accountID, err))
 		}
 
 		retryable, err := memberInvited(out, accountID)
@@ -271,20 +274,20 @@ func inviteMemberWaiter(ctx context.Context, accountID, detectorID string, timeo
 		out, err = conn.GetMembersWithContext(ctx, &input)
 
 		if err != nil {
-			return fmt.Errorf("Error reading GuardDuty member: %w", err)
+			return fmt.Errorf("reading GuardDuty member: %w", err)
 		}
 		_, err = memberInvited(out, accountID)
 		return err
 	}
 	if err != nil {
-		return fmt.Errorf("Error waiting for GuardDuty email verification: %w", err)
+		return fmt.Errorf("waiting for GuardDuty email verification: %w", err)
 	}
 	return nil
 }
 
 func memberInvited(out *guardduty.GetMembersOutput, accountID string) (bool, error) {
 	if out == nil || len(out.Members) == 0 {
-		return true, fmt.Errorf("error reading GuardDuty Member %q: member missing from response", accountID)
+		return true, fmt.Errorf("reading GuardDuty Member %q: member missing from response", accountID)
 	}
 
 	member := out.Members[0]
@@ -298,7 +301,7 @@ func memberInvited(out *guardduty.GetMembersOutput, accountID string) (bool, err
 		return true, fmt.Errorf("Expected member to be invited but was in state: %s", status)
 	}
 
-	return false, fmt.Errorf("error inviting GuardDuty Member %q: invalid status: %s", accountID, status)
+	return false, fmt.Errorf("inviting GuardDuty Member %q: invalid status: %s", accountID, status)
 }
 
 func DecodeMemberID(id string) (accountID, detectorID string, err error) {

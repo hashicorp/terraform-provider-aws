@@ -75,9 +75,9 @@ The following arguments are supported:
 
 * `minimum_instance_metadata_service_version` - (Optional) Indicates the minimum IMDS version that the notebook instance supports. When passed "1" is passed. This means that both IMDSv1 and IMDSv2 are supported. Valid values are `1` and `2`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the notebook instance.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this notebook instance.

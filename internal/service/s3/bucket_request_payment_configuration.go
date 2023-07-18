@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -51,7 +53,7 @@ func ResourceBucketRequestPaymentConfiguration() *schema.Resource {
 }
 
 func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -72,7 +74,7 @@ func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *sch
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating S3 bucket (%s) request payment configuration: %w", bucket, err))
+		return diag.Errorf("creating S3 bucket (%s) request payment configuration: %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
@@ -81,7 +83,7 @@ func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *sch
 }
 
 func resourceBucketRequestPaymentConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -105,7 +107,7 @@ func resourceBucketRequestPaymentConfigurationRead(ctx context.Context, d *schem
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error reading S3 bucket request payment configuration (%s): empty output", d.Id()))
+		return diag.Errorf("reading S3 bucket request payment configuration (%s): empty output", d.Id())
 	}
 
 	d.Set("bucket", bucket)
@@ -116,7 +118,7 @@ func resourceBucketRequestPaymentConfigurationRead(ctx context.Context, d *schem
 }
 
 func resourceBucketRequestPaymentConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -137,14 +139,14 @@ func resourceBucketRequestPaymentConfigurationUpdate(ctx context.Context, d *sch
 	_, err = conn.PutBucketRequestPaymentWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating S3 bucket request payment configuration (%s): %w", d.Id(), err))
+		return diag.Errorf("updating S3 bucket request payment configuration (%s): %s", d.Id(), err)
 	}
 
 	return resourceBucketRequestPaymentConfigurationRead(ctx, d, meta)
 }
 
 func resourceBucketRequestPaymentConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -171,7 +173,7 @@ func resourceBucketRequestPaymentConfigurationDelete(ctx context.Context, d *sch
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting S3 bucket request payment configuration (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting S3 bucket request payment configuration (%s): %s", d.Id(), err)
 	}
 
 	return nil

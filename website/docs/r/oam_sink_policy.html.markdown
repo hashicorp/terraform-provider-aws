@@ -49,9 +49,9 @@ The following arguments are required:
 * `sink_identifier` - (Required) ARN of the sink to attach this policy to.
 * `policy` - (Required) JSON policy to use. If you are updating an existing policy, the entire existing policy is replaced by what you specify here.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Sink.
 * `sink_id` - ID string that AWS generated as part of the sink ARN.

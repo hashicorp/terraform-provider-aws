@@ -36,9 +36,9 @@ The following arguments are supported by the `filter` configuration block:
 * `name` - (Required) Name of the filter field. Valid values can be found in the [RDS DescribeDBClusters API Reference](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBClusters.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `cluster_arns` - Set of cluster ARNs of the matched RDS clusters.
 * `cluster_identifiers` - Set of ARNs of cluster identifiers of the matched RDS clusters.
