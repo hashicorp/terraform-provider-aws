@@ -80,7 +80,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-RDS DB Proxy Targets can be imported using the `db_proxy_name`, `target_group_name`, target type (e.g., `RDS_INSTANCE` or `TRACKED_CLUSTER`), and resource identifier separated by forward slashes (`/`), e.g.,
+Import RDS DB Proxy Targets using the `db_proxy_name`, `target_group_name`, target type (e.g., `RDS_INSTANCE` or `TRACKED_CLUSTER`), and resource identifier separated by forward slashes (`/`). For example:
 
 Instances:
 
