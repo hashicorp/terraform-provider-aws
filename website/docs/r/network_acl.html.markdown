@@ -53,7 +53,7 @@ resource "aws_network_acl" "main" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_id` - (Required) The ID of the associated VPC.
 * `subnet_ids` - (Optional) A list of Subnet IDs to apply the ACL to

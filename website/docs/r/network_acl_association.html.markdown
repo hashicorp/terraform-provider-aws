@@ -25,7 +25,7 @@ resource "aws_network_acl_association" "main" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `network_acl_id` - (Required) The ID of the network ACL.
 * `subnet_id` - (Required) The ID of the associated Subnet.

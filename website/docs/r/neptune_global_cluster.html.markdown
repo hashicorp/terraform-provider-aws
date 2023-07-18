@@ -100,7 +100,7 @@ resource "aws_neptune_global_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `global_cluster_identifier` - (Required, Forces new resources) The global cluster identifier.
 * `deletion_protection` - (Optional) If the Global Cluster should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
