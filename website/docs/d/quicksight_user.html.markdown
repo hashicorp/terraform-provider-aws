@@ -33,7 +33,7 @@ The following arguments are optional:
 * `aws_account_id` - (Optional) AWS account ID.
 * `namespace` - (Optional) QuickSight namespace. Defaults to `default`.
 
-## Attributes Reference
+## Attribute Reference
 
 * `active` - The active status of user. When you create an Amazon QuickSight user that’s not an IAM user or an Active Directory user, that user is inactive until they sign in and provide a password.
 * `arn` - The Amazon Resource Name (ARN) for the user.
