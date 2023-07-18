@@ -29,7 +29,7 @@ resource "aws_chime_voice_connector_termination" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
 * `cidr_allow_list` - (Required) The IP addresses allowed to make calls, in CIDR format.
