@@ -75,7 +75,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Spaces can be imported using the `id`, e.g.,
+Import SageMaker Spaces using the `id`. For example:
 
 ```
 $ terraform import aws_sagemaker_space.test_space arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name

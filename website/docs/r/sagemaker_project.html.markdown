@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Projects can be imported using the `project_name`, e.g.,
+Import SageMaker Projects using the `project_name`. For example:
 
 ```
 $ terraform import aws_sagemaker_project.example example
