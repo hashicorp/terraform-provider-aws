@@ -27,7 +27,7 @@ resource "aws_route53_resolver_config" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
 * `resource_id` - (Required) The ID of the VPC that the configuration is for.
 * `autodefined_reverse_flag` - (Required) Indicates whether or not the Resolver will create autodefined rules for reverse DNS lookups. Valid values: `ENABLE`, `DISABLE`.
