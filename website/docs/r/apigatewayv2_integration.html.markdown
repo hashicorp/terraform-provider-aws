@@ -104,7 +104,7 @@ resource "aws_apigatewayv2_integration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `integration_type` - (Required) Integration type of an integration.

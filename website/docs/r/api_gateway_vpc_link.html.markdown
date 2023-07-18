@@ -35,7 +35,7 @@ resource "aws_api_gateway_vpc_link" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name used to label and identify the VPC link.
 * `description` - (Optional) Description of the VPC link.
