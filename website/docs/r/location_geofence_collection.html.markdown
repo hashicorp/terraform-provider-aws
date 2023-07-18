@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Location Geofence Collection can be imported using the `collection_name`, e.g.,
+Import Location Geofence Collection using the `collection_name`. For example:
 
 ```
 $ terraform import aws_location_geofence_collection.example example

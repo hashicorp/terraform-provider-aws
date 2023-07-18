@@ -159,7 +159,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Lightsail Instances can be imported using their name, e.g.,
+Import Lightsail Instances using their name. For example:
 
 ```
 $ terraform import aws_lightsail_instance.gitlab_test 'custom_gitlab'
