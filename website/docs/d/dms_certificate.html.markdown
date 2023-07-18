@@ -26,9 +26,9 @@ The following arguments are required:
 
 * `certificate_id` - (Required) A customer-assigned name for the certificate. Identifiers must begin with a letter and must contain only ASCII letters, digits, and hyphens. They can't end with a hyphen or contain two consecutive hyphens.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `certificate_creation_date` - The date that the certificate was created.
 * `certificate_pem` - The contents of a .pem file, which contains an X.509 certificate.
