@@ -100,9 +100,9 @@ The `ebs_volumes` block supports the following:
 * `enable` - (Required) If true, enables [Malware Protection](https://docs.aws.amazon.com/guardduty/latest/ug/malware-protection.html) as data source for the detector.
   Defaults to `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `account_id` - The AWS account ID of the GuardDuty detector
 * `arn` - Amazon Resource Name (ARN) of the GuardDuty detector
