@@ -331,13 +331,13 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading CloudFormation StackSet Instance (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 		}
 
 		d.Set("account_id", stackInstance.Account)
 		d.Set("organizational_unit_id", stackInstance.OrganizationalUnitId)
 		if err := d.Set("parameter_overrides", flattenAllParameters(stackInstance.ParameterOverrides)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting parameters: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 		}
 
 		d.Set("stack_id", stackInstance.StackId)
