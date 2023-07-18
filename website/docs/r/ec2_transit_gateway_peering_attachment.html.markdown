@@ -60,7 +60,7 @@ A full example of how to create a Transit Gateway in one AWS account, share it w
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `peer_account_id` - (Optional) Account ID of EC2 Transit Gateway to peer with. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `peer_region` - (Required) Region of EC2 Transit Gateway to peer with.
