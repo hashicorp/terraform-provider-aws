@@ -41,7 +41,7 @@ resource "aws_eip" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `allocation_id` - (Optional) The allocation ID. This is required for EC2-VPC.
 * `allow_reassociation` - (Optional, Boolean) Whether to allow an Elastic IP to
