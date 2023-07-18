@@ -26,7 +26,7 @@ The following arguments are supported:
 * `domain_owner` - (Optional) Account number of the AWS account that owns the domain.
 * `duration_seconds` - (Optional) Time, in seconds, that the generated authorization token is valid. Valid values are `0` and between `900` and `43200`.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to the argument above, the following attributes are exported:
 
