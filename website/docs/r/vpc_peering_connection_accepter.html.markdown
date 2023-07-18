@@ -103,7 +103,7 @@ This resource exports the following attributes in addition to the arguments abov
 (https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the requester VPC.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-#### Accepter and Requester Attributes Reference
+#### Accepter and Requester Attribute Reference
 
 * `allow_remote_vpc_dns_resolution` - Indicates whether a local VPC can resolve public DNS hostnames to
 private IP addresses when queried from instances in a peer VPC.

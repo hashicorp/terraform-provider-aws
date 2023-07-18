@@ -163,7 +163,7 @@ The following arguments are supported:
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
