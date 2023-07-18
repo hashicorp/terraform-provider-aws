@@ -47,9 +47,9 @@ List of SIP media applications with priority and AWS Region. Only one SIP applic
 * `priority` - (Required) Priority of the SIP media application in the target list.
 * `sip_media_application_id` - (Required) The SIP media application ID.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The SIP rule ID.
 

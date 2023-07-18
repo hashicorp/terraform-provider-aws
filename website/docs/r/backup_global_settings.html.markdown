@@ -22,13 +22,13 @@ resource "aws_backup_global_settings" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `global_settings` - (Required) A list of resources along with the opt-in preferences for the account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The AWS Account ID.
 

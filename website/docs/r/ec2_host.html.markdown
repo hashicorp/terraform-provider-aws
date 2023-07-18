@@ -25,7 +25,7 @@ resource "aws_ec2_host" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `auto_placement` - (Optional) Indicates whether the host accepts any untargeted instance launches that match its instance type configuration, or if it only accepts Host tenancy instance launches that specify its unique host ID. Valid values: `on`, `off`. Default: `on`.
 * `availability_zone` - (Required) The Availability Zone in which to allocate the Dedicated Host.
@@ -35,9 +35,9 @@ The following arguments are supported:
 * `outpost_arn` - (Optional) The Amazon Resource Name (ARN) of the AWS Outpost on which to allocate the Dedicated Host.
 * `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the allocated Dedicated Host. This is used to launch an instance onto a specific host.
 * `arn` - The ARN of the Dedicated Host.

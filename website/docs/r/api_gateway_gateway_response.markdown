@@ -34,7 +34,7 @@ resource "aws_api_gateway_gateway_response" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) String identifier of the associated REST API.
 * `response_type` - (Required) Response type of the associated GatewayResponse.
@@ -42,9 +42,9 @@ The following arguments are supported:
 * `response_templates` - (Optional) Map of templates used to transform the response body.
 * `response_parameters` - (Optional) Map of parameters (paths, query strings and headers) of the Gateway Response.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

@@ -45,7 +45,7 @@ resource "aws_cleanrooms_collaboration" "test_collaboration" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) - The name of the collaboration.  Collaboration names do not need to be unique.
 * `description` - (Required) - A description for a collaboration.
@@ -73,9 +73,9 @@ or cryptographically processed (false).
 s
 * `tags` - (Optional) - Key value pairs which tag the collaboration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The arn of the collaboration
 * `id` - The id of the collaboration

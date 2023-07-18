@@ -20,7 +20,7 @@ resource "aws_ec2_instance_connect_endpoint" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `preserve_client_ip` - (Optional) Indicates whether your client's IP address is preserved as the source. Default: `true`.
 * `security_group_ids` - (Optional) One or more security groups to associate with the endpoint. If you don't specify a security group, the default security group for the VPC will be associated with the endpoint.
@@ -34,9 +34,9 @@ The following arguments are supported:
 - `create` - (Default `10m`)
 - `delete` - (Default `10m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the EC2 Instance Connect Endpoint.
 * `availability_zone` - The Availability Zone of the EC2 Instance Connect Endpoint.

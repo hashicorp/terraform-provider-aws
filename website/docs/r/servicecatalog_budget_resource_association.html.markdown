@@ -30,9 +30,9 @@ The following arguments are required:
 * `budget_name` - (Required) Budget name.
 * `resource_id` - (Required) Resource identifier.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of the association.
 

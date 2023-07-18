@@ -33,7 +33,7 @@ resource "aws_transfer_connector" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `access_role` - (Required) The IAM Role which provides read and write access to the parent directory of the file location mentioned in the StartFileTransfer request.
 * `as2_config` - (Required) The parameters to configure for the connector object. Fields documented below.
@@ -52,9 +52,9 @@ The following arguments are supported:
 * `partner_profile_id` - (Required) The unique identifier for the AS2 partner profile.
 * `signing_algorithm` - (Required) The algorithm that is used to sign AS2 messages sent with the connector. The valid values are SHA256 | SHA384 | SHA512 | SHA1 | NONE .
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `connector_id`  - The unique identifier for the AS2 profile
 

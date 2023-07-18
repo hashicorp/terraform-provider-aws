@@ -25,7 +25,7 @@ resource "aws_route53recoveryreadiness_resource_set" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_set_name` - (Required) Unique name describing the resource set.
 * `resource_set_type` - (Required) Type of the resources in the resource set.
@@ -63,9 +63,9 @@ The following arguments are optional:
 * `domain_name` - (Optional) Domain name that is targeted.
 * `record_set_id` - (Optional) Resource record set ID that is targeted.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the resource set
 * `resources.#.component_id` - Unique identified for DNS Target Resources, use for readiness checks.

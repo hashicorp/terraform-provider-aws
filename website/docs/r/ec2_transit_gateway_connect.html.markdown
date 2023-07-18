@@ -27,7 +27,7 @@ resource "aws_ec2_transit_gateway_connect" "attachment" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `protocol` - (Optional) The tunnel protocol. Valid values: `gre`. Default is `gre`.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Connect. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -36,9 +36,9 @@ The following arguments are supported:
 * `transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway.
 * `transport_attachment_id` - (Required) The underlaying VPC attachment
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway Attachment identifier
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

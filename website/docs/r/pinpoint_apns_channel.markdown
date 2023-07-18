@@ -28,7 +28,7 @@ resource "aws_pinpoint_app" "app" {}
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `application_id` - (Required) The application ID.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. Defaults to `true`.
@@ -51,9 +51,9 @@ If you choose to use __Key credentials__ you will have to provide:
 * `token_key` - (Required) The `.p8` file that you download from your Apple developer account when you create an authentication key.
 * `token_key_id` - (Required) The ID assigned to your signing key. To find this value, choose Certificates, IDs & Profiles, and choose your key in the Keys section.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

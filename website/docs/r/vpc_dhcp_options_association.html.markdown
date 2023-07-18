@@ -21,7 +21,7 @@ resource "aws_vpc_dhcp_options_association" "dns_resolver" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_id` - (Required) The ID of the VPC to which we would like to associate a DHCP Options Set.
 * `dhcp_options_id` - (Required) The ID of the DHCP Options Set to associate to the VPC.
@@ -31,9 +31,9 @@ The following arguments are supported:
 * You can only associate one DHCP Options Set to a given VPC ID.
 * Removing the DHCP Options Association automatically sets AWS's `default` DHCP Options Set to the VPC.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the DHCP Options Set Association.
 

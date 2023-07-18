@@ -32,7 +32,7 @@ resource "aws_connect_security_profile" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Specifies the description of the Security Profile.
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
@@ -41,9 +41,9 @@ The following arguments are supported:
 * `tags` - (Optional) Tags to apply to the Security Profile. If configured with a provider
 [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Security Profile.
 * `organization_resource_id` - The organization resource identifier for the security profile.

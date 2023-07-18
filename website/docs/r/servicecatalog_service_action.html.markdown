@@ -47,9 +47,9 @@ The `definition` configuration block supports the following attributes:
 * `type` - (Optional) Service action definition type. Valid value is `SSM_AUTOMATION`. Default is `SSM_AUTOMATION`.
 * `version` - (Required) SSM document version. For example, `1`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of the service action.
 

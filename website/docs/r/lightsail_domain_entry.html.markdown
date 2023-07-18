@@ -30,7 +30,7 @@ resource "aws_lightsail_domain_entry" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) The name of the Lightsail domain in which to create the entry
 * `name` - (Required) Name of the entry record
@@ -38,9 +38,9 @@ The following arguments are supported:
 * `target` - (Required) Target of the domain entry
 * `is_alias` - (Optional) If the entry should be an alias Defaults to `false`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A combination of attributes to create a unique id: `name`,`domain_name`,`type`,`target`
 

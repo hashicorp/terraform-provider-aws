@@ -98,9 +98,9 @@ The following arguments are optional:
 * `type` - (Optional) The type of phone number.
 * `value` - (Optional) The user's phone number.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `external_ids` - A list of identifiers issued to this resource by an external identity provider.
     * `id` - The identifier issued to this resource by an external identity provider.

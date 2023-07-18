@@ -55,7 +55,7 @@ resource "aws_ec2_traffic_mirror_filter_rule" "rulein" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Description of the traffic mirror filter rule.
 * `traffic_mirror_filter_id`  - (Required) ID of the traffic mirror filter to which this rule should be added
@@ -73,9 +73,9 @@ Traffic mirror port range support following attributes:
 * `from_port` - (Optional) Starting port of the range
 * `to_port` - (Optional) Ending port of the range
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the traffic mirror filter rule.
 * `id` - Name of the traffic mirror filter rule.

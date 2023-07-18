@@ -85,9 +85,9 @@ The following arguments are optional:
 * `maximum_bitrate` - (Optional) Maximum bitrate.
 * `priority` - (Optional) Priority value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the MultiplexProgram.
 * `example_attribute` - Concise description.

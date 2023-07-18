@@ -26,16 +26,16 @@ PROPERTIES
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `server_properties` - (Required) Contents of the server.properties file. Supported properties are documented in the [MSK Developer Guide](https://docs.aws.amazon.com/msk/latest/developerguide/msk-configuration-properties.html).
 * `kafka_versions` - (Required) List of Apache Kafka versions which can use this configuration.
 * `name` - (Required) Name of the configuration.
 * `description` - (Optional) Description of the configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the configuration.
 * `latest_revision` - Latest revision of the configuration.

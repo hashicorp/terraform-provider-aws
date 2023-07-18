@@ -35,9 +35,9 @@ The following arguments are optional:
 * `last_name` - (Optional) Last name, or surname, of the user.
 * `send_email_notification` - (Optional) Send an email notification.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the appstream user.
 * `created_time` - Date and time, in UTC and extended RFC 3339 format, when the user was created.

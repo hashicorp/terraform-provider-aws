@@ -33,9 +33,9 @@ The following arguments are optional:
 * `display_name` - (Optional) A string containing the name of the group. This value is commonly displayed when the group is referenced.
 * `description` - (Optional) A string containing the description of the group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `group_id` - The identifier of the newly created group in the identity store.
 * `external_ids` - A list of external IDs that contains the identifiers issued to this resource by an external identity provider. See [External IDs](#external-ids) below.

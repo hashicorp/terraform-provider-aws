@@ -26,9 +26,9 @@ The following arguments are required:
 * `cluster_arn` - (Required) ARN of the cluster in which this control panel will reside.
 * `name` - (Required) Name describing the control panel.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the control panel.
 * `default_control_panel` - Whether a control panel is default.

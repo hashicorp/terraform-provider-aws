@@ -138,6 +138,10 @@ func DataSourceInstance() *schema.Resource {
 					},
 				},
 			},
+			"max_allocated_storage": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"monitoring_interval": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -252,6 +256,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
 		}
 	}
+	d.Set("max_allocated_storage", v.MaxAllocatedStorage)
 	d.Set("monitoring_interval", v.MonitoringInterval)
 	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
 	d.Set("multi_az", v.MultiAZ)

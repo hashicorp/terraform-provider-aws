@@ -29,20 +29,20 @@ resource "aws_efs_backup_policy" "policy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `file_system_id` - (Required) The ID of the EFS file system.
 * `backup_policy` - (Required) A backup_policy object (documented below).
 
 ### Backup Policy Arguments
 
-For **backup_policy** the following attributes are supported:
+`backup_policy` supports the following arguments:
 
 * `status` - (Required) A status of the backup policy. Valid values: `ENABLED`, `DISABLED`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID that identifies the file system (e.g., fs-ccfc0d65).
 

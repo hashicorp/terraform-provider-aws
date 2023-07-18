@@ -44,7 +44,7 @@ resource "aws_sagemaker_app_image_config" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `app_image_config_name` - (Required) The name of the App Image Config.
 * `kernel_gateway_image_config` - (Optional) The configuration for the file system and kernels in a SageMaker image running as a KernelGateway app. See [Kernel Gateway Image Config](#kernel-gateway-image-config) details below.
@@ -68,9 +68,9 @@ The following arguments are supported:
 * `name` - (Required) The name of the kernel.
 * `display_name` - (Optional) The display name of the kernel.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the App Image Config.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this App Image Config.

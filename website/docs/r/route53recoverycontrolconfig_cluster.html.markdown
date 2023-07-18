@@ -24,9 +24,9 @@ The following arguments are required:
 
 * `name` - (Required) Unique name describing the cluster.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the cluster
 * `cluster_endpoints` - List of 5 endpoints in 5 regions that can be used to talk to the cluster. See below.

@@ -26,9 +26,9 @@ The following arguments are required:
 * `tag_key` - (Required) The key for the cost allocation tag.
 * `status` - (Required) The status of a cost allocation tag. Valid values are `Active` and `Inactive`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The key for the cost allocation tag.
 * `type` - The type of cost allocation tag.

@@ -42,7 +42,7 @@ resource "aws_cloudwatch_event_permission" "OrganizationAccess" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `principal` - (Required) The 12-digit AWS account ID that you are permitting to put events to your default event bus. Specify `*` to permit any account to put events to your default event bus, optionally limited by `condition`.
 * `statement_id` - (Required) An identifier string for the external account that you are granting permissions to.
@@ -57,9 +57,9 @@ The following arguments are supported:
 * `type` - (Required) Type of condition. Value values: `StringEquals`.
 * `value` - (Required) Value for the key.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The statement ID of the EventBridge permission.
 

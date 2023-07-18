@@ -247,9 +247,9 @@ resource "aws_lambda_permission" "logging" {
 [2]: https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
 [3]: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

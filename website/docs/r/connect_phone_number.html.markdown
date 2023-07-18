@@ -51,7 +51,7 @@ resource "aws_connect_phone_number" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `country_code` - (Required, Forces new resource) The ISO country code. For a list of Valid values, refer to [PhoneNumberCountryCode](https://docs.aws.amazon.com/connect/latest/APIReference/API_SearchAvailablePhoneNumbers.html#connect-SearchAvailablePhoneNumbers-request-PhoneNumberCountryCode).
 * `description` - (Optional, Forces new resource) The description of the phone number.
@@ -60,9 +60,9 @@ The following arguments are supported:
 * `target_arn` - (Required) The Amazon Resource Name (ARN) for Amazon Connect instances that phone numbers are claimed to.
 * `type` - (Required, Forces new resource) The type of phone number. Valid Values: `TOLL_FREE` | `DID`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the phone number.
 * `phone_number` - The phone number. Phone numbers are formatted `[+] [country code] [subscriber number including area code]`.

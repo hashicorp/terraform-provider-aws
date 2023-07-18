@@ -51,9 +51,9 @@ The following argument is optional:
 
 * `custom_redirect_domain` - (Optional) Custom subdomain that is used to redirect email recipients to the Amazon SES event tracking domain.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - SES configuration set ARN.
 * `id` - SES configuration set name.

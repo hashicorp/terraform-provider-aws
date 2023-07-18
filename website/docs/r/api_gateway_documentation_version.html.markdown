@@ -36,15 +36,15 @@ resource "aws_api_gateway_documentation_part" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
 * `version` - (Required) Version identifier of the API documentation snapshot.
 * `rest_api_id` - (Required) ID of the associated Rest API
 * `description` - (Optional) Description of the API documentation version.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 ## Import
 

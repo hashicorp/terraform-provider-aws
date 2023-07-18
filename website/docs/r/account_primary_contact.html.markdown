@@ -29,7 +29,7 @@ resource "aws_account_primary_contact" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) The ID of the target account when managing member accounts. Will manage current user's account by default if omitted.
 * `address_line_1` - (Required) The first line of the primary contact address.
@@ -45,9 +45,9 @@ The following arguments are supported:
 * `state_or_region` - (Optional) The state or region of the primary contact address. This field is required in selected countries.
 * `website_url` - (Optional) The URL of the website associated with the primary contact information, if any.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

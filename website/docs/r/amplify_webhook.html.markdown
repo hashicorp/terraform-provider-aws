@@ -31,15 +31,15 @@ resource "aws_amplify_webhook" "master" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `app_id` - (Required) Unique ID for an Amplify app.
 * `branch_name` - (Required) Name for a branch that is part of the Amplify app.
 * `description` - (Optional) Description for a webhook.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN for the webhook.
 * `url` - URL of the webhook.

@@ -33,9 +33,9 @@ The following arguments are required:
 * `key_store_password` - (Required) Password for `kmsuser` on CloudHSM.
 * `trust_anchor_certificate` - (Required) Customer certificate used for signing on CloudHSM.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Custom Key Store ID
 

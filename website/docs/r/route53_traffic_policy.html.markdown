@@ -43,9 +43,9 @@ The following arguments are optional:
 
 * `comment` - (Optional) Comment for the traffic policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the traffic policy
 * `type` - DNS type of the resource record sets that Amazon Route 53 creates when you use a traffic policy to create a traffic policy instance.

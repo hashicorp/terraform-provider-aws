@@ -26,7 +26,7 @@ resource "aws_gamelift_script" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the script
 * `storage_location` - (Optional) Information indicating where your game script files are stored. See below.
@@ -43,9 +43,9 @@ The following arguments are supported:
 * `role_arn` - (Required) ARN of the access role that allows Amazon GameLift to access your S3 bucket.
 * `object_version` - (Optional) A specific version of the file. If not set, the latest version of the file is retrieved.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - GameLift Script ID.
 * `arn` - GameLift Script ARN.

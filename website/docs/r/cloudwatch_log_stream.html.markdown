@@ -25,14 +25,14 @@ resource "aws_cloudwatch_log_stream" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the log stream. Must not be longer than 512 characters and must not contain `:`
 * `log_group_name` - (Required) The name of the log group under which the log stream is to be created.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the log stream.
 

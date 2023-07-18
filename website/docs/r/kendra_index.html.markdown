@@ -597,7 +597,7 @@ resource "aws_kendra_index" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `capacity_units` - (Optional) A block that sets the number of additional document storage and query capacity units that should be used by the index. [Detailed below](#capacity_units).
 * `description` - (Optional) The description of the Index.
@@ -693,9 +693,9 @@ A `jwt_token_type_configuration` block supports the following arguments:
 * `delete` - (Default `40m`)
 * `update` - (Default `40m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Index.
 * `created_at` - The Unix datetime that the index was created.

@@ -169,7 +169,7 @@ resource "aws_networkmanager_vpc_attachment" "example_us_east_1" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Description of the Core Network.
 * `base_policy_region` - (Optional, **Deprecated** use the `base_policy_regions` argument instead) The base policy created by setting the `create_base_policy` argument to `true` requires a region to be set in the `edge-locations`, `location` key. If `base_policy_region` is not specified, the region used in the base policy defaults to the region specified in the `provider` block.
@@ -212,9 +212,9 @@ The following arguments are supported:
 * `delete` - (Default `30m`)
 * `update` - (Default `30m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Core Network Amazon Resource Name (ARN).
 * `created_at` - Timestamp when a core network was created.

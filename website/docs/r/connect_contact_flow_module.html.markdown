@@ -107,7 +107,7 @@ resource "aws_connect_contact_flow_module" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `content` - (Optional) Specifies the content of the Contact Flow Module, provided as a JSON string, written in Amazon Connect Contact Flow Language. If defined, the `filename` argument cannot be used.
 * `content_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the Contact Flow Module source specified with `filename`. The usual way to set this is filebase64sha256("contact_flow_module.json") (Terraform 0.11.12 and later) or base64sha256(file("contact_flow_module.json")) (Terraform 0.11.11 and earlier), where "contact_flow_module.json" is the local filename of the Contact Flow Module source.
@@ -117,9 +117,9 @@ The following arguments are supported:
 * `name` - (Required) Specifies the name of the Contact Flow Module.
 * `tags` - (Optional) Tags to apply to the Contact Flow Module. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Contact Flow Module.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Contact Flow Module separated by a colon (`:`).

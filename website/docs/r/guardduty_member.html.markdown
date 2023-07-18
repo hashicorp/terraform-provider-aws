@@ -34,7 +34,7 @@ resource "aws_guardduty_member" "member" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Required) AWS account ID for member account.
 * `detector_id` - (Required) The detector ID of the GuardDuty account where you want to create member accounts.
@@ -43,9 +43,9 @@ The following arguments are supported:
 * `invitation_message` - (Optional) Message for invitation.
 * `disable_email_notification` - (Optional) Boolean whether an email notification is sent to the accounts. Defaults to `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the GuardDuty member
 * `relationship_status` - The status of the relationship between the member account and its primary account. More information can be found in [Amazon GuardDuty API Reference](https://docs.aws.amazon.com/guardduty/latest/ug/get-members.html).

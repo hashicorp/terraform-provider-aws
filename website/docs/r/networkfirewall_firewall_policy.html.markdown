@@ -58,7 +58,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) A friendly description of the firewall policy.
 
@@ -155,9 +155,9 @@ The `dimension` block supports the following argument:
 
 * `value` - (Required) The string value to use in the custom metric dimension.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) that identifies the firewall policy.
 

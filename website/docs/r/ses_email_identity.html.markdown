@@ -12,13 +12,13 @@ Provides an SES email identity resource
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `email` - (Required) The email address to assign to SES.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the email identity.
 

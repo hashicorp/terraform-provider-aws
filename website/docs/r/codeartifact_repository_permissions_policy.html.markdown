@@ -49,7 +49,7 @@ resource "aws_codeartifact_repository_permissions_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `repository` - (Required) The name of the repository to set the resource policy on.
 * `domain` - (Required) The name of the domain on which to set the resource policy.
@@ -57,9 +57,9 @@ The following arguments are supported:
 * `domain_owner` - (Optional) The account number of the AWS account that owns the domain.
 * `policy_revision` - (Optional) The current revision of the resource policy to be set. This revision is used for optimistic locking, which prevents others from overwriting your changes to the domain's resource policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the resource associated with the resource policy.
 * `resource_arn` - The ARN of the resource associated with the resource policy.

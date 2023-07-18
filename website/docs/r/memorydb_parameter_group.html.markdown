@@ -45,9 +45,9 @@ The following arguments are optional:
 * `name` - (Required) The name of the parameter.
 * `value` - (Required) The value of the parameter.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Same as `name`.
 * `arn` - The ARN of the parameter group.

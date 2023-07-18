@@ -44,9 +44,9 @@ The following arguments are optional:
 
 * `description` - (Optional) Description of Voice Profile Domain.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Voice Profile Domain.
 * `id` - ID of the Voice Profile Domain.

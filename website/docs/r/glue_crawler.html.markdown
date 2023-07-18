@@ -130,7 +130,7 @@ resource "aws_glue_crawler" "events_crawler" {
 
 ~> **NOTE:** Must specify at least one of `dynamodb_target`, `jdbc_target`, `s3_target`, `mongodb_target` or `catalog_target`.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `database_name` (Required) Glue database where results are written.
 * `name` (Required) Name of the crawler.
@@ -225,9 +225,9 @@ The following arguments are supported:
 
 * `recrawl_behavior` - (Optional) Specifies whether to crawl the entire dataset again, crawl only folders that were added since the last crawler run, or crawl what S3 notifies the crawler of via SQS. Valid Values are: `CRAWL_EVENT_MODE`, `CRAWL_EVERYTHING` and `CRAWL_NEW_FOLDERS_ONLY`. Default value is `CRAWL_EVERYTHING`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Crawler name
 * `arn` - The ARN of the crawler

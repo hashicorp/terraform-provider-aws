@@ -79,7 +79,7 @@ resource "aws_iot_provisioning_template" "fleet" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the fleet provisioning template.
 * `description` - (Optional) The description of the fleet provisioning template.
@@ -96,9 +96,9 @@ The `pre_provisioning_hook` configuration block supports the following:
 * `payload_version` - (Optional) The version of the payload that was sent to the target function. The only valid (and the default) payload version is `"2020-04-01"`.
 * `target_arn` - (Optional) The ARN of the target function.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN that identifies the provisioning template.
 * `default_version_id` - The default version of the fleet provisioning template.

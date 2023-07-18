@@ -28,7 +28,7 @@ resource "aws_customer_gateway" "main" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bgp_asn` - (Required) The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
 * `certificate_arn` - (Optional) The Amazon Resource Name (ARN) for the customer gateway certificate.
@@ -38,9 +38,9 @@ The following arguments are supported:
   supports at this time is "ipsec.1".
 * `tags` - (Optional) Tags to apply to the gateway. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The amazon-assigned ID of the gateway.
 * `arn` - The ARN of the customer gateway.

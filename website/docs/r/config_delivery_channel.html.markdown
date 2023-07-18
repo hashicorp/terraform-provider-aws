@@ -69,7 +69,7 @@ resource "aws_iam_role_policy" "p" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The name of the delivery channel. Defaults to `default`. Changing it recreates the resource.
 * `s3_bucket_name` - (Required) The name of the S3 bucket used to store the configuration history.
@@ -82,9 +82,9 @@ The following arguments are supported:
 
 * `delivery_frequency` - (Optional) - The frequency with which AWS Config recurringly delivers configuration snapshotsE.g., `One_Hour` or `Three_Hours`. Valid values are listed [here](https://docs.aws.amazon.com/config/latest/APIReference/API_ConfigSnapshotDeliveryProperties.html#API_ConfigSnapshotDeliveryProperties_Contents).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the delivery channel.
 

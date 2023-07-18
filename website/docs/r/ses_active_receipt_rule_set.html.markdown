@@ -20,13 +20,13 @@ resource "aws_ses_active_receipt_rule_set" "main" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rule_set_name` - (Required) The name of the rule set
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The SES receipt rule set name.
 * `arn` - The SES receipt rule set ARN.

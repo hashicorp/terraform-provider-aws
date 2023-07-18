@@ -25,15 +25,15 @@ resource "aws_securityhub_member" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Required) The ID of the member AWS account.
 * `email` - (Optional) The email of the member AWS account.
 * `invite` - (Optional) Boolean whether to invite the account to Security Hub as a member. Defaults to `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the member AWS account (matches `account_id`).
 * `master_id` - The ID of the master Security Hub AWS account.

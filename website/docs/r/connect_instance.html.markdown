@@ -49,7 +49,7 @@ resource "aws_connect_instance" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `auto_resolve_best_voices_enabled` - (Optional) Specifies whether auto resolve best voices is enabled. Defaults to `true`.
 * `contact_flow_logs_enabled` - (Optional) Specifies whether contact flow logs are enabled. Defaults to `false`.
@@ -63,9 +63,9 @@ The following arguments are supported:
 * `outbound_calls_enabled` - (Required) Specifies whether outbound calls are enabled.
 <!-- * `use_custom_tts_voices` - (Optional) Whether use custom tts voices is enabled. Defaults to `false` -->
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier of the instance.
 * `arn` - Amazon Resource Name (ARN) of the instance.

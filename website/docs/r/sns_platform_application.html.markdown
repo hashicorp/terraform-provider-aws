@@ -48,7 +48,7 @@ resource "aws_sns_platform_application" "gcm_application" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The friendly name for the SNS platform application
 * `platform` - (Required) The platform that the app is registered with. See [Platform][1] for supported platforms.
@@ -67,9 +67,9 @@ The following attributes are needed only when using APNS token credentials:
 * `apple_platform_team_id` - (Required) The identifier that's assigned to your Apple developer account team. Must be 10 alphanumeric characters.
 * `apple_platform_bundle_id` - (Required) The bundle identifier that's assigned to your iOS app. May only include alphanumeric characters, hyphens (-), and periods (.).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the SNS platform application
 * `arn` - The ARN of the SNS platform application

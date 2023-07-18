@@ -59,9 +59,9 @@ The following arguments are optional:
 * `file_key` - (Required) The file key for an object in an S3 bucket.
 * `object_version` - (Optional) The version of an object in an S3 bucket.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - the Amazon Resource Name (ARN) of the custom plugin.
 * `latest_revision` - an ID of the latest successfully created revision of the custom plugin.

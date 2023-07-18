@@ -255,7 +255,7 @@ resource "aws_evidently_launch" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Specifies the description of the launch.
 * `groups` - (Required) One or up to five blocks that contain the feature and variations that are to be used for the launch. [Detailed below](#groups).
@@ -319,9 +319,9 @@ The `steps` block supports the following arguments:
 * `delete` - (Default `2m`)
 * `update` - (Default `2m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the launch.
 * `created_time` - The date and time that the launch is created.

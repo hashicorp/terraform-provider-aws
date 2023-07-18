@@ -11,8 +11,6 @@ description: |-
 Provides an Amazon Connect Queue resource. For more information see
 [Amazon Connect: Getting Started](https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-get-started.html)
 
-~> **NOTE:** Due to The behaviour of Amazon Connect you cannot delete queues.
-
 ## Example Usage
 
 ### Basic
@@ -72,7 +70,7 @@ resource "aws_connect_queue" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Specifies the description of the Queue.
 * `hours_of_operation_id` - (Required) Specifies the identifier of the Hours of Operation.
@@ -90,9 +88,9 @@ A `outbound_caller_config` block supports the following arguments:
 * `outbound_caller_id_number_id` - (Optional) Specifies the caller ID number.
 * `outbound_flow_id` - (Optional) Specifies outbound whisper flow to be used during an outbound call.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Queue.
 * `queue_id` - The identifier for the Queue.

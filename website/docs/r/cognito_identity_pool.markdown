@@ -66,9 +66,9 @@ backend and the Cognito service to communicate about the developer provider.
 * `provider_name` (Optional) - The provider name for an Amazon Cognito Identity User Pool.
 * `server_side_token_check` (Optional) - Whether server-side token validation is enabled for the identity provider’s token or not.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - An identity pool ID, e.g. `us-west-2:1a234567-8901-234b-5cde-f6789g01h2i3`.
 * `arn` - The ARN of the identity pool.

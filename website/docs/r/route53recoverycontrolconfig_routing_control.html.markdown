@@ -38,9 +38,9 @@ The following arguments are optional:
 
 * `control_panel_arn` - (Optional) ARN of the control panel in which this routing control will reside.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the routing control.
 * `status` - Status of routing control. `PENDING` when it is being created/updated, `PENDING_DELETION` when it is being deleted, and `DEPLOYED` otherwise.

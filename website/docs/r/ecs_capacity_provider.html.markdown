@@ -44,7 +44,7 @@ resource "aws_ecs_capacity_provider" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `auto_scaling_group_provider` - (Required) Configuration block for the provider for the ECS auto scaling group. Detailed below.
 * `name` - (Required) Name of the capacity provider.
@@ -64,9 +64,9 @@ The following arguments are supported:
 * `status` - (Optional) Whether auto scaling is managed by ECS. Valid values are `ENABLED` and `DISABLED`.
 * `target_capacity` - (Optional) Target utilization for the capacity provider. A number between 1 and 100.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN that identifies the capacity provider.
 * `id` - ARN that identifies the capacity provider.

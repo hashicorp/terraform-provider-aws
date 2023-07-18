@@ -41,14 +41,14 @@ resource "aws_lightsail_lb_https_redirection_policy" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `lb_name` - (Required) The name of the load balancer to which you want to enable http to https redirection.
 * `enabled` - (Required) - The Https Redirection state of the load balancer. `true` to activate http to https redirection or `false` to deactivate http to https redirection.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name used for this load balancer (matches `lb_name`).
 

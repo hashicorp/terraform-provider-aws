@@ -46,7 +46,7 @@ resource "aws_guardduty_filter" "MyFilter" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `detector_id` - (Required) ID of a GuardDuty detector, attached to your account.
 * `name` - (Required) The name of your filter.
@@ -68,9 +68,9 @@ The `criterion` block suports the following:
 * `less_than` - (Optional) A value to be evaluated. Accepts either an integer or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `less_than_or_equal` - (Optional) A value to be evaluated. Accepts either an integer or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the GuardDuty filter.
 * `id` - A compound field, consisting of the ID of the GuardDuty detector and the name of the filter.

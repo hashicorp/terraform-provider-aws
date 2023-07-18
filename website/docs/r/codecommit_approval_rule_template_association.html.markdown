@@ -21,14 +21,14 @@ resource "aws_codecommit_approval_rule_template_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `approval_rule_template_name` - (Required) The name for the approval rule template.
 * `repository_name` - (Required) The name of the repository that you want to associate with the template.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the approval rule template and name of the repository, separated by a comma (`,`).
 

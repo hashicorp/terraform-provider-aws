@@ -81,7 +81,7 @@ resource "aws_cloudformation_stack_set_instance" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `stack_set_name` - (Required) Name of the StackSet.
 * `account_id` - (Optional) Target AWS Account ID to create a Stack based on the StackSet. Defaults to current account.
@@ -109,9 +109,9 @@ The `operation_preferences` configuration block supports the following arguments
 * `region_concurrency_type` - (Optional) The concurrency type of deploying StackSets operations in Regions, could be in parallel or one Region at a time. Valid values are `SEQUENTIAL` and `PARALLEL`.
 * `region_order` - (Optional) The order of the Regions in where you want to perform the stack operation.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - StackSet name, target AWS account ID, and target AWS region separated by commas (`,`)
 * `organizational_unit_id` - The organization root ID or organizational unit (OU) IDs specified for `deployment_targets`.

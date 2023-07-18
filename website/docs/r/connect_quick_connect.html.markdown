@@ -35,7 +35,7 @@ resource "aws_connect_quick_connect" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Specifies the description of the Quick Connect.
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
@@ -64,9 +64,9 @@ A `user_config` block supports the following arguments:
 * `contact_flow_id` - (Required) Specifies the identifier of the contact flow.
 * `user_id` - (Required) Specifies the identifier for the user.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Quick Connect.
 * `quick_connect_id` - The identifier for the Quick Connect.

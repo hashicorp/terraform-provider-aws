@@ -52,7 +52,7 @@ resource "aws_opsworks_application" "foo-app" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A human-readable name for the application.
 * `short_name` - (Required) A short, machine-readable name for the application. This can only be defined on resource creation and ignored on resource update.
@@ -93,9 +93,9 @@ A `ssl_configuration` block supports the following arguments (can only be define
 * `certificate` - (Required) The contents of the certificate's domain.crt file.
 * `chain` - (Optional)  Can be used to specify an intermediate certificate authority key or client authentication.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The id of the application.
 

@@ -54,7 +54,7 @@ resource "aws_codestarnotifications_notification_rule" "commits" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `detail_type` - (Required) The level of detail to include in the notifications for this resource. Possible values are `BASIC` and `FULL`.
 * `event_type_ids` - (Required) A list of event types associated with this notification rule.
@@ -70,9 +70,9 @@ An `target` block supports the following arguments:
 * `address` - (Required) The ARN of notification rule target. For example, a SNS Topic ARN.
 * `type` - (Optional) The type of the notification target. Default value is `SNS`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The codestar notification rule ARN.
 * `arn` - The codestar notification rule ARN.

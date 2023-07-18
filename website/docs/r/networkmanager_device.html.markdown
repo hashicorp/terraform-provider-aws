@@ -22,7 +22,7 @@ resource "aws_networkmanager_device" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `aws_location` - (Optional) The AWS location of the device. Documented below.
 * `description` - (Optional) A description of the device.
@@ -46,9 +46,9 @@ The `location` object supports the following:
 * `latitude` - (Optional) The latitude.
 * `longitude` - (Optional) The longitude.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the device.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

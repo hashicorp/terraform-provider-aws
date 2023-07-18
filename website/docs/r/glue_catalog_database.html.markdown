@@ -36,7 +36,7 @@ resource "aws_glue_catalog_database" "aws_glue_catalog_database" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `catalog_id` - (Optional) ID of the Glue Catalog to create the database in. If omitted, this defaults to the AWS Account ID.
 * `create_table_default_permission` - (Optional) Creates a set of default permissions on the table for principals. See [`create_table_default_permission`](#create_table_default_permission) below.
@@ -62,9 +62,9 @@ The following arguments are supported:
 
 * `data_lake_principal_identifier` - (Optional) An identifier for the Lake Formation principal.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Glue Catalog Database.
 * `id` - Catalog ID and name of the database.

@@ -38,7 +38,7 @@ resource "aws_kinesis_stream" "test_stream" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name to identify the stream. This is unique to the AWS account and region the Stream is created in.
 * `shard_count` – (Optional) The number of shards that the stream will use. If the `stream_mode` is `PROVISIONED`, this field is required.
@@ -55,9 +55,9 @@ Amazon has guidelines for specifying the Stream size that should be referenced w
 
 * `stream_mode` - (Required) Specifies the capacity mode of the stream. Must be either `PROVISIONED` or `ON_DEMAND`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique Stream id
 * `name` - The unique Stream name
