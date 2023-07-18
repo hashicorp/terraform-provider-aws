@@ -19,7 +19,7 @@ data "aws_ecrpublic_authorization_token" "token" {
 }
 ```
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
 
