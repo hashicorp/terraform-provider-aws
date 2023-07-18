@@ -12,7 +12,6 @@ Provides an EventBridge event archive resource.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
-
 ## Example Usage
 
 ```terraform
@@ -38,11 +37,9 @@ resource "aws_cloudwatch_event_archive" "order" {
   description      = "Archived events from order service"
   event_source_arn = aws_cloudwatch_event_bus.order.arn
   retention_days   = 7
-  event_pattern    = <<PATTERN
-{
-  "source": ["company.team.order"]
-}
-PATTERN
+  event_pattern = jsonencode({
+    source = ["company.team.order"]
+  })
 }
 ```
 
@@ -56,9 +53,9 @@ The following arguments are supported:
 * `event_pattern` - (Optional) Instructs the new event archive to only capture events matched by this pattern. By default, it attempts to archive every event received in the `event_source_arn`.
 * `retention_days` - (Optional) The maximum number of days to retain events in the new event archive. By default, it archives indefinitely.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the event archive.
 
@@ -66,6 +63,6 @@ In addition to all arguments above, the following attributes are exported:
 
 Event Archive can be imported using their name, for example
 
-```bash
-terraform import aws_cloudwatch_event_archive.imported_event_archive order-archive
+```console
+$ terraform import aws_cloudwatch_event_archive.imported_event_archive order-archive
 ```

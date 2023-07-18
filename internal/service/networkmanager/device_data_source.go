@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -9,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_networkmanager_device")
 func DataSourceDevice() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDeviceRead,
@@ -92,7 +96,7 @@ func DataSourceDevice() *schema.Resource {
 }
 
 func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	globalNetworkID := d.Get("global_network_id").(string)
@@ -100,14 +104,14 @@ func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	device, err := FindDeviceByTwoPartKey(ctx, conn, globalNetworkID, deviceID)
 
 	if err != nil {
-		return diag.Errorf("error reading Network Manager Device (%s): %s", deviceID, err)
+		return diag.Errorf("reading Network Manager Device (%s): %s", deviceID, err)
 	}
 
 	d.SetId(deviceID)
 	d.Set("arn", device.DeviceArn)
 	if device.AWSLocation != nil {
 		if err := d.Set("aws_location", []interface{}{flattenAWSLocation(device.AWSLocation)}); err != nil {
-			return diag.Errorf("error setting aws_location: %s", err)
+			return diag.Errorf("setting aws_location: %s", err)
 		}
 	} else {
 		d.Set("aws_location", nil)
@@ -116,7 +120,7 @@ func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("device_id", device.DeviceId)
 	if device.Location != nil {
 		if err := d.Set("location", []interface{}{flattenLocation(device.Location)}); err != nil {
-			return diag.Errorf("error setting location: %s", err)
+			return diag.Errorf("setting location: %s", err)
 		}
 	} else {
 		d.Set("location", nil)
@@ -127,8 +131,8 @@ func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("type", device.Type)
 	d.Set("vendor", device.Vendor)
 
-	if err := d.Set("tags", KeyValueTags(device.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+	if err := d.Set("tags", KeyValueTags(ctx, device.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil

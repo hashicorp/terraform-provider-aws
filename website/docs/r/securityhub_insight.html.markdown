@@ -285,9 +285,9 @@ The workflow status filter configuration block supports the following arguments:
 * `comparison` - (Required) The condition to apply to a string value when querying for findings. Valid values include: `EQUALS`, `PREFIX`, `NOT_EQUALS`, `PREFIX_NOT_EQUALS`.
 * `value` - (Required) The string filter value. Valid values include: `NEW`, `NOTIFIED`, `SUPPRESSED`, and `RESOLVED`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ARN of the insight.
 * `arn` - ARN of the insight.

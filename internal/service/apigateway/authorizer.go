@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -10,25 +13,30 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const DefaultAuthorizerTTL = 300
 
+// @SDKResource("aws_api_gateway_authorizer")
 func ResourceAuthorizer() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceAuthorizerCreate,
-		Read:          resourceAuthorizerRead,
-		Update:        resourceAuthorizerUpdate,
-		Delete:        resourceAuthorizerDelete,
-		CustomizeDiff: resourceAuthorizerCustomizeDiff,
+		CreateWithoutTimeout: resourceAuthorizerCreate,
+		ReadWithoutTimeout:   resourceAuthorizerRead,
+		UpdateWithoutTimeout: resourceAuthorizerUpdate,
+		DeleteWithoutTimeout: resourceAuthorizerDelete,
+		CustomizeDiff:        resourceAuthorizerCustomizeDiff,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/AUTHORIZER-ID", d.Id())
@@ -97,24 +105,28 @@ func ResourceAuthorizer() *schema.Resource {
 	}
 }
 
-func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
-	var postCreateOps []*apigateway.PatchOperation
+func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
-	input := apigateway.CreateAuthorizerInput{
+	if err := validateAuthorizerType(d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway Authorizer: %s", err)
+	}
+
+	var postCreateOps []*apigateway.PatchOperation
+	name := d.Get("name").(string)
+	input := &apigateway.CreateAuthorizerInput{
 		IdentitySource:               aws.String(d.Get("identity_source").(string)),
-		Name:                         aws.String(d.Get("name").(string)),
+		Name:                         aws.String(name),
 		RestApiId:                    aws.String(d.Get("rest_api_id").(string)),
 		Type:                         aws.String(d.Get("type").(string)),
 		AuthorizerResultTtlInSeconds: aws.Int64(int64(d.Get("authorizer_result_ttl_in_seconds").(int))),
 	}
 
-	if err := validateAuthorizerType(d); err != nil {
-		return err
-	}
 	if v, ok := d.GetOk("authorizer_uri"); ok {
 		input.AuthorizerUri = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("authorizer_credentials"); ok {
 		// While the CreateAuthorizer method allows one to pass AuthorizerCredentials
 		// regardless of authorizer Type, the API ignores this setting if the authorizer
@@ -134,90 +146,73 @@ func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("identity_validation_expression"); ok {
 		input.IdentityValidationExpression = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("provider_arns"); ok {
 		input.ProviderARNs = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	log.Printf("[INFO] Creating API Gateway Authorizer: %s", input)
-	out, err := conn.CreateAuthorizer(&input)
+	output, err := conn.CreateAuthorizerWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway Authorizer: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway Authorizer (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.Id))
+	d.SetId(aws.StringValue(output.Id))
 
 	if postCreateOps != nil {
-		input := apigateway.UpdateAuthorizerInput{
+		input := &apigateway.UpdateAuthorizerInput{
 			AuthorizerId:    aws.String(d.Id()),
 			PatchOperations: postCreateOps,
 			RestApiId:       input.RestApiId,
 		}
 
-		log.Printf("[INFO] Applying update operations to API Gateway Authorizer: %s", d.Id())
-		_, err := conn.UpdateAuthorizer(&input)
+		_, err := conn.UpdateAuthorizerWithContext(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("applying update operations to API Gateway Authorizer (%s) failed: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating API Gateway Authorizer (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceAuthorizerRead(d, meta)
+	return append(diags, resourceAuthorizerRead(ctx, d, meta)...)
 }
 
-func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
-	log.Printf("[INFO] Reading API Gateway Authorizer %s", d.Id())
+	apiID := d.Get("rest_api_id").(string)
+	authorizer, err := FindAuthorizerByTwoPartKey(ctx, conn, d.Id(), apiID)
 
-	restApiId := d.Get("rest_api_id").(string)
-	input := apigateway.GetAuthorizerInput{
-		AuthorizerId: aws.String(d.Id()),
-		RestApiId:    aws.String(restApiId),
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] API Gateway Authorizer (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	authorizer, err := conn.GetAuthorizer(&input)
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
-			log.Printf("[WARN] API Gateway Authorizer (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading API Gateway Authorizer (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Authorizer (%s): %s", d.Id(), err)
 	}
-	log.Printf("[DEBUG] Received API Gateway Authorizer: %s", authorizer)
 
+	d.Set("arn", authorizerARN(meta.(*conns.AWSClient), apiID, d.Id()))
 	d.Set("authorizer_credentials", authorizer.AuthorizerCredentials)
-
-	if authorizer.AuthorizerResultTtlInSeconds != nil {
+	if authorizer.AuthorizerResultTtlInSeconds != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("authorizer_result_ttl_in_seconds", authorizer.AuthorizerResultTtlInSeconds)
 	} else {
 		d.Set("authorizer_result_ttl_in_seconds", DefaultAuthorizerTTL)
 	}
-
 	d.Set("authorizer_uri", authorizer.AuthorizerUri)
 	d.Set("identity_source", authorizer.IdentitySource)
 	d.Set("identity_validation_expression", authorizer.IdentityValidationExpression)
 	d.Set("name", authorizer.Name)
+	d.Set("provider_arns", aws.StringValueSlice(authorizer.ProviderARNs))
 	d.Set("type", authorizer.Type)
-	d.Set("provider_arns", flex.FlattenStringSet(authorizer.ProviderARNs))
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("/restapis/%s/authorizers/%s", restApiId, d.Id()),
-	}.String()
-	d.Set("arn", arn)
-
-	return nil
+	return diags
 }
 
-func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
-
-	input := apigateway.UpdateAuthorizerInput{
-		AuthorizerId: aws.String(d.Id()),
-		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
-	}
+func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	operations := make([]*apigateway.PatchOperation, 0)
 
@@ -293,34 +288,40 @@ func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	input.PatchOperations = operations
-
-	log.Printf("[INFO] Updating API Gateway Authorizer: %s", input)
-	_, err := conn.UpdateAuthorizer(&input)
-	if err != nil {
-		return fmt.Errorf("updating API Gateway Authorizer failed: %w", err)
+	input := &apigateway.UpdateAuthorizerInput{
+		AuthorizerId:    aws.String(d.Id()),
+		PatchOperations: operations,
+		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
 	}
 
-	return resourceAuthorizerRead(d, meta)
+	_, err := conn.UpdateAuthorizerWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating API Gateway Authorizer (%s): %s", d.Id(), err)
+	}
+
+	return append(diags, resourceAuthorizerRead(ctx, d, meta)...)
 }
 
-func resourceAuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
-	input := apigateway.DeleteAuthorizerInput{
+func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+
+	log.Printf("[INFO] Deleting API Gateway Authorizer: %s", d.Id())
+	_, err := conn.DeleteAuthorizerWithContext(ctx, &apigateway.DeleteAuthorizerInput{
 		AuthorizerId: aws.String(d.Id()),
 		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
-	}
-	log.Printf("[INFO] Deleting API Gateway Authorizer: %s", input)
-	_, err := conn.DeleteAuthorizer(&input)
+	})
+
 	if err != nil {
 		// XXX: Figure out a way to delete the method that depends on the authorizer first
 		// otherwise the authorizer will be dangling until the API is deleted
 		if !strings.Contains(err.Error(), apigateway.ErrCodeConflictException) {
-			return fmt.Errorf("deleting API Gateway Authorizer failed: %w", err)
+			return sdkdiag.AppendErrorf(diags, "deleting API Gateway Authorizer failed: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func resourceAuthorizerCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
@@ -353,4 +354,39 @@ func validateAuthorizerType(d *schema.ResourceData) error {
 	}
 
 	return nil
+}
+
+func FindAuthorizerByTwoPartKey(ctx context.Context, conn *apigateway.APIGateway, authorizerID, apiID string) (*apigateway.Authorizer, error) {
+	input := &apigateway.GetAuthorizerInput{
+		AuthorizerId: aws.String(authorizerID),
+		RestApiId:    aws.String(apiID),
+	}
+
+	output, err := conn.GetAuthorizerWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func authorizerARN(c *conns.AWSClient, apiID, authorizerID string) string {
+	return arn.ARN{
+		Partition: c.Partition,
+		Service:   "apigateway",
+		Region:    c.Region,
+		Resource:  fmt.Sprintf("/restapis/%s/authorizers/%s", apiID, authorizerID),
+	}.String()
 }

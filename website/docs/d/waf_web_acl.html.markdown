@@ -22,9 +22,10 @@ data "aws_waf_web_acl" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the WAF Web ACL.
+* `name` - (Required) Name of the WAF Web ACL.
 
-## Attributes Reference
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
 
-* `id` - The ID of the WAF Web ACL.
+This data source exports the following attributes in addition to the arguments above:
+
+* `id` - ID of the WAF Web ACL.

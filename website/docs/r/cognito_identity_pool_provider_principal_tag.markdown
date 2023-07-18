@@ -55,9 +55,9 @@ The following arguments are supported:
 * `principal_tags`: (Optional: []) - String to string map of variables.
 * `use_defaults`: (Optional: true) use default (username and clientID) attribute mappings.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

@@ -24,7 +24,6 @@ resource "aws_pinpoint_gcm_channel" "gcm" {
 resource "aws_pinpoint_app" "app" {}
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -33,9 +32,9 @@ The following arguments are supported:
 * `api_key` - (Required) Platform credential API key from Google.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. Defaults to `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

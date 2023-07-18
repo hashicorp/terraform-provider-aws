@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -6,6 +9,8 @@ import (
 )
 
 func TestValidAssumeRoleDuration(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		val         interface{}
 		expectedErr *regexp.Regexp

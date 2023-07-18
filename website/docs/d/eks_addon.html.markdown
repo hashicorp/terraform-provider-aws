@@ -29,12 +29,13 @@ output "eks_addon_outputs" {
   the names returned by [list-addon](https://docs.aws.amazon.com/cli/latest/reference/eks/list-addons.html).
 * `cluster_name` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the EKS add-on.
-* `addon_version` - The version of EKS add-on.
+* `arn` - ARN of the EKS add-on.
+* `addon_version` - Version of EKS add-on.
+* `configuration_values` - Configuration values for the addon with a single JSON string.
 * `service_account_role_arn` - ARN of IAM role used for EKS add-on. If value is empty -
   then add-on uses the IAM role assigned to the EKS Cluster node.
 * `id` - EKS Cluster name and EKS add-on name separated by a colon (`:`).

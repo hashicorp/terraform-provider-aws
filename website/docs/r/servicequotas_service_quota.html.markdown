@@ -30,9 +30,9 @@ The following arguments are supported:
 * `service_code` - (Required) Code of the service to track. For example: `vpc`. Available values can be found with the [AWS CLI service-quotas list-services command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-services.html).
 * `value` - (Required) Float specifying the desired value for the service quota. If the desired value is higher than the current value, a quota increase request is submitted. When a known request is submitted and pending, the value reflects the desired value of the pending request.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `adjustable` - Whether the service quota can be increased.
 * `arn` - Amazon Resource Name (ARN) of the service quota.
@@ -40,6 +40,15 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Service code and quota code, separated by a front slash (`/`)
 * `quota_name` - Name of the quota.
 * `service_name` - Name of the service.
+* `usage_metric` - Information about the measurement.
+    * `metric_dimensions` - The metric dimensions.
+        * `class`
+        * `resource`
+        * `service`
+        * `type`
+    * `metric_name` - The name of the metric.
+    * `metric_namespace` - The namespace of the metric.
+    * `metric_statistic_recommendation` - The metric statistic that AWS recommend you use when determining quota usage.
 
 ## Import
 

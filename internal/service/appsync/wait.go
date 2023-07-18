@@ -1,67 +1,71 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
 	apiCacheAvailableTimeout           = 60 * time.Minute
 	apiCacheDeletedTimeout             = 60 * time.Minute
-	domainNameApiAssociationTimeout    = 60 * time.Minute
-	domainNameApiDisassociationTimeout = 60 * time.Minute
+	domainNameAPIAssociationTimeout    = 60 * time.Minute
+	domainNameAPIDisassociationTimeout = 60 * time.Minute
 )
 
-func waitApiCacheAvailable(conn *appsync.AppSync, id string) error {
-	stateConf := &resource.StateChangeConf{
+func waitAPICacheAvailable(ctx context.Context, conn *appsync.AppSync, id string) error {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{appsync.ApiCacheStatusCreating, appsync.ApiCacheStatusModifying},
 		Target:  []string{appsync.ApiCacheStatusAvailable},
-		Refresh: StatusApiCache(conn, id),
+		Refresh: StatusAPICache(ctx, conn, id),
 		Timeout: apiCacheAvailableTimeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
 
-func waitApiCacheDeleted(conn *appsync.AppSync, id string) error {
-	stateConf := &resource.StateChangeConf{
+func waitAPICacheDeleted(ctx context.Context, conn *appsync.AppSync, id string) error {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{appsync.ApiCacheStatusDeleting},
 		Target:  []string{},
-		Refresh: StatusApiCache(conn, id),
+		Refresh: StatusAPICache(ctx, conn, id),
 		Timeout: apiCacheDeletedTimeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
 
-func waitDomainNameApiAssociation(conn *appsync.AppSync, id string) error {
-	stateConf := &resource.StateChangeConf{
+func waitDomainNameAPIAssociation(ctx context.Context, conn *appsync.AppSync, id string) error {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{appsync.AssociationStatusProcessing},
 		Target:  []string{appsync.AssociationStatusSuccess},
-		Refresh: statusDomainNameApiAssociation(conn, id),
-		Timeout: domainNameApiAssociationTimeout,
+		Refresh: statusDomainNameAPIAssociation(ctx, conn, id),
+		Timeout: domainNameAPIAssociationTimeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
 
-func waitDomainNameApiDisassociation(conn *appsync.AppSync, id string) error {
-	stateConf := &resource.StateChangeConf{
+func waitDomainNameAPIDisassociation(ctx context.Context, conn *appsync.AppSync, id string) error {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{appsync.AssociationStatusProcessing},
 		Target:  []string{},
-		Refresh: statusDomainNameApiAssociation(conn, id),
-		Timeout: domainNameApiDisassociationTimeout,
+		Refresh: statusDomainNameAPIAssociation(ctx, conn, id),
+		Timeout: domainNameAPIDisassociationTimeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }

@@ -12,7 +12,6 @@ Provides a resource to manage AWS Device Farm Device Pools.
 
 ## Example Usage
 
-
 ```terraform
 resource "aws_devicefarm_device_pool" "example" {
   name        = "example"
@@ -32,7 +31,7 @@ resource "aws_devicefarm_device_pool" "example" {
 * `rule` - (Required) The device pool's rules. See [Rule](#rule).
 * `description` - (Optional) The device pool's description.
 * `max_devices` - (Optional) The number of devices that Device Farm can add to your device pool.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Rule
 
@@ -40,12 +39,12 @@ resource "aws_devicefarm_device_pool" "example" {
 * `operator` - (Optional) Specifies how Device Farm compares the rule's attribute to the value. For the operators that are supported by each attribute. Valid values are: `EQUALS`, `NOT_IN`, `IN`, `GREATER_THAN`, `GREATER_THAN_OR_EQUALS`, `LESS_THAN`, `LESS_THAN_OR_EQUALS`, `CONTAINS`.
 * `value` - (Optional) The rule's value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name of this Device Pool
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

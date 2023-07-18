@@ -1,15 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
-import "time"
+import (
+	"time"
+)
 
 const (
-	ResIdentityProvider = "Identity Provider"
-	ResResourceServer   = "Resource Server"
-	ResUserGroup        = "User Group"
-	ResUserPoolClient   = "User Pool Client"
-	ResUserPoolDomain   = "User Pool Domain"
-	ResUserPool         = "User Pool"
-	ResUser             = "User"
+	ResNameIdentityProvider  = "Identity Provider"
+	ResNameResourceServer    = "Resource Server"
+	ResNameRiskConfiguration = "Risk Configuration"
+	ResNameUserGroup         = "User Group"
+	ResNameUserPoolClient    = "User Pool Client"
+	ResNameUserPoolDomain    = "User Pool Domain"
+	ResNameUserPool          = "User Pool"
+	ResNameUser              = "User"
 )
 
 const (

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager_test
 
 import (
@@ -6,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/networkmanager"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
@@ -16,6 +19,8 @@ import (
 )
 
 func TestAccNetworkManagerConnection_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":               testAccConnection_basic,
 		"disappears":          testAccConnection_disappears,
@@ -23,28 +28,24 @@ func TestAccNetworkManagerConnection_serial(t *testing.T) {
 		"descriptionAndLinks": testAccConnection_descriptionAndLinks,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccConnection_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionConfig(rName),
+				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectionExists(resourceName),
+					testAccCheckConnectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "connected_link_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -63,20 +64,21 @@ func testAccConnection_basic(t *testing.T) {
 }
 
 func testAccConnection_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionConfig(rName),
+				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceConnection(), resourceName),
+					testAccCheckConnectionExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,19 +87,20 @@ func testAccConnection_disappears(t *testing.T) {
 }
 
 func testAccConnection_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionConfigTags1(rName, "key1", "value1"),
+				Config: testAccConnectionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName),
+					testAccCheckConnectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -109,18 +112,18 @@ func testAccConnection_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConnectionConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccConnectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName),
+					testAccCheckConnectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccConnectionConfigTags1(rName, "key2", "value2"),
+				Config: testAccConnectionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName),
+					testAccCheckConnectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -130,21 +133,22 @@ func testAccConnection_tags(t *testing.T) {
 }
 
 func testAccConnection_descriptionAndLinks(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_connection.test"
 	link1ResourceName := "aws_networkmanager_link.test1"
 	link2ResourceName := "aws_networkmanager_link.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionDescriptionAndLinksConfig(rName),
+				Config: testAccConnectionConfig_descriptionAndLinks(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectionExists(resourceName),
+					testAccCheckConnectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "connected_link_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 					resource.TestCheckResourceAttrPair(resourceName, "link_id", link1ResourceName, "id"),
@@ -157,9 +161,9 @@ func testAccConnection_descriptionAndLinks(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConnectionDescriptionAndLinksUpdatedConfig(rName),
+				Config: testAccConnectionConfig_descriptionAndLinksUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectionExists(resourceName),
+					testAccCheckConnectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "connected_link_id", link2ResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 					resource.TestCheckResourceAttrPair(resourceName, "link_id", link1ResourceName, "id"),
@@ -169,31 +173,33 @@ func testAccConnection_descriptionAndLinks(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_networkmanager_device" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_networkmanager_device" {
+				continue
+			}
+
+			_, err := tfnetworkmanager.FindConnectionByTwoPartKey(ctx, conn, rs.Primary.Attributes["global_network_id"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Network Manager Connection %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfnetworkmanager.FindConnectionByTwoPartKey(context.TODO(), conn, rs.Primary.Attributes["global_network_id"], rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Network Manager Connection %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckConnectionExists(n string) resource.TestCheckFunc {
+func testAccCheckConnectionExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -204,15 +210,11 @@ func testAccCheckConnectionExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Network Manager Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
-		_, err := tfnetworkmanager.FindConnectionByTwoPartKey(context.TODO(), conn, rs.Primary.Attributes["global_network_id"], rs.Primary.ID)
+		_, err := tfnetworkmanager.FindConnectionByTwoPartKey(ctx, conn, rs.Primary.Attributes["global_network_id"], rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -265,7 +267,7 @@ resource "aws_networkmanager_device" "test2" {
 `, rName)
 }
 
-func testAccConnectionConfig(rName string) string {
+func testAccConnectionConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccConnectionBaseConfig(rName), `
 resource "aws_networkmanager_connection" "test" {
   global_network_id   = aws_networkmanager_global_network.test.id
@@ -275,7 +277,7 @@ resource "aws_networkmanager_connection" "test" {
 `)
 }
 
-func testAccConnectionConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccConnectionConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccConnectionBaseConfig(rName), fmt.Sprintf(`
 resource "aws_networkmanager_connection" "test" {
   global_network_id   = aws_networkmanager_global_network.test.id
@@ -289,7 +291,7 @@ resource "aws_networkmanager_connection" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccConnectionConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccConnectionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccConnectionBaseConfig(rName), fmt.Sprintf(`
 resource "aws_networkmanager_connection" "test" {
   global_network_id   = aws_networkmanager_global_network.test.id
@@ -355,7 +357,7 @@ resource "aws_networkmanager_link_association" "test2" {
 `, rName))
 }
 
-func testAccConnectionDescriptionAndLinksConfig(rName string) string {
+func testAccConnectionConfig_descriptionAndLinks(rName string) string {
 	return acctest.ConfigCompose(testAccConnectionDescriptionAndLinksBaseConfig(rName), fmt.Sprintf(`
 resource "aws_networkmanager_connection" "test" {
   global_network_id   = aws_networkmanager_global_network.test.id
@@ -375,7 +377,7 @@ resource "aws_networkmanager_connection" "test" {
 `, rName))
 }
 
-func testAccConnectionDescriptionAndLinksUpdatedConfig(rName string) string {
+func testAccConnectionConfig_descriptionAndLinksUpdated(rName string) string {
 	return acctest.ConfigCompose(testAccConnectionDescriptionAndLinksBaseConfig(rName), fmt.Sprintf(`
 resource "aws_networkmanager_connection" "test" {
   global_network_id   = aws_networkmanager_global_network.test.id

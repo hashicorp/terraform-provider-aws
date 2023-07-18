@@ -1,0 +1,70 @@
+rules:
+  - id: aws-api-context
+    languages: [go]
+    message: All AWS API calls should use the WithContext version
+    paths:
+      include:
+        - internal/service/*
+        - internal/acctest/*
+      exclude:
+        - "internal/service/*/service_package.go"
+        - "internal/service/*/service_package_gen.go"
+    patterns:
+      - pattern: |
+          $CONN.$API(...)
+      - metavariable-regex:
+          metavariable: $CONN
+          regex: ^(?!conns)\w*([cC]onn)
+      - metavariable-regex:
+          metavariable: $API
+          # This weird construction is to get around greedy matching
+          regex: ^(?!.*(WithContext|_Values)).*$
+      - pattern-not: |
+          $CONN.$APIV2(ctx, ...)
+      - pattern-not: tfconnect.$API(...)
+      - pattern-not: tfcodestarconnections.$API()
+      - pattern-not: tfdirectconnect.$API()
+      - pattern-not: tfkafkaconnect.$API()
+      - pattern-not: conn.Handlers.$X(...)
+      - pattern-not: conn.Handlers.$X.$Y(...)
+    severity: ERROR
+  - id: context-todo
+    languages: [go]
+    message: Should not use `context.TODO()`
+    paths:
+      include:
+        - internal/service/*
+        - internal/acctest/*
+    pattern: context.TODO()
+    severity: ERROR
+  - id: schema-noop
+    languages: [go]
+    message: Should use `schema.NoopContext` instead of `schema.Noop`
+    paths:
+      include:
+        - internal/service/*
+        - internal/acctest/*
+    pattern: schema.Noop
+    severity: ERROR
+  - id: direct-CRUD-calls
+    languages: [go]
+    message: Avoid direct calls to `schema.Resource` CRUD calls
+    paths:
+      include:
+        - internal/service/*
+        - internal/acctest/*
+    patterns:
+      - pattern-either:
+          - pattern: $D.Create($DATA, $META)
+          - pattern: $D.Read($DATA, $META)
+          - pattern: $D.Update($DATA, $META)
+          - pattern: $D.Delete($DATA, $META)
+          - pattern: $D.CreateContext($CTX, $DATA, $META)
+          - pattern: $D.ReadContext($CTX, $DATA, $META)
+          - pattern: $D.UpdateContext($CTX, $DATA, $META)
+          - pattern: $D.DeleteContext($CTX, $DATA, $META)
+          - pattern: $D.CreateWithoutTimeout($CTX, $DATA, $META)
+          - pattern: $D.ReadWithoutTimeout($CTX, $DATA, $META)
+          - pattern: $D.UpdateWithoutTimeout($CTX, $DATA, $META)
+          - pattern: $D.DeleteWithoutTimeout($CTX, $DATA, $META)
+    severity: ERROR

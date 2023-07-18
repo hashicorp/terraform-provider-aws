@@ -31,47 +31,39 @@ resource "aws_config_configuration_recorder" "foo" {
   role_arn = aws_iam_role.r.arn
 }
 
-resource "aws_iam_role" "r" {
-  name = "awsconfig-example"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "config.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["config.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-POLICY
+
+resource "aws_iam_role" "r" {
+  name               = "awsconfig-example"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "p" {
+  statement {
+    effect  = "Allow"
+    actions = ["s3:*"]
+    resources = [
+      aws_s3_bucket.b.arn,
+      "${aws_s3_bucket.b.arn}/*"
+    ]
+  }
 }
 
 resource "aws_iam_role_policy" "p" {
-  name = "awsconfig-example"
-  role = aws_iam_role.r.id
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:*"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_s3_bucket.b.arn}",
-        "${aws_s3_bucket.b.arn}/*"
-      ]
-    }
-  ]
-}
-POLICY
+  name   = "awsconfig-example"
+  role   = aws_iam_role.r.id
+  policy = data.aws_iam_policy_document.p.json
 }
 ```
 
@@ -90,9 +82,9 @@ The following arguments are supported:
 
 * `delivery_frequency` - (Optional) - The frequency with which AWS Config recurringly delivers configuration snapshotsE.g., `One_Hour` or `Three_Hours`. Valid values are listed [here](https://docs.aws.amazon.com/config/latest/APIReference/API_ConfigSnapshotDeliveryProperties.html#API_ConfigSnapshotDeliveryProperties_Contents).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the delivery channel.
 

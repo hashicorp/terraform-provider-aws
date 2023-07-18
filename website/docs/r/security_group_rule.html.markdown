@@ -11,12 +11,10 @@ description: |-
 Provides a security group rule resource. Represents a single `ingress` or
 `egress` group rule, which can be added to external Security Groups.
 
-~> **NOTE on Security Groups and Security Group Rules:** Terraform currently
-provides both a standalone Security Group Rule resource (a single `ingress` or
-`egress` rule), and a [Security Group resource](security_group.html) with `ingress` and `egress` rules
-defined in-line. At this time you cannot use a Security Group with in-line rules
-in conjunction with any Security Group Rule resources. Doing so will cause
-a conflict of rule settings and will overwrite rules.
+~> **NOTE on Security Groups and Security Group Rules:** Terraform currently provides a [Security Group resource](security_group.html) with `ingress` and `egress` rules defined in-line and a Security Group Rule resource which manages one or more `ingress` or
+`egress` rules. Both of these resource were added before AWS assigned a [security group rule unique ID](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules.html), and they do not work well in all scenarios using the`description` and `tags` attributes, which rely on the unique ID.
+The [`aws_vpc_security_group_egress_rule`](vpc_security_group_egress_rule.html) and [`aws_vpc_security_group_ingress_rule`](vpc_security_group_ingress_rule.html) resources have been added to address these limitations and should be used for all new security group rules.
+You should not use the `aws_vpc_security_group_egress_rule` and `aws_vpc_security_group_ingress_rule` resources in conjunction with an `aws_security_group` resource with in-line rules or with `aws_security_group_rule` resources defined for the same Security Group, as rule conflicts may occur and rules will be overwritten.
 
 ~> **NOTE:** Setting `protocol = "all"` or `protocol = -1` with `from_port` and `to_port` will result in the EC2 API creating a security group rule with all ports open. This API behavior cannot be controlled by Terraform and may generate warnings in the future.
 
@@ -101,6 +99,8 @@ or `egress` (outbound).
 
 The following arguments are optional:
 
+~> **Note** Although `cidr_blocks`, `ipv6_cidr_blocks`, `prefix_list_ids`, and `source_security_group_id` are all marked as optional, you _must_ provide one of them in order to configure the source of the traffic.
+
 * `cidr_blocks` - (Optional) List of CIDR blocks. Cannot be specified with `source_security_group_id` or `self`.
 * `description` - (Optional) Description of the rule.
 * `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks. Cannot be specified with `source_security_group_id` or `self`.
@@ -108,11 +108,18 @@ The following arguments are optional:
 * `self` - (Optional) Whether the security group itself will be added as a source to this ingress rule. Cannot be specified with `cidr_blocks`, `ipv6_cidr_blocks`, or `source_security_group_id`.
 * `source_security_group_id` - (Optional) Security group id to allow access to/from, depending on the `type`. Cannot be specified with `cidr_blocks`, `ipv6_cidr_blocks`, or `self`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the security group rule.
+* `security_group_rule_id` - If the `aws_security_group_rule` resource has a single source or destination then this is the AWS Security Group Rule resource ID. Otherwise it is empty.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `5m`)
 
 ## Import
 

@@ -42,19 +42,21 @@ The following arguments are supported:
 * `host_instance_type` - (Optional) Filter response by host instance type.
 * `storage_type` - (Optional) Filter response by storage type.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `broker_instance_options` -  Option for host instance type. See Broker Instance Options below.
 
 ### Broker Instance Options
 
-* `availability_zones` - The list of available AZs. See Availability Zones. below
-* `engine_type` - The broker's engine type.
-* `host_instance_type` - The broker's instance type.
-* `storage_type` - The broker's storage type.
+* `availability_zones` - List of available AZs. See Availability Zones. below
+* `engine_type` - Broker's engine type.
+* `host_instance_type` - Broker's instance type.
+* `storage_type` - Broker's storage type.
 * `supported_deployment_modes` - The list of supported deployment modes.
 * `supported_engine_versions` - The list of supported engine versions.
 
 ### Availability Zones
 
-* `name` - The name of the Availability Zone.
+* `name` - Name of the Availability Zone.

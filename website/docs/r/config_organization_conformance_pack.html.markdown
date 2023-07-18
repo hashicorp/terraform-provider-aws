@@ -102,21 +102,20 @@ The `input_parameter` configuration block supports the following arguments:
 * `parameter_name` - (Required) The input key.
 * `parameter_value` - (Required) The input value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the organization conformance pack.
 * `id` - The name of the organization conformance pack.
 
 ## Timeouts
 
-`aws_config_organization_conformance_pack` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for creating conformance pack
-- `update` - (Default `10 minutes`) Used for conformance pack modifications
-- `delete` - (Default `20 minutes`) Used for destroying conformance pack
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `20m`)
 
 ## Import
 

@@ -29,7 +29,6 @@ resource "aws_sagemaker_device" "example" {
 The following arguments are supported:
 
 * `device_fleet_name` - (Required) The name of the Device Fleet.
-* `role_arn` - (Required) The Amazon Resource Name (ARN) that has access to AWS Internet of Things (IoT).
 * `device` - (Required) The device to register with SageMaker Edge Manager. See [Device](#device) details below.
 
 ### Device
@@ -38,9 +37,9 @@ The following arguments are supported:
 * `device_name` - (Optional) The name of the device.
 * `iot_thing_name` - (Optional) Amazon Web Services Internet of Things (IoT) object name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The id is constructed from `device-fleet-name/device-name`.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Device.

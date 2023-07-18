@@ -33,18 +33,17 @@ The following arguments are optional:
 * `accept_language` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 * `source_portfolio_id` - (Optional) Identifier of the source portfolio.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of the association.
 
-`aws_servicecatalog_product_portfolio_association` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `3 minutes`)
-- `read` - (Default `10 minutes`)
-- `delete` - (Default `3 minutes`)
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `delete` - (Default `3m`)
 
 ## Import
 

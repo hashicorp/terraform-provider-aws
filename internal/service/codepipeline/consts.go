@@ -1,10 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codepipeline
 
-import "time"
+import (
+	"time"
+)
 
 const (
-	ResWebhook      = "Webhook"
-	ResCodePipeline = "Pipeline"
+	ResNameWebhook  = "Webhook"
+	ResNamePipeline = "Pipeline"
 )
 
 const (

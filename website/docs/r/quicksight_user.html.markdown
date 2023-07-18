@@ -27,7 +27,6 @@ resource "aws_quicksight_user" "example" {
 
 The following arguments are supported:
 
-
 * `email` - (Required) The email address of the user that you want to register.
 * `identity_type` - (Required) Amazon QuickSight supports several ways of managing the identity of users. This parameter accepts either  `IAM` or `QUICKSIGHT`. If `IAM` is specified, the `iam_arn` must also be specified.
 * `user_role` - (Required) The Amazon QuickSight role of the user. The user role can be one of the following: `READER`, `AUTHOR`, or `ADMIN`
@@ -37,9 +36,9 @@ The following arguments are supported:
 * `namespace`  - (Optional) The Amazon Quicksight namespace to create the user in. Defaults to `default`.
 * `session_name` - (Optional) The name of the IAM session to use when assuming roles that can embed QuickSight dashboards. Only valid for registering users using an assumed IAM role. Additionally, if registering multiple users using the same IAM role, each user needs to have a unique session name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the user
 

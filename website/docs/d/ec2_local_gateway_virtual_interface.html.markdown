@@ -37,7 +37,7 @@ The `filter` configuration block supports the following arguments:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `local_address` - Local address.
 * `local_bgp_asn` - Border Gateway Protocol (BGP) Autonomous System Number (ASN) of the EC2 Local Gateway.
@@ -45,3 +45,9 @@ In addition to all arguments above, the following attributes are exported:
 * `peer_address` - Peer address.
 * `peer_bgp_asn` - Border Gateway Protocol (BGP) Autonomous System Number (ASN) of the peer.
 * `vlan` - Virtual Local Area Network.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

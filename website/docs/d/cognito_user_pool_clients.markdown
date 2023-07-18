@@ -20,10 +20,11 @@ data "aws_cognito_user_pool_clients" "main" {
 
 ## Argument Reference
 
-* `user_pool_id` - (required) The Cognito user pool ID.
+* `user_pool_id` - (Required) Cognito user pool ID.
 
+## Attribute Reference
 
-## Attributes Reference
+This data source exports the following attributes in addition to the arguments above:
 
 * `client_ids` - List of Cognito user pool client IDs.
 * `client_names` - List of Cognito user pool client names.

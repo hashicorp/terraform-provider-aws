@@ -77,22 +77,21 @@ The `type` you specify determines what must be included in the `parameters` JSON
 
 * `TEMPLATE`: Specify the Rules property. For more information, see [Template Constraint Rules](http://docs.aws.amazon.com/servicecatalog/latest/adminguide/reference-template_constraint_rules.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Constraint identifier.
 * `owner` - Owner of the constraint.
 
 ## Timeouts
 
-`aws_servicecatalog_constraint` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `3 minutes`)
-- `read` - (Default `10 minutes`)
-- `update` - (Default `3 minutes`)
-- `delete` - (Default `3 minutes`)
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `update` - (Default `3m`)
+- `delete` - (Default `3m`)
 
 ## Import
 

@@ -104,9 +104,9 @@ Used for cross-account Direct Connect gateway associations.
 Used for cross-account Direct Connect gateway associations.
 * `allowed_prefixes` - (Optional) VPC prefixes (CIDRs) to advertise to the Direct Connect gateway. Defaults to the CIDR block of the VPC associated with the Virtual Gateway. To enable drift detection, must be configured.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Direct Connect gateway association resource.
 * `associated_gateway_type` - The type of the associated gateway, `transitGateway` or `virtualPrivateGateway`.
@@ -115,12 +115,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_dx_gateway_association` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30 minutes`) Used for creating the association
-- `update` - (Default `30 minutes`) Used for updating the association
-- `delete` - (Default `30 minutes`) Used for destroying the association
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 

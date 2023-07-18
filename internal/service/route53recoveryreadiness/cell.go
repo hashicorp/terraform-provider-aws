@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53recoveryreadiness
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -8,23 +12,29 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_route53recoveryreadiness_cell", name="Cell")
+// @Tags(identifierAttribute="arn")
 func ResourceCell() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCellCreate,
-		Read:   resourceCellRead,
-		Update: resourceCellUpdate,
-		Delete: resourceCellDelete,
+		CreateWithoutTimeout: resourceCellCreate,
+		ReadWithoutTimeout:   resourceCellRead,
+		UpdateWithoutTimeout: resourceCellUpdate,
+		DeleteWithoutTimeout: resourceCellDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -55,60 +65,57 @@ func ResourceCell() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceCellCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceCellCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
+	name := d.Get("cell_name").(string)
 	input := &route53recoveryreadiness.CreateCellInput{
-		CellName: aws.String(d.Get("cell_name").(string)),
+		CellName: aws.String(name),
 		Cells:    flex.ExpandStringList(d.Get("cells").([]interface{})),
 	}
 
-	resp, err := conn.CreateCell(input)
+	output, err := conn.CreateCellWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Route53 Recovery Readiness Cell: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Readiness Cell (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.CellName))
+	d.SetId(aws.StringValue(output.CellName))
 
-	if len(tags) > 0 {
-		arn := aws.StringValue(resp.CellArn)
-		if err := UpdateTags(conn, arn, nil, tags); err != nil {
-			return fmt.Errorf("error adding Route53 Recovery Readiness Cell (%s) tags: %w", d.Id(), err)
-		}
+	if err := createTags(ctx, conn, aws.StringValue(output.CellArn), getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Route53 Recovery Readiness Cell (%s) tags: %s", d.Id(), err)
 	}
 
-	return resourceCellRead(d, meta)
+	return append(diags, resourceCellRead(ctx, d, meta)...)
 }
 
-func resourceCellRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceCellRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 	input := &route53recoveryreadiness.GetCellInput{
 		CellName: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetCell(input)
+	resp, err := conn.GetCellWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Route53RecoveryReadiness Cell (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Route53 Recovery Readiness Cell (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Route53 Recovery Readiness Cell: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Recovery Readiness Cell (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", resp.CellArn)
@@ -116,83 +123,65 @@ func resourceCellRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cells", resp.Cells)
 	d.Set("parent_readiness_scopes", resp.ParentReadinessScopes)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for Route53 Recovery Readiness Cell (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceCellUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+func resourceCellUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
-	input := &route53recoveryreadiness.UpdateCellInput{
-		CellName: aws.String(d.Id()),
-		Cells:    flex.ExpandStringList(d.Get("cells").([]interface{})),
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &route53recoveryreadiness.UpdateCellInput{
+			CellName: aws.String(d.Id()),
+			Cells:    flex.ExpandStringList(d.Get("cells").([]interface{})),
+		}
 
-	_, err := conn.UpdateCell(input)
-	if err != nil {
-		return fmt.Errorf("error updating Route53 Recovery Readiness Cell: %s", err)
-	}
+		_, err := conn.UpdateCellWithContext(ctx, input)
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		arn := d.Get("arn").(string)
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Route53 Recovery Readiness Cell (%s) tags: %w", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Readiness Cell (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceCellRead(d, meta)
+	return append(diags, resourceCellRead(ctx, d, meta)...)
 }
 
-func resourceCellDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+func resourceCellDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
-	input := &route53recoveryreadiness.DeleteCellInput{
+	log.Printf("[DEBUG] Deleting Route53 Recovery Readiness Cell: %s", d.Id())
+	_, err := conn.DeleteCellWithContext(ctx, &route53recoveryreadiness.DeleteCellInput{
 		CellName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
+		return diags
 	}
-	_, err := conn.DeleteCell(input)
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return fmt.Errorf("error deleting Route53 Recovery Readiness Cell: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Recovery Readiness Cell (%s): %s", d.Id(), err)
 	}
 
 	gcinput := &route53recoveryreadiness.GetCellInput{
 		CellName: aws.String(d.Id()),
 	}
-	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.GetCell(gcinput)
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
+		_, err := conn.GetCellWithContext(ctx, gcinput)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
-		return resource.RetryableError(fmt.Errorf("Route 53 Recovery Readiness Cell (%s) still exists", d.Id()))
+		return retry.RetryableError(fmt.Errorf("Route 53 Recovery Readiness Cell (%s) still exists", d.Id()))
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.GetCell(gcinput)
+		_, err = conn.GetCellWithContext(ctx, gcinput)
 	}
 	if err != nil {
-		return fmt.Errorf("error waiting for Route 53 Recovery Readiness Cell (%s) deletion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Recovery Readiness Cell (%s) deletion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,6 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	devEndpointStatusFailed       = "FAILED"

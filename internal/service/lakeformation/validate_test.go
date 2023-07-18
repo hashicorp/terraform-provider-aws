@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation
 
 import (
@@ -5,6 +8,8 @@ import (
 )
 
 func TestValidPrincipal(t *testing.T) {
+	t.Parallel()
+
 	v := ""
 	_, errors := validPrincipal(v, "arn")
 	if len(errors) == 0 {

@@ -59,7 +59,7 @@ The following arguments are optional:
 * `provisioning_parameters` - (Optional) Configuration block with parameters specified by the administrator that are required for provisioning the product. See details below.
 * `retain_physical_resources` - (Optional) _Only applies to deleting._ Whether to delete the Service Catalog provisioned product but leave the CloudFormation stack, stack set, or the underlying resources of the deleted provisioned product. The default value is `false`.
 * `stack_set_provisioning_preferences` - (Optional) Configuration block with information about the provisioning preferences for a stack set. See details below.
-* `tags` - (Optional) Tags to apply to the provisioned product. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the provisioned product. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### provisioning_parameters
 
@@ -82,9 +82,9 @@ The following arguments are supported:
 * `max_concurrency_percentage` - (Optional) Maximum percentage of accounts in which to perform this operation at one time. When calculating the number of accounts based on the specified percentage, AWS Service Catalog rounds down to the next whole number. This is true except in cases where rounding down would result is zero. In this case, AWS Service Catalog sets the number as 1 instead. Note that this setting lets you specify the maximum for operations. For large deployments, under certain circumstances the actual number of accounts acted upon concurrently may be lower due to service throttling. You must specify either `max_concurrency_count` or `max_concurrency_percentage`, but not both.
 * `regions` - (Optional) One or more AWS Regions where the provisioned product will be available. The specified regions should be within the list of regions from the STACKSET constraint. To get the list of regions in the STACKSET constraint, use the `aws_servicecatalog_provisioning_parameters` data source. If no values are specified, the default value is all regions from the STACKSET constraint.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the provisioned product.
 * `cloudwatch_dashboard_names` - Set of CloudWatch dashboards that were created when provisioning the product.
@@ -100,27 +100,25 @@ In addition to all arguments above, the following attributes are exported:
     * `value` - The output value.
 * `status` - Current status of the provisioned product. See meanings below.
 * `status_message` - Current status message of the provisioned product.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - Type of provisioned product. Valid values are `CFN_STACK` and `CFN_STACKSET`.
 
-### status Meanings
+### `status` Meanings
 
 * `AVAILABLE` - Stable state, ready to perform any operation. The most recent operation succeeded and completed.
-* `UNDER_CHANGE` - Transitive state. Operations performed might not have
-valid results. Wait for an `AVAILABLE` status before performing operations.
+* `UNDER_CHANGE` - Transitive state. Operations performed might not have valid results. Wait for an `AVAILABLE` status before performing operations.
 * `TAINTED` - Stable state, ready to perform any operation. The stack has completed the requested operation but is not exactly what was requested. For example, a request to update to a new version failed and the stack rolled back to the current version.
 * `ERROR` - An unexpected error occurred. The provisioned product exists but the stack is not running. For example, CloudFormation received a parameter value that was not valid and could not launch the stack.
 * `PLAN_IN_PROGRESS` - Transitive state. The plan operations were performed to provision a new product, but resources have not yet been created. After reviewing the list of resources to be created, execute the plan. Wait for an `AVAILABLE` status before performing operations.
 
 ## Timeouts
 
-`aws_servicecatalog_provisioned_product` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30 minutes`)
-- `read` - (Default `10 minutes`)
-- `update` - (Default `30 minutes`)
-- `delete` - (Default `30 minutes`)
+- `create` - (Default `30m`)
+- `read` - (Default `10m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 

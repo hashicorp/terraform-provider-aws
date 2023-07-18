@@ -40,9 +40,9 @@ The following arguments are supported:
 
 * `master_id` - (Required) The account ID of the master Security Hub account whose invitation you're accepting.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `invitation_id` - The ID of the invitation.
 

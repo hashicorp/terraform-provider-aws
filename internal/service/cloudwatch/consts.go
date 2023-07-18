@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudwatch
 
 const (
-	ResDashboard   = "Dashboard"
-	ResMetricAlarm = "Metric Alarm"
+	ResNameDashboard = "Dashboard"
 )
 
 const (

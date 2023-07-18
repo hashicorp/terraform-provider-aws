@@ -43,9 +43,9 @@ The following arguments are supported:
 * `table_name` - (Required) The name of the DynamoDB table. There
   can only be one Kinesis streaming destination for a given DynamoDB table.
   
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `table_name` and `stream_arn` separated by a comma (`,`).
 

@@ -16,9 +16,15 @@ Provides a way to check whether serial console access is enabled for your AWS ac
 data "aws_ec2_serial_console_access" "current" {}
 ```
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `enabled` - Whether or not serial console access is enabled. Returns as `true` or `false`.
 * `id` - Region of serial console access.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

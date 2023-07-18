@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
 import (
@@ -9,6 +12,8 @@ import (
 )
 
 func TestExpandStepAdjustments(t *testing.T) {
+	t.Parallel()
+
 	expanded := []interface{}{
 		map[string]interface{}{
 			"metric_interval_lower_bound": "1.0",
@@ -36,6 +41,8 @@ func TestExpandStepAdjustments(t *testing.T) {
 }
 
 func TestFlattenStepAdjustments(t *testing.T) {
+	t.Parallel()
+
 	expanded := []*autoscaling.StepAdjustment{
 		{
 			MetricIntervalLowerBound: aws.Float64(1.0),

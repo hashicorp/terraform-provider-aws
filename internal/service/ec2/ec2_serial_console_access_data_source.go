@@ -1,7 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
 	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -9,9 +13,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_ec2_serial_console_access")
 func DataSourceSerialConsoleAccess() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSerialConsoleAccessRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"enabled": {
@@ -22,12 +31,12 @@ func DataSourceSerialConsoleAccess() *schema.Resource {
 	}
 }
 func dataSourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	output, err := conn.GetSerialConsoleAccessStatus(&ec2.GetSerialConsoleAccessStatusInput{})
+	output, err := conn.GetSerialConsoleAccessStatusWithContext(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Serial Console Access: %s", err)
+		return diag.Errorf("reading EC2 Serial Console Access: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

@@ -44,9 +44,9 @@ The following arguments are optional:
 * `blackhole` - (Optional) Indicates whether to drop traffic that matches the Prefix List. Defaults to `false`.
 * `transit_gateway_attachment_id` - (Optional) Identifier of EC2 Transit Gateway Attachment.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway Route Table identifier and EC2 Prefix List identifier, separated by an underscore (`_`)
 

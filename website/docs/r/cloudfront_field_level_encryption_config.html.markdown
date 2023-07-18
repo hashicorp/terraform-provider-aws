@@ -1,7 +1,7 @@
 ---
 subcategory: "CloudFront"
 layout: "aws"
-page_title: "AWS: cloudfront_field_level_encryption_config"
+page_title: "AWS: aws_cloudfront_field_level_encryption_config"
 description: |-
   Provides a CloudFront Field-level Encryption Config resource.
 ---
@@ -69,9 +69,9 @@ The following arguments are supported:
 * `profile_id` - (Required) ID of profile to use for field-level encryption query argument-profile mapping
 * `query_arg` - (Required) Query argument for field-level encryption query argument-profile mapping.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `caller_reference` - Internal value used by CloudFront to allow future updates to the Field Level Encryption Config.
 * `etag` - The current version of the Field Level Encryption Config. For example: `E2QWRUHAPOMQZL`.

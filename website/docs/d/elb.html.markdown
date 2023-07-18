@@ -33,9 +33,9 @@ data "aws_elb" "test" {
 
 The following arguments are supported:
 
-* `name` - (Required) The unique name of the load balancer.
+* `name` - (Required) Unique name of the load balancer.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [ELB Resource](/docs/providers/aws/r/elb.html) for details on the
 returned attributes - they are identical.

@@ -13,23 +13,17 @@ Provides an IoT policy attachment.
 ## Example Usage
 
 ```terraform
-resource "aws_iot_policy" "pubsub" {
-  name = "PubSubToAnyTopic"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "iot:*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
+data "aws_iam_policy_document" "pubsub" {
+  statement {
+    effect    = "Allow"
+    actions   = ["iot:*"]
+    resources = ["*"]
+  }
 }
-EOF
+
+resource "aws_iot_policy" "pubsub" {
+  name   = "PubSubToAnyTopic"
+  policy = data.aws_iam_policy_document.pubsub.json
 }
 
 resource "aws_iot_certificate" "cert" {
@@ -50,6 +44,6 @@ The following arguments are supported:
 * `policy` - (Required) The name of the policy to attach.
 * `target` - (Required) The identity to which the policy is attached.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.

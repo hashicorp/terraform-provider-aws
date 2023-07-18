@@ -25,16 +25,16 @@ resource "aws_api_gateway_request_validator" "example" {
 
 The following argument is supported:
 
-* `name` - (Required) The name of the request validator
-* `rest_api_id` - (Required) The ID of the associated Rest API
+* `name` - (Required) Name of the request validator
+* `rest_api_id` - (Required) ID of the associated Rest API
 * `validate_request_body` - (Optional) Boolean whether to validate request body. Defaults to `false`.
 * `validate_request_parameters` - (Optional) Boolean whether to validate request parameters. Defaults to `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The unique ID of the request validator
+* `id` - Unique ID of the request validator
 
 ## Import
 

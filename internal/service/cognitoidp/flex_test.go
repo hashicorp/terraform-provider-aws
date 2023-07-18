@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
@@ -8,6 +11,8 @@ import (
 )
 
 func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Input    *cognitoidentityprovider.SchemaAttributeType
 		Expected bool

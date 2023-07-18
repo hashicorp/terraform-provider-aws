@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_route53_traffic_policy_instance")
 func ResourceTrafficPolicyInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficPolicyInstanceCreate,
@@ -63,7 +67,7 @@ func ResourceTrafficPolicyInstance() *schema.Resource {
 }
 
 func resourceTrafficPolicyInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	name := d.Get("name").(string)
 	input := &route53.CreateTrafficPolicyInstanceInput{
@@ -75,25 +79,25 @@ func resourceTrafficPolicyInstanceCreate(ctx context.Context, d *schema.Resource
 	}
 
 	log.Printf("[INFO] Creating Route53 Traffic Policy Instance: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return conn.CreateTrafficPolicyInstanceWithContext(ctx, input)
 	}, route53.ErrCodeNoSuchTrafficPolicy)
 
 	if err != nil {
-		return diag.Errorf("error creating Route53 Traffic Policy Instance (%s): %s", name, err)
+		return diag.Errorf("creating Route53 Traffic Policy Instance (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*route53.CreateTrafficPolicyInstanceOutput).TrafficPolicyInstance.Id))
 
 	if _, err = waitTrafficPolicyInstanceStateCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("error waiting for Route53 Traffic Policy Instance (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for Route53 Traffic Policy Instance (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceTrafficPolicyInstanceRead(ctx, d, meta)
 }
 
 func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	trafficPolicyInstance, err := FindTrafficPolicyInstanceByID(ctx, conn, d.Id())
 
@@ -104,7 +108,7 @@ func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Route53 Traffic Policy Instance (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Route53 Traffic Policy Instance (%s): %s", d.Id(), err)
 	}
 
 	d.Set("hosted_zone_id", trafficPolicyInstance.HostedZoneId)
@@ -117,7 +121,7 @@ func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceTrafficPolicyInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	input := &route53.UpdateTrafficPolicyInstanceInput{
 		Id:                   aws.String(d.Id()),
@@ -130,18 +134,18 @@ func resourceTrafficPolicyInstanceUpdate(ctx context.Context, d *schema.Resource
 	_, err := conn.UpdateTrafficPolicyInstanceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating Route53 Traffic Policy Instance (%s): %s", d.Id(), err)
+		return diag.Errorf("updating Route53 Traffic Policy Instance (%s): %s", d.Id(), err)
 	}
 
 	if _, err = waitTrafficPolicyInstanceStateUpdated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("error waiting for Route53 Traffic Policy Instance (%s) update: %s", d.Id(), err)
+		return diag.Errorf("waiting for Route53 Traffic Policy Instance (%s) update: %s", d.Id(), err)
 	}
 
 	return resourceTrafficPolicyInstanceRead(ctx, d, meta)
 }
 
 func resourceTrafficPolicyInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	log.Printf("[INFO] Delete Route53 Traffic Policy Instance: %s", d.Id())
 	_, err := conn.DeleteTrafficPolicyInstanceWithContext(ctx, &route53.DeleteTrafficPolicyInstanceInput{
@@ -153,11 +157,11 @@ func resourceTrafficPolicyInstanceDelete(ctx context.Context, d *schema.Resource
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Route53 Traffic Policy Instance (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Route53 Traffic Policy Instance (%s): %s", d.Id(), err)
 	}
 
 	if _, err = waitTrafficPolicyInstanceStateDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("error waiting for Route53 Traffic Policy Instance (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for Route53 Traffic Policy Instance (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

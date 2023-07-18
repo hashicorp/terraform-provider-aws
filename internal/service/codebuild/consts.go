@@ -1,10 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codebuild
 
-import "time"
+import (
+	"time"
+)
 
 const (
-	ResReportGroup = "Report Group"
-	ResWebhook     = "Webhook"
+	ResNameReportGroup = "Report Group"
+	ResNameWebhook     = "Webhook"
 )
 
 const (

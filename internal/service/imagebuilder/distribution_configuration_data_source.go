@@ -1,19 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_imagebuilder_distribution_configuration")
 func DataSourceDistributionConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDistributionConfigurationRead,
+		ReadWithoutTimeout: dataSourceDistributionConfigurationRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -137,6 +143,58 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"fast_launch_configuration": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"account_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"enabled": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"launch_template": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"launch_template_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"launch_template_name": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"launch_template_version": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"max_parallel_launches": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"snapshot_configuration": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"target_resource_count": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"launch_template_configuration": {
 							Type:     schema.TypeSet,
 							Computed: true,
@@ -180,8 +238,9 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 	}
 }
 
-func dataSourceDistributionConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceDistributionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetDistributionConfigurationInput{}
@@ -190,14 +249,14 @@ func dataSourceDistributionConfigurationRead(d *schema.ResourceData, meta interf
 		input.DistributionConfigurationArn = aws.String(v.(string))
 	}
 
-	output, err := conn.GetDistributionConfiguration(input)
+	output, err := conn.GetDistributionConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error getting Image Builder Distribution Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Distribution Configuration (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.DistributionConfiguration == nil {
-		return fmt.Errorf("error getting Image Builder Distribution Configuration (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Distribution Configuration (%s): empty response", d.Id())
 	}
 
 	distributionConfiguration := output.DistributionConfiguration
@@ -209,7 +268,7 @@ func dataSourceDistributionConfigurationRead(d *schema.ResourceData, meta interf
 	d.Set("description", distributionConfiguration.Description)
 	d.Set("distribution", flattenDistributions(distributionConfiguration.Distributions))
 	d.Set("name", distributionConfiguration.Name)
-	d.Set("tags", KeyValueTags(distributionConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(ctx, distributionConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
-	return nil
+	return diags
 }

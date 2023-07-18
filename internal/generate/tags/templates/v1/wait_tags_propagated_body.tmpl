@@ -1,0 +1,34 @@
+// {{ .WaitTagsPropagatedFunc }} waits for {{ .ServicePackage }} service tags to be propagated.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func {{ .WaitTagsPropagatedFunc }}(ctx context.Context, conn {{ .ClientType }}, id string, tags tftags.KeyValueTags) error {
+	checkFunc := func() (bool, error) {
+		output, err := listTags(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		return output.Equal(tags), nil
+	}
+	opts := tfresource.WaitOpts{
+		{{- if ne .WaitContinuousOccurence 0 }}
+		ContinuousTargetOccurence: {{ .WaitContinuousOccurence }},
+		{{- end }}
+		{{- if ne .WaitDelay "" }}
+		Delay: {{ .WaitDelay }},
+		{{- end }}
+		{{- if ne .WaitMinTimeout "" }}
+		MinTimeout: {{ .WaitMinTimeout }},
+		{{- end }}
+		{{- if ne .WaitPollInterval "" }}
+		PollInterval: {{ .WaitPollInterval }},
+		{{- end }}
+	}
+
+	return tfresource.WaitUntil(ctx, {{ .WaitTimeout }}, checkFunc, opts)
+}

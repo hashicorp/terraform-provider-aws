@@ -30,9 +30,9 @@ The following arguments are supported:
 * `subject` - (Optional) The subject line of the email.
 * `text` - (Optional) The email body that will be visible to recipients whose email clients do not display HTML. Must be less than 500KB in size, including both the text and HTML parts.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the SES template
 * `id` - The name of the SES template

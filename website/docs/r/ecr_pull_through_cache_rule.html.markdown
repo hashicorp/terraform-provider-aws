@@ -29,9 +29,9 @@ The following arguments are supported:
 * `ecr_repository_prefix` - (Required, Forces new resource) The repository name prefix to use when caching images from the source registry.
 * `upstream_registry_url` - (Required, Forces new resource) The registry URL of the upstream public registry to use as the source.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `registry_id` - The registry ID where the repository was created.
 

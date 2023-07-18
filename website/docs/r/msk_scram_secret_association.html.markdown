@@ -54,22 +54,24 @@ resource "aws_secretsmanager_secret_version" "example" {
   secret_string = jsonencode({ username = "user", password = "pass" })
 }
 
+data "aws_iam_policy_document" "example" {
+  statement {
+    sid    = "AWSKafkaResourcePolicy"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["kafka.amazonaws.com"]
+    }
+
+    actions   = ["secretsmanager:getSecretValue"]
+    resources = [aws_secretsmanager_secret.example.arn]
+  }
+}
+
 resource "aws_secretsmanager_secret_policy" "example" {
   secret_arn = aws_secretsmanager_secret.example.arn
-  policy     = <<POLICY
-{
-  "Version" : "2012-10-17",
-  "Statement" : [ {
-    "Sid": "AWSKafkaResourcePolicy",
-    "Effect" : "Allow",
-    "Principal" : {
-      "Service" : "kafka.amazonaws.com"
-    },
-    "Action" : "secretsmanager:getSecretValue",
-    "Resource" : "${aws_secretsmanager_secret.example.arn}"
-  } ]
-}
-POLICY
+  policy     = data.aws_iam_policy_document.example.json
 }
 ```
 
@@ -80,9 +82,9 @@ The following arguments are supported:
 * `cluster_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the MSK cluster.
 * `secret_arn_list` - (Required) List of AWS Secrets Manager secret ARNs.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the MSK cluster.
 

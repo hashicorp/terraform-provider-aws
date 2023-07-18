@@ -44,9 +44,9 @@ The following arguments are supported:
 * `type` - (Required) Type of the IP address - `IPV4` or `IPV6`.
 * `value` - (Required) An IPv4 or IPv6 address specified via CIDR notationE.g., `192.0.2.44/32` or `1111:0000:0000:0000:0000:0000:0000:0000/64`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF IPSet.
 * `arn` - The ARN of the WAF IPSet.

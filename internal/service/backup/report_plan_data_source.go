@@ -1,18 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_backup_report_plan")
 func DataSourceReportPlan() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceReportPlanRead,
+		ReadWithoutTimeout: dataSourceReportPlanRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -63,6 +69,13 @@ func DataSourceReportPlan() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"accounts": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 						"framework_arns": {
 							Type:     schema.TypeSet,
 							Computed: true,
@@ -73,6 +86,20 @@ func DataSourceReportPlan() *schema.Resource {
 						"number_of_frameworks": {
 							Type:     schema.TypeInt,
 							Computed: true,
+						},
+						"organization_units": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"regions": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
 						"report_template": {
 							Type:     schema.TypeString,
@@ -86,15 +113,16 @@ func DataSourceReportPlan() *schema.Resource {
 	}
 }
 
-func dataSourceReportPlanRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func dataSourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	reportPlan, err := FindReportPlanByName(conn, name)
+	reportPlan, err := FindReportPlanByName(ctx, conn, name)
 
 	if err != nil {
-		return fmt.Errorf("error reading Backup Report Plan (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading Backup Report Plan (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(reportPlan.ReportPlanName))
@@ -106,22 +134,22 @@ func dataSourceReportPlanRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", reportPlan.ReportPlanName)
 
 	if err := d.Set("report_delivery_channel", flattenReportDeliveryChannel(reportPlan.ReportDeliveryChannel)); err != nil {
-		return fmt.Errorf("error setting report_delivery_channel: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting report_delivery_channel: %s", err)
 	}
 
 	if err := d.Set("report_setting", flattenReportSetting(reportPlan.ReportSetting)); err != nil {
-		return fmt.Errorf("error setting report_setting: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting report_setting: %s", err)
 	}
 
-	tags, err := ListTags(conn, aws.StringValue(reportPlan.ReportPlanArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(reportPlan.ReportPlanArn))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Backup Report Plan (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Report Plan (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

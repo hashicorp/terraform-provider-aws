@@ -45,16 +45,15 @@ The following arguments are supported:
 
 * `model_package_group_name` - (Required) The name of the model package group.
 
+## Attribute Reference
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the Model Package Package Group.
 
 ## Import
 
-SageMaker Code Model Package Groups can be imported using the `name`, e.g.,
+SageMaker Model Package Groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_model_package_group_policy.example example

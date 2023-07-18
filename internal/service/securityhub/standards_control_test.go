@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub_test
 
 import (
@@ -7,27 +10,28 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
 func testAccStandardsControl_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var standardsControl securityhub.StandardsControl
 	resourceName := "aws_securityhub_standards_control.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil, //lintignore:AT001
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil, //lintignore:AT001
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStandardsControlConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStandardsControlExists(resourceName, &standardsControl),
+					testAccCheckStandardsControlExists(ctx, resourceName, &standardsControl),
 					resource.TestCheckResourceAttr(resourceName, "control_id", "CIS.1.10"),
 					resource.TestCheckResourceAttr(resourceName, "control_status", "ENABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, "control_status_updated_at"),
@@ -44,19 +48,20 @@ func testAccStandardsControl_basic(t *testing.T) {
 }
 
 func testAccStandardsControl_disabledControlStatus(t *testing.T) {
+	ctx := acctest.Context(t)
 	var standardsControl securityhub.StandardsControl
 	resourceName := "aws_securityhub_standards_control.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil, //lintignore:AT001
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil, //lintignore:AT001
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStandardsControlConfig_disabledStatus(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStandardsControlExists(resourceName, &standardsControl),
+					testAccCheckStandardsControlExists(ctx, resourceName, &standardsControl),
 					resource.TestCheckResourceAttr(resourceName, "control_status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "disabled_reason", "We handle password policies within Okta"),
 				),
@@ -66,11 +71,13 @@ func testAccStandardsControl_disabledControlStatus(t *testing.T) {
 }
 
 func testAccStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T) {
+	ctx := acctest.Context(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil, //lintignore:AT001
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil, //lintignore:AT001
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStandardsControlConfig_enabledStatus(),
@@ -80,7 +87,7 @@ func testAccStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T)
 	})
 }
 
-func testAccCheckStandardsControlExists(n string, control *securityhub.StandardsControl) resource.TestCheckFunc {
+func testAccCheckStandardsControlExists(ctx context.Context, n string, control *securityhub.StandardsControl) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -91,7 +98,7 @@ func testAccCheckStandardsControlExists(n string, control *securityhub.Standards
 			return fmt.Errorf("No Security Hub Standards Control ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		standardsSubscriptionARN, err := tfsecurityhub.StandardsControlARNToStandardsSubscriptionARN(rs.Primary.ID)
 
@@ -99,7 +106,7 @@ func testAccCheckStandardsControlExists(n string, control *securityhub.Standards
 			return err
 		}
 
-		output, err := tfsecurityhub.FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(context.TODO(), conn, standardsSubscriptionARN, rs.Primary.ID)
+		output, err := tfsecurityhub.FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx, conn, standardsSubscriptionARN, rs.Primary.ID)
 
 		if err != nil {
 			return err

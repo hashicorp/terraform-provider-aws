@@ -1,7 +1,7 @@
 ---
 subcategory: "Elasticsearch"
 layout: "aws"
-page_title: "AWS: aws_elasticsearch_domain"
+page_title: "AWS: aws_elasticsearch_domain_policy"
 description: |-
   Provides an Elasticsearch Domain Policy.
 ---
@@ -47,6 +47,6 @@ The following arguments are supported:
 * `domain_name` - (Required) Name of the domain.
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.

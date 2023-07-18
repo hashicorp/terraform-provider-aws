@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesis
 
 import (
@@ -8,6 +11,8 @@ import (
 )
 
 func TestFlattenShardLevelMetrics(t *testing.T) {
+	t.Parallel()
+
 	expanded := []*kinesis.EnhancedMetrics{
 		{
 			ShardLevelMetrics: []*string{

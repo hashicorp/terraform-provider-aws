@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appflow
 
 import (
@@ -5,11 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appflow"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FlowStatus(ctx context.Context, conn *appflow.Appflow, id string) resource.StateRefreshFunc {
+func FlowStatus(ctx context.Context, conn *appflow.Appflow, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindFlowByARN(ctx, conn, id)
 

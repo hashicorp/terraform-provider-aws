@@ -1,0 +1,48 @@
+name: Resource Counts
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 9 * * WED'
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Token
+        id: generate_token
+        uses: tibdex/github-app-token@b62528385c34dbc9f38e5f4225ac829252d1ea92 # v1.8.0
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          installation_id: ${{ secrets.INSTALLATION_ID }}
+          private_key: ${{secrets.APP_PEM }}
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+      - run: |
+          touch main.tf
+          cat << EOF > main.tf
+          terraform {
+          required_providers {
+          aws = {
+          source  = "hashicorp/aws"
+          }
+          }
+          }
+          EOF
+      - run: terraform init
+      - run: |
+          datasources=$(terraform providers schema -json | jq '.provider_schemas[] .data_source_schemas | length')
+          resources=$(terraform providers schema -json | jq '.provider_schemas[] .resource_schemas | length')
+          sed -r -i "s/There are currently ([0-9]+) resources and ([0-9]+)(.*)/There are currently $resources resources and $datasources\3/" website/docs/index.html.markdown
+      - run: |
+          rm main.tf
+          rm .terraform.lock.hcl
+          rm -rf .terraform
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@153407881ec5c347639a548ade7d8ad1d6740e38 # v5.0.2
+        with:
+          token: ${{ steps.generate_token.outputs.token }}
+          branch: "resource-counts"
+          commit-message: "docs: update resource counts"
+          title: "docs: update resource counts"
+          body: "This PR updates the resource/data source counts included on the provider documentation index page."

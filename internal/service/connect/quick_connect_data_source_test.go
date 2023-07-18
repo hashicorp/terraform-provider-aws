@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
@@ -5,24 +8,26 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/connect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectQuickConnectDataSource_id(t *testing.T) {
+func testAccQuickConnectDataSource_id(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_quick_connect.test"
 	datasourceName := "data.aws_connect_quick_connect.test"
 	phoneNumber := "+12345678912"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQuickConnectDataSourceConfig_id(rName, resourceName, phoneNumber),
+				Config: testAccQuickConnectDataSourceConfig_id(rName, rName2, phoneNumber),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
@@ -40,7 +45,8 @@ func TestAccConnectQuickConnectDataSource_id(t *testing.T) {
 	})
 }
 
-func TestAccConnectQuickConnectDataSource_name(t *testing.T) {
+func testAccQuickConnectDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_quick_connect.test"
@@ -48,9 +54,9 @@ func TestAccConnectQuickConnectDataSource_name(t *testing.T) {
 	phoneNumber := "+12345678912"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQuickConnectDataSourceConfig_name(rName, rName2, phoneNumber),
@@ -71,7 +77,7 @@ func TestAccConnectQuickConnectDataSource_name(t *testing.T) {
 	})
 }
 
-func testAccQuickConnectBaseDataSourceConfig(rName, rName2, phoneNumber string) string {
+func testAccQuickConnectDataSourceConfig_base(rName, rName2, phoneNumber string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -102,7 +108,7 @@ resource "aws_connect_quick_connect" "test" {
 
 func testAccQuickConnectDataSourceConfig_id(rName, rName2, phoneNumber string) string {
 	return acctest.ConfigCompose(
-		testAccQuickConnectBaseDataSourceConfig(rName, rName2, phoneNumber),
+		testAccQuickConnectDataSourceConfig_base(rName, rName2, phoneNumber),
 		`
 data "aws_connect_quick_connect" "test" {
   instance_id      = aws_connect_instance.test.id
@@ -113,7 +119,7 @@ data "aws_connect_quick_connect" "test" {
 
 func testAccQuickConnectDataSourceConfig_name(rName, rName2, phoneNumber string) string {
 	return acctest.ConfigCompose(
-		testAccQuickConnectBaseDataSourceConfig(rName, rName2, phoneNumber),
+		testAccQuickConnectDataSourceConfig_base(rName, rName2, phoneNumber),
 		`
 data "aws_connect_quick_connect" "test" {
   instance_id = aws_connect_instance.test.id

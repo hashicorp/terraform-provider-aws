@@ -28,9 +28,9 @@ The following arguments are supported:
 * `resource_arn` - (Required) Amazon Resource Name (ARN) of the resource to associate with the RAM Resource Share.
 * `resource_share_arn` - (Required) Amazon Resource Name (ARN) of the RAM Resource Share.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the resource share.
 

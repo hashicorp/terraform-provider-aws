@@ -84,7 +84,7 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
   task_invocation_parameters {
     run_command_parameters {
-      output_s3_bucket     = aws_s3_bucket.example.bucket
+      output_s3_bucket     = aws_s3_bucket.example.id
       output_s3_key_prefix = "output"
       service_role_arn     = aws_iam_role.example.arn
       timeout_seconds      = 600
@@ -198,9 +198,9 @@ The following arguments are supported:
 * `name` - (Required) The parameter name.
 * `values` - (Required) The array of strings.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the maintenance window task.
 * `id` - The ID of the maintenance window task.

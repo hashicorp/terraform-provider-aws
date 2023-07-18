@@ -46,8 +46,8 @@ resource "aws_autoscaling_group_tag" "example" {
 
 The following arguments are supported:
 
-* `autoscaling_group_name` - (Required) The name of the Autoscaling Group to apply the tag to.
-* `tag` - (Required) The tag to create. The `tag` block is documented below.
+* `autoscaling_group_name` - (Required) Name of the Autoscaling Group to apply the tag to.
+* `tag` - (Required) Tag to create. The `tag` block is documented below.
 
 The `tag` block supports the following arguments:
 
@@ -55,9 +55,9 @@ The `tag` block supports the following arguments:
 * `value` - (Required) Tag value.
 * `propagate_at_launch` - (Required) Whether to propagate the tags to instances launched by the ASG.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ASG name and key, separated by a comma (`,`)
 

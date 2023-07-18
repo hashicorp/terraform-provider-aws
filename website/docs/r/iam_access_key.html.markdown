@@ -23,24 +23,18 @@ resource "aws_iam_user" "lb" {
   path = "/system/"
 }
 
-resource "aws_iam_user_policy" "lb_ro" {
-  name = "test"
-  user = aws_iam_user.lb.name
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
+data "aws_iam_policy_document" "lb_ro" {
+  statement {
+    effect    = "Allow"
+    actions   = ["ec2:Describe*"]
+    resources = ["*"]
+  }
 }
-EOF
+
+resource "aws_iam_user_policy" "lb_ro" {
+  name   = "test"
+  user   = aws_iam_user.lb.name
+  policy = data.aws_iam_policy_document.lb_ro.json
 }
 
 output "secret" {
@@ -67,13 +61,13 @@ output "aws_iam_smtp_password_v4" {
 
 The following arguments are supported:
 
-* `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a keybase username in the form `keybase:some_person_that_exists`, for use in the `encrypted_secret` output attribute.
+* `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a keybase username in the form `keybase:some_person_that_exists`, for use in the `encrypted_secret` output attribute. If providing a base-64 encoded PGP public key, make sure to provide the "raw" version and not the "armored" one (e.g. avoid passing the `-a` option to `gpg --export`).
 * `status` - (Optional) Access key status to apply. Defaults to `Active`. Valid values are `Active` and `Inactive`.
 * `user` - (Required) IAM user to associate with this access key.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `create_date` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the access key was created.
 * `encrypted_secret` - Encrypted secret, base64 encoded, if `pgp_key` was specified. This attribute is not available for imported resources. The encrypted secret may be decrypted using the command line, for example: `terraform output -raw encrypted_secret | base64 --decode | keybase pgp decrypt`.

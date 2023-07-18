@@ -41,7 +41,6 @@ The following arguments are supported:
 * `solution_stack_name` – (Optional) A solution stack to base your Template
 off of. Example stacks can be found in the [Amazon API documentation][1]
 
-
 ## Option Settings
 
 The `setting` field supports the following format:
@@ -51,9 +50,9 @@ The `setting` field supports the following format:
 * `value` - value for the configuration option
 * `resource` - (Optional) resource name for [scheduled action](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options-general.html#command-options-general-autoscalingscheduledaction)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `name`
 * `application`

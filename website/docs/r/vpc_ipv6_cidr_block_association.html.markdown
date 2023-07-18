@@ -36,15 +36,14 @@ The following arguments are supported:
 
 ## Timeouts
 
-`aws_vpc_ipv6_cidr_block_association` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for creating the association
-- `delete` - (Default `10 minutes`) Used for destroying the association
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC CIDR association
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -8,6 +11,8 @@ import (
 )
 
 func TestExpandReplicationRuleFilterTag(t *testing.T) {
+	t.Parallel()
+
 	expectedKey := "TestKey1"
 	expectedValue := "TestValue1"
 
@@ -32,6 +37,8 @@ func TestExpandReplicationRuleFilterTag(t *testing.T) {
 }
 
 func TestFlattenReplicationRuleFilterTag(t *testing.T) {
+	t.Parallel()
+
 	expectedKey := "TestKey1"
 	expectedValue := "TestValue1"
 

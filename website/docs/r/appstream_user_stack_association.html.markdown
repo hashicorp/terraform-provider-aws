@@ -39,15 +39,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `send_email_notification` - (Optional) Specifies whether a welcome email is sent to a user after the user is created in the user pool.
+* `send_email_notification` - (Optional) Whether a welcome email is sent to a user after the user is created in the user pool.
 
+## Attribute Reference
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique ID of the appstream User Stack association.
-
 
 ## Import
 

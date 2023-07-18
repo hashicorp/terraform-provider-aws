@@ -1,15 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 // waitImageStatusAvailable waits for an Image to return Available
-func waitImageStatusAvailable(conn *imagebuilder.Imagebuilder, imageBuildVersionArn string, timeout time.Duration) (*imagebuilder.Image, error) {
-	stateConf := &resource.StateChangeConf{
+func waitImageStatusAvailable(ctx context.Context, conn *imagebuilder.Imagebuilder, imageBuildVersionArn string, timeout time.Duration) (*imagebuilder.Image, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			imagebuilder.ImageStatusBuilding,
 			imagebuilder.ImageStatusCreating,
@@ -19,11 +23,11 @@ func waitImageStatusAvailable(conn *imagebuilder.Imagebuilder, imageBuildVersion
 			imagebuilder.ImageStatusTesting,
 		},
 		Target:  []string{imagebuilder.ImageStatusAvailable},
-		Refresh: statusImage(conn, imageBuildVersionArn),
+		Refresh: statusImage(ctx, conn, imageBuildVersionArn),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*imagebuilder.Image); ok {
 		return v, err

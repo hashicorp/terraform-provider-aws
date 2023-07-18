@@ -29,9 +29,9 @@ resource "aws_cloudfront_origin_access_identity" "example" {
 
 * `comment` (Optional) - An optional comment for the origin access identity.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 * `caller_reference` - Internal value used by CloudFront to allow future
@@ -97,7 +97,6 @@ resource "aws_s3_bucket_policy" "example" {
 [2]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
 [3]: /docs/providers/aws/r/cloudfront_distribution.html
 [4]: /docs/providers/aws/r/s3_bucket.html
-
 
 ## Import
 

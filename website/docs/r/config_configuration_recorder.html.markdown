@@ -20,24 +20,22 @@ resource "aws_config_configuration_recorder" "foo" {
   role_arn = aws_iam_role.r.arn
 }
 
-resource "aws_iam_role" "r" {
-  name = "awsconfig-example"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "config.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["config.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-POLICY
+
+resource "aws_iam_role" "r" {
+  name               = "awsconfig-example"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 ```
 
@@ -52,12 +50,18 @@ The following arguments are supported:
 ### `recording_group`
 
 * `all_supported` - (Optional) Specifies whether AWS Config records configuration changes for every supported type of regional resource (which includes any new type that will become supported in the future). Conflicts with `resource_types`. Defaults to `true`.
-* `include_global_resource_types` - (Optional) Specifies whether AWS Config includes all supported types of *global resources* with the resources that it records. Requires `all_supported = true`. Conflicts with `resource_types`.
+* `exclusion_by_resource_types` - (Optional) An object that specifies how AWS Config excludes resource types from being recorded by the configuration recorder.To use this option, you must set the useOnly field of RecordingStrategy to `EXCLUSION_BY_RESOURCE_TYPES` Requires `all_supported = false`. Conflicts with `resource_types`.
+* `include_global_resource_types` - (Optional) Specifies whether AWS Config includes all supported types of _global resources_ with the resources that it records. Requires `all_supported = true`. Conflicts with `resource_types`.
+* `recording_strategy` - (Optional) Recording Strategy - see below..
 * `resource_types` - (Optional) A list that specifies the types of AWS resources for which AWS Config records configuration changes (for example, `AWS::EC2::Instance` or `AWS::CloudTrail::Trail`). See [relevant part of AWS Docs](http://docs.aws.amazon.com/config/latest/APIReference/API_ResourceIdentifier.html#config-Type-ResourceIdentifier-resourceType) for available types. In order to use this attribute, `all_supported` must be set to false.
 
-## Attributes Reference
+#### `recording_strategy`
 
-In addition to all arguments above, the following attributes are exported:
+* ` use_only` - (Optional) The recording strategy for the configuration recorder.See [relevant part of AWS Docs](https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingStrategy.html)
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the recorder
 

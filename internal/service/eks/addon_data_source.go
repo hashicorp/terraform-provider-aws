@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_eks_addon")
 func DataSourceAddon() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAddonRead,
@@ -35,6 +38,10 @@ func DataSourceAddon() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validClusterName,
 			},
+			"configuration_values": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -53,7 +60,7 @@ func DataSourceAddon() *schema.Resource {
 }
 
 func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	addonName := d.Get("addon_name").(string)
@@ -63,18 +70,19 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta inter
 	addon, err := FindAddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading EKS Add-On (%s): %w", id, err))
+		return diag.Errorf("reading EKS Add-On (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 	d.Set("addon_version", addon.AddonVersion)
 	d.Set("arn", addon.AddonArn)
+	d.Set("configuration_values", addon.ConfigurationValues)
 	d.Set("created_at", aws.TimeValue(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).Format(time.RFC3339))
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
-	if err := d.Set("tags", KeyValueTags(addon.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+	if err := d.Set("tags", KeyValueTags(ctx, addon.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil

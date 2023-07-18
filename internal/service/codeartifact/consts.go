@@ -1,8 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codeartifact
 
 const (
-	ResDomain                      = "Domain"
-	ResDomainPermissionsPolicy     = "Domain Permissions Policy"
-	ResRepository                  = "Repository"
-	ResRepositoryPermissionsPolicy = "Repository Permissions Policy"
+	ResNameDomain                      = "Domain"
+	ResNameDomainPermissionsPolicy     = "Domain Permissions Policy"
+	ResNameRepository                  = "Repository"
+	ResNameRepositoryPermissionsPolicy = "Repository Permissions Policy"
 )

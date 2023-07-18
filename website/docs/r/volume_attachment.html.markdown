@@ -58,9 +58,9 @@ means attached.
 * `stop_instance_before_detaching` - (Optional, Boolean) Set this to true to ensure that the target instance is stopped
 before trying to detach the volume. Stops the instance, if it is not already stopped.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `device_name` - The device name exposed to the instance
 * `instance_id` - ID of the Instance
@@ -73,7 +73,6 @@ EBS Volume Attachments can be imported using `DEVICE_NAME:VOLUME_ID:INSTANCE_ID`
 ```
 $ terraform import aws_volume_attachment.example /dev/sdh:vol-049df61146c4d7901:i-12345678
 ```
-
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html#available-ec2-device-names
 [2]: https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/device_naming.html#available-ec2-device-names

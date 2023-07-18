@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfresource_test
 
 import (
@@ -6,10 +9,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestWaitUntil(t *testing.T) {
+func TestWaitUntil(t *testing.T) { //nolint:tparallel
+	ctx := acctest.Context(t)
+	t.Parallel()
+
 	var retryCount int32
 
 	testCases := []struct {
@@ -49,11 +56,11 @@ func TestWaitUntil(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:paralleltest
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
-			err := tfresource.WaitUntil(5*time.Second, testCase.F, tfresource.WaitOpts{})
+			err := tfresource.WaitUntil(ctx, 5*time.Second, testCase.F, tfresource.WaitOpts{})
 
 			if testCase.ExpectError && err == nil {
 				t.Fatal("expected error")

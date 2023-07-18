@@ -25,27 +25,24 @@ resource "aws_xray_encryption_config" "example" {
 ```terraform
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_policy_document" "example" {
+  statement {
+    sid    = "Enable IAM User Permissions"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
+}
 resource "aws_kms_key" "example" {
   description             = "Some Key"
   deletion_window_in_days = 7
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
+  policy                  = data.aws_iam_policy_document.example.json
 }
 
 resource "aws_xray_encryption_config" "example" {
@@ -59,9 +56,9 @@ resource "aws_xray_encryption_config" "example" {
 * `type` - (Required) The type of encryption. Set to `KMS` to use your own key for encryption. Set to `NONE` for default encryption.
 * `key_id` - (Optional) An AWS KMS customer master key (CMK) ARN.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Region name.
 

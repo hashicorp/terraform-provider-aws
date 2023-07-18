@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
@@ -9,28 +13,26 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDirectConnectTransitVirtualInterface_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":    testAccTransitVirtualInterface_basic,
 		"tags":     testAccTransitVirtualInterface_tags,
 		"sitelink": testAccTransitVirtualInterface_siteLink,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccTransitVirtualInterface_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
 	if connectionId == "" {
@@ -46,15 +48,15 @@ func testAccTransitVirtualInterface_basic(t *testing.T) {
 	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitVirtualInterfaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitVirtualInterfaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitVirtualInterfaceConfig_basic(connectionId, rName, amzAsn, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckTransitVirtualInterfaceExists(ctx, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -75,7 +77,7 @@ func testAccTransitVirtualInterface_basic(t *testing.T) {
 			{
 				Config: testAccTransitVirtualInterfaceConfig_updated(connectionId, rName, amzAsn, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckTransitVirtualInterfaceExists(ctx, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -104,6 +106,7 @@ func testAccTransitVirtualInterface_basic(t *testing.T) {
 }
 
 func testAccTransitVirtualInterface_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
 	if connectionId == "" {
@@ -119,15 +122,15 @@ func testAccTransitVirtualInterface_tags(t *testing.T) {
 	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitVirtualInterfaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitVirtualInterfaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitVirtualInterfaceConfig_tags(connectionId, rName, amzAsn, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckTransitVirtualInterfaceExists(ctx, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -151,7 +154,7 @@ func testAccTransitVirtualInterface_tags(t *testing.T) {
 			{
 				Config: testAccTransitVirtualInterfaceConfig_tagsUpdated(connectionId, rName, amzAsn, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckTransitVirtualInterfaceExists(ctx, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -183,6 +186,7 @@ func testAccTransitVirtualInterface_tags(t *testing.T) {
 }
 
 func testAccTransitVirtualInterface_siteLink(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
 	if connectionId == "" {
@@ -198,15 +202,15 @@ func testAccTransitVirtualInterface_siteLink(t *testing.T) {
 	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitVirtualInterfaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitVirtualInterfaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitVirtualInterfaceConfig_SiteLink_basic(connectionId, rName, amzAsn, bgpAsn, vlan, true),
+				Config: testAccTransitVirtualInterfaceConfig_siteLinkBasic(connectionId, rName, amzAsn, bgpAsn, vlan, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckTransitVirtualInterfaceExists(ctx, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -226,9 +230,9 @@ func testAccTransitVirtualInterface_siteLink(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTransitVirtualInterfaceConfig_SiteLink_updated(connectionId, rName, amzAsn, bgpAsn, vlan, false),
+				Config: testAccTransitVirtualInterfaceConfig_siteLinkUpdated(connectionId, rName, amzAsn, bgpAsn, vlan, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckTransitVirtualInterfaceExists(ctx, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -257,12 +261,14 @@ func testAccTransitVirtualInterface_siteLink(t *testing.T) {
 	})
 }
 
-func testAccCheckTransitVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
-	return testAccCheckVirtualInterfaceExists(name, vif)
+func testAccCheckTransitVirtualInterfaceExists(ctx context.Context, name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
+	return testAccCheckVirtualInterfaceExists(ctx, name, vif)
 }
 
-func testAccCheckTransitVirtualInterfaceDestroy(s *terraform.State) error {
-	return testAccCheckVirtualInterfaceDestroy(s, "aws_dx_transit_virtual_interface")
+func testAccCheckTransitVirtualInterfaceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccCheckVirtualInterfaceDestroy(ctx, s, "aws_dx_transit_virtual_interface")
+	}
 }
 
 func testAccTransitVirtualInterfaceConfig_base(rName string, amzAsn int) string {
@@ -339,7 +345,7 @@ resource "aws_dx_transit_virtual_interface" "test" {
 `, cid, rName, bgpAsn, vlan)
 }
 
-func testAccTransitVirtualInterfaceConfig_SiteLink_basic(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
+func testAccTransitVirtualInterfaceConfig_siteLinkBasic(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
 	return testAccTransitVirtualInterfaceConfig_base(rName, amzAsn) + fmt.Sprintf(`
 resource "aws_dx_transit_virtual_interface" "test" {
   address_family   = "ipv4"
@@ -354,7 +360,7 @@ resource "aws_dx_transit_virtual_interface" "test" {
 `, cid, rName, bgpAsn, vlan, sitelink_enabled)
 }
 
-func testAccTransitVirtualInterfaceConfig_SiteLink_updated(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
+func testAccTransitVirtualInterfaceConfig_siteLinkUpdated(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
 	return testAccTransitVirtualInterfaceConfig_base(rName, amzAsn) + fmt.Sprintf(`
 resource "aws_dx_transit_virtual_interface" "test" {
   address_family   = "ipv4"

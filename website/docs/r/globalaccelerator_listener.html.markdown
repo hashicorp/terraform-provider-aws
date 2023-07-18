@@ -51,20 +51,19 @@ The following arguments are supported:
 * `from_port` - (Optional) The first port in the range of ports, inclusive.
 * `to_port` - (Optional) The last port in the range of ports, inclusive.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the listener.
 
 ## Timeouts
 
-`aws_globalaccelerator_listener` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30 minutes`) How long to wait for the Global Accelerator Listener to be created.
-* `update` - (Default `30 minutes`) How long to wait for the Global Accelerator Listener to be updated.
-* `delete` - (Default `30 minutes`) How long to wait for the Global Accelerator Listener to be deleted.
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 

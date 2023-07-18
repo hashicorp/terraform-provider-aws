@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -9,28 +13,29 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccRDSOptionGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOptionGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupBasicConfig(rName),
+				Config: testAccOptionGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &v),
+					testAccCheckOptionGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`og:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "engine_name", "mysql"),
 					resource.TestCheckResourceAttr(resourceName, "major_engine_version", "8.0"),
@@ -51,20 +56,21 @@ func TestAccRDSOptionGroup_basic(t *testing.T) {
 }
 
 func TestAccRDSOptionGroup_timeoutBlock(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOptionGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupBasicTimeoutBlockConfig(rName),
+				Config: testAccOptionGroupConfig_timeoutBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &v),
+					testAccCheckOptionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -79,18 +85,19 @@ func TestAccRDSOptionGroup_timeoutBlock(t *testing.T) {
 }
 
 func TestAccRDSOptionGroup_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.OptionGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOptionGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroup_namePrefix,
+				Config: testAccOptionGroupConfig_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists("aws_db_option_group.test", &v),
+					testAccCheckOptionGroupExists(ctx, "aws_db_option_group.test", &v),
 					resource.TestMatchResourceAttr("aws_db_option_group.test", "name", regexp.MustCompile("^tf-test-")),
 				),
 			},
@@ -105,18 +112,19 @@ func TestAccRDSOptionGroup_namePrefix(t *testing.T) {
 }
 
 func TestAccRDSOptionGroup_generatedName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.OptionGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOptionGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroup_generatedName,
+				Config: testAccOptionGroupConfig_generatedName,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists("aws_db_option_group.test", &v),
+					testAccCheckOptionGroupExists(ctx, "aws_db_option_group.test", &v),
 				),
 			},
 			{
@@ -130,20 +138,21 @@ func TestAccRDSOptionGroup_generatedName(t *testing.T) {
 }
 
 func TestAccRDSOptionGroup_optionGroupDescription(t *testing.T) {
+	ctx := acctest.Context(t)
 	var optionGroup1 rds.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOptionGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupOptionGroupDescriptionConfig(rName, "description1"),
+				Config: testAccOptionGroupConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &optionGroup1),
+					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
 					resource.TestCheckResourceAttr(resourceName, "option_group_description", "description1"),
 				),
 			},
@@ -158,6 +167,7 @@ func TestAccRDSOptionGroup_optionGroupDescription(t *testing.T) {
 }
 
 func TestAccRDSOptionGroup_basicDestroyWithInstance(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -166,13 +176,13 @@ func TestAccRDSOptionGroup_basicDestroyWithInstance(t *testing.T) {
 	resourceName := "aws_db_option_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOptionGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupBasicDestroyConfig(rName),
+				Config: testAccOptionGroupConfig_destroy(rName),
 			},
 			{
 				ResourceName:            resourceName,
@@ -185,20 +195,21 @@ func TestAccRDSOptionGroup_basicDestroyWithInstance(t *testing.T) {
 }
 
 func TestAccRDSOptionGroup_Option_optionSettings(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOptionGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupOptionSettings(rName),
+				Config: testAccOptionGroupConfig_optionSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &v),
+					testAccCheckOptionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*.option_settings.*", map[string]string{
@@ -215,9 +226,9 @@ func TestAccRDSOptionGroup_Option_optionSettings(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix", "option"},
 			},
 			{
-				Config: testAccOptionGroupOptionSettings_update(rName),
+				Config: testAccOptionGroupConfig_optionSettingsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &v),
+					testAccCheckOptionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*.option_settings.*", map[string]string{
@@ -237,20 +248,21 @@ func TestAccRDSOptionGroup_Option_optionSettings(t *testing.T) {
 }
 
 func TestAccRDSOptionGroup_OptionOptionSettings_iamRole(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOptionGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupOptionSettingsIAMRole(rName),
+				Config: testAccOptionGroupConfig_optionSettingsIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &v),
+					testAccCheckOptionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 					testAccCheckOptionGroupOptionSettingsIAMRole(&v),
@@ -267,20 +279,21 @@ func TestAccRDSOptionGroup_OptionOptionSettings_iamRole(t *testing.T) {
 }
 
 func TestAccRDSOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOptionGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupSQLServerEEOptions(rName),
+				Config: testAccOptionGroupConfig_sqlServerEEOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &v),
+					testAccCheckOptionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -291,9 +304,9 @@ func TestAccRDSOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccOptionGroupSQLServerEEOptions_update(rName),
+				Config: testAccOptionGroupConfig_sqlServerEEOptionsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &v),
+					testAccCheckOptionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 				),
@@ -303,20 +316,21 @@ func TestAccRDSOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 }
 
 func TestAccRDSOptionGroup_oracleOptionsUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOptionGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupOracleEEOptionSettings(rName, "13.2.0.0.v2"),
+				Config: testAccOptionGroupConfig_oracleEEOptionSettings(rName, "13.2.0.0.v2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &v),
+					testAccCheckOptionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 					testAccCheckOptionGroupOptionVersionAttribute(&v, "13.2.0.0.v2"),
@@ -330,9 +344,9 @@ func TestAccRDSOptionGroup_oracleOptionsUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix", "option"},
 			},
 			{
-				Config: testAccOptionGroupOracleEEOptionSettings(rName, "13.3.0.0.v2"),
+				Config: testAccOptionGroupConfig_oracleEEOptionSettings(rName, "13.3.0.0.v2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &v),
+					testAccCheckOptionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 					testAccCheckOptionGroupOptionVersionAttribute(&v, "13.3.0.0.v2"),
@@ -344,20 +358,21 @@ func TestAccRDSOptionGroup_oracleOptionsUpdate(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/1876
 func TestAccRDSOptionGroup_OptionOptionSettings_multipleNonDefault(t *testing.T) {
+	ctx := acctest.Context(t)
 	var optionGroup1, optionGroup2 rds.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOptionGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupOptionOptionSettingsMultipleConfig(rName, "example1"),
+				Config: testAccOptionGroupConfig_settingsMultiple(rName, "example1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &optionGroup1),
+					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 				),
 			},
@@ -368,9 +383,9 @@ func TestAccRDSOptionGroup_OptionOptionSettings_multipleNonDefault(t *testing.T)
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccOptionGroupOptionOptionSettingsMultipleConfig(rName, "example1,example2"),
+				Config: testAccOptionGroupConfig_settingsMultiple(rName, "example1,example2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &optionGroup2),
+					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup2),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 				),
 			},
@@ -379,20 +394,21 @@ func TestAccRDSOptionGroup_OptionOptionSettings_multipleNonDefault(t *testing.T)
 }
 
 func TestAccRDSOptionGroup_multipleOptions(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.OptionGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOptionGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupMultipleOptions(rName),
+				Config: testAccOptionGroupConfig_multipleOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &v),
+					testAccCheckOptionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "2"),
 				),
@@ -408,20 +424,21 @@ func TestAccRDSOptionGroup_multipleOptions(t *testing.T) {
 }
 
 func TestAccRDSOptionGroup_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var optionGroup1, optionGroup2, optionGroup3 rds.OptionGroup
 	resourceName := "aws_db_option_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOptionGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupTags1Config(rName, "key1", "value1"),
+				Config: testAccOptionGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &optionGroup1),
+					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -433,18 +450,18 @@ func TestAccRDSOptionGroup_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccOptionGroupTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccOptionGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &optionGroup2),
+					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccOptionGroupTags1Config(rName, "key2", "value2"),
+				Config: testAccOptionGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &optionGroup3),
+					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -455,20 +472,21 @@ func TestAccRDSOptionGroup_tags(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7114
 func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
+	ctx := acctest.Context(t)
 	var optionGroup1, optionGroup2, optionGroup3 rds.OptionGroup
 	resourceName := "aws_db_option_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOptionGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupTagsWithOption1Config(rName, "key1", "value1"),
+				Config: testAccOptionGroupConfig_tagsOption1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &optionGroup1),
+					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -481,9 +499,9 @@ func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccOptionGroupTagsWithOption2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccOptionGroupConfig_tagsOption2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &optionGroup2),
+					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup2),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -491,9 +509,9 @@ func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOptionGroupTagsWithOption1Config(rName, "key2", "value2"),
+				Config: testAccOptionGroupConfig_tagsOption1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptionGroupExists(resourceName, &optionGroup3),
+					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup3),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -545,7 +563,7 @@ func testAccCheckOptionGroupOptionVersionAttribute(optionGroup *rds.OptionGroup,
 	}
 }
 
-func testAccCheckOptionGroupExists(n string, v *rds.OptionGroup) resource.TestCheckFunc {
+func testAccCheckOptionGroupExists(ctx context.Context, n string, v *rds.OptionGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -556,14 +574,13 @@ func testAccCheckOptionGroupExists(n string, v *rds.OptionGroup) resource.TestCh
 			return fmt.Errorf("No DB Option Group Name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		opts := rds.DescribeOptionGroupsInput{
 			OptionGroupName: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := conn.DescribeOptionGroups(&opts)
-
+		resp, err := conn.DescribeOptionGroupsWithContext(ctx, &opts)
 		if err != nil {
 			return err
 		}
@@ -579,36 +596,37 @@ func testAccCheckOptionGroupExists(n string, v *rds.OptionGroup) resource.TestCh
 	}
 }
 
-func testAccCheckOptionGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+func testAccCheckOptionGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_option_group" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_db_option_group" {
+				continue
+			}
 
-		resp, err := conn.DescribeOptionGroups(
-			&rds.DescribeOptionGroupsInput{
+			resp, err := conn.DescribeOptionGroupsWithContext(ctx, &rds.DescribeOptionGroupsInput{
 				OptionGroupName: aws.String(rs.Primary.ID),
 			})
 
-		if err == nil {
-			if len(resp.OptionGroupsList) != 0 &&
-				*resp.OptionGroupsList[0].OptionGroupName == rs.Primary.ID {
-				return fmt.Errorf("DB Option Group still exists")
+			if err == nil {
+				if len(resp.OptionGroupsList) != 0 &&
+					*resp.OptionGroupsList[0].OptionGroupName == rs.Primary.ID {
+					return fmt.Errorf("DB Option Group still exists")
+				}
+			}
+
+			// Verify the error
+			if !tfawserr.ErrCodeEquals(err, rds.ErrCodeOptionGroupNotFoundFault) {
+				return err
 			}
 		}
 
-		// Verify the error
-		if !tfawserr.ErrCodeEquals(err, rds.ErrCodeOptionGroupNotFoundFault) {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccOptionGroupBasicTimeoutBlockConfig(rName string) string {
+func testAccOptionGroupConfig_timeoutBlock(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -627,7 +645,7 @@ resource "aws_db_option_group" "test" {
 `, rName)
 }
 
-func testAccOptionGroupBasicConfig(rName string) string {
+func testAccOptionGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -641,7 +659,7 @@ resource "aws_db_option_group" "test" {
 `, rName)
 }
 
-func testAccOptionGroupBasicDestroyConfig(rName string) string {
+func testAccOptionGroupConfig_destroy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -658,7 +676,7 @@ resource "aws_db_instance" "test" {
   engine            = data.aws_rds_orderable_db_instance.test.engine
   engine_version    = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class    = data.aws_rds_orderable_db_instance.test.instance_class
-  name              = "baz"
+  db_name           = "baz"
   password          = "barbarbarbar"
   username          = "foo"
 
@@ -682,7 +700,7 @@ resource "aws_db_option_group" "test" {
 `, mySQLPreferredInstanceClasses, rName)
 }
 
-func testAccOptionGroupOptionSettings(rName string) string {
+func testAccOptionGroupConfig_optionSettings(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "oracle-ee"
@@ -706,7 +724,7 @@ resource "aws_db_option_group" "test" {
 `, rName)
 }
 
-func testAccOptionGroupOptionSettingsIAMRole(rName string) string {
+func testAccOptionGroupConfig_optionSettingsIAMRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -748,7 +766,7 @@ resource "aws_db_option_group" "test" {
 `, rName)
 }
 
-func testAccOptionGroupOptionSettings_update(rName string) string {
+func testAccOptionGroupConfig_optionSettingsUpdate(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "oracle-ee"
@@ -772,7 +790,7 @@ resource "aws_db_option_group" "test" {
 `, rName)
 }
 
-func testAccOptionGroupSQLServerEEOptions(rName string) string {
+func testAccOptionGroupConfig_sqlServerEEOptions(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "sqlserver-ee"
@@ -787,7 +805,7 @@ resource "aws_db_option_group" "test" {
 `, rName)
 }
 
-func testAccOptionGroupSQLServerEEOptions_update(rName string) string {
+func testAccOptionGroupConfig_sqlServerEEOptionsUpdate(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "sqlserver-ee"
@@ -806,7 +824,7 @@ resource "aws_db_option_group" "test" {
 `, rName)
 }
 
-func testAccOptionGroupOracleEEOptionSettings(rName, optionVersion string) string {
+func testAccOptionGroupConfig_oracleEEOptionSettings(rName, optionVersion string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "oracle-ee"
@@ -848,7 +866,7 @@ resource "aws_db_option_group" "test" {
 `, rName, optionVersion)
 }
 
-func testAccOptionGroupMultipleOptions(rName string) string {
+func testAccOptionGroupConfig_multipleOptions(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "oracle-ee"
@@ -871,7 +889,7 @@ resource "aws_db_option_group" "test" {
 `, rName)
 }
 
-const testAccOptionGroup_namePrefix = `
+const testAccOptionGroupConfig_namePrefix = `
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
 }
@@ -884,7 +902,7 @@ resource "aws_db_option_group" "test" {
 }
 `
 
-const testAccOptionGroup_generatedName = `
+const testAccOptionGroupConfig_generatedName = `
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
 }
@@ -896,7 +914,7 @@ resource "aws_db_option_group" "test" {
 }
 `
 
-func testAccOptionGroupOptionGroupDescriptionConfig(rName, optionGroupDescription string) string {
+func testAccOptionGroupConfig_description(rName, optionGroupDescription string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -911,7 +929,7 @@ resource "aws_db_option_group" "test" {
 `, rName, optionGroupDescription)
 }
 
-func testAccOptionGroupOptionOptionSettingsMultipleConfig(rName, value string) string {
+func testAccOptionGroupConfig_settingsMultiple(rName, value string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -944,7 +962,7 @@ resource "aws_db_option_group" "test" {
 `, rName, value)
 }
 
-func testAccOptionGroupTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccOptionGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -962,7 +980,7 @@ resource "aws_db_option_group" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccOptionGroupTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccOptionGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -981,7 +999,7 @@ resource "aws_db_option_group" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccOptionGroupTagsWithOption1Config(rName, tagKey1, tagValue1 string) string {
+func testAccOptionGroupConfig_tagsOption1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -1008,7 +1026,7 @@ resource "aws_db_option_group" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccOptionGroupTagsWithOption2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccOptionGroupConfig_tagsOption2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"

@@ -26,9 +26,9 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the configuration.
+* `arn` - ARN of the configuration.
 * `latest_revision` - Latest revision of the configuration.
 * `description` - Description of the configuration.
 * `kafka_versions` - List of Apache Kafka versions which can use this configuration.

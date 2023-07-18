@@ -1,9 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudtrail
 
-import "time"
+import (
+	"time"
+)
 
 const (
-	ResCloudTrail = "Trail"
+	ResNameTrail = "Trail"
 
 	resourceTypeDynamoDBTable  = "AWS::DynamoDB::Table"
 	resourceTypeLambdaFunction = "AWS::Lambda::Function"

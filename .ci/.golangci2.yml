@@ -1,0 +1,252 @@
+issues:
+  exclude-rules:
+    - linters:
+        - paralleltest
+      text: "Function TestAcc"
+    - linters:
+        - tparallel
+      text: "TestAcc"
+    - linters:
+        - unparam
+      text: "always receives"
+      # tfsdk: d.GetOkExists
+    - linters:
+        - staticcheck
+      text: "SA1019: \\w+.GetOkExists is deprecated: usage is discouraged due to undefined behaviors and may be removed in a future version of the SDK"
+      # tfsdk: schema.SchemaValidateFunc
+    - linters:
+        - staticcheck
+      text: "SA1019: schema.SchemaValidateFunc is deprecated: please use SchemaValidateDiagFunc"
+      # provider: acctest.ConfigAlternateRegionProvider
+    - linters:
+        - staticcheck
+      text: "SA1019: acctest.ConfigAlternateRegionProvider is deprecated: Use ConfigMultipleRegionProvider instead"
+      # tfsdk: MigrateState
+    - linters:
+        - staticcheck
+      text: "MigrateState is deprecated and any new changes to a resource's schema should be handled by StateUpgraders."
+      # Legacy CRUD
+    - linters:
+        - staticcheck
+      text: "SA1019: \\w+.\\w+ is deprecated: Use \\w+Context or \\w+WithoutTimeout instead"
+      # go: strings.Title
+    - linters:
+        - staticcheck
+      text: "SA1019: strings.Title has been deprecated since Go 1.18 and an alternative has been available since Go 1.0"
+    # Per-Service
+    - linters:
+        - staticcheck
+      path: internal/service/batch/
+      text: "SA1019: apiObject.ImageId is deprecated: This field is deprecated"
+    - linters:
+        - staticcheck
+      path: internal/service/chime/
+      text: "SA1019: conn.\\w+ is deprecated: Replaced by \\w+ in the Amazon Chime SDK Voice Namespace"
+    - linters:
+        - staticcheck
+      path: "internal/service/cloudfront"
+      text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
+    - linters:
+        - staticcheck
+      path: "internal/service/cloudtrail"
+      text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
+    - linters:
+        - staticcheck
+      path: internal/service/detective/
+      text: "SA1019: resp.VolumeUsageInBytes is deprecated: This property is deprecated. Use VolumeUsageByDatasourcePackage instead"
+    - linters:
+        - staticcheck
+      path: internal/service/ecr/
+      text: "SA1019: params.RegistryIds is deprecated: This field is deprecated."
+    - linters:
+        - staticcheck
+      path: "internal/service/firehose"
+      text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
+    - linters:
+        - staticcheck
+      path: internal/service/globalaccelerator/
+      text: "SA1019: apiObject.IpFamily is deprecated: IpFamily has been replaced by IpAddressFamily"
+    - linters:
+        - staticcheck
+      path: internal/service/guardduty/
+      text: "SA1019: \\w+.\\w+ is deprecated. This (input|operation|parameter|field) is deprecated"
+    - linters:
+        - staticcheck
+      path: internal/service/identitystore/
+      text: "SA1019: \\w+.Filters is deprecated: Using filters with List\\w+ API is deprecated"
+    - linters:
+        - staticcheck
+      path: internal/service/kms/
+      text: "SA1019: [a-zA-Z0-9.]+.CustomerMasterKeySpec is deprecated: This field has been deprecated. Instead, use the KeySpec field"
+    - linters:
+        - staticcheck
+      path: "internal/service/neptune"
+      text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
+    - linters:
+        - staticcheck
+      path: "internal/service/s3"
+      text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
+    - linters:
+        - staticcheck
+      path: internal/service/securityhub/
+      text: "SA1019: \\w+.(\\w+) is deprecated:"
+    - linters:
+        - staticcheck
+      path: internal/service/servicediscovery/
+      text: "SA1019: \\w+.(\\w+) is deprecated:"
+    - linters:
+        - staticcheck
+      path: internal/service/wafv2/
+      text: "SA1019: \\w+.(\\w+) is deprecated: Deprecated. Use"
+    - linters:
+        - staticcheck
+      path: internal/service/worklink/
+      text: "SA1019: \\w+.(\\w+) is deprecated: Amazon WorkLink is no longer supported. This will be removed in a future version of the SDK."
+  max-per-linter: 0
+  max-same-issues: 0
+
+linters:
+  disable-all: true
+  enable:
+    - asasalint
+    - asciicheck
+    - containedctx
+    - contextcheck
+    - dogsled
+    - durationcheck
+    - errcheck
+    - errname
+    - errorlint
+    - exportloopref
+    - goconst
+    - gocritic
+    - gofmt
+    - gomnd
+    - gosimple
+    - ineffassign
+    - makezero
+    - misspell
+    - nakedret
+    - nilerr
+    - nolintlint
+    - paralleltest
+    - predeclared
+    - revive
+    - staticcheck
+    - stylecheck
+    - tenv
+    - tparallel
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - vet
+    - vetshadow
+    - whitespace
+
+linters-settings:
+  dogsled:
+    max-blank-identifiers: 3
+  errcheck:
+    ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set,fmt:.*,io:Close
+  errorlint:
+    errorf: false
+  goconst:
+    ignore-tests: true
+    min-occurrences: 6
+  gocritic:
+    enabled-tags:
+      - diagnostic
+    disabled-tags:
+      - style
+      - performance
+      - experimental
+      - opinionated
+  gomnd:
+    settings:
+      mnd:
+        checks:
+          - argument
+        ignored-functions:
+          # AWS Go SDK
+          - aws.Int64
+          - request.ConstantWaiterDelay
+          - request.WithWaiterMaxAttempts
+          # AWS Provider
+          - nullable.*
+          - tfresource.Retry*
+          - tfresource.With*
+          # Terraform Plugin SDK
+          - retry.RetryContext
+          - schema.DefaultTimeout
+          - validation.*
+          # Terraform Plugin Framework
+          - int64validator.*
+          - listvalidator.*
+          - setvalidator.*
+          - stringvalidator.*
+          - SetDefaultCreateTimeout
+          - SetDefaultReadTimeout
+          - SetDefaultUpdateTimeout
+          - SetDefaultDeleteTimeout
+          # Go
+          - make
+          - strconv.FormatFloat
+          - strconv.FormatInt
+          - strconv.ParseFloat
+          - strconv.ParseInt
+          - strings.SplitN
+  nolintlint:
+    allow-unused: false
+    allow-leading-space: false
+    require-explanation: true
+    require-specific: true
+    allow-no-explanation:
+      - gomnd
+      - paralleltest
+      - tparallel
+      - unparam
+  predeclared:
+    ignore: cap,close,copy,delete,len,new
+  revive:
+    # Recommended configuration.
+    # See https://github.com/mgechev/revive#recommended-configuration.
+    ignore-generated-header: true
+    severity: warning
+    confidence: 0.8
+    error-code: 0
+    warning-code: 0
+    rules:
+      - name: atomic
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: empty-block
+      - name: error-naming
+      - name: error-return
+      # - name: error-strings
+      - name: errorf
+      # - name: exported
+      # - name: if-return
+      # - name: increment-decrement
+      # - name: indent-error-flow
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      # - name: redefines-builtin-id
+      - name: superfluous-else
+      - name: time-naming
+      # - name: unexported-return
+      - name: unreachable-code
+      # - name: unused-parameter
+      - name: var-declaration
+      # - name: var-naming
+  staticcheck:
+    checks: ["all"]
+  stylecheck:
+    checks: ["all", "-ST1005", "-ST1003"]
+    initialisms: ["ACL", "ACM", "ACMPCA", "ACMPCA", "AMI", "API", "APIGateway", "AppConfig", "AppMesh", "AppSync", "ARN", "ASG", "ASN", "AutoScaling", "BGP", "BYOIP", "CIDR", "CloudFormation", "CloudFront", "CloudWatch", "CMK", "CNAME", "CoIP", "CPU", "CSS", "CSV", "DAX", "DB", "DHCP", "DKIM", "DLM", "DMS", "DNS", "DNSSEC", "DocDB", "DocDB", "DynamoDB", "DynamoDB", "EBS", "EC2", "ECMP", "ECR", "ECS", "EFS", "EIP", "EKS", "ElastiCache", "Elasticsearch", "ELB", "EMR", "FIFO", "FMS", "FQDNS", "FSx", "FSx", "GameLift", "GCM", "GP2", "GP3", "GraphQL", "GRPC", "GuardDuty", "HAProxy", "HSM", "HTTP", "HTTPS", "HVM", "IAM", "IoT", "IP", "IPAM", "IPSet", "iSCSI", "JDBC", "JSON", "KMS", "MFA", "MSK", "MWAA", "MySQL", "NFS", "OAuth", "OIDC", "OpsWorks", "PHP", "PITR", "POSIX", "PreCheck", "QLDB", "RabbitMQ", "RDS", "RFC", "SageMaker", "SASL", "SFN", "SMB", "SMS", "SMTP", "SNS", "SQL", "SQS", "SSH", "SSL", "SSM", "SSO", "STS", "SWF", "TCP", "TLS", "TTL", "URI", "URL", "VGW", "VoIP", "VPC", "VPN", "WAF", "WAFV2", "WorkGroup", "WorkLink", "WorkSpaces", "XRay", "XSS", "YAML"]
+
+run:
+  timeout: 75m

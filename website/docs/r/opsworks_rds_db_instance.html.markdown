@@ -33,8 +33,8 @@ The following arguments are supported:
 * `db_user` - (Required) A db username
 * `db_password` - (Required) A db password
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The computed id. Please note that this is only used internally to identify the stack <-> instance relation. This value is not used in aws.

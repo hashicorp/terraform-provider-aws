@@ -56,9 +56,9 @@ The following arguments are supported:
 * `ipam_pool_id` - (Required) The ID of the pool to which you want to assign a CIDR.
 * `netmask_length` - (Optional) The netmask length of the CIDR you would like to preview from the IPAM pool.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `cidr` - The previewed CIDR from the pool.
 * `id` - The ID of the preview.

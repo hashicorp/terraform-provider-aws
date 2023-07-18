@@ -1,21 +1,33 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_vpn_gateway")
 func DataSourceVPNGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceVPNGatewayRead,
+		ReadWithoutTimeout: dataSourceVPNGatewayRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"amazon_side_asn": {
@@ -53,8 +65,9 @@ func DataSourceVPNGateway() *schema.Resource {
 	}
 }
 
-func dataSourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeVpnGatewaysInput{}
@@ -85,7 +98,7 @@ func dataSourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 		)...)
 	}
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 	input.Filters = append(input.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
@@ -95,10 +108,10 @@ func dataSourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = nil
 	}
 
-	vgw, err := FindVPNGateway(conn, input)
+	vgw, err := FindVPNGateway(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 VPN Gateway", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPN Gateway", err))
 	}
 
 	d.SetId(aws.StringValue(vgw.VpnGatewayId))
@@ -121,9 +134,9 @@ func dataSourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("availability_zone", vgw.AvailabilityZone)
 	d.Set("state", vgw.State)
 
-	if err := d.Set("tags", KeyValueTags(vgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, vgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

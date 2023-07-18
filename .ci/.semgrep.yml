@@ -1,0 +1,623 @@
+rules:
+  - id: acceptance-test-naming-parent-disappears
+    languages: [go]
+    message: Prefer naming acceptance tests with _disappears_Parent suffix
+    paths:
+      include:
+        - "internal/**/*_test.go"
+    patterns:
+      - pattern: func $FUNCNAME(t *testing.T) { ... }
+      - metavariable-regex:
+          metavariable: "$FUNCNAME"
+          regex: "^TestAcc[^_]+_([a-zA-Z]+[dD]isappears|[^_]+_disappears)$"
+      - focus-metavariable: $FUNCNAME
+    severity: WARNING
+
+  - id: data-source-with-resource-read
+    languages: [go]
+    message: Calling a resource's Read method from within a data-source is discouraged
+    paths:
+      include:
+        - internal/service/**/*_data_source.go
+    patterns:
+      - pattern-regex: "(resource.+Read|flatten.+Resource)"
+      - pattern-inside: func $FUNCNAME(...) $RETURNTYPE { ... }
+      - pattern-not-inside: |
+          d.Set(..., []interface{}{ ... })
+      - pattern-not-inside: |
+          d.Set($ATTRIBUTE, $FUNC($APIOBJECT))
+      - metavariable-regex:
+          metavariable: "$FUNCNAME"
+          regex: "dataSource.+Read"
+    severity: WARNING
+
+  - id: helper-acctest-RandInt-compiled
+    languages: [go]
+    message: Using `acctest.RandInt()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+          - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandInt() ...>, ...)
+          - pattern: var $VAR = fmt.Sprintf(..., <... acctest.RandInt() ...>, ...)
+    severity: WARNING
+
+  - id: helper-acctest-RandString-compiled
+    languages: [go]
+    message: Using `acctest.RandString()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+          - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandString(...) ...>, ...)
+          - pattern: var $VAR = fmt.Sprintf(..., <... acctest.RandString(...) ...>, ...)
+    severity: WARNING
+
+  - id: helper-acctest-RandomWithPrefix-compiled
+    languages: [go]
+    message: Using `acctest.RandomWithPrefix()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+          - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandomWithPrefix(...) ...>, ...)
+          - pattern: var $VAR = fmt.Sprintf(..., <... acctest.RandomWithPrefix(...) ...>, ...)
+    severity: WARNING
+
+  - id: helper-schema-Elem-check-valid-type
+    languages: [go]
+    message: Elem must be either a *schema.Schema or *schema.Resource type
+    paths:
+      include:
+        - internal/service/**/*.go
+      exclude:
+        - internal/service/**/*_data_source.go
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern-regex: "Elem:[ ]*schema.Type[a-zA-Z]*,"
+    severity: WARNING
+
+  - id: helper-schema-Set-extraneous-NewSet-with-flattenStringList
+    languages: [go]
+    message: Prefer `flex.FlattenStringSet()` or `flex.FlattenStringValueSet()`
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: schema.NewSet(schema.HashString, flex.FlattenStringList($APIOBJECT))
+      - pattern: schema.NewSet(schema.HashString, flex.FlattenStringValueList($APIOBJECT))
+    severity: WARNING
+
+  - id: helper-schema-Set-extraneous-expandStringList-with-List
+    languages: [go]
+    message: Prefer `flex.ExpandStringSet()` or `flex.ExpandStringValueSet()`
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+          - pattern: flex.ExpandStringList($SET.List())
+          - pattern: |
+              $LIST := $SET.List()
+              ...
+              flex.ExpandStringList($LIST)
+          - pattern: flex.ExpandStringValueList($SET.List())
+          - pattern: |
+              $LIST := $SET.List()
+              ...
+              flex.ExpandStringValueList($LIST)
+    severity: WARNING
+
+  - id: helper-schema-ResourceData-GetOk-with-extraneous-conditional
+    languages: [go]
+    message: Zero value conditional check after `d.GetOk()` is extraneous
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+          - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(bool) { $BODY }
+          - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(int) != 0 { $BODY }
+          - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(int) > 0 { $BODY }
+          - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(string) != "" { $BODY }
+          - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && len($VALUE.(string)) > 0 { $BODY }
+    severity: WARNING
+
+  - id: helper-schema-ResourceData-Set-extraneous-nil-check
+    languages: [go]
+    message: Nil value check before `d.Set()` is extraneous
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+          - pattern: |
+              if $APIOBJECT != nil {
+                d.Set($ATTRIBUTE, $APIOBJECT)
+              }
+          - pattern: |
+              if $APIOBJECT != nil {
+                d.Set($ATTRIBUTE, $FUNC(*$APIOBJECT))
+              }
+          - pattern: |
+              if $APIOBJECT != nil {
+                if $ERROR := d.Set($ATTRIBUTE, $APIOBJECT); err != nil { $BODY }
+              }
+          - pattern: |
+              if $APIOBJECT != nil {
+                ...
+                $ERROR := d.Set($ATTRIBUTE, $APIOBJECT)
+                ...
+              }
+          - pattern: |
+              if $APIOBJECT != nil {
+                ...
+                $ERROR = d.Set($ATTRIBUTE, $FUNC(*$APIOBJECT))
+                ...
+              }
+    severity: WARNING
+
+  # Not sure why this isn't working
+  # - id: helper-schema-ResourceData-DataSource-Set-tags
+  #   languages: [go]
+  #   message: (schema.ResourceData).Set() call with the tags key should include IgnoreConfig in the value
+  #   paths:
+  #     include:
+  #       - internal/service/**/*_data_source.go
+  #     exclude:
+  #       - internal/service/**/*.go
+  #   patterns:
+  #     - pattern-inside: func $READMETHOD(...) $ERRORTYPE { ... }
+  #     - pattern: if err := d.Set("tags", $TAGSMAP); err != nil { ... }
+  #     - pattern-not: if err := d.Set("tags", $KEYVALUETAGS.IgnoreAws().IgnoreConfig($CONFIG).Map()); err != nil { ... }
+  #   severity: WARNING
+
+  - id: helper-schema-ResourceData-Resource-Set-tags
+    languages: [go]
+    message: (schema.ResourceData).Set() call with the tags key should be preceded by a call to IgnoreConfig
+    paths:
+      include:
+        - internal/service/**/*.go
+      exclude:
+        - internal/service/**/*_data_source.go
+    patterns:
+      - pattern-inside: func $READMETHOD(...) $ERRORTYPE { ... }
+      - pattern-either:
+          - pattern: |
+              tags := $TAGS
+              ...
+              if err := d.Set("tags", $TAGSMAP); err != nil { ... }
+          - pattern: |
+              tags = $TAGS
+              ...
+              if err := d.Set("tags", $TAGSMAP); err != nil { ... }
+      - pattern-not: |
+          tags = $KEYVALUETAGS.IgnoreAws().IgnoreConfig($CONFIG)
+          ...
+      - pattern-not: |
+          tags = $KEYVALUETAGS.$IGNORESERVICE().IgnoreConfig($CONFIG)
+          ...
+      - pattern-not: |
+          tags = $KEYVALUETAGS.IgnoreAWS().IgnoreConfig($CONFIG).Ignore($IGNORE)
+          ...
+    severity: WARNING
+
+  - id: helper-schema-retry-RetryContext-without-TimeoutError-check
+    languages: [go]
+    message: Check retry.RetryContext() errors with tfresource.TimedOut()
+    paths:
+      exclude:
+        - "*_test.go"
+        - sweep.go
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $ERR := retry.RetryContext(...)
+              ...
+              return ...
+          - pattern: |
+              $ERR = retry.RetryContext(...)
+              ...
+              return ...
+      - pattern-not: |
+          $ERR := retry.RetryContext(...)
+          ...
+          if isResourceTimeoutError($ERR) { ... }
+          ...
+          return ...
+      - pattern-not: |
+          $ERR = retry.RetryContext(...)
+          ...
+          if isResourceTimeoutError($ERR) { ... }
+          ...
+          return ...
+      - pattern-not: |
+          $ERR := retry.RetryContext(...)
+          ...
+          if tfresource.TimedOut($ERR) { ... }
+          ...
+          return ...
+      - pattern-not: |
+          $ERR = retry.RetryContext(...)
+          ...
+          if tfresource.TimedOut($ERR) { ... }
+          ...
+          return ...
+    severity: WARNING
+
+  - id: helper-schema-TimeoutError-check-doesnt-return-output
+    languages: [go]
+    message: If the retry.RetryContext() or tfresource.Retry() function returns a value, ensure the isResourceTimeoutError() check does as well
+    paths:
+      exclude:
+        - "*_test.go"
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern: |
+                  if isResourceTimeoutError($ERR) {
+                    _, $ERR = $CONN.$FUNC(...)
+                  }
+              - pattern-not-inside: |
+                  $ERR = retry.RetryContext(..., func() *retry.RetryError {
+                    ...
+                    _, $ERR2 = $CONN.$FUNC(...)
+                    ...
+                  })
+                  ...
+                  if isResourceTimeoutError($ERR) { ... }
+              - pattern-not-inside: |
+                  $ERR = tfresource.Retry(..., func() *retry.RetryError {
+                    ...
+                    _, $ERR2 = $CONN.$FUNC(...)
+                    ...
+                  }, ...)
+                  ...
+                  if isResourceTimeoutError($ERR) { ... }
+          - patterns:
+              - pattern: |
+                  if tfresource.TimedOut($ERR) {
+                    _, $ERR = $CONN.$FUNC(...)
+                  }
+              - pattern-not-inside: |
+                  $ERR = retry.RetryContext(..., func() *retry.RetryError {
+                    ...
+                    _, $ERR2 = $CONN.$FUNC(...)
+                    ...
+                  })
+                  ...
+                  if tfresource.TimedOut($ERR) { ... }
+              - pattern-not-inside: |
+                  $ERR = tfresource.Retry(..., func() *retry.RetryError {
+                    ...
+                    _, $ERR2 = $CONN.$FUNC(...)
+                    ...
+                  }, ...)
+                  ...
+                  if tfresource.TimedOut($ERR) { ... }
+    severity: WARNING
+
+  - id: is-not-found-error
+    languages: [go]
+    message: Check for retry.NotFoundError errors with tfresource.NotFound()
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern: |
+                  var $CAST *retry.NotFoundError
+                  ...
+                  errors.As($ERR, &$CAST)
+              - pattern-not-inside: |
+                  var $CAST *retry.NotFoundError
+                  ...
+                  errors.As($ERR, &$CAST)
+                  ...
+                  $CAST.$FIELD
+          - patterns:
+              - pattern: |
+                  $X, $Y := $ERR.(*retry.NotFoundError)
+    severity: WARNING
+
+  - id: time-equality
+    languages: [go]
+    message: Use time.Equal() instead of ==
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+          - pattern: |
+              aws.TimeValue($X) == $Y
+          - pattern: |
+              aws.TimeValue($X) != $Y
+          - pattern: |
+              ($X : time.Time) == $Y
+          - pattern: |
+              ($X : time.Time) != $Y
+          - pattern: |
+              $X == aws.TimeValue($Y)
+          - pattern: |
+              $X != aws.TimeValue($Y)
+          - pattern: |
+              $X == ($Y : time.Time)
+          - pattern: |
+              $X != ($Y : time.Time)
+    severity: WARNING
+
+  - id: prefer-pagination-bool-var-last-page
+    languages: [go]
+    message: Use lastPage for bool variable in pagination functions
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: |
+          $X.$Z(..., func(..., $Y bool) {
+            ...
+          })
+      - pattern-not: |
+          $X.$Z(..., func(..., lastPage bool) {
+            ...
+          })
+      - pattern-not: |
+          $X.$Z(..., func(..., _ bool) {
+            ...
+          })
+      - metavariable-regex:
+          metavariable: "$Z"
+          regex: ".*Pages$"
+    severity: WARNING
+
+  - id: calling-fmt.Print-and-variants
+    languages: [go]
+    message: Do not call `fmt.Print` and variant
+    paths:
+      include:
+        - internal/
+      exclude:
+        - .ci/providerlint/vendor/
+        - internal/generate/
+    patterns:
+      - pattern-either:
+          - pattern: |
+              fmt.Print(...)
+          - pattern: |
+              fmt.Printf(...)
+          - pattern: |
+              fmt.Println(...)
+    severity: WARNING
+
+  - id: domain-names
+    languages: [go]
+    message: Domain names should be in the namespaces defined in RFC 6761 (https://datatracker.ietf.org/doc/html/rfc6761) as reserved for testing
+    paths:
+      include:
+        - internal/service
+      exclude:
+        - internal/service/firehose/delivery_stream_test.go
+        - internal/service/fsx/windows_file_system_test.go
+        - internal/service/iam/openid_connect_provider_test.go
+        - internal/service/mq/broker_test.go
+        - internal/service/mq/forge_test.go
+        - internal/service/route53/sweep.go
+        - internal/service/s3/bucket_test.go
+        - internal/service/s3/object_test.go
+        - internal/service/storagegateway/cached_iscsi_volume.go
+        - internal/service/storagegateway/cached_iscsi_volume_test.go
+        - internal/service/storagegateway/stored_iscsi_volume_test.go
+        - internal/service/transfer/access_test.go
+        - internal/service/transfer/server_test.go
+        - "internal/service/**/*_test.go"
+    patterns:
+      - patterns:
+          - pattern-regex: '(([-a-zA-Z0-9]{2,}\.)|(%[sdftq]))+(com|net|org)\b'
+      - pattern-inside: "($X : string)"
+      - pattern-not-regex: 'amazonaws\.com'
+      - pattern-not-regex: 'awsapps\.com'
+      - pattern-not-regex: '@(([-a-zA-Z0-9]{2,}\.)|(%[sdftq]))+(com|net|org)\b' # exclude domain names in email addresses
+      - pattern-not-regex: '[^-a-zA-Z0-9]example\.com'
+      - pattern-not-regex: '[^-a-zA-Z0-9]example\.net'
+      - pattern-not-regex: '[^-a-zA-Z0-9]example\.org'
+      - pattern-not-regex: 'github\.com'
+      - pattern-not-regex: 'aws\.amazon\.com'
+      - pattern-not-regex: 'graph\.facebook\.com'
+      - pattern-not-regex: 'people\.googleapis\.com'
+      - pattern-not-regex: 'www\.googleapis\.com'
+      - pattern-not-regex: 'accounts\.google\.com'
+      - pattern-not-regex: '[-a-z0-9]+\.apps\.googleusercontent\.com'
+      - pattern-not-regex: 'elasticbeanstalk\.com'
+      - pattern-not-regex: 'awsglobalaccelerator\.com'
+      - pattern-not-regex: 'cloudfront\.net'
+      - pattern-not-regex: 'http://json-schema\.org/draft-0\d/schema'
+      - pattern-not-regex: "http://activemq.apache.org/schema/core"
+      - pattern-not-regex: "mcr.microsoft.com"
+    severity: WARNING
+
+  - id: email-address
+    languages: [go]
+    message: Use default email address or generate a random email address. https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md#hardcoded-email-addresses
+    paths:
+      include:
+        - internal/
+      exclude:
+        - internal/service/route53domains/registered_domain_test.go
+    patterns:
+      - pattern-regex: '[-_A-Za-z0-9.+]+@([-A-Za-z0-9]+\.)(com|net|org)'
+      - pattern-not-regex: 'no-reply@hashicorp\.com'
+      - pattern-inside: "($X : string)"
+    severity: WARNING
+
+  - id: ssh-key
+    languages: [go]
+    message: Generate random SSH keys using acctest.RandSSHKeyPair() or RandSSHKeyPairSize(). https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md#hardcoded-ssh-key
+    paths:
+      include:
+        - internal/
+      exclude:
+        - .ci/providerlint/vendor/
+    patterns:
+      # This isn't technically the correct regex, but for some reason adding a '+' causes the regex to
+      # miss some SSH keys. AFAICT, this is good enough.
+      - pattern-regex: "ssh-rsa [A-Za-z0-9/]+"
+      - pattern-inside: "($X : string)"
+    severity: WARNING
+
+  - id: non-tags-change-detection
+    languages: [go]
+    message: Incorrect form of non-tags change detection. https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/contribution-checklists.md#resource-tagging-code-implementation
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: 'if d.HasChangeExcept("tags_all") {...}'
+    severity: WARNING
+
+  - id: unnecessary-literal-type-conversion
+    languages: [go]
+    message: Literal numbers do not need type conversions
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: "aws.Int64(int64($X))"
+      - metavariable-regex:
+          metavariable: $X
+          regex: (\d+)
+    severity: ERROR
+    fix: "aws.Int64($X)"
+
+  - id: calling-SetId-with-empty-string-in-resource-create
+    languages: [go]
+    message: Do not call `d.SetId("")` inside a resource create function
+    paths:
+      include:
+        - internal/service/
+    patterns:
+      - pattern: |
+          func $FUNC(...) {
+            ...
+            d.SetId("")
+          }
+      - metavariable-regex:
+          metavariable: "$FUNC"
+          regex: "^resource\\w*(Create|Put|Set|Upsert|Enable)$"
+    severity: WARNING
+
+  - id: calling-SetId-with-empty-string-in-resource-update
+    languages: [go]
+    message: Do not call `d.SetId("")` inside a resource update function
+    paths:
+      include:
+        - internal/service/
+    patterns:
+      - pattern: |
+          func $FUNC(...) {
+            ...
+            d.SetId("")
+          }
+      - metavariable-regex:
+          metavariable: "$FUNC"
+          regex: "^resource\\w*(Update)$|^update\\w*$" # Put and Upsert variants are handled in calling-SetId-with-empty-string-in-resource-create above
+    severity: WARNING
+
+  - id: calling-SetId-in-resource-delete
+    languages: [go]
+    message: Do not call `d.SetId(...)` inside a resource delete function
+    paths:
+      include:
+        - internal/service/
+    patterns:
+      - pattern: |
+          func $FUNC(...) {
+            ...
+            d.SetId(...)
+          }
+      - metavariable-regex:
+          metavariable: "$FUNC"
+          regex: "^resource\\w*(Delete|Disable)$"
+    severity: WARNING
+
+  - id: avoid-string-is-empty-validation
+    languages: [go]
+    message: Empty strings should not be included in validation
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: validation.Any(..., validation.StringIsEmpty, ...)
+    severity: ERROR
+
+  - id: use-error-code-equals-if-not-checking-message
+    languages: [go]
+    message: Use tfawserr.ErrCodeEquals() when message parameter is empty string
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: tfawserr.ErrMessageContains(err, ..., "")
+    severity: ERROR
+
+  - id: avoid-dependency-for-one-constant
+    languages: [go]
+    message: Use constant in the same package rather than importing iam for a constant
+    paths:
+      include:
+        - internal/
+      exclude:
+        - internal/service/iam
+    patterns:
+      - pattern: tfiam.PropagationTimeout
+    severity: ERROR
+
+  - id: use-acctest-protov5-provider-factories
+    languages: [go]
+    message: Use acctest.ProtoV5ProviderFactories, not acctest.Providers or acctest.ProviderFactories
+    paths:
+      include:
+        - "internal/**/*_test.go"
+    pattern-either:
+      - pattern-regex: Providers:\s+(acctest\.)?Providers,
+      - pattern-regex: ProviderFactories:\s+(acctest\.)?ProviderFactories,
+    severity: WARNING
+
+  - id: fmt-Errorf-awserr-Error-Code
+    languages: [go]
+    message: Prefer `err` with `%w` format verb instead of `err.Code()` or `err.Message()`
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+          - pattern: fmt.Errorf(..., $ERR.Code(), ...)
+          - pattern: fmt.Errorf(..., $ERR.Message(), ...)
+    severity: WARNING
+
+  - id: typed-enum-conversion
+    languages: [go]
+    message: Prefer using `enum.Slice()` to convert a slice of typed string enums to a slice of strings
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: "[]string{..., string($X), ...}"
+    severity: WARNING
+
+  - id: avoid-context-CRUD-handlers
+    languages: [go]
+    message: Prefer using WithoutTimeout CRUD handlers instead of Context variants
+    paths:
+      include:
+        - internal/service
+    patterns:
+      - pattern-regex: "(Create|Read|Update|Delete)Context:"
+    severity: ERROR

@@ -1,15 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amplify
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusDomainAssociation(conn *amplify.Amplify, appID, domainName string) resource.StateRefreshFunc {
+func statusDomainAssociation(ctx context.Context, conn *amplify.Amplify, appID, domainName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		domainAssociation, err := FindDomainAssociationByAppIDAndDomainName(conn, appID, domainName)
+		domainAssociation, err := FindDomainAssociationByAppIDAndDomainName(ctx, conn, appID, domainName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

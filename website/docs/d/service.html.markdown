@@ -50,8 +50,8 @@ The following arguments are optional:
 * `reverse_dns_prefix` - (Optional) Prefix of the service (_e.g.,_ `com.amazonaws` in AWS Commercial, `cn.com.amazonaws` in AWS China).
 * `service_id` - (Optional) Service (_e.g.,_ `s3`, `rds`, `ec2`). One of `dns_name`, `reverse_dns_name`, or `service_id` is required.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `supported` - Whether the service is supported in the region's partition. New services may not be listed immediately as supported.

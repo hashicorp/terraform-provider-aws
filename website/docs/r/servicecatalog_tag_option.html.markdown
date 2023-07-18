@@ -32,22 +32,21 @@ The following arguments are optional:
 
 * `active` - (Optional) Whether tag option is active. Default is `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier (e.g., `tag-pjtvagohlyo3m`).
 * `owner_id` - AWS account ID of the owner account that created the tag option.
 
 ## Timeouts
 
-`aws_servicecatalog_tag_option` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `3 minutes`)
-- `read` - (Default `10 minutes`)
-- `update` - (Default `3 minutes`)
-- `delete` - (Default `3 minutes`)
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `update` - (Default `3m`)
+- `delete` - (Default `3m`)
 
 ## Import
 

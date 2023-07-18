@@ -32,35 +32,14 @@ resource "aws_kms_key" "example" {
           "kms:DescribeKey",
           "kms:GetPublicKey",
           "kms:Sign",
+          "kms:Verify",
         ],
         Effect = "Allow"
         Principal = {
           Service = "dnssec-route53.amazonaws.com"
         }
+        Resource = "*"
         Sid      = "Allow Route 53 DNSSEC Service",
-        Resource = "*"
-        Condition = {
-          StringEquals = {
-            "aws:SourceAccount" = "${data.aws_caller_identity.current.account_id}"
-          }
-          ArnLike = {
-            "aws:SourceArn" = "arn:aws:route53:::hostedzone/*"
-          }
-        }
-      },
-      {
-        Action = "kms:CreateGrant",
-        Effect = "Allow"
-        Principal = {
-          Service = "dnssec-route53.amazonaws.com"
-        }
-        Sid      = "Allow Route 53 DNSSEC Service to CreateGrant",
-        Resource = "*"
-        Condition = {
-          Bool = {
-            "kms:GrantIsForAWSResource" = "true"
-          }
-        }
       },
       {
         Action = "kms:*"
@@ -104,9 +83,9 @@ The following arguments are optional:
 
 * `signing_status` - (Optional) Hosted Zone signing status. Valid values: `SIGNING`, `NOT_SIGNING`. Defaults to `SIGNING`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Route 53 Hosted Zone identifier.
 

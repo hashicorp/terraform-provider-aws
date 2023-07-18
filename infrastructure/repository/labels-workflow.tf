@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 variable "workflow_labels" {
   default = {
     # Stop the search. Keep these alphabetibelized.
@@ -82,6 +85,10 @@ variable "workflow_labels" {
       color       = "ac72f0", # color:terraform (link on black)
       description = "Introduces a new service."
     },
+    "partner" = {
+      color       = "ff9900", # color:aws
+      description = "Contribution from a partner."
+    },
     "pre-service-packages" = {
       color       = "ffec6e", # color:vault
       description = "Includes pre-Service Packages aspects."
@@ -109,6 +116,10 @@ variable "workflow_labels" {
     "repository" = {
       color       = "828a90", # color:stale grey
       description = "Repository modifications; GitHub Actions, developer docs, issue templates, codeowners, changelog."
+    },
+    "roadmap" = {
+      color       = "d1ebff", # color:terraform accent
+      description = "Issue mentioned on the public roadmap. To be resolved in the current quarter.",
     },
     "service/meta" = {
       color       = "7b42bc", # color:terraform (logomark)

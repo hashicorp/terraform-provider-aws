@@ -28,11 +28,19 @@ The following arguments are supported:
 * `network_interface_id` - (Required) ENI ID to attach.
 * `device_index` - (Required) Network interface index (int).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `instance_id` - Instance ID.
 * `network_interface_id` - Network interface ID.
 * `attachment_id` - The ENI Attachment ID.
 * `status` - The status of the Network Interface Attachment.
+
+## Import
+
+Elastic network interface (ENI) Attachments can be imported using its Attachment ID e.g.,
+
+```
+terraform import aws_network_interface_attachment.secondary_nic eni-attach-0a33842b4ec347c4c
+```

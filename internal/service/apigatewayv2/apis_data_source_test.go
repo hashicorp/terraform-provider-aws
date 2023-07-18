@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2_test
 
 import (
@@ -5,25 +8,26 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAPIGatewayV2APIsDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIsNameDataSourceConfig(rName1, rName2),
+				Config: testAccAPIsDataSourceConfig_name(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
 					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "2"),
@@ -34,19 +38,20 @@ func TestAccAPIGatewayV2APIsDataSource_name(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2APIsDataSource_protocolType(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIsProtocolTypeDataSourceConfig(rName1, rName2),
+				Config: testAccAPIsDataSourceConfig_protocolType(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
 					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "1"),
@@ -57,6 +62,7 @@ func TestAccAPIGatewayV2APIsDataSource_protocolType(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2APIsDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
 	dataSource3Name := "data.aws_apigatewayv2_apis.test3"
@@ -64,13 +70,13 @@ func TestAccAPIGatewayV2APIsDataSource_tags(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIsTagsDataSourceConfig(rName1, rName2),
+				Config: testAccAPIsDataSourceConfig_tags(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
 					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "2"),
@@ -113,7 +119,7 @@ resource "aws_apigatewayv2_api" "test3" {
 `, rName1, rName2)
 }
 
-func testAccAPIsNameDataSourceConfig(rName1, rName2 string) string {
+func testAccAPIsDataSourceConfig_name(rName1, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccAPIsBaseDataSourceConfig(rName1, rName2),
 		`
@@ -129,7 +135,7 @@ data "aws_apigatewayv2_apis" "test2" {
 `)
 }
 
-func testAccAPIsProtocolTypeDataSourceConfig(rName1, rName2 string) string {
+func testAccAPIsDataSourceConfig_protocolType(rName1, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccAPIsBaseDataSourceConfig(rName1, rName2),
 		fmt.Sprintf(`
@@ -147,7 +153,7 @@ data "aws_apigatewayv2_apis" "test2" {
 `, rName1, rName2))
 }
 
-func testAccAPIsTagsDataSourceConfig(rName1, rName2 string) string {
+func testAccAPIsDataSourceConfig_tags(rName1, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccAPIsBaseDataSourceConfig(rName1, rName2),
 		`

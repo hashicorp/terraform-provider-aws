@@ -25,46 +25,42 @@ resource "aws_ses_domain_identity" "identity" {
   domain = "example.com"
 }
 
-resource "aws_iam_role" "role" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "pinpoint.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["pinpoint.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "role" {
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "role_policy" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "mobileanalytics:PutEvents",
+      "mobileanalytics:PutItems",
+    ]
+
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "role_policy" {
-  name = "role_policy"
-  role = aws_iam_role.role.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Action": [
-      "mobileanalytics:PutEvents",
-      "mobileanalytics:PutItems"
-    ],
-    "Effect": "Allow",
-    "Resource": [
-      "*"
-    ]
-  }
-}
-EOF
+  name   = "role_policy"
+  role   = aws_iam_role.role.id
+  policy = data.aws_iam_policy_document.role_policy.json
 }
 ```
-
 
 ## Argument Reference
 
@@ -77,9 +73,9 @@ The following arguments are supported:
 * `identity` - (Required) The ARN of an identity verified with SES.
 * `role_arn` - (Optional) The ARN of an IAM Role used to submit events to Mobile Analytics' event ingestion service.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `messages_per_second` - Messages per second that can be sent.
 

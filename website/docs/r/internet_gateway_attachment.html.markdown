@@ -32,12 +32,18 @@ The following arguments are supported:
 * `internet_gateway_id` - (Required) The ID of the internet gateway.
 * `vpc_id` - (Required) The ID of the VPC.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC and Internet Gateway separated by a colon.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `20m`)
+- `delete` - (Default `20m`)
 
 ## Import
 

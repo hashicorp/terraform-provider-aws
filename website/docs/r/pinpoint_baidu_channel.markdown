@@ -13,7 +13,6 @@ Provides a Pinpoint Baidu Channel resource.
 ~> **Note:** All arguments including the Api Key and Secret Key will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
-
 ## Example Usage
 
 ```terraform
@@ -26,7 +25,6 @@ resource "aws_pinpoint_baidu_channel" "channel" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -36,9 +34,9 @@ The following arguments are supported:
 * `api_key` - (Required) Platform credential API key from Baidu.
 * `secret_key` - (Required) Platform credential Secret key from Baidu.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

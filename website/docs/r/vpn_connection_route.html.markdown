@@ -47,9 +47,9 @@ The following arguments are supported:
 * `destination_cidr_block` - (Required) The CIDR block associated with the local subnet of the customer network.
 * `vpn_connection_id` - (Required) The ID of the VPN connection.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `destination_cidr_block` - The CIDR block associated with the local subnet of the customer network.
 * `vpn_connection_id` - The ID of the VPN connection.

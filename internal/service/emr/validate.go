@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
@@ -24,9 +27,11 @@ func validCustomAMIID(v interface{}, k string) (ws []string, errors []error) {
 
 func validEBSVolumeType() schema.SchemaValidateFunc {
 	return validation.StringInSlice([]string{
+		"gp3",
 		"gp2",
 		"io1",
 		"standard",
 		"st1",
+		"sc1",
 	}, false)
 }

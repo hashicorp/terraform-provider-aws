@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -143,8 +146,8 @@ func validSubnetGroupNamePrefix(v interface{}, k string) (ws []string, errors []
 	return
 }
 
-func validEngine() schema.SchemaValidateFunc {
-	return validation.StringInSlice(Engine_Values(), false)
+func validClusterEngine() schema.SchemaValidateFunc {
+	return validation.StringInSlice(ClusterEngine_Values(), false)
 }
 
 func validIdentifier(v interface{}, k string) (ws []string, errors []error) {

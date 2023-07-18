@@ -15,9 +15,9 @@ Provides a resource to manage an [Amazon Macie Organization Admin Account](https
 ```terraform
 resource "aws_macie2_account" "example" {}
 
-resource "aws_macie2_organization_admin_account" "test" {
+resource "aws_macie2_organization_admin_account" "example" {
   admin_account_id = "ID OF THE ADMIN ACCOUNT"
-  depends_on       = [aws_macie2_account.test]
+  depends_on       = [aws_macie2_account.example]
 }
 ```
 
@@ -27,9 +27,9 @@ The following arguments are supported:
 
 * `admin_account_id` - (Required) The AWS account ID for the account to designate as the delegated Amazon Macie administrator account for the organization.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the macie organization admin account.
 

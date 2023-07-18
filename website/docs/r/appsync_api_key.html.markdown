@@ -28,16 +28,16 @@ resource "aws_appsync_api_key" "example" {
 
 The following arguments are supported:
 
-* `api_id` - (Required) The ID of the associated AppSync API
-* `description` - (Optional) The API key description. Defaults to "Managed by Terraform".
+* `api_id` - (Required) ID of the associated AppSync API
+* `description` - (Optional) API key description. Defaults to "Managed by Terraform".
 * `expires` - (Optional) RFC3339 string representation of the expiry date. Rounded down to nearest hour. By default, it is 7 days from the date of creation.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - API Key ID (Formatted as ApiId:Key)
-* `key` - The API key
+* `key` - API key
 
 ## Import
 

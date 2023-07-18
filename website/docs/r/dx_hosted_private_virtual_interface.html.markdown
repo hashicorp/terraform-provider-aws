@@ -39,9 +39,9 @@ The following arguments are supported:
 * `bgp_auth_key` - (Optional) The authentication key for BGP configuration.
 * `customer_address` - (Optional) The IPv4 CIDR destination address to which Amazon should send traffic. Required for IPv4 BGP peers.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the virtual interface.
 * `arn` - The ARN of the virtual interface.
@@ -50,12 +50,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_dx_hosted_private_virtual_interface` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for creating virtual interface
-- `update` - (Default `10 minutes`) Used for virtual interface modifications
-- `delete` - (Default `10 minutes`) Used for destroying virtual interface
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 

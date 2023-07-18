@@ -51,21 +51,20 @@ Terraform will only perform drift detection of its value when present in a confi
 * `endpoint_port` - (Required) The endpoint port that you want a listener port to be mapped to. This is the port on the endpoint, such as the Application Load Balancer or Amazon EC2 instance.
 * `listener_port` - (Required) The listener port that you want to map to a specific endpoint port. This is the port that user traffic arrives to the Global Accelerator on.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the endpoint group.
 * `arn` - The Amazon Resource Name (ARN) of the endpoint group.
 
 ## Timeouts
 
-`aws_globalaccelerator_endpoint_group` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30 minutes`) How long to wait for the Global Accelerator Endpoint Group to be created.
-* `update` - (Default `30 minutes`) How long to wait for the Global Accelerator Endpoint Group to be updated.
-* `delete` - (Default `30 minutes`) How long to wait for the Global Accelerator Endpoint Group to be deleted.
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 

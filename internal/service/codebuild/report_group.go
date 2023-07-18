@@ -1,30 +1,38 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codebuild
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_codebuild_report_group", name="Report Group")
+// @Tags
 func ResourceReportGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceReportGroupCreate,
-		Read:   resourceReportGroupRead,
-		Update: resourceReportGroupUpdate,
-		Delete: resourceReportGroupDelete,
+		CreateWithoutTimeout: resourceReportGroupCreate,
+		ReadWithoutTimeout:   resourceReportGroupRead,
+		UpdateWithoutTimeout: resourceReportGroupUpdate,
+		DeleteWithoutTimeout: resourceReportGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -99,59 +107,58 @@ func ResourceReportGroup() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceReportGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	createOpts := &codebuild.CreateReportGroupInput{
+func resourceReportGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
+
+	input := &codebuild.CreateReportGroupInput{
 		Name:         aws.String(d.Get("name").(string)),
 		Type:         aws.String(d.Get("type").(string)),
 		ExportConfig: expandReportGroupExportConfig(d.Get("export_config").([]interface{})),
-		Tags:         Tags(tags.IgnoreAWS()),
+		Tags:         getTagsIn(ctx),
 	}
 
-	resp, err := conn.CreateReportGroup(createOpts)
+	resp, err := conn.CreateReportGroupWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating CodeBuild Report Group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeBuild Report Group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.ReportGroup.Arn))
 
-	return resourceReportGroupRead(d, meta)
+	return append(diags, resourceReportGroupRead(ctx, d, meta)...)
 }
 
-func resourceReportGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceReportGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
-	reportGroup, err := FindReportGroupByARN(conn, d.Id())
+	reportGroup, err := FindReportGroupByARN(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CodeBuild, names.ErrActionReading, ResReportGroup, d.Id())
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return names.Error(names.CodeBuild, names.ErrActionReading, ResReportGroup, d.Id(), err)
+		return create.DiagError(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && reportGroup == nil {
-		names.LogNotFoundRemoveState(names.CodeBuild, names.ErrActionReading, ResReportGroup, d.Id())
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if reportGroup == nil {
-		return names.Error(names.CodeBuild, names.ErrActionReading, ResReportGroup, d.Id(), errors.New("not found after creation"))
+		return create.DiagError(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("arn", reportGroup.Arn)
@@ -159,31 +166,21 @@ func resourceReportGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", reportGroup.Name)
 
 	if err := d.Set("created", reportGroup.Created.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting created: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting created: %s", err)
 	}
 
 	if err := d.Set("export_config", flattenReportGroupExportConfig(reportGroup.ExportConfig)); err != nil {
-		return fmt.Errorf("error setting export config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting export config: %s", err)
 	}
 
-	tags := KeyValueTags(reportGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, reportGroup.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceReportGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceReportGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	input := &codebuild.UpdateReportGroupInput{
 		Arn: aws.String(d.Id()),
@@ -194,34 +191,35 @@ func resourceReportGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("tags_all") {
-		input.Tags = Tags(tags.IgnoreAWS())
+		input.Tags = getTagsIn(ctx)
 	}
 
-	_, err := conn.UpdateReportGroup(input)
+	_, err := conn.UpdateReportGroupWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error updating CodeBuild Report Group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "updating CodeBuild Report Group: %s", err)
 	}
 
-	return resourceReportGroupRead(d, meta)
+	return append(diags, resourceReportGroupRead(ctx, d, meta)...)
 }
 
-func resourceReportGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+func resourceReportGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	deleteOpts := &codebuild.DeleteReportGroupInput{
 		Arn:           aws.String(d.Id()),
 		DeleteReports: aws.Bool(d.Get("delete_reports").(bool)),
 	}
 
-	if _, err := conn.DeleteReportGroup(deleteOpts); err != nil {
-		return fmt.Errorf("error deleting CodeBuild Report Group (%s): %w", d.Id(), err)
+	if _, err := conn.DeleteReportGroupWithContext(ctx, deleteOpts); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting CodeBuild Report Group (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitReportGroupDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error while waiting for CodeBuild Report Group (%s) to become deleted: %w", d.Id(), err)
+	if _, err := waitReportGroupDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "while waiting for CodeBuild Report Group (%s) to become deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandReportGroupExportConfig(config []interface{}) *codebuild.ReportExportConfig {
