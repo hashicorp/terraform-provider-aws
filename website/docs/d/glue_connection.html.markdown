@@ -25,6 +25,8 @@ data "aws_glue_connection" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `arn` - ARN of the Glue Connection.
 * `catalog_id` - Catalog ID of the Glue Connection.
 * `connection_type` - Type of Glue Connection.

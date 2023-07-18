@@ -243,6 +243,8 @@ output "scala_code" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - AWS Region.
 * `python_script` - Python script generated from the DAG when the `language` argument is set to `PYTHON`.
 * `scala_code` - Scala code generated from the DAG when the `language` argument is set to `SCALA`.

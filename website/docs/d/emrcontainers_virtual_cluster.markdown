@@ -32,6 +32,8 @@ output "arn" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - ID of the cluster.
 * `name` - Name of the cluster.
 * `arn` - ARN of the cluster.

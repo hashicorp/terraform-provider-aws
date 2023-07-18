@@ -31,6 +31,8 @@ The following arguments are supported:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - Catalog ID, Database name and of the name table.
 * `arn` - The ARN of the Glue Table.
 * `description` - Description of the table.

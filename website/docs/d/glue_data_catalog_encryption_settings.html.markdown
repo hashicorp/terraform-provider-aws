@@ -24,6 +24,8 @@ data "aws_glue_data_catalog_encryption_settings" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `data_catalog_encryption_settings` – The security configuration to set. see [Data Catalog Encryption Settings](#data_catalog_encryption_settings).
 * `id` – The ID of the Data Catalog to set the security configuration for.
 
