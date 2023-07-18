@@ -49,7 +49,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPC Endpoint Subnet Associations can be imported using `vpc_endpoint_id` together with `subnet_id`,
+Import VPC Endpoint Subnet Associations using `vpc_endpoint_id` together with `subnet_id`,
 e.g.,
 
 ```

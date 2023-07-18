@@ -70,7 +70,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPC Endpoint Services can be imported using the `VPC endpoint service id`, e.g.,
+Import VPC Endpoint Services using the `VPC endpoint service id`. For example:
 
 ```
 $ terraform import aws_vpc_endpoint_service.foo vpce-svc-0f97a19d3fa8220bc

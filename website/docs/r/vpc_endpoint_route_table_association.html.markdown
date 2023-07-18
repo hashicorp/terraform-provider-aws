@@ -34,7 +34,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPC Endpoint Route Table Associations can be imported using `vpc_endpoint_id` together with `route_table_id`,
+Import VPC Endpoint Route Table Associations using `vpc_endpoint_id` together with `route_table_id`,
 e.g.,
 
 ```

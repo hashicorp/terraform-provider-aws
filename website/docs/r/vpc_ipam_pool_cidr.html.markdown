@@ -93,7 +93,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IPAMs can be imported using the `<cidr>_<ipam-pool-id>`. Please note we **DO NOT** use the ipam pool cidr id as this was introduced after the resource already existed. An import example:
+Import IPAMs using the `<cidr>_<ipam-pool-id>`. Please note we **DO NOT** use the ipam pool cidr id as this was introduced after the resource already existed. An import example:
 
 ```
 $ terraform import aws_vpc_ipam_pool_cidr.example 172.2.0.0/24_ipam-pool-0e634f5a1517cccdc
