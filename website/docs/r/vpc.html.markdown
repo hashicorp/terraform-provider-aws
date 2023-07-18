@@ -105,7 +105,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPCs can be imported using the `vpc id`, e.g.,
+Import VPCs using the `vpc id`. For example:
 
 ```
 $ terraform import aws_vpc.test_vpc vpc-a01106c2
