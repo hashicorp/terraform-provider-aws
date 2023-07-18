@@ -20,7 +20,7 @@ resource "aws_simpledb_domain" "users" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the SimpleDB domain
 
