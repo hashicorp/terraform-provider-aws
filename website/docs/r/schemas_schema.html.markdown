@@ -50,7 +50,7 @@ resource "aws_schemas_schema" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the schema. Maximum of 385 characters consisting of lower case letters, upper case letters, ., -, _, @.
 * `content` - (Required) The schema specification. Must be a valid Open API 3.0 spec.
