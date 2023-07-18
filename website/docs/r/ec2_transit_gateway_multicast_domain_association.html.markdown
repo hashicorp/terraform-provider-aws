@@ -36,7 +36,7 @@ resource "aws_ec2_transit_gateway_multicast_domain_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `subnet_id` - (Required) The ID of the subnet to associate with the transit gateway multicast domain.
 * `transit_gateway_attachment_id` - (Required) The ID of the transit gateway attachment.
