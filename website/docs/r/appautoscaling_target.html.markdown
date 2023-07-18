@@ -84,7 +84,7 @@ resource "aws_appautoscaling_target" "ecs_target" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `max_capacity` - (Required) Max capacity of the scalable target.
 * `min_capacity` - (Required) Min capacity of the scalable target.
