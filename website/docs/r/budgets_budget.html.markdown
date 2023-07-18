@@ -268,6 +268,6 @@ Valid keys for `planned_limit` parameter.
 
 ## Import
 
-Budgets can be imported using `AccountID:BudgetName`, e.g.,
+Import Budgets using `AccountID:BudgetName`. For example:
 
 `$ terraform import aws_budgets_budget.myBudget 123456789012:myBudget`

@@ -69,7 +69,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Backup vault notifications can be imported using the `name`, e.g.,
+Import Backup vault notifications using the `name`. For example:
 
 ```
 $ terraform import aws_backup_vault_notifications.test TestVault
