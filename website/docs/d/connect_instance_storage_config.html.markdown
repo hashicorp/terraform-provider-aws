@@ -28,7 +28,7 @@ The following arguments are supported:
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `resource_type` - (Required) A valid resource type. Valid Values: `CHAT_TRANSCRIPTS` | `CALL_RECORDINGS` | `SCHEDULED_REPORTS` | `MEDIA_STREAMS` | `CONTACT_TRACE_RECORDS` | `AGENT_EVENTS` | `REAL_TIME_CONTACT_ANALYSIS_SEGMENTS`.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all of the arguments above, the following attributes are exported:
 

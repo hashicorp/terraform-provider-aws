@@ -40,7 +40,7 @@ The following arguments are supported:
 * `name` - (Optional) Returns information on a specific Routing Profile by name
 * `routing_profile_id` - (Optional) Returns information on a specific Routing Profile by Routing Profile id
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all of the arguments above, the following attributes are exported:
 

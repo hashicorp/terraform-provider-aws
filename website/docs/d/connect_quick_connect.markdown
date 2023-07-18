@@ -40,7 +40,7 @@ The following arguments are supported:
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Quick Connect by name
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all of the arguments above, the following attributes are exported:
 
