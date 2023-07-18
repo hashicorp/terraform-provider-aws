@@ -40,6 +40,8 @@ resource "aws_elb" "elb" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` is set to the unique id of the IAM Server Certificate
 * `arn` is set to the ARN of the IAM Server Certificate
 * `path` is set to the path of the IAM Server Certificate

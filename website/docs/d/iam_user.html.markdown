@@ -26,6 +26,8 @@ data "aws_iam_user" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `arn` - ARN assigned by AWS for this user.
 * `path` - Path in which this user was created.
 * `permissions_boundary` - The ARN of the policy that is used to set the permissions boundary for the user.

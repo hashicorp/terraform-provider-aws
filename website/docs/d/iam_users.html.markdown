@@ -45,6 +45,8 @@ The following arguments are supported:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `arns` - Set of ARNs of the matched IAM users.
 * `names` - Set of Names of the matched IAM users.
 
