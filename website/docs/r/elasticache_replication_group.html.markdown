@@ -223,9 +223,9 @@ The `log_delivery_configuration` block allows the streaming of Redis [SLOWLOG](h
 * `log_format` - Valid values are `json` or `text`
 * `log_type` - Valid values are  `slow-log` or `engine-log`. Max 1 of each.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the created ElastiCache Replication Group.
 * `engine_version_actual` - Because ElastiCache pulls the latest minor or patch for a version, this attribute returns the running version of the cache engine.

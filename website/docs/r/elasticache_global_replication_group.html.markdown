@@ -123,9 +123,9 @@ The following arguments are supported:
   Specifying without a major version upgrade will fail.
   Note that ElastiCache creates a copy of this parameter group for each member replication group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the ElastiCache Global Replication Group.
 * `arn` - The ARN of the ElastiCache Global Replication Group.
