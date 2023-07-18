@@ -25,7 +25,7 @@ resource "aws_lightsail_bucket_access_key_access_key" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket_name` - (Required) The name of the bucket that the new access key will belong to, and grant access to.
 

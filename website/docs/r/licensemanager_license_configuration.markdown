@@ -34,7 +34,7 @@ resource "aws_licensemanager_license_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the license configuration.
 * `description` - (Optional) Description of the license configuration.

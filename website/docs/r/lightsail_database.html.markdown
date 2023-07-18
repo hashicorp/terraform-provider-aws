@@ -100,7 +100,7 @@ resource "aws_lightsail_database" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name to use for your new Lightsail database resource. Names be unique within each AWS Region in your Lightsail account.
 * `availability_zone` - The Availability Zone in which to create your new database. Use the us-east-2a case-sensitive format.
