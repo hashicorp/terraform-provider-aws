@@ -23,7 +23,7 @@ resource "aws_datasync_location_fsx_windows_file_system" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `fsx_filesystem_arn` - (Required) The Amazon Resource Name (ARN) for the FSx for Windows file system.
 * `password` - (Required) The password of the user who has the permissions to access files and folders in the FSx for Windows file system.
