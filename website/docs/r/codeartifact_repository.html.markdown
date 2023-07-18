@@ -66,7 +66,7 @@ resource "aws_codeartifact_repository" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain` - (Required) The domain that contains the created repository.
 * `repository` - (Required) The name of the repository to create.
