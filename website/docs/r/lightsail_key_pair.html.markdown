@@ -58,9 +58,9 @@ imported into Lightsail
 Without a PGP key, the private key material will be stored in state unencrypted.
 `pgp_key` is ignored if `public_key` is supplied.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name used for this key pair
 * `arn` - The ARN of the Lightsail key pair
