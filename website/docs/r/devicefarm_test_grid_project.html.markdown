@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DeviceFarm Test Grid Projects can be imported by their arn:
+Import DeviceFarm Test Grid Projects using their ARN. For example:
 
 ```
 $ terraform import aws_devicefarm_test_grid_project.example arn:aws:devicefarm:us-west-2:123456789012:testgrid-project:4fa784c7-ccb4-4dbf-ba4f-02198320daa1

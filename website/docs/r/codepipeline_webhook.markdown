@@ -138,7 +138,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CodePipeline Webhooks can be imported by their ARN, e.g.,
+Import CodePipeline Webhooks using their ARN. For example:
 
 ```
 $ terraform import aws_codepipeline_webhook.example arn:aws:codepipeline:us-west-2:123456789012:webhook:example
