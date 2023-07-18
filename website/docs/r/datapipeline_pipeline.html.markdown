@@ -35,7 +35,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_datapipeline_pipeline` can be imported by using the id (Pipeline ID), e.g.,
+Import `aws_datapipeline_pipeline` using the id (Pipeline ID). For example:
 
 ```
 $ terraform import aws_datapipeline_pipeline.default df-1234567890
