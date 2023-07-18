@@ -40,7 +40,7 @@ resource "aws_cloudfront_origin_request_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Unique name to identify the origin request policy.
 * `comment` - (Optional) Comment to describe the origin request policy.
