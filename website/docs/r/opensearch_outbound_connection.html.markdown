@@ -36,7 +36,7 @@ resource "aws_opensearch_outbound_connection" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `connection_alias` - (Required, Forces new resource) Specifies the connection alias that will be used by the customer for this connection.
 * `local_domain_info` - (Required, Forces new resource) Configuration block for the local Opensearch domain.

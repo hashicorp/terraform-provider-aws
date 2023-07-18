@@ -52,7 +52,7 @@ resource "aws_opsworks_application" "foo-app" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A human-readable name for the application.
 * `short_name` - (Required) A short, machine-readable name for the application. This can only be defined on resource creation and ignored on resource update.
