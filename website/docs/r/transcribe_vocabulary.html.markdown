@@ -74,7 +74,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Transcribe Vocabulary can be imported using the `vocabulary_name`, e.g.,
+Import Transcribe Vocabulary using the `vocabulary_name`. For example:
 
 ```
 $ terraform import aws_transcribe_vocabulary.example example-name

@@ -72,7 +72,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Transcribe MedicalVocabulary can be imported using the `vocabulary_name`, e.g.,
+Import Transcribe MedicalVocabulary using the `vocabulary_name`. For example:
 
 ```
 $ terraform import aws_transcribe_medical_vocabulary.example example-name
