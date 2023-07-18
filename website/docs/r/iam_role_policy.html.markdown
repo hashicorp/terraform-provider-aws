@@ -76,7 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM Role Policies can be imported using the `role_name:role_policy_name`, e.g.,
+Import IAM Role Policies using the `role_name:role_policy_name`. For example:
 
 ```
 $ terraform import aws_iam_role_policy.mypolicy role_of_mypolicy_name:mypolicy_name

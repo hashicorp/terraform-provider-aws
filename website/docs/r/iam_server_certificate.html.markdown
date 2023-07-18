@@ -124,7 +124,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM Server Certificates can be imported using the `name`, e.g.,
+Import IAM Server Certificates using the `name`. For example:
 
 ```
 $ terraform import aws_iam_server_certificate.certificate example.com-certificate-until-2018
