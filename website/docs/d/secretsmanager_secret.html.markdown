@@ -35,6 +35,8 @@ data "aws_secretsmanager_secret" "by-name" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `arn` - ARN of the secret.
 * `description` - Description of the secret.
 * `kms_key_id` - Key Management Service (KMS) Customer Master Key (CMK) associated with the secret.

@@ -26,6 +26,8 @@ data "aws_secretsmanager_secret_rotation" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `rotation_enabled` - ARN of the secret.
 * `rotation_lambda_arn` - Decrypted part of the protected secret information that was originally provided as a string.
 * `rotation_rules` - Decrypted part of the protected secret information that was originally provided as a binary. Base64 encoded.

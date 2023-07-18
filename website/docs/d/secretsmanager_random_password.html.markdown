@@ -32,4 +32,6 @@ data "aws_secretsmanager_random_password" "test" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `random_password` - Random password.
