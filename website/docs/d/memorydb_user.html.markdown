@@ -24,7 +24,7 @@ The following arguments are required:
 
 * `user_name` - (Required) Name of the user.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition, the following attributes are exported:
 

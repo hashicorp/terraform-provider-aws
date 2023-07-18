@@ -24,7 +24,7 @@ The following arguments are required:
 
 * `name` - (Required) Name of the snapshot.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition, the following attributes are exported:
 
