@@ -22,7 +22,7 @@ resource "aws_api_gateway_api_key" "MyDemoApiKey" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the API key.
 * `description` - (Optional) API key description. Defaults to "Managed by Terraform".

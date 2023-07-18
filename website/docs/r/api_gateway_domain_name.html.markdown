@@ -152,7 +152,7 @@ resource "aws_route53_record" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) Fully-qualified domain name to register.
 * `endpoint_configuration` - (Optional) Configuration block defining API endpoint information including type. See below.
