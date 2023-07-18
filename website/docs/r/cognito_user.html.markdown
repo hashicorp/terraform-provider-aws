@@ -93,7 +93,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Cognito User can be imported using the `user_pool_id`/`name` attributes concatenated, e.g.,
+Import Cognito User using the `user_pool_id`/`name` attributes concatenated. For example:
 
 ```
 $ terraform import aws_cognito_user.user us-east-1_vG78M4goG/user
