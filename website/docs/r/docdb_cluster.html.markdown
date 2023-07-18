@@ -76,9 +76,9 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate
   with the Cluster
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of cluster
 * `cluster_members` – List of DocumentDB Instances that are a part of this cluster
