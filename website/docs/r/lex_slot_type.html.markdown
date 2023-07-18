@@ -90,7 +90,7 @@ not included as an argument because the resource will add it automatically when 
 
 ## Import
 
-Import Slot types using their name.
+Import Slot types using their name. For example:
 
 ```
 $ terraform import aws_lex_slot_type.flower_types FlowerTypes

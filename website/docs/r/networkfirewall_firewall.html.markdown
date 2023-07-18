@@ -87,7 +87,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Network Firewall Firewalls using their `ARN`.
+Import Network Firewall Firewalls using their `arn`. For example:
 
 ```
 $ terraform import aws_networkfirewall_firewall.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
