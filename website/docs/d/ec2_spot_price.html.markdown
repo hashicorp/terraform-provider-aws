@@ -26,7 +26,7 @@ data "aws_ec2_spot_price" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `instance_type` - (Optional) Type of instance for which to query Spot Price information.
 * `availability_zone` - (Optional) Availability zone in which to query Spot price information.
