@@ -23,7 +23,7 @@ data "aws_transfer_server" "example" {
 
 * `server_id` - (Required) ID for an SFTP server.
 
-## Attributes Reference
+## Attribute Reference
 
 * `arn` - ARN of Transfer Server.
 * `certificate` - ARN of any certificate.

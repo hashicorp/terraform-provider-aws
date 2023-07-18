@@ -81,7 +81,7 @@ data "aws_subnets" "selected" {
 * `values` - (Required) Set of values that are accepted for the given field.
   Subnet IDs will be selected if any one of the given values match.
 
-## Attributes Reference
+## Attribute Reference
 
 * `ids` - List of all the subnet ids found.
 

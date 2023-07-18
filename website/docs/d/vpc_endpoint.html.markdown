@@ -47,7 +47,7 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC Endpoint will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above except `filter`, the following attributes are exported:
 
