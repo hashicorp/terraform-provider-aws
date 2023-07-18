@@ -99,9 +99,9 @@ For more information on the permissions required for the bucket, please read the
 * `retention_period` - (Optional) The number of days to retain automated snapshots in the destination region after they are copied from the source region. Defaults to `7`.
 * `grant_name` - (Optional) The name of the snapshot copy grant to use when snapshots of an AWS KMS-encrypted cluster are copied to the destination region.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of cluster
 * `id` - The Redshift Cluster ID.
