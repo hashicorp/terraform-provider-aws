@@ -99,7 +99,7 @@ resource "aws_lb" "example" {
 
 ~> **NOTE:** Please note that one of either `subnets` or `subnet_mapping` is required.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `access_logs` - (Optional) An Access Logs block. Access Logs documented below.
 * `customer_owned_ipv4_pool` - (Optional) The ID of the customer owned ipv4 pool to use for this load balancer.

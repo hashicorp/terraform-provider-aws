@@ -35,7 +35,7 @@ resource "aws_lb_cookie_stickiness_policy" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the stickiness policy.
 * `load_balancer` - (Required) The load balancer to which the policy
