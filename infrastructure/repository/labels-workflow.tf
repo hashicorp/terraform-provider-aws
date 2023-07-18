@@ -105,6 +105,10 @@ variable "workflow_labels" {
       color       = "60dea9", # color:nomad
       description = "Pertains to testing Terraform releases prior to release."
     },
+    "prioritized" = {
+      color       = "d1ebff", # color:terraform accent
+      description = "Part of the maintainer teams immediate focus. To be addressed within the current quarter.",
+    },
     "proposal" = {
       color       = "d1ebff", # color:terraform accent
       description = "Proposes new design or functionality."
@@ -124,10 +128,6 @@ variable "workflow_labels" {
     "repository" = {
       color       = "828a90", # color:stale grey
       description = "Repository modifications; GitHub Actions, developer docs, issue templates, codeowners, changelog."
-    },
-    "prioritized" = {
-      color       = "d1ebff", # color:terraform accent
-      description = "Part of the maintainer teams immediate focus. Issues with this label are due to be addressed within the quarter.",
     },
     "service/meta" = {
       color       = "7b42bc", # color:terraform (logomark)
