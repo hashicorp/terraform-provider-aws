@@ -84,7 +84,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-WorkLink can be imported using the ARN, e.g.,
+Import WorkLink using the ARN. For example:
 
 ```
 $ terraform import aws_worklink_fleet.test arn:aws:worklink::123456789012:fleet/example
