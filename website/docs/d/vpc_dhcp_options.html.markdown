@@ -50,6 +50,8 @@ For more information about filtering, see the [EC2 API documentation](https://do
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `arn` - ARN of the DHCP Options Set.
 * `dhcp_options_id` - EC2 DHCP Options ID
 * `domain_name` - Suffix domain name to used when resolving non Fully Qualified Domain NamesE.g., the `search` value in the `/etc/resolv.conf` file.

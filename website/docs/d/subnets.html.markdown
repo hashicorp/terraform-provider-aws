@@ -83,6 +83,8 @@ data "aws_subnets" "selected" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `ids` - List of all the subnet ids found.
 
 ## Timeouts

@@ -25,6 +25,8 @@ data "aws_transfer_server" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `arn` - ARN of Transfer Server.
 * `certificate` - ARN of any certificate.
 * `domain` -  The domain of the storage system that is used for file transfers.
