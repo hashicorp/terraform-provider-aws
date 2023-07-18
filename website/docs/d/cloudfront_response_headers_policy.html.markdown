@@ -32,7 +32,7 @@ data "aws_cloudfront_response_headers_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Optional) Unique name to identify the response headers policy.
 * `id` - (Optional) Identifier for the response headers policy.

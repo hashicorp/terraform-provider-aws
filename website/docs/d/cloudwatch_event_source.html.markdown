@@ -22,7 +22,7 @@ data "aws_cloudwatch_event_source" "examplepartner" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name_prefix` - (Optional) Specifying this limits the results to only those partner event sources with names that start with the specified prefix
 
