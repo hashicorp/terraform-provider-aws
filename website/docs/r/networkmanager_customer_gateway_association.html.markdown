@@ -60,7 +60,7 @@ resource "aws_networkmanager_customer_gateway_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `customer_gateway_arn` - (Required) The Amazon Resource Name (ARN) of the customer gateway.
 * `device_id` - (Required) The ID of the device.
