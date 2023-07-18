@@ -104,9 +104,9 @@ Used for cross-account Direct Connect gateway associations.
 Used for cross-account Direct Connect gateway associations.
 * `allowed_prefixes` - (Optional) VPC prefixes (CIDRs) to advertise to the Direct Connect gateway. Defaults to the CIDR block of the VPC associated with the Virtual Gateway. To enable drift detection, must be configured.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Direct Connect gateway association resource.
 * `associated_gateway_type` - The type of the associated gateway, `transitGateway` or `virtualPrivateGateway`.
