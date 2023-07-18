@@ -46,9 +46,9 @@ The following arguments are optional:
 
 * `skip_destroy` - (Optional) Whether to retain the provisoned concurrency configuration upon destruction. Defaults to `false`. If set to `true`, the resource in simply removed from state instead.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Lambda Function name and qualifier separated by a comma (`,`).
 

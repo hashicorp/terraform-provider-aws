@@ -492,9 +492,9 @@ Each `tag_specifications` block supports the following:
 * `resource_type` - (Optional) The type of resource to tag.
 * `tags` -(Optional)  A map of tags to assign to the resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the launch template.
 * `id` - The ID of the launch template.
