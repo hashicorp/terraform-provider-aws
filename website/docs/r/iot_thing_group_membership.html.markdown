@@ -35,7 +35,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IoT Thing Group Membership using the thing group name and thing name.
+Import IoT Thing Group Membership using the thing group name and thing name. For example:
 
 ```
 $ terraform import aws_iot_thing_group_membership.example thing_group_name/thing_name
