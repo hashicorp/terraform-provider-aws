@@ -49,7 +49,7 @@ resource "aws_redshift_subnet_group" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Redshift Subnet group.
 * `description` - (Optional) The description of the Redshift Subnet group. Defaults to "Managed by Terraform".
