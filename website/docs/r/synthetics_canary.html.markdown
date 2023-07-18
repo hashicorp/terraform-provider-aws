@@ -108,7 +108,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Synthetics Canaries can be imported using the `name`, e.g.,
+Import Synthetics Canaries using the `name`. For example:
 
 ```
 $ terraform import aws_synthetics_canary.some some-canary
