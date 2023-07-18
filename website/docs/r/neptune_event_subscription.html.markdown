@@ -92,7 +92,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_neptune_event_subscription` can be imported by using the event subscription name, e.g.,
+Import `aws_neptune_event_subscription` using the event subscription name. For example:
 
 ```
 $ terraform import aws_neptune_event_subscription.example my-event-subscription
