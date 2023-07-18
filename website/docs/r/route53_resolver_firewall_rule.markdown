@@ -39,7 +39,7 @@ resource "aws_route53_resolver_firewall_rule" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name that lets you identify the rule, to manage and use it.
 * `action` - (Required) The action that DNS Firewall should take on a DNS query when it matches one of the domains in the rule's domain list. Valid values: `ALLOW`, `BLOCK`, `ALERT`.
