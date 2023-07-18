@@ -195,7 +195,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import MWAA Environment using `Name` e.g.,
+Import MWAA Environment using `Name`. For example:
 
 ```
 $ terraform import aws_mwaa_environment.example MyAirflowEnvironment
