@@ -44,9 +44,9 @@ The following arguments are optional:
 * `reservation_id` - (Optional) Customer-specified identifier to track this reservation.
 * `tags` - (Optional) Map of tags to assign to the DB reservation. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN for the reserved DB instance.
 * `id` - Unique identifier for the reservation. same as `reservation_id`.

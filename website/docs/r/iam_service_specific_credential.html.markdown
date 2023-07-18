@@ -31,9 +31,9 @@ The following arguments are supported:
 * `user_name` - (Required) The name of the IAM user that is to be associated with the credentials. The new service-specific credentials have the same permissions as the associated user except that they can be used only to access the specified service.
 * `status` - (Optional) The status to be assigned to the service-specific credential. Valid values are `Active` and `Inactive`. Default value is `Active`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The combination of `service_name` and `user_name` as such: `service_name:user_name:service_specific_credential_id`.
 * `service_password` - The generated password for the service-specific credential.

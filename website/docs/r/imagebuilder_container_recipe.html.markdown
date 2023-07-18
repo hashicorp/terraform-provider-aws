@@ -119,9 +119,9 @@ The following arguments are optional:
 * `volume_size` - (Optional) Size of the volume, in GiB.
 * `volume_type` - (Optional) Type of the volume. For example, `gp2` or `io2`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - (Required) Amazon Resource Name (ARN) of the container recipe.
 * `date_created` - Date the container recipe was created.

@@ -54,7 +54,9 @@ exactly match a pair on desired instances.
 several valid keys, for a full reference, check out
 [describe-instances in the AWS CLI reference][1].
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - IDs of instances found through the filter

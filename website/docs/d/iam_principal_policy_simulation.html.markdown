@@ -195,9 +195,9 @@ The following arguments are all required in each `context` block:
 
 * `values` (Required) - A set of one or more values for this context entry.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attribute is exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `all_allowed` - `true` if all of the simulation results have decision "allowed", or `false` otherwise.
 

@@ -38,9 +38,9 @@ The following arguments are supported:
 
 * `admin_account_id` - (Required) The AWS account identifier of the account to designate as the Security Hub administrator account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - AWS account identifier.
 

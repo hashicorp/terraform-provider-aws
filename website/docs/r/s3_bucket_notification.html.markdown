@@ -355,9 +355,9 @@ The following arguments are optional:
 * `id` - (Optional) Unique identifier for each of the notification configurations.
 * `topic_arn` - (Required) SNS topic ARN.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

@@ -63,9 +63,9 @@ The following arguments are required:
 * `keyword_input_type` - (Required) Input method for the keyword. Valid values are `SELECT_FROM_LIST`.
 * `keyword_value` - (Required) The value of the keyword that's used when mapping a control data source. For example, this can be a CloudTrail event name, a rule name for Config, a Security Hub control, or the name of an Amazon Web Services API call. See the [Audit Manager supported control data sources documentation](https://docs.aws.amazon.com/audit-manager/latest/userguide/control-data-sources.html) for more information.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the control.
 * `control_mapping_sources.*.source_id` - Unique identifier for the source.

@@ -837,9 +837,9 @@ The `immunity_time_property` block supports the following arguments:
 
 * `immunity_time` - (Optional) The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the WAF WebACL.
 * `capacity` - Web ACL capacity units (WCUs) currently being used by this web ACL.

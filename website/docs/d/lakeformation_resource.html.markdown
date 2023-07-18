@@ -22,9 +22,9 @@ data "aws_lakeformation_resource" "example" {
 
 * `arn` – (Required) ARN of the resource, an S3 path.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `last_modified` - Date and time the resource was last modified in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `role_arn` – Role that the resource was registered with.

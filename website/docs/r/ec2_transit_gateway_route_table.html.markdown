@@ -25,9 +25,9 @@ The following arguments are supported:
 * `transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Route Table. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - EC2 Transit Gateway Route Table Amazon Resource Name (ARN).
 * `default_association_route_table` - Boolean whether this is the default association route table for the EC2 Transit Gateway.

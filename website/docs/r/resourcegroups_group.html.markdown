@@ -59,9 +59,9 @@ The `parameters` block supports the following arguments:
 * `name` - (Required) The name of the group configuration parameter.
 * `values` - (Optional) The value or values to be used for the specified parameter.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN assigned by AWS for this resource group.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

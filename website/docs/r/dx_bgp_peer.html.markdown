@@ -33,9 +33,9 @@ Required for IPv4 BGP peers on public virtual interfaces.
 * `customer_address` - (Optional) The IPv4 CIDR destination address to which Amazon should send traffic.
 Required for IPv4 BGP peers on public virtual interfaces.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the BGP peer resource.
 * `bgp_status` - The Up/Down state of the BGP peer.

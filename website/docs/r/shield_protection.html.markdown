@@ -42,9 +42,9 @@ The following arguments are supported:
 * `resource_arn` - (Required) The ARN (Amazon Resource Name) of the resource to be protected.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) for the Protection object that is created.
 * `arn` - The ARN of the Protection.

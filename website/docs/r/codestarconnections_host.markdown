@@ -38,9 +38,9 @@ A `vpc_configuration` block supports the following arguments:
 * `tls_certificate` - (Optional) The value of the Transport Layer Security (TLS) certificate associated with the infrastructure where your provider type is installed.
 * `vpc_id` - (Required) The ID of the Amazon VPC connected to the infrastructure where your provider type is installed.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The CodeStar Host ARN.
 * `arn` - The CodeStar Host ARN.

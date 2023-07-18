@@ -180,9 +180,9 @@ The following arguments are optional:
 
 * `message_group_id` - (Optional) FIFO message group ID to use as the target.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the schedule.
 * `arn` - ARN of the schedule.

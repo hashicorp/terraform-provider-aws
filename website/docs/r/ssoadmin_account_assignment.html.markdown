@@ -54,9 +54,9 @@ The following arguments are supported:
 * `target_id` - (Required, Forces new resource) An AWS account identifier, typically a 10-12 digit string.
 * `target_type` - (Optional, Forces new resource) The entity type for which the assignment will be created. Valid values: `AWS_ACCOUNT`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier of the Account Assignment i.e., `principal_id`, `principal_type`, `target_id`, `target_type`, `permission_set_arn`, `instance_arn` separated by commas (`,`).
 

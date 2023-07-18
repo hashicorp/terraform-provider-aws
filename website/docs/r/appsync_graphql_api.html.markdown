@@ -256,9 +256,9 @@ The following arguments are supported:
 * `authorizer_result_ttl_in_seconds` - (Optional) Number of seconds a response should be cached for. The default is 5 minutes (300 seconds). The Lambda function can override this by returning a `ttlOverride` key in its response. A value of 0 disables caching of responses. Minimum value of 0. Maximum value of 3600.
 * `identity_validation_expression` - (Optional) Regular expression for validation of tokens before the Lambda function is called.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - API ID
 * `arn` - ARN

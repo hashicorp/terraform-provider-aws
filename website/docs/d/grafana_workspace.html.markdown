@@ -26,9 +26,9 @@ The following arguments are required:
 
 * `workspace_id` - (Required) Grafana workspace ID.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `account_access_type` - (Required) Type of account access for the workspace. Valid values are `CURRENT_ACCOUNT` and `ORGANIZATION`. If `ORGANIZATION` is specified, then `organizational_units` must also be present.
 * `authentication_providers` - (Required) Authentication providers for the workspace. Valid values are `AWS_SSO`, `SAML`, or both.

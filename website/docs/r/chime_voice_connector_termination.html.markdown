@@ -38,9 +38,9 @@ The following arguments are supported:
 * `default_phone_number` - (Optional) The default caller ID phone number.
 * `cps_limit` - (Optional) The limit on calls per second. Max value based on account service quota. Default value of `1`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Chime Voice Connector ID.
 

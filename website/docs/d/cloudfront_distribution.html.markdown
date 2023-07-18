@@ -6,7 +6,7 @@ description: |-
   Provides a CloudFront web distribution data source.
 ---
 
-# Data source: aws_cloudfront_distribution
+# Data Source: aws_cloudfront_distribution
 
 Use this data source to retrieve information about a CloudFront distribution.
 
@@ -22,9 +22,9 @@ data "aws_cloudfront_distribution" "test" {
 
 * `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 

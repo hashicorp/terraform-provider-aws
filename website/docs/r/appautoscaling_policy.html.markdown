@@ -341,9 +341,9 @@ The `target_tracking_scaling_policy_configuration` `predefined_metric_specificat
 * `predefined_metric_type` - (Required) Metric type.
 * `resource_label` - (Optional) Reserved for future use if the `predefined_metric_type` is not `ALBRequestCountPerTarget`. If the `predefined_metric_type` is `ALBRequestCountPerTarget`, you must specify this argument. Documentation can be found at: [AWS Predefined Scaling Metric Specification](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_PredefinedScalingMetricSpecification.html). Must be less than or equal to 1023 characters in length.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `alarm_arns` - List of CloudWatch alarm ARNs associated with the scaling policy.
 * `arn` - ARN assigned by AWS to the scaling policy.

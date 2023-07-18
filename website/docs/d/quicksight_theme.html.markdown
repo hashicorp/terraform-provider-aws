@@ -30,9 +30,9 @@ The following arguments are optional:
 
 * `aws_account_id` - AWS account ID.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the theme.
 * `base_theme_id` - The ID of the theme that a custom theme will inherit from. All themes inherit from one of the starting themes defined by Amazon QuickSight.

@@ -42,7 +42,9 @@ data "aws_kms_key" "by_key_arn" {
     * Alias ARN: E.g.: `arn:aws:kms:us-east-1:111122223333:alias/my-key`
 * `grant_tokens` - (Optional) List of grant tokens
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id`: The globally unique identifier for the key
 * `arn`: The ARN of the key

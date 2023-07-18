@@ -38,9 +38,9 @@ resource "aws_xray_group" "example" {
 * `insights_enabled` - (Required) Specifies whether insights are enabled.
 * `notifications_enabled` - (Optional) Specifies whether insight notifications are enabled.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the Group.
 * `arn` - The ARN of the Group.

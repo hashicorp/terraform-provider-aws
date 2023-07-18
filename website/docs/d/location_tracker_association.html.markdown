@@ -28,6 +28,6 @@ The following arguments are required:
 * `consumer_arn` - (Required) ARN of the geofence collection associated to tracker resource.
 * `tracker_name` - (Required) Name of the tracker resource associated with a geofence collection.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This data source exports no additional attributes.

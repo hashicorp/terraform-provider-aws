@@ -54,9 +54,9 @@ The following arguments are supported:
 * `domain_name` - (Required, Forces new resource) The name of the remote domain.
 * `region` - (Required, Forces new resource) The region of the remote domain.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Id of the connection.
 * `connection_status` - Status of the connection request.

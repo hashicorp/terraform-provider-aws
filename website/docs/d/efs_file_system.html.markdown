@@ -37,9 +37,9 @@ The following arguments are supported:
 * `creation_token` - (Optional) Restricts the list to the file system with this creation token.
 * `tags` - (Optional) Restricts the list to the file system with these tags.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the file system.
 * `availability_zone_name` - The Availability Zone name in which the file system's One Zone storage classes exist.

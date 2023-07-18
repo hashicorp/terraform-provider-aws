@@ -58,9 +58,9 @@ An `ebs_volume` block supports the following arguments:
 * `type` - (Optional) The type of volume to create. This may be `standard` (the default), `io1` or `gp2`.
 * `iops` - (Optional) For PIOPS volumes, the IOPS per disk.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The id of the layer.
 * `arn` - The Amazon Resource Name(ARN) of the layer.

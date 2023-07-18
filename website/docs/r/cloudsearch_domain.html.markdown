@@ -85,9 +85,9 @@ This configuration block supports the following attributes:
 * `sort` - (Optional) You can enable the property to be sortable.
 * `source_fields` - (Optional) A comma-separated list of source fields to map to the field. Specifying a source field copies data from one field to another, enabling you to use the same source data in different ways by configuring different options for the fields.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The domain's ARN.
 * `document_service_endpoint` - The service endpoint for updating documents in a search domain.

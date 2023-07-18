@@ -81,9 +81,9 @@ The following arguments are supported:
 * `packaging` - (Optional) The type of build output artifact to create. Valid values are: `NONE` (default) and `ZIP`.
 * `path` - (Optional) The path to the exported report's raw data results.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of Report Group.
 * `arn` - The ARN of Report Group.

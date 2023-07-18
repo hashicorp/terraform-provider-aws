@@ -36,9 +36,9 @@ The following arguments are supported:
 * `availability_zone` - (Optional) The IDs of AZ in which HSM module will be located. Conflicts with `subnet_id`.
 * `ip_address` - (Optional) The IP address of HSM module. Must be within the CIDR of selected subnet.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `hsm_id` - The id of the HSM module.
 * `hsm_state` - The state of the HSM module.

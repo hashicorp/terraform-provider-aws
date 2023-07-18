@@ -55,7 +55,7 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPN Gateway will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes are also exported as result attributes.
 

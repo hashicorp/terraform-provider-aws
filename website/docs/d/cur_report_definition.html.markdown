@@ -28,7 +28,9 @@ The following arguments are supported:
 
 * `report_name` - (Required) Name of the report definition to match.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `time_unit` - Frequency on which report data are measured and displayed.
 * `format` - Preferred compression format for report.

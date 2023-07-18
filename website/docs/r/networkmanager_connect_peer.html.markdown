@@ -98,9 +98,9 @@ The following arguments are optional:
 - `core_network_address` (Optional) A Connect peer core network address.
 - `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 - `arn` - The ARN of the attachment.
 - `configuration` - The configuration of the Connect peer.

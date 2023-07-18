@@ -53,9 +53,9 @@ The following arguments are supported:
 * `detector_id` - (Required) The detector ID of the member GuardDuty account.
 * `master_account_id` - (Required) AWS account ID for primary account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - GuardDuty member detector ID
 

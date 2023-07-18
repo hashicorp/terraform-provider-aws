@@ -160,7 +160,7 @@ The following arguments are optional:
   When the version is 6, the major and minor version can be set, e.g., `6.2`,
   or the minor version can be unspecified which will use the latest version at creation time, e.g., `6.x`.
   Otherwise, specify the full version desired, e.g., `5.0.6`.
-  The actual engine version used is returned in the attribute `engine_version_actual`, see [Attributes Reference](#attributes-reference) below.
+  The actual engine version used is returned in the attribute `engine_version_actual`, see [Attribute Reference](#attribute-reference) below.
 * `final_snapshot_identifier` - (Optional, Redis only) Name of your final cluster snapshot. If omitted, no final snapshot will be made.
 * `ip_discovery` - (Optional) The IP version to advertise in the discovery protocol. Valid values are `ipv4` or `ipv6`.
 * `log_delivery_configuration` - (Optional, Redis only) Specifies the destination and format of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html). See [Log Delivery Configuration](#log-delivery-configuration) below for more details.
@@ -191,9 +191,9 @@ The `log_delivery_configuration` block allows the streaming of Redis [SLOWLOG](h
 * `log_format` - Valid values are `json` or `text`
 * `log_type` - Valid values are  `slow-log` or `engine-log`. Max 1 of each.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the created ElastiCache Cluster.
 * `engine_version_actual` - Because ElastiCache pulls the latest minor or patch for a version, this attribute returns the running version of the cache engine.

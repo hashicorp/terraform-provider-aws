@@ -130,9 +130,9 @@ The following arguments are supported:
 * `instance_ids` - (Required) The EC2 and RDS instance IDs.
 * `region` - (Required) The Region to run the SSM document.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `action_id` - The id of the budget action.
 * `id` - ID of resource.

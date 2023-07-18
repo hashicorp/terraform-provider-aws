@@ -112,9 +112,9 @@ The following arguments are supported:
   Valid values are `Forest` and `External`.
   Default value is `Forest`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `created_date_time` - Date and time when the Trust was created.
 * `id` - The Trust identifier.

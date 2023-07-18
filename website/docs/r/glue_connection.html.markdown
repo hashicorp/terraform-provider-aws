@@ -85,9 +85,9 @@ The following arguments are supported:
 * `security_group_id_list` - (Optional) The security group ID list used by the connection.
 * `subnet_id` - (Optional) The subnet ID used by the connection.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Catalog ID and name of the connection
 * `arn` - The ARN of the Glue Connection.

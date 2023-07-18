@@ -30,9 +30,9 @@ The following arguments are required:
 
 * `email_identity` - (Required) The name of the email identity.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `behavior_on_mx_failure` - The action to take if the required MX record isn't found when you send an email. Valid values: `USE_DEFAULT_VALUE`, `REJECT_MESSAGE`.
 * `mail_from_domain` - The custom MAIL FROM domain that you want the verified identity to use.

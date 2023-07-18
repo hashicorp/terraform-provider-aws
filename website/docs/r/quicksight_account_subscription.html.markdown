@@ -44,9 +44,9 @@ The following arguments are optional:
 * `reader_group` - (Optional) Reader group associated with your Active Direcrtory.
 * `realm` - (Optional) Realm of the Active Directory that is associated with your Amazon QuickSight account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `account_subscription_status` - Status of the Amazon QuickSight account's subscription.
 

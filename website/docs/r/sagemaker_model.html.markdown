@@ -81,9 +81,9 @@ The `primary_container` and `container` block both support:
 
 * `mode` - (Required) How containers in a multi-container are run. The following values are valid `Serial` and `Direct`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `name` - The name of the model.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this model.

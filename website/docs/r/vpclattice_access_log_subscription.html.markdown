@@ -28,9 +28,9 @@ The following arguments are required:
 * `destination_arn` - (Required) Amazon Resource Name (ARN) of the log destination.
 * `resource_identifier` - (Required) The ID or Amazon Resource Identifier (ARN) of the service network or service. You must use the ARN if the resources specified in the operation are in different accounts.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the access log subscription.
 * `arn` - Amazon Resource Name (ARN) of the access log subscription.

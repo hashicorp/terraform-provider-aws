@@ -40,9 +40,9 @@ The following arguments are supported inside the `s3_config` configuration block
 
 * `bucket_access_role_arn` - (Required) ARN of the IAM Role used to connect to the S3 Bucket.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the DataSync Location.
 * `arn` - Amazon Resource Name (ARN) of the DataSync Location.

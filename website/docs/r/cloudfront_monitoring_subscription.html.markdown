@@ -39,9 +39,9 @@ The following arguments are supported:
 
 * `realtime_metrics_subscription_status` - (Required) A flag that indicates whether additional CloudWatch metrics are enabled for a given CloudFront distribution. Valid values are `Enabled` and `Disabled`. See below.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the CloudFront monitoring subscription, which corresponds to the `distribution_id`.
 

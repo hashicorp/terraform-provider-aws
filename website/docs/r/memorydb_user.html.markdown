@@ -50,9 +50,9 @@ The following arguments are optional:
 * `passwords` - (Required) The set of passwords used for authentication. You can create up to two passwords for each user.
 * `type` - (Required) Indicates whether the user requires a password to authenticate. Must be set to `password`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Same as `user_name`.
 * `arn` - The ARN of the user.

@@ -32,7 +32,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `db_password` - Temporary password that authorizes the user name returned by `db_user` to log on to the database `db_name`.
 * `expiration` - Date and time the password in `db_password` expires.

@@ -29,9 +29,9 @@ The following arguments are supported:
 
 * `bucket_name` - (Required) The name of the bucket that the new access key will belong to, and grant access to.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A combination of attributes separated by a `,` to create a unique id: `bucket_name`,`access_key_id`
 * `access_key_id` - The ID of the access key.

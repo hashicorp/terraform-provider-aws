@@ -28,9 +28,9 @@ The following arguments are required:
 
 * `account_id` - (Required) Account to enable as delegated admin account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `relationship_status` - Status of this delegated admin account.
 

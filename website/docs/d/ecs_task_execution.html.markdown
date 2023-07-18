@@ -116,9 +116,9 @@ For more information, see the [Task Networking](https://docs.aws.amazon.com/Amaz
 
 For more information, see the [Placement Strategy](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_PlacementStrategy.html) documentation.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `task_arns` - A list of the provisioned task ARNs.
 * `id` - The unique identifier, which is a comma-delimited string joining the `cluster` and `task_definition` attributes.

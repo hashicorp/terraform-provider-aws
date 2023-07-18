@@ -96,9 +96,9 @@ The following arguments are supported:
  TTL is the length of time since the last refresh after which access to the directory would cause the file gateway
   to first refresh that directory's contents from the Amazon S3 bucket. Valid Values: `0` or `300` to `2592000` seconds (5 minutes to 30 days). Defaults to `0`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the FSx file system association
 * `arn` - Amazon Resource Name (ARN) of the newly created file system association.

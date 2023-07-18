@@ -80,9 +80,9 @@ The following arguments are supported:
 * `acm_pca_arn` - (Optional, required when `source_type` is `AWS_ACM_PCA`) The ARN of an ACM Private Certificate Authority.
 * `x509_certificate_data` - (Optional, required when `source_type` is `CERTIFICATE_BUNDLE`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Trust Anchor
 * `id` - The Trust Anchor ID.

@@ -59,9 +59,9 @@ The following arguments are supported:
 
 * ` use_only` - (Optional) The recording strategy for the configuration recorder.See [relevant part of AWS Docs](https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingStrategy.html)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the recorder
 

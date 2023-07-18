@@ -159,9 +159,9 @@ The `encryption_config` configuration block supports the following arguments:
 * `encryption_type` - (Required) The type of encryption. Valid Values: `KMS`.
 * `key_id` - (Required) The full ARN of the encryption key. Be sure to provide the full ARN of the encryption key, not just the ID.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `association_id` - The existing association identifier that uniquely identifies the resource type and storage config for the given instance ID.
 * `id` - The identifier of the hosting Amazon Connect Instance, `association_id`, and `resource_type` separated by a colon (`:`).

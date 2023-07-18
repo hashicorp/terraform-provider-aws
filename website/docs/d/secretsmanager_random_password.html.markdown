@@ -30,6 +30,8 @@ data "aws_secretsmanager_random_password" "test" {
 * `password_length` - (Optional) Length of the password.
 * `require_each_included_type` - (Optional) Specifies whether to include at least one upper and lowercase letter, one number, and one punctuation.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `random_password` - Random password.

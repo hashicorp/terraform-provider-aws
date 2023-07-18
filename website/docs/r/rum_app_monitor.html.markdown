@@ -46,9 +46,9 @@ The following arguments are supported:
 
 * `status` - (Optional) Specifies whether this app monitor allows the web client to define and send custom events. The default is for custom events to be `DISABLED`. Valid values are `DISABLED` and `ENABLED`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the app monitor.
 * `id` - The CloudWatch RUM name as it is the identifier of a RUM.

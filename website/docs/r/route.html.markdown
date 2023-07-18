@@ -71,9 +71,9 @@ One of the following target arguments must be supplied:
 
 Note that the default route, mapping the VPC's CIDR block to "local", is created implicitly and cannot be specified.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 ~> **NOTE:** Only the arguments that are configured (one of the above) will be exported as an attribute once the resource is created.
 

@@ -126,9 +126,9 @@ The API Gateway Usage Plan argument layout is a structure composed of several su
 * `burst_limit` (Optional) - The API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
 * `rate_limit` (Optional) - The API request steady-state rate limit.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the API resource
 * `name` - Name of the usage plan.

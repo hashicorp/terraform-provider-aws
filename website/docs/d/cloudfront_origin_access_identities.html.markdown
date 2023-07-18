@@ -32,9 +32,9 @@ data "aws_cloudfront_origin_access_identities" "example" {
 
 * `comments` (Optional) - Filter origin access identities by comment.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `iam_arns` - Set of ARNs of the matched origin access identities.
 * `ids` - Set of ids of the matched origin access identities.

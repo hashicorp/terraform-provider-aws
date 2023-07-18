@@ -460,9 +460,9 @@ AWS documentation: [Off Peak Hours Support for Amazon OpenSearch Service Domains
         * `hours` - (Required) Starting hour of the 10-hour window for updates
         * `minutes` - (Required) Starting minute of the 10-hour window for updates
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the domain.
 * `domain_id` - Unique identifier for the domain.

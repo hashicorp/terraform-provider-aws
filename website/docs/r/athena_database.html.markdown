@@ -47,9 +47,9 @@ The following arguments are supported:
 * `encryption_option` - (Required) Type of key; one of `SSE_S3`, `SSE_KMS`, `CSE_KMS`
 * `kms_key` - (Optional) KMS key ARN or ID; required for key types `SSE_KMS` and `CSE_KMS`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Database name
 

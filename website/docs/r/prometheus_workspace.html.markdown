@@ -50,9 +50,9 @@ The `logging_configuration` block supports the following arguments:
 
 * `log_group_arn` - (Required) The ARN of the CloudWatch log group to which the vended log data will be published. This log group must exist.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the workspace.
 * `id` - Identifier of the workspace

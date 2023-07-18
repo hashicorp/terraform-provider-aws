@@ -509,9 +509,9 @@ The `condition_on_value` configuration blocks supports the following arguments:
 * `string_list_value` - (Optional) A list of strings.
 * `string` - (Optional) A string, such as "department".
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Data Source.
 * `created_at` - The Unix timestamp of when the Data Source was created.

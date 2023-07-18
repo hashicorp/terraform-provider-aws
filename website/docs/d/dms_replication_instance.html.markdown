@@ -29,9 +29,9 @@ The following arguments are required:
     - Cannot end with a hyphen
     - Cannot contain two consecutive hyphens.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `allocated_storage` - (Default: 50, Min: 5, Max: 6144) The amount of storage (in gigabytes) to be initially allocated for the replication instance.
 * `allow_major_version_upgrade` - (Default: false) Indicates that major version upgrades are allowed.

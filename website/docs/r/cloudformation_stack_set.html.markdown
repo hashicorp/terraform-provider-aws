@@ -117,9 +117,9 @@ The `operation_preferences` configuration block supports the following arguments
 * `region_concurrency_type` - (Optional) The concurrency type of deploying StackSets operations in Regions, could be in parallel or one Region at a time.
 * `region_order` - (Optional) The order of the Regions in where you want to perform the stack operation.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the StackSet.
 * `id` - Name of the StackSet.

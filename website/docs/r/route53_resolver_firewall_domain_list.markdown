@@ -26,9 +26,9 @@ The following argument is supported:
 * `domains` - (Optional) A array of domains for the firewall domain list.
 * `tags` - (Optional) A map of tags to assign to the resource. f configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN (Amazon Resource Name) of the domain list.
 * `id` - The ID of the domain list.

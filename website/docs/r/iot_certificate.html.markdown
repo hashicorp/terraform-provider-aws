@@ -53,9 +53,9 @@ resource "aws_iot_certificate" "cert" {
   for more information on registering a certificate.
 * `ca_pem` - (Optional) The CA certificate for the certificate to be registered. If this is set, the CA needs to be registered with AWS IoT beforehand.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The internal ID assigned to this certificate.
 * `arn` - The ARN of the created certificate.

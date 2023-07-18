@@ -47,9 +47,9 @@ The following arguments are required:
         * `namespace` - The namespace where the EMR Containers cluster is running
 * `type` - The type of the container provider
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the cluster.
 * `id` - The ID of the cluster.

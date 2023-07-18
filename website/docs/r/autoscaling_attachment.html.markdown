@@ -38,6 +38,6 @@ The following arguments are supported:
 * `elb` - (Optional) Name of the ELB.
 * `lb_target_group_arn` - (Optional) ARN of a load balancer target group.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.

@@ -55,9 +55,9 @@ The `monitor` block supports the following:
 * `alarm_arn` - (Required) ARN of the Amazon CloudWatch alarm.
 * `alarm_role_arn` - (Optional) ARN of an IAM role for AWS AppConfig to monitor `alarm_arn`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the AppConfig Environment.
 * `id` - (**Deprecated**) AppConfig environment ID and application ID separated by a colon (`:`).

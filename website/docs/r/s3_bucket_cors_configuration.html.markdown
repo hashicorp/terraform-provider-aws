@@ -56,9 +56,9 @@ The `cors_rule` configuration block supports the following arguments:
 * `id` - (Optional) Unique identifier for the rule. The value cannot be longer than 255 characters.
 * `max_age_seconds` - (Optional) Time in seconds that your browser is to cache the preflight response for the specified resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 

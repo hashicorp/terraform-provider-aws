@@ -93,9 +93,9 @@ The `thumbnail_config_permissions` object supports the following:
 * `grantee` - The AWS user or group that you want to have access to thumbnail files.
 * `grantee_type` - Specify the type of value that appears in the `thumbnail_config_permissions.grantee` object. Valid values are `Canonical`, `Email` or `Group`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Elastictranscoder pipeline.
 * `arn` - The ARN of the Elastictranscoder pipeline.

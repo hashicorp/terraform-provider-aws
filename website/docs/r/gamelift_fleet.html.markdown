@@ -77,9 +77,9 @@ The following arguments are supported:
 * `launch_path` - (Required) Location of the server executable in a game build. All game builds are installed on instances at the root : for Windows instances `C:\game`, and for Linux instances `/local/game`.
 * `parameters` - (Optional) Optional list of parameters to pass to the server executable on launch.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Fleet ID.
 * `arn` - Fleet ARN.

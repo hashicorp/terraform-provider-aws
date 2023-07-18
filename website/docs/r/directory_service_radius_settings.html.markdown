@@ -40,9 +40,9 @@ The following arguments are supported:
 * `shared_secret` - (Required) Required for enabling RADIUS on the directory.
 * `use_same_username` - (Optional) Not currently used.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The directory identifier.
 

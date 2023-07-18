@@ -64,9 +64,9 @@ For **report_setting** the following attributes are supported:
 * `regions` - (Optional) Specifies the list of regions a report covers.
 * `report_template` - (Required) Identifies the report template for the report. Reports are built using a report template. The report templates are: `RESOURCE_COMPLIANCE_REPORT` | `CONTROL_COMPLIANCE_REPORT` | `BACKUP_JOB_REPORT` | `COPY_JOB_REPORT` | `RESTORE_JOB_REPORT`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the backup report plan.
 * `creation_time` - The date and time that a report plan is created, in Unix format and Coordinated Universal Time (UTC).

@@ -51,9 +51,9 @@ The following argument is supported:
 * `firewall_rule_group_id` - (Required) The unique identifier of the firewall rule group where you want to create the rule.
 * `priority` - (Required) The setting that determines the processing order of the rule in the rule group. DNS Firewall processes the rules in a rule group by order of priority, starting from the lowest setting.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the rule.
 

@@ -38,9 +38,9 @@ The following arguments are supported:
 * `version_number` (Required) Version of Lambda Layer, which you want to grant access to. Note: permissions only apply to a single version of a layer.
 * `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`. When this is not set to `true`, changing any of `compatible_architectures`, `compatible_runtimes`, `description`, `filename`, `layer_name`, `license_info`, `s3_bucket`, `s3_key`, `s3_object_version`, or `source_code_hash` forces deletion of the existing layer version and creation of a new layer version.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `layer_name` and `version_number`, separated by a comma (`,`).
 * `revision_id` - A unique identifier for the current revision of the policy.

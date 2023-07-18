@@ -26,8 +26,8 @@ The following arguments are supported:
 * `function_arn` - (Required) ARN of the Lambda Function, omitting any version or alias qualifier.
 * `instance_id` - (Required) Identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
