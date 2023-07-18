@@ -30,7 +30,7 @@ resource "aws_securityhub_standards_subscription" "pci_321" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `standards_arn` - (Required) The ARN of a standard - see below.
 

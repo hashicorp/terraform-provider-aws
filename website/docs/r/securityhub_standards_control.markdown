@@ -35,7 +35,7 @@ resource "aws_securityhub_standards_control" "ensure_iam_password_policy_prevent
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `standards_control_arn` - (Required) The standards control ARN. See the AWS documentation for how to list existing controls using [`get-enabled-standards`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/securityhub/get-enabled-standards.html) and [`describe-standards-controls`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/securityhub/describe-standards-controls.html).
 * `control_status` – (Required) The control status could be `ENABLED` or `DISABLED`. You have to specify `disabled_reason` argument for `DISABLED` control status.
