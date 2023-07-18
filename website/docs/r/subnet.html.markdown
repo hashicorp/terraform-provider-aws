@@ -90,7 +90,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Subnets using the `subnet id`. For example:
+Import subnets using the subnet `id`. For example:
 
 ```
 $ terraform import aws_subnet.public_subnet subnet-9d4a7b6c
