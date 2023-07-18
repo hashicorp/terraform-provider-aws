@@ -32,7 +32,7 @@ resource "aws_elastic_beanstalk_application" "tftest" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the application, must be unique within your account
 * `description` - (Optional) Short description of the application

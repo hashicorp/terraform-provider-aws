@@ -33,7 +33,7 @@ resource "aws_elasticache_parameter_group" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the ElastiCache parameter group.
 * `family` - (Required) The family of the ElastiCache parameter group.

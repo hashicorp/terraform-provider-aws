@@ -32,7 +32,7 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A unique name for this Environment. This name is used
   in the application URL
