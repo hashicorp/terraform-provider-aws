@@ -162,9 +162,9 @@ A `phone_config` block supports the following arguments:
 * `desk_phone_number` - (Optional) The phone number for the user's desk phone. Required if `phone_type` is set as `DESK_PHONE`.
 * `phone_type` - (Required) The phone type. Valid values are `DESK_PHONE` and `SOFT_PHONE`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the user.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the user
