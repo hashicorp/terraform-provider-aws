@@ -44,6 +44,8 @@ which take the following arguments:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - AWS Region.
 * `ids` - Set of all the Local Gateway identifiers
 

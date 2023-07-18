@@ -45,4 +45,6 @@ which take the following arguments:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `pool_ids` - List of all the pool IDs found.
