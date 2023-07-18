@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the AppIntegrations Event Integration.
 * `description` - The description of the Event Integration.
