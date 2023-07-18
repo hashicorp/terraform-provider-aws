@@ -24,7 +24,7 @@ resource "aws_chimesdkvoice_global_settings" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `voice_connector` - (Required) The Voice Connector settings. See [voice_connector](#voice_connector).
 

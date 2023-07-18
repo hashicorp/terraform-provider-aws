@@ -68,7 +68,7 @@ output "cloud9_public_ip" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the environment.
 * `instance_type` - (Required) The type of instance to connect to the environment, e.g., `t2.micro`.
