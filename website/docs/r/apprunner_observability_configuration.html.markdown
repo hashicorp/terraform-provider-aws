@@ -40,9 +40,9 @@ The `trace_configuration` block supports the following argument:
 
 * `vendor` - (Required) Implementation provider chosen for tracing App Runner services. Valid values: `AWSXRAY`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of this observability configuration.
 * `observability_configuration_revision` - The revision of this observability configuration.
