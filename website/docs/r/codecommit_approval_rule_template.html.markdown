@@ -31,7 +31,7 @@ resource "aws_codecommit_approval_rule_template" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `content` - (Required) The content of the approval rule template. Maximum of 3000 characters.
 * `name` - (Required) The name for the approval rule template. Maximum of 100 characters.

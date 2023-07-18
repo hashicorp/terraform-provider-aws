@@ -21,7 +21,7 @@ resource "aws_codecommit_repository" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `repository_name` - (Required) The name for the repository. This needs to be less than 100 characters.
 * `description` - (Optional) The description of the repository. This needs to be less than 1000 characters
