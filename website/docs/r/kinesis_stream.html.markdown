@@ -75,7 +75,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Kinesis Streams can be imported using the `name`, e.g.,
+Import Kinesis Streams using the `name`. For example:
 
 ```
 $ terraform import aws_kinesis_stream.test_stream terraform-kinesis-test
