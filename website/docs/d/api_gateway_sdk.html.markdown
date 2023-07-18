@@ -34,6 +34,8 @@ data "aws_api_gateway_sdk" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - The `REST-API-ID:STAGE-NAME`
 * `body` - SDK as a string.
 * `content_type` - Content-type header value in the HTTP response.

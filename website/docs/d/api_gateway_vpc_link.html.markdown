@@ -28,6 +28,8 @@ data "aws_api_gateway_vpc_link" "my_api_gateway_vpc_link" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - Set to the ID of the found API Gateway VPC Link.
 * `description` - Description of the VPC link.
 * `status` - Status of the VPC link.

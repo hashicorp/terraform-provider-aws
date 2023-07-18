@@ -27,6 +27,8 @@ data "aws_api_gateway_rest_api" "my_rest_api" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `api_key_source` - Source of the API key for requests.
 * `arn` - ARN of the REST API.
 * `binary_media_types` - List of binary media types supported by the REST API.
