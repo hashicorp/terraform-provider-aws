@@ -23,7 +23,7 @@ resource "aws_ses_template" "MyTemplate" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the template. Cannot exceed 64 characters. You will refer to this name when you send email.
 * `html` - (Optional) The HTML body of the email. Must be less than 500KB in size, including both the text and HTML parts.

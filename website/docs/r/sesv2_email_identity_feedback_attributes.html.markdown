@@ -27,7 +27,7 @@ resource "aws_sesv2_email_identity_feedback_attributes" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `email_identity` - (Required) The email identity.
 * `email_forwarding_enabled` - (Optional) Sets the feedback forwarding configuration for the identity.
