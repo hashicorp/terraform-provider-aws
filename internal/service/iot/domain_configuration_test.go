@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccIotDomainConfiguration_basic(t *testing.T) {
+func TestAccIoTDomainConfiguration_basic(t *testing.T) {
 	resourceName := "aws_iot_domain_configuration.test"
 	domain := acctest.RandomDomainName()
 
