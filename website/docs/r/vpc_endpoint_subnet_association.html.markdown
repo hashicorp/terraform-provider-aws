@@ -34,9 +34,9 @@ The following arguments are supported:
 * `vpc_endpoint_id` - (Required) The ID of the VPC endpoint with which the subnet will be associated.
 * `subnet_id` - (Required) The ID of the subnet to be associated with the VPC endpoint.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the association.
 
