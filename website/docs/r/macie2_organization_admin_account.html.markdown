@@ -23,7 +23,7 @@ resource "aws_macie2_organization_admin_account" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `admin_account_id` - (Required) The AWS account ID for the account to designate as the delegated Amazon Macie administrator account for the organization.
 
