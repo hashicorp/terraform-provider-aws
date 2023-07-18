@@ -109,7 +109,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Multi-Region Access Points using the `account_id` and `name` of the Multi-Region Access Point separated by a colon (`:`), e.g.
+Import Multi-Region Access Points using the `account_id` and `name` of the Multi-Region Access Point separated by a colon (`:`). For example:
 
 ```
 $ terraform import aws_s3control_multi_region_access_point.example 123456789012:example

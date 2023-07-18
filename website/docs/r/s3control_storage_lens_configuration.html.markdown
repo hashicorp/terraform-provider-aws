@@ -209,7 +209,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import S3 Storage Lens configurations using the `account_id` and `config_id`, separated by a colon (`:`), e.g.
+Import S3 Storage Lens configurations using the `account_id` and `config_id`, separated by a colon (`:`). For example:
 
 ```
 $ terraform import aws_s3control_storage_lens_configuration.example 123456789012:example-1

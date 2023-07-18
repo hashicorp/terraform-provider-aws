@@ -74,7 +74,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Object Lambda Access Point policies using the `account_id` and `name`, separated by a colon (`:`), e.g.
+Import Object Lambda Access Point policies using the `account_id` and `name`, separated by a colon (`:`). For example:
 
 ```
 $ terraform import aws_s3control_object_lambda_access_point_policy.example 123456789012:example
