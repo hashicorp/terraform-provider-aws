@@ -266,7 +266,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_api_gateway_rest_api` can be imported by using the REST API ID, e.g.,
+Import `aws_api_gateway_rest_api` using the REST API ID. For example:
 
 ```
 $ terraform import aws_api_gateway_rest_api.example 12345abcde
