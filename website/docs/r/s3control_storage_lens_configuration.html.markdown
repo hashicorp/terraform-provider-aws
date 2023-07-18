@@ -60,7 +60,7 @@ resource "aws_s3control_storage_lens_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) The AWS account ID for the S3 Storage Lens configuration. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `config_id` - (Required) The ID of the S3 Storage Lens configuration.
