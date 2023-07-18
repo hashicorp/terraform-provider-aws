@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ec2_transit_gateway_vpc_attachment` can be imported by using the EC2 Transit Gateway Attachment identifier, e.g.,
+Import `aws_ec2_transit_gateway_vpc_attachment` using the EC2 Transit Gateway Attachment identifier. For example:
 
 ```
 $ terraform import aws_ec2_transit_gateway_vpc_attachment.example tgw-attach-12345678
