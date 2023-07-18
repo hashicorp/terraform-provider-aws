@@ -29,9 +29,9 @@ resource "aws_cloudfront_origin_access_identity" "example" {
 
 * `comment` (Optional) - An optional comment for the origin access identity.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 * `caller_reference` - Internal value used by CloudFront to allow future

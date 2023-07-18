@@ -41,9 +41,9 @@ The following arguments are optional:
 * `comment` - (Optional) Comment.
 * `publish` - (Optional) Whether to publish creation/change as Live CloudFront Function Version. Defaults to `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) identifying your CloudFront Function.
 * `etag` - ETag hash of the function. This is the value for the `DEVELOPMENT` stage of the function.
