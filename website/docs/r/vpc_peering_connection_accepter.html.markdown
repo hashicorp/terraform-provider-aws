@@ -87,9 +87,9 @@ by removing the corresponding `aws_vpc_peering_connection` resource from your co
 Removing a `aws_vpc_peering_connection_accepter` resource from your configuration will remove it
 from your statefile and management, **but will not destroy the VPC Peering Connection.**
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC Peering Connection.
 * `accept_status` - The status of the VPC Peering Connection request.
