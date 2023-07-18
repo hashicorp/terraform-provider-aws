@@ -62,7 +62,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EBS Volumes can be imported using the `id`, e.g.,
+Import EBS Volumes using the `id`. For example:
 
 ```
 $ terraform import aws_ebs_volume.id vol-049df61146c4d7901

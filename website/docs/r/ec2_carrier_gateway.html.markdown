@@ -40,7 +40,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ec2_carrier_gateway` can be imported using the carrier gateway's ID,
+Import `aws_ec2_carrier_gateway` using the carrier gateway's ID,
 e.g.,
 
 ```

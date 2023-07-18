@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Capacity Reservations can be imported using the `id`, e.g.,
+Import Capacity Reservations using the `id`. For example:
 
 ```
 $ terraform import aws_ec2_capacity_reservation.web cr-0123456789abcdef0

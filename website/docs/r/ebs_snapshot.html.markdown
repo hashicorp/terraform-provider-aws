@@ -66,7 +66,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EBS Snapshot can be imported using the `id`, e.g.,
+Import EBS Snapshot using the `id`. For example:
 
 ```
 $ terraform import aws_ebs_snapshot.id snap-049df61146c4d7901
