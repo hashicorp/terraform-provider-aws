@@ -83,7 +83,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DB Event Subscriptions can be imported using the `name`, e.g.,
+Import DB Event Subscriptions using the `name`. For example:
 
 ```
 $ terraform import aws_db_event_subscription.default rds-event-sub

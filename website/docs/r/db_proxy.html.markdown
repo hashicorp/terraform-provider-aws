@@ -80,7 +80,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DB proxies can be imported using the `name`, e.g.,
+Import DB proxies using the `name`. For example:
 
 ```
 $ terraform import aws_db_proxy.example example
