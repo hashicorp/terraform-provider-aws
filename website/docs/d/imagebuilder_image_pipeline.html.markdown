@@ -22,9 +22,9 @@ data "aws_imagebuilder_image_pipeline" "example" {
 
 * `arn` - (Required) ARN of the image pipeline.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `container_recipe_arn` - ARN of the container recipe.
 * `date_created` - Date the image pipeline was created.

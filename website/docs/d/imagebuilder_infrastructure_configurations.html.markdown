@@ -32,7 +32,7 @@ The following arguments are supported by the `filter` configuration block:
 * `name` - (Required) Name of the filter field. Valid values can be found in the [Image Builder ListInfrastructureConfigurations API Reference](https://docs.aws.amazon.com/imagebuilder/latest/APIReference/API_ListInfrastructureConfigurations.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
-## Attributes Reference
+## Attribute Reference
 
 * `arns` - Set of ARNs of the matched Image Builder Infrastructure Configurations.
 * `names` - Set of names of the matched Image Builder Infrastructure Configurations.
