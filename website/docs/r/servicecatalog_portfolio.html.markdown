@@ -22,7 +22,7 @@ resource "aws_servicecatalog_portfolio" "portfolio" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the portfolio.
 * `description` - (Required) Description of the portfolio
