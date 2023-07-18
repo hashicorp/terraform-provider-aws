@@ -39,7 +39,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ECS Account Setting defaults can be imported using the `name`, e.g.,
+Import ECS Account Setting defaults using the `name`. For example:
 
 ```
 $ terraform import aws_ecs_account_setting_default.example taskLongArnFormat
