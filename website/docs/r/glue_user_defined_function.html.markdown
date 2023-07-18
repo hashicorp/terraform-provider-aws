@@ -59,7 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Glue User Defined Functions can be imported using the `catalog_id:database_name:function_name`. If you have not set a Catalog ID specify the AWS Account ID that the database is in, e.g.,
+Import Glue User Defined Functions using the `catalog_id:database_name:function_name`. If you have not set a Catalog ID specify the AWS Account ID that the database is in. For example:
 
 ```
 $ terraform import aws_glue_user_defined_function.func 123456789012:my_database:my_func

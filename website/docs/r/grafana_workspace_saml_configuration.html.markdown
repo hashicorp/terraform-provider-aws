@@ -75,7 +75,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Grafana Workspace SAML configuration can be imported using the workspace's `id`, e.g.,
+Import Grafana Workspace SAML configuration using the workspace's `id`. For example:
 
 ```
 $ terraform import aws_grafana_workspace_saml_configuration.example g-2054c75a02

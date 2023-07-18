@@ -168,7 +168,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Glue Triggers can be imported using `name`, e.g.,
+Import Glue Triggers using `name`. For example:
 
 ```
 $ terraform import aws_glue_trigger.MyTrigger MyTrigger
