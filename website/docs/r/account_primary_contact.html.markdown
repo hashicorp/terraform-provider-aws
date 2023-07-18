@@ -51,7 +51,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-The Primary Contact can be imported using the `account_id`, e.g.,
+Import The Primary Contact using the `account_id`. For example:
 
 ```
 $ terraform import aws_account_primary_contact.test 1234567890
