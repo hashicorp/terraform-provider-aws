@@ -57,7 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-API Gateway documentation_parts can be imported using `REST-API-ID/DOC-PART-ID`, e.g.,
+Import API Gateway documentation_parts using `REST-API-ID/DOC-PART-ID`. For example:
 
 ```
 $ terraform import aws_api_gateway_documentation_part.example 5i4e1ko720/3oyy3t

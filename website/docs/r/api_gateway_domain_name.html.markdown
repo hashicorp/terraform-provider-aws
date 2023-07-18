@@ -198,7 +198,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-API Gateway domain names can be imported using their `name`, e.g.,
+Import API Gateway domain names using their `name`. For example:
 
 ```
 $ terraform import aws_api_gateway_domain_name.example dev.example.com

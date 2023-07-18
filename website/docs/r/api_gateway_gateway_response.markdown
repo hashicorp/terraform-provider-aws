@@ -48,7 +48,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-`aws_api_gateway_gateway_response` can be imported using `REST-API-ID/RESPONSE-TYPE`, e.g.,
+Import `aws_api_gateway_gateway_response` using `REST-API-ID/RESPONSE-TYPE`. For example:
 
 ```
 $ terraform import aws_api_gateway_gateway_response.example 12345abcde/UNAUTHORIZED
