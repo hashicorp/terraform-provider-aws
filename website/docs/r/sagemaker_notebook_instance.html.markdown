@@ -51,7 +51,7 @@ resource "aws_sagemaker_notebook_instance" "ni" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the notebook instance (must be unique).
 * `role_arn` - (Required) The ARN of the IAM role to be used by the notebook instance which allows SageMaker to call other services on your behalf.

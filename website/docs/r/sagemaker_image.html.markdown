@@ -23,7 +23,7 @@ resource "aws_sagemaker_image" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `image_name` - (Required) The name of the image. Must be unique to your account.
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker to perform tasks on your behalf.

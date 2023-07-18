@@ -27,7 +27,7 @@ resource "aws_sagemaker_monitoring_schedule" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `monitoring_schedule_config` - (Required) The configuration object that specifies the monitoring schedule and defines the monitoring job. Fields are documented below.
 * `name` - (Optional) The name of the monitoring schedule. The name must be unique within an AWS Region within an AWS account. If omitted, Terraform will assign a random, unique name.
