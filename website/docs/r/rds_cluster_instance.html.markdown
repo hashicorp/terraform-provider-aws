@@ -116,7 +116,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-RDS Cluster Instances can be imported using the `identifier`, e.g.,
+Import RDS Cluster Instances using the `identifier`. For example:
 
 ```
 $ terraform import aws_rds_cluster_instance.prod_instance_1 aurora-cluster-instance-1
