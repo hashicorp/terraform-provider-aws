@@ -60,7 +60,7 @@ resource "aws_cloudwatch_log_data_protection_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `log_group_name` - (Required) The name of the log group under which the log stream is to be created.
 * `policy_document` - (Required) Specifies the data protection policy in JSON. Read more at [Data protection policy syntax](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/mask-sensitive-log-data-start.html#mask-sensitive-log-data-policysyntax).
