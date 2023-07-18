@@ -336,9 +336,9 @@ For network connectivity to AWS resources in a VPC, specify a list of security g
 * `security_group_ids` - (Required) List of security group IDs associated with the Lambda function.
 * `subnet_ids` - (Required) List of subnet IDs associated with the Lambda function.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) identifying your Lambda Function.
 * `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
