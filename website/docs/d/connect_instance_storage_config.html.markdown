@@ -22,7 +22,7 @@ data "aws_connect_instance_storage_config" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `association_id` - (Required) The existing association identifier that uniquely identifies the resource type and storage config for the given instance ID.
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance

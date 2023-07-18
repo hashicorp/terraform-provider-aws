@@ -23,7 +23,7 @@ data "aws_connect_prompt" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Required) Returns information on a specific Prompt by name
