@@ -60,7 +60,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Audit Manager Framework can be imported using the framework `id`, e.g.,
+Import Audit Manager Framework using the framework `id`. For example:
 
 ```
 $ terraform import aws_auditmanager_framework.example abc123-de45
