@@ -30,7 +30,7 @@ resource "aws_waf_geo_match_set" "geo_match_set" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name or description of the GeoMatchSet.
 * `geo_match_constraint` - (Optional) The GeoMatchConstraint objects which contain the country that you want AWS WAF to search for.

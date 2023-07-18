@@ -40,7 +40,7 @@ resource "aws_waf_rate_based_rule" "wafrule" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule.
 * `name` - (Required) The name or description of the rule.
