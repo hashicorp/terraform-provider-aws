@@ -54,7 +54,7 @@ resource "aws_backup_vault_notifications" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `backup_vault_name` - (Required) Name of the backup vault to add notifications for.
 * `sns_topic_arn` - (Required) The Amazon Resource Name (ARN) that specifies the topic for a backup vault’s events
