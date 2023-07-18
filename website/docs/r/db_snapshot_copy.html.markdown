@@ -40,7 +40,7 @@ resource "aws_db_snapshot_copy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `copy_tags` - (Optional) Whether to copy existing tags. Defaults to `false`.
 * `destination_region` - (Optional) The Destination region to place snapshot copy.
