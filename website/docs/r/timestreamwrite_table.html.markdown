@@ -58,7 +58,7 @@ resource "aws_timestreamwrite_table" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `database_name` – (Required) The name of the Timestream database.
 * `magnetic_store_write_properties` - (Optional) Contains properties to set on the table when enabling magnetic store writes. See [Magnetic Store Write Properties](#magnetic-store-write-properties) below for more details.

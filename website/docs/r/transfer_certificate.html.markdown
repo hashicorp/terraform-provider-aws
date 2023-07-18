@@ -26,7 +26,7 @@ resource "aws_transfer_certificate" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `certificate` - (Required) The valid certificate file required for the transfer.
 * `certificate_chain` - (Optional) The optional list of certificate that make up the chain for the certificate that is being imported.
