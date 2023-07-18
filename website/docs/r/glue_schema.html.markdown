@@ -24,7 +24,7 @@ resource "aws_glue_schema" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `schema_name` – (Required) The Name of the schema.
 * `registry_arn` - (Required) The ARN of the Glue Registry to create the schema in.
