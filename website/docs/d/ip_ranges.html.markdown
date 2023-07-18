@@ -55,6 +55,8 @@ CIDR blocks, Terraform will fail.
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `cidr_blocks` - Lexically ordered list of CIDR blocks.
 * `ipv6_cidr_blocks` - Lexically ordered list of IPv6 CIDR blocks.
 * `create_date` - Publication time of the IP ranges (e.g., `2016-08-03-23-46-05`).
