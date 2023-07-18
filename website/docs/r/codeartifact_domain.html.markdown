@@ -40,7 +40,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CodeArtifact Domain can be imported using the CodeArtifact Domain arn, e.g.,
+Import CodeArtifact Domain using the CodeArtifact Domain arn. For example:
 
 ```
 $ terraform import aws_codeartifact_domain.example arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-8593714120730241305

@@ -248,7 +248,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudWatch Metric Alarm can be imported using the `alarm_name`, e.g.,
+Import CloudWatch Metric Alarm using the `alarm_name`. For example:
 
 ```
 $ terraform import aws_cloudwatch_metric_alarm.test alarm-12345
