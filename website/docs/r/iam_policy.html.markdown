@@ -37,7 +37,7 @@ resource "aws_iam_policy" "policy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional, Forces new resource) Description of the IAM policy.
 * `name` - (Optional, Forces new resource) The name of the policy. If omitted, Terraform will assign a random, unique name.
