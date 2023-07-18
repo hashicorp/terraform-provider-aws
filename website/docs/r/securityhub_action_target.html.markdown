@@ -25,7 +25,7 @@ resource "aws_securityhub_action_target" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The description for the custom action target.
 * `identifier` - (Required) The ID for the custom action target.
