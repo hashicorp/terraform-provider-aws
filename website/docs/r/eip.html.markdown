@@ -142,7 +142,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EIPs in a VPC can be imported using their Allocation ID, e.g.,
+Import EIPs in a VPC using their Allocation ID. For example:
 
 ```
 $ terraform import aws_eip.bar eipalloc-00a10e96
