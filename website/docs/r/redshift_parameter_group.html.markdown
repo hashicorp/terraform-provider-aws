@@ -61,7 +61,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Parameter Groups can be imported using the `name`, e.g.,
+Import Redshift Parameter Groups using the `name`. For example:
 
 ```
 $ terraform import aws_redshift_parameter_group.paramgroup1 parameter-group-test-terraform
