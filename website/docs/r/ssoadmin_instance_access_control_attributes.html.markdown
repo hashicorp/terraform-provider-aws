@@ -48,9 +48,9 @@ The following arguments are supported:
 
 * `source` - (Required) The identity source to use when mapping a specified attribute to AWS SSO.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier of the Instance Access Control Attribute `instance_arn`.
 
