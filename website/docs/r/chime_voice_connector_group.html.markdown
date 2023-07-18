@@ -44,7 +44,7 @@ resource "aws_chime_voice_connector_group" "group" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Amazon Chime Voice Connector group.
 * `connector` - (Optional) The Amazon Chime Voice Connectors to route inbound calls to.

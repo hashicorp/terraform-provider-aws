@@ -42,7 +42,7 @@ resource "aws_chime_voice_connector_origination" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
 * `route` - (Required) Set of call distribution properties defined for your SIP hosts. See [route](#route) below for more details. Minimum of 1. Maximum of 20.
