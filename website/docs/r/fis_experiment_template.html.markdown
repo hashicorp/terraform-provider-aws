@@ -136,7 +136,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import FIS Experiment Templates using the `id`, e.g.
+Import FIS Experiment Templates using the `id`. For example:
 
 ```
 $ terraform import aws_fis_experiment_template.template EXT123AbCdEfGhIjK

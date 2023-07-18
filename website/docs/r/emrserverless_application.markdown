@@ -125,7 +125,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EMR Severless applications using the `id`, e.g.
+Import EMR Severless applications using the `id`. For example:
 
 ```
 $ terraform import aws_emrserverless_application.example id
