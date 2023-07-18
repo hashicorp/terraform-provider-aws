@@ -74,7 +74,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Lambda Layers can be imported using `arn`.
+Import Lambda Layers using `arn`.
 
 ```
 $ terraform import \
