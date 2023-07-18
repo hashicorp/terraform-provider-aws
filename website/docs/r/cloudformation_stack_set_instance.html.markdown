@@ -81,7 +81,7 @@ resource "aws_cloudformation_stack_set_instance" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `stack_set_name` - (Required) Name of the StackSet.
 * `account_id` - (Optional) Target AWS Account ID to create a Stack based on the StackSet. Defaults to current account.
