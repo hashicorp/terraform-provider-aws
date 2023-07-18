@@ -78,7 +78,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SSM Maintenance Window targets can be imported using `WINDOW_ID/WINDOW_TARGET_ID`, e.g.,
+Import SSM Maintenance Window targets using `WINDOW_ID/WINDOW_TARGET_ID`. For example:
 
 ```
 $ terraform import aws_ssm_maintenance_window_target.example mw-0c50858d01EXAMPLE/23639a0b-ddbc-4bca-9e72-78d96EXAMPLE
