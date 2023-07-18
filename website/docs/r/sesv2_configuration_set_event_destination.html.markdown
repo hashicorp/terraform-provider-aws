@@ -160,9 +160,9 @@ The following arguments are required:
 
 * `topic_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon SNS topic to publish email events to.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A pipe-delimited string combining `configuration_set_name` and `event_destination_name`.
 
