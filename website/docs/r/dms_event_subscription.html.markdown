@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Event subscriptions can be imported using the `name`, e.g.,
+Import Event subscriptions using the `name`. For example:
 
 ```
 $ terraform import aws_dms_event_subscription.test my-awesome-event-subscription
