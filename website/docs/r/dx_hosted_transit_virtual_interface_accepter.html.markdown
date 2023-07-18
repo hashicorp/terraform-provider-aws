@@ -66,7 +66,7 @@ resource "aws_dx_hosted_transit_virtual_interface_accepter" "accepter" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `dx_gateway_id` - (Required) The ID of the [Direct Connect gateway](dx_gateway.html) to which to connect the virtual interface.
 * `virtual_interface_id` - (Required) The ID of the Direct Connect virtual interface to accept.
