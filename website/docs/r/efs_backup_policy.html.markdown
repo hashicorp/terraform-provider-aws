@@ -29,7 +29,7 @@ resource "aws_efs_backup_policy" "policy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `file_system_id` - (Required) The ID of the EFS file system.
 * `backup_policy` - (Required) A backup_policy object (documented below).
