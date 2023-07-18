@@ -23,7 +23,7 @@ resource "aws_dax_cluster" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_endpoint_encryption_type` – (Optional) The type of encryption the
 cluster's endpoint should support. Valid values are: `NONE` and `TLS`.
