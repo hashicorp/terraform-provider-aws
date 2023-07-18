@@ -33,7 +33,7 @@ resource "aws_transfer_connector" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `access_role` - (Required) The IAM Role which provides read and write access to the parent directory of the file location mentioned in the StartFileTransfer request.
 * `as2_config` - (Required) The parameters to configure for the connector object. Fields documented below.
