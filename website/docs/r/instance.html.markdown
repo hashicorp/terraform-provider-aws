@@ -443,7 +443,7 @@ For `instance_market_options`, in addition to the arguments above, the following
 
 ## Import
 
-Instances can be imported using the `id`, e.g.,
+Import Instances using the `id`. For example:
 
 ```
 $ terraform import aws_instance.web i-12345678

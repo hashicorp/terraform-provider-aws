@@ -106,7 +106,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IoT fleet provisioning templates can be imported using the `name`, e.g.
+Import IoT fleet provisioning templates using the `name`, e.g.
 
 ```
 $ terraform import aws_iot_provisioning_template.fleet FleetProvisioningTemplate
