@@ -26,7 +26,7 @@ resource "aws_gamelift_script" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the script
 * `storage_location` - (Optional) Information indicating where your game script files are stored. See below.
