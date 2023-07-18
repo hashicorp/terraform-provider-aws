@@ -34,9 +34,9 @@ The following arguments are supported:
 * `api_key` - (Required) Platform credential API key from Baidu.
 * `secret_key` - (Required) Platform credential Secret key from Baidu.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 

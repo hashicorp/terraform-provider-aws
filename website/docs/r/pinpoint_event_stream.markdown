@@ -70,9 +70,9 @@ The following arguments are supported:
 * `destination_stream_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon Kinesis stream or Firehose delivery stream to which you want to publish events.
 * `role_arn` - (Required) The IAM role that authorizes Amazon Pinpoint to publish events to the stream in your account.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
