@@ -62,7 +62,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_servicecatalog_portfolio_share` can be imported using the portfolio share ID, e.g.,
+Import `aws_servicecatalog_portfolio_share` using the portfolio share ID. For example:
 
 ```
 $ terraform import aws_servicecatalog_portfolio_share.example port-12344321:ACCOUNT:123456789012
