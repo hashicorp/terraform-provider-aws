@@ -51,7 +51,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-QuickSight Namespace can be imported using the AWS account ID and namespace separated by commas (`,`) e.g.,
+Import QuickSight Namespace using the AWS account ID and namespace separated by commas (`,`) e.g.,
 
 ```
 $ terraform import aws_quicksight_namespace.example 123456789012,example

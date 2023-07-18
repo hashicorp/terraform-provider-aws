@@ -53,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-QuickSight IAM Policy Assignment can be imported using the AWS account ID, namespace, and assignment name separated by commas (`,`) e.g.,
+Import QuickSight IAM Policy Assignment using the AWS account ID, namespace, and assignment name separated by commas (`,`) e.g.,
 
 ```
 $ terraform import aws_quicksight_iam_policy_assignment.example 123456789012,default,example
