@@ -34,7 +34,7 @@ output "caller_user" {
 
 There are no arguments available for this data source.
 
-## Attributes Reference
+## Attribute Reference
 
 * `account_id` - AWS Account ID number of the account that owns or contains the calling entity.
 * `arn` - ARN associated with the calling entity.
