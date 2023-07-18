@@ -25,7 +25,7 @@ resource "aws_kms_key" "a" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) The description of the key as viewed in AWS console.
 * `key_usage` - (Optional) Specifies the intended use of the key. Valid values: `ENCRYPT_DECRYPT`, `SIGN_VERIFY`, or `GENERATE_VERIFY_MAC`.
