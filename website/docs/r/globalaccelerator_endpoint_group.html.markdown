@@ -25,7 +25,7 @@ resource "aws_globalaccelerator_endpoint_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `listener_arn` - (Required) The Amazon Resource Name (ARN) of the listener.
 * `endpoint_group_region` (Optional) - The name of the AWS Region where the endpoint group is located.

@@ -29,7 +29,7 @@ resource "aws_globalaccelerator_accelerator" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the accelerator.
 * `ip_address_type` - (Optional) The value for the address type. Defaults to `IPV4`. Valid values: `IPV4`, `DUAL_STACK`.

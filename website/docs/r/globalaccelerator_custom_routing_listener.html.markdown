@@ -37,7 +37,7 @@ resource "aws_globalaccelerator_custom_routing_listener" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `accelerator_arn` - (Required) The Amazon Resource Name (ARN) of a custom routing accelerator.
 * `port_range` - (Optional) The list of port ranges for the connections from clients to the accelerator. Fields documented below.
