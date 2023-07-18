@@ -40,7 +40,7 @@ resource "aws_opensearch_inbound_connection_accepter" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `connection_id` - (Required, Forces new resource) Specifies the ID of the connection to accept.
 
