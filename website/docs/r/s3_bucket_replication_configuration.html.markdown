@@ -429,7 +429,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-S3 bucket replication configuration can be imported using the `bucket`, e.g.
+Import S3 bucket replication configuration using the `bucket`, e.g.
 
 ```sh
 $ terraform import aws_s3_bucket_replication_configuration.replication bucket-name

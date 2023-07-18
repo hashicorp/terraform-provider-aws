@@ -361,7 +361,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-S3 bucket notification can be imported using the `bucket`, e.g.,
+Import S3 bucket notification using the `bucket`. For example:
 
 ```
 $ terraform import aws_s3_bucket_notification.bucket_notification bucket-name
