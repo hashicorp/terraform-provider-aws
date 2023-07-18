@@ -54,7 +54,7 @@ The following arguments are required:
 
 ## Attribute Reference
 
-In addition to the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the route table.
 * `associations` - List of associations with attributes detailed below.

@@ -31,6 +31,8 @@ The given filters must match exactly one resolver rule whose data will be export
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `firewall_rules` - List with information about the firewall rules. See details below.
 
 ### provisioning_artifact_details
