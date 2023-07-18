@@ -32,7 +32,7 @@ resource "aws_connect_security_profile" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Specifies the description of the Security Profile.
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
