@@ -24,7 +24,7 @@ resource "aws_datasync_location_object_storage" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `agent_arns` - (Required) A list of DataSync Agent ARNs with which this location will be associated.
 * `access_key` - (Optional) The access key is used if credentials are required to access the self-managed object storage server. If your object storage requires a user name and password to authenticate, use `access_key` and `secret_key` to provide the user name and password, respectively.

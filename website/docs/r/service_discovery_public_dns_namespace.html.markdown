@@ -21,7 +21,7 @@ resource "aws_service_discovery_public_dns_namespace" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the namespace.
 * `description` - (Optional) The description that you specify for the namespace when you create it.

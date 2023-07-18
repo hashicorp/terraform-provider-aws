@@ -31,7 +31,7 @@ resource "aws_subnet" "alpha" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `file_system_id` - (Required) The ID of the file system for which the mount target is intended.
 * `subnet_id` - (Required) The ID of the subnet to add the mount target in.

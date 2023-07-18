@@ -37,7 +37,7 @@ resource "aws_waf_rule" "wafrule" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule. The name can contain only alphanumeric characters (A-Z, a-z, 0-9); the name can't contain whitespace.
 * `name` - (Required) The name or description of the rule.

@@ -200,7 +200,7 @@ resource "aws_rds_cluster_instance" "primary" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `global_cluster_identifier` - (Required, Forces new resources) Global cluster identifier.
 * `database_name` - (Optional, Forces new resources) Name for an automatically created database on cluster creation.

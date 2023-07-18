@@ -56,7 +56,7 @@ resource "aws_emr_instance_fleet" "task" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_id` - (Required) ID of the EMR Cluster to attach to. Changing this forces a new resource to be created.
 * `instance_type_configs` - (Optional) Configuration block for instance fleet

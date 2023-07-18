@@ -43,7 +43,7 @@ resource "aws_lex_slot_type" "flower_types" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `enumeration_value` - (Required) A list of EnumerationValue objects that defines the values that
 the slot type can take. Each value can have a list of synonyms, which are additional values that help

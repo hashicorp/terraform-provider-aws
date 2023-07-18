@@ -35,7 +35,7 @@ data "aws_ssm_patch_baseline" "default_custom" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `owner` - (Required) Owner of the baseline. Valid values: `All`, `AWS`, `Self` (the current account).
 * `name_prefix` - (Optional) Filter results by the baseline name prefix.

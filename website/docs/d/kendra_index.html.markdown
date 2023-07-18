@@ -20,7 +20,7 @@ data "aws_kendra_index" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `id` - (Required) Returns information on a specific Index by id.
 

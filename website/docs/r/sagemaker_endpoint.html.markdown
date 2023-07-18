@@ -27,7 +27,7 @@ resource "aws_sagemaker_endpoint" "e" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `endpoint_config_name` - (Required) The name of the endpoint configuration to use.
 * `deployment_config` - (Optional) The deployment configuration for an endpoint, which contains the desired deployment strategy and rollback configurations. See [Deployment Config](#deployment-config).

@@ -23,7 +23,7 @@ resource "aws_networkmanager_site" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `global_network_id` - (Required) The ID of the Global Network to create the site in.
 * `description` - (Optional) Description of the Site.

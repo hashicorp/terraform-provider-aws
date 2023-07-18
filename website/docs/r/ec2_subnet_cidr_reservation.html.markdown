@@ -22,7 +22,7 @@ resource "aws_ec2_subnet_cidr_reservation" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cidr_block` - (Required) The CIDR block for the reservation.
 * `reservation_type` - (Required) The type of reservation to create. Valid values: `explicit`, `prefix`

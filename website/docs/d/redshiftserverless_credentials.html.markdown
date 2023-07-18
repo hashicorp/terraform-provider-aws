@@ -20,7 +20,7 @@ data "aws_redshiftserverless_credentials" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `workgroup_name` - (Required) The name of the workgroup associated with the database.
 * `db_name` - (Optional) The name of the database to get temporary authorization to log on to.

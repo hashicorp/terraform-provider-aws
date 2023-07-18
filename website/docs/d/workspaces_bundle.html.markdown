@@ -31,7 +31,7 @@ data "aws_workspaces_bundle" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `bundle_id` – (Optional) ID of the bundle.
 * `owner` – (Optional) Owner of the bundles. You have to leave it blank for own bundles. You cannot combine this parameter with `bundle_id`.

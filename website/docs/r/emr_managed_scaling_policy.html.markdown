@@ -41,7 +41,7 @@ resource "aws_emr_managed_scaling_policy" "samplepolicy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_id` - (Required) ID of the EMR cluster
 * `compute_limits` - (Required) Configuration block with compute limit settings. Described below.

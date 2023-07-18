@@ -109,7 +109,7 @@ resource "aws_launch_template" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `block_device_mappings` - (Optional) Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.

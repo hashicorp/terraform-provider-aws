@@ -24,7 +24,7 @@ resource "aws_networkmanager_link_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `device_id` - (Required) The ID of the device.
 * `global_network_id` - (Required) The ID of the global network.

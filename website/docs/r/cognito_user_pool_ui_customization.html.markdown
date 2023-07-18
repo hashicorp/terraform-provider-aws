@@ -67,7 +67,7 @@ resource "aws_cognito_user_pool_ui_customization" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `client_id` (Optional) The client ID for the client app. Defaults to `ALL`. If `ALL` is specified, the `css` and/or `image_file` settings will be used for every client that has no UI customization set previously.
 * `css` (Optional) - The CSS values in the UI customization, provided as a String. At least one of `css` or `image_file` is required.

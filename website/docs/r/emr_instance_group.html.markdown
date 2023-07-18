@@ -28,7 +28,7 @@ resource "aws_emr_instance_group" "task" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` (Required) Human friendly name given to the instance group. Changing this forces a new resource to be created.
 * `cluster_id` (Required) ID of the EMR Cluster to attach to. Changing this forces a new resource to be created.

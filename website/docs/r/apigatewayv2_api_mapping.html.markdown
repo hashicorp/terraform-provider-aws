@@ -25,7 +25,7 @@ resource "aws_apigatewayv2_api_mapping" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `domain_name` - (Required) Domain name. Use the [`aws_apigatewayv2_domain_name`](/docs/providers/aws/r/apigatewayv2_domain_name.html) resource to configure a domain name.

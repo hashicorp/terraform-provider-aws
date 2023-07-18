@@ -27,7 +27,7 @@ resource "aws_ec2_transit_gateway_connect" "attachment" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `protocol` - (Optional) The tunnel protocol. Valid values: `gre`. Default is `gre`.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Connect. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

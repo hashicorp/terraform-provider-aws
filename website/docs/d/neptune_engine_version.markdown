@@ -20,7 +20,7 @@ data "aws_neptune_engine_version" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `engine` - (Optional) DB engine. (Default: `neptune`)
 * `parameter_group_family` - (Optional) Name of a specific DB parameter group family. An example parameter group family is `neptune1`.

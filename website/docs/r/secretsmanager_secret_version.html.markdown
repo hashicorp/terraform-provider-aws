@@ -57,7 +57,7 @@ output "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `secret_id` - (Required) Specifies the secret to which you want to add a new version. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret. The secret must already exist.
 * `secret_string` - (Optional) Specifies text data that you want to encrypt and store in this version of the secret. This is required if secret_binary is not set.

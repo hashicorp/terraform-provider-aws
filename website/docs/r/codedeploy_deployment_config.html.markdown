@@ -91,7 +91,7 @@ resource "aws_codedeploy_deployment_group" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `deployment_config_name` - (Required) The name of the deployment config.
 * `compute_platform` - (Optional) The compute platform can be `Server`, `Lambda`, or `ECS`. Default is `Server`.

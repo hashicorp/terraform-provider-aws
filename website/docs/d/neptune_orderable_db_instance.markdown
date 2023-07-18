@@ -21,7 +21,7 @@ data "aws_neptune_orderable_db_instance" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `engine` - (Optional) DB engine. (Default: `neptune`)
 * `engine_version` - (Optional) Version of the DB engine. For example, `1.0.1.0`, `1.0.1.2`, `1.0.2.2`, and `1.0.3.0`.

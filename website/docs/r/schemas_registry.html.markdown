@@ -23,7 +23,7 @@ resource "aws_schemas_registry" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the custom event schema registry. Maximum of 64 characters consisting of lower case letters, upper case letters, 0-9, ., -, _.
 * `description` - (Optional) The description of the discoverer. Maximum of 256 characters.

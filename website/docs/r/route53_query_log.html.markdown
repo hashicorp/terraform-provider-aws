@@ -75,7 +75,7 @@ resource "aws_route53_query_log" "example_com" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cloudwatch_log_group_arn` - (Required) CloudWatch log group ARN to send query logs.
 * `zone_id` - (Required) Route53 hosted zone ID to enable query logs.

@@ -21,7 +21,7 @@ resource "aws_dax_subnet_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` – (Required) The name of the subnet group.
 * `description` - (Optional) A description of the subnet group.

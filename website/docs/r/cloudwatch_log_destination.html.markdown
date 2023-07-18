@@ -22,7 +22,7 @@ resource "aws_cloudwatch_log_destination" "test_destination" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name for the log destination.
 * `role_arn` - (Required) The ARN of an IAM role that grants Amazon CloudWatch Logs permissions to put data into the target.

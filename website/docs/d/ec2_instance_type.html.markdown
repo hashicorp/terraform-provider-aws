@@ -22,7 +22,7 @@ data "aws_ec2_instance_type" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This data source supports the following arguments:
 
 * `instance_type` - (Required) Instance
 

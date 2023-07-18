@@ -79,7 +79,7 @@ resource "aws_s3_bucket_inventory" "test-prefix" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the source bucket that inventory lists the objects for.
 * `name` - (Required) Unique identifier of the inventory configuration for the bucket.

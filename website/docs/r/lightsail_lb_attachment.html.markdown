@@ -46,7 +46,7 @@ resource "aws_lightsail_lb_attachment" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `lb_name` - (Required) The name of the Lightsail load balancer.
 * `instance_name` - (Required) The name of the instance to attach to the load balancer.

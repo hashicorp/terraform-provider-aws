@@ -25,7 +25,7 @@ resource "aws_route53recoveryreadiness_resource_set" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_set_name` - (Required) Unique name describing the resource set.
 * `resource_set_type` - (Required) Type of the resources in the resource set.

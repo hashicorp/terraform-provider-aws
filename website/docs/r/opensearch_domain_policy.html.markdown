@@ -44,7 +44,7 @@ resource "aws_opensearch_domain_policy" "main" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain
 * `domain_name` - (Required) Name of the domain.

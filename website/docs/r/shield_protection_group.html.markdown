@@ -62,7 +62,7 @@ resource "aws_shield_protection_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `aggregation` - (Required) Defines how AWS Shield combines resource data for the group in order to detect, mitigate, and report events.
 * `members` - (Optional) The Amazon Resource Names (ARNs) of the resources to include in the protection group. You must set this when you set `pattern` to ARBITRARY and you must not set it for any other `pattern` setting.

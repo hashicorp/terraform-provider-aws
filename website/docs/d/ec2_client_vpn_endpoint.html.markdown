@@ -33,7 +33,7 @@ data "aws_ec2_client_vpn_endpoint" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `client_vpn_endpoint_id` - (Optional) ID of the Client VPN endpoint.
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.

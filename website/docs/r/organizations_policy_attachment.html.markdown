@@ -41,7 +41,7 @@ resource "aws_organizations_policy_attachment" "unit" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `policy_id` - (Required) The unique identifier (ID) of the policy that you want to attach to the target.
 * `target_id` - (Required) The unique identifier (ID) of the root, organizational unit, or account number that you want to attach the policy to.

@@ -52,7 +52,7 @@ resource "aws_wafregional_rule_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required, Forces new resource) The friendly name of the AWS Firewall Manager Policy.
 * `delete_all_policy_resources` - (Optional) If true, the request will also perform a clean-up process. Defaults to `true`. More information can be found here [AWS Firewall Manager delete policy](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_DeletePolicy.html)

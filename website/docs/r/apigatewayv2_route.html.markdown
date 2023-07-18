@@ -54,7 +54,7 @@ resource "aws_apigatewayv2_route" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `route_key` - (Required) Route key for the route. For HTTP APIs, the route key can be either `$default`, or a combination of an HTTP method and resource path, for example, `GET /pets`.

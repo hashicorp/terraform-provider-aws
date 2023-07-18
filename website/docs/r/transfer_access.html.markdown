@@ -40,7 +40,7 @@ resource "aws_transfer_access" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `external_id` - (Required) The SID of a group in the directory connected to the Transfer Server (e.g., `S-1-1-12-1234567890-123456789-1234567890-1234`)
 * `server_id` - (Required) The Server ID of the Transfer Server (e.g., `s-12345678`)

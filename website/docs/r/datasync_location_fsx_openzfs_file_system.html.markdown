@@ -29,7 +29,7 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `fsx_filesystem_arn` - (Required) The Amazon Resource Name (ARN) for the FSx for OpenZfs file system.
 * `protocol` - (Required) The type of protocol that DataSync uses to access your file system. See below.

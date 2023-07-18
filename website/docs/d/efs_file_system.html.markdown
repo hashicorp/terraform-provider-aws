@@ -31,7 +31,7 @@ data "aws_efs_file_system" "by_tag" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `file_system_id` - (Optional) ID that identifies the file system (e.g., fs-ccfc0d65).
 * `creation_token` - (Optional) Restricts the list to the file system with this creation token.

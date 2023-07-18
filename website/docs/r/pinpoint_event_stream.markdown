@@ -64,7 +64,7 @@ resource "aws_iam_role_policy" "test_role_policy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `application_id` - (Required) The application ID.
 * `destination_stream_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon Kinesis stream or Firehose delivery stream to which you want to publish events.

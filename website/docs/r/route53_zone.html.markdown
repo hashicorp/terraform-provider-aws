@@ -66,7 +66,7 @@ resource "aws_route53_zone" "private" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) This is the name of the hosted zone.
 * `comment` - (Optional) A comment for the hosted zone. Defaults to 'Managed by Terraform'.

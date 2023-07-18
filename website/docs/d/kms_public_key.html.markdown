@@ -32,7 +32,7 @@ data "aws_kms_public_key" "by_key_arn" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `key_id` - (Required) Key identifier which can be one of the following format:
     * Key ID. E.g - `1234abcd-12ab-34cd-56ef-1234567890ab`

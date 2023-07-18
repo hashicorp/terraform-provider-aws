@@ -20,7 +20,7 @@ data "aws_outposts_outposts" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `availability_zone` - (Optional) Availability Zone name.
 * `availability_zone_id` - (Optional) Availability Zone identifier.

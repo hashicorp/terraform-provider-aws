@@ -35,7 +35,7 @@ To enable automatic secret rotation, the Secrets Manager service requires usage 
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `secret_id` - (Required) Specifies the secret to which you want to add a new version. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret. The secret must already exist.
 * `rotation_lambda_arn` - (Required) Specifies the ARN of the Lambda function that can rotate the secret.

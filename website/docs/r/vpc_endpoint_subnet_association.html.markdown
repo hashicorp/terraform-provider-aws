@@ -29,7 +29,7 @@ resource "aws_vpc_endpoint_subnet_association" "sn_ec2" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_endpoint_id` - (Required) The ID of the VPC endpoint with which the subnet will be associated.
 * `subnet_id` - (Required) The ID of the subnet to be associated with the VPC endpoint.

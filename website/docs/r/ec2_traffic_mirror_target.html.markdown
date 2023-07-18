@@ -34,7 +34,7 @@ resource "aws_ec2_traffic_mirror_target" "gwlb" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional, Forces new) A description of the traffic mirror session.
 * `network_interface_id` - (Optional, Forces new) The network interface ID that is associated with the target.

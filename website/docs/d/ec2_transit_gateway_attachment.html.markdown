@@ -28,7 +28,7 @@ data "aws_ec2_transit_gateway_attachment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `transit_gateway_attachment_id` - (Optional) ID of the attachment.

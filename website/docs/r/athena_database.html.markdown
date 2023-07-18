@@ -25,7 +25,7 @@ resource "aws_athena_database" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of S3 bucket to save the results of the query execution.
 * `name` - (Required) Name of the database to create.

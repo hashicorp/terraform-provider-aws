@@ -24,7 +24,7 @@ A full example of how to create a Transit Gateway in one AWS account, share it w
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `subnet_ids` - (Required) Identifiers of EC2 Subnets.
 * `transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway.

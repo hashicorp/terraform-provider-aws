@@ -43,7 +43,7 @@ resource "aws_ec2_client_vpn_endpoint" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `client_vpn_endpoint_id` - (Required) The ID of the Client VPN endpoint.
 * `destination_cidr_block` - (Required) The IPv4 address range, in CIDR notation, of the route destination.

@@ -36,7 +36,7 @@ resource "aws_securityhub_invite_accepter" "invitee" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `master_id` - (Required) The account ID of the master Security Hub account whose invitation you're accepting.
 

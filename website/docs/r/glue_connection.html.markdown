@@ -68,7 +68,7 @@ resource "aws_glue_connection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `catalog_id` – (Optional) The ID of the Data Catalog in which to create the connection. If none is supplied, the AWS account ID is used by default.
 * `connection_properties` – (Optional) A map of key-value pairs used as parameters for this connection.

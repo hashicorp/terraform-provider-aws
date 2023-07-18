@@ -20,7 +20,7 @@ data "aws_apigatewayv2_apis" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Optional) API name.
 * `protocol_type` - (Optional) API protocol.

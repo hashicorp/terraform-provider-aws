@@ -49,7 +49,7 @@ resource "aws_db_instance" "dev" {
 
 ~> **NOTE:** One of either `db_instance_identifier` or `db_snapshot_identifier` is required.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent Snapshot.

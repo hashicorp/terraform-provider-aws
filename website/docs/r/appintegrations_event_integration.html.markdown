@@ -30,7 +30,7 @@ resource "aws_appintegrations_event_integration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Description of the Event Integration.
 * `eventbridge_bus` - (Required) EventBridge bus.

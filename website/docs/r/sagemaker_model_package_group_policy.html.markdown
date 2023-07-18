@@ -41,7 +41,7 @@ resource "aws_sagemaker_model_package_group_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `model_package_group_name` - (Required) The name of the model package group.
 

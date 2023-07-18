@@ -31,7 +31,7 @@ data "aws_workspaces_workspace" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `bundle_id` - (Optional) ID of the bundle for the WorkSpace.
 * `directory_id` - (Optional) ID of the directory for the WorkSpace. You have to specify `user_name` along with `directory_id`. You cannot combine this parameter with `workspace_id`.

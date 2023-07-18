@@ -41,7 +41,7 @@ resource "aws_vpc_endpoint_connection_accepter" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_endpoint_id` - (Required) AWS VPC Endpoint ID.
 * `vpc_endpoint_service_id` - (Required) AWS VPC Endpoint Service ID.

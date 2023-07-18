@@ -69,7 +69,7 @@ resource "aws_transfer_user" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `server_id` - (Required) The Server ID of the Transfer Server (e.g., `s-12345678`)
 * `user_name` - (Required) The name used for log in to your SFTP server.

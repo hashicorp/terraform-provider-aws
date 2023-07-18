@@ -31,7 +31,7 @@ resource "aws_instance" "web" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the stack
 

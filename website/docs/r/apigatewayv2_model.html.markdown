@@ -36,7 +36,7 @@ resource "aws_apigatewayv2_model" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `content_type` - (Required)  The content-type for the model, for example, `application/json`. Must be between 1 and 256 characters in length.

@@ -25,7 +25,7 @@ resource "aws_apigatewayv2_route_response" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `route_id` - (Required) Identifier of the [`aws_apigatewayv2_route`](/docs/providers/aws/r/apigatewayv2_route.html).

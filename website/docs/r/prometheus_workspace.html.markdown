@@ -38,7 +38,7 @@ resource "aws_prometheus_workspace" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `alias` - (Optional) The alias of the prometheus workspace. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-onboard-create-workspace.html).
 * `logging_configuration` - (Optional) Logging configuration for the workspace. See [Logging Configuration](#logging-configuration) below for details.

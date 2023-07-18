@@ -21,7 +21,7 @@ resource "aws_rum_metrics_destination" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `app_monitor_name` - (Required) The name of the CloudWatch RUM app monitor that will send the metrics.
 * `destination` - (Required)  Defines the destination to send the metrics to. Valid values are `CloudWatch` and `Evidently`. If you specify `Evidently`, you must also specify the ARN of the CloudWatchEvidently experiment that is to be the destination and an IAM role that has permission to write to the experiment.

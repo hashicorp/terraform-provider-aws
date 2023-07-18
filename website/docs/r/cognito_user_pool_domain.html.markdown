@@ -57,7 +57,7 @@ resource "aws_route53_record" "auth-cognito-A" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain` - (Required) For custom domains, this is the fully-qualified domain name, such as auth.example.com. For Amazon Cognito prefix domains, this is the prefix alone, such as auth.
 * `user_pool_id` - (Required) The user pool ID.

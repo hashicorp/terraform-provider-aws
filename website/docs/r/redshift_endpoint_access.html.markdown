@@ -22,7 +22,7 @@ resource "aws_redshift_endpoint_access" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_identifier` - (Required) The cluster identifier of the cluster to access.
 * `endpoint_name` - (Required) The Redshift-managed VPC endpoint name.

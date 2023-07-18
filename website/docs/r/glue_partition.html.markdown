@@ -22,7 +22,7 @@ resource "aws_glue_partition" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `database_name` - (Required) Name of the metadata database where the table metadata resides. For Hive compatibility, this must be all lowercase.
 * `partition_values` - (Required) The values that define the partition.

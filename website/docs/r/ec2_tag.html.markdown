@@ -40,7 +40,7 @@ resource "aws_ec2_tag" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_id` - (Required) The ID of the EC2 resource to manage the tag for.
 * `key` - (Required) The tag name.

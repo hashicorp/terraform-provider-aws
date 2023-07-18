@@ -180,7 +180,7 @@ resource "aws_instance" "this" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `ami` - (Optional) AMI to use for the instance. Required unless `launch_template` is specified and the Launch Template specifes an AMI. If an AMI is specified in the Launch Template, setting `ami` will override the AMI specified in the Launch Template.
 * `associate_public_ip_address` - (Optional) Whether to associate a public IP address with an instance in a VPC.

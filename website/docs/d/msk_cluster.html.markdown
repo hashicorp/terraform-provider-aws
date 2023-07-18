@@ -22,7 +22,7 @@ data "aws_msk_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cluster_name` - (Required) Name of the cluster.
 

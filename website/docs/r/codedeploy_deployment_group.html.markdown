@@ -183,7 +183,7 @@ resource "aws_codedeploy_deployment_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `app_name` - (Required) The name of the application.
 * `deployment_group_name` - (Required) The name of the deployment group.

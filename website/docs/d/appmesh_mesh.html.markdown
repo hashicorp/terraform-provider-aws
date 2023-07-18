@@ -29,7 +29,7 @@ data "aws_appmesh_mesh" "simple" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the service mesh.
 * `mesh_owner` - (Optional) AWS account ID of the service mesh's owner.

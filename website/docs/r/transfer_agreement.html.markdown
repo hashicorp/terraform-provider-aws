@@ -27,7 +27,7 @@ resource "aws_transfer_agreement" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `access_role` - (Required) The IAM Role which provides read and write access to the parent directory of the file location mentioned in the StartFileTransfer request.
 * `base_directory` - (Required) The landing directory for the files transferred by using the AS2 protocol.

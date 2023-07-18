@@ -25,7 +25,7 @@ resource "aws_ec2_host" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `auto_placement` - (Optional) Indicates whether the host accepts any untargeted instance launches that match its instance type configuration, or if it only accepts Host tenancy instance launches that specify its unique host ID. Valid values: `on`, `off`. Default: `on`.
 * `availability_zone` - (Required) The Availability Zone in which to allocate the Dedicated Host.

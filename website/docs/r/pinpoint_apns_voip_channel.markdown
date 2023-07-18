@@ -28,7 +28,7 @@ resource "aws_pinpoint_app" "app" {}
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `application_id` - (Required) The application ID.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. Defaults to `true`.

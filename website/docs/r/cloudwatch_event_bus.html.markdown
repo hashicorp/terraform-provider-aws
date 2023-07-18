@@ -33,7 +33,7 @@ resource "aws_cloudwatch_event_bus" "examplepartner" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the new event bus. The names of custom event buses can't contain the / character. To create a partner event bus, ensure the `name` matches the `event_source_name`.
 * `event_source_name` (Optional) The partner event source that the new event bus will be matched with. Must match `name`.

@@ -35,7 +35,7 @@ resource "aws_connect_quick_connect" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Specifies the description of the Quick Connect.
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.

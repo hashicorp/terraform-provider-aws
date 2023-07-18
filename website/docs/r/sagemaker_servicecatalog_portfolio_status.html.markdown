@@ -22,7 +22,7 @@ resource "aws_sagemaker_servicecatalog_portfolio_status" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `status` - (Required) Whether Service Catalog is enabled or disabled in SageMaker. Valid values are `Enabled` and `Disabled`.
 

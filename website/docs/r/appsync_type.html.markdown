@@ -34,7 +34,7 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) GraphQL API ID.
 * `format` - (Required) The type format: `SDL` or `JSON`.

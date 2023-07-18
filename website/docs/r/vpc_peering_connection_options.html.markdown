@@ -135,7 +135,7 @@ resource "aws_vpc_peering_connection_options" "accepter" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_peering_connection_id` - (Required) The ID of the requester VPC peering connection.
 * `accepter` (Optional) - An optional configuration block that allows for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to be set for the VPC that acceptsthe peering connection (a maximum of one).

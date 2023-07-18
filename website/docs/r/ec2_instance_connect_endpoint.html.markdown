@@ -20,7 +20,7 @@ resource "aws_ec2_instance_connect_endpoint" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `preserve_client_ip` - (Optional) Indicates whether your client's IP address is preserved as the source. Default: `true`.
 * `security_group_ids` - (Optional) One or more security groups to associate with the endpoint. If you don't specify a security group, the default security group for the VPC will be associated with the endpoint.

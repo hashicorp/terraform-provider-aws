@@ -61,7 +61,7 @@ resource "aws_sagemaker_workforce" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `workforce_name` - (Required) The name of the Workforce (must be unique).
 * `cognito_config` - (Optional) Use this parameter to configure an Amazon Cognito private workforce. A single Cognito workforce is created using and corresponds to a single Amazon Cognito user pool. Conflicts with `oidc_config`. see [Cognito Config](#cognito-config) details below.

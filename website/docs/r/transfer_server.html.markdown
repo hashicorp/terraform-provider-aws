@@ -87,7 +87,7 @@ resource "aws_transfer_server" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `certificate` - (Optional) The Amazon Resource Name (ARN) of the AWS Certificate Manager (ACM) certificate. This is required when `protocols` is set to `FTPS`
 * `domain` - (Optional) The domain of the storage system that is used for file transfers. Valid values are: `S3` and `EFS`. The default value is `S3`.

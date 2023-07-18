@@ -29,7 +29,7 @@ resource "aws_iam_virtual_mfa_device" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `virtual_mfa_device_name` - (Required) The name of the virtual MFA device. Use with path to uniquely identify a virtual MFA device.
 * `path` – (Optional) The path for the virtual MFA device.

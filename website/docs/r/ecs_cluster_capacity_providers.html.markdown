@@ -34,7 +34,7 @@ resource "aws_ecs_cluster_capacity_providers" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `capacity_providers` - (Optional) Set of names of one or more capacity providers to associate with the cluster. Valid values also include `FARGATE` and `FARGATE_SPOT`.
 * `cluster_name` - (Required, Forces new resource) Name of the ECS cluster to manage capacity providers for.

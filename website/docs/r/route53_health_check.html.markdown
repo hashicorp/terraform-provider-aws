@@ -81,7 +81,7 @@ resource "aws_route53_health_check" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 ~> **Note:** At least one of either `fqdn` or `ip_address` must be specified.
 

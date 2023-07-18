@@ -45,7 +45,7 @@ resource "aws_cleanrooms_collaboration" "test_collaboration" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) - The name of the collaboration.  Collaboration names do not need to be unique.
 * `description` - (Required) - A description for a collaboration.

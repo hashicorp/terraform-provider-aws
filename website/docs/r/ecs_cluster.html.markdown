@@ -54,7 +54,7 @@ resource "aws_ecs_cluster" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `configuration` - (Optional) The execute command configuration for the cluster. Detailed below.
 * `name` - (Required) Name of the cluster (up to 255 letters, numbers, hyphens, and underscores)

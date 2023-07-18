@@ -119,7 +119,7 @@ resource "aws_s3_bucket_acl" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `acl` - (Optional, Conflicts with `access_control_policy`) Canned ACL to apply to the bucket.
 * `access_control_policy` - (Optional, Conflicts with `acl`) Configuration block that sets the ACL permissions for an object per grantee. [See below](#access_control_policy).

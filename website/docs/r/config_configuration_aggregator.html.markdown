@@ -64,7 +64,7 @@ resource "aws_iam_role_policy_attachment" "organization" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the configuration aggregator.
 * `account_aggregation_source` - (Optional) The account(s) to aggregate config data from as documented below.

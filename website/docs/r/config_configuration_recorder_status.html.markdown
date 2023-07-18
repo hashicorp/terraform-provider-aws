@@ -78,7 +78,7 @@ resource "aws_iam_role_policy" "p" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the recorder
 * `is_enabled` - (Required) Whether the configuration recorder should be enabled or disabled.

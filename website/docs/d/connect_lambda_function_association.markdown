@@ -21,7 +21,7 @@ data "aws_connect_lambda_function_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `function_arn` - (Required) ARN of the Lambda Function, omitting any version or alias qualifier.
 * `instance_id` - (Required) Identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.

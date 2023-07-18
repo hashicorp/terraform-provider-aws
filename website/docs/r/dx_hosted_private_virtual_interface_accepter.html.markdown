@@ -61,7 +61,7 @@ resource "aws_dx_hosted_private_virtual_interface_accepter" "accepter" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `virtual_interface_id` - (Required) The ID of the Direct Connect virtual interface to accept.
 * `dx_gateway_id` - (Optional) The ID of the Direct Connect gateway to which to connect the virtual interface.

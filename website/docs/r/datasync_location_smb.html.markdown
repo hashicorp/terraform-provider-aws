@@ -28,7 +28,7 @@ resource "aws_datasync_location_smb" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `agent_arns` - (Required) A list of DataSync Agent ARNs with which this location will be associated.
 * `domain` - (Optional) The name of the Windows domain the SMB server belongs to.
@@ -41,7 +41,7 @@ The following arguments are supported:
 
 ### mount_options Argument Reference
 
-The following arguments are supported inside the `mount_options` configuration block:
+The `mount_options` configuration block supports the following arguments:
 
 * `version` - (Optional) The specific SMB version that you want DataSync to use for mounting your SMB share. Valid values: `AUTOMATIC`, `SMB2`, and `SMB3`. Default: `AUTOMATIC`
 

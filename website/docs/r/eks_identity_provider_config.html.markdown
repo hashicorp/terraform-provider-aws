@@ -26,7 +26,7 @@ resource "aws_eks_identity_provider_config" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_name` – (Required) Name of the EKS Cluster.
 * `oidc` - (Required) Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster. Detailed below.

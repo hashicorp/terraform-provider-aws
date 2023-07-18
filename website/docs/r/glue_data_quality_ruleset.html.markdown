@@ -60,7 +60,7 @@ resource "aws_glue_data_quality_ruleset" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Description of the data quality ruleset.
 * `name` - (Required, Forces new resource) Name of the data quality ruleset.

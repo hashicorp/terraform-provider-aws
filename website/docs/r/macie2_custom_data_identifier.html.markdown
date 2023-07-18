@@ -29,7 +29,7 @@ resource "aws_macie2_custom_data_identifier" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `regex` - (Optional) The regular expression (regex) that defines the pattern to match. The expression can contain as many as 512 characters.
 * `keywords` -  (Optional) An array that lists specific character sequences (keywords), one of which must be within proximity (`maximum_match_distance`) of the regular expression to match. The array can contain as many as 50 keywords. Each keyword can contain 3 - 90 characters. Keywords aren't case sensitive.

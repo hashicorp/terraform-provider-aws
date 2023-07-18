@@ -29,7 +29,7 @@ resource "aws_datasync_location_hdfs" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `agent_arns` - (Required) A list of DataSync Agent ARNs with which this location will be associated.
 * `authentication_type` - (Required) The type of authentication used to determine the identity of the user. Valid values are `SIMPLE` and `KERBEROS`.

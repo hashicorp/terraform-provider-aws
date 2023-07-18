@@ -20,7 +20,7 @@ resource "aws_ses_receipt_rule_set" "main" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rule_set_name` - (Required) Name of the rule set.
 

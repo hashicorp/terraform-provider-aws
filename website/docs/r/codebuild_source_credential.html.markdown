@@ -36,7 +36,7 @@ resource "aws_codebuild_source_credential" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `auth_type` - (Required) The type of authentication used to connect to a GitHub, GitHub Enterprise, or Bitbucket repository. An OAUTH connection is not supported by the API.
 * `server_type` - (Required) The source provider used for this project.

@@ -268,7 +268,7 @@ resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "my_
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Configuration name.
 * `resource_access_role_arn` - (Required) ARN of IAM Role used by service to invoke processors and sinks specified by configuration elements.

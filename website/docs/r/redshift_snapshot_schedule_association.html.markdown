@@ -35,7 +35,7 @@ resource "aws_redshift_snapshot_schedule_association" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_identifier` - (Required, Forces new resource) The cluster identifier.
 * `schedule_identifier` - (Required, Forces new resource) The snapshot schedule identifier.

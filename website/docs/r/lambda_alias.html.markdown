@@ -38,7 +38,7 @@ resource "aws_lambda_alias" "test_lambda_alias" {
 * `function_version` - (Required) Lambda function version for which you are creating the alias. Pattern: `(\$LATEST|[0-9]+)`.
 * `routing_config` - (Optional) The Lambda alias' route configuration settings. Fields documented below
 
-For **routing_config** the following attributes are supported:
+`routing_config` supports the following arguments:
 
 * `additional_version_weights` - (Optional) A map that defines the proportion of events that should be sent to different versions of a lambda function.
 

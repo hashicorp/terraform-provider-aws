@@ -26,7 +26,7 @@ resource "aws_sagemaker_device" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `device_fleet_name` - (Required) The name of the Device Fleet.
 * `device` - (Required) The device to register with SageMaker Edge Manager. See [Device](#device) details below.

@@ -33,7 +33,7 @@ resource "aws_redshift_cluster" "example" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](http://docs.aws.amazon.com/cli/latest/reference/redshift/index.html#cli-aws-redshift).
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `cluster_identifier` - (Required) The Cluster Identifier. Must be a lower case string.
 * `database_name` - (Optional) The name of the first database to be created when the cluster is created.

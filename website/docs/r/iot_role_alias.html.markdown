@@ -37,7 +37,7 @@ resource "aws_iot_role_alias" "alias" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `alias` - (Required) The name of the role alias.
 * `role_arn` - (Required) The identity of the role to which the alias refers.

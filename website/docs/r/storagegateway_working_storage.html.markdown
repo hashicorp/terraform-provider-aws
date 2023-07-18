@@ -23,7 +23,7 @@ resource "aws_storagegateway_working_storage" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `disk_id` - (Required) Local disk identifier. For example, `pci-0000:03:00.0-scsi-0:0:0:0`.
 * `gateway_arn` - (Required) The Amazon Resource Name (ARN) of the gateway.

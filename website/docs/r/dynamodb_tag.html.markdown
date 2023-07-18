@@ -51,7 +51,7 @@ resource "aws_dynamodb_tag" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_arn` - (Required) Amazon Resource Name (ARN) of the DynamoDB resource to tag.
 * `key` - (Required) Tag name.

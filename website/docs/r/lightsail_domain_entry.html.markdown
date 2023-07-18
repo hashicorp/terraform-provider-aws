@@ -30,7 +30,7 @@ resource "aws_lightsail_domain_entry" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) The name of the Lightsail domain in which to create the entry
 * `name` - (Required) Name of the entry record

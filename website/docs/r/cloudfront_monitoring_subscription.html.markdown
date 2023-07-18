@@ -26,7 +26,7 @@ resource "aws_cloudfront_monitoring_subscription" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `distribution_id` - (Required) The ID of the distribution that you are enabling metrics for.
 * `monitoring_subscription` - (Required) A monitoring subscription. This structure contains information about whether additional CloudWatch metrics are enabled for a given CloudFront distribution.

@@ -20,7 +20,7 @@ resource "aws_efs_access_point" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `file_system_id` - (Required) ID of the file system for which the access point is intended.
 * `posix_user` - (Optional) Operating system user and group applied to all file system requests made using the access point. [Detailed](#posix_user) below.

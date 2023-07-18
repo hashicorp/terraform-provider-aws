@@ -56,7 +56,7 @@ resource "aws_autoscaling_lifecycle_hook" "foobar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the lifecycle hook.
 * `autoscaling_group_name` - (Required) Name of the Auto Scaling group to which you want to assign the lifecycle hook

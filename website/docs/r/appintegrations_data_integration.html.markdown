@@ -33,7 +33,7 @@ resource "aws_appintegrations_data_integration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Specifies the description of the Data Integration.
 * `kms_key` - (Required) Specifies the KMS key Amazon Resource Name (ARN) for the Data Integration.

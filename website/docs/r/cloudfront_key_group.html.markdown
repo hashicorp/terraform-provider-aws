@@ -28,7 +28,7 @@ resource "aws_cloudfront_key_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `comment` - (Optional) A comment to describe the key group..
 * `items` - (Required) A list of the identifiers of the public keys in the key group.

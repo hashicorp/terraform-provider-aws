@@ -36,7 +36,7 @@ resource "aws_ec2_traffic_mirror_session" "session" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) A description of the traffic mirror session.
 * `network_interface_id` - (Required, Forces new) ID of the source network interface. Not all network interfaces are eligible as mirror sources. On EC2 instances only nitro based instances support mirroring.

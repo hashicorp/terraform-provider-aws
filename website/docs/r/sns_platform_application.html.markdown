@@ -48,7 +48,7 @@ resource "aws_sns_platform_application" "gcm_application" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The friendly name for the SNS platform application
 * `platform` - (Required) The platform that the app is registered with. See [Platform][1] for supported platforms.

@@ -20,7 +20,7 @@ resource "aws_datapipeline_pipeline" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of Pipeline.
 * `description` - (Optional) The description of Pipeline.

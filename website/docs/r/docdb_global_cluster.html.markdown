@@ -98,7 +98,7 @@ resource "aws_docdb_global_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `global_cluster_identifier` - (Required, Forces new resources) The global cluster identifier.
 * `database_name` - (Optional, Forces new resources) Name for an automatically created database on cluster creation.

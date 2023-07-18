@@ -77,7 +77,7 @@ The following arguments are optional:
 
 ### self_managed_active_directory
 
-The following arguments are supported for `self_managed_active_directory` configuration block:
+The `self_managed_active_directory` configuration block supports the following arguments:
 
 * `dns_ips` - (Required) A list of up to two IP addresses of DNS servers or domain controllers in the self-managed AD directory. The IP addresses need to be either in the same VPC CIDR range as the file system or in the private IP version 4 (IPv4) address ranges as specified in [RFC 1918](https://tools.ietf.org/html/rfc1918).
 * `domain_name` - (Required) The fully qualified domain name of the self-managed AD directory. For example, `corp.example.com`.

@@ -119,7 +119,7 @@ resource "aws_directory_service_region" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `desired_number_of_domain_controllers` - (Optional) The number of domain controllers desired in the replicated directory. Minimum value of `2`.
 * `directory_id` - (Required) The identifier of the directory to which you want to add Region replication.

@@ -41,7 +41,7 @@ resource "aws_api_gateway_base_path_mapping" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) Already-registered domain name to connect the API to.
 * `api_id` - (Required) ID of the API to connect.

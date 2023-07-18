@@ -29,7 +29,7 @@ resource "aws_vpc_ipam_resource_discovery_association" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `ipam_id` - (Required) The ID of the IPAM to associate.
 * `ipam_resource_discovery_id` - (Required) The ID of the Resource Discovery to associate.

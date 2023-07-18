@@ -47,7 +47,7 @@ resource "aws_cloudsearch_domain" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `endpoint_options` - (Optional) Domain endpoint options. Documented below.
 * `index_field` - (Optional) The index fields for documents added to the domain. Documented below.

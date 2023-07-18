@@ -23,7 +23,7 @@ resource "aws_sagemaker_image_version" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `image_name` - (Required) The name of the image. Must be unique to your account.
 * `base_image` - (Required) The registry path of the container image on which this image version is based.

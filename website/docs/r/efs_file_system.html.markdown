@@ -38,7 +38,7 @@ resource "aws_efs_file_system" "foo_with_lifecyle_policy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `availability_zone_name` - (Optional) the AWS Availability Zone in which to create the file system. Used to create a file system that uses One Zone storage classes. See [user guide](https://docs.aws.amazon.com/efs/latest/ug/storage-classes.html) for more information.
 * `creation_token` - (Optional) A unique name (a maximum of 64 characters are allowed)
@@ -55,7 +55,7 @@ user guide for more information.
 
 ### Lifecycle Policy Arguments
 
-For **lifecycle_policy** the following attributes are supported:
+`lifecycle_policy` supports the following arguments:
 
 * `transition_to_ia` - (Optional) Indicates how long it takes to transition files to the IA storage class. Valid values: `AFTER_1_DAY`, `AFTER_7_DAYS`, `AFTER_14_DAYS`, `AFTER_30_DAYS`, `AFTER_60_DAYS`, or `AFTER_90_DAYS`.
 * `transition_to_primary_storage_class` - (Optional) Describes the policy used to transition a file from infequent access storage to primary storage. Valid values: `AFTER_1_ACCESS`.

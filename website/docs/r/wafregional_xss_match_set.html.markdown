@@ -36,7 +36,7 @@ resource "aws_wafregional_xss_match_set" "xss_match_set" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the set
 * `xss_match_tuple` - (Optional) The parts of web requests that you want to inspect for cross-site scripting attacks.

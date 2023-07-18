@@ -27,7 +27,7 @@ resource "aws_internet_gateway" "example" {}
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `internet_gateway_id` - (Required) The ID of the internet gateway.
 * `vpc_id` - (Required) The ID of the VPC.

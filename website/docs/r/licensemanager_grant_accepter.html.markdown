@@ -20,7 +20,7 @@ resource "aws_licensemanager_grant_accepter" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `grant_arn` - (Required) The ARN of the grant to accept.
 

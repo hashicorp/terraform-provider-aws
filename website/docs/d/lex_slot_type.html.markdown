@@ -21,7 +21,7 @@ data "aws_lex_slot_type" "flower_types" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the slot type. The name is case sensitive.
 * `version` - (Optional) Version of the slot type.

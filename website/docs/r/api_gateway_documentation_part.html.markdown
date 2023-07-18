@@ -31,7 +31,7 @@ resource "aws_api_gateway_rest_api" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
 * `location` - (Required) Location of the targeted API entity of the to-be-created documentation part. See below.
 * `properties` - (Required) Content map of API-specific key-value pairs describing the targeted API entity. The map must be encoded as a JSON string, e.g., "{ \"description\": \"The API does ...\" }". Only Swagger-compliant key-value pairs can be exported and, hence, published.

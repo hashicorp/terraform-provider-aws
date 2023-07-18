@@ -128,7 +128,7 @@ resource "aws_api_gateway_stage" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) REST API identifier.
 * `description` - (Optional) Description of the deployment

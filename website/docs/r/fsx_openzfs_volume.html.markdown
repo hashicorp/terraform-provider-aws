@@ -22,7 +22,7 @@ resource "aws_fsx_openzfs_volume" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Volume. You can use a maximum of 203 alphanumeric characters, plus the underscore (_) special character.
 * `parent_volume_id` - (Required) The volume id of volume that will be the parent volume for the volume being created, this could be the root volume created from the `aws_fsx_openzfs_file_system` resource with the `root_volume_id` or the `id` property of another `aws_fsx_openzfs_volume`.

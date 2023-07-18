@@ -29,7 +29,7 @@ resource "aws_account_primary_contact" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) The ID of the target account when managing member accounts. Will manage current user's account by default if omitted.
 * `address_line_1` - (Required) The first line of the primary contact address.

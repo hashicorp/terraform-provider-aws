@@ -80,7 +80,7 @@ resource "aws_storagegateway_file_system_association" "fsx" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `gateway_arn` - (Required) The Amazon Resource Name (ARN) of the gateway.
 * `location_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon FSx file system to associate with the FSx File Gateway.

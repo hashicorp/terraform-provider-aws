@@ -47,7 +47,7 @@ resource "aws_vpc_endpoint_connection_notification" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_endpoint_service_id` - (Optional) The ID of the VPC Endpoint Service to receive notifications for.
 * `vpc_endpoint_id` - (Optional) The ID of the VPC Endpoint to receive notifications for.

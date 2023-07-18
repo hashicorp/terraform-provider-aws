@@ -27,7 +27,7 @@ resource "aws_macie2_member" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Required) The AWS account ID for the account.
 * `email` - (Required) The email address for the account.

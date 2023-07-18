@@ -55,7 +55,7 @@ resource "aws_shield_protection_health_check_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `health_check_arn` - (Required) The ARN (Amazon Resource Name) of the Route53 Health Check resource which will be associated to the protected resource.
 * `shield_protection_id` - (Required) The ID of the protected resource.

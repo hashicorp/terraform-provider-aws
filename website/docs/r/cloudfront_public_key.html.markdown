@@ -22,7 +22,7 @@ resource "aws_cloudfront_public_key" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `comment` - (Optional) An optional comment about the public key.
 * `encoded_key` - (Required) The encoded public key that you want to add to CloudFront to use with features like field-level encryption.

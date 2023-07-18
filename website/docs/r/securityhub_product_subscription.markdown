@@ -25,7 +25,7 @@ resource "aws_securityhub_product_subscription" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `product_arn` - (Required) The ARN of the product that generates findings that you want to import into Security Hub - see below.
 

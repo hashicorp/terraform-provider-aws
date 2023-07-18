@@ -36,7 +36,7 @@ resource "aws_lightsail_lb_certificate_attachment" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `lb_name` - (Required) The name of the load balancer to which you want to associate the SSL/TLS certificate.
 * `certificate_name` - (Required) The name of your SSL/TLS certificate.

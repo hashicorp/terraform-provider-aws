@@ -32,7 +32,7 @@ data "aws_region" "current" {}
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the stack to create. The resource deployed in AWS will be prefixed with `serverlessrepo-`
 * `application_id` - (Required) The ARN of the application from the Serverless Application Repository.

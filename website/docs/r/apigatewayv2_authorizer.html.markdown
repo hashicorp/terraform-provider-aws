@@ -40,7 +40,7 @@ resource "aws_apigatewayv2_authorizer" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `authorizer_type` - (Required) Authorizer type. Valid values: `JWT`, `REQUEST`.

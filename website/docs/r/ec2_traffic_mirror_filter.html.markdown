@@ -24,7 +24,7 @@ resource "aws_ec2_traffic_mirror_filter" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional, Forces new resource) A description of the filter.
 * `network_services` - (Optional) List of amazon network services that should be mirrored. Valid values: `amazon-dns`.

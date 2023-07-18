@@ -49,7 +49,7 @@ resource "aws_s3_bucket_metric" "example-filtered" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket to put metric configuration.
 * `name` - (Required) Unique identifier of the metrics configuration for the bucket. Must be less than or equal to 64 characters in length.

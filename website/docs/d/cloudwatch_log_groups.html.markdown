@@ -20,7 +20,7 @@ data "aws_cloudwatch_log_groups" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `log_group_name_prefix` - (Optional) Group prefix of the Cloudwatch log groups to list
 

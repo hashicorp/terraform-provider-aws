@@ -66,7 +66,7 @@ resource "aws_load_balancer_backend_server_policy" "wu-tang-backend-auth-policie
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `load_balancer_name` - (Required) The load balancer to attach the policy to.
 * `policy_names` - (Required) List of Policy Names to apply to the backend server.

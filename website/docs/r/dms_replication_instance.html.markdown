@@ -96,7 +96,7 @@ resource "aws_dms_replication_instance" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `allocated_storage` - (Optional, Default: 50, Min: 5, Max: 6144) The amount of storage (in gigabytes) to be initially allocated for the replication instance.
 * `allow_major_version_upgrade` - (Optional, Default: false) Indicates that major version upgrades are allowed.

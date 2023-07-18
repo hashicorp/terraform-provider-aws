@@ -40,7 +40,7 @@ resource "aws_connect_routing_profile" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `default_outbound_queue_id` - (Required) Specifies the default outbound queue for the Routing Profile.
 * `description` - (Required) Specifies the description of the Routing Profile.

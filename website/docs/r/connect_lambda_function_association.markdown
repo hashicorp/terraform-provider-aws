@@ -22,7 +22,7 @@ resource "aws_connect_lambda_function_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `function_arn` - (Required) Amazon Resource Name (ARN) of the Lambda Function, omitting any version or alias qualifier.
 * `instance_id` - (Required) The identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.

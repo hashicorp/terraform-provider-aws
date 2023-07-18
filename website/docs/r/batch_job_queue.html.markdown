@@ -59,7 +59,7 @@ resource "aws_batch_job_queue" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Specifies the name of the job queue.
 * `compute_environments` - (Required) Specifies the set of compute environments

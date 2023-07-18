@@ -65,7 +65,7 @@ resource "aws_s3_bucket" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket this intelligent tiering configuration is associated with.
 * `name` - (Required) Unique name used to identify the S3 Intelligent-Tiering configuration for the bucket.

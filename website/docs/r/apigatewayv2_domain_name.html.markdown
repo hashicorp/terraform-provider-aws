@@ -58,7 +58,7 @@ resource "aws_route53_record" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) Domain name. Must be between 1 and 512 characters in length.
 * `domain_name_configuration` - (Required) Domain name configuration. See below.

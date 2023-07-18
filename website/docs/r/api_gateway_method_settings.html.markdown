@@ -84,7 +84,7 @@ resource "aws_api_gateway_method_settings" "path_specific" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) ID of the REST API
 * `stage_name` - (Required) Name of the stage

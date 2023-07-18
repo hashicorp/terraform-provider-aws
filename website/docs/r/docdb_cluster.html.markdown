@@ -40,7 +40,7 @@ resource "aws_docdb_cluster" "docdb" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-cluster.html).
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications
      are applied immediately, or during the next maintenance window. Default is

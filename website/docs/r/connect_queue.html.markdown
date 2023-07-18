@@ -11,8 +11,6 @@ description: |-
 Provides an Amazon Connect Queue resource. For more information see
 [Amazon Connect: Getting Started](https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-get-started.html)
 
-~> **NOTE:** Due to The behaviour of Amazon Connect you cannot delete queues.
-
 ## Example Usage
 
 ### Basic
@@ -72,7 +70,7 @@ resource "aws_connect_queue" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Specifies the description of the Queue.
 * `hours_of_operation_id` - (Required) Specifies the identifier of the Hours of Operation.
