@@ -98,7 +98,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SES event destinations can be imported using `configuration_set_name` together with the event destination's `name`,
+Import SES event destinations using `configuration_set_name` together with the event destination's `name`,
 e.g.,
 
 ```

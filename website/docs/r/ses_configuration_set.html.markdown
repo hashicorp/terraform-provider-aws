@@ -61,7 +61,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SES Configuration Sets can be imported using their `name`, e.g.,
+Import SES Configuration Sets using their `name`. For example:
 
 ```
 $ terraform import aws_ses_configuration_set.test some-configuration-set-test
