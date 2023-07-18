@@ -84,9 +84,9 @@ Option Settings blocks support the following:
 * `name` - (Optional) The Name of the setting.
 * `value` - (Optional) The Value of the setting.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The db option group name.
 * `arn` - The ARN of the db option group.

@@ -108,9 +108,9 @@ The following arguments are supported inside the `options` configuration block:
 * `filter_type` - (Optional) The type of filter rule to apply. Valid values: `SIMPLE_PATTERN`.
 * `value` - (Optional) A single filter string that consists of the patterns to include. The patterns are delimited by "|" (that is, a pipe), for example: `/folder1|/folder2`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the DataSync Task.
 * `arn` - Amazon Resource Name (ARN) of the DataSync Task.
