@@ -181,7 +181,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import An AWS FinSpace Kx Cluster using the `id` (environment ID and cluster name, comma-delimited). For example:
+Import an AWS FinSpace Kx Cluster using the `id` (environment ID and cluster name, comma-delimited). For example:
 
 ```
 $ terraform import aws_finspace_kx_cluster.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster

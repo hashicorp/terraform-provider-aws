@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import An existing Security Hub enabled account using the AWS account ID. For example:
+Import an existing Security Hub enabled account using the AWS account ID. For example:
 
 ```
 $ terraform import aws_securityhub_organization_configuration.example 123456789012

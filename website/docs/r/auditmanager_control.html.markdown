@@ -74,7 +74,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import An Audit Manager Control using the `id`. For example:
+Import an Audit Manager Control using the `id`. For example:
 
 ```
 $ terraform import aws_auditmanager_control.example abc123-de45
