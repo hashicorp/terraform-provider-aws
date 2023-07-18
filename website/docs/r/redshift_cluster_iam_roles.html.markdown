@@ -23,7 +23,7 @@ resource "aws_redshift_cluster_iam_roles" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_identifier` - (Required) The name of the Redshift Cluster IAM Roles.
 * `iam_role_arns` - (Optional) A list of IAM Role ARNs to associate with the cluster. A Maximum of 10 can be associated to the cluster at any time.
