@@ -53,7 +53,7 @@ The following arguments are required:
 
 ## Attribute Reference
 
-In addition to the attributes above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the Dedicated Host.
 * `arn` - ARN of the Dedicated Host.
