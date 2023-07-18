@@ -55,7 +55,7 @@ The following arguments are optional:
 
 ### provisioning_artifact_parameters
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `description` - (Optional) Description of the provisioning artifact (i.e., version), including how it differs from the previous provisioning artifact.
 * `disable_template_validation` - (Optional) Whether AWS Service Catalog stops validating the specified provisioning artifact template even if it is invalid.
