@@ -33,9 +33,9 @@ The `vpc_configuration` object takes the following arguments:
 * `subnet_ids` - (Required) The subnet IDs of the VPC destination.
 * `vpc_id` - (Required) The ID of the VPC.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the topic rule destination
 

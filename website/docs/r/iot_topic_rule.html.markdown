@@ -224,9 +224,9 @@ The `timestream` object takes the following arguments:
     * `unit` - (Required) The precision of the timestamp value that results from the expression described in value. Valid values: `SECONDS`, `MILLISECONDS`, `MICROSECONDS`, `NANOSECONDS`.
     * `value` - (Required) An expression that returns a long epoch time value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the topic rule
 * `arn` - The ARN of the topic rule
