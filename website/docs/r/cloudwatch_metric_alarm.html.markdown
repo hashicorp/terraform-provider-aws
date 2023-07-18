@@ -238,9 +238,9 @@ The following values are supported: `ignore`, and `evaluate`.
    See docs for [supported statistics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html).
 * `unit` - (Optional) The unit for this metric.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the CloudWatch Metric Alarm.
 * `id` - The ID of the health check.
