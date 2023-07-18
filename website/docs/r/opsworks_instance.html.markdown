@@ -105,9 +105,9 @@ resources cannot be automatically detected by Terraform. After making updates
 to block device configuration, resource recreation can be manually triggered by
 using the [`taint` command](https://www.terraform.io/docs/commands/taint.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `created_at` - Time that the instance was created.
 * `ec2_instance_id` - EC2 instance ID.
