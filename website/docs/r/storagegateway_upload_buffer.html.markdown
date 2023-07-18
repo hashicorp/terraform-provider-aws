@@ -44,7 +44,7 @@ resource "aws_storagegateway_upload_buffer" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `disk_id` - (Optional) Local disk identifier. For example, `pci-0000:03:00.0-scsi-0:0:0:0`.
 * `disk_path` - (Optional) Local disk path. For example, `/dev/nvme1n1`.
