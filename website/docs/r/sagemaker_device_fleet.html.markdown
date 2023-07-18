@@ -27,7 +27,7 @@ resource "aws_sagemaker_device_fleet" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `device_fleet_name` - (Required) The name of the Device Fleet (must be unique).
 * `role_arn` - (Required) The Amazon Resource Name (ARN) that has access to AWS Internet of Things (IoT).

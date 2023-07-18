@@ -50,7 +50,7 @@ resource "aws_sagemaker_code_repository" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `code_repository_name` - (Required) The name of the Code Repository (must be unique).
 * `git_config` - (Required) Specifies details about the repository. see [Git Config](#git-config) details below.
