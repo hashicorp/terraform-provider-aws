@@ -45,7 +45,7 @@ resource "aws_cloudwatch_event_archive" "order" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the new event archive. The archive name cannot exceed 48 characters.
 * `event_source_arn` - (Required) Event bus source ARN from where these events should be archived.

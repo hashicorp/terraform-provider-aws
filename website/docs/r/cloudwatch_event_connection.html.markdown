@@ -133,7 +133,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the new connection. Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_.
 * `description` - (Optional) Enter a description for the connection. Maximum of 512 characters.
