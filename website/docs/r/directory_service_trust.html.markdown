@@ -92,7 +92,7 @@ resource "aws_directory_service_directory" "two" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `conditional_forwarder_ip_addrs` - (Optional) Set of IPv4 addresses for the DNS server associated with the remote Directory.
   Can contain between 1 and 4 values.
