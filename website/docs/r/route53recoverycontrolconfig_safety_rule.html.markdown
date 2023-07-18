@@ -45,7 +45,7 @@ resource "aws_route53recoverycontrolconfig_safety_rule" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `control_panel_arn` - (Required) ARN of the control panel in which this safety rule will reside.
 * `name` - (Required) Name describing the safety rule.
