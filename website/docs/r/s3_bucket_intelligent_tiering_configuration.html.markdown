@@ -89,7 +89,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import S3 bucket intelligent tiering configurations using `bucket:name`, e.g.
+Import S3 bucket intelligent tiering configurations using `bucket:name`. For example:
 
 ```
 $ terraform import aws_s3_bucket_intelligent_tiering_configuration.my-bucket-entire-bucket my-bucket:EntireBucket
