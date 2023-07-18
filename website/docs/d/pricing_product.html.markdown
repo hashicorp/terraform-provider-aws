@@ -82,4 +82,6 @@ data "aws_pricing_product" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `result` - Set to the product returned from the API.

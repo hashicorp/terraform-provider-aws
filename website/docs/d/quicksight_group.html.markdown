@@ -35,6 +35,8 @@ The following arguments are optional:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `arn` - The Amazon Resource Name (ARN) for the group.
 * `description` - The group description.
 * `principal_id` - The principal ID of the group.

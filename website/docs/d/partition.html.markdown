@@ -37,6 +37,8 @@ There are no arguments available for this data source.
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `dns_suffix` - Base DNS domain name for the current partition (e.g., `amazonaws.com` in AWS Commercial, `amazonaws.com.cn` in AWS China).
 * `id` - Identifier of the current partition (e.g., `aws` in AWS Commercial, `aws-cn` in AWS China).
 * `partition` - Identifier of the current partition (e.g., `aws` in AWS Commercial, `aws-cn` in AWS China).
