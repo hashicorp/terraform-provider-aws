@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Security Hub members can be imported using their account ID, e.g.,
+Import Security Hub members using their account ID. For example:
 
 ```
 $ terraform import aws_securityhub_member.example 123456789012
