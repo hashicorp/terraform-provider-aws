@@ -42,9 +42,9 @@ A `event_filter` block supports the following arguments:
 
 * `source` - (Required) Source of the events.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Event Integration.
 * `id` - Identifier of the Event Integration which is the name of the Event Integration.
