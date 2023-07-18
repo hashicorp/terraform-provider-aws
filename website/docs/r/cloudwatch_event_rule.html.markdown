@@ -58,7 +58,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The name of the rule. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.

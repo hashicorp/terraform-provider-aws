@@ -49,7 +49,7 @@ resource "aws_cloudwatch_log_destination_policy" "test_destination_policy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `destination_name` - (Required) A name for the subscription filter
 * `access_policy` - (Required) The policy document. This is a JSON formatted string.
