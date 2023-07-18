@@ -251,9 +251,9 @@ The following arguments are supported in the `control_plane_placement` configura
 
 * `outpost_arns` - (Required) The ARN of the Outpost that you want to use for your local Amazon EKS cluster on Outposts. This argument is a list of arns, but only a single Outpost ARN is supported currently.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the cluster.
 * `certificate_authority` - Attribute block containing `certificate-authority-data` for your cluster. Detailed below.

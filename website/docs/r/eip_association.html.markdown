@@ -59,9 +59,9 @@ specified, the Elastic IP address is associated with the primary private IP
 address.
 * `public_ip` - (Optional) The Elastic IP address. This is required for EC2-Classic.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `association_id` - The ID that represents the association of the Elastic IP
 address with an instance.

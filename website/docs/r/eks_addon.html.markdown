@@ -148,9 +148,9 @@ The following arguments are optional:
   for service accounts on your cluster](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html)
   in the Amazon EKS User Guide.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the EKS add-on.
 * `id` - EKS Cluster name and EKS Addon name separated by a colon (`:`).

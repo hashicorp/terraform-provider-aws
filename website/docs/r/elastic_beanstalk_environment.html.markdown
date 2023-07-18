@@ -103,9 +103,9 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
 }
 ```
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the Elastic Beanstalk Environment.
 * `name` - Name of the Elastic Beanstalk Environment.
