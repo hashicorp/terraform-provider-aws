@@ -42,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Media Package Channels can be imported via the channel ID, e.g.,
+Import Media Package Channels using the channel ID. For example:
 
 ```
 $ terraform import aws_media_package_channel.kittens kittens-channel
