@@ -36,7 +36,7 @@ resource "aws_appmesh_mesh" "simple" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name to use for the service mesh. Must be between 1 and 255 characters in length.
 * `spec` - (Optional) Service mesh specification to apply.
