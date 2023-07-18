@@ -24,7 +24,7 @@ data "aws_docdb_orderable_db_instance" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `engine` - (Optional) DB engine. Default: `docdb`
 * `engine_version` - (Optional) Version of the DB engine.
