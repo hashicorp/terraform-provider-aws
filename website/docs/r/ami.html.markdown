@@ -98,9 +98,9 @@ Nested `ephemeral_block_device` blocks have the following structure:
 * `virtual_name` - (Required) Name for the ephemeral device, of the form "ephemeralN" where
   *N* is a volume number starting from zero.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the AMI.
 * `id` - ID of the created AMI.
