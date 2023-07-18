@@ -31,6 +31,6 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to the argument above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `repository_endpoint` - URL of the returned endpoint.
