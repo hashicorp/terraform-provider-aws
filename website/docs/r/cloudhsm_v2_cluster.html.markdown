@@ -62,7 +62,7 @@ resource "aws_cloudhsm_v2_cluster" "cloudhsm_v2_cluster" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `source_backup_identifier` - (Optional) ID of Cloud HSM v2 cluster backup to be restored.
 * `hsm_type` - (Required) The type of HSM module in the cluster. Currently, only `hsm1.medium` is supported.

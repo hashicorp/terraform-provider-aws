@@ -87,7 +87,7 @@ resource "aws_cloudfront_response_headers_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A unique name to identify the response headers policy.
 * `comment` - (Optional) A comment to describe the response headers policy. The comment cannot be longer than 128 characters.

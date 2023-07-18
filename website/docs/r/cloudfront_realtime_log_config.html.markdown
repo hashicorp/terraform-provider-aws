@@ -72,7 +72,7 @@ resource "aws_cloudfront_realtime_log_config" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `endpoint` - (Required) The Amazon Kinesis data streams where real-time log data is sent.
 * `fields` - (Required) The fields that are included in each real-time log record. See the [AWS documentation](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/real-time-logs.html#understand-real-time-log-config-fields) for supported values.

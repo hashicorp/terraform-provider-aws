@@ -27,7 +27,7 @@ resource "aws_cloudhsm_v2_hsm" "cloudhsm_v2_hsm" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 ~> **NOTE:** Either `subnet_id` or `availability_zone` must be specified.
 
