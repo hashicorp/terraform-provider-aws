@@ -20,7 +20,7 @@ data "aws_rds_certificate" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `id` - (Optional) Certificate identifier. For example, `rds-ca-2019`.
 * `latest_valid_till` - (Optional) When enabled, returns the certificate with the latest `ValidTill`.

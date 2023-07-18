@@ -43,7 +43,7 @@ resource "aws_kinesis_firehose_delivery_stream" "example_stream" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cluster_identifier` - (Required) Cluster identifier
 
