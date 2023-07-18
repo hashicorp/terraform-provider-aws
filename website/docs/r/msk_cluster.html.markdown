@@ -201,7 +201,7 @@ resource "aws_msk_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `broker_node_group_info` - (Required) Configuration block for the broker nodes of the Kafka cluster.
 * `cluster_name` - (Required) Name of the MSK cluster.

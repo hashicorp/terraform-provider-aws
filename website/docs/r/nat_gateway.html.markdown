@@ -40,7 +40,7 @@ resource "aws_nat_gateway" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `allocation_id` - (Optional) The Allocation ID of the Elastic IP address for the gateway. Required for `connectivity_type` of `public`.
 * `connectivity_type` - (Optional) Connectivity type for the gateway. Valid values are `private` and `public`. Defaults to `public`.

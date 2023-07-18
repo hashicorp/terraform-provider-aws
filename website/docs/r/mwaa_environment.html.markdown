@@ -124,7 +124,7 @@ resource "aws_mwaa_environment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `airflow_configuration_options` - (Optional) The `airflow_configuration_options` parameter specifies airflow override options. Check the [Official documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-env-variables.html#configuring-env-variables-reference) for all possible configuration options.
 * `airflow_version` - (Optional) Airflow version of your environment, will be set by default to the latest version that MWAA supports.
