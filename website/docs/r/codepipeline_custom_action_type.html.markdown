@@ -33,7 +33,7 @@ resource "aws_codepipeline_custom_action_type" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `category` - (Required) The category of the custom action. Valid values: `Source`, `Build`, `Deploy`, `Test`, `Invoke`, `Approval`
 * `configuration_property` - (Optional) The configuration properties for the custom action. Max 10 items.
