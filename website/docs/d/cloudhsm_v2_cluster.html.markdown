@@ -27,7 +27,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `vpc_id` - ID of the VPC that the CloudHSM cluster resides in.
 * `security_group_id` - ID of the security group associated with the CloudHSM cluster.

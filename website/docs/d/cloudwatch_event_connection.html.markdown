@@ -26,7 +26,7 @@ data "aws_cloudwatch_event_connection" "test" {
 
 ## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `name` - Name of the connection.
 
