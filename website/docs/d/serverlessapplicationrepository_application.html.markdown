@@ -32,6 +32,8 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `application_id` - ARN of the application.
 * `name` - Name of the application.
 * `required_capabilities` - A list of capabilities describing the permissions needed to deploy the application.

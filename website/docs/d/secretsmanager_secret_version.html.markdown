@@ -49,6 +49,8 @@ output "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `arn` - ARN of the secret.
 * `id` - Unique identifier of this version of the secret.
 * `secret_string` - Decrypted part of the protected secret information that was originally provided as a string.

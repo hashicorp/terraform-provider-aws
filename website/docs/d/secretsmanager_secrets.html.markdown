@@ -34,5 +34,7 @@ The following arguments are supported by the `filter` configuration block:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `arns` - Set of ARNs of the matched Secrets Manager secrets.
 * `names` - Set of names of the matched Secrets Manager secrets.

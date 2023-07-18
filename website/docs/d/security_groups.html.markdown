@@ -42,6 +42,8 @@ data "aws_security_groups" "test" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `arns` - ARNs of the matched security groups.
 * `id` - AWS Region.
 * `ids` - IDs of the matches security groups.
