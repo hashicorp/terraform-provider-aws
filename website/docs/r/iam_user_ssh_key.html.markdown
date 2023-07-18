@@ -27,7 +27,7 @@ resource "aws_iam_user_ssh_key" "user" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `username` - (Required) The name of the IAM user to associate the SSH public key with.
 * `encoding` - (Required) Specifies the public key encoding format to use in the response. To retrieve the public key in ssh-rsa format, use `SSH`. To retrieve the public key in PEM format, use `PEM`.
