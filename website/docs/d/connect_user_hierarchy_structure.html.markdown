@@ -24,7 +24,7 @@ The following arguments are supported:
 
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all of the argument above, the following attributes are exported:
 

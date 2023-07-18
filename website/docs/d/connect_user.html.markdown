@@ -40,7 +40,7 @@ The following arguments are supported:
 * `name` - (Optional) Returns information on a specific User by name
 * `user_id` - (Optional) Returns information on a specific User by User id
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all of the arguments above, the following attributes are exported:
 
