@@ -121,9 +121,9 @@ The following arguments are optional:
 * `preferred_protocol` - (Optional) The preferred protocol that you want to use while streaming your application.
   Valid values are `TCP` and `UDP`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the appstream stack.
 * `created_time` - Date and time, in UTC and extended RFC 3339 format, when the stack was created.
