@@ -16,7 +16,7 @@ Provides a way to check whether serial console access is enabled for your AWS ac
 data "aws_ec2_serial_console_access" "current" {}
 ```
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
 

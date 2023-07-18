@@ -23,7 +23,7 @@ The following arguments are supported:
 
 * `registry_id` - (Optional) AWS account ID of the ECR Repository. If not specified the default account is assumed.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to the argument above, the following attributes are exported:
 
