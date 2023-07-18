@@ -33,7 +33,7 @@ resource "aws_workspaces_ip_group" "contractors" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the IP group.
 * `description` - (Optional) The description of the IP group.
