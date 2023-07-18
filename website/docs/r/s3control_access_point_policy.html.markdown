@@ -68,7 +68,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Access Point policies using the `access_point_arn`, e.g.
+Import Access Point policies using the `access_point_arn`. For example:
 
 ```
 $ terraform import aws_s3control_access_point_policy.example arn:aws:s3:us-west-2:123456789012:accesspoint/example
