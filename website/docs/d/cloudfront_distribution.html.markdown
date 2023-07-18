@@ -24,7 +24,7 @@ data "aws_cloudfront_distribution" "test" {
 
 ## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 
