@@ -132,9 +132,9 @@ The following arguments are optional:
 * `warning` - (Optional) Color (hexadecimal) that applies to warning and informational messages.
 * `warning_foreground` - (Optional) Color (hexadecimal) that applies to any text or other elements that appear over the warning color.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the theme.
 * `created_time` - The time that the theme was created.
