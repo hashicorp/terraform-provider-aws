@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Cloud9 environment membership using the `environment-id#user-arn`, e.g.
+Import Cloud9 environment membership using the `environment-id#user-arn`. For example:
 
 ```
 $ terraform import aws_cloud9_environment_membership.test environment-id#user-arn
