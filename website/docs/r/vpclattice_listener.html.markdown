@@ -113,7 +113,7 @@ resource "aws_vpclattice_listener" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `default_action` - (Required) Default action block for the default listener rule. Default action blocks are defined below.
 * `name` - (Required, Forces new resource) Name of the listener. A listener name must be unique within a service. Valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.

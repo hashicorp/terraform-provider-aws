@@ -73,7 +73,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_peering_connection_id` - (Required) The VPC Peering Connection ID to manage.
 * `auto_accept` - (Optional) Whether or not to accept the peering request. Defaults to `false`.
