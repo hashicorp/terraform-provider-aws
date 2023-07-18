@@ -97,7 +97,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-MediaLive Input can be imported using the `id`, e.g.,
+Import MediaLive Input using the `id`. For example:
 
 ```
 $ terraform import aws_medialive_input.example 12345678

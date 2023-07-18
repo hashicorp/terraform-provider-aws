@@ -35,7 +35,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-MediaStore Container can be imported using the MediaStore Container Name, e.g.,
+Import MediaStore Container using the MediaStore Container Name. For example:
 
 ```
 $ terraform import aws_media_store_container.example example
