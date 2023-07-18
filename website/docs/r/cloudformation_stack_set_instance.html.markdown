@@ -127,7 +127,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudFormation StackSet Instances that target an AWS Account ID can be imported using the StackSet name, target AWS account ID, and target AWS region separated by commas (`,`) e.g.
+Import CloudFormation StackSet Instances that target an AWS Account ID using the StackSet name, target AWS account ID, and target AWS region separated by commas (`,`) e.g.
 
 ```
 $ terraform import aws_cloudformation_stack_set_instance.example example,123456789012,us-east-1

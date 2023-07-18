@@ -55,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-A ChimeSDKVoice SIP Rule can be imported using the `id`, e.g.,
+Import A ChimeSDKVoice SIP Rule using the `id`. For example:
 
 ```
 $ terraform import aws_chimesdkvoice_sip_rule.example abcdef123456

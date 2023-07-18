@@ -466,7 +466,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudFront Distributions can be imported using the `id`, e.g.,
+Import CloudFront Distributions using the `id`. For example:
 
 ```
 $ terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
