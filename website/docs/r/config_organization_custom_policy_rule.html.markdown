@@ -78,7 +78,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-A Config Organization Custom Policy Rule can be imported using the `name` argument, e.g.,
+Import A Config Organization Custom Policy Rule using the `name` argument. For example:
 
 ```
 $ terraform import aws_config_organization_custom_policy_rule.example example_rule_name
