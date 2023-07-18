@@ -51,7 +51,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Appsync Types can be imported using the `id` e.g.,
+Import Appsync Types using the `id` e.g.,
 
 ```
 $ terraform import aws_appsync_type.example api-id:format:name

@@ -135,7 +135,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_appsync_function` can be imported using the AppSync API ID and Function ID separated by `-`, e.g.,
+Import `aws_appsync_function` using the AppSync API ID and Function ID separated by `-`. For example:
 
 ```
 $ terraform import aws_appsync_function.example xxxxx-yyyyy

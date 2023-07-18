@@ -55,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Athena Databases can be imported using their name, e.g.,
+Import Athena Databases using their name. For example:
 
 ```
 $ terraform import aws_athena_database.example example
