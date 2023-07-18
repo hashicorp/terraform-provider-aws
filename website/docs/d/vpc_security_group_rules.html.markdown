@@ -37,4 +37,6 @@ which take the following arguments:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `ids` - List of all the security group rule IDs found.
