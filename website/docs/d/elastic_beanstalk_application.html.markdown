@@ -32,6 +32,8 @@ output "description" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - Name of the application
 * `arn` - ARN of the application.
 * `description` - Short description of the application

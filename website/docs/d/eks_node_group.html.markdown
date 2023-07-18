@@ -26,6 +26,8 @@ data "aws_eks_node_group" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - EKS Cluster name and EKS Node Group name separated by a colon (`:`).
 * `ami_type` - Type of Amazon Machine Image (AMI) associated with the EKS Node Group.
 * `arn` - ARN of the EKS Node Group.

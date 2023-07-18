@@ -23,5 +23,7 @@ data "aws_eks_cluster" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - AWS Region.
 * `names` - Set of EKS clusters names

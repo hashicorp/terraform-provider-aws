@@ -37,6 +37,8 @@ output "identity-oidc-issuer" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - Name of the cluster
 * `arn` - ARN of the cluster.
 * `certificate_authority` - Nested attribute containing `certificate-authority-data` for your cluster.

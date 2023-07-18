@@ -41,5 +41,7 @@ provider "kubernetes" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - Name of the cluster.
 * `token` - Token to use to authenticate with the cluster.
