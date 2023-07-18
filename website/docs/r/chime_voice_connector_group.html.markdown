@@ -64,7 +64,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Configuration Recorder can be imported using the name, e.g.,
+Import Configuration Recorder using the name. For example:
 
 ```
 $ terraform import aws_chime_voice_connector_group.default example

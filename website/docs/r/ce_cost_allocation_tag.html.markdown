@@ -35,7 +35,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ce_cost_allocation_tag` can be imported using the `id`, e.g.
+Import `aws_ce_cost_allocation_tag` using the `id`, e.g.
 
 ```
 $ terraform import aws_ce_cost_allocation_tag.example key

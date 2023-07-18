@@ -213,7 +213,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ce_anomaly_subscription` can be imported using the `id`, e.g.
+Import `aws_ce_anomaly_subscription` using the `id`, e.g.
 
 ```
 $ terraform import aws_ce_anomaly_subscription.example AnomalySubscriptionARN
