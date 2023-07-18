@@ -32,9 +32,9 @@ The following arguments are supported:
 The name must start with the word "alias" followed by a forward slash (alias/).  Conflicts with `name`.
 * `target_key_id` - (Required) Identifier for the key for which the alias is for, can be either an ARN or key_id.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the key alias.
 * `target_key_arn` - The Amazon Resource Name (ARN) of the target key identifier.
