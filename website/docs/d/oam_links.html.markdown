@@ -19,7 +19,7 @@ data "aws_oam_links" "example" {
 }
 ```
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
 
