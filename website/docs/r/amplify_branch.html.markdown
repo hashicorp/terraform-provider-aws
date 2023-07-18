@@ -153,7 +153,7 @@ resource "aws_sns_topic_subscription" "this" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `app_id` - (Required) Unique ID for an Amplify app.
 * `branch_name` - (Required) Name for the branch.

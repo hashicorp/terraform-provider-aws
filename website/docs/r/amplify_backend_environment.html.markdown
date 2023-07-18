@@ -28,7 +28,7 @@ resource "aws_amplify_backend_environment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `app_id` - (Required) Unique ID for an Amplify app.
 * `environment_name` - (Required) Name for the backend environment.
