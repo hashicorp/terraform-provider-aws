@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Cluster Snapshots support import by `snapshot_identifier`, e.g.,
+Import Redshift Cluster Snapshots using `snapshot_identifier`. For example:
 
 ```console
 $ terraform import aws_redshift_cluster_snapshot.test example
