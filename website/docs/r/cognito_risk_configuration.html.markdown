@@ -24,7 +24,7 @@ resource "aws_cognito_risk_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `user_pool_id` - (Required) The user pool ID.
 * `client_id` - (Optional) The app client ID. When the client ID is not provided, the same risk configuration is applied to all the clients in the User Pool.

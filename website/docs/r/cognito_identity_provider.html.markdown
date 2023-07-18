@@ -39,7 +39,7 @@ resource "aws_cognito_identity_provider" "example_provider" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `user_pool_id` (Required) - The user pool id
 * `provider_name` (Required) - The provider name
