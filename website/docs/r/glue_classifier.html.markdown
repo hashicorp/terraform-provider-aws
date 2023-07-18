@@ -113,7 +113,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Glue Classifiers can be imported using their name, e.g.,
+Import Glue Classifiers using their name. For example:
 
 ```
 $ terraform import aws_glue_classifier.MyClassifier MyClassifier
