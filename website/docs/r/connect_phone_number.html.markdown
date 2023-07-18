@@ -87,7 +87,7 @@ The `status` configuration block supports the following attributes:
 
 ## Import
 
-Import Amazon Connect Phone Numbers using its `id` e.g.,
+Import Amazon Connect Phone Numbers using its `id`. For example:
 
 ```
 $ terraform import aws_connect_phone_number.example 12345678-abcd-1234-efgh-9876543210ab

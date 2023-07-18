@@ -35,7 +35,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_connect_lambda_function_association` using the `instance_id` and `function_arn` separated by a comma (`,`) e.g.,
+Import `aws_connect_lambda_function_association` using the `instance_id` and `function_arn` separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_connect_lambda_function_association.example aaaaaaaa-bbbb-cccc-dddd-111111111111,arn:aws:lambda:us-west-2:123456789123:function:example
