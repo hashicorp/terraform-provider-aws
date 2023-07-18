@@ -135,7 +135,7 @@ failure_reason response element.
 
 ## Import
 
-Bots can be imported using their name.
+Import Bots using their name.
 
 ```
 $ terraform import aws_lex_bot.order_flowers_bot OrderFlowers
