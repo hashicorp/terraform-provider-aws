@@ -44,7 +44,7 @@ IPAM Pools in the current region.
 
 ## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `ipam_pools` - List of IPAM pools and their attributes. See below for details
 
