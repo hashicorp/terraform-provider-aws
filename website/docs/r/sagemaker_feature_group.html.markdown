@@ -88,7 +88,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Feature Groups can be imported using the `name`, e.g.,
+Import Feature Groups using the `name`. For example:
 
 ```
 $ terraform import aws_sagemaker_feature_group.test_feature_group feature_group-foo
