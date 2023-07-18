@@ -66,7 +66,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import The AWS organization using the `id`. For example:
+Import the AWS organization using the `id`. For example:
 
 ```
 $ terraform import aws_organizations_organization.my_org o-1234567
