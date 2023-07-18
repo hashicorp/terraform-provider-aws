@@ -20,7 +20,7 @@ data "aws_appintegrations_event_integration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) The AppIntegrations Event Integration name.
 

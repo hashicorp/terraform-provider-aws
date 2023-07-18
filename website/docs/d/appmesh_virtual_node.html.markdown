@@ -21,7 +21,7 @@ data "aws_appmesh_virtual_node" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the virtual node.
 * `mesh_name` - (Required) Name of the service mesh in which the virtual node exists.
