@@ -14725,11 +14725,139 @@ var awsPartition = partition{
 					Region: "ap-southeast-2",
 				}: endpoint{},
 				endpointKey{
+					Region: "api-ap-southeast-1",
+				}: endpoint{
+					Hostname: "api.iottwinmaker.ap-southeast-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-southeast-1",
+					},
+				},
+				endpointKey{
+					Region: "api-ap-southeast-2",
+				}: endpoint{
+					Hostname: "api.iottwinmaker.ap-southeast-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-southeast-2",
+					},
+				},
+				endpointKey{
+					Region: "api-eu-central-1",
+				}: endpoint{
+					Hostname: "api.iottwinmaker.eu-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-central-1",
+					},
+				},
+				endpointKey{
+					Region: "api-eu-west-1",
+				}: endpoint{
+					Hostname: "api.iottwinmaker.eu-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-west-1",
+					},
+				},
+				endpointKey{
+					Region: "api-us-east-1",
+				}: endpoint{
+					Hostname: "api.iottwinmaker.us-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
+				},
+				endpointKey{
+					Region: "api-us-west-2",
+				}: endpoint{
+					Hostname: "api.iottwinmaker.us-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-2",
+					},
+				},
+				endpointKey{
+					Region: "data-ap-southeast-1",
+				}: endpoint{
+					Hostname: "data.iottwinmaker.ap-southeast-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-southeast-1",
+					},
+				},
+				endpointKey{
+					Region: "data-ap-southeast-2",
+				}: endpoint{
+					Hostname: "data.iottwinmaker.ap-southeast-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-southeast-2",
+					},
+				},
+				endpointKey{
+					Region: "data-eu-central-1",
+				}: endpoint{
+					Hostname: "data.iottwinmaker.eu-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-central-1",
+					},
+				},
+				endpointKey{
+					Region: "data-eu-west-1",
+				}: endpoint{
+					Hostname: "data.iottwinmaker.eu-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-west-1",
+					},
+				},
+				endpointKey{
+					Region: "data-us-east-1",
+				}: endpoint{
+					Hostname: "data.iottwinmaker.us-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
+				},
+				endpointKey{
+					Region: "data-us-west-2",
+				}: endpoint{
+					Hostname: "data.iottwinmaker.us-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-2",
+					},
+				},
+				endpointKey{
 					Region: "eu-central-1",
 				}: endpoint{},
 				endpointKey{
 					Region: "eu-west-1",
 				}: endpoint{},
+				endpointKey{
+					Region: "fips-api-us-east-1",
+				}: endpoint{
+					Hostname: "api.iottwinmaker-fips.us-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
+				},
+				endpointKey{
+					Region: "fips-api-us-west-2",
+				}: endpoint{
+					Hostname: "api.iottwinmaker-fips.us-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-2",
+					},
+				},
+				endpointKey{
+					Region: "fips-data-us-east-1",
+				}: endpoint{
+					Hostname: "data.iottwinmaker-fips.us-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
+				},
+				endpointKey{
+					Region: "fips-data-us-west-2",
+				}: endpoint{
+					Hostname: "data.iottwinmaker-fips.us-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-2",
+					},
+				},
 				endpointKey{
 					Region: "fips-us-east-1",
 				}: endpoint{
@@ -17888,6 +18016,9 @@ var awsPartition = partition{
 				}: endpoint{},
 				endpointKey{
 					Region: "ap-southeast-2",
+				}: endpoint{},
+				endpointKey{
+					Region: "ca-central-1",
 				}: endpoint{},
 				endpointKey{
 					Region: "eu-central-1",
@@ -36022,6 +36153,38 @@ var awsusgovPartition = partition{
 		},
 		"iottwinmaker": service{
 			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "api-us-gov-west-1",
+				}: endpoint{
+					Hostname: "api.iottwinmaker.us-gov-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-west-1",
+					},
+				},
+				endpointKey{
+					Region: "data-us-gov-west-1",
+				}: endpoint{
+					Hostname: "data.iottwinmaker.us-gov-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-west-1",
+					},
+				},
+				endpointKey{
+					Region: "fips-api-us-gov-west-1",
+				}: endpoint{
+					Hostname: "api.iottwinmaker-fips.us-gov-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-west-1",
+					},
+				},
+				endpointKey{
+					Region: "fips-data-us-gov-west-1",
+				}: endpoint{
+					Hostname: "data.iottwinmaker-fips.us-gov-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-west-1",
+					},
+				},
 				endpointKey{
 					Region: "fips-us-gov-west-1",
 				}: endpoint{
