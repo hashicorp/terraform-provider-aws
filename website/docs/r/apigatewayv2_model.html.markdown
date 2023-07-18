@@ -44,9 +44,9 @@ The following arguments are supported:
 * `schema` - (Required) Schema for the model. This should be a [JSON schema draft 4](https://tools.ietf.org/html/draft-zyp-json-schema-04) model. Must be less than or equal to 32768 characters in length.
 * `description` - (Optional) Description of the model. Must be between 1 and 128 characters in length.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Model identifier.
 
