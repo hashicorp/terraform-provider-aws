@@ -64,7 +64,7 @@ resource "aws_iam_role_policy" "role_policy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `application_id` - (Required) The application ID.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. Defaults to `true`.

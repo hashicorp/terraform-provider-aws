@@ -40,7 +40,7 @@ resource "aws_proxy_protocol_policy" "smtp" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `load_balancer` - (Required) The load balancer to which the policy
   should be attached.
