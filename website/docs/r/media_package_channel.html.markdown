@@ -21,7 +21,7 @@ resource "aws_media_package_channel" "kittens" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `channel_id` - (Required) A unique identifier describing the channel
 * `description` - (Optional) A description of the channel
