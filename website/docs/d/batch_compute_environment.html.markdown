@@ -25,9 +25,9 @@ The following arguments are supported:
 
 * `compute_environment_name` - (Required) Name of the Batch Compute Environment
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the compute environment.
 * `ecs_cluster_arn` - ARN of the underlying Amazon ECS cluster used by the compute environment.

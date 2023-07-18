@@ -6,7 +6,7 @@ description: |-
   Provides details about an AWS Backup selection.
 ---
 
-# Data source: aws_backup_selection
+# Data Source: aws_backup_selection
 
 Use this data source to get information on an existing backup selection.
 
@@ -26,7 +26,7 @@ The following arguments are supported:
 * `plan_id` - (Required) Backup plan ID associated with the selection of resources.
 * `selection_id` - (Required) Backup selection ID.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are available:
 

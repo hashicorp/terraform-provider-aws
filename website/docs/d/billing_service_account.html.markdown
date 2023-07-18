@@ -60,7 +60,7 @@ resource "aws_s3_bucket_policy" "allow_billing_logging" {
 }
 ```
 
-## Attributes Reference
+## Attribute Reference
 
 * `id` - ID of the AWS billing service account.
 * `arn` - ARN of the AWS billing service account.

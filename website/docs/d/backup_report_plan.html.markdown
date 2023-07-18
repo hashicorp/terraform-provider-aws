@@ -24,7 +24,7 @@ The following arguments are supported:
 
 * `name` - (Required) Backup report plan name.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to the arguments above, the following attributes are exported:
 

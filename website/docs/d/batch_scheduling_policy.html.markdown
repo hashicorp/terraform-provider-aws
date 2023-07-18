@@ -24,7 +24,7 @@ The following arguments are supported:
 
 * `arn` - (Required) ARN of the scheduling policy.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all the arguments above, the following attributes are exported:
 

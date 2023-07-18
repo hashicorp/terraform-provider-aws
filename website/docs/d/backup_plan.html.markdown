@@ -24,7 +24,7 @@ The following arguments are supported:
 
 * `plan_id` - (Required) Backup plan ID.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to the arguments above, the following attributes are exported:
 
