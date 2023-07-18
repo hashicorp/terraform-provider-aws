@@ -88,7 +88,7 @@ resource "aws_s3_object" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required, Forces new resource) Name of the S3 bucket.
 * `versioning_configuration` - (Required) Configuration block for the versioning parameters. [See below](#versioning_configuration).

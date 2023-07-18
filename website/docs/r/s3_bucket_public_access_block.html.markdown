@@ -29,7 +29,7 @@ resource "aws_s3_bucket_public_access_block" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) S3 Bucket to which this Public Access Block configuration should be applied.
 * `block_public_acls` - (Optional) Whether Amazon S3 should block public ACLs for this bucket. Defaults to `false`. Enabling this setting does not affect existing policies or ACLs. When set to `true` causes the following behavior:
