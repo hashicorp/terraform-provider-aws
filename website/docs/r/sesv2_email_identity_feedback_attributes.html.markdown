@@ -32,9 +32,9 @@ The following arguments are supported:
 * `email_identity` - (Required) The email identity.
 * `email_forwarding_enabled` - (Optional) Sets the feedback forwarding configuration for the identity.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
