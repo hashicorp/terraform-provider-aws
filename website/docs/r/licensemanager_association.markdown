@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-License configurations can be imported using `resource_arn,license_configuration_arn`, e.g.,
+Import License configurations using `resource_arn,license_configuration_arn`. For example:
 
 ```
 $ terraform import aws_licensemanager_association.example arn:aws:ec2:eu-west-1:123456789012:image/ami-123456789abcdef01,arn:aws:license-manager:eu-west-1:123456789012:license-configuration:lic-0123456789abcdef0123456789abcdef
