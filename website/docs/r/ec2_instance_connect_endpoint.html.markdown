@@ -34,9 +34,9 @@ The following arguments are supported:
 - `create` - (Default `10m`)
 - `delete` - (Default `10m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the EC2 Instance Connect Endpoint.
 * `availability_zone` - The Availability Zone of the EC2 Instance Connect Endpoint.

@@ -199,9 +199,9 @@ This configuration block supports the following:
 
 * `total_target_capacity` - (Required) The number of units to request, filled using `default_target_capacity_type`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Fleet identifier
 * `arn` - The ARN of the fleet
