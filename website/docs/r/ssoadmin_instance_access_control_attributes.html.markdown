@@ -34,7 +34,7 @@ resource "aws_ssoadmin_instance_access_control_attributes" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `instance_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance.
 * `attribute` - (Required) See [AccessControlAttribute](#accesscontrolattribute) for more details.
