@@ -6,7 +6,6 @@ package conns
 import (
 	"context"
 	"fmt"
-	"log"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	imds_sdkv2 "github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
@@ -16,6 +15,7 @@ import (
 	basediag "github.com/hashicorp/aws-sdk-go-base/v2/diag"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -147,14 +147,19 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 
 	tflog.Debug(ctx, "Retrieving AWS account details")
-	accountID, partition, err := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
-	if err != nil {
-		return nil, sdkdiag.AppendErrorf(diags, "retrieving AWS account details: %s", err)
+	accountID, partition, awsDiags := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
+	for _, d := range awsDiags {
+		diags = append(diags, diag.Diagnostic{
+			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Summary:  fmt.Sprintf("retrieving AWS account details: %s", d.Summary()),
+			Detail:   d.Detail(),
+		})
 	}
 
 	if accountID == "" {
-		// TODO: Make this a Warning Diagnostic
-		log.Println("[WARN] AWS account ID not found for provider. See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications.")
+		diags = append(diags, errs.NewWarningDiagnostic(
+			"AWS account ID not found for provider",
+			"See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications."))
 	}
 
 	if len(c.ForbiddenAccountIds) > 0 {
