@@ -44,7 +44,7 @@ resource "aws_autoscaling_group_tag" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `autoscaling_group_name` - (Required) Name of the Autoscaling Group to apply the tag to.
 * `tag` - (Required) Tag to create. The `tag` block is documented below.
