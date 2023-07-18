@@ -37,9 +37,9 @@ The following arguments are supported:
 * `workspace_id` - (Required) ID of the prometheus workspace the rule group namespace should be linked to
 * `data` - (Required) the rule group namespace data that you want to be applied. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-Ruler.html).
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
