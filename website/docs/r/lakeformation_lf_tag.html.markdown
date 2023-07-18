@@ -21,7 +21,7 @@ resource "aws_lakeformation_lf_tag" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `catalog_id` - (Optional) ID of the Data Catalog to create the tag in. If omitted, this defaults to the AWS Account ID.
 * `key` - (Required) Key-name for the tag.
