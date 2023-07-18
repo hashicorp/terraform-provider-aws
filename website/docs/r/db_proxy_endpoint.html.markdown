@@ -23,7 +23,7 @@ resource "aws_db_proxy_endpoint" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `db_proxy_endpoint_name` - (Required) The identifier for the proxy endpoint. An identifier must begin with a letter and must contain only ASCII letters, digits, and hyphens; it can't end with a hyphen or contain two consecutive hyphens.
 * `db_proxy_name` - (Required) The name of the DB proxy associated with the DB proxy endpoint that you create.
