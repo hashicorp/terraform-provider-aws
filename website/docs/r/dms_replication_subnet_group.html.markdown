@@ -80,7 +80,7 @@ resource "aws_dms_replication_subnet_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `replication_subnet_group_description` - (Required) Description for the subnet group.
 * `replication_subnet_group_id` - (Required) Name for the replication subnet group. This value is stored as a lowercase string. It must contain no more than 255 alphanumeric characters, periods, spaces, underscores, or hyphens and cannot be `default`.
