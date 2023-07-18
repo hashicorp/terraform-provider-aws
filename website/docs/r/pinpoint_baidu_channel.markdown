@@ -27,7 +27,7 @@ resource "aws_pinpoint_baidu_channel" "channel" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `application_id` - (Required) The application ID.
 * `enabled` - (Optional) Specifies whether to enable the channel. Defaults to `true`.
