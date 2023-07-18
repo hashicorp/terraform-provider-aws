@@ -34,9 +34,9 @@ The following arguments are optional:
 
 * `aws_account_id` - (Optional) AWS account ID.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Ingestion.
 * `id` - A comma-delimited string joining AWS account ID, data set ID, and ingestion ID.
