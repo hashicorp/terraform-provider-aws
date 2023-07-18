@@ -35,7 +35,7 @@ resource "aws_vpn_connection" "transit" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `id` - (Optional) ID of the gateway.
 * `filter` - (Optional) One or more [name-value pairs][dcg-filters] to filter by.

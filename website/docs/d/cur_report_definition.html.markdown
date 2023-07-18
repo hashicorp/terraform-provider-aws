@@ -24,7 +24,7 @@ data "aws_cur_report_definition" "report_definition" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `report_name` - (Required) Name of the report definition to match.
 
