@@ -26,7 +26,7 @@ resource "aws_service_discovery_private_dns_namespace" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the namespace.
 * `vpc` - (Required) The ID of VPC that you want to associate the namespace with.

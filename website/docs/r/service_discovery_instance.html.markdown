@@ -78,7 +78,7 @@ resource "aws_service_discovery_instance" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `instance_id` - (Required, ForceNew) The ID of the service instance.
 * `service_id` - (Required, ForceNew) The ID of the service that you want to use to create the instance.
