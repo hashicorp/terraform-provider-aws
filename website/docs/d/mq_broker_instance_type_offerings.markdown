@@ -44,6 +44,8 @@ The following arguments are supported:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `broker_instance_options` -  Option for host instance type. See Broker Instance Options below.
 
 ### Broker Instance Options
