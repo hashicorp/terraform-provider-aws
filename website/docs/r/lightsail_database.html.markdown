@@ -186,7 +186,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Lightsail Databases can be imported using their name, e.g.
+Import Lightsail Databases using their name, e.g.
 
 ```
 $ terraform import aws_lightsail_database.foo 'bar'
