@@ -25,6 +25,8 @@ data "aws_api_gateway_api_key" "my_api_key" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - Set to the ID of the API Key.
 * `name` - Set to the name of the API Key.
 * `value` - Set to the value of the API Key.

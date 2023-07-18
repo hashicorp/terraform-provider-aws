@@ -24,7 +24,7 @@ data "aws_api_gateway_domain_name" "example" {
 
 ## Attribute Reference
 
-In addition to the arguments, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the found custom domain name.
 * `certificate_arn` - ARN for an AWS-managed certificate that is used by edge-optimized endpoint for this domain name.

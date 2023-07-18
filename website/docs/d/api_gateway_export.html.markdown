@@ -28,6 +28,8 @@ data "aws_api_gateway_export" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `id` - The `REST-API-ID:STAGE-NAME`
 * `body` - API Spec.
 * `content_type` - Content-type header value in the HTTP response.

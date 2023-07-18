@@ -47,6 +47,8 @@ data "aws_acm_certificate" "rsa_4096" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `arn` - ARN of the found certificate, suitable for referencing in other resources that support ACM certificates.
 * `id` - ARN of the found certificate, suitable for referencing in other resources that support ACM certificates.
 * `status` - Status of the found certificate.
