@@ -96,7 +96,7 @@ data "aws_iam_policy_document" "example" {
     effect = "Allow"
     principals {
       identifiers = ["delivery.logs.amazonaws.com"]
-      type        = "AWS"
+      type        = "Service"
     }
     actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
     resources = ["${aws_cloudwatch_log_group.example.arn}:*"]
