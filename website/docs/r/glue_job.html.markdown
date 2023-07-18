@@ -81,7 +81,7 @@ resource "aws_glue_job" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `command` – (Required) The command of the job. Defined below.
 * `connections` – (Optional) The list of connections used for this job.
