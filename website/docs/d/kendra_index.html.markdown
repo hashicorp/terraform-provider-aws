@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Index.
 * `capacity_units` - Block that sets the number of additional document storage and query capacity units that should be used by the index. Documented below.

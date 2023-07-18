@@ -28,7 +28,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the block list.
 * `created_at` - Date-time a block list was created.
