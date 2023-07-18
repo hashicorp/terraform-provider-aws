@@ -30,7 +30,7 @@ resource "aws_gamelift_fleet" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `build_id` - (Optional) ID of the GameLift Build to be deployed on the fleet.
 * `certificate_configuration` - (Optional) Prompts GameLift to generate a TLS/SSL certificate for the fleet. See [certificate_configuration](#certificate_configuration).
