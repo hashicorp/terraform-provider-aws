@@ -30,9 +30,9 @@ The following arguments are supported:
 * `link_id` - (Optional) The ID of the link.
 * `transit_gateway_connect_peer_arn` - (Required) The Amazon Resource Name (ARN) of the Connect peer.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
