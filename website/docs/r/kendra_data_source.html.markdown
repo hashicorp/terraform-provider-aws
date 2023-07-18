@@ -532,7 +532,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Kendra Data Source can be imported using the unique identifiers of the data_source and index separated by a slash (`/`) e.g.,
+Import Kendra Data Source using the unique identifiers of the data_source and index separated by a slash (`/`) e.g.,
 
 ```
 $ terraform import aws_kendra_data_source.example 1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f

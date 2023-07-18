@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Key Pairs can be imported using the `key_name`, e.g.,
+Import Key Pairs using the `key_name`. For example:
 
 ```
 $ terraform import aws_key_pair.deployer deployer-key

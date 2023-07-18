@@ -86,7 +86,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IVS (Interactive Video) Chat Room can be imported using the ARN, e.g.,
+Import IVS (Interactive Video) Chat Room using the ARN. For example:
 
 ```
 $ terraform import aws_ivschat_room.example arn:aws:ivschat:us-west-2:326937407773:room/GoXEXyB4VwHb
