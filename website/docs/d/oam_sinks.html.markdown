@@ -19,7 +19,7 @@ data "aws_oam_sinks" "example" {
 }
 ```
 
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
 

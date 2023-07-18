@@ -71,9 +71,9 @@ data "aws_iam_policy_document" "sns_topic_policy" {
 
 There are no arguments available for this data source.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the organization.
 * `feature_set` - FeatureSet of the organization.

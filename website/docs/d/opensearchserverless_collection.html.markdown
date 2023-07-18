@@ -27,9 +27,9 @@ The following arguments are required:
 * `id` - (Required) ID of the collection. Either `id` or `name` must be provided.
 * `name` - (Required) Name of the collection. Either `name` or `id` must be provided.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the collection.
 * `collection_endpoint` - Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.
