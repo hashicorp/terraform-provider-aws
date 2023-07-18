@@ -43,7 +43,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import QuickSight Template Alias using the AWS account ID, template ID, and alias name separated by a comma (`,`) e.g.,
+Import QuickSight Template Alias using the AWS account ID, template ID, and alias name separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_quicksight_template_alias.example 123456789012,example-id,example-alias

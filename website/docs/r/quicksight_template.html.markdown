@@ -161,7 +161,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import A QuickSight Template using the AWS account ID and template ID separated by a comma (`,`) e.g.,
+Import A QuickSight Template using the AWS account ID and template ID separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_quicksight_template.example 123456789012,example-id
