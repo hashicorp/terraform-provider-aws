@@ -57,7 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Data Statements can be imported using the `id`, e.g.,
+Import Redshift Data Statements using the `id`. For example:
 
 ```
 $ terraform import aws_redshiftdata_statement.example example

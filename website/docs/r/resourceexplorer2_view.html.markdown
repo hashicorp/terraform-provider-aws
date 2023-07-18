@@ -63,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Resource Explorer views can be imported using the `arn`, e.g.
+Import Resource Explorer views using the `arn`, e.g.
 
 ```
 $ terraform import aws_resourceexplorer2_view.example arn:aws:resource-explorer-2:us-west-2:123456789012:view/exampleview/e0914f6c-6c27-4b47-b5d4-6b28381a2421
