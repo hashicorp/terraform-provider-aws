@@ -52,7 +52,7 @@ resource "aws_appconfig_extension" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name for the extension. Each extension name in your account must be unique. Extension versions use the same name.
 * `description` - (Optional) Information about the extension.
