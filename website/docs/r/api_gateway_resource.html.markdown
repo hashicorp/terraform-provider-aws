@@ -27,7 +27,7 @@ resource "aws_api_gateway_resource" "MyDemoResource" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) ID of the associated REST API
 * `parent_id` - (Required) ID of the parent API resource

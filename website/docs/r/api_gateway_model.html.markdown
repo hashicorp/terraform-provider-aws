@@ -32,7 +32,7 @@ resource "aws_api_gateway_model" "MyDemoModel" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) ID of the associated REST API
 * `name` - (Required) Name of the model

@@ -23,7 +23,7 @@ resource "aws_api_gateway_request_validator" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the request validator
 * `rest_api_id` - (Required) ID of the associated Rest API
