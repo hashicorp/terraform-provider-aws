@@ -35,7 +35,7 @@ data "aws_iam_policy_document" "s3_policy" {
 
 There are no arguments available for this data source.
 
-## Attributes Reference
+## Attribute Reference
 
 * `dns_suffix` - Base DNS domain name for the current partition (e.g., `amazonaws.com` in AWS Commercial, `amazonaws.com.cn` in AWS China).
 * `id` - Identifier of the current partition (e.g., `aws` in AWS Commercial, `aws-cn` in AWS China).

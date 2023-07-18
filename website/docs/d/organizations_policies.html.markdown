@@ -31,6 +31,6 @@ The following arguments are required:
 
 * `filter` - (Required) The type of policies to be returned in the response. Valid values are `SERVICE_CONTROL_POLICY | TAG_POLICY | BACKUP_POLICY | AISERVICES_OPT_OUT_POLICY`
 
-## Attributes Reference
+## Attribute Reference
 
 * `ids` - List of all the policy ids found.

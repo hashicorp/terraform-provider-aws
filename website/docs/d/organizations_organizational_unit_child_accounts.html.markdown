@@ -24,7 +24,7 @@ data "aws_organizations_organizational_unit_child_accounts" "accounts" {
 
 * `parent_id` - (Required) The parent ID of the accounts.
 
-## Attributes Reference
+## Attribute Reference
 
 * `accounts` - List of child accounts, which have the following attributes:
     * `arn` - The Amazon Resource Name (ARN) of the account.

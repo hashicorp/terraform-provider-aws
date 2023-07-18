@@ -80,6 +80,6 @@ data "aws_pricing_product" "example" {
 * `field` (Required) Product attribute name that you want to filter on.
 * `value` (Required) Product attribute value that you want to filter on.
 
-## Attributes Reference
+## Attribute Reference
 
 * `result` - Set to the product returned from the API.
