@@ -208,7 +208,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-OpenSearchServerless Security Policy can be imported using the `name` and `type` arguments separated by a slash (`/`), e.g.,
+Import OpenSearchServerless Security Policy using the `name` and `type` arguments separated by a slash (`/`). For example:
 
 ```
 $ terraform import aws_opensearchserverless_security_policy.example example/encryption

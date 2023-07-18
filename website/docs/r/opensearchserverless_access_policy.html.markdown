@@ -66,7 +66,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-OpenSearchServerless Access Policy can be imported using the `name` and `type` arguments separated by a slash (`/`), e.g.,
+Import OpenSearchServerless Access Policy using the `name` and `type` arguments separated by a slash (`/`). For example:
 
 ```
 $ terraform import aws_opensearchserverless_access_policy.example example/data

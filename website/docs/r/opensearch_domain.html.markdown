@@ -484,7 +484,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-OpenSearch domains can be imported using the `domain_name`, e.g.,
+Import OpenSearch domains using the `domain_name`. For example:
 
 ```
 $ terraform import aws_opensearch_domain.example domain_name
