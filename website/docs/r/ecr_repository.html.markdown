@@ -58,7 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ECR Repositories can be imported using the `name`, e.g.,
+Import ECR Repositories using the `name`. For example:
 
 ```
 $ terraform import aws_ecr_repository.service test-service
