@@ -22,7 +22,7 @@ data "aws_ecs_service" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `service_name` - (Required) Name of the ECS Service
 * `cluster_arn` - (Required) ARN of the ECS Cluster

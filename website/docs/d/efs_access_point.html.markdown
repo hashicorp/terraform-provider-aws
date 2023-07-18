@@ -20,7 +20,7 @@ data "aws_efs_access_point" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `access_point_id` - (Required) ID that identifies the file system.
 
