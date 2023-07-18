@@ -34,7 +34,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CodeCommit approval rule template associations can be imported using the `approval_rule_template_name` and `repository_name` separated by a comma (`,`), e.g.
+Import CodeCommit approval rule template associations using the `approval_rule_template_name` and `repository_name` separated by a comma (`,`), e.g.
 
 ```
 $ terraform import aws_codecommit_approval_rule_template_association.example approver-rule-for-example,MyExampleRepo

@@ -92,7 +92,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CodeBuild Report Group can be imported using the CodeBuild Report Group arn, e.g.,
+Import CodeBuild Report Group using the CodeBuild Report Group arn. For example:
 
 ```
 $ terraform import aws_codebuild_report_group.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name
