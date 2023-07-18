@@ -91,7 +91,7 @@ resource "aws_elb" "ourapp" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The name of the Server Certificate. Do not include the
   path in this value. If omitted, Terraform will assign a random, unique name.
