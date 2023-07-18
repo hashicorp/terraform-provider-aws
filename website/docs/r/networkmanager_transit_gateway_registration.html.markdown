@@ -29,7 +29,7 @@ resource "aws_networkmanager_transit_gateway_registration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `global_network_id` - (Required) The ID of the Global Network to register to.
 * `transit_gateway_arn` - (Required) The ARN of the Transit Gateway to register.

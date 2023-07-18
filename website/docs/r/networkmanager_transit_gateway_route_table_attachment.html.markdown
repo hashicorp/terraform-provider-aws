@@ -21,7 +21,7 @@ resource "aws_networkmanager_transit_gateway_route_table_attachment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `peering_id` - (Required) The ID of the peer for the attachment.
 * `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
