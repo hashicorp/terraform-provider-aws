@@ -373,7 +373,7 @@ Since `prefix` is deprecated by Amazon S3 and will be removed in the next major 
 
 The `rule` configuration block supports the following arguments:
 
-* `abort_incomplete_multipart_upload` - (Optional) Configuration block that specifies the days since the initiation of an incomplete multipart upload that Amazon S3 will wait before permanently removing all parts of the upload. [See below](#abort_incomplete_multipart_upload).
+* `abort_incomplete_multipart_upload` - (Optional)  Number of days after which Amazon S3 aborts an incomplete multipart upload. Value should be a number.
 * `expiration` - (Optional) Configuration block that specifies the expiration for the lifecycle of the object in the form of date, days and, whether the object has a delete marker. [See below](#expiration).
 * `filter` - (Optional) Configuration block used to identify objects that a Lifecycle Rule applies to. [See below](#filter). If not specified, the `rule` will default to using `prefix`.
 * `id` - (Required) Unique identifier for the rule. The value cannot be longer than 255 characters.
@@ -383,11 +383,7 @@ The `rule` configuration block supports the following arguments:
 * `status` - (Required) Whether the rule is currently being applied. Valid values: `Enabled` or `Disabled`.
 * `transition` - (Optional) Set of configuration blocks that specify when an Amazon S3 object transitions to a specified storage class. [See below](#transition).
 
-### abort_incomplete_multipart_upload
 
-The `abort_incomplete_multipart_upload` configuration block supports the following arguments:
-
-* `days_after_initiation` - Number of days after which Amazon S3 aborts an incomplete multipart upload.
 
 ### expiration
 
