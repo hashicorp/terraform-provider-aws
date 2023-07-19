@@ -107,7 +107,7 @@ the time required to take snapshots
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import DocumentDB Cluster Instances using the `identifier`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DocumentDB Cluster Instances using the `identifier`. For example:
 
 ```terraform
 import {

@@ -104,7 +104,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Replication subnet groups using the `replication_subnet_group_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Replication subnet groups using the `replication_subnet_group_id`. For example:
 
 ```terraform
 import {
