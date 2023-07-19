@@ -90,8 +90,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Cloudformation Stacks using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Cloudformation Stacks using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudformation_stack.stack
+  id = "networking-stack"
+}
 ```
-$ terraform import aws_cloudformation_stack.stack networking-stack
+
+Using `terraform import`, import Cloudformation Stacks using the `name`. For example:
+
+```console
+% terraform import aws_cloudformation_stack.stack networking-stack
 ```

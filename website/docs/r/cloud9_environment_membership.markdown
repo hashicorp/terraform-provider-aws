@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Cloud9 environment membership using the `environment-id#user-arn`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Cloud9 environment membership using the `environment-id#user-arn`. For example:
 
+```terraform
+import {
+  to = aws_cloud9_environment_membership.test
+  id = "environment-id#user-arn"
+}
 ```
-$ terraform import aws_cloud9_environment_membership.test environment-id#user-arn
+
+Using `terraform import`, import Cloud9 environment membership using the `environment-id#user-arn`. For example:
+
+```console
+% terraform import aws_cloud9_environment_membership.test environment-id#user-arn
 ```

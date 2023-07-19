@@ -42,8 +42,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import AWS Chime SDK Voice Global Settings using the `id` (AWS account ID). For example:
+In Terraform v1.5.0 and later, use an `import` block to import AWS Chime SDK Voice Global Settings using the `id` (AWS account ID). For example:
 
+```terraform
+import {
+  to = aws_chimesdkvoice_global_settings.example
+  id = "123456789012"
+}
 ```
-$ terraform import aws_chimesdkvoice_global_settings.example 123456789012
+
+Using `terraform import`, import AWS Chime SDK Voice Global Settings using the `id` (AWS account ID). For example:
+
+```console
+% terraform import aws_chimesdkvoice_global_settings.example 123456789012
 ```
