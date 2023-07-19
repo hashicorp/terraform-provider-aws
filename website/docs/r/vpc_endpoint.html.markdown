@@ -164,8 +164,17 @@ DNS blocks (for `dns_entry`) support the following attributes:
 
 ## Import
 
-Import VPC Endpoints using the `vpc endpoint id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import VPC Endpoints using the `vpc endpoint id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_endpoint.endpoint1
+  id = "vpce-3ecf2a57"
+}
 ```
-$ terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
+
+Using `terraform import`, import VPC Endpoints using the `vpc endpoint id`. For example:
+
+```console
+% terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
 ```

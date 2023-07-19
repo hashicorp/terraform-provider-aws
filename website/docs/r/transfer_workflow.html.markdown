@@ -135,8 +135,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Transfer Workflows using the `worflow_id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Transfer Workflows using the `worflow_id`. For example:
 
+```terraform
+import {
+  to = aws_transfer_workflow.example
+  id = "example"
+}
 ```
-$ terraform import aws_transfer_workflow.example example
+
+Using `terraform import`, import Transfer Workflows using the `worflow_id`. For example:
+
+```console
+% terraform import aws_transfer_workflow.example example
 ```

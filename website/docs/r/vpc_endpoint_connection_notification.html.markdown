@@ -66,8 +66,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import VPC Endpoint connection notifications using the `VPC endpoint connection notification id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import VPC Endpoint connection notifications using the `VPC endpoint connection notification id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_endpoint_connection_notification.foo
+  id = "vpce-nfn-09e6ed3b4efba2263"
+}
 ```
-$ terraform import aws_vpc_endpoint_connection_notification.foo vpce-nfn-09e6ed3b4efba2263
+
+Using `terraform import`, import VPC Endpoint connection notifications using the `VPC endpoint connection notification id`. For example:
+
+```console
+% terraform import aws_vpc_endpoint_connection_notification.foo vpce-nfn-09e6ed3b4efba2263
 ```

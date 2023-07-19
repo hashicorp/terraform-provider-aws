@@ -68,10 +68,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EBS Volume Attachments using `DEVICE_NAME:VOLUME_ID:INSTANCE_ID`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import EBS Volume Attachments using `DEVICE_NAME:VOLUME_ID:INSTANCE_ID`. For example:
 
+```terraform
+import {
+  to = aws_volume_attachment.example
+  id = "/dev/sdh:vol-049df61146c4d7901:i-12345678"
+}
 ```
-$ terraform import aws_volume_attachment.example /dev/sdh:vol-049df61146c4d7901:i-12345678
+
+Using `terraform import`, import EBS Volume Attachments using `DEVICE_NAME:VOLUME_ID:INSTANCE_ID`. For example:
+
+```console
+% terraform import aws_volume_attachment.example /dev/sdh:vol-049df61146c4d7901:i-12345678
 ```
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html#available-ec2-device-names
