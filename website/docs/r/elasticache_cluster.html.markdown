@@ -212,8 +212,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import ElastiCache Clusters using the `cluster_id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import ElastiCache Clusters using the `cluster_id`. For example:
 
+```terraform
+import {
+  to = aws_elasticache_cluster.my_cluster
+  id = "my_cluster"
+}
 ```
-$ terraform import aws_elasticache_cluster.my_cluster my_cluster
+
+Using `terraform import`, import ElastiCache Clusters using the `cluster_id`. For example:
+
+```console
+% terraform import aws_elasticache_cluster.my_cluster my_cluster
 ```

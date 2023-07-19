@@ -54,8 +54,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Elastic Beanstalk Applications using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Elastic Beanstalk Applications using the `name`. For example:
 
+```terraform
+import {
+  to = aws_elastic_beanstalk_application.tf_test
+  id = "tf-test-name"
+}
 ```
-$ terraform import aws_elastic_beanstalk_application.tf_test tf-test-name
+
+Using `terraform import`, import Elastic Beanstalk Applications using the `name`. For example:
+
+```console
+% terraform import aws_elastic_beanstalk_application.tf_test tf-test-name
 ```
