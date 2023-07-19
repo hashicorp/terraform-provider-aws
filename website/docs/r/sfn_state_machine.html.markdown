@@ -167,8 +167,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import State Machines using the `arn`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import State Machines using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_sfn_state_machine.foo
+  id = "arn:aws:states:eu-west-1:123456789098:stateMachine:bar"
+}
 ```
-$ terraform import aws_sfn_state_machine.foo arn:aws:states:eu-west-1:123456789098:stateMachine:bar
+
+Using `terraform import`, import State Machines using the `arn`. For example:
+
+```console
+% terraform import aws_sfn_state_machine.foo arn:aws:states:eu-west-1:123456789098:stateMachine:bar
 ```

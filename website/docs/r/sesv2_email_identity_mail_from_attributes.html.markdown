@@ -41,8 +41,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import SESv2 (Simple Email V2) Email Identity Mail From Attributes using the `email_identity`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import SESv2 (Simple Email V2) Email Identity Mail From Attributes using the `email_identity`. For example:
 
+```terraform
+import {
+  to = aws_sesv2_email_identity_mail_from_attributes.example
+  id = "example.com"
+}
 ```
-$ terraform import aws_sesv2_email_identity_mail_from_attributes.example example.com
+
+Using `terraform import`, import SESv2 (Simple Email V2) Email Identity Mail From Attributes using the `email_identity`. For example:
+
+```console
+% terraform import aws_sesv2_email_identity_mail_from_attributes.example example.com
 ```
