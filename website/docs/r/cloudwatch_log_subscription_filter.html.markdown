@@ -40,7 +40,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import CloudWatch Logs subscription filter using the log group name and subscription filter name separated by `|`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs subscription filter using the log group name and subscription filter name separated by `|`. For example:
 
 ```terraform
 import {
