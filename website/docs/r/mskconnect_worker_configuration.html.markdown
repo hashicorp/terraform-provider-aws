@@ -49,7 +49,7 @@ In Terraform v1.5.0 and later, use an `import` block to import MSK Connect Worke
 ```terraform
 import {
   to = aws_mskconnect_worker_configuration.example
-  id = "'arn:aws:kafkaconnect:eu-central-1:123456789012:worker-configuration/example/8848493b-7fcc-478c-a646-4a52634e3378-4'"
+  id = "arn:aws:kafkaconnect:eu-central-1:123456789012:worker-configuration/example/8848493b-7fcc-478c-a646-4a52634e3378-4"
 }
 ```
 

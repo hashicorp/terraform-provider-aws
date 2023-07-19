@@ -199,7 +199,7 @@ In Terraform v1.5.0 and later, use an `import` block to import MSK Connect Conne
 ```terraform
 import {
   to = aws_mskconnect_connector.example
-  id = "'arn:aws:kafkaconnect:eu-central-1:123456789012:connector/example/264edee4-17a3-412e-bd76-6681cfc93805-3'"
+  id = "arn:aws:kafkaconnect:eu-central-1:123456789012:connector/example/264edee4-17a3-412e-bd76-6681cfc93805-3"
 }
 ```
 

@@ -41,7 +41,7 @@ In Terraform v1.5.0 and later, use an `import` block to import Identity Notifica
 ```terraform
 import {
   to = aws_ses_identity_notification_topic.test
-  id = "'example.com|Bounce'"
+  id = "example.com|Bounce"
 }
 ```
 

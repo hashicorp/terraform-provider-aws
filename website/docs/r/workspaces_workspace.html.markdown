@@ -83,8 +83,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Workspaces using their ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Workspaces using their ID. For example:
 
+```terraform
+import {
+  to = aws_workspaces_workspace.example
+  id = "ws-9z9zmbkhv"
+}
 ```
-$ terraform import aws_workspaces_workspace.example ws-9z9zmbkhv
+
+Using `terraform import`, import Workspaces using their ID. For example:
+
+```console
+% terraform import aws_workspaces_workspace.example ws-9z9zmbkhv
 ```

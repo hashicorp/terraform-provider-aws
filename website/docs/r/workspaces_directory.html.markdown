@@ -202,8 +202,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Workspaces directory using the directory ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Workspaces directory using the directory ID. For example:
 
+```terraform
+import {
+  to = aws_workspaces_directory.main
+  id = "d-4444444444"
+}
 ```
-$ terraform import aws_workspaces_directory.main d-4444444444
+
+Using `terraform import`, import Workspaces directory using the directory ID. For example:
+
+```console
+% terraform import aws_workspaces_directory.main d-4444444444
 ```

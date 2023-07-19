@@ -55,7 +55,7 @@ In Terraform v1.5.0 and later, use an `import` block to import SES Identity Poli
 ```terraform
 import {
   to = aws_ses_identity_policy.example
-  id = "'example.com|example'"
+  id = "example.com|example"
 }
 ```
 

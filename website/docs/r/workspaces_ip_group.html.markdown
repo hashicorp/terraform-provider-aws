@@ -58,8 +58,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import WorkSpaces IP groups using their GroupID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import WorkSpaces IP groups using their GroupID. For example:
 
+```terraform
+import {
+  to = aws_workspaces_ip_group.example
+  id = "wsipg-488lrtl3k"
+}
 ```
-$ terraform import aws_workspaces_ip_group.example wsipg-488lrtl3k
+
+Using `terraform import`, import WorkSpaces IP groups using their GroupID. For example:
+
+```console
+% terraform import aws_workspaces_ip_group.example wsipg-488lrtl3k
 ```

@@ -164,7 +164,7 @@ In Terraform v1.5.0 and later, use an `import` block to import Lightsail Instanc
 ```terraform
 import {
   to = aws_lightsail_instance.gitlab_test
-  id = "'custom_gitlab'"
+  id = "custom_gitlab"
 }
 ```
 

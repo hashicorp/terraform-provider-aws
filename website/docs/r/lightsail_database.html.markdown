@@ -191,7 +191,7 @@ In Terraform v1.5.0 and later, use an `import` block to import Lightsail Databas
 ```terraform
 import {
   to = aws_lightsail_database.foo
-  id = "'bar'"
+  id = "bar"
 }
 ```
 

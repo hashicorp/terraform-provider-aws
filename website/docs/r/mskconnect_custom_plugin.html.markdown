@@ -81,7 +81,7 @@ In Terraform v1.5.0 and later, use an `import` block to import MSK Connect Custo
 ```terraform
 import {
   to = aws_mskconnect_custom_plugin.example
-  id = "'arn:aws:kafkaconnect:eu-central-1:123456789012:custom-plugin/debezium-example/abcdefgh-1234-5678-9abc-defghijklmno-4'"
+  id = "arn:aws:kafkaconnect:eu-central-1:123456789012:custom-plugin/debezium-example/abcdefgh-1234-5678-9abc-defghijklmno-4"
 }
 ```
 

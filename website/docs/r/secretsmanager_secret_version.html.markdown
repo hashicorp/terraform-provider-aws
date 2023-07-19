@@ -81,7 +81,7 @@ In Terraform v1.5.0 and later, use an `import` block to import `aws_secretsmanag
 ```terraform
 import {
   to = aws_secretsmanager_secret_version.example
-  id = "'arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx'"
+  id = "arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx"
 }
 ```
 
