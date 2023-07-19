@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicequotas
 
 import (
@@ -131,7 +134,7 @@ func ResourceServiceQuota() *schema.Resource {
 
 func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn()
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn(ctx)
 
 	quotaCode := d.Get("quota_code").(string)
 	serviceCode := d.Get("service_code").(string)
@@ -180,7 +183,7 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn()
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn(ctx)
 
 	serviceCode, quotaCode, err := resourceServiceQuotaParseID(d.Id())
 
@@ -257,7 +260,7 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceServiceQuotaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn()
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn(ctx)
 
 	value := d.Get("value").(float64)
 	serviceCode, quotaCode, err := resourceServiceQuotaParseID(d.Id())

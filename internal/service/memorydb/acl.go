@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb
 
 import (
@@ -75,12 +78,12 @@ func ResourceACL() *schema.Resource {
 }
 
 func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &memorydb.CreateACLInput{
 		ACLName: aws.String(name),
-		Tags:    GetTagsIn(ctx),
+		Tags:    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("user_names"); ok && v.(*schema.Set).Len() > 0 {
@@ -104,7 +107,7 @@ func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &memorydb.UpdateACLInput{
@@ -162,7 +165,7 @@ func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	acl, err := FindACLByName(ctx, conn, d.Id())
 
@@ -186,7 +189,7 @@ func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface
 }
 
 func resourceACLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB ACL: (%s)", d.Id())
 	_, err := conn.DeleteACLWithContext(ctx, &memorydb.DeleteACLInput{

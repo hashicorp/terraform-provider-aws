@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dax
 
 import (
@@ -201,7 +204,7 @@ func ResourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DAXConn()
+	conn := meta.(*conns.AWSClient).DAXConn(ctx)
 
 	clusterName := d.Get("cluster_name").(string)
 	iamRoleArn := d.Get("iam_role_arn").(string)
@@ -217,7 +220,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ReplicationFactor: aws.Int64(numNodes),
 		SecurityGroupIds:  securityIds,
 		SubnetGroupName:   aws.String(subnetGroupName),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	// optionals can be defaulted by AWS
@@ -300,7 +303,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DAXConn()
+	conn := meta.(*conns.AWSClient).DAXConn(ctx)
 
 	req := &dax.DescribeClustersInput{
 		ClusterNames: []*string{aws.String(d.Id())},
@@ -366,7 +369,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DAXConn()
+	conn := meta.(*conns.AWSClient).DAXConn(ctx)
 
 	req := &dax.UpdateClusterInput{
 		ClusterName: aws.String(d.Id()),
@@ -497,7 +500,7 @@ func (b byNodeId) Less(i, j int) bool {
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DAXConn()
+	conn := meta.(*conns.AWSClient).DAXConn(ctx)
 
 	req := &dax.DeleteClusterInput{
 		ClusterName: aws.String(d.Id()),

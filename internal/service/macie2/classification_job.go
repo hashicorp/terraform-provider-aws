@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2
 
 import (
@@ -574,14 +577,14 @@ func resourceClassificationJobCustomizeDiff(_ context.Context, diff *schema.Reso
 }
 
 func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.CreateClassificationJobInput{
 		ClientToken:     aws.String(id.UniqueId()),
 		Name:            aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string))),
 		JobType:         aws.String(d.Get("job_type").(string)),
 		S3JobDefinition: expandS3JobDefinition(d.Get("s3_job_definition").([]interface{})),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("custom_data_identifier_ids"); ok {
@@ -629,7 +632,7 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DescribeClassificationJobInput{
 		JobId: aws.String(d.Id()),
@@ -665,7 +668,7 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("setting `%s` for Macie ClassificationJob (%s): %s", "s3_job_definition", d.Id(), err)
 	}
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	d.Set("job_id", resp.JobId)
 	d.Set("job_arn", resp.JobArn)
@@ -683,7 +686,7 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceClassificationJobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.UpdateClassificationJobInput{
 		JobId: aws.String(d.Id()),
@@ -708,7 +711,7 @@ func resourceClassificationJobUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceClassificationJobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.UpdateClassificationJobInput{
 		JobId:     aws.String(d.Id()),

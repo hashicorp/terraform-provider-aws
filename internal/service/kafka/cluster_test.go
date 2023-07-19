@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka_test
 
 import (
@@ -1145,7 +1148,7 @@ func testAccCheckResourceAttrIsSortedCSV(resourceName, attributeName string) res
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_msk_cluster" {
@@ -1180,7 +1183,7 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *kafka.ClusterIn
 			return fmt.Errorf("No MSK Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn(ctx)
 
 		output, err := tfkafka.FindClusterByARN(ctx, conn, rs.Primary.ID)
 
@@ -1215,7 +1218,7 @@ func testAccCheckClusterRecreated(i, j *kafka.ClusterInfo) resource.TestCheckFun
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn(ctx)
 
 	input := &kafka.ListClustersInput{}
 

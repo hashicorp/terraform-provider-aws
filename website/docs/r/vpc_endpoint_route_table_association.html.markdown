@@ -21,21 +21,20 @@ resource "aws_vpc_endpoint_route_table_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `route_table_id` - (Required) Identifier of the EC2 Route Table to be associated with the VPC Endpoint.
 * `vpc_endpoint_id` - (Required) Identifier of the VPC Endpoint with which the EC2 Route Table will be associated.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A hash of the EC2 Route Table and VPC Endpoint identifiers.
 
 ## Import
 
-VPC Endpoint Route Table Associations can be imported using `vpc_endpoint_id` together with `route_table_id`,
-e.g.,
+Import VPC Endpoint Route Table Associations using `vpc_endpoint_id` together with `route_table_id`. For example:
 
 ```
 $ terraform import aws_vpc_endpoint_route_table_association.example vpce-aaaaaaaa/rtb-bbbbbbbb

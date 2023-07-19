@@ -67,15 +67,15 @@ The following arguments are optional:
 * `org_assertion` - (Optional) The org assertion.
 * `role_assertion` - (Optional) The role assertion.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `status` - The status of the SAML configuration.
 
 ## Import
 
-Grafana Workspace SAML configuration can be imported using the workspace's `id`, e.g.,
+Import Grafana Workspace SAML configuration using the workspace's `id`. For example:
 
 ```
 $ terraform import aws_grafana_workspace_saml_configuration.example g-2054c75a02

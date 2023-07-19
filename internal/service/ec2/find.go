@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -7,14 +10,15 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 func FindAvailabilityZones(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeAvailabilityZonesInput) ([]*ec2.AvailabilityZone, error) {
@@ -1645,24 +1649,6 @@ func FindNetworkInterfaceByID(ctx context.Context, conn *ec2.EC2, id string) (*e
 	return output, nil
 }
 
-func FindLambdaNetworkInterfacesBySecurityGroupIDsAndFunctionName(ctx context.Context, conn *ec2.EC2, securityGroupIDs []string, functionName string) ([]*ec2.NetworkInterface, error) {
-	// lambdaENIDescriptionPrefix is the common prefix used in the description for Lambda function
-	// elastic network interfaces (ENI). This can be used with a function name to filter to only
-	// ENIs associated with a single function.
-	lambdaENIDescriptionPrefix := "AWS Lambda VPC ENI-"
-	description := fmt.Sprintf("%s%s-*", lambdaENIDescriptionPrefix, functionName)
-
-	input := &ec2.DescribeNetworkInterfacesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
-			"interface-type": ec2.NetworkInterfaceTypeLambda,
-			"description":    description,
-		}),
-	}
-	input.Filters = append(input.Filters, NewFilter("group-id", securityGroupIDs))
-
-	return FindNetworkInterfaces(ctx, conn, input)
-}
-
 func FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx context.Context, conn *ec2.EC2, attachmentInstanceOwnerID, description string) ([]*ec2.NetworkInterface, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
@@ -2032,7 +2018,7 @@ func FindRouteByIPv4Destination(ctx context.Context, conn *ec2.EC2, routeTableID
 	}
 
 	for _, route := range routeTable.Routes {
-		if verify.CIDRBlocksEqual(aws.StringValue(route.DestinationCidrBlock), destinationCidr) {
+		if types.CIDRBlocksEqual(aws.StringValue(route.DestinationCidrBlock), destinationCidr) {
 			return route, nil
 		}
 	}
@@ -2052,7 +2038,7 @@ func FindRouteByIPv6Destination(ctx context.Context, conn *ec2.EC2, routeTableID
 	}
 
 	for _, route := range routeTable.Routes {
-		if verify.CIDRBlocksEqual(aws.StringValue(route.DestinationIpv6CidrBlock), destinationIpv6Cidr) {
+		if types.CIDRBlocksEqual(aws.StringValue(route.DestinationIpv6CidrBlock), destinationIpv6Cidr) {
 			return route, nil
 		}
 	}
@@ -4641,7 +4627,7 @@ func FindTransitGatewayRoute(ctx context.Context, conn *ec2.EC2, transitGatewayR
 			continue
 		}
 
-		if v := aws.StringValue(route.DestinationCidrBlock); verify.CIDRBlocksEqual(v, destination) {
+		if v := aws.StringValue(route.DestinationCidrBlock); types.CIDRBlocksEqual(v, destination) {
 			if state := aws.StringValue(route.State); state == ec2.TransitGatewayRouteStateDeleted {
 				return nil, &retry.NotFoundError{
 					Message:     state,
@@ -4649,7 +4635,7 @@ func FindTransitGatewayRoute(ctx context.Context, conn *ec2.EC2, transitGatewayR
 				}
 			}
 
-			route.DestinationCidrBlock = aws.String(verify.CanonicalCIDRBlock(v))
+			route.DestinationCidrBlock = aws.String(types.CanonicalCIDRBlock(v))
 
 			return route, nil
 		}
@@ -6856,8 +6842,8 @@ func FindSnapshotTierStatusBySnapshotID(ctx context.Context, conn *ec2.EC2, id s
 	return output, nil
 }
 
-func FindNetworkPerformanceMetricSubscriptions(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeAwsNetworkPerformanceMetricSubscriptionsInput) ([]types.Subscription, error) {
-	var output []types.Subscription
+func FindNetworkPerformanceMetricSubscriptions(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeAwsNetworkPerformanceMetricSubscriptionsInput) ([]awstypes.Subscription, error) {
+	var output []awstypes.Subscription
 	paginator := ec2_sdkv2.NewDescribeAwsNetworkPerformanceMetricSubscriptionsPaginator(conn, input, func(o *ec2_sdkv2.DescribeAwsNetworkPerformanceMetricSubscriptionsPaginatorOptions) {
 		o.Limit = 100
 	})
@@ -6875,7 +6861,7 @@ func FindNetworkPerformanceMetricSubscriptions(ctx context.Context, conn *ec2_sd
 	return output, nil
 }
 
-func FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx context.Context, conn *ec2_sdkv2.Client, source, destination, metric, statistic string) (*types.Subscription, error) {
+func FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx context.Context, conn *ec2_sdkv2.Client, source, destination, metric, statistic string) (*awstypes.Subscription, error) {
 	input := &ec2_sdkv2.DescribeAwsNetworkPerformanceMetricSubscriptionsInput{}
 
 	output, err := FindNetworkPerformanceMetricSubscriptions(ctx, conn, input)
@@ -6930,4 +6916,65 @@ func FindInstanceStateByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 	}
 
 	return instanceState, nil
+}
+
+func FindInstanceConnectEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeInstanceConnectEndpointsInput) (*awstypes.Ec2InstanceConnectEndpoint, error) {
+	output, err := FindInstanceConnectEndpoints(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindInstanceConnectEndpoints(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeInstanceConnectEndpointsInput) ([]awstypes.Ec2InstanceConnectEndpoint, error) {
+	var output []awstypes.Ec2InstanceConnectEndpoint
+	paginator := ec2_sdkv2.NewDescribeInstanceConnectEndpointsPaginator(conn, input)
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidInstanceConnectEndpointIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.InstanceConnectEndpoints...)
+	}
+
+	return output, nil
+}
+
+func FindInstanceConnectEndpointByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.Ec2InstanceConnectEndpoint, error) {
+	input := &ec2_sdkv2.DescribeInstanceConnectEndpointsInput{
+		InstanceConnectEndpointIds: []string{id},
+	}
+	output, err := FindInstanceConnectEndpoint(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.Ec2InstanceConnectEndpointStateDeleteComplete {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws_sdkv2.ToString(output.InstanceConnectEndpointId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }

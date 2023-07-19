@@ -30,18 +30,18 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `workspace_id` - (Required) ID of the prometheus workspace the alert manager definition should be linked to
 * `definition` - (Required) the alert manager definition that you want to be applied. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-alert-manager.html).
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-The prometheus alert manager definition can be imported using the workspace identifier, e.g.,
+Import the prometheus alert manager definition using the workspace identifier. For example:
 
 ```
 $ terraform import aws_prometheus_alert_manager_definition.demo ws-C6DCB907-F2D7-4D96-957B-66691F865D8B

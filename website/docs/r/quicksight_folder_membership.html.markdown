@@ -34,15 +34,15 @@ The following arguments are optional:
 
 * `aws_account_id` - (Optional, Forces new resource) AWS account ID.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A comma-delimited string joining AWS account ID, folder ID, member type, and member ID.
 
 ## Import
 
-QuickSight Folder Membership can be imported using the AWS account ID, folder ID, member type, and member ID separated by commas (`,`) e.g.,
+Import QuickSight Folder Membership using the AWS account ID, folder ID, member type, and member ID separated by commas (`,`). For example:
 
 ```
 $ terraform import aws_quicksight_folder_membership.example 123456789012,example-folder,DATASET,example-dataset

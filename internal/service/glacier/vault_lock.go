@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glacier
 
 import (
@@ -72,7 +75,7 @@ const (
 
 func resourceVaultLockCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlacierClient()
+	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -119,7 +122,7 @@ func resourceVaultLockCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceVaultLockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlacierClient()
+	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
 	output, err := findVaultLockByName(ctx, conn, d.Id())
 
@@ -149,7 +152,7 @@ func resourceVaultLockRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceVaultLockDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlacierClient()
+	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Glacier Vault Lock: %s", d.Id())
 	_, err := conn.AbortVaultLock(ctx, &glacier.AbortVaultLockInput{

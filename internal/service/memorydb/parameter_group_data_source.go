@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb
 
 import (
@@ -56,7 +59,7 @@ func DataSourceParameterGroup() *schema.Resource {
 }
 
 func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -85,7 +88,7 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("failed to set parameter: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for MemoryDB Parameter Group (%s): %s", d.Id(), err)

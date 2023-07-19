@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
@@ -977,7 +980,7 @@ func testAccCheckTargetExists(ctx context.Context, n string, v *eventbridge.Targ
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		output, err := tfevents.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
 
@@ -993,7 +996,7 @@ func testAccCheckTargetExists(ctx context.Context, n string, v *eventbridge.Targ
 
 func testAccCheckTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_target" {

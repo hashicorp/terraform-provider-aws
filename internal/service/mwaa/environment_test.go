@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mwaa_test
 
 import (
@@ -401,7 +404,7 @@ func testAccCheckEnvironmentExists(ctx context.Context, n string, v *mwaa.Enviro
 			return fmt.Errorf("No MWAA Environment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn(ctx)
 
 		output, err := tfmwaa.FindEnvironmentByName(ctx, conn, rs.Primary.ID)
 
@@ -417,7 +420,7 @@ func testAccCheckEnvironmentExists(ctx context.Context, n string, v *mwaa.Enviro
 
 func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_mwaa_environment" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssoadmin_test
 
 import (
@@ -175,7 +178,7 @@ func TestAccSSOAdminManagedPolicyAttachment_multipleManagedPolicies(t *testing.T
 
 func testAccCheckManagedPolicyAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssoadmin_managed_policy_attachment" {
@@ -225,7 +228,7 @@ func testAccCheckManagedPolicyAttachmentExists(ctx context.Context, resourceName
 			return fmt.Errorf("error parsing SSO Managed Policy Attachment ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
 
 		policy, err := tfssoadmin.FindManagedPolicy(ctx, conn, managedPolicyArn, permissionSetArn, instanceArn)
 

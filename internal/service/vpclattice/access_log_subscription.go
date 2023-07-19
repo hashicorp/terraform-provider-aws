@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice
 
 import (
@@ -66,13 +69,13 @@ const (
 )
 
 func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	in := &vpclattice.CreateAccessLogSubscriptionInput{
 		ClientToken:        aws.String(id.UniqueId()),
 		DestinationArn:     aws.String(d.Get("destination_arn").(string)),
 		ResourceIdentifier: aws.String(d.Get("resource_identifier").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateAccessLogSubscription(ctx, in)
@@ -87,7 +90,7 @@ func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAccessLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	out, err := findAccessLogSubscriptionByID(ctx, conn, d.Id())
 
@@ -115,7 +118,7 @@ func resourceAccessLogSubscriptionUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAccessLogSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice AccessLogSubscription %s", d.Id())
 	_, err := conn.DeleteAccessLogSubscription(ctx, &vpclattice.DeleteAccessLogSubscriptionInput{

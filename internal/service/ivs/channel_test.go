@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivs_test
 
 import (
@@ -215,7 +218,7 @@ func TestAccIVSChannel_recordingConfiguration(t *testing.T) {
 
 func testAccCheckChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ivs_channel" {
@@ -253,7 +256,7 @@ func testAccCheckChannelExists(ctx context.Context, name string, channel *ivs.Ch
 			return create.Error(names.IVS, create.ErrActionCheckingExistence, tfivs.ResNameChannel, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn(ctx)
 
 		output, err := tfivs.FindChannelByID(ctx, conn, rs.Primary.ID)
 
@@ -268,7 +271,7 @@ func testAccCheckChannelExists(ctx context.Context, name string, channel *ivs.Ch
 }
 
 func testAccChannelPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn(ctx)
 
 	input := &ivs.ListChannelsInput{}
 	_, err := conn.ListChannelsWithContext(ctx, input)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/beevik/etree"
 )
 
-// cannonicalXML reads XML in a string and re-writes it canonically, used for
+// CanonicalXML reads XML in a string and re-writes it canonically, used for
 // comparing XML for logical equivalency
 func CanonicalXML(s string) (string, error) {
 	doc := etree.NewDocument()

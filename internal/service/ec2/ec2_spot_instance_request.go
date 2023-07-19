@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -42,14 +45,15 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 
 		Schema: func() map[string]*schema.Schema {
 			// The Spot Instance Request Schema is based on the AWS Instance schema.
-			s := ResourceInstance().Schema
+			s := ResourceInstance().SchemaMap()
 
-			// Everything on a spot instance is ForceNew (except tags).
+			// Everything on a spot instance is ForceNew (except tags/tags_all).
 			for k, v := range s {
 				if v.Computed && !v.Optional {
 					continue
 				}
-				if k == names.AttrTags {
+				// tags_all is Optional+Computed.
+				if k == names.AttrTags || k == names.AttrTagsAll {
 					continue
 				}
 				v.ForceNew = true
@@ -144,7 +148,7 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 
 func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instanceOpts, err := buildInstanceOpts(ctx, d, meta)
 	if err != nil {
@@ -200,7 +204,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 		input.LaunchSpecification.Placement = instanceOpts.SpotPlacement
 	}
 
-	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.RequestSpotInstancesWithContext(ctx, input)
 		},
@@ -237,9 +241,9 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindSpotInstanceRequestByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -270,7 +274,7 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 	d.Set("launch_group", request.LaunchGroup)
 	d.Set("block_duration_minutes", request.BlockDurationMinutes)
 
-	SetTagsOut(ctx, request.Tags)
+	setTagsOut(ctx, request.Tags)
 
 	d.Set("instance_interruption_behavior", request.InstanceInterruptionBehavior)
 	d.Set("valid_from", aws.TimeValue(request.ValidFrom).Format(time.RFC3339))
@@ -286,7 +290,7 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 
 func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instance, err := FindInstanceByID(ctx, conn, d.Get("spot_instance_id").(string))
 
@@ -367,7 +371,7 @@ func resourceSpotInstanceRequestUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceSpotInstanceRequestDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Cancelling EC2 Spot Instance Request: %s", d.Id())
 	_, err := conn.CancelSpotInstanceRequestsWithContext(ctx, &ec2.CancelSpotInstanceRequestsInput{

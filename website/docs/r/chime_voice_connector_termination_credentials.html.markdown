@@ -42,7 +42,7 @@ resource "aws_chime_voice_connector_termination_credentials" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `voice_connector_id` - (Required) Amazon Chime Voice Connector ID.
 * `credentials` - (Required) List of termination SIP credentials.
@@ -54,15 +54,15 @@ The SIP credentials used to authenticate requests to your Amazon Chime Voice Con
 * `username` - (Required) RFC2617 compliant username associated with the SIP credentials.
 * `password` - (Required) RFC2617 compliant password associated with the SIP credentials.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Chime Voice Connector ID.
 
 ## Import
 
-Chime Voice Connector Termination Credentials can be imported using the `voice_connector_id`, e.g.,
+Import Chime Voice Connector Termination Credentials using the `voice_connector_id`. For example:
 
 ```
 $ terraform import aws_chime_voice_connector_termination_credentials.default abcdef1ghij2klmno3pqr4

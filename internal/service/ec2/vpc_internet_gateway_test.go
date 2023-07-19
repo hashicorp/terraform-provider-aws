@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -154,7 +157,7 @@ func TestAccVPCInternetGateway_Tags(t *testing.T) {
 
 func testAccCheckInternetGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_internet_gateway" {
@@ -189,7 +192,7 @@ func testAccCheckInternetGatewayExists(ctx context.Context, n string, v *ec2.Int
 			return fmt.Errorf("No EC2 Internet Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindInternetGatewayByID(ctx, conn, rs.Primary.ID)
 

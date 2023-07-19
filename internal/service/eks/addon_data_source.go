@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks
 
 import (
@@ -57,7 +60,7 @@ func DataSourceAddon() *schema.Resource {
 }
 
 func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	addonName := d.Get("addon_name").(string)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package firehose
 
 import (
@@ -2854,10 +2857,10 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 	}
 
-	conn := meta.(*conns.AWSClient).FirehoseConn()
+	conn := meta.(*conns.AWSClient).FirehoseConn(ctx)
 	input := &firehose.CreateDeliveryStreamInput{
 		DeliveryStreamName: aws.String(sn),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kinesis_source_configuration"); ok {
@@ -2994,7 +2997,7 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 	}
 
-	conn := meta.(*conns.AWSClient).FirehoseConn()
+	conn := meta.(*conns.AWSClient).FirehoseConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		updateInput := &firehose.UpdateDestinationInput{
@@ -3117,7 +3120,7 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FirehoseConn()
+	conn := meta.(*conns.AWSClient).FirehoseConn(ctx)
 
 	sn := d.Get("name").(string)
 	s, err := FindDeliveryStreamByName(ctx, conn, sn)
@@ -3141,7 +3144,7 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceDeliveryStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FirehoseConn()
+	conn := meta.(*conns.AWSClient).FirehoseConn(ctx)
 
 	sn := d.Get("name").(string)
 	log.Printf("[DEBUG] Deleting Kinesis Firehose Delivery Stream: (%s)", sn)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mwaa
 
 import (
@@ -289,7 +292,7 @@ func ResourceEnvironment() *schema.Resource {
 }
 
 func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn()
+	conn := meta.(*conns.AWSClient).MWAAConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &mwaa.CreateEnvironmentInput{
@@ -298,7 +301,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		Name:                 aws.String(name),
 		NetworkConfiguration: expandEnvironmentNetworkConfigurationCreate(d.Get("network_configuration").([]interface{})),
 		SourceBucketArn:      aws.String(d.Get("source_bucket_arn").(string)),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("airflow_configuration_options"); ok {
@@ -388,7 +391,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn()
+	conn := meta.(*conns.AWSClient).MWAAConn(ctx)
 
 	environment, err := FindEnvironmentByName(ctx, conn, d.Id())
 
@@ -436,13 +439,13 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("webserver_url", environment.WebserverUrl)
 	d.Set("weekly_maintenance_window_start", environment.WeeklyMaintenanceWindowStart)
 
-	SetTagsOut(ctx, environment.Tags)
+	setTagsOut(ctx, environment.Tags)
 
 	return nil
 }
 
 func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn()
+	conn := meta.(*conns.AWSClient).MWAAConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &mwaa.UpdateEnvironmentInput{
@@ -545,7 +548,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn()
+	conn := meta.(*conns.AWSClient).MWAAConn(ctx)
 
 	log.Printf("[INFO] Deleting MWAA Environment: %s", d.Id())
 	_, err := conn.DeleteEnvironmentWithContext(ctx, &mwaa.DeleteEnvironmentInput{

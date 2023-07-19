@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream
 
 import (
@@ -67,7 +70,7 @@ func ResourceDirectoryConfig() *schema.Resource {
 }
 
 func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	directoryName := d.Get("directory_name").(string)
 	input := &appstream.CreateDirectoryConfigInput{
@@ -91,7 +94,7 @@ func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	resp, err := conn.DescribeDirectoryConfigsWithContext(ctx, &appstream.DescribeDirectoryConfigsInput{DirectoryNames: []*string{aws.String(d.Id())}})
 
@@ -127,7 +130,7 @@ func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 	input := &appstream.UpdateDirectoryConfigInput{
 		DirectoryName: aws.String(d.Id()),
 	}
@@ -149,7 +152,7 @@ func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDirectoryConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	log.Printf("[DEBUG] Deleting AppStream Directory Config: (%s)", d.Id())
 	_, err := conn.DeleteDirectoryConfigWithContext(ctx, &appstream.DeleteDirectoryConfigInput{

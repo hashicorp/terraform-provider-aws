@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager_test
 
 import (
@@ -94,7 +97,7 @@ func testAccOrganizationAdminAccountRegistration_disappears(t *testing.T) {
 
 func testAccCheckOrganizationAdminAccountRegistrationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_auditmanager_organization_admin_account_registration" {
@@ -125,7 +128,7 @@ func testAccCheckOrganizationAdminAccountRegistrationExists(ctx context.Context,
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameOrganizationAdminAccountRegistration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 		out, err := conn.GetOrganizationAdminAccount(ctx, &auditmanager.GetOrganizationAdminAccountInput{})
 		if err != nil {
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameOrganizationAdminAccountRegistration, rs.Primary.ID, err)

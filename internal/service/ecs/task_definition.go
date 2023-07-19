@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
@@ -443,7 +446,7 @@ func ValidTaskDefinitionContainerDefinitions(v interface{}, k string) (ws []stri
 
 func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	rawDefinitions := d.Get("container_definitions").(string)
 	definitions, err := expandContainerDefinitions(rawDefinitions)
@@ -454,7 +457,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: definitions,
 		Family:               aws.String(d.Get("family").(string)),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cpu"); ok {
@@ -531,14 +534,14 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get("family").(string), err)
 	}
 
-	taskDefinition := *output.TaskDefinition // nosemgrep:ci.prefer-aws-go-sdk-pointer-conversion-assignment // false positive
+	taskDefinition := *output.TaskDefinition // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment // false positive
 
 	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
 	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(taskDefinition.TaskDefinitionArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -556,7 +559,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	input := ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get("arn").(string)),
@@ -644,7 +647,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
 	}
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	return diags
 }
@@ -664,7 +667,7 @@ func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	_, err := conn.DeregisterTaskDefinitionWithContext(ctx, &ecs.DeregisterTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get("arn").(string)),
@@ -971,7 +974,6 @@ func expandVolumesEFSVolume(efsConfig []interface{}) *ecs.EFSVolumeConfiguration
 		efsVol.TransitEncryptionPort = aws.Int64(int64(v))
 	}
 	if v, ok := config["authorization_config"].([]interface{}); ok && len(v) > 0 {
-		efsVol.RootDirectory = nil
 		efsVol.AuthorizationConfig = expandVolumesEFSVolumeAuthorizationConfig(v)
 	}
 

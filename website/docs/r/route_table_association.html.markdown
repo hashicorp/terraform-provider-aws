@@ -31,15 +31,15 @@ resource "aws_route_table_association" "b" {
 
 ~> **NOTE:** Please note that one of either `subnet_id` or `gateway_id` is required.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `subnet_id` - (Optional) The subnet ID to create an association. Conflicts with `gateway_id`.
 * `gateway_id` - (Optional) The gateway ID to create an association. Conflicts with `subnet_id`.
 * `route_table_id` - (Required) The ID of the routing table to associate with.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the association
 
@@ -53,14 +53,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-~> **NOTE:** Attempting to associate a route table with a subnet or gateway, where either
-is already associated, will result in an error (e.g.,
-`Resource.AlreadyAssociated: the specified association for route table
-rtb-4176657279 conflicts with an existing association`) unless you first
-import the original association.
+Import EC2 Route Table Associations using the associated resource ID and Route Table ID separated by a forward slash (`/`). For example:
 
-EC2 Route Table Associations can be imported using the associated resource ID and Route Table ID
-separated by a forward slash (`/`).
+~> **NOTE:** Attempting to associate a route table with a subnet or gateway, where either is already associated, will result in an error (e.g., `Resource.AlreadyAssociated: the specified association for route table rtb-4176657279 conflicts with an existing association`) unless you first import the original association.
 
 For example with EC2 Subnets:
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync_test
 
 import (
@@ -141,7 +144,7 @@ func TestAccDataSyncLocationSMB_tags(t *testing.T) {
 
 func testAccCheckLocationSMBDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datasync_location_smb" {
@@ -174,7 +177,7 @@ func testAccCheckLocationSMBExists(ctx context.Context, resourceName string, loc
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 		input := &datasync.DescribeLocationSmbInput{
 			LocationArn: aws.String(rs.Primary.ID),
 		}
@@ -197,7 +200,7 @@ func testAccCheckLocationSMBExists(ctx context.Context, resourceName string, loc
 
 func testAccCheckLocationSMBDisappears(ctx context.Context, location *datasync.DescribeLocationSmbOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 
 		input := &datasync.DeleteLocationInput{
 			LocationArn: location.LocationArn,

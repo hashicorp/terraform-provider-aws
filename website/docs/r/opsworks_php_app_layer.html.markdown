@@ -20,7 +20,7 @@ resource "aws_opsworks_php_app_layer" "app" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `stack_id` - (Required) ID of the stack the layer will belong to.
 * `name` - (Optional) A human-readable name for the layer.
@@ -58,9 +58,9 @@ An `ebs_volume` block supports the following arguments:
 * `type` - (Optional) The type of volume to create. This may be `standard` (the default), `io1` or `gp2`.
 * `iops` - (Optional) For PIOPS volumes, the IOPS per disk.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The id of the layer.
 * `arn` - The Amazon Resource Name(ARN) of the layer.
@@ -68,7 +68,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-OpsWorks PHP Application Layers can be imported using the `id`, e.g.,
+Import OpsWorks PHP Application Layers using the `id`. For example:
 
 ```
 $ terraform import aws_opsworks_php_app_layer.bar 00000000-0000-0000-0000-000000000000

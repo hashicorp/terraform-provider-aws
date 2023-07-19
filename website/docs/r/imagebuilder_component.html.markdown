@@ -68,9 +68,9 @@ The following attributes are optional:
 
 ~> **NOTE:** Updating `data` or `uri` requires specifying a new `version`. This causes replacement of the resource. The `skip_destroy` argument can be used to retain the old version.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - (Required) Amazon Resource Name (ARN) of the component.
 * `date_created` - Date the component was created.
@@ -81,7 +81,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_imagebuilder_components` resources can be imported by using the Amazon Resource Name (ARN), e.g.,
+Import `aws_imagebuilder_components` resources using the Amazon Resource Name (ARN). For example:
 
 ```
 $ terraform import aws_imagebuilder_component.example arn:aws:imagebuilder:us-east-1:123456789012:component/example/1.0.0/1

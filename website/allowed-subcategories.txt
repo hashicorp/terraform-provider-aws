@@ -312,6 +312,7 @@ VPC Lattice
 VPN (Client)
 VPN (Site-to-Site)
 Verified Access
+Verified Permissions
 WAF
 WAF Classic
 WAF Classic Regional

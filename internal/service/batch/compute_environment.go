@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch
 
 import (
@@ -172,6 +175,11 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
+						"placement_group": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -267,14 +275,14 @@ func ResourceComputeEnvironment() *schema.Resource {
 
 func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	computeEnvironmentName := create.Name(d.Get("compute_environment_name").(string), d.Get("compute_environment_name_prefix").(string))
 	computeEnvironmentType := d.Get("type").(string)
 	input := &batch.CreateComputeEnvironmentInput{
 		ComputeEnvironmentName: aws.String(computeEnvironmentName),
 		ServiceRole:            aws.String(d.Get("service_role").(string)),
-		Tags:                   GetTagsIn(ctx),
+		Tags:                   getTagsIn(ctx),
 		Type:                   aws.String(computeEnvironmentType),
 	}
 
@@ -307,7 +315,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	computeEnvironment, err := FindComputeEnvironmentDetailByName(ctx, conn, d.Id())
 
@@ -349,14 +357,14 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("eks_configuration", nil)
 	}
 
-	SetTagsOut(ctx, computeEnvironment.Tags)
+	setTagsOut(ctx, computeEnvironment.Tags)
 
 	return diags
 }
 
 func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &batch.UpdateComputeEnvironmentInput{
@@ -411,7 +419,7 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	log.Printf("[DEBUG] Disabling Batch Compute Environment: %s", d.Id())
 	{
@@ -674,6 +682,10 @@ func expandComputeResource(ctx context.Context, tfMap map[string]interface{}) *b
 		apiObject.MinvCpus = aws.Int64(0)
 	}
 
+	if v, ok := tfMap["placement_group"].(string); ok && v != "" {
+		apiObject.PlacementGroup = aws.String(v)
+	}
+
 	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
@@ -830,6 +842,10 @@ func flattenComputeResource(ctx context.Context, apiObject *batch.ComputeResourc
 
 	if v := apiObject.MinvCpus; v != nil {
 		tfMap["min_vcpus"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.PlacementGroup; v != nil {
+		tfMap["placement_group"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SecurityGroupIds; v != nil {

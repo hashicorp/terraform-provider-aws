@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync
 
 import (
@@ -131,14 +134,14 @@ func ResourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 
 func resourceLocationFSxOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	fsxArn := d.Get("fsx_filesystem_arn").(string)
 	input := &datasync.CreateLocationFsxOpenZfsInput{
 		FsxFilesystemArn:  aws.String(fsxArn),
 		Protocol:          expandProtocol(d.Get("protocol").([]interface{})),
 		SecurityGroupArns: flex.ExpandStringSet(d.Get("security_group_arns").(*schema.Set)),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("subdirectory"); ok {
@@ -158,7 +161,7 @@ func resourceLocationFSxOpenZFSFileSystemCreate(ctx context.Context, d *schema.R
 
 func resourceLocationFSxOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	output, err := FindFSxOpenZFSLocationByARN(ctx, conn, d.Id())
 
@@ -172,7 +175,7 @@ func resourceLocationFSxOpenZFSFileSystemRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location Fsx OpenZfs (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
+	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location Fsx OpenZfs (%s): %s", d.Id(), err)
@@ -207,7 +210,7 @@ func resourceLocationFSxOpenZFSFileSystemUpdate(ctx context.Context, d *schema.R
 
 func resourceLocationFSxOpenZFSFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),

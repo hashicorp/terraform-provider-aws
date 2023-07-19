@@ -64,7 +64,7 @@ resource "aws_appautoscaling_scheduled_action" "ecs" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the scheduled action.
 * `service_namespace` - (Required) Namespace of the AWS service. Documentation can be found in the `ServiceNamespace` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_PutScheduledAction.html) Example: ecs
@@ -81,8 +81,8 @@ The following arguments are supported:
 * `max_capacity` - (Optional) Maximum capacity. At least one of `max_capacity` or `min_capacity` must be set.
 * `min_capacity` - (Optional) Minimum capacity. At least one of `min_capacity` or `max_capacity` must be set.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the scheduled action.

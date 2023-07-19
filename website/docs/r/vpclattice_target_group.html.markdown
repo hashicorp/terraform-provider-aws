@@ -105,9 +105,9 @@ Health Check (`health_check`) supports the following:
 * `protocol_version` - (Optional) The protocol version used when performing health checks on targets. The possible protocol versions are `HTTP1` and `HTTP2`. The default is `HTTP1`.
 * `unhealthy_threshold_count` - (Optional) The number of consecutive failed health checks required before considering a target unhealthy. The range is 2–10. The default is 2.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the target group.
 * `id` - Unique identifier for the target group.
@@ -123,7 +123,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPC Lattice Target Group can be imported using the `id`, e.g.,
+Import VPC Lattice Target Group using the `id`. For example:
 
 ```
 $ terraform import aws_vpclattice_target_group.example tg-0c11d4dc16ed96bdb

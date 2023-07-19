@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package plugin
 
 import (
@@ -565,9 +568,7 @@ func (c *Client) Start() (addr net.Addr, err error) {
 		return nil, err
 	}
 
-	if c.config.SecureConfig == nil {
-		c.logger.Warn("plugin configured with a nil SecureConfig")
-	} else {
+	if c.config.SecureConfig != nil {
 		if ok, err := c.config.SecureConfig.Check(cmd.Path); err != nil {
 			return nil, fmt.Errorf("error verifying checksum: %s", err)
 		} else if !ok {

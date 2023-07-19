@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda_test
 
 import (
@@ -301,7 +304,7 @@ func testAccCheckLayerVersionPermissionExists(ctx context.Context, n string) res
 			return fmt.Errorf("error parsing lambda layer ID: %w", err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
 
 		_, err = conn.GetLayerVersionPolicyWithContext(ctx, &lambda.GetLayerVersionPolicyInput{
 			LayerName:     aws.String(layerName),
@@ -314,7 +317,7 @@ func testAccCheckLayerVersionPermissionExists(ctx context.Context, n string) res
 
 func testAccCheckLayerVersionPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_layer_version_permission" {

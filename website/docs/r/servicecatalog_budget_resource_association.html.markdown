@@ -30,9 +30,9 @@ The following arguments are required:
 * `budget_name` - (Required) Budget name.
 * `resource_id` - (Required) Resource identifier.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of the association.
 
@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_servicecatalog_budget_resource_association` can be imported using the budget name and resource ID, e.g.,
+Import `aws_servicecatalog_budget_resource_association` using the budget name and resource ID. For example:
 
 ```
 $ terraform import aws_servicecatalog_budget_resource_association.example budget-pjtvyakdlyo3m:prod-dnigbtea24ste

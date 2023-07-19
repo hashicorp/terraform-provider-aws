@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub
 
 import (
@@ -38,7 +41,7 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 
 func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	adminAccountID := d.Get("admin_account_id").(string)
 
@@ -63,7 +66,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 
 func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	adminAccount, err := FindAdminAccount(ctx, conn, d.Id())
 
@@ -94,7 +97,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 
 func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	input := &securityhub.DisableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(d.Id()),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package outposts_test
 
 import (
@@ -48,7 +51,7 @@ func testAccCheckSitesAttributes(dataSourceName string) resource.TestCheckFunc {
 }
 
 func testAccPreCheckSites(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OutpostsConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OutpostsConn(ctx)
 
 	input := &outposts.ListSitesInput{}
 

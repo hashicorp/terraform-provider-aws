@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb
 
 import (
@@ -89,7 +92,7 @@ func ResourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	userName := d.Get("user_name").(string)
 	input := &memorydb.CreateUserInput{
@@ -98,7 +101,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 			Passwords: flex.ExpandStringSet(d.Get("authentication_mode.0.passwords").(*schema.Set)),
 			Type:      aws.String(d.Get("authentication_mode.0.type").(string)),
 		},
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 		UserName: aws.String(userName),
 	}
 
@@ -114,7 +117,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	user, err := FindUserByName(ctx, conn, d.Id())
 
@@ -150,7 +153,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &memorydb.UpdateUserInput{
@@ -183,7 +186,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB User: (%s)", d.Id())
 	_, err := conn.DeleteUserWithContext(ctx, &memorydb.DeleteUserInput{

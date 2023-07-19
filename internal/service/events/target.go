@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
@@ -440,7 +443,7 @@ func ResourceTarget() *schema.Resource {
 }
 
 func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	rule := d.Get("rule").(string)
 
@@ -476,7 +479,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	busName := d.Get("event_bus_name").(string)
 
@@ -565,7 +568,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := buildPutTargetInputStruct(ctx, d)
 
@@ -584,7 +587,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.RemoveTargetsInput{
 		Ids:  []*string{aws.String(d.Get("target_id").(string))},

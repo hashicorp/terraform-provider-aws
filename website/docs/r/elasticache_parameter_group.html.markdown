@@ -33,7 +33,7 @@ resource "aws_elasticache_parameter_group" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the ElastiCache parameter group.
 * `family` - (Required) The family of the ElastiCache parameter group.
@@ -46,9 +46,9 @@ Parameter blocks support the following:
 * `name` - (Required) The name of the ElastiCache parameter.
 * `value` - (Required) The value of the ElastiCache parameter.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ElastiCache parameter group name.
 * `arn` - The AWS ARN associated with the parameter group.
@@ -56,7 +56,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ElastiCache Parameter Groups can be imported using the `name`, e.g.,
+Import ElastiCache Parameter Groups using the `name`. For example:
 
 ```
 $ terraform import aws_elasticache_parameter_group.default redis-params

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package devicefarm
 
 import (
@@ -72,7 +75,7 @@ func ResourceUpload() *schema.Resource {
 
 func resourceUploadCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	input := &devicefarm.CreateUploadInput{
 		Name:       aws.String(d.Get("name").(string)),
@@ -98,7 +101,7 @@ func resourceUploadCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	upload, err := FindUploadByARN(ctx, conn, d.Id())
 
@@ -133,7 +136,7 @@ func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	input := &devicefarm.UpdateUploadInput{
 		Arn: aws.String(d.Id()),
@@ -158,7 +161,7 @@ func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceUploadDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	input := &devicefarm.DeleteUploadInput{
 		Arn: aws.String(d.Id()),

@@ -35,18 +35,18 @@ resource "aws_redshift_snapshot_schedule_association" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_identifier` - (Required, Forces new resource) The cluster identifier.
 * `schedule_identifier` - (Required, Forces new resource) The snapshot schedule identifier.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-Redshift Snapshot Schedule Association can be imported using the `<cluster-identifier>/<schedule-identifier>`, e.g.,
+Import Redshift Snapshot Schedule Association using the `<cluster-identifier>/<schedule-identifier>`. For example:
 
 ```
 $ terraform import aws_redshift_snapshot_schedule_association.default tf-redshift-cluster/tf-redshift-snapshot-schedule

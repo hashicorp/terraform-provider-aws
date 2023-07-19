@@ -37,20 +37,20 @@ resource "aws_backup_region_settings" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_type_opt_in_preference` - (Required) A map of services along with the opt-in preferences for the Region.
-* `resource_type_management_preference` - (Optional) A map of services along with the management preferences for the Region.
+* `resource_type_management_preference` - (Optional) A map of services along with the management preferences for the Region. For more information, see the [AWS Documentation](https://docs.aws.amazon.com/aws-backup/latest/devguide/API_UpdateRegionSettings.html#API_UpdateRegionSettings_RequestSyntax).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The AWS region.
 
 ## Import
 
-Backup Region Settings can be imported using the `region`, e.g.,
+Import Backup Region Settings using the `region`. For example:
 
 ```
 $ terraform import aws_backup_region_settings.test us-west-2

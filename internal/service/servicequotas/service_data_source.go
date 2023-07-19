@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicequotas
 
 import (
@@ -31,7 +34,7 @@ func DataSourceService() *schema.Resource {
 
 func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn()
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn(ctx)
 
 	serviceName := d.Get("service_name").(string)
 

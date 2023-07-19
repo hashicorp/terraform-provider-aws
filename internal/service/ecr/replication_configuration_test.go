@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr_test
 
 import (
@@ -149,7 +152,7 @@ func testAccCheckReplicationConfigurationExists(ctx context.Context, name string
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
 		out, err := conn.DescribeRegistryWithContext(ctx, &ecr.DescribeRegistryInput{})
 		if err != nil {
 			return fmt.Errorf("ECR replication rules not found: %w", err)
@@ -165,7 +168,7 @@ func testAccCheckReplicationConfigurationExists(ctx context.Context, name string
 
 func testAccCheckReplicationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecr_replication_configuration" {

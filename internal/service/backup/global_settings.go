@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
@@ -35,7 +38,7 @@ func ResourceGlobalSettings() *schema.Resource {
 
 func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	input := &backup.UpdateGlobalSettingsInput{
 		GlobalSettings: flex.ExpandStringMap(d.Get("global_settings").(map[string]interface{})),
@@ -53,7 +56,7 @@ func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	resp, err := conn.DescribeGlobalSettingsWithContext(ctx, &backup.DescribeGlobalSettingsInput{})
 	if err != nil {

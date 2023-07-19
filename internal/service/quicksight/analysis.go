@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
@@ -51,85 +54,88 @@ func ResourceAnalysis() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_account_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"created_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"analysis_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"definition": quicksightschema.AnalysisDefinitionSchema(),
-			"last_updated_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_published_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 2048),
-			},
-			"parameters": quicksightschema.ParametersSchema(),
-			"permissions": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 64,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"actions": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 16,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"principal": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 256),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_account_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"created_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"analysis_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"definition": quicksightschema.AnalysisDefinitionSchema(),
+				"last_updated_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_published_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 2048),
+				},
+				"parameters": quicksightschema.ParametersSchema(),
+				"permissions": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 64,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"actions": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 16,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"principal": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
 						},
 					},
 				},
-			},
-			"recovery_window_in_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  30,
-				ValidateFunc: validation.Any(
-					validation.IntBetween(recoveryWindowInDaysMin, recoveryWindowInDaysMax),
-					validation.IntInSlice([]int{0}),
-				),
-			},
-			"source_entity": quicksightschema.AnalysisSourceEntitySchema(),
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"theme_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+				"recovery_window_in_days": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  30,
+					ValidateFunc: validation.Any(
+						validation.IntBetween(recoveryWindowInDaysMin, recoveryWindowInDaysMax),
+						validation.IntInSlice([]int{0}),
+					),
+				},
+				"source_entity": quicksightschema.AnalysisSourceEntitySchema(),
+				"status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"theme_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -139,7 +145,7 @@ const (
 )
 
 func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -153,7 +159,7 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 		AwsAccountId: aws.String(awsAccountId),
 		AnalysisId:   aws.String(analysisId),
 		Name:         aws.String(d.Get("name").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("source_entity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -185,7 +191,7 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, analysisId, err := ParseAnalysisId(d.Id())
 	if err != nil {
@@ -249,7 +255,7 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, analysisId, err := ParseAnalysisId(d.Id())
 	if err != nil {
@@ -316,7 +322,7 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceAnalysisDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, analysisId, err := ParseAnalysisId(d.Id())
 	if err != nil {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog_test
 
 import (
@@ -161,7 +164,7 @@ func TestAccServiceCatalogTagOption_notActive(t *testing.T) {
 
 func testAccCheckTagOptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_tag_option" {
@@ -199,7 +202,7 @@ func testAccCheckTagOptionExists(ctx context.Context, resourceName string) resou
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		input := &servicecatalog.DescribeTagOptionInput{
 			Id: aws.String(rs.Primary.ID),

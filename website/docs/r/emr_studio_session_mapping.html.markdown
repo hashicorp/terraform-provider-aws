@@ -31,15 +31,15 @@ The following arguments are required:
 * `session_policy_arn` - (Required) The Amazon Resource Name (ARN) for the session policy that will be applied to the user or group. You should specify the ARN for the session policy that you want to apply, not the ARN of your user role.
 * `studio_id` - (Required) The ID of the Amazon EMR Studio to which the user or group will be mapped.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id`- The id of the Elastic MapReduce Studio Session Mapping.
 
 ## Import
 
-EMR studio session mappings can be imported using the `id`, e.g., `studio-id:identity-type:identity-id`
+Import EMR studio session mappings using `studio-id:identity-type:identity-id`. For example:
 
 ```
 $ terraform import aws_emr_studio_session_mapping.example es-xxxxx:USER:xxxxx-xxx-xxx

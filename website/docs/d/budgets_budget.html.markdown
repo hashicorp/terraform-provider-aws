@@ -31,9 +31,9 @@ The following arguments are optional:
 * `account_id` - The ID of the target account for budget. Will use current user's account_id by default if omitted.
 * `name_prefix` - The prefix of the name of a budget. Unique within accounts.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `auto_adjust_data` - Object containing [AutoAdjustData] which determines the budget amount for an auto-adjusting budget.
 * `budget_type` - Whether this budget tracks monetary cost or usage.

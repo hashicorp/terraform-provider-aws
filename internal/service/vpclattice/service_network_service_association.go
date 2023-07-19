@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice
 
 import (
@@ -97,13 +100,13 @@ const (
 )
 
 func resourceServiceNetworkServiceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	in := &vpclattice.CreateServiceNetworkServiceAssociationInput{
 		ClientToken:              aws.String(id.UniqueId()),
 		ServiceIdentifier:        aws.String(d.Get("service_identifier").(string)),
 		ServiceNetworkIdentifier: aws.String(d.Get("service_network_identifier").(string)),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateServiceNetworkServiceAssociation(ctx, in)
@@ -125,7 +128,7 @@ func resourceServiceNetworkServiceAssociationCreate(ctx context.Context, d *sche
 }
 
 func resourceServiceNetworkServiceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	out, err := findServiceNetworkServiceAssociationByID(ctx, conn, d.Id())
 
@@ -162,7 +165,7 @@ func resourceServiceNetworkServiceAssociationUpdate(ctx context.Context, d *sche
 }
 
 func resourceServiceNetworkServiceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice Service Network Association %s", d.Id())
 

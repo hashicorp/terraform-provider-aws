@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package signer_test
 
 import (
@@ -111,7 +114,7 @@ func testAccCheckSigningJobExists(ctx context.Context, res string, job *signer.D
 			return fmt.Errorf("Signing job with that ID does not exist")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn(ctx)
 
 		params := &signer.DescribeSigningJobInput{
 			JobId: aws.String(rs.Primary.ID),

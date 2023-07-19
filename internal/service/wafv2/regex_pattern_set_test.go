@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2_test
 
 import (
@@ -224,7 +227,7 @@ func testAccCheckRegexPatternSetDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
 
 			_, err := tfwafv2.FindRegexPatternSetByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 
@@ -254,7 +257,7 @@ func testAccCheckRegexPatternSetExists(ctx context.Context, n string, v *wafv2.R
 			return fmt.Errorf("No WAFv2 RegexPatternSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
 
 		output, err := tfwafv2.FindRegexPatternSetByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 

@@ -54,22 +54,22 @@ resource "aws_route53_zone_association" "secondary" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `zone_id` - (Required) The private hosted zone to associate.
 * `vpc_id` - (Required) The VPC to associate with the private hosted zone.
 * `vpc_region` - (Optional) The VPC's region. Defaults to the region of the AWS provider.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The calculated unique identifier for the association.
 * `owning_account` - The account ID of the account that created the hosted zone.
 
 ## Import
 
-Route 53 Hosted Zone Associations can be imported via the Hosted Zone ID and VPC ID, separated by a colon (`:`), e.g.,
+Import Route 53 Hosted Zone Associations using the Hosted Zone ID and VPC ID, separated by a colon (`:`). For example:
 
 ```
 $ terraform import aws_route53_zone_association.example Z123456ABCDEFG:vpc-12345678

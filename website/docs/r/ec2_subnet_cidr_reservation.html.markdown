@@ -22,23 +22,23 @@ resource "aws_ec2_subnet_cidr_reservation" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cidr_block` - (Required) The CIDR block for the reservation.
 * `reservation_type` - (Required) The type of reservation to create. Valid values: `explicit`, `prefix`
 * `subnet_id` - (Required) The ID of the subnet to create the reservation for.
 * `description` - (Optional) A brief description of the reservation.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the CIDR reservation.
 * `owner_id` - ID of the AWS account that owns this CIDR reservation.
 
 ## Import
 
-Existing CIDR reservations can be imported using `SUBNET_ID:RESERVATION_ID`, e.g.,
+Import Existing CIDR reservations using `SUBNET_ID:RESERVATION_ID`. For example:
 
 ```
 $ terraform import aws_ec2_subnet_cidr_reservation.example subnet-01llsxvsxabqiymcz:scr-4mnvz6wb7otksjcs9

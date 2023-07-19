@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless_test
 
 import (
@@ -242,7 +245,7 @@ func TestAccRedshiftServerlessWorkgroup_disappears(t *testing.T) {
 
 func testAccCheckWorkgroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshiftserverless_workgroup" {
@@ -276,7 +279,7 @@ func testAccCheckWorkgroupExists(ctx context.Context, name string) resource.Test
 			return fmt.Errorf("Redshift Serverless Workgroup ID is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 		_, err := tfredshiftserverless.FindWorkgroupByName(ctx, conn, rs.Primary.ID)
 

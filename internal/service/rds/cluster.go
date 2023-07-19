@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -533,7 +536,7 @@ func ResourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing
@@ -562,7 +565,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			Engine:              aws.String(d.Get("engine").(string)),
 			EngineMode:          aws.String(d.Get("engine_mode").(string)),
 			SnapshotIdentifier:  aws.String(v.(string)),
-			Tags:                GetTagsIn(ctx),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
@@ -681,7 +684,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			S3Prefix:            aws.String(tfMap["bucket_prefix"].(string)),
 			SourceEngine:        aws.String(tfMap["source_engine"].(string)),
 			SourceEngineVersion: aws.String(tfMap["source_engine_version"].(string)),
-			Tags:                GetTagsIn(ctx),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
@@ -791,7 +794,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DBClusterIdentifier:       aws.String(identifier),
 			DeletionProtection:        aws.Bool(d.Get("deletion_protection").(bool)),
 			SourceDBClusterIdentifier: aws.String(tfMap["source_cluster_identifier"].(string)),
-			Tags:                      GetTagsIn(ctx),
+			Tags:                      getTagsIn(ctx),
 		}
 
 		if v, ok := tfMap["restore_to_time"].(string); ok && v != "" {
@@ -903,7 +906,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			EngineMode:          aws.String(d.Get("engine_mode").(string)),
-			Tags:                GetTagsIn(ctx),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOkExists("allocated_storage"); ok {
@@ -1075,7 +1078,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbc, err := FindDBClusterByID(ctx, conn, d.Id())
 
@@ -1193,13 +1196,13 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	SetTagsOut(ctx, dbc.TagList)
+	setTagsOut(ctx, dbc.TagList)
 
 	return nil
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	if d.HasChangesExcept(
 		"allow_major_version_upgrade",
@@ -1432,7 +1435,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	// Automatically remove from global cluster to bypass this error on deletion:
 	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first

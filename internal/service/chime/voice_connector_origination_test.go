@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chime_test
 
 import (
@@ -124,7 +127,7 @@ func testAccCheckVoiceConnectorOriginationExists(ctx context.Context, name strin
 			return fmt.Errorf("no Chime voice connector origination ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn(ctx)
 		input := &chime.GetVoiceConnectorOriginationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
@@ -148,7 +151,7 @@ func testAccCheckVoiceConnectorOriginationDestroy(ctx context.Context) resource.
 			if rs.Type != "aws_chime_voice_connector_origination" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn(ctx)
 			input := &chime.GetVoiceConnectorOriginationInput{
 				VoiceConnectorId: aws.String(rs.Primary.ID),
 			}

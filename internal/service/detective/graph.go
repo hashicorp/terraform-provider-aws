@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package detective
 
 import (
@@ -45,10 +48,10 @@ func ResourceGraph() *schema.Resource {
 }
 
 func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	input := &detective.CreateGraphInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	var output *detective.CreateGraphOutput
@@ -80,7 +83,7 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	resp, err := FindGraphByARN(ctx, conn, d.Id())
 
@@ -104,7 +107,7 @@ func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	input := &detective.DeleteGraphInput{
 		GraphArn: aws.String(d.Id()),

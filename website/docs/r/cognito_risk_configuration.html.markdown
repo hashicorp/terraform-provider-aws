@@ -24,7 +24,7 @@ resource "aws_cognito_risk_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `user_pool_id` - (Required) The user pool ID.
 * `client_id` - (Optional) The app client ID. When the client ID is not provided, the same risk configuration is applied to all the clients in the User Pool.
@@ -81,15 +81,15 @@ The following arguments are supported:
   The IP range is in CIDR notation.
   Can contain a maximum of 200 items.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The user pool ID. or The user pool ID and Client Id separated by a `:` if the configuration is client specific.
 
 ## Import
 
-Cognito Risk Configurations can be imported using the `id`, e.g.,
+Import Cognito Risk Configurations using the `id`. For example:
 
 ```
 $ terraform import aws_cognito_risk_configuration.main example

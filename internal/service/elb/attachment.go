@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb
 
 import (
@@ -43,7 +46,7 @@ func ResourceAttachment() *schema.Resource {
 
 func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 	elbName := d.Get("elb").(string)
 
 	instance := d.Get("instance").(string)
@@ -83,7 +86,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 	elbName := d.Get("elb").(string)
 
 	// only add the instance that was previously defined for this resource
@@ -128,7 +131,7 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 	elbName := d.Get("elb").(string)
 
 	instance := d.Get("instance").(string)

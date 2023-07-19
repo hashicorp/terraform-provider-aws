@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -131,13 +134,13 @@ func ResourceSnapshot() *schema.Resource {
 
 func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbSnapshotID := d.Get("db_snapshot_identifier").(string)
 	input := &rds.CreateDBSnapshotInput{
 		DBInstanceIdentifier: aws.String(d.Get("db_instance_identifier").(string)),
 		DBSnapshotIdentifier: aws.String(dbSnapshotID),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateDBSnapshotWithContext(ctx, input)
@@ -169,7 +172,7 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	snapshot, err := FindDBSnapshotByID(ctx, conn, d.Id())
 
@@ -215,14 +218,14 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("shared_accounts", flex.FlattenStringSet(output.DBSnapshotAttributesResult.DBSnapshotAttributes[0].AttributeValues))
 
-	SetTagsOut(ctx, snapshot.TagList)
+	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
 }
 
 func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	if d.HasChange("shared_accounts") {
 		o, n := d.GetChange("shared_accounts")
@@ -251,7 +254,7 @@ func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting RDS DB Snapshot: %s", d.Id())
 	_, err := conn.DeleteDBSnapshotWithContext(ctx, &rds.DeleteDBSnapshotInput{

@@ -389,7 +389,8 @@ data "aws_iam_policy_document" "example_log_policy" {
     principals {
       type = "Service"
       identifiers = [
-        "events.amazonaws.com"
+        "events.amazonaws.com",
+        "delivery.logs.amazonaws.com"
       ]
     }
   }
@@ -406,7 +407,8 @@ data "aws_iam_policy_document" "example_log_policy" {
     principals {
       type = "Service"
       identifiers = [
-        "events.amazonaws.com"
+        "events.amazonaws.com",
+        "delivery.logs.amazonaws.com"
       ]
     }
 
@@ -570,13 +572,13 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 * `message_group_id` - (Optional) The FIFO message group ID to use as the target.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-EventBridge Targets can be imported using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used).
+Import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
 
  ```
 $ terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id

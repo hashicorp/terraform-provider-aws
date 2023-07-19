@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -122,7 +125,7 @@ func DataSourceSnapshot() *schema.Resource {
 
 func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeDBSnapshotsInput{
 		IncludePublic: aws.Bool(d.Get("include_public").(bool)),

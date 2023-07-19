@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync_test
 
 import (
@@ -133,7 +136,7 @@ func TestAccDataSyncLocationHDFS_tags(t *testing.T) {
 
 func testAccCheckLocationHDFSDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datasync_location_hdfs" {
@@ -164,7 +167,7 @@ func testAccCheckLocationHDFSExists(ctx context.Context, resourceName string, lo
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 		output, err := tfdatasync.FindLocationHDFSByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {

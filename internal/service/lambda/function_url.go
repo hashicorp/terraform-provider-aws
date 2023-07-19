@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -120,7 +123,7 @@ func ResourceFunctionURL() *schema.Resource {
 }
 
 func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	name := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
@@ -177,7 +180,7 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	name, qualifier, err := FunctionURLParseResourceID(d.Id())
 
@@ -227,7 +230,7 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	name, qualifier, err := FunctionURLParseResourceID(d.Id())
 
@@ -270,7 +273,7 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	name, qualifier, err := FunctionURLParseResourceID(d.Id())
 

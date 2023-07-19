@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda_test
 
 import (
@@ -2219,7 +2222,7 @@ func TestAccLambdaFunction_skipDestroyInconsistentPlan(t *testing.T) {
 
 func testAccCheckFunctionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_function" {
@@ -2245,7 +2248,7 @@ func testAccCheckFunctionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckFunctionNoDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_function" {
@@ -2272,7 +2275,7 @@ func testAccCheckFunctionExists(ctx context.Context, n string, v *lambda.GetFunc
 			return fmt.Errorf("No Lambda Function ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
 		output, err := tflambda.FindFunctionByName(ctx, conn, rs.Primary.ID)
 
@@ -2303,7 +2306,7 @@ func testAccCheckFunctionInvokeARN(name string, function *lambda.GetFunctionOutp
 func testAccInvokeFunction(ctx context.Context, function *lambda.GetFunctionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		f := function.Configuration
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
 		// If the function is VPC-enabled this will create ENI automatically
 		_, err := conn.Invoke(ctx, &lambda.InvokeInput{
@@ -3731,11 +3734,6 @@ resource "aws_s3_bucket" "artifacts" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "artifacts" {
-  bucket = aws_s3_bucket.artifacts.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_versioning" "artifacts" {
   bucket = aws_s3_bucket.artifacts.id
   versioning_configuration {
@@ -3790,11 +3788,6 @@ func testAccFunctionConfig_s3UnversionedTPL(rName, key, path string) string {
 resource "aws_s3_bucket" "artifacts" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "artifacts" {
-  bucket = aws_s3_bucket.artifacts.id
-  acl    = "private"
 }
 
 resource "aws_s3_object" "o" {
@@ -3895,7 +3888,7 @@ func TestFlattenImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {
 }
 
 func testAccPreCheckSignerSigningProfile(ctx context.Context, t *testing.T, platformID string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn(ctx)
 
 	var foundPlatform bool
 	err := conn.ListSigningPlatformsPagesWithContext(ctx, &signer.ListSigningPlatformsInput{}, func(page *signer.ListSigningPlatformsOutput, lastPage bool) bool {

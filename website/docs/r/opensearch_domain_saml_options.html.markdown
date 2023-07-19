@@ -69,9 +69,9 @@ The following arguments are optional:
 * `entity_id` - (Required) Unique Entity ID of the application in SAML Identity Provider.
 * `metadata_content` - (Required) Metadata of the SAML application in xml format.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the domain the SAML options are associated with.
 
@@ -84,7 +84,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-OpenSearch domains can be imported using the `domain_name`, e.g.,
+Import OpenSearch domains using the `domain_name`. For example:
 
 ```
 $ terraform import aws_opensearch_domain_saml_options.example domain_name

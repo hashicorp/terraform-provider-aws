@@ -35,7 +35,7 @@ resource "aws_wafregional_rule_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A friendly name of the rule group
 * `metric_name` - (Required) A friendly name for the metrics from the rule group
@@ -54,9 +54,9 @@ The following arguments are supported:
 * `rule_id` - (Required) The ID of a [rule](/docs/providers/aws/r/wafregional_rule.html)
 * `type` - (Optional) The rule type, either [`REGULAR`](/docs/providers/aws/r/wafregional_rule.html), [`RATE_BASED`](/docs/providers/aws/r/wafregional_rate_based_rule.html), or `GROUP`. Defaults to `REGULAR`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF Regional Rule Group.
 * `arn` - The ARN of the WAF Regional Rule Group.
@@ -64,7 +64,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAF Regional Rule Group can be imported using the id, e.g.,
+Import WAF Regional Rule Group using the id. For example:
 
 ```
 $ terraform import aws_wafregional_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

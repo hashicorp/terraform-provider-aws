@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -64,7 +67,7 @@ func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 }
 
 func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID := d.Get("catalog_id").(string)
 	output, err := conn.GetDataCatalogEncryptionSettingsWithContext(ctx, &glue.GetDataCatalogEncryptionSettingsInput{

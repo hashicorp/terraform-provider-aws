@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling_test
 
 import (
@@ -3681,7 +3684,7 @@ func testAccCheckGroupExists(ctx context.Context, n string, v *autoscaling.Group
 			return fmt.Errorf("No Auto Scaling Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 
 		output, err := tfautoscaling.FindGroupByName(ctx, conn, rs.Primary.ID)
 
@@ -3697,7 +3700,7 @@ func testAccCheckGroupExists(ctx context.Context, n string, v *autoscaling.Group
 
 func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_autoscaling_group" {
@@ -3741,7 +3744,7 @@ func testAccCheckGroupHealthyInstanceCount(v *autoscaling.Group, expected int) r
 
 func testAccCheckInstanceRefreshCount(ctx context.Context, v *autoscaling.Group, expected int) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 
 		output, err := tfautoscaling.FindInstanceRefreshes(ctx, conn, &autoscaling.DescribeInstanceRefreshesInput{
 			AutoScalingGroupName: v.AutoScalingGroupName,
@@ -3761,7 +3764,7 @@ func testAccCheckInstanceRefreshCount(ctx context.Context, v *autoscaling.Group,
 
 func testAccCheckInstanceRefreshStatus(ctx context.Context, v *autoscaling.Group, index int, expected ...string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 
 		output, err := tfautoscaling.FindInstanceRefreshes(ctx, conn, &autoscaling.DescribeInstanceRefreshesInput{
 			AutoScalingGroupName: v.AutoScalingGroupName,
@@ -3798,7 +3801,7 @@ func testAccCheckLBTargetGroupExists(ctx context.Context, n string, v *elbv2.Tar
 			return errors.New("No ELBv2 Target Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 
 		output, err := tfelbv2.FindTargetGroupByARN(ctx, conn, rs.Primary.ID)
 
@@ -3816,7 +3819,7 @@ func testAccCheckLBTargetGroupExists(ctx context.Context, n string, v *elbv2.Tar
 // sure that all instances in it are healthy.
 func testAccCheckALBTargetGroupHealthy(ctx context.Context, v *elbv2.TargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 
 		output, err := conn.DescribeTargetHealthWithContext(ctx, &elbv2.DescribeTargetHealthInput{
 			TargetGroupArn: v.TargetGroupArn,

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package detective
 
 import (
@@ -84,7 +87,7 @@ func ResourceMember() *schema.Resource {
 }
 
 func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	accountId := d.Get("account_id").(string)
 	graphArn := d.Get("graph_arn").(string)
@@ -140,7 +143,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	graphArn, accountId, err := DecodeMemberID(d.Id())
 	if err != nil {
@@ -178,7 +181,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return nil
 }
 func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	graphArn, accountId, err := DecodeMemberID(d.Id())
 	if err != nil {

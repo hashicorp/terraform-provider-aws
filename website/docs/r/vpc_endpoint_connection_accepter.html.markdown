@@ -41,21 +41,21 @@ resource "aws_vpc_endpoint_connection_accepter" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_endpoint_id` - (Required) AWS VPC Endpoint ID.
 * `vpc_endpoint_service_id` - (Required) AWS VPC Endpoint Service ID.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC Endpoint Connection.
 * `vpc_endpoint_state` - State of the VPC Endpoint.
 
 ## Import
 
-VPC Endpoint Services can be imported using ID of the connection, which is the `VPC Endpoint Service ID` and `VPC Endpoint ID` separated by underscore (`_`). e.g.
+Import VPC Endpoint Services using ID of the connection, which is the `VPC Endpoint Service ID` and `VPC Endpoint ID` separated by underscore (`_`).. For example:
 
 ```
 $ terraform import aws_vpc_endpoint_connection_accepter.foo vpce-svc-0f97a19d3fa8220bc_vpce-010601a6db371e263

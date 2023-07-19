@@ -46,7 +46,7 @@ If no value is specified, the default value is `false`.
 * `include_deprecated` - (Optional) If true, all deprecated AMIs are included in the response.
 If false, no deprecated AMIs are included in the response. If no value is specified, the default value is `false`.
 
-## Attributes Reference
+## Attribute Reference
 
 `ids` is set to the list of AMI IDs, sorted by creation time according to `sort_ascending`.
 
