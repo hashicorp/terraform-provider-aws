@@ -52,6 +52,10 @@ func main() {
 			continue
 		}
 
+		if l[names.ColNoClient] != "" {
+			continue
+		}
+
 		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
 			continue
 		}
