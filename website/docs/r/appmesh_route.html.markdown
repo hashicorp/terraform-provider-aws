@@ -319,10 +319,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import App Mesh virtual routes using `mesh_name` and `virtual_router_name` together with the route's `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import App Mesh virtual routes using `mesh_name` and `virtual_router_name` together with the route's `name`. For example:
 
+```terraform
+import {
+  to = aws_appmesh_route.serviceb
+  id = "simpleapp/serviceB/serviceB-route"
+}
 ```
-$ terraform import aws_appmesh_route.serviceb simpleapp/serviceB/serviceB-route
+
+Using `terraform import`, import App Mesh virtual routes using `mesh_name` and `virtual_router_name` together with the route's `name`. For example:
+
+```console
+% terraform import aws_appmesh_route.serviceb simpleapp/serviceB/serviceB-route
 ```
 
 [1]: /docs/providers/aws/index.html

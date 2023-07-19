@@ -320,10 +320,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import AppFlow Connector Profile using the connector profile `arn`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import AppFlow Connector Profile using the connector profile `arn`. For example:
 
+```terraform
+import {
+  to = aws_appflow_connector_profile.profile
+  id = "arn:aws:appflow:us-west-2:123456789012:connectorprofile/example-profile"
+}
 ```
-$ terraform import aws_appflow_connector_profile.profile arn:aws:appflow:us-west-2:123456789012:connectorprofile/example-profile
+
+Using `terraform import`, import AppFlow Connector Profile using the connector profile `arn`. For example:
+
+```console
+% terraform import aws_appflow_connector_profile.profile arn:aws:appflow:us-west-2:123456789012:connectorprofile/example-profile
 ```
 
 [1]: https://docs.aws.amazon.com/appflow/1.0/APIReference/Welcome.html

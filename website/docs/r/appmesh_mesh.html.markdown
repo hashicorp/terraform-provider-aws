@@ -65,8 +65,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import App Mesh service meshes using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import App Mesh service meshes using the `name`. For example:
 
+```terraform
+import {
+  to = aws_appmesh_mesh.simple
+  id = "simpleapp"
+}
 ```
-$ terraform import aws_appmesh_mesh.simple simpleapp
+
+Using `terraform import`, import App Mesh service meshes using the `name`. For example:
+
+```console
+% terraform import aws_appmesh_mesh.simple simpleapp
 ```
