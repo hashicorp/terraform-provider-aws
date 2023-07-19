@@ -73,10 +73,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import AWS SSM Activation using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import AWS SSM Activation using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ssm_activation.example
+  id = "e488f2f6-e686-4afb-8a04-ef6dfEXAMPLE"
+}
 ```
-$ terraform import aws_ssm_activation.example e488f2f6-e686-4afb-8a04-ef6dfEXAMPLE
+
+Using `terraform import`, import AWS SSM Activation using the `id`. For example:
+
+```console
+% terraform import aws_ssm_activation.example e488f2f6-e686-4afb-8a04-ef6dfEXAMPLE
 ```
 
 -> **Note:** The `activation_code` attribute cannot be imported.

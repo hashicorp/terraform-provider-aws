@@ -74,6 +74,6 @@ Using `terraform import`, import the Systems Manager Default Patch Baseline usin
 % terraform import aws_ssm_default_patch_baseline.example arn:aws:ssm:us-west-2:123456789012:patchbaseline/pb-1234567890abcdef1
 ```
 
-```
-$ terraform import aws_ssm_default_patch_baseline.example CENTOS
+```console
+% terraform import aws_ssm_default_patch_baseline.example CENTOS
 ```
