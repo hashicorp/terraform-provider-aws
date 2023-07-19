@@ -71,7 +71,7 @@ Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Route53 Resolver rules using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Resolver rules using the `id`. For example:
 
 ```terraform
 import {

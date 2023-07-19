@@ -46,7 +46,7 @@ Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import  Route 53 Resolver query logging configurations using the Route 53 Resolver query logging configuration ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import  Route 53 Resolver query logging configurations using the Route 53 Resolver query logging configuration ID. For example:
 
 ```terraform
 import {
