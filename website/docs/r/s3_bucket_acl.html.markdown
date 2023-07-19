@@ -164,7 +164,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import S3 bucket ACL using `bucket`, `expected_bucket_owner`, and/or `acl`, depending on your situation. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket ACL using `bucket`, `expected_bucket_owner`, and/or `acl`, depending on your situation. For example:
 
 If the owner (account ID) of the source bucket is the _same_ account used to configure the Terraform AWS Provider, and the source bucket is **not configured** with a
 [canned ACL][1] (i.e. predefined grant), import using the `bucket`:
