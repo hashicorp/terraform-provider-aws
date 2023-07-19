@@ -239,7 +239,7 @@ func DataSourceBroker() *schema.Resource {
 						},
 						"username": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 					},
 				},
