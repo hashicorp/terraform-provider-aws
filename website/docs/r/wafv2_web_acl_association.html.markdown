@@ -100,8 +100,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import WAFv2 Web ACL Association using `WEB_ACL_ARN,RESOURCE_ARN`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import WAFv2 Web ACL Association using `WEB_ACL_ARN,RESOURCE_ARN`. For example:
 
+```terraform
+import {
+  to = aws_wafv2_web_acl_association.example
+  id = "arn:aws:wafv2:...7ce849ea,arn:aws:apigateway:...ages/name"
+}
 ```
-$ terraform import aws_wafv2_web_acl_association.example arn:aws:wafv2:...7ce849ea,arn:aws:apigateway:...ages/name
+
+Using `terraform import`, import WAFv2 Web ACL Association using `WEB_ACL_ARN,RESOURCE_ARN`. For example:
+
+```console
+% terraform import aws_wafv2_web_acl_association.example arn:aws:wafv2:...7ce849ea,arn:aws:apigateway:...ages/name
 ```
