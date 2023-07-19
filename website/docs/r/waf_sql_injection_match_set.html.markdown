@@ -65,8 +65,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import AWS WAF SQL Injection Match Set using their ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import AWS WAF SQL Injection Match Set using their ID. For example:
 
+```terraform
+import {
+  to = aws_waf_sql_injection_match_set.example
+  id = "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc"
+}
 ```
-$ terraform import aws_waf_sql_injection_match_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+
+Using `terraform import`, import AWS WAF SQL Injection Match Set using their ID. For example:
+
+```console
+% terraform import aws_waf_sql_injection_match_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
