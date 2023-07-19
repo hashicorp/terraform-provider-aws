@@ -164,20 +164,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import S3 bucket ACL using `bucket`, `expected_bucket_owner`, and/or `acl`, depending on your situation. For example:
+In Terraform v1.5.0 and later, use an `import` block to import S3 bucket ACL using `bucket`, `expected_bucket_owner`, and/or `acl`, depending on your situation. For example:
 
 If the owner (account ID) of the source bucket is the _same_ account used to configure the Terraform AWS Provider, and the source bucket is **not configured** with a
 [canned ACL][1] (i.e. predefined grant), import using the `bucket`:
 
+```terraform
+import {
+  to = aws_s3_bucket_acl.example
+  id = "bucket-name"
+}
 ```
-$ terraform import aws_s3_bucket_acl.example bucket-name
+
+Using `terraform import`, import S3 bucket ACL using `bucket`, `expected_bucket_owner`, and/or `acl`, depending on your situation. For example:
+
+If the owner (account ID) of the source bucket is the _same_ account used to configure the Terraform AWS Provider, and the source bucket is **not configured** with a
+[canned ACL][1] (i.e. predefined grant), import using the `bucket`:
+
+```console
+% terraform import aws_s3_bucket_acl.example bucket-name
 ```
 
 If the owner (account ID) of the source bucket is the _same_ account used to configure the Terraform AWS Provider, and the source bucket is **configured** with a
 [canned ACL][1] (i.e. predefined grant), import using the `bucket` and `acl` separated by a comma (`,`):
 
-```
-$ terraform import aws_s3_bucket_acl.example bucket-name,private
+```console
+% terraform import aws_s3_bucket_acl.example bucket-name,private
 ```
 
 If the owner (account ID) of the source bucket _differs_ from the account used to configure the Terraform AWS Provider, and the source bucket is **not configured** with a [canned ACL][1] (i.e. predefined grant), imported using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):

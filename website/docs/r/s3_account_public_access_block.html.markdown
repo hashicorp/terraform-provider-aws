@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_s3_account_public_access_block` using the AWS account ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_s3_account_public_access_block` using the AWS account ID. For example:
 
+```terraform
+import {
+  to = aws_s3_account_public_access_block.example
+  id = "123456789012"
+}
 ```
-$ terraform import aws_s3_account_public_access_block.example 123456789012
+
+Using `terraform import`, import `aws_s3_account_public_access_block` using the AWS account ID. For example:
+
+```console
+% terraform import aws_s3_account_public_access_block.example 123456789012
 ```
