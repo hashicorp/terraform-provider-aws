@@ -67,8 +67,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Global Accelerator listeners using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Global Accelerator listeners using the `id`. For example:
 
+```terraform
+import {
+  to = aws_globalaccelerator_listener.example
+  id = "arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx"
+}
 ```
-$ terraform import aws_globalaccelerator_listener.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx
+
+Using `terraform import`, import Global Accelerator listeners using the `id`. For example:
+
+```console
+% terraform import aws_globalaccelerator_listener.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx
 ```

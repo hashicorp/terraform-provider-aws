@@ -71,8 +71,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Glacier Vault Locks using the Glacier Vault name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Glacier Vault Locks using the Glacier Vault name. For example:
 
+```terraform
+import {
+  to = aws_glacier_vault_lock.example
+  id = "example-vault"
+}
 ```
-$ terraform import aws_glacier_vault_lock.example example-vault
+
+Using `terraform import`, import Glacier Vault Locks using the Glacier Vault name. For example:
+
+```console
+% terraform import aws_glacier_vault_lock.example example-vault
 ```
