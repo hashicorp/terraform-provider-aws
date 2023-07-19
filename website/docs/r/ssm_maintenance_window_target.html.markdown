@@ -78,7 +78,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import SSM Maintenance Window targets using `WINDOW_ID/WINDOW_TARGET_ID`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Maintenance Window targets using `WINDOW_ID/WINDOW_TARGET_ID`. For example:
 
 ```terraform
 import {
