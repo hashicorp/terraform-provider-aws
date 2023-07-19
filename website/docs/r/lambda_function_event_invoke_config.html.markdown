@@ -117,18 +117,29 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Lambda Function Event Invoke Configs using the fully qualified Function name or Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an `import` block to import Lambda Function Event Invoke Configs using the fully qualified Function name or Amazon Resource Name (ARN). For example:
 
 ARN without qualifier (all versions and aliases):
 
+```terraform
+import {
+  to = aws_lambda_function_event_invoke_config.example
+  id = "arn:aws:us-east-1:123456789012:function:my_function"
+}
 ```
-$ terraform import aws_lambda_function_event_invoke_config.example arn:aws:us-east-1:123456789012:function:my_function
+
+Using `terraform import`, import Lambda Function Event Invoke Configs using the fully qualified Function name or Amazon Resource Name (ARN). For example:
+
+ARN without qualifier (all versions and aliases):
+
+```console
+% terraform import aws_lambda_function_event_invoke_config.example arn:aws:us-east-1:123456789012:function:my_function
 ```
 
 ARN with qualifier:
 
-```
-$ terraform import aws_lambda_function_event_invoke_config.example arn:aws:us-east-1:123456789012:function:my_function:production
+```console
+% terraform import aws_lambda_function_event_invoke_config.example arn:aws:us-east-1:123456789012:function:my_function:production
 ```
 
 Name without qualifier (all versions and aliases):

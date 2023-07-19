@@ -55,8 +55,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Lambda Function Aliases using the `function_name/alias`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Lambda Function Aliases using the `function_name/alias`. For example:
 
+```terraform
+import {
+  to = aws_lambda_alias.test_lambda_alias
+  id = "my_test_lambda_function/my_alias"
+}
 ```
-$ terraform import aws_lambda_alias.test_lambda_alias my_test_lambda_function/my_alias
+
+Using `terraform import`, import Lambda Function Aliases using the `function_name/alias`. For example:
+
+```console
+% terraform import aws_lambda_alias.test_lambda_alias my_test_lambda_function/my_alias
 ```

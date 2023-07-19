@@ -35,8 +35,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Lake Formation LF-Tags using the `catalog_id:key`. If you have not set a Catalog ID specify the AWS Account ID that the database is in. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Lake Formation LF-Tags using the `catalog_id:key`. If you have not set a Catalog ID specify the AWS Account ID that the database is in. For example:
 
+```terraform
+import {
+  to = aws_lakeformation_lf_tag.example
+  id = "123456789012:some_key"
+}
 ```
-$ terraform import aws_lakeformation_lf_tag.example 123456789012:some_key
+
+Using `terraform import`, import Lake Formation LF-Tags using the `catalog_id:key`. If you have not set a Catalog ID specify the AWS Account ID that the database is in. For example:
+
+```console
+% terraform import aws_lakeformation_lf_tag.example 123456789012:some_key
 ```

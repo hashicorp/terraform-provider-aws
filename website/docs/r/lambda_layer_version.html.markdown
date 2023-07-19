@@ -74,10 +74,21 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Lambda Layers using `arn`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Lambda Layers using `arn`. For example:
 
+```terraform
+import {
+  to = \
+
+  id = "   aws_lambda_layer_version.test_layer \
+    arn:aws:lambda:_REGION_:_ACCOUNT_ID_:layer:_LAYER_NAME_:_LAYER_VERSION_"
+}
 ```
-$ terraform import \
+
+Using `terraform import`, import Lambda Layers using `arn`. For example:
+
+```console
+% terraform import \
     aws_lambda_layer_version.test_layer \
     arn:aws:lambda:_REGION_:_ACCOUNT_ID_:layer:_LAYER_NAME_:_LAYER_VERSION_
 ```
