@@ -125,8 +125,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import S3 bucket inventory configurations using `bucket:inventory`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import S3 bucket inventory configurations using `bucket:inventory`. For example:
 
+```terraform
+import {
+  to = aws_s3_bucket_inventory.my-bucket-entire-bucket
+  id = "my-bucket:EntireBucket"
+}
 ```
-$ terraform import aws_s3_bucket_inventory.my-bucket-entire-bucket my-bucket:EntireBucket
+
+Using `terraform import`, import S3 bucket inventory configurations using `bucket:inventory`. For example:
+
+```console
+% terraform import aws_s3_bucket_inventory.my-bucket-entire-bucket my-bucket:EntireBucket
 ```
