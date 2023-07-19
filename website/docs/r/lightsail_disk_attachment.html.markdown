@@ -60,6 +60,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 Import `aws_lightsail_disk` using the id attribute. For example:
 
-```shell
+```
 $ terraform import aws_lightsail_disk_attachment.test test-disk,test-instance
 ```

@@ -123,7 +123,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Route53 Health Checks using the `health check id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Route53 Health Checks using the health check `id`. For example:
 
 ```terraform
 import {
@@ -132,7 +132,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Route53 Health Checks using the `health check id`. For example:
+Using `terraform import`, import Route53 Health Checks using the health check `id`. For example:
 
 ```console
 % terraform import aws_route53_health_check.http_check abcdef11-2222-3333-4444-555555fedcba

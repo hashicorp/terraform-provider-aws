@@ -90,7 +90,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import CloudHSM v2 Clusters using the `cluster id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import CloudHSM v2 Clusters using the cluster `id`. For example:
 
 ```terraform
 import {
@@ -99,7 +99,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CloudHSM v2 Clusters using the `cluster id`. For example:
+Using `terraform import`, import CloudHSM v2 Clusters using the cluster `id`. For example:
 
 ```console
 % terraform import aws_cloudhsm_v2_cluster.test_cluster cluster-aeb282a201

@@ -162,6 +162,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 Import Lightsail Container Service using the `name`. For example:
 
-```shell
+```
 $ terraform import aws_lightsail_container_service.my_container_service container-service-1
 ```

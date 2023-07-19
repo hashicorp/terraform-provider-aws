@@ -93,7 +93,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Route53 Zones using the `zone id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Route53 Zones using the zone `id`. For example:
 
 ```terraform
 import {
@@ -102,7 +102,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Route53 Zones using the `zone id`. For example:
+Using `terraform import`, import Route53 Zones using the zone `id`. For example:
 
 ```console
 % terraform import aws_route53_zone.myzone Z1D633PJN98FT9

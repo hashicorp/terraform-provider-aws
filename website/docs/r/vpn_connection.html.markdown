@@ -238,7 +238,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import VPN Connections using the `vpn connection id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import VPN Connections using the VPN connection `id`. For example:
 
 ```terraform
 import {
@@ -247,7 +247,7 @@ import {
 }
 ```
 
-Using `terraform import`, import VPN Connections using the `vpn connection id`. For example:
+Using `terraform import`, import VPN Connections using the VPN connection `id`. For example:
 
 ```console
 % terraform import aws_vpn_connection.testvpnconnection vpn-40f41529

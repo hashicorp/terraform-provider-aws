@@ -86,7 +86,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import SSM Parameters using the `parameter store name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import SSM Parameters using the parameter store `name`. For example:
 
 ```terraform
 import {
@@ -95,7 +95,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SSM Parameters using the `parameter store name`. For example:
+Using `terraform import`, import SSM Parameters using the parameter store `name`. For example:
 
 ```console
 % terraform import aws_ssm_parameter.my_param /my_path/my_paramname

@@ -150,7 +150,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Transfer Servers using the `server id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Transfer Servers using the server `id`. For example:
 
 ```terraform
 import {
@@ -159,7 +159,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Transfer Servers using the `server id`. For example:
+Using `terraform import`, import Transfer Servers using the server `id`. For example:
 
 ```console
 % terraform import aws_transfer_server.example s-12345678

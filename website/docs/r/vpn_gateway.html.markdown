@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import VPN Gateways using the `vpn gateway id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import VPN Gateways using the VPN gateway `id`. For example:
 
 ```terraform
 import {
@@ -50,7 +50,7 @@ import {
 }
 ```
 
-Using `terraform import`, import VPN Gateways using the `vpn gateway id`. For example:
+Using `terraform import`, import VPN Gateways using the VPN gateway `id`. For example:
 
 ```console
 % terraform import aws_vpn_gateway.testvpngateway vgw-9a4cacf3

@@ -164,7 +164,7 @@ DNS blocks (for `dns_entry`) support the following attributes:
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import VPC Endpoints using the `vpc endpoint id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import VPC Endpoints using the VPC endpoint `id`. For example:
 
 ```terraform
 import {
@@ -173,7 +173,7 @@ import {
 }
 ```
 
-Using `terraform import`, import VPC Endpoints using the `vpc endpoint id`. For example:
+Using `terraform import`, import VPC Endpoints using the VPC endpoint `id`. For example:
 
 ```console
 % terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57

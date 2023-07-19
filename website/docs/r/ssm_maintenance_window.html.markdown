@@ -47,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import SSM  Maintenance Windows using the `maintenance window id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import SSM  Maintenance Windows using the maintenance window `id`. For example:
 
 ```terraform
 import {
@@ -56,7 +56,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SSM  Maintenance Windows using the `maintenance window id`. For example:
+Using `terraform import`, import SSM  Maintenance Windows using the maintenance window `id`. For example:
 
 ```console
 % terraform import aws_ssm_maintenance_window.imported-window mw-0123456789

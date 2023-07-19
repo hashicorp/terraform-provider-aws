@@ -110,7 +110,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import SNS Topics using the `topic arn`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import SNS Topics using the topic `arn`. For example:
 
 ```terraform
 import {
@@ -119,7 +119,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SNS Topics using the `topic arn`. For example:
+Using `terraform import`, import SNS Topics using the topic `arn`. For example:
 
 ```console
 % terraform import aws_sns_topic.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic

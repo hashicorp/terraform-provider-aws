@@ -276,7 +276,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import SNS Topic Subscriptions using the `subscription arn`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import SNS Topic Subscriptions using the subscription `arn`. For example:
 
 ```terraform
 import {
@@ -285,7 +285,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SNS Topic Subscriptions using the `subscription arn`. For example:
+Using `terraform import`, import SNS Topic Subscriptions using the subscription `arn`. For example:
 
 ```console
 % terraform import aws_sns_topic_subscription.user_updates_sqs_target arn:aws:sns:us-west-2:0123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f
