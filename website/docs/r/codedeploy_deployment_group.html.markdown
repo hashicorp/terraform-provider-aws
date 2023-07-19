@@ -357,10 +357,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import CodeDeploy Deployment Groups using `app_name`, a colon, and `deployment_group_name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import CodeDeploy Deployment Groups using `app_name`, a colon, and `deployment_group_name`. For example:
 
+```terraform
+import {
+  to = aws_codedeploy_deployment_group.example
+  id = "my-application:my-deployment-group"
+}
 ```
-$ terraform import aws_codedeploy_deployment_group.example my-application:my-deployment-group
+
+Using `terraform import`, import CodeDeploy Deployment Groups using `app_name`, a colon, and `deployment_group_name`. For example:
+
+```console
+% terraform import aws_codedeploy_deployment_group.example my-application:my-deployment-group
 ```
 
 [1]: http://docs.aws.amazon.com/codedeploy/latest/userguide/monitoring-sns-event-notifications-create-trigger.html

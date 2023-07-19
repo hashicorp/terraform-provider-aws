@@ -219,8 +219,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import CodePipelines using the name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import CodePipelines using the name. For example:
 
+```terraform
+import {
+  to = aws_codepipeline.foo
+  id = "example"
+}
 ```
-$ terraform import aws_codepipeline.foo example
+
+Using `terraform import`, import CodePipelines using the name. For example:
+
+```console
+% terraform import aws_codepipeline.foo example
 ```
