@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_lightsail_bucket_access_key` using the `id` attribute. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_lightsail_bucket_access_key` using the `id` attribute. For example:
 
+```terraform
+import {
+  to = aws_lightsail_bucket_access_key.test
+  id = "example-bucket,AKIA47VOQ2KPR7LLRZ6D"
+}
 ```
-$ terraform import aws_lightsail_bucket_access_key.test example-bucket,AKIA47VOQ2KPR7LLRZ6D
+
+Using `terraform import`, import `aws_lightsail_bucket_access_key` using the `id` attribute. For example:
+
+```console
+% terraform import aws_lightsail_bucket_access_key.test example-bucket,AKIA47VOQ2KPR7LLRZ6D
 ```

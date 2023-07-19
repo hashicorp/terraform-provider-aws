@@ -261,8 +261,17 @@ included as an argument because the resource will add it automatically when upda
 
 ## Import
 
-Import Intents using their name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Intents using their name. For example:
 
+```terraform
+import {
+  to = aws_lex_intent.order_flowers_intent
+  id = "OrderFlowers"
+}
 ```
-$ terraform import aws_lex_intent.order_flowers_intent OrderFlowers
+
+Using `terraform import`, import Intents using their name. For example:
+
+```console
+% terraform import aws_lex_intent.order_flowers_intent OrderFlowers
 ```
