@@ -90,8 +90,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Delivery Channel using the name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Delivery Channel using the name. For example:
 
+```terraform
+import {
+  to = aws_config_delivery_channel.foo
+  id = "example"
+}
 ```
-$ terraform import aws_config_delivery_channel.foo example
+
+Using `terraform import`, import Delivery Channel using the name. For example:
+
+```console
+% terraform import aws_config_delivery_channel.foo example
 ```

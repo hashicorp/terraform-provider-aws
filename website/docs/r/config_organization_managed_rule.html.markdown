@@ -61,8 +61,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Config Organization Managed Rules using the name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Config Organization Managed Rules using the name. For example:
 
+```terraform
+import {
+  to = aws_config_organization_managed_rule.example
+  id = "example"
+}
 ```
-$ terraform import aws_config_organization_managed_rule.example example
+
+Using `terraform import`, import Config Organization Managed Rules using the name. For example:
+
+```console
+% terraform import aws_config_organization_managed_rule.example example
 ```
