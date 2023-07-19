@@ -37,6 +37,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 Import AWS SSM Service Setting using the `setting_id`. For example:
 
-```sh
+```
 $ terraform import aws_ssm_service_setting.example arn:aws:ssm:us-east-1:123456789012:servicesetting/ssm/parameter-store/high-throughput-enabled
 ```

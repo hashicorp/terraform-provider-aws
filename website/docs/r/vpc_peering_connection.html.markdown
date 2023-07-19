@@ -152,7 +152,7 @@ or accept the connection manually using the AWS Management Console, AWS CLI, thr
 
 Import VPC Peering resources using the VPC peering `id`. For example:
 
-```sh
+```
 $ terraform import aws_vpc_peering_connection.test_connection pcx-111aaa111
 ```
 

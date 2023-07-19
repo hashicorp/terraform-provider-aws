@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 Import Lambda Layer Permissions using `layer_name` and `version_number`, separated by a comma (`,`). For example:
 
-```sh
+```
 $ terraform import aws_lambda_layer_version_permission.example arn:aws:lambda:us-west-2:123456654321:layer:test_layer1,1
 ```
 

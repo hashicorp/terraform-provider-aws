@@ -61,6 +61,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 Import AMI Launch Permissions using `[ACCOUNT-ID|GROUP-NAME|ORGANIZATION-ARN|ORGANIZATIONAL-UNIT-ARN]/IMAGE-ID`. For example:
 
-```sh
+```
 $ terraform import aws_ami_launch_permission.example 123456789012/ami-12345678
 ```

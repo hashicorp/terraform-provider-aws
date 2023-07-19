@@ -43,6 +43,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 Import Inspector Classic Assessment Targets using their Amazon Resource Name (ARN). For example:
 
-```sh
+```
 $ terraform import aws_inspector_assessment_target.example arn:aws:inspector:us-east-1:123456789012:target/0-xxxxxxx
 ```

@@ -55,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 Import IAM User Login Profiles without password information via the IAM User name. For example:
 
-```sh
+```
 $ terraform import aws_iam_user_login_profile.example myusername
 ```
 

@@ -63,6 +63,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 Import AWS WAF Regional XSS Match using the `id`. For example:
 
-```sh
+```
 $ terraform import aws_wafregional_xss_match_set.example 12345abcde
 ```

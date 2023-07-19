@@ -75,7 +75,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 Import AWS SSM Activation using the `id`. For example:
 
-```sh
+```
 $ terraform import aws_ssm_activation.example e488f2f6-e686-4afb-8a04-ef6dfEXAMPLE
 ```
 

@@ -112,7 +112,7 @@ private IP addresses when queried from instances in a peer VPC.
 
 Import VPC Peering Connection Accepters using the Peering Connection ID. For example:
 
-```sh
+```
 $ terraform import aws_vpc_peering_connection_accepter.example pcx-12345678
 ```
 

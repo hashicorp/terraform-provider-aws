@@ -210,6 +210,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 Import AWS Maintenance Window Task using the `window_id` and `window_task_id` separated by `/`. For example:
 
-```sh
+```
 $ terraform import aws_ssm_maintenance_window_task.task <window_id>/<window_task_id>
 ```

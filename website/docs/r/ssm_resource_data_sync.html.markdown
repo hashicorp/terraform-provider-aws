@@ -91,6 +91,6 @@ This resource exports no additional attributes.
 
 Import SSM resource data sync using the `name`. For example:
 
-```sh
+```
 $ terraform import aws_ssm_resource_data_sync.example example-name
 ```

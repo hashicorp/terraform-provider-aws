@@ -53,6 +53,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 Import IOT Role Alias using the alias. For example:
 
-```sh
+```
 $ terraform import aws_iot_role_alias.example myalias
 ```
