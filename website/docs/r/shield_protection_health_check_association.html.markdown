@@ -68,7 +68,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Shield protection health check association resources using the `shield_protection_id` and `health_check_arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Shield protection health check association resources using the `shield_protection_id` and `health_check_arn`. For example:
 
 ```terraform
 import {
