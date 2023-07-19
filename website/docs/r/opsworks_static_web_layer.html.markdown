@@ -67,8 +67,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import OpsWorks static web server Layers using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import OpsWorks static web server Layers using the `id`. For example:
 
+```terraform
+import {
+  to = aws_opsworks_static_web_layer.bar
+  id = "00000000-0000-0000-0000-000000000000"
+}
 ```
-$ terraform import aws_opsworks_static_web_layer.bar 00000000-0000-0000-0000-000000000000
+
+Using `terraform import`, import OpsWorks static web server Layers using the `id`. For example:
+
+```console
+% terraform import aws_opsworks_static_web_layer.bar 00000000-0000-0000-0000-000000000000
 ```
