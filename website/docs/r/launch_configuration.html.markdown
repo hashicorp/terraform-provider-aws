@@ -230,8 +230,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Launch configurations using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Launch configurations using the `name`. For example:
 
+```terraform
+import {
+  to = aws_launch_configuration.as_conf
+  id = "terraform-lg-123456"
+}
 ```
-$ terraform import aws_launch_configuration.as_conf terraform-lg-123456
+
+Using `terraform import`, import Launch configurations using the `name`. For example:
+
+```console
+% terraform import aws_launch_configuration.as_conf terraform-lg-123456
 ```

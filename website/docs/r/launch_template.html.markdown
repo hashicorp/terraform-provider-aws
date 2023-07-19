@@ -503,8 +503,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Launch Templates using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Launch Templates using the `id`. For example:
 
+```terraform
+import {
+  to = aws_launch_template.web
+  id = "lt-12345678"
+}
 ```
-$ terraform import aws_launch_template.web lt-12345678
+
+Using `terraform import`, import Launch Templates using the `id`. For example:
+
+```console
+% terraform import aws_launch_template.web lt-12345678
 ```
