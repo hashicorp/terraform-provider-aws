@@ -867,7 +867,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import WAFv2 Web ACLs using `ID/Name/Scope`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAFv2 Web ACLs using `ID/Name/Scope`. For example:
 
 ```terraform
 import {
