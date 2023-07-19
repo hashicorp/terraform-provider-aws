@@ -110,7 +110,7 @@ private IP addresses when queried from instances in a peer VPC.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import VPC Peering Connection Accepters using the Peering Connection ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Peering Connection Accepters using the Peering Connection ID. For example:
 
 ```terraform
 import {
