@@ -103,8 +103,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SESv2 (Simple Email V2) Configuration Set using the `configuration_set_name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import SESv2 (Simple Email V2) Configuration Set using the `configuration_set_name`. For example:
 
+```terraform
+import {
+  to = aws_sesv2_configuration_set.example
+  id = "example"
+}
 ```
-$ terraform import aws_sesv2_configuration_set.example example
+
+Using `terraform import`, import SESv2 (Simple Email V2) Configuration Set using the `configuration_set_name`. For example:
+
+```console
+% terraform import aws_sesv2_configuration_set.example example
 ```

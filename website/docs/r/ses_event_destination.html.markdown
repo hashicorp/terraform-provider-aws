@@ -98,8 +98,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SES event destinations using `configuration_set_name` together with the event destination's `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import SES event destinations using `configuration_set_name` together with the event destination's `name`. For example:
 
+```terraform
+import {
+  to = aws_ses_event_destination.sns
+  id = "some-configuration-set-test/event-destination-sns"
+}
 ```
-$ terraform import aws_ses_event_destination.sns some-configuration-set-test/event-destination-sns
+
+Using `terraform import`, import SES event destinations using `configuration_set_name` together with the event destination's `name`. For example:
+
+```console
+% terraform import aws_ses_event_destination.sns some-configuration-set-test/event-destination-sns
 ```
