@@ -77,7 +77,6 @@ func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestMatchResourceAttr(resourceName, "network_interface_id", regexp.MustCompile("eni-.*")),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -285,6 +284,10 @@ resource "aws_instance" "test" {
 resource "aws_ec2_traffic_mirror_target" "test" {
   description          = %[2]q
   network_interface_id = aws_instance.test.primary_network_interface_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, description))
 }
@@ -339,10 +342,14 @@ func testAccVPCTrafficMirrorTargetConfig_gwlb(rName, description string) string 
 		testAccVPCEndpointConfig_gatewayLoadBalancer(rName),
 		fmt.Sprintf(`
 resource "aws_ec2_traffic_mirror_target" "test" {
-  description                       = %[1]q
+  description                       = %[2]q
   gateway_load_balancer_endpoint_id = aws_vpc_endpoint.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, description))
+`, rName, description))
 }
 
 func testAccPreCheckTrafficMirrorTarget(ctx context.Context, t *testing.T) {
