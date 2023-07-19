@@ -37,8 +37,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_macie2_account` using the id. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_macie2_account` using the id. For example:
 
+```terraform
+import {
+  to = aws_macie2_account.example
+  id = "abcd1"
+}
 ```
-$ terraform import aws_macie2_account.example abcd1
+
+Using `terraform import`, import `aws_macie2_account` using the id. For example:
+
+```console
+% terraform import aws_macie2_account.example abcd1
 ```

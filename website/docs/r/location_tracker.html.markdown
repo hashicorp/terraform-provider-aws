@@ -42,8 +42,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_location_tracker` resources using the tracker name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_location_tracker` resources using the tracker name. For example:
 
+```terraform
+import {
+  to = aws_location_tracker.example
+  id = "example"
+}
 ```
-$ terraform import aws_location_tracker.example example
+
+Using `terraform import`, import `aws_location_tracker` resources using the tracker name. For example:
+
+```console
+% terraform import aws_location_tracker.example example
 ```

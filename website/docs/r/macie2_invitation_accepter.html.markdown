@@ -49,8 +49,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_macie2_invitation_accepter` using the admin account ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_macie2_invitation_accepter` using the admin account ID. For example:
 
+```terraform
+import {
+  to = aws_macie2_invitation_accepter.example
+  id = "123456789012"
+}
 ```
-$ terraform import aws_macie2_invitation_accepter.example 123456789012
+
+Using `terraform import`, import `aws_macie2_invitation_accepter` using the admin account ID. For example:
+
+```console
+% terraform import aws_macie2_invitation_accepter.example 123456789012
 ```
