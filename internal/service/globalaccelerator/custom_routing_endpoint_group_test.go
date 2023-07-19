@@ -136,7 +136,7 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_endpointGroupRegion(t *t
 					resource.TestCheckTypeSetElemAttr(resourceName, "destination_configuration.0.protocols.*", "TCP"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.to_port", "8443"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.AlternateRegion()()),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.AlternateRegion()),
 				),
 			},
 			{
