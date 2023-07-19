@@ -91,7 +91,16 @@ import {
 }
 ```
 
-Using `terraform import`, import RDS DB Proxy Targets using the `db_proxy_name`, `target_group_name`, target type (such as `RDS_INSTANCE` or `TRACKED_CLUSTER`), and resource identifier separated by forward slashes (`/`). For example:
+Provisioned Clusters:
+
+```terraform
+import {
+  to = aws_db_proxy_target.example
+  id = "example-proxy/default/TRACKED_CLUSTER/example-cluster"
+}
+```
+
+**Using `terraform import` to import** RDS DB Proxy Targets using the `db_proxy_name`, `target_group_name`, target type (such as `RDS_INSTANCE` or `TRACKED_CLUSTER`), and resource identifier separated by forward slashes (`/`). For example:
 
 Instances:
 
