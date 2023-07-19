@@ -231,7 +231,7 @@ func TestAccQuickSightFolder_parentFolder(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFolderConfig_parentFolder(rId, rName, parentId2, parentName2),
+				Config: testAccFolderConfig_parentFolder2(rId, rName, parentId1, parentName1, parentId2, parentName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "parent_folder_arn", "quicksight", fmt.Sprintf("folder/%s", parentId2)),
@@ -398,4 +398,25 @@ resource "aws_quicksight_folder" "test" {
   parent_folder_arn = aws_quicksight_folder.parent.arn
 }
 `, rId, rName, parentId, parentName)
+}
+
+func testAccFolderConfig_parentFolder2(rId, rName, parentId, parentName, parentId2, parentName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_quicksight_folder" "parent" {
+  folder_id = %[3]q
+  name      = %[4]q
+}
+
+resource "aws_quicksight_folder" "parent2" {
+  folder_id = %[5]q
+  name      = %[6]q
+  parent_folder_arn = aws_quicksight_folder.parent.arn
+}
+
+resource "aws_quicksight_folder" "test" {
+  folder_id         = %[1]q
+  name              = %[2]q
+  parent_folder_arn = aws_quicksight_folder.parent2.arn
+}
+`, rId, rName, parentId, parentName, parentId2, parentName2)
 }
