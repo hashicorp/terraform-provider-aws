@@ -124,8 +124,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Service Discovery Service using the service ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Service Discovery Service using the service ID. For example:
 
+```terraform
+import {
+  to = aws_service_discovery_service.example
+  id = "0123456789"
+}
 ```
-$ terraform import aws_service_discovery_service.example 0123456789
+
+Using `terraform import`, import Service Discovery Service using the service ID. For example:
+
+```console
+% terraform import aws_service_discovery_service.example 0123456789
 ```

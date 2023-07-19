@@ -49,8 +49,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_servicecatalog_principal_portfolio_association` using the accept language, principal ARN, and portfolio ID, separated by a comma. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_servicecatalog_principal_portfolio_association` using the accept language, principal ARN, and portfolio ID, separated by a comma. For example:
 
+```terraform
+import {
+  to = aws_servicecatalog_principal_portfolio_association.example
+  id = "en,arn:aws:iam::123456789012:user/Eleanor,port-68656c6c6f"
+}
 ```
-$ terraform import aws_servicecatalog_principal_portfolio_association.example en,arn:aws:iam::123456789012:user/Eleanor,port-68656c6c6f
+
+Using `terraform import`, import `aws_servicecatalog_principal_portfolio_association` using the accept language, principal ARN, and portfolio ID, separated by a comma. For example:
+
+```console
+% terraform import aws_servicecatalog_principal_portfolio_association.example en,arn:aws:iam::123456789012:user/Eleanor,port-68656c6c6f
 ```

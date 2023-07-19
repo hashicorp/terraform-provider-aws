@@ -86,8 +86,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_servicecatalog_product` using the product ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_servicecatalog_product` using the product ID. For example:
 
+```terraform
+import {
+  to = aws_servicecatalog_product.example
+  id = "prod-dnigbtea24ste"
+}
 ```
-$ terraform import aws_servicecatalog_product.example prod-dnigbtea24ste
+
+Using `terraform import`, import `aws_servicecatalog_product` using the product ID. For example:
+
+```console
+% terraform import aws_servicecatalog_product.example prod-dnigbtea24ste
 ```

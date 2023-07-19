@@ -47,8 +47,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Service Catalog Portfolios using the `service catalog portfolio id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Service Catalog Portfolios using the `service catalog portfolio id`. For example:
 
+```terraform
+import {
+  to = aws_servicecatalog_portfolio.testfolio
+  id = "port-12344321"
+}
 ```
-$ terraform import aws_servicecatalog_portfolio.testfolio port-12344321
+
+Using `terraform import`, import Service Catalog Portfolios using the `service catalog portfolio id`. For example:
+
+```console
+% terraform import aws_servicecatalog_portfolio.testfolio port-12344321
 ```
