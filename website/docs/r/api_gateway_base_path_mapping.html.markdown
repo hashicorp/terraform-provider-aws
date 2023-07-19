@@ -54,16 +54,27 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import `aws_api_gateway_base_path_mapping` using the domain name and base path. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_api_gateway_base_path_mapping` using the domain name and base path. For example:
 
 For empty `base_path` (e.g., root path (`/`)):
 
+```terraform
+import {
+  to = aws_api_gateway_base_path_mapping.example
+  id = "example.com/"
+}
 ```
-$ terraform import aws_api_gateway_base_path_mapping.example example.com/
+
+Using `terraform import`, import `aws_api_gateway_base_path_mapping` using the domain name and base path. For example:
+
+For empty `base_path` (e.g., root path (`/`)):
+
+```console
+% terraform import aws_api_gateway_base_path_mapping.example example.com/
 ```
 
 Otherwise:
 
-```
-$ terraform import aws_api_gateway_base_path_mapping.example example.com/base-path
+```console
+% terraform import aws_api_gateway_base_path_mapping.example example.com/base-path
 ```

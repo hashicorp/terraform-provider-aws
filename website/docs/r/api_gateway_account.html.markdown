@@ -80,8 +80,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import API Gateway Accounts using the word `api-gateway-account`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import API Gateway Accounts using the word `api-gateway-account`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_account.demo
+  id = "api-gateway-account"
+}
 ```
-$ terraform import aws_api_gateway_account.demo api-gateway-account
+
+Using `terraform import`, import API Gateway Accounts using the word `api-gateway-account`. For example:
+
+```console
+% terraform import aws_api_gateway_account.demo api-gateway-account
 ```

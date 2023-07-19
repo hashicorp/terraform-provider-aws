@@ -43,8 +43,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import API Gateway Keys using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import API Gateway Keys using the `id`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_api_key.my_demo_key
+  id = "8bklk8bl1k3sB38D9B3l0enyWT8c09B30lkq0blk"
+}
 ```
-$ terraform import aws_api_gateway_api_key.my_demo_key 8bklk8bl1k3sB38D9B3l0enyWT8c09B30lkq0blk
+
+Using `terraform import`, import API Gateway Keys using the `id`. For example:
+
+```console
+% terraform import aws_api_gateway_api_key.my_demo_key 8bklk8bl1k3sB38D9B3l0enyWT8c09B30lkq0blk
 ```

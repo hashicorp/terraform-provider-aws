@@ -44,8 +44,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Amplify backend environment using `app_id` and `environment_name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Amplify backend environment using `app_id` and `environment_name`. For example:
 
+```terraform
+import {
+  to = aws_amplify_backend_environment.example
+  id = "d2ypk4k47z8u6/example"
+}
 ```
-$ terraform import aws_amplify_backend_environment.example d2ypk4k47z8u6/example
+
+Using `terraform import`, import Amplify backend environment using `app_id` and `environment_name`. For example:
+
+```console
+% terraform import aws_amplify_backend_environment.example d2ypk4k47z8u6/example
 ```

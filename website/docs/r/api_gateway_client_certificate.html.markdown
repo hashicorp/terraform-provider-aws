@@ -38,8 +38,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import API Gateway Client Certificates using the id. For example:
+In Terraform v1.5.0 and later, use an `import` block to import API Gateway Client Certificates using the id. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_client_certificate.demo
+  id = "ab1cqe"
+}
 ```
-$ terraform import aws_api_gateway_client_certificate.demo ab1cqe
+
+Using `terraform import`, import API Gateway Client Certificates using the id. For example:
+
+```console
+% terraform import aws_api_gateway_client_certificate.demo ab1cqe
 ```
