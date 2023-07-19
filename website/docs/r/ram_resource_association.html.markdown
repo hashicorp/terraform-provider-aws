@@ -36,8 +36,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import RAM Resource Associations using their Resource Share ARN and Resource ARN separated by a comma. For example:
+In Terraform v1.5.0 and later, use an `import` block to import RAM Resource Associations using their Resource Share ARN and Resource ARN separated by a comma. For example:
 
+```terraform
+import {
+  to = aws_ram_resource_association.example
+  id = "arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12,arn:aws:ec2:eu-west-1:123456789012:subnet/subnet-12345678"
+}
 ```
-$ terraform import aws_ram_resource_association.example arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12,arn:aws:ec2:eu-west-1:123456789012:subnet/subnet-12345678
+
+Using `terraform import`, import RAM Resource Associations using their Resource Share ARN and Resource ARN separated by a comma. For example:
+
+```console
+% terraform import aws_ram_resource_association.example arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12,arn:aws:ec2:eu-west-1:123456789012:subnet/subnet-12345678
 ```

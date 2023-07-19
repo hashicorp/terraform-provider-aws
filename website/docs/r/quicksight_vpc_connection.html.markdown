@@ -97,8 +97,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import QuickSight VPC connection using the AWS account ID and VPC connection ID separated by commas (`,`). For example:
+In Terraform v1.5.0 and later, use an `import` block to import QuickSight VPC connection using the AWS account ID and VPC connection ID separated by commas (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_vpc_connection.example
+  id = "123456789012,example"
+}
 ```
-$ terraform import aws_quicksight_vpc_connection.example 123456789012,example
+
+Using `terraform import`, import QuickSight VPC connection using the AWS account ID and VPC connection ID separated by commas (`,`). For example:
+
+```console
+% terraform import aws_quicksight_vpc_connection.example 123456789012,example
 ```
