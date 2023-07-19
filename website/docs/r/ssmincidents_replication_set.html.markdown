@@ -132,7 +132,7 @@ In addition to the preceding arguments, the `region` configuration block exports
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import an Incident Manager replication. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an Incident Manager replication. For example:
 
 ```terraform
 import {
