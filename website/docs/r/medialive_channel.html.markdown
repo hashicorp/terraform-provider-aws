@@ -539,8 +539,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import MediaLive Channel using the `channel_id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import MediaLive Channel using the `channel_id`. For example:
 
+```terraform
+import {
+  to = aws_medialive_channel.example
+  id = "1234567"
+}
 ```
-$ terraform import aws_medialive_channel.example 1234567
+
+Using `terraform import`, import MediaLive Channel using the `channel_id`. For example:
+
+```console
+% terraform import aws_medialive_channel.example 1234567
 ```

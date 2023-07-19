@@ -35,8 +35,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import MediaStore Container using the MediaStore Container Name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import MediaStore Container using the MediaStore Container Name. For example:
 
+```terraform
+import {
+  to = aws_media_store_container.example
+  id = "example"
+}
 ```
-$ terraform import aws_media_store_container.example example
+
+Using `terraform import`, import MediaStore Container using the MediaStore Container Name. For example:
+
+```console
+% terraform import aws_media_store_container.example example
 ```
