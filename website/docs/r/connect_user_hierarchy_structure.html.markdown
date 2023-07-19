@@ -90,7 +90,7 @@ A level block supports the following additional attributes:
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Amazon Connect User Hierarchy Structures using the `instance_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Connect User Hierarchy Structures using the `instance_id`. For example:
 
 ```terraform
 import {
