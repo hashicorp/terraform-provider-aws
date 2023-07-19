@@ -775,7 +775,7 @@ func testAccCheckEndpoints(_ context.Context, p **schema.Provider) resource.Test
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
 
-		for _, serviceKey := range names.ProviderPackages() {
+		for _, serviceKey := range names.Aliases() {
 			methodName := serviceConn(serviceKey)
 			method := reflect.ValueOf(providerClient).MethodByName(methodName)
 			if !method.IsValid() {
@@ -798,11 +798,6 @@ func testAccCheckEndpoints(_ context.Context, p **schema.Provider) resource.Test
 
 			if !providerClientField.IsValid() {
 				return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", serviceKey)
-			}
-
-			if providerClientField.IsNil() {
-				t.Errorf("No match for service %q", serviceKey)
-				continue
 			}
 
 			if !reflect.Indirect(providerClientField).FieldByName("Config").IsValid() {
