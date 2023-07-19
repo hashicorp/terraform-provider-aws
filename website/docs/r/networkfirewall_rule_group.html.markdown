@@ -530,8 +530,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Network Firewall Rule Groups using their `arn`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Network Firewall Rule Groups using their `arn`. For example:
 
+```terraform
+import {
+  to = aws_networkfirewall_rule_group.example
+  id = "arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example"
+}
 ```
-$ terraform import aws_networkfirewall_rule_group.example arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example
+
+Using `terraform import`, import Network Firewall Rule Groups using their `arn`. For example:
+
+```console
+% terraform import aws_networkfirewall_rule_group.example arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example
 ```
