@@ -79,10 +79,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IAM Access Keys using the identifier. For example:
+In Terraform v1.5.0 and later, use an `import` block to import IAM Access Keys using the identifier. For example:
 
+```terraform
+import {
+  to = aws_iam_access_key.example
+  id = "AKIA1234567890"
+}
 ```
-$ terraform import aws_iam_access_key.example AKIA1234567890
+
+Using `terraform import`, import IAM Access Keys using the identifier. For example:
+
+```console
+% terraform import aws_iam_access_key.example AKIA1234567890
 ```
 
 Resource attributes such as `encrypted_secret`, `key_fingerprint`, `pgp_key`, `secret`, `ses_smtp_password_v4`, and `encrypted_ses_smtp_password_v4` are not available for imported resources as this information cannot be read from the IAM API.

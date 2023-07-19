@@ -78,8 +78,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import GuardDuty filters using the detector ID and filter's name separated by a colon. For example:
+In Terraform v1.5.0 and later, use an `import` block to import GuardDuty filters using the detector ID and filter's name separated by a colon. For example:
 
+```terraform
+import {
+  to = aws_guardduty_filter.MyFilter
+  id = "00b00fd5aecc0ab60a708659477e9617:MyFilter"
+}
 ```
-$ terraform import aws_guardduty_filter.MyFilter 00b00fd5aecc0ab60a708659477e9617:MyFilter
+
+Using `terraform import`, import GuardDuty filters using the detector ID and filter's name separated by a colon. For example:
+
+```console
+% terraform import aws_guardduty_filter.MyFilter 00b00fd5aecc0ab60a708659477e9617:MyFilter
 ```

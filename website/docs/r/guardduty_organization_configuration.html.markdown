@@ -110,8 +110,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import GuardDuty Organization Configurations using the GuardDuty Detector ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import GuardDuty Organization Configurations using the GuardDuty Detector ID. For example:
 
+```terraform
+import {
+  to = aws_guardduty_organization_configuration.example
+  id = "00b00fd5aecc0ab60a708659477e9617"
+}
 ```
-$ terraform import aws_guardduty_organization_configuration.example 00b00fd5aecc0ab60a708659477e9617
+
+Using `terraform import`, import GuardDuty Organization Configurations using the GuardDuty Detector ID. For example:
+
+```console
+% terraform import aws_guardduty_organization_configuration.example 00b00fd5aecc0ab60a708659477e9617
 ```
