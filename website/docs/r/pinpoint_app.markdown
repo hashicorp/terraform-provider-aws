@@ -66,8 +66,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Pinpoint App using the `application-id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Pinpoint App using the `application-id`. For example:
 
+```terraform
+import {
+  to = aws_pinpoint_app.name
+  id = "application-id"
+}
 ```
-$ terraform import aws_pinpoint_app.name application-id
+
+Using `terraform import`, import Pinpoint App using the `application-id`. For example:
+
+```console
+% terraform import aws_pinpoint_app.name application-id
 ```
