@@ -126,7 +126,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import the Trust relationship using the directory ID and remote domain name, separated by a `/`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the Trust relationship using the directory ID and remote domain name, separated by a `/`. For example:
 
 ```terraform
 import {
