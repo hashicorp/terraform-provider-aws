@@ -90,8 +90,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import the current EMR Block Public Access Configuration. For example:
+In Terraform v1.5.0 and later, use an `import` block to import the current EMR Block Public Access Configuration. For example:
 
+```terraform
+import {
+  to = aws_emr_block_public_access_configuration.example
+  id = "current"
+}
 ```
-$ terraform import aws_emr_block_public_access_configuration.example current
+
+Using `terraform import`, import the current EMR Block Public Access Configuration. For example:
+
+```console
+% terraform import aws_emr_block_public_access_configuration.example current
 ```

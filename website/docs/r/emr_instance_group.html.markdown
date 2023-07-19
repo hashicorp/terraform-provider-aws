@@ -80,8 +80,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EMR task instance group using their EMR Cluster id and Instance Group id separated by a forward-slash `/`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import EMR task instance group using their EMR Cluster id and Instance Group id separated by a forward-slash `/`. For example:
 
+```terraform
+import {
+  to = aws_emr_instance_group.task_group
+  id = "j-123456ABCDEF/ig-15EK4O09RZLNR"
+}
 ```
-$ terraform import aws_emr_instance_group.task_group j-123456ABCDEF/ig-15EK4O09RZLNR
+
+Using `terraform import`, import EMR task instance group using their EMR Cluster id and Instance Group id separated by a forward-slash `/`. For example:
+
+```console
+% terraform import aws_emr_instance_group.task_group j-123456ABCDEF/ig-15EK4O09RZLNR
 ```
