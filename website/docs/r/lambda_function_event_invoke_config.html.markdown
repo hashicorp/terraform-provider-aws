@@ -144,8 +144,8 @@ ARN with qualifier:
 
 Name without qualifier (all versions and aliases):
 
-```
-$ terraform import aws_lambda_function_event_invoke_config.example my_function
+```console
+% terraform import aws_lambda_function_event_invoke_config.example my_function
 ```
 
 Name with qualifier:
