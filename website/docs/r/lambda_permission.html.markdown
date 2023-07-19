@@ -253,7 +253,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Lambda permission statements using function_name/statement_id, with an optional qualifier. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda permission statements using function_name/statement_id, with an optional qualifier. For example:
 
 ```terraform
 import {
