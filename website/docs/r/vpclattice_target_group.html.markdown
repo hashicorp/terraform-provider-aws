@@ -123,8 +123,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import VPC Lattice Target Group using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import VPC Lattice Target Group using the `id`. For example:
 
+```terraform
+import {
+  to = aws_vpclattice_target_group.example
+  id = "tg-0c11d4dc16ed96bdb"
+}
 ```
-$ terraform import aws_vpclattice_target_group.example tg-0c11d4dc16ed96bdb
+
+Using `terraform import`, import VPC Lattice Target Group using the `id`. For example:
+
+```console
+% terraform import aws_vpclattice_target_group.example tg-0c11d4dc16ed96bdb
 ```

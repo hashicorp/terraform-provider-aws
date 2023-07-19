@@ -57,8 +57,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import VPC Lattice Resource Policy using the `resource_arn`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import VPC Lattice Resource Policy using the `resource_arn`. For example:
 
+```terraform
+import {
+  to = aws_vpclattice_resource_policy.example
+  id = "rft-8012925589"
+}
 ```
-$ terraform import aws_vpclattice_resource_policy.example rft-8012925589
+
+Using `terraform import`, import VPC Lattice Resource Policy using the `resource_arn`. For example:
+
+```console
+% terraform import aws_vpclattice_resource_policy.example rft-8012925589
 ```
