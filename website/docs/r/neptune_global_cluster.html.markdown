@@ -131,10 +131,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_neptune_global_cluster` using the Global Cluster identifier. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_neptune_global_cluster` using the Global Cluster identifier. For example:
 
+```terraform
+import {
+  to = aws_neptune_global_cluster.example
+  id = "example"
+}
 ```
-$ terraform import aws_neptune_global_cluster.example example
+
+Using `terraform import`, import `aws_neptune_global_cluster` using the Global Cluster identifier. For example:
+
+```console
+% terraform import aws_neptune_global_cluster.example example
 ```
 
 Certain resource arguments, like `source_db_cluster_identifier`, do not have an API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.

@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Neptune Parameter Groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Neptune Parameter Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_neptune_parameter_group.some_pg
+  id = "some-pg"
+}
 ```
-$ terraform import aws_neptune_parameter_group.some_pg some-pg
+
+Using `terraform import`, import Neptune Parameter Groups using the `name`. For example:
+
+```console
+% terraform import aws_neptune_parameter_group.some_pg some-pg
 ```
