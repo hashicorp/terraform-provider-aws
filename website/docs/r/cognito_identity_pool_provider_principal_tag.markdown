@@ -61,7 +61,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Cognito Identity Pool Roles Attachment using the Identity Pool ID and provider name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito Identity Pool Roles Attachment using the Identity Pool ID and provider name. For example:
 
 ```terraform
 import {
