@@ -36,7 +36,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import `aws_networkmanager_link_association` using the global network ID, link ID and device ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_link_association` using the global network ID, link ID and device ID. For example:
 
 ```terraform
 import {

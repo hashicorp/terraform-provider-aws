@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import `aws_networkmanager_transit_gateway_route_table_attachment` using the attachment ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_transit_gateway_route_table_attachment` using the attachment ID. For example:
 
 ```terraform
 import {
