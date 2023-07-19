@@ -52,8 +52,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import DB proxy endpoints using the `DB-PROXY-NAME/DB-PROXY-ENDPOINT-NAME`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import DB proxy endpoints using the `DB-PROXY-NAME/DB-PROXY-ENDPOINT-NAME`. For example:
 
+```terraform
+import {
+  to = aws_db_proxy_endpoint.example
+  id = "example/example"
+}
 ```
-$ terraform import aws_db_proxy_endpoint.example example/example
+
+Using `terraform import`, import DB proxy endpoints using the `DB-PROXY-NAME/DB-PROXY-ENDPOINT-NAME`. For example:
+
+```console
+% terraform import aws_db_proxy_endpoint.example example/example
 ```

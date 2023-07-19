@@ -443,8 +443,17 @@ The `master_user_secret` configuration block supports the following attributes:
 
 ## Import
 
-Import DB Instances using the `identifier`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import DB Instances using the `identifier`. For example:
 
+```terraform
+import {
+  to = aws_db_instance.default
+  id = "mydb-rds-instance"
+}
 ```
-$ terraform import aws_db_instance.default mydb-rds-instance
+
+Using `terraform import`, import DB Instances using the `identifier`. For example:
+
+```console
+% terraform import aws_db_instance.default mydb-rds-instance
 ```

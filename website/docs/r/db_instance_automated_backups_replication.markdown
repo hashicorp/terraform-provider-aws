@@ -96,8 +96,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import RDS instance automated backups replication using the `arn`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import RDS instance automated backups replication using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_db_instance_automated_backups_replication.default
+  id = "arn:aws:rds:us-east-1:123456789012:auto-backup:ab-faaa2mgdj1vmp4xflr7yhsrmtbtob7ltrzzz2my"
+}
 ```
-$ terraform import aws_db_instance_automated_backups_replication.default arn:aws:rds:us-east-1:123456789012:auto-backup:ab-faaa2mgdj1vmp4xflr7yhsrmtbtob7ltrzzz2my
+
+Using `terraform import`, import RDS instance automated backups replication using the `arn`. For example:
+
+```console
+% terraform import aws_db_instance_automated_backups_replication.default arn:aws:rds:us-east-1:123456789012:auto-backup:ab-faaa2mgdj1vmp4xflr7yhsrmtbtob7ltrzzz2my
 ```
