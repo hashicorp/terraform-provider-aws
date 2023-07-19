@@ -85,8 +85,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Cognito User Pool UI Customizations using the `user_pool_id` and `client_id` separated by `,`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Cognito User Pool UI Customizations using the `user_pool_id` and `client_id` separated by `,`. For example:
 
+```terraform
+import {
+  to = aws_cognito_user_pool_ui_customization.example
+  id = "us-west-2_ZCTarbt5C,12bu4fuk3mlgqa2rtrujgp6egq"
+}
 ```
-$ terraform import aws_cognito_user_pool_ui_customization.example us-west-2_ZCTarbt5C,12bu4fuk3mlgqa2rtrujgp6egq
+
+Using `terraform import`, import Cognito User Pool UI Customizations using the `user_pool_id` and `client_id` separated by `,`. For example:
+
+```console
+% terraform import aws_cognito_user_pool_ui_customization.example us-west-2_ZCTarbt5C,12bu4fuk3mlgqa2rtrujgp6egq
 ```

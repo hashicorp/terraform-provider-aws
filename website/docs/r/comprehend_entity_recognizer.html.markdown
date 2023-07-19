@@ -158,8 +158,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Comprehend Entity Recognizer using the ARN. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Comprehend Entity Recognizer using the ARN. For example:
 
+```terraform
+import {
+  to = aws_comprehend_entity_recognizer.example
+  id = "arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example"
+}
 ```
-$ terraform import aws_comprehend_entity_recognizer.example arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example
+
+Using `terraform import`, import Comprehend Entity Recognizer using the ARN. For example:
+
+```console
+% terraform import aws_comprehend_entity_recognizer.example arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example
 ```

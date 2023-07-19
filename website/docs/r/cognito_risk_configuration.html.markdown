@@ -89,12 +89,21 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Cognito Risk Configurations using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Cognito Risk Configurations using the `id`. For example:
 
-```
-$ terraform import aws_cognito_risk_configuration.main example
+```terraform
+import {
+  to = aws_cognito_risk_configuration.main
+  id = "example"
+}
 ```
 
+Using `terraform import`, import Cognito Risk Configurations using the `id`. For example:
+
+```console
+% terraform import aws_cognito_risk_configuration.main example
 ```
-$ terraform import aws_cognito_risk_configuration.main example:example
+
+```console
+% terraform import aws_cognito_risk_configuration.main example:example
 ```

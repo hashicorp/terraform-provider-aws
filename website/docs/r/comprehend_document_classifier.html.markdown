@@ -133,8 +133,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Comprehend Document Classifier using the ARN. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Comprehend Document Classifier using the ARN. For example:
 
+```terraform
+import {
+  to = aws_comprehend_document_classifier.example
+  id = "arn:aws:comprehend:us-west-2:123456789012:document_classifier/example"
+}
 ```
-$ terraform import aws_comprehend_document_classifier.example arn:aws:comprehend:us-west-2:123456789012:document_classifier/example
+
+Using `terraform import`, import Comprehend Document Classifier using the ARN. For example:
+
+```console
+% terraform import aws_comprehend_document_classifier.example arn:aws:comprehend:us-west-2:123456789012:document_classifier/example
 ```
