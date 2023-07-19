@@ -42,8 +42,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_api_gateway_resource` using `REST-API-ID/RESOURCE-ID`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_api_gateway_resource` using `REST-API-ID/RESOURCE-ID`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_resource.example
+  id = "12345abcde/67890fghij"
+}
 ```
-$ terraform import aws_api_gateway_resource.example 12345abcde/67890fghij
+
+Using `terraform import`, import `aws_api_gateway_resource` using `REST-API-ID/RESOURCE-ID`. For example:
+
+```console
+% terraform import aws_api_gateway_resource.example 12345abcde/67890fghij
 ```
