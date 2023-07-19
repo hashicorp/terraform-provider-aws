@@ -213,7 +213,7 @@ Renewal summary objects export the following attributes:
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Certificates using their ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Certificates using their ARN. For example:
 
 ```terraform
 import {
