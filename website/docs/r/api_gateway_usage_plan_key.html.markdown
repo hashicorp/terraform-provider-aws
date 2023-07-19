@@ -60,8 +60,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import AWS API Gateway Usage Plan Key using the `USAGE-PLAN-ID/USAGE-PLAN-KEY-ID`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import AWS API Gateway Usage Plan Key using the `USAGE-PLAN-ID/USAGE-PLAN-KEY-ID`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_usage_plan_key.key
+  id = "12345abcde/zzz"
+}
 ```
-$ terraform import aws_api_gateway_usage_plan_key.key 12345abcde/zzz
+
+Using `terraform import`, import AWS API Gateway Usage Plan Key using the `USAGE-PLAN-ID/USAGE-PLAN-KEY-ID`. For example:
+
+```console
+% terraform import aws_api_gateway_usage_plan_key.key 12345abcde/zzz
 ```
