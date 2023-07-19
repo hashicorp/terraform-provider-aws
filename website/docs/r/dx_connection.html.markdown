@@ -81,8 +81,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Direct Connect connections using the `connection id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Direct Connect connections using the `connection id`. For example:
 
+```terraform
+import {
+  to = aws_dx_connection.test_connection
+  id = "dxcon-ffre0ec3"
+}
 ```
-$ terraform import aws_dx_connection.test_connection dxcon-ffre0ec3
+
+Using `terraform import`, import Direct Connect connections using the `connection id`. For example:
+
+```console
+% terraform import aws_dx_connection.test_connection dxcon-ffre0ec3
 ```

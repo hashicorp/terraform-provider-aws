@@ -41,16 +41,25 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Direct Connect Gateway Association Proposals using either a proposal ID or proposal ID, Direct Connect Gateway ID and associated gateway ID separated by `/`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Direct Connect Gateway Association Proposals using either a proposal ID or proposal ID, Direct Connect Gateway ID and associated gateway ID separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_dx_gateway_association_proposal.example
+  id = "ac90e981-b718-4364-872d-65478c84fafe"
+}
 ```
-$ terraform import aws_dx_gateway_association_proposal.example ac90e981-b718-4364-872d-65478c84fafe
+
+Using `terraform import`, import Direct Connect Gateway Association Proposals using either a proposal ID or proposal ID, Direct Connect Gateway ID and associated gateway ID separated by `/`. For example:
+
+```console
+% terraform import aws_dx_gateway_association_proposal.example ac90e981-b718-4364-872d-65478c84fafe
 ```
 
 or
 
-```
-$ terraform import aws_dx_gateway_association_proposal.example ac90e981-b718-4364-872d-65478c84fafe/abcd1234-dcba-5678-be23-cdef9876ab45/vgw-12345678
+```console
+% terraform import aws_dx_gateway_association_proposal.example ac90e981-b718-4364-872d-65478c84fafe/abcd1234-dcba-5678-be23-cdef9876ab45/vgw-12345678
 ```
 
 The latter case is useful when a previous proposal has been accepted and deleted by AWS.
