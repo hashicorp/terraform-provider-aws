@@ -96,8 +96,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IPAMs using the `ipam pool id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import IPAMs using the `ipam pool id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_ipam_pool.example
+  id = "ipam-pool-0958f95207d978e1e"
+}
 ```
-$ terraform import aws_vpc_ipam_pool.example ipam-pool-0958f95207d978e1e
+
+Using `terraform import`, import IPAMs using the `ipam pool id`. For example:
+
+```console
+% terraform import aws_vpc_ipam_pool.example ipam-pool-0958f95207d978e1e
 ```

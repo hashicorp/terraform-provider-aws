@@ -100,8 +100,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IPAM allocations using the `allocation id` and `pool id`, separated by `_`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import IPAM allocations using the `allocation id` and `pool id`, separated by `_`. For example:
 
+```terraform
+import {
+  to = aws_vpc_ipam_pool_cidr_allocation.example
+  id = "ipam-pool-alloc-0dc6d196509c049ba8b549ff99f639736_ipam-pool-07cfb559e0921fcbe"
+}
 ```
-$ terraform import aws_vpc_ipam_pool_cidr_allocation.example ipam-pool-alloc-0dc6d196509c049ba8b549ff99f639736_ipam-pool-07cfb559e0921fcbe
+
+Using `terraform import`, import IPAM allocations using the `allocation id` and `pool id`, separated by `_`. For example:
+
+```console
+% terraform import aws_vpc_ipam_pool_cidr_allocation.example ipam-pool-alloc-0dc6d196509c049ba8b549ff99f639736_ipam-pool-07cfb559e0921fcbe
 ```

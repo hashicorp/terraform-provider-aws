@@ -48,8 +48,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IPAMs using the `delegate account id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import IPAMs using the `delegate account id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_ipam_organization_admin_account.example
+  id = "12345678901"
+}
 ```
-$ terraform import aws_vpc_ipam_organization_admin_account.example 12345678901
+
+Using `terraform import`, import IPAMs using the `delegate account id`. For example:
+
+```console
+% terraform import aws_vpc_ipam_organization_admin_account.example 12345678901
 ```

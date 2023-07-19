@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IPAMs using the `ipam resource discovery association id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import IPAMs using the `ipam resource discovery association id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_ipam_resource_discovery_association.example
+  id = "ipam-res-disco-assoc-0178368ad2146a492"
+}
 ```
-$ terraform import aws_vpc_ipam_resource_discovery_association.example ipam-res-disco-assoc-0178368ad2146a492
+
+Using `terraform import`, import IPAMs using the `ipam resource discovery association id`. For example:
+
+```console
+% terraform import aws_vpc_ipam_resource_discovery_association.example ipam-res-disco-assoc-0178368ad2146a492
 ```
