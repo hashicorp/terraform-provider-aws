@@ -266,7 +266,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import `aws_api_gateway_rest_api` using the REST API ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_rest_api` using the REST API ID. For example:
 
 ```terraform
 import {
