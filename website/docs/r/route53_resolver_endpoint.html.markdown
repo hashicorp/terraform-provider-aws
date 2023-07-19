@@ -74,8 +74,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import  Route 53 Resolver endpoints using the Route 53 Resolver endpoint ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import  Route 53 Resolver endpoints using the Route 53 Resolver endpoint ID. For example:
 
+```terraform
+import {
+  to = aws_route53_resolver_endpoint.foo
+  id = "rslvr-in-abcdef01234567890"
+}
 ```
-$ terraform import aws_route53_resolver_endpoint.foo rslvr-in-abcdef01234567890
+
+Using `terraform import`, import  Route 53 Resolver endpoints using the Route 53 Resolver endpoint ID. For example:
+
+```console
+% terraform import aws_route53_resolver_endpoint.foo rslvr-in-abcdef01234567890
 ```
