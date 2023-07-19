@@ -92,7 +92,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import `aws_neptune_event_subscription` using the event subscription name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_neptune_event_subscription` using the event subscription name. For example:
 
 ```terraform
 import {
