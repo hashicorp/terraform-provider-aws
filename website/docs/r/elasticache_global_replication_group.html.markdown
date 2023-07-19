@@ -151,7 +151,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import ElastiCache Global Replication Groups using the `global_replication_group_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache Global Replication Groups using the `global_replication_group_id`. For example:
 
 ```terraform
 import {
