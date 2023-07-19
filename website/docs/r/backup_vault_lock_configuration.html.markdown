@@ -39,8 +39,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Backup vault lock configuration using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Backup vault lock configuration using the `name`. For example:
 
+```terraform
+import {
+  to = aws_backup_vault_lock_configuration.test
+  id = "TestVault"
+}
 ```
-$ terraform import aws_backup_vault_lock_configuration.test TestVault
+
+Using `terraform import`, import Backup vault lock configuration using the `name`. For example:
+
+```console
+% terraform import aws_backup_vault_lock_configuration.test TestVault
 ```

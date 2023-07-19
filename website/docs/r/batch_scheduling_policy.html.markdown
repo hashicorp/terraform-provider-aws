@@ -65,8 +65,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Batch Scheduling Policy using the `arn`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Batch Scheduling Policy using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_batch_scheduling_policy.test_policy
+  id = "arn:aws:batch:us-east-1:123456789012:scheduling-policy/sample"
+}
 ```
-$ terraform import aws_batch_scheduling_policy.test_policy arn:aws:batch:us-east-1:123456789012:scheduling-policy/sample
+
+Using `terraform import`, import Batch Scheduling Policy using the `arn`. For example:
+
+```console
+% terraform import aws_batch_scheduling_policy.test_policy arn:aws:batch:us-east-1:123456789012:scheduling-policy/sample
 ```
