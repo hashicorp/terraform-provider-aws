@@ -67,8 +67,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Directory Service Shared Directories using the owner directory ID/shared directory ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Directory Service Shared Directories using the owner directory ID/shared directory ID. For example:
 
+```terraform
+import {
+  to = aws_directory_service_shared_directory.example
+  id = "d-1234567890/d-9267633ece"
+}
 ```
-$ terraform import aws_directory_service_shared_directory.example d-1234567890/d-9267633ece
+
+Using `terraform import`, import Directory Service Shared Directories using the owner directory ID/shared directory ID. For example:
+
+```console
+% terraform import aws_directory_service_shared_directory.example d-1234567890/d-9267633ece
 ```

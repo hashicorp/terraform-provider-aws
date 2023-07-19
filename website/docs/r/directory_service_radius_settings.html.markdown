@@ -55,8 +55,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import RADIUS settings using the directory ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import RADIUS settings using the directory ID. For example:
 
+```terraform
+import {
+  to = aws_directory_service_radius_settings.example
+  id = "d-926724cf57"
+}
 ```
-$ terraform import aws_directory_service_radius_settings.example d-926724cf57
+
+Using `terraform import`, import RADIUS settings using the directory ID. For example:
+
+```console
+% terraform import aws_directory_service_radius_settings.example d-926724cf57
 ```

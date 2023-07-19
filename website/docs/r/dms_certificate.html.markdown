@@ -49,8 +49,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Certificates using the `certificate_id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Certificates using the `certificate_id`. For example:
 
+```terraform
+import {
+  to = aws_dms_certificate.test
+  id = "test-dms-certificate-tf"
+}
 ```
-$ terraform import aws_dms_certificate.test test-dms-certificate-tf
+
+Using `terraform import`, import Certificates using the `certificate_id`. For example:
+
+```console
+% terraform import aws_dms_certificate.test test-dms-certificate-tf
 ```
