@@ -217,8 +217,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Auto Scaling scaling plans using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Auto Scaling scaling plans using the `name`. For example:
 
+```terraform
+import {
+  to = aws_autoscalingplans_scaling_plan.example
+  id = "MyScale1"
+}
 ```
-$ terraform import aws_autoscalingplans_scaling_plan.example MyScale1
+
+Using `terraform import`, import Auto Scaling scaling plans using the `name`. For example:
+
+```console
+% terraform import aws_autoscalingplans_scaling_plan.example MyScale1
 ```

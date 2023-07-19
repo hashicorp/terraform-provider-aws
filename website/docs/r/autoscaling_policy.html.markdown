@@ -418,8 +418,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import AutoScaling scaling policy using the role autoscaling_group_name and name separated by `/`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import AutoScaling scaling policy using the role autoscaling_group_name and name separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_autoscaling_policy.test-policy
+  id = "asg-name/policy-name"
+}
 ```
-$ terraform import aws_autoscaling_policy.test-policy asg-name/policy-name
+
+Using `terraform import`, import AutoScaling scaling policy using the role autoscaling_group_name and name separated by `/`. For example:
+
+```console
+% terraform import aws_autoscaling_policy.test-policy asg-name/policy-name
 ```

@@ -63,8 +63,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_autoscaling_group_tag` using the ASG name and key, separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_autoscaling_group_tag` using the ASG name and key, separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_autoscaling_group_tag.example
+  id = "asg-example,k8s.io/cluster-autoscaler/node-template/label/eks.amazonaws.com/capacityType"
+}
 ```
-$ terraform import aws_autoscaling_group_tag.example asg-example,k8s.io/cluster-autoscaler/node-template/label/eks.amazonaws.com/capacityType
+
+Using `terraform import`, import `aws_autoscaling_group_tag` using the ASG name and key, separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_autoscaling_group_tag.example asg-example,k8s.io/cluster-autoscaler/node-template/label/eks.amazonaws.com/capacityType
 ```

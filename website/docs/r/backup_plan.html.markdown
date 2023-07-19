@@ -90,8 +90,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Backup Plan using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Backup Plan using the `id`. For example:
 
+```terraform
+import {
+  to = aws_backup_plan.test
+  id = "<id>"
+}
 ```
-$ terraform import aws_backup_plan.test <id>
+
+Using `terraform import`, import Backup Plan using the `id`. For example:
+
+```console
+% terraform import aws_backup_plan.test <id>
 ```
