@@ -238,8 +238,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import `aws_api_gateway_integration` using `REST-API-ID/RESOURCE-ID/HTTP-METHOD`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_api_gateway_integration` using `REST-API-ID/RESOURCE-ID/HTTP-METHOD`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_integration.example
+  id = "12345abcde/67890fghij/GET"
+}
 ```
-$ terraform import aws_api_gateway_integration.example 12345abcde/67890fghij/GET
+
+Using `terraform import`, import `aws_api_gateway_integration` using `REST-API-ID/RESOURCE-ID/HTTP-METHOD`. For example:
+
+```console
+% terraform import aws_api_gateway_integration.example 12345abcde/67890fghij/GET
 ```

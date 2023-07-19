@@ -65,8 +65,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import `aws_api_gateway_method_response` using `REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_api_gateway_method_response` using `REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_method_response.example
+  id = "12345abcde/67890fghij/GET/200"
+}
 ```
-$ terraform import aws_api_gateway_method_response.example 12345abcde/67890fghij/GET/200
+
+Using `terraform import`, import `aws_api_gateway_method_response` using `REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE`. For example:
+
+```console
+% terraform import aws_api_gateway_method_response.example 12345abcde/67890fghij/GET/200
 ```
