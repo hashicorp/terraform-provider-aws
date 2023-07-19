@@ -48,8 +48,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import QLDB Ledgers using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import QLDB Ledgers using the `name`. For example:
 
+```terraform
+import {
+  to = aws_qldb_ledger.sample-ledger
+  id = "sample-ledger"
+}
 ```
-$ terraform import aws_qldb_ledger.sample-ledger sample-ledger
+
+Using `terraform import`, import QLDB Ledgers using the `name`. For example:
+
+```console
+% terraform import aws_qldb_ledger.sample-ledger sample-ledger
 ```

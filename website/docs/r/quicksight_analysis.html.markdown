@@ -159,8 +159,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import a QuickSight Analysis using the AWS account ID and analysis ID separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an `import` block to import a QuickSight Analysis using the AWS account ID and analysis ID separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_analysis.example
+  id = "123456789012,example-id"
+}
 ```
-$ terraform import aws_quicksight_analysis.example 123456789012,example-id
+
+Using `terraform import`, import a QuickSight Analysis using the AWS account ID and analysis ID separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_quicksight_analysis.example 123456789012,example-id
 ```
