@@ -95,8 +95,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import CodeArtifact Repository using the CodeArtifact Repository ARN. For example:
+In Terraform v1.5.0 and later, use an `import` block to import CodeArtifact Repository using the CodeArtifact Repository ARN. For example:
 
+```terraform
+import {
+  to = aws_codeartifact_repository.example
+  id = "arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763"
+}
 ```
-$ terraform import aws_codeartifact_repository.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763
+
+Using `terraform import`, import CodeArtifact Repository using the CodeArtifact Repository ARN. For example:
+
+```console
+% terraform import aws_codeartifact_repository.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763
 ```

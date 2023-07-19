@@ -64,8 +64,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import CodeBuild Resource Policy using the CodeBuild Resource Policy arn. For example:
+In Terraform v1.5.0 and later, use an `import` block to import CodeBuild Resource Policy using the CodeBuild Resource Policy arn. For example:
 
+```terraform
+import {
+  to = aws_codebuild_resource_policy.example
+  id = "arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name"
+}
 ```
-$ terraform import aws_codebuild_resource_policy.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name
+
+Using `terraform import`, import CodeBuild Resource Policy using the CodeBuild Resource Policy arn. For example:
+
+```console
+% terraform import aws_codebuild_resource_policy.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name
 ```
