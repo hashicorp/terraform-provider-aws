@@ -104,8 +104,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import FSx Backups using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import FSx Backups using the `id`. For example:
 
+```terraform
+import {
+  to = aws_fsx_backup.example
+  id = "fs-543ab12b1ca672f33"
+}
 ```
-$ terraform import aws_fsx_backup.example fs-543ab12b1ca672f33
+
+Using `terraform import`, import FSx Backups using the `id`. For example:
+
+```console
+% terraform import aws_fsx_backup.example fs-543ab12b1ca672f33
 ```

@@ -116,8 +116,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Amazon File Cache cache using the resource `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Amazon File Cache cache using the resource `id`. For example:
 
+```terraform
+import {
+  to = aws_fsx_file_cache.example
+  id = "fc-8012925589"
+}
 ```
-$ terraform import aws_fsx_file_cache.example fc-8012925589
+
+Using `terraform import`, import Amazon File Cache cache using the resource `id`. For example:
+
+```console
+% terraform import aws_fsx_file_cache.example fc-8012925589
 ```

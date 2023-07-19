@@ -90,8 +90,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import FSx Data Repository Associations using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import FSx Data Repository Associations using the `id`. For example:
 
+```terraform
+import {
+  to = aws_fsx_data_repository_association.example
+  id = "dra-0b1cfaeca11088b10"
+}
 ```
-$ terraform import aws_fsx_data_repository_association.example dra-0b1cfaeca11088b10
+
+Using `terraform import`, import FSx Data Repository Associations using the `id`. For example:
+
+```console
+% terraform import aws_fsx_data_repository_association.example dra-0b1cfaeca11088b10
 ```
