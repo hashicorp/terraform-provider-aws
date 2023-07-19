@@ -79,8 +79,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Cloudfront Field Level Encryption Config using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Cloudfront Field Level Encryption Config using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_field_level_encryption_config.config
+  id = "E74FTE3AEXAMPLE"
+}
 ```
-$ terraform import aws_cloudfront_field_level_encryption_config.config E74FTE3AEXAMPLE
+
+Using `terraform import`, import Cloudfront Field Level Encryption Config using the `id`. For example:
+
+```console
+% terraform import aws_cloudfront_field_level_encryption_config.config E74FTE3AEXAMPLE
 ```
