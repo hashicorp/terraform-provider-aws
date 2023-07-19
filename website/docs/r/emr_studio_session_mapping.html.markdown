@@ -39,7 +39,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import EMR studio session mappings using `studio-id:identity-type:identity-id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EMR studio session mappings using `studio-id:identity-type:identity-id`. For example:
 
 ```terraform
 import {
