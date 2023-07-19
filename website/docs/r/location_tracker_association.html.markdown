@@ -47,7 +47,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Location Tracker Association using the `tracker_name|consumer_arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Location Tracker Association using the `tracker_name|consumer_arn`. For example:
 
 ```terraform
 import {
