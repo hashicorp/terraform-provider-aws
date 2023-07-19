@@ -71,8 +71,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import CloudWatch dashboards using the `dashboard_name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import CloudWatch dashboards using the `dashboard_name`. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_dashboard.sample
+  id = "dashboard_name"
+}
 ```
-$ terraform import aws_cloudwatch_dashboard.sample dashboard_name
+
+Using `terraform import`, import CloudWatch dashboards using the `dashboard_name`. For example:
+
+```console
+% terraform import aws_cloudwatch_dashboard.sample dashboard_name
 ```
