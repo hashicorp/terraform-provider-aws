@@ -73,8 +73,17 @@ address with an instance.
 
 ## Import
 
-Import EIP Assocations using their association IDs. For example:
+In Terraform v1.5.0 and later, use an `import` block to import EIP Assocations using their association IDs. For example:
 
+```terraform
+import {
+  to = aws_eip_association.test
+  id = "eipassoc-ab12c345"
+}
 ```
-$ terraform import aws_eip_association.test eipassoc-ab12c345
+
+Using `terraform import`, import EIP Assocations using their association IDs. For example:
+
+```console
+% terraform import aws_eip_association.test eipassoc-ab12c345
 ```

@@ -59,8 +59,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import the EFS access points using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import the EFS access points using the `id`. For example:
 
+```terraform
+import {
+  to = aws_efs_access_point.test
+  id = "fsap-52a643fb"
+}
 ```
-$ terraform import aws_efs_access_point.test fsap-52a643fb
+
+Using `terraform import`, import the EFS access points using the `id`. For example:
+
+```console
+% terraform import aws_efs_access_point.test fsap-52a643fb
 ```
