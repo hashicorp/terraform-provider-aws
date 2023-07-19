@@ -102,7 +102,7 @@ Note: S3 access points only support secure access by HTTPS. HTTP isn't supported
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import this resource using the `account_id` and `name` separated by a colon (`:`) for Access Points associated with an AWS Partition S3 Bucket or the ARN for Access Points associated with an S3 on Outposts Bucket. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import this resource using the `account_id` and `name` separated by a colon (`:`) for Access Points associated with an AWS Partition S3 Bucket or the ARN for Access Points associated with an S3 on Outposts Bucket. For example:
 
 Import using the `account_id` and `name` separated by a colon (`:`) for Access Points associated with an AWS Partition S3 Bucket:
 
