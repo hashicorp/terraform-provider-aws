@@ -85,8 +85,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Grafana Workspace using the workspace's `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Grafana Workspace using the workspace's `id`. For example:
 
+```terraform
+import {
+  to = aws_grafana_workspace.example
+  id = "g-2054c75a02"
+}
 ```
-$ terraform import aws_grafana_workspace.example g-2054c75a02
+
+Using `terraform import`, import Grafana Workspace using the workspace's `id`. For example:
+
+```console
+% terraform import aws_grafana_workspace.example g-2054c75a02
 ```
