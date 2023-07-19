@@ -39,8 +39,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SageMaker Image Versions using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import SageMaker Image Versions using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_image_version.test_image
+  id = "my-code-repo"
+}
 ```
-$ terraform import aws_sagemaker_image_version.test_image my-code-repo
+
+Using `terraform import`, import SageMaker Image Versions using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_image_version.test_image my-code-repo
 ```

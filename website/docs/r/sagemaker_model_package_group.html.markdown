@@ -38,8 +38,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SageMaker Model Package Groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import SageMaker Model Package Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_model_package_group.test_model_package_group
+  id = "my-code-repo"
+}
 ```
-$ terraform import aws_sagemaker_model_package_group.test_model_package_group my-code-repo
+
+Using `terraform import`, import SageMaker Model Package Groups using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_model_package_group.test_model_package_group my-code-repo
 ```

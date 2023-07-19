@@ -53,8 +53,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Monitoring schedules using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Monitoring schedules using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_monitoring_schedule.test_monitoring_schedule
+  id = "monitoring-schedule-foo"
+}
 ```
-$ terraform import aws_sagemaker_monitoring_schedule.test_monitoring_schedule monitoring-schedule-foo
+
+Using `terraform import`, import Monitoring schedules using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_monitoring_schedule.test_monitoring_schedule monitoring-schedule-foo
 ```
