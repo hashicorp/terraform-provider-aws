@@ -27,6 +27,7 @@ resource "aws_ec2_host" "test" {
 
 This resource supports the following arguments:
 
+* `asset_id` - (Optional) The ID of the Outpost hardware asset on which to allocate the Dedicated Hosts. This parameter is supported only if you specify OutpostArn. If you are allocating the Dedicated Hosts in a Region, omit this parameter.
 * `auto_placement` - (Optional) Indicates whether the host accepts any untargeted instance launches that match its instance type configuration, or if it only accepts Host tenancy instance launches that specify its unique host ID. Valid values: `on`, `off`. Default: `on`.
 * `availability_zone` - (Required) The Availability Zone in which to allocate the Dedicated Host.
 * `host_recovery` - (Optional) Indicates whether to enable or disable host recovery for the Dedicated Host. Valid values: `on`, `off`. Default: `off`.
