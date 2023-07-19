@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_s3_bucket_public_access_block` using the bucket name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_s3_bucket_public_access_block` using the bucket name. For example:
 
+```terraform
+import {
+  to = aws_s3_bucket_public_access_block.example
+  id = "my-bucket"
+}
 ```
-$ terraform import aws_s3_bucket_public_access_block.example my-bucket
+
+Using `terraform import`, import `aws_s3_bucket_public_access_block` using the bucket name. For example:
+
+```console
+% terraform import aws_s3_bucket_public_access_block.example my-bucket
 ```

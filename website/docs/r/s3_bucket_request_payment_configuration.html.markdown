@@ -37,16 +37,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import S3 bucket request payment configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an `import` block to import S3 bucket request payment configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
 
 If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
 
+```terraform
+import {
+  to = aws_s3_bucket_request_payment_configuration.example
+  id = "bucket-name"
+}
 ```
-$ terraform import aws_s3_bucket_request_payment_configuration.example bucket-name
+
+Using `terraform import`, import S3 bucket request payment configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
+
+If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
+
+```console
+% terraform import aws_s3_bucket_request_payment_configuration.example bucket-name
 ```
 
 If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
 
-```
-$ terraform import aws_s3_bucket_request_payment_configuration.example bucket-name,123456789012
+```console
+% terraform import aws_s3_bucket_request_payment_configuration.example bucket-name,123456789012
 ```

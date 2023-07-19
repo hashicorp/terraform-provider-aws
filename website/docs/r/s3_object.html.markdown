@@ -178,14 +178,23 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import objects using the `id`. The `id` is the bucket name and the key together. For example:
+In Terraform v1.5.0 and later, use an `import` block to import objects using the `id`. The `id` is the bucket name and the key together. For example:
 
+```terraform
+import {
+  to = aws_s3_object.object
+  id = "some-bucket-name/some/key.txt"
+}
 ```
-$ terraform import aws_s3_object.object some-bucket-name/some/key.txt
+
+Using `terraform import`, import objects using the `id`. The `id` is the bucket name and the key together. For example:
+
+```console
+% terraform import aws_s3_object.object some-bucket-name/some/key.txt
 ```
 
 Additionally, s3 url syntax can be used, e.g.,
 
-```
-$ terraform import aws_s3_object.object s3://some-bucket-name/some/key.txt
+```console
+% terraform import aws_s3_object.object s3://some-bucket-name/some/key.txt
 ```
