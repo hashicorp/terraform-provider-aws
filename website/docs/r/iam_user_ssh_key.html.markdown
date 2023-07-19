@@ -43,7 +43,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import SSH public keys using the `username`, `ssh_public_key_id`, and `encoding`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSH public keys using the `username`, `ssh_public_key_id`, and `encoding`. For example:
 
 ```terraform
 import {
