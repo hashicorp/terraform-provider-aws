@@ -99,8 +99,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_connect_bot_association` using the Amazon Connect instance ID, Lex (V1) bot name, and Lex (V1) bot region separated by colons (`:`). For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_connect_bot_association` using the Amazon Connect instance ID, Lex (V1) bot name, and Lex (V1) bot region separated by colons (`:`). For example:
 
+```terraform
+import {
+  to = aws_connect_bot_association.example
+  id = "aaaaaaaa-bbbb-cccc-dddd-111111111111:Example:us-west-2"
+}
 ```
-$ terraform import aws_connect_bot_association.example aaaaaaaa-bbbb-cccc-dddd-111111111111:Example:us-west-2
+
+Using `terraform import`, import `aws_connect_bot_association` using the Amazon Connect instance ID, Lex (V1) bot name, and Lex (V1) bot region separated by colons (`:`). For example:
+
+```console
+% terraform import aws_connect_bot_association.example aaaaaaaa-bbbb-cccc-dddd-111111111111:Example:us-west-2
 ```
