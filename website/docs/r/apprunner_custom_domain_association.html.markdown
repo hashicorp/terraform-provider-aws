@@ -48,7 +48,7 @@ The configuration block consists of the following arguments:
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import App Runner Custom Domain Associations using the `domain_name` and `service_arn` separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner Custom Domain Associations using the `domain_name` and `service_arn` separated by a comma (`,`). For example:
 
 ```terraform
 import {
