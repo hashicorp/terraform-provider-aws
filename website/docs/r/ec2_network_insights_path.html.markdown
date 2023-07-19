@@ -45,8 +45,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Network Insights Paths using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Network Insights Paths using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ec2_network_insights_path.test
+  id = "nip-00edfba169923aefd"
+}
 ```
-$ terraform import aws_ec2_network_insights_path.test nip-00edfba169923aefd
+
+Using `terraform import`, import Network Insights Paths using the `id`. For example:
+
+```console
+% terraform import aws_ec2_network_insights_path.test nip-00edfba169923aefd
 ```

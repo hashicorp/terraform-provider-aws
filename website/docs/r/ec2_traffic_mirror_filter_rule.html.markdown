@@ -82,8 +82,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Traffic mirror rules using the `traffic_mirror_filter_id` and `id` separated by `:`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Traffic mirror rules using the `traffic_mirror_filter_id` and `id` separated by `:`. For example:
 
+```terraform
+import {
+  to = aws_ec2_traffic_mirror_filter_rule.rule
+  id = "tmf-0fbb93ddf38198f64:tmfr-05a458f06445d0aee"
+}
 ```
-$ terraform import aws_ec2_traffic_mirror_filter_rule.rule tmf-0fbb93ddf38198f64:tmfr-05a458f06445d0aee
+
+Using `terraform import`, import Traffic mirror rules using the `traffic_mirror_filter_id` and `id` separated by `:`. For example:
+
+```console
+% terraform import aws_ec2_traffic_mirror_filter_rule.rule tmf-0fbb93ddf38198f64:tmfr-05a458f06445d0aee
 ```

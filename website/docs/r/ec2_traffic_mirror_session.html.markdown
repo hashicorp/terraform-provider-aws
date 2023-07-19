@@ -58,8 +58,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Traffic mirror sessions using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Traffic mirror sessions using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ec2_traffic_mirror_session.session
+  id = "tms-0d8aa3ca35897b82e"
+}
 ```
-$ terraform import aws_ec2_traffic_mirror_session.session tms-0d8aa3ca35897b82e
+
+Using `terraform import`, import Traffic mirror sessions using the `id`. For example:
+
+```console
+% terraform import aws_ec2_traffic_mirror_session.session tms-0d8aa3ca35897b82e
 ```

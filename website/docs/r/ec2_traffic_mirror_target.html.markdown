@@ -55,8 +55,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Traffic mirror targets using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Traffic mirror targets using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ec2_traffic_mirror_target.target
+  id = "tmt-0c13a005422b86606"
+}
 ```
-$ terraform import aws_ec2_traffic_mirror_target.target tmt-0c13a005422b86606
+
+Using `terraform import`, import Traffic mirror targets using the `id`. For example:
+
+```console
+% terraform import aws_ec2_traffic_mirror_target.target tmt-0c13a005422b86606
 ```

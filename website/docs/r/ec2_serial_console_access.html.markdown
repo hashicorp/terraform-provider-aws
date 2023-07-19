@@ -32,8 +32,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import serial console access state. For example:
+In Terraform v1.5.0 and later, use an `import` block to import serial console access state. For example:
 
+```terraform
+import {
+  to = aws_ec2_serial_console_access.example
+  id = "default"
+}
 ```
-$ terraform import aws_ec2_serial_console_access.example default
+
+Using `terraform import`, import serial console access state. For example:
+
+```console
+% terraform import aws_ec2_serial_console_access.example default
 ```
