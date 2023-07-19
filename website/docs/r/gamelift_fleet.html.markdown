@@ -97,8 +97,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import GameLift Fleets using the ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import GameLift Fleets using the ID. For example:
 
+```terraform
+import {
+  to = aws_gamelift_fleet.example
+  id = "<fleet-id>"
+}
 ```
-$ terraform import aws_gamelift_fleet.example <fleet-id>
+
+Using `terraform import`, import GameLift Fleets using the ID. For example:
+
+```console
+% terraform import aws_gamelift_fleet.example <fleet-id>
 ```
