@@ -119,8 +119,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SageMaker User Profiles using the `arn`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import SageMaker User Profiles using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_user_profile.test_user_profile
+  id = "arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name"
+}
 ```
-$ terraform import aws_sagemaker_user_profile.test_user_profile arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name
+
+Using `terraform import`, import SageMaker User Profiles using the `arn`. For example:
+
+```console
+% terraform import aws_sagemaker_user_profile.test_user_profile arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name
 ```
