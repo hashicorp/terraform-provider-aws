@@ -106,7 +106,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("asset_id"); ok {
-		input.AssetIds = []*string{aws.String(v.(string))}
+		input.AssetIds = aws.StringSlice([]string{v.(string)})
 	}
 
 	if v, ok := d.GetOk("instance_family"); ok {
