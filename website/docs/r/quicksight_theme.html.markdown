@@ -154,8 +154,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import a QuickSight Theme using the AWS account ID and theme ID separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an `import` block to import a QuickSight Theme using the AWS account ID and theme ID separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_theme.example
+  id = "123456789012,example-id"
+}
 ```
-$ terraform import aws_quicksight_theme.example 123456789012,example-id
+
+Using `terraform import`, import a QuickSight Theme using the AWS account ID and theme ID separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_quicksight_theme.example 123456789012,example-id
 ```

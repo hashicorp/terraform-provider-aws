@@ -44,8 +44,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import QuickSight Ingestion using the AWS account ID, data set ID, and ingestion ID separated by commas (`,`). For example:
+In Terraform v1.5.0 and later, use an `import` block to import QuickSight Ingestion using the AWS account ID, data set ID, and ingestion ID separated by commas (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_ingestion.example
+  id = "123456789012,example-dataset-id,example-ingestion-id"
+}
 ```
-$ terraform import aws_quicksight_ingestion.example 123456789012,example-dataset-id,example-ingestion-id
+
+Using `terraform import`, import QuickSight Ingestion using the AWS account ID, data set ID, and ingestion ID separated by commas (`,`). For example:
+
+```console
+% terraform import aws_quicksight_ingestion.example 123456789012,example-dataset-id,example-ingestion-id
 ```

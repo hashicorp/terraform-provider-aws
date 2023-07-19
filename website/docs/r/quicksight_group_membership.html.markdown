@@ -34,8 +34,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import QuickSight Group membership using the AWS account ID, namespace, group name and member name separated by `/`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import QuickSight Group membership using the AWS account ID, namespace, group name and member name separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_quicksight_group_membership.example
+  id = "123456789123/default/all-access-users/john_smith"
+}
 ```
-$ terraform import aws_quicksight_group_membership.example 123456789123/default/all-access-users/john_smith
+
+Using `terraform import`, import QuickSight Group membership using the AWS account ID, namespace, group name and member name separated by `/`. For example:
+
+```console
+% terraform import aws_quicksight_group_membership.example 123456789123/default/all-access-users/john_smith
 ```

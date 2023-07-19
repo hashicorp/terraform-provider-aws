@@ -51,8 +51,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import QuickSight Namespace using the AWS account ID and namespace separated by commas (`,`). For example:
+In Terraform v1.5.0 and later, use an `import` block to import QuickSight Namespace using the AWS account ID and namespace separated by commas (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_namespace.example
+  id = "123456789012,example"
+}
 ```
-$ terraform import aws_quicksight_namespace.example 123456789012,example
+
+Using `terraform import`, import QuickSight Namespace using the AWS account ID and namespace separated by commas (`,`). For example:
+
+```console
+% terraform import aws_quicksight_namespace.example 123456789012,example
 ```
