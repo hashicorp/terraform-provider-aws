@@ -124,53 +124,6 @@ func FindStackInstanceSummariesByOrgIDs(ctx context.Context, conn *cloudformatio
 	return result, nil
 }
 
-func FindStackInstanceAccountIdByOrgIDs(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, region, callAs string, orgIDs []string) (string, error) {
-	input := &cloudformation.ListStackInstancesInput{
-		StackInstanceRegion: aws.String(region),
-		StackSetName:        aws.String(stackSetName),
-	}
-
-	if callAs != "" {
-		input.CallAs = aws.String(callAs)
-	}
-
-	var result string
-
-	err := conn.ListStackInstancesPagesWithContext(ctx, input, func(page *cloudformation.ListStackInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, s := range page.Summaries {
-			if s == nil {
-				continue
-			}
-
-			for _, orgID := range orgIDs {
-				if aws.StringValue(s.OrganizationalUnitId) == orgID {
-					result = aws.StringValue(s.Account)
-					return false
-				}
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackSetNotFoundException) {
-		return "", &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return "", err
-	}
-
-	return result, nil
-}
-
 func FindStackInstanceByName(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, accountID, region, callAs string) (*cloudformation.StackInstance, error) {
 	input := &cloudformation.DescribeStackInstanceInput{
 		StackInstanceAccount: aws.String(accountID),
