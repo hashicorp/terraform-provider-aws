@@ -131,8 +131,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IVS (Interactive Video) Chat Logging Configuration using the ARN. For example:
+In Terraform v1.5.0 and later, use an `import` block to import IVS (Interactive Video) Chat Logging Configuration using the ARN. For example:
 
+```terraform
+import {
+  to = aws_ivschat_logging_configuration.example
+  id = "arn:aws:ivschat:us-west-2:326937407773:logging-configuration/MMUQc8wcqZmC"
+}
 ```
-$ terraform import aws_ivschat_logging_configuration.example arn:aws:ivschat:us-west-2:326937407773:logging-configuration/MMUQc8wcqZmC
+
+Using `terraform import`, import IVS (Interactive Video) Chat Logging Configuration using the ARN. For example:
+
+```console
+% terraform import aws_ivschat_logging_configuration.example arn:aws:ivschat:us-west-2:326937407773:logging-configuration/MMUQc8wcqZmC
 ```
