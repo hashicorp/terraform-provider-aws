@@ -355,13 +355,13 @@ The following arguments are optional:
 * `id` - (Optional) Unique identifier for each of the notification configurations.
 * `topic_arn` - (Required) SNS topic ARN.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-S3 bucket notification can be imported using the `bucket`, e.g.,
+Import S3 bucket notification using the `bucket`. For example:
 
 ```
 $ terraform import aws_s3_bucket_notification.bucket_notification bucket-name

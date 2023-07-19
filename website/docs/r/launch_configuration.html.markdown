@@ -216,9 +216,9 @@ Modifying any of the `ebs_block_device` settings requires resource replacement.
 * `volume_size` - (Optional) The size of the volume in gigabytes.
 * `volume_type` - (Optional) The type of volume. Can be `standard`, `gp2`, `gp3`, `st1`, `sc1` or `io1`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the launch configuration.
 * `arn` - The Amazon Resource Name of the launch configuration.
@@ -230,7 +230,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Launch configurations can be imported using the `name`, e.g.,
+Import Launch configurations using the `name`. For example:
 
 ```
 $ terraform import aws_launch_configuration.as_conf terraform-lg-123456

@@ -228,7 +228,7 @@ resource "aws_s3_bucket_replication_configuration" "west_to_east" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the source S3 bucket you want Amazon S3 to monitor.
 * `role` - (Required) ARN of the IAM role for Amazon S3 to assume when replicating the objects.
@@ -421,15 +421,15 @@ The `sse_kms_encrypted_objects` configuration block supports the following argum
 
 * `status` - (Required) Whether the existing objects should be replicated. Either `"Enabled"` or `"Disabled"`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - S3 source bucket name.
 
 ## Import
 
-S3 bucket replication configuration can be imported using the `bucket`, e.g.
+Import S3 bucket replication configuration using the `bucket`. For example:
 
 ```sh
 $ terraform import aws_s3_bucket_replication_configuration.replication bucket-name

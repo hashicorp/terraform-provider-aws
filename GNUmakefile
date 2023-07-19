@@ -1,4 +1,4 @@
-SWEEP               ?= us-west-2,us-east-1,us-east-2
+SWEEP               ?= us-west-2,us-east-1,us-east-2,us-west-1
 TEST                ?= ./...
 SWEEP_DIR           ?= ./internal/sweep
 PKG_NAME            ?= internal

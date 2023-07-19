@@ -44,7 +44,7 @@ resource "aws_autoscaling_group_tag" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `autoscaling_group_name` - (Required) Name of the Autoscaling Group to apply the tag to.
 * `tag` - (Required) Tag to create. The `tag` block is documented below.
@@ -55,15 +55,15 @@ The `tag` block supports the following arguments:
 * `value` - (Required) Tag value.
 * `propagate_at_launch` - (Required) Whether to propagate the tags to instances launched by the ASG.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ASG name and key, separated by a comma (`,`)
 
 ## Import
 
-`aws_autoscaling_group_tag` can be imported by using the ASG name and key, separated by a comma (`,`), e.g.,
+Import `aws_autoscaling_group_tag` using the ASG name and key, separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_autoscaling_group_tag.example asg-example,k8s.io/cluster-autoscaler/node-template/label/eks.amazonaws.com/capacityType

@@ -36,7 +36,7 @@ resource "aws_ses_receipt_rule" "store" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the rule
 * `rule_set_name` - (Required) The name of the rule set
@@ -101,16 +101,16 @@ WorkMail actions support the following:
 * `topic_arn` - (Optional) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The SES receipt rule name.
 * `arn` - The SES receipt rule ARN.
 
 ## Import
 
-SES receipt rules can be imported using the ruleset name and rule name separated by `:`.
+Import SES receipt rules using the ruleset name and rule name separated by `:`. For example:
 
 ```
 $ terraform import aws_ses_receipt_rule.my_rule my_rule_set:my_rule

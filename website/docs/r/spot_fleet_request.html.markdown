@@ -400,9 +400,9 @@ This configuration block supports the following:
     * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Spot fleet request ID
 * `spot_request_state` - The state of the Spot fleet request.
@@ -417,7 +417,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Spot Fleet Requests can be imported using `id`, e.g.,
+Import Spot Fleet Requests using `id`. For example:
 
 ```
 $ terraform import aws_spot_fleet_request.fleet sfr-005e9ec8-5546-4c31-b317-31a62325411e

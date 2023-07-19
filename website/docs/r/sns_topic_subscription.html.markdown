@@ -264,9 +264,9 @@ Partially supported values for `protocol` include:
 * `http` -- Delivers JSON-encoded messages via HTTP POST. `endpoint` is a URL beginning with `http://`.
 * `https` -- Delivers JSON-encoded messages via HTTPS POST. `endpoint` is a URL beginning with `https://`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the subscription.
 * `confirmation_was_authenticated` - Whether the subscription confirmation request was authenticated.
@@ -276,7 +276,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SNS Topic Subscriptions can be imported using the `subscription arn`, e.g.,
+Import SNS Topic Subscriptions using the `subscription arn`. For example:
 
 ```
 $ terraform import aws_sns_topic_subscription.user_updates_sqs_target arn:aws:sns:us-west-2:0123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f

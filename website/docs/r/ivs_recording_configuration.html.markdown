@@ -42,9 +42,9 @@ The following arguments are optional:
     * `recording_mode` - (Optional) Thumbnail recording mode. Valid values: `DISABLED`, `INTERVAL`.
     * `target_interval_seconds` (Configurable [and required] only if `recording_mode` is `INTERVAL`) - The targeted thumbnail-generation interval in seconds.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Recording Configuration.
 * `state` -  The current state of the Recording Configuration.
@@ -59,7 +59,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IVS (Interactive Video) Recording Configuration can be imported using the ARN, e.g.,
+Import IVS (Interactive Video) Recording Configuration using the ARN. For example:
 
 ```
 $ terraform import aws_ivs_recording_configuration.example arn:aws:ivs:us-west-2:326937407773:recording-configuration/KAk1sHBl2L47

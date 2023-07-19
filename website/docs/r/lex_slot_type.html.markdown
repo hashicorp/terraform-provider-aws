@@ -43,7 +43,7 @@ resource "aws_lex_slot_type" "flower_types" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `enumeration_value` - (Required) A list of EnumerationValue objects that defines the values that
 the slot type can take. Each value can have a list of synonyms, which are additional values that help
@@ -78,9 +78,9 @@ pizza should have. The slot type could include the values: thick, thin, stuffed.
 * `update` - (Default `1m`)
 * `delete` - (Default `5m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `checksum` - Checksum identifying the version of the slot type that was created. The checksum is
 not included as an argument because the resource will add it automatically when updating the slot type.
@@ -90,7 +90,7 @@ not included as an argument because the resource will add it automatically when 
 
 ## Import
 
-Slot types can be imported using their name.
+Import Slot types using their name. For example:
 
 ```
 $ terraform import aws_lex_slot_type.flower_types FlowerTypes

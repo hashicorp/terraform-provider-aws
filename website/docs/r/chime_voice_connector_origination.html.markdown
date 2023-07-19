@@ -42,7 +42,7 @@ resource "aws_chime_voice_connector_origination" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
 * `route` - (Required) Set of call distribution properties defined for your SIP hosts. See [route](#route) below for more details. Minimum of 1. Maximum of 20.
@@ -58,15 +58,15 @@ Origination routes define call distribution properties for your SIP hosts to rec
 * `protocol` - (Required) The protocol to use for the origination route. Encryption-enabled Amazon Chime Voice Connectors use TCP protocol by default.
 * `weight` - (Required) The weight associated with the host. If hosts are equal in priority, calls are redistributed among them based on their relative weight.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Chime Voice Connector ID.
 
 ## Import
 
-Chime Voice Connector Origination can be imported using the `voice_connector_id`, e.g.,
+Import Chime Voice Connector Origination using the `voice_connector_id`. For example:
 
 ```
 $ terraform import aws_chime_voice_connector_origination.default abcdef1ghij2klmno3pqr4

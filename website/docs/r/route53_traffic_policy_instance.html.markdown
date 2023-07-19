@@ -32,15 +32,15 @@ The following arguments are required:
 * `hosted_zone_id` - (Required) ID of the hosted zone that you want Amazon Route 53 to create resource record sets in by using the configuration in a traffic policy.
 * `ttl` - (Required) TTL that you want Amazon Route 53 to assign to all the resource record sets that it creates in the specified hosted zone.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of traffic policy instance.
 
 ## Import
 
-Route53 traffic policy instance can be imported using its id.
+Import Route53 traffic policy instance using its id. For example:
 
 ```
 $ terraform import aws_route53_traffic_policy_instance.test df579d9a-6396-410e-ac22-e7ad60cf9e7e

@@ -22,16 +22,16 @@ resource "aws_servicecatalog_portfolio" "portfolio" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the portfolio.
 * `description` - (Required) Description of the portfolio
 * `provider_name` - (Required) Name of the person or organization who owns the portfolio.
 * `tags` - (Optional) Tags to apply to the connection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Service Catalog Portfolio.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -47,7 +47,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Service Catalog Portfolios can be imported using the `service catalog portfolio id`, e.g.,
+Import Service Catalog Portfolios using the `service catalog portfolio id`. For example:
 
 ```
 $ terraform import aws_servicecatalog_portfolio.testfolio port-12344321

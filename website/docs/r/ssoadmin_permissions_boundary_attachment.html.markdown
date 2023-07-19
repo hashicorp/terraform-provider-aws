@@ -87,15 +87,15 @@ The `customer_managed_policy_reference` config block describes a customer manage
 * `name` - (Required, Forces new resource) Name of the customer managed IAM Policy to be attached.
 * `path` - (Optional, Forces new resource) The path to the IAM policy to be attached. The default is `/`. See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-friendly-names) for more information.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Permission Set Amazon Resource Name (ARN) and SSO Instance ARN, separated by a comma (`,`).
 
 ## Import
 
-SSO Admin Permissions Boundary Attachments can be imported using the `permission_set_arn` and `instance_arn`, separated by a comma (`,`) e.g.,
+Import SSO Admin Permissions Boundary Attachments using the `permission_set_arn` and `instance_arn`, separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_ssoadmin_permissions_boundary_attachment.example arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72

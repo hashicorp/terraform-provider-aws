@@ -138,9 +138,9 @@ The following arguments are optional:
 * `parameters_declarations` - (Optional) A list of parameter declarations for a template. Parameters are named variables that can transfer a value for use by an action or an object. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterDeclaration.html). For more information, see [Parameters in Amazon QuickSight](https://docs.aws.amazon.com/quicksight/latest/user/parameters-in-quicksight.html) in the Amazon QuickSight User Guide.
 * `sheets` - (Optional) A list of sheet definitions for a template. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetDefinition.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the template.
 * `created_time` - The time that the template was created.
@@ -161,7 +161,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-A QuickSight Template can be imported using the AWS account ID and template ID separated by a comma (`,`) e.g.,
+Import a QuickSight Template using the AWS account ID and template ID separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_quicksight_template.example 123456789012,example-id

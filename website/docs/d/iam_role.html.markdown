@@ -24,7 +24,9 @@ data "aws_iam_role" "example" {
 
 * `name` - (Required) Friendly IAM role name to match.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Friendly IAM role name to match.
 * `arn` - ARN of the role.

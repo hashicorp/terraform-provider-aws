@@ -40,15 +40,15 @@ The following arguments are required:
 * `fleet_name` - (Required) Name of the fleet.
 * `stack_name` (Required) Name of the stack.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique ID of the appstream stack fleet association, composed of the `fleet_name` and `stack_name` separated by a slash (`/`).
 
 ## Import
 
-AppStream Stack Fleet Association can be imported by using the `fleet_name` and `stack_name` separated by a slash (`/`), e.g.,
+Import AppStream Stack Fleet Association using the `fleet_name` and `stack_name` separated by a slash (`/`). For example:
 
 ```
 $ terraform import aws_appstream_fleet_stack_association.example fleetName/stackName

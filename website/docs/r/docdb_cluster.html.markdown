@@ -40,7 +40,7 @@ resource "aws_docdb_cluster" "docdb" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-cluster.html).
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications
      are applied immediately, or during the next maintenance window. Default is
@@ -76,9 +76,9 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate
   with the Cluster
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of cluster
 * `cluster_members` – List of DocumentDB Instances that are a part of this cluster
@@ -100,7 +100,7 @@ any cleanup task during the destroying process.
 
 ## Import
 
-DocumentDB Clusters can be imported using the `cluster_identifier`, e.g.,
+Import DocumentDB Clusters using the `cluster_identifier`. For example:
 
 ```
 $ terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster

@@ -72,12 +72,12 @@ The following arguments are optional:
 * `availability_zone` - (Optional) The Availability Zone where the IP address of the target is to be registered. If the private IP address is outside of the VPC scope, this value must be set to `all`.
 * `port` - (Optional) The port on which targets receive traffic.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A unique identifier for the attachment.
 
 ## Import
 
-Target Group Attachments cannot be imported.
+You cannot import Target Group Attachments.

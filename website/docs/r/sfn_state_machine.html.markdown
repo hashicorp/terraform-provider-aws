@@ -125,7 +125,7 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `definition` - (Required) The [Amazon States Language](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html) definition of the state machine.
 * `logging_configuration` - (Optional) Defines what execution history events are logged and where they are logged. The `logging_configuration` parameter is only valid when `type` is set to `EXPRESS`. Defaults to `OFF`. For more information see [Logging Express Workflows](https://docs.aws.amazon.com/step-functions/latest/dg/cw-logs.html) and [Log Levels](https://docs.aws.amazon.com/step-functions/latest/dg/cloudwatch-log-level.html) in the AWS Step Functions User Guide.
@@ -147,9 +147,9 @@ The following arguments are supported:
 
 * `enabled` - (Optional) When set to `true`, AWS X-Ray tracing is enabled. Make sure the State Machine has the correct IAM policies for logging. See the [AWS Step Functions Developer Guide](https://docs.aws.amazon.com/step-functions/latest/dg/xray-iam.html) for details.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the state machine.
 * `arn` - The ARN of the state machine.
@@ -167,7 +167,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-State Machines can be imported using the `arn`, e.g.,
+Import State Machines using the `arn`. For example:
 
 ```
 $ terraform import aws_sfn_state_machine.foo arn:aws:states:eu-west-1:123456789098:stateMachine:bar

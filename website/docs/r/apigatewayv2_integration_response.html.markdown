@@ -25,7 +25,7 @@ resource "aws_apigatewayv2_integration_response" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `integration_id` - (Required) Identifier of the [`aws_apigatewayv2_integration`](/docs/providers/aws/r/apigatewayv2_integration.html).
@@ -34,15 +34,15 @@ The following arguments are supported:
 * `response_templates` - (Optional) Map of Velocity templates that are applied on the request payload based on the value of the Content-Type header sent by the client.
 * `template_selection_expression` - (Optional) The [template selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-template-selection-expressions) for the integration response.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Integration response identifier.
 
 ## Import
 
-`aws_apigatewayv2_integration_response` can be imported by using the API identifier, integration identifier and integration response identifier, e.g.,
+Import `aws_apigatewayv2_integration_response` using the API identifier, integration identifier and integration response identifier. For example:
 
 ```
 $ terraform import aws_apigatewayv2_integration_response.example aabbccddee/1122334/998877

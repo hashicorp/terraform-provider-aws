@@ -69,9 +69,9 @@ Valid values: `ERROR`, `INFO`, `OFF`. Defaults to `OFF`. Supported only for WebS
 * `throttling_burst_limit` - (Optional) Throttling burst limit for the route.
 * `throttling_rate_limit` - (Optional) Throttling rate limit for the route.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Stage identifier.
 * `arn` - ARN of the stage.
@@ -84,7 +84,7 @@ See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigate
 
 ## Import
 
-`aws_apigatewayv2_stage` can be imported by using the API identifier and stage name, e.g.,
+Import `aws_apigatewayv2_stage` using the API identifier and stage name. For example:
 
 ```
 $ terraform import aws_apigatewayv2_stage.example aabbccddee/example-stage

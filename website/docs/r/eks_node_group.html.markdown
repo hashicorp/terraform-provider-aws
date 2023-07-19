@@ -189,9 +189,9 @@ The following arguments are mutually exclusive.
 * `max_unavailable` - (Optional) Desired max number of unavailable worker nodes during node group update.
 * `max_unavailable_percentage` - (Optional) Desired max percentage of unavailable worker nodes during node group update.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the EKS Node Group.
 * `id` - EKS Cluster name and EKS Node Group name separated by a colon (`:`).
@@ -212,7 +212,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EKS Node Groups can be imported using the `cluster_name` and `node_group_name` separated by a colon (`:`), e.g.,
+Import EKS Node Groups using the `cluster_name` and `node_group_name` separated by a colon (`:`). For example:
 
 ```
 $ terraform import aws_eks_node_group.my_node_group my_cluster:my_node_group

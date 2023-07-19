@@ -73,9 +73,9 @@ The `vpc_config` block supports the following arguments:
 * `security_group_ids` - (Optional) Identifiers of the security groups for the image builder or image builder.
 * `subnet_ids` - (Optional) Identifiers of the subnets to which a network interface is attached from the image builder instance or image builder instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the appstream image builder.
 * `created_time` -  Date and time, in UTC and extended RFC 3339 format, when the image builder was created.
@@ -85,7 +85,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_appstream_image_builder` can be imported using the `name`, e.g.,
+Import `aws_appstream_image_builder` using the `name`. For example:
 
 ```
 $ terraform import aws_appstream_image_builder.example imageBuilderExample

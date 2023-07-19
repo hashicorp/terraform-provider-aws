@@ -48,14 +48,14 @@ resource "aws_guardduty_detector" "member" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `detector_id` - (Required) The detector ID of the member GuardDuty account.
 * `master_account_id` - (Required) AWS account ID for primary account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - GuardDuty member detector ID
 
@@ -67,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_guardduty_invite_accepter` can be imported using the member GuardDuty detector ID, e.g.,
+Import `aws_guardduty_invite_accepter` using the member GuardDuty detector ID. For example:
 
 ```
 $ terraform import aws_guardduty_invite_accepter.member 00b00fd5aecc0ab60a708659477e9617
