@@ -32,7 +32,7 @@ resource "aws_ses_email_identity" "example" {
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import SES email identities using the email address. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES email identities using the email address. For example:
 
 ```terraform
 import {
