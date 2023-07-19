@@ -79,8 +79,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import MAIL FROM domain using the `domain` attribute. For example:
+In Terraform v1.5.0 and later, use an `import` block to import MAIL FROM domain using the `domain` attribute. For example:
 
+```terraform
+import {
+  to = aws_ses_domain_mail_from.example
+  id = "example.com"
+}
 ```
-$ terraform import aws_ses_domain_mail_from.example example.com
+
+Using `terraform import`, import MAIL FROM domain using the `domain` attribute. For example:
+
+```console
+% terraform import aws_ses_domain_mail_from.example example.com
 ```
