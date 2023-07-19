@@ -49,7 +49,9 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the Alternate Contact for the current account using the `alternate_contact_type`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the Alternate Contact for the current or another account using the `alternate_contact_type`. For example:
+
+Import the Alternate Contact for the current account:
 
 ```terraform
 import {
@@ -58,13 +60,24 @@ import {
 }
 ```
 
-Using `terraform import`, import the Alternate Contact for the current account using the `alternate_contact_type`. For example:
+Import the Alternate Contact for another account using the `account_id` and `alternate_contact_type` separated by a forward slash (`/`):
+
+```terraform
+import {
+  to = aws_account_alternate_contact.operations
+  id = "1234567890/OPERATIONS"
+}
+```
+
+**Using `terraform import` to import** the Alternate Contact for the current or another account using the `alternate_contact_type`. For example:
+
+Import the Alternate Contact for the current account:
 
 ```console
 % terraform import aws_account_alternate_contact.operations OPERATIONS
 ```
 
-If you provide an account ID, import the Alternate Contact using the `account_id` and `alternate_contact_type` separated by a forward slash (`/`). For example:
+Import the Alternate Contact for another account using the `account_id` and `alternate_contact_type` separated by a forward slash (`/`):
 
 ```console
 % terraform import aws_account_alternate_contact.operations 1234567890/OPERATIONS
