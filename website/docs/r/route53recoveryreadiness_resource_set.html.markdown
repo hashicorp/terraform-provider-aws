@@ -75,8 +75,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 Import Route53 Recovery Readiness resource set name using the resource set name. For example:
 
-```
-$ terraform import aws_route53recoveryreadiness_resource_set.my-cw-alarm-set
+```console
+% terraform import aws_route53recoveryreadiness_resource_set.my-cw-alarm-set
 ```
 
 ## Timeouts
