@@ -38,8 +38,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import CloudWatch Logs destinations using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import CloudWatch Logs destinations using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_log_destination.test_destination
+  id = "test_destination"
+}
 ```
-$ terraform import aws_cloudwatch_log_destination.test_destination test_destination
+
+Using `terraform import`, import CloudWatch Logs destinations using the `name`. For example:
+
+```console
+% terraform import aws_cloudwatch_log_destination.test_destination test_destination
 ```

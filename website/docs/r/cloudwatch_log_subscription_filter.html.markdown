@@ -40,8 +40,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import CloudWatch Logs subscription filter using the log group name and subscription filter name separated by `|`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import CloudWatch Logs subscription filter using the log group name and subscription filter name separated by `|`. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter
+  id = "/aws/lambda/example_lambda_name|test_lambdafunction_logfilter"
+}
 ```
-$ terraform import aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter /aws/lambda/example_lambda_name|test_lambdafunction_logfilter
+
+Using `terraform import`, import CloudWatch Logs subscription filter using the log group name and subscription filter name separated by `|`. For example:
+
+```console
+% terraform import aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter /aws/lambda/example_lambda_name|test_lambdafunction_logfilter
 ```

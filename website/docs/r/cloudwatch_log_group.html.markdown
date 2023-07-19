@@ -47,8 +47,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Cloudwatch Log Groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Cloudwatch Log Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_log_group.test_group
+  id = "yada"
+}
 ```
-$ terraform import aws_cloudwatch_log_group.test_group yada
+
+Using `terraform import`, import Cloudwatch Log Groups using the `name`. For example:
+
+```console
+% terraform import aws_cloudwatch_log_group.test_group yada
 ```

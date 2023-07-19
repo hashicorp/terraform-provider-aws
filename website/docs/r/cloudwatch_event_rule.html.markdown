@@ -81,8 +81,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EventBridge Rules using the `event_bus_name/rule_name` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
+In Terraform v1.5.0 and later, use an `import` block to import EventBridge Rules using the `event_bus_name/rule_name` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_event_rule.console
+  id = "example-event-bus/capture-console-sign-in"
+}
 ```
-$ terraform import aws_cloudwatch_event_rule.console example-event-bus/capture-console-sign-in
+
+Using `terraform import`, import EventBridge Rules using the `event_bus_name/rule_name` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
+
+```console
+% terraform import aws_cloudwatch_event_rule.console example-event-bus/capture-console-sign-in
 ```
