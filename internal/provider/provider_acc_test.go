@@ -865,11 +865,7 @@ func funcHasConnFuncSignature(method reflect.Value) bool {
 	fn := func(ctx context.Context) {}
 	ftyp := reflect.TypeOf(fn)
 
-	in := typ.In(0)
-	if in != ftyp.In(0) {
-		return false
-	}
-	return true
+	return typ.In(0) == ftyp.In(0)
 }
 
 func serviceConn(key string) string {
