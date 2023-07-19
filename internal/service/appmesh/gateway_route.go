@@ -107,36 +107,6 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 						MaxItems: 1,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"target": {
-									Type:     schema.TypeList,
-									Required: true,
-									MinItems: 1,
-									MaxItems: 1,
-									Elem: &schema.Resource{
-										Schema: map[string]*schema.Schema{
-											"port": {
-												Type:         schema.TypeInt,
-												Optional:     true,
-												ValidateFunc: validation.IsPortNumber,
-											},
-											"virtual_service": {
-												Type:     schema.TypeList,
-												Required: true,
-												MinItems: 1,
-												MaxItems: 1,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"virtual_service_name": {
-															Type:         schema.TypeString,
-															Required:     true,
-															ValidateFunc: validation.StringLenBetween(1, 255),
-														},
-													},
-												},
-											},
-										},
-									},
-								},
 								"rewrite": {
 									Type:     schema.TypeList,
 									Optional: true,
@@ -159,9 +129,9 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 													},
 												},
 												AtLeastOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
 													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.path", attrName),
 													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
-													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
 												},
 											},
 											"path": {
@@ -179,9 +149,9 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 													},
 												},
 												AtLeastOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
 													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.path", attrName),
 													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
-													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
 												},
 											},
 											"prefix": {
@@ -212,9 +182,39 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 													},
 												},
 												AtLeastOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
 													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.path", attrName),
 													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
-													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
+												},
+											},
+										},
+									},
+								},
+								"target": {
+									Type:     schema.TypeList,
+									Required: true,
+									MinItems: 1,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"port": {
+												Type:         schema.TypeInt,
+												Optional:     true,
+												ValidateFunc: validation.IsPortNumber,
+											},
+											"virtual_service": {
+												Type:     schema.TypeList,
+												Required: true,
+												MinItems: 1,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"virtual_service_name": {
+															Type:         schema.TypeString,
+															Required:     true,
+															ValidateFunc: validation.StringLenBetween(1, 255),
+														},
+													},
 												},
 											},
 										},
@@ -349,8 +349,8 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 										},
 									},
 									AtLeastOneOf: []string{
-										fmt.Sprintf("spec.0.%s.0.match.0.path", attrName),
 										fmt.Sprintf("spec.0.%s.0.match.0.hostname", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.path", attrName),
 										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
 									},
 								},
@@ -364,9 +364,9 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 									Optional:     true,
 									ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
 									AtLeastOneOf: []string{
-										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
 										fmt.Sprintf("spec.0.%s.0.match.0.hostname", attrName),
 										fmt.Sprintf("spec.0.%s.0.match.0.path", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
 									},
 								},
 								"query_parameter": {
