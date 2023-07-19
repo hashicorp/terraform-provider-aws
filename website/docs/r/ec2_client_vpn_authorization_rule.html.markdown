@@ -44,7 +44,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import AWS Client VPN authorization rules using the endpoint ID and target network CIDR. If there is a specific group name that is included as well. All values are separated by a `,`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Client VPN authorization rules using the endpoint ID and target network CIDR. If there is a specific group name that is included as well. All values are separated by a `,`. For example:
 
 ```terraform
 import {
