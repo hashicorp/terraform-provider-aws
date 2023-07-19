@@ -352,8 +352,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Application AutoScaling Policy using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Application AutoScaling Policy using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_appautoscaling_policy.test-policy
+  id = "service-namespace/resource-id/scalable-dimension/policy-name"
+}
 ```
-$ terraform import aws_appautoscaling_policy.test-policy service-namespace/resource-id/scalable-dimension/policy-name
+
+Using `terraform import`, import Application AutoScaling Policy using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`. For example:
+
+```console
+% terraform import aws_appautoscaling_policy.test-policy service-namespace/resource-id/scalable-dimension/policy-name
 ```

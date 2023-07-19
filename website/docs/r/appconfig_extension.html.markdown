@@ -94,8 +94,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import AppConfig Extensions using their extension ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import AppConfig Extensions using their extension ID. For example:
 
+```terraform
+import {
+  to = aws_appconfig_extension.example
+  id = "71rxuzt"
+}
 ```
-$ terraform import aws_appconfig_extension.example 71rxuzt
+
+Using `terraform import`, import AppConfig Extensions using their extension ID. For example:
+
+```console
+% terraform import aws_appconfig_extension.example 71rxuzt
 ```

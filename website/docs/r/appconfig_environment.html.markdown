@@ -68,8 +68,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import AppConfig Environments using the environment ID and application ID separated by a colon (`:`). For example:
+In Terraform v1.5.0 and later, use an `import` block to import AppConfig Environments using the environment ID and application ID separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_appconfig_environment.example
+  id = "71abcde:11xxxxx"
+}
 ```
-$ terraform import aws_appconfig_environment.example 71abcde:11xxxxx
+
+Using `terraform import`, import AppConfig Environments using the environment ID and application ID separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_appconfig_environment.example 71abcde:11xxxxx
 ```

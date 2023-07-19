@@ -103,8 +103,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Application AutoScaling Target using the `service-namespace` , `resource-id` and `scalable-dimension` separated by `/`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Application AutoScaling Target using the `service-namespace` , `resource-id` and `scalable-dimension` separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_appautoscaling_target.test-target
+  id = "service-namespace/resource-id/scalable-dimension"
+}
 ```
-$ terraform import aws_appautoscaling_target.test-target service-namespace/resource-id/scalable-dimension
+
+Using `terraform import`, import Application AutoScaling Target using the `service-namespace` , `resource-id` and `scalable-dimension` separated by `/`. For example:
+
+```console
+% terraform import aws_appautoscaling_target.test-target service-namespace/resource-id/scalable-dimension
 ```
