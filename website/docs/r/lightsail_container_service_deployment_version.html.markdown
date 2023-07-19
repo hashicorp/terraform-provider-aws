@@ -107,8 +107,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Lightsail Container Service Deployment Version using the `service_name` and `version` separated by a slash (`/`). For example:
+In Terraform v1.5.0 and later, use an `import` block to import Lightsail Container Service Deployment Version using the `service_name` and `version` separated by a slash (`/`). For example:
 
+```terraform
+import {
+  to = aws_lightsail_container_service_deployment_version.example
+  id = "container-service-1/1"
+}
 ```
-$ terraform import aws_lightsail_container_service_deployment_version.example container-service-1/1
+
+Using `terraform import`, import Lightsail Container Service Deployment Version using the `service_name` and `version` separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_lightsail_container_service_deployment_version.example container-service-1/1
 ```

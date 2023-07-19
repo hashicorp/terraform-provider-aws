@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_lightsail_disk` using the name attribute. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_lightsail_disk` using the name attribute. For example:
 
+```terraform
+import {
+  to = aws_lightsail_disk.test
+  id = "test"
+}
 ```
-$ terraform import aws_lightsail_disk.test test
+
+Using `terraform import`, import `aws_lightsail_disk` using the name attribute. For example:
+
+```console
+% terraform import aws_lightsail_disk.test test
 ```
