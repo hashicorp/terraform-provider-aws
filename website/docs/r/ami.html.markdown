@@ -126,8 +126,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_ami` using the ID of the AMI. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_ami` using the ID of the AMI. For example:
 
+```terraform
+import {
+  to = aws_ami.example
+  id = "ami-12345678"
+}
 ```
-$ terraform import aws_ami.example ami-12345678
+
+Using `terraform import`, import `aws_ami` using the ID of the AMI. For example:
+
+```console
+% terraform import aws_ami.example ami-12345678
 ```

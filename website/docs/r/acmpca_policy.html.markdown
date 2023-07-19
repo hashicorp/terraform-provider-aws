@@ -75,8 +75,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import `aws_acmpca_policy` using the `resource_arn` value. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_acmpca_policy` using the `resource_arn` value. For example:
 
+```terraform
+import {
+  to = aws_acmpca_policy.example
+  id = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"
+}
 ```
-$ terraform import aws_acmpca_policy.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
+
+Using `terraform import`, import `aws_acmpca_policy` using the `resource_arn` value. For example:
+
+```console
+% terraform import aws_acmpca_policy.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
 ```
