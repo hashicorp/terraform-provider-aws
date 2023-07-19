@@ -88,7 +88,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Object Lambda Access Points using the `account_id` and `name`, separated by a colon (`:`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Object Lambda Access Points using the `account_id` and `name`, separated by a colon (`:`). For example:
 
 ```terraform
 import {
