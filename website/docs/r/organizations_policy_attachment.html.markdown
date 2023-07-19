@@ -53,10 +53,21 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import `aws_organizations_policy_attachment` using the target ID and policy ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_organizations_policy_attachment` using the target ID and policy ID. For example:
 
 With an account target:
 
+```terraform
+import {
+  to = aws_organizations_policy_attachment.account
+  id = "123456789012:p-12345678"
+}
 ```
-$ terraform import aws_organizations_policy_attachment.account 123456789012:p-12345678
+
+Using `terraform import`, import `aws_organizations_policy_attachment` using the target ID and policy ID. For example:
+
+With an account target:
+
+```console
+% terraform import aws_organizations_policy_attachment.account 123456789012:p-12345678
 ```

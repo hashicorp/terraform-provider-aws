@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_organizations_delegated_administrator` using the account ID and its service principal. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_organizations_delegated_administrator` using the account ID and its service principal. For example:
 
+```terraform
+import {
+  to = aws_organizations_delegated_administrator.example
+  id = "123456789012/config.amazonaws.com"
+}
 ```
-$ terraform import aws_organizations_delegated_administrator.example 123456789012/config.amazonaws.com
+
+Using `terraform import`, import `aws_organizations_delegated_administrator` using the account ID and its service principal. For example:
+
+```console
+% terraform import aws_organizations_delegated_administrator.example 123456789012/config.amazonaws.com
 ```

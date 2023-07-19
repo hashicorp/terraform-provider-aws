@@ -66,8 +66,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_organizations_resource_policy` using the resource policy ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_organizations_resource_policy` using the resource policy ID. For example:
 
+```terraform
+import {
+  to = aws_organizations_resource_policy.example
+  id = "rp-12345678"
+}
 ```
-$ terraform import aws_organizations_resource_policy.example rp-12345678
+
+Using `terraform import`, import `aws_organizations_resource_policy` using the resource policy ID. For example:
+
+```console
+% terraform import aws_organizations_resource_policy.example rp-12345678
 ```

@@ -66,8 +66,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import the AWS organization using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import the AWS organization using the `id`. For example:
 
+```terraform
+import {
+  to = aws_organizations_organization.my_org
+  id = "o-1234567"
+}
 ```
-$ terraform import aws_organizations_organization.my_org o-1234567
+
+Using `terraform import`, import the AWS organization using the `id`. For example:
+
+```console
+% terraform import aws_organizations_organization.my_org o-1234567
 ```
