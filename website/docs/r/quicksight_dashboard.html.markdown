@@ -217,7 +217,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import a QuickSight Dashboard using the AWS account ID and dashboard ID separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a QuickSight Dashboard using the AWS account ID and dashboard ID separated by a comma (`,`). For example:
 
 ```terraform
 import {
