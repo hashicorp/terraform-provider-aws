@@ -38,6 +38,7 @@ This data source exports the following attributes in addition to the arguments a
 * `auto_adjust_data` - Object containing [AutoAdjustData] which determines the budget amount for an auto-adjusting budget.
 * `budget_type` - Whether this budget tracks monetary cost or usage.
 * `budget_limit` - The total amount of cost, usage, RI utilization, RI coverage, Savings Plans utilization, or Savings Plans coverage that you want to track with your budget. Contains object [Spend](#spend)
+* `budget_exceeded` - Boolean indicating whether this budget has been exceeded or not
 * `calculated_spend` - The spend objects that are associated with this budget. The [actualSpend](#actual-spend) tracks how much you've used, cost, usage, RI units, or Savings Plans units and the [forecastedSpend](#forecasted-spend) tracks how much that you're predicted to spend based on your historical usage profile.
 * `cost_filter` - A list of [CostFilter](#cost-filter) name/values pair to apply to budget.
 * `cost_types` - Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
