@@ -37,7 +37,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import CloudWatch Synthetics Group Association using the `canary_arn,group_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Synthetics Group Association using the `canary_arn,group_name`. For example:
 
 ```terraform
 import {

@@ -120,7 +120,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Timestream tables using the `table_name` and `database_name` separate by a colon (`:`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Timestream tables using the `table_name` and `database_name` separate by a colon (`:`). For example:
 
 ```terraform
 import {
