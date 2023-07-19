@@ -61,8 +61,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import AWS WAF Regional XSS Match using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import AWS WAF Regional XSS Match using the `id`. For example:
 
+```terraform
+import {
+  to = aws_wafregional_xss_match_set.example
+  id = "12345abcde"
+}
 ```
-$ terraform import aws_wafregional_xss_match_set.example 12345abcde
+
+Using `terraform import`, import AWS WAF Regional XSS Match using the `id`. For example:
+
+```console
+% terraform import aws_wafregional_xss_match_set.example 12345abcde
 ```
