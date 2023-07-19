@@ -40,8 +40,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_ec2_transit_gateway_policy_table` using the EC2 Transit Gateway Policy Table identifier. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_ec2_transit_gateway_policy_table` using the EC2 Transit Gateway Policy Table identifier. For example:
 
+```terraform
+import {
+  to = aws_ec2_transit_gateway_policy_table.example
+  id = "tgw-rtb-12345678"
+}
 ```
-$ terraform import aws_ec2_transit_gateway_policy_table.example tgw-rtb-12345678
+
+Using `terraform import`, import `aws_ec2_transit_gateway_policy_table` using the EC2 Transit Gateway Policy Table identifier. For example:
+
+```console
+% terraform import aws_ec2_transit_gateway_policy_table.example tgw-rtb-12345678
 ```
