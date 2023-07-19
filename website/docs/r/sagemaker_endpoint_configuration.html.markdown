@@ -120,8 +120,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Endpoint configurations using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Endpoint configurations using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_endpoint_configuration.test_endpoint_config
+  id = "endpoint-config-foo"
+}
 ```
-$ terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo
+
+Using `terraform import`, import Endpoint configurations using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo
 ```

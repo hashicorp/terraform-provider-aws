@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SageMaker Devices using the `device-fleet-name/device-name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import SageMaker Devices using the `device-fleet-name/device-name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_device.example
+  id = "my-fleet/my-device"
+}
 ```
-$ terraform import aws_sagemaker_device.example my-fleet/my-device
+
+Using `terraform import`, import SageMaker Devices using the `device-fleet-name/device-name`. For example:
+
+```console
+% terraform import aws_sagemaker_device.example my-fleet/my-device
 ```

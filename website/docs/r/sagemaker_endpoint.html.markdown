@@ -80,8 +80,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Endpoints using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Endpoints using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_endpoint.test_endpoint
+  id = "my-endpoint"
+}
 ```
-$ terraform import aws_sagemaker_endpoint.test_endpoint my-endpoint
+
+Using `terraform import`, import Endpoints using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_endpoint.test_endpoint my-endpoint
 ```
