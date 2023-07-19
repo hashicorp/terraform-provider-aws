@@ -95,8 +95,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Data catalogs using their `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Data catalogs using their `name`. For example:
 
+```terraform
+import {
+  to = aws_athena_data_catalog.example
+  id = "example-data-catalog"
+}
 ```
-$ terraform import aws_athena_data_catalog.example example-data-catalog
+
+Using `terraform import`, import Data catalogs using their `name`. For example:
+
+```console
+% terraform import aws_athena_data_catalog.example example-data-catalog
 ```

@@ -55,10 +55,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Athena Databases using their name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Athena Databases using their name. For example:
 
+```terraform
+import {
+  to = aws_athena_database.example
+  id = "example"
+}
 ```
-$ terraform import aws_athena_database.example example
+
+Using `terraform import`, import Athena Databases using their name. For example:
+
+```console
+% terraform import aws_athena_database.example example
 ```
 
 Certain resource arguments, like `encryption_configuration` and `bucket`, do not have an API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,

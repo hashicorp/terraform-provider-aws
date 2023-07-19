@@ -51,8 +51,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Appsync Types using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Appsync Types using the `id`. For example:
 
+```terraform
+import {
+  to = aws_appsync_type.example
+  id = "api-id:format:name"
+}
 ```
-$ terraform import aws_appsync_type.example api-id:format:name
+
+Using `terraform import`, import Appsync Types using the `id`. For example:
+
+```console
+% terraform import aws_appsync_type.example api-id:format:name
 ```

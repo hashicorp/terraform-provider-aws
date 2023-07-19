@@ -34,8 +34,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_appsync_domain_name_api_association` using the AppSync domain name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_appsync_domain_name_api_association` using the AppSync domain name. For example:
 
+```terraform
+import {
+  to = aws_appsync_domain_name_api_association.example
+  id = "example.com"
+}
 ```
-$ terraform import aws_appsync_domain_name_api_association.example example.com
+
+Using `terraform import`, import `aws_appsync_domain_name_api_association` using the AppSync domain name. For example:
+
+```console
+% terraform import aws_appsync_domain_name_api_association.example example.com
 ```

@@ -178,8 +178,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_appsync_datasource` using the `api_id`, a hyphen, and `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_appsync_datasource` using the `api_id`, a hyphen, and `name`. For example:
 
+```terraform
+import {
+  to = aws_appsync_datasource.example
+  id = "abcdef123456-example"
+}
 ```
-$ terraform import aws_appsync_datasource.example abcdef123456-example
+
+Using `terraform import`, import `aws_appsync_datasource` using the `api_id`, a hyphen, and `name`. For example:
+
+```console
+% terraform import aws_appsync_datasource.example abcdef123456-example
 ```
