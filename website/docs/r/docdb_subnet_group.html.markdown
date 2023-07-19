@@ -43,8 +43,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import DocumentDB Subnet groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import DocumentDB Subnet groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_docdb_subnet_group.default
+  id = "production-subnet-group"
+}
 ```
-$ terraform import aws_docdb_subnet_group.default production-subnet-group
+
+Using `terraform import`, import DocumentDB Subnet groups using the `name`. For example:
+
+```console
+% terraform import aws_docdb_subnet_group.default production-subnet-group
 ```

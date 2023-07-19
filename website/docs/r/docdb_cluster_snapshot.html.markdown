@@ -49,8 +49,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_docdb_cluster_snapshot` using the cluster snapshot identifier. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_docdb_cluster_snapshot` using the cluster snapshot identifier. For example:
 
+```terraform
+import {
+  to = aws_docdb_cluster_snapshot.example
+  id = "my-cluster-snapshot"
+}
 ```
-$ terraform import aws_docdb_cluster_snapshot.example my-cluster-snapshot
+
+Using `terraform import`, import `aws_docdb_cluster_snapshot` using the cluster snapshot identifier. For example:
+
+```console
+% terraform import aws_docdb_cluster_snapshot.example my-cluster-snapshot
 ```

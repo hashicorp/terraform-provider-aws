@@ -107,8 +107,17 @@ the time required to take snapshots
 
 ## Import
 
-Import DocumentDB Cluster Instances using the `identifier`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import DocumentDB Cluster Instances using the `identifier`. For example:
 
+```terraform
+import {
+  to = aws_docdb_cluster_instance.prod_instance_1
+  id = "aurora-cluster-instance-1"
+}
 ```
-$ terraform import aws_docdb_cluster_instance.prod_instance_1 aurora-cluster-instance-1
+
+Using `terraform import`, import DocumentDB Cluster Instances using the `identifier`. For example:
+
+```console
+% terraform import aws_docdb_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```
