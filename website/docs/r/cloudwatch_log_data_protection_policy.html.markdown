@@ -71,7 +71,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import This resource using the `log_group_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import this resource using the `log_group_name`. For example:
 
 ```terraform
 import {
@@ -80,7 +80,7 @@ import {
 }
 ```
 
-Using `terraform import`, import This resource using the `log_group_name`. For example:
+Using `terraform import`, import this resource using the `log_group_name`. For example:
 
 ```console
 % terraform import aws_cloudwatch_log_data_protection_policy.example my-log-group
