@@ -36,7 +36,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import RAM Resource Associations using their Resource Share ARN and Resource ARN separated by a comma. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RAM Resource Associations using their Resource Share ARN and Resource ARN separated by a comma. For example:
 
 ```terraform
 import {
