@@ -156,6 +156,7 @@ func init() {
 			"aws_db_proxy",
 			"aws_directory_service_directory",
 			"aws_ec2_client_vpn_endpoint",
+			"aws_ec2_traffic_mirror_session",
 			"aws_ec2_transit_gateway_vpc_attachment",
 			"aws_eks_cluster",
 			"aws_elb",
@@ -256,6 +257,27 @@ func init() {
 			"aws_spot_instance_request",
 			"aws_vpc_endpoint",
 			"aws_grafana_workspace",
+		},
+	})
+
+	resource.AddTestSweepers("aws_ec2_traffic_mirror_filter", &resource.Sweeper{
+		Name: "aws_ec2_traffic_mirror_filter",
+		F:    sweepTrafficMirrorFilters,
+		Dependencies: []string{
+			"aws_ec2_traffic_mirror_session",
+		},
+	})
+
+	resource.AddTestSweepers("aws_ec2_traffic_mirror_session", &resource.Sweeper{
+		Name: "aws_ec2_traffic_mirror_session",
+		F:    sweepTrafficMirrorSessions,
+	})
+
+	resource.AddTestSweepers("aws_ec2_traffic_mirror_target", &resource.Sweeper{
+		Name: "aws_ec2_traffic_mirror_target",
+		F:    sweepTrafficMirrorTargets,
+		Dependencies: []string{
+			"aws_ec2_traffic_mirror_session",
 		},
 	})
 
@@ -1736,6 +1758,138 @@ func sweepSubnets(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EC2 Subnets (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepTrafficMirrorFilters(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeTrafficMirrorFiltersInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeTrafficMirrorFiltersPagesWithContext(ctx, input, func(page *ec2.DescribeTrafficMirrorFiltersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TrafficMirrorFilters {
+			r := ResourceTrafficMirrorFilter()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.TrafficMirrorFilterId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Traffic Mirror Filter sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Traffic Mirror Filters (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Traffic Mirror Filters (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepTrafficMirrorSessions(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeTrafficMirrorSessionsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeTrafficMirrorSessionsPagesWithContext(ctx, input, func(page *ec2.DescribeTrafficMirrorSessionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TrafficMirrorSessions {
+			r := ResourceTrafficMirrorSession()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.TrafficMirrorSessionId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Traffic Mirror Session sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Traffic Mirror Sessions (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Traffic Mirror Sessions (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepTrafficMirrorTargets(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeTrafficMirrorTargetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeTrafficMirrorTargetsPagesWithContext(ctx, input, func(page *ec2.DescribeTrafficMirrorTargetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TrafficMirrorTargets {
+			r := ResourceTrafficMirrorTarget()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.TrafficMirrorTargetId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Traffic Mirror Target sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Traffic Mirror Targets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Traffic Mirror Targets (%s): %w", region, err)
 	}
 
 	return nil
