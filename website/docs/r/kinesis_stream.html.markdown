@@ -75,10 +75,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Kinesis Streams using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Kinesis Streams using the `name`. For example:
 
+```terraform
+import {
+  to = aws_kinesis_stream.test_stream
+  id = "terraform-kinesis-test"
+}
 ```
-$ terraform import aws_kinesis_stream.test_stream terraform-kinesis-test
+
+Using `terraform import`, import Kinesis Streams using the `name`. For example:
+
+```console
+% terraform import aws_kinesis_stream.test_stream terraform-kinesis-test
 ```
 
 [1]: https://aws.amazon.com/documentation/kinesis/

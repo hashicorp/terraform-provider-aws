@@ -45,10 +45,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Kinesis Stream Consumers using the Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an `import` block to import Kinesis Stream Consumers using the Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_kinesis_stream_consumer.example
+  id = "arn:aws:kinesis:us-west-2:123456789012:stream/example/consumer/example:1616044553"
+}
 ```
-$ terraform import aws_kinesis_stream_consumer.example arn:aws:kinesis:us-west-2:123456789012:stream/example/consumer/example:1616044553
+
+Using `terraform import`, import Kinesis Stream Consumers using the Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_kinesis_stream_consumer.example arn:aws:kinesis:us-west-2:123456789012:stream/example/consumer/example:1616044553
 ```
 
 [1]: https://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-consumers.html

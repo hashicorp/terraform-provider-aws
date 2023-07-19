@@ -120,8 +120,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import a table using the `keyspace_name` and `table_name` separated by `/`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import a table using the `keyspace_name` and `table_name` separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_keyspaces_table.example
+  id = "my_keyspace/my_table"
+}
 ```
-$ terraform import aws_keyspaces_table.example my_keyspace/my_table
+
+Using `terraform import`, import a table using the `keyspace_name` and `table_name` separated by `/`. For example:
+
+```console
+% terraform import aws_keyspaces_table.example my_keyspace/my_table
 ```

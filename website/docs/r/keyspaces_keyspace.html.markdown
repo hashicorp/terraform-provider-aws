@@ -47,8 +47,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import a keyspace using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import a keyspace using the `name`. For example:
 
+```terraform
+import {
+  to = aws_keyspaces_keyspace.example
+  id = "my_keyspace"
+}
 ```
-$ terraform import aws_keyspaces_keyspace.example my_keyspace
+
+Using `terraform import`, import a keyspace using the `name`. For example:
+
+```console
+% terraform import aws_keyspaces_keyspace.example my_keyspace
 ```
