@@ -80,8 +80,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Shield protection group resources using their protection group id. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Shield protection group resources using their protection group id. For example:
 
+```terraform
+import {
+  to = aws_shield_protection_group.example
+  id = "example"
+}
 ```
-$ terraform import aws_shield_protection_group.example example
+
+Using `terraform import`, import Shield protection group resources using their protection group id. For example:
+
+```console
+% terraform import aws_shield_protection_group.example example
 ```
