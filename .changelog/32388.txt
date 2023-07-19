@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/ec2_host: Add `asset_id` argument
+resource/aws_ec2_host: Add `asset_id` argument
 ```
