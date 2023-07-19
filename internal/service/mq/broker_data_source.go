@@ -225,7 +225,6 @@ func DataSourceBroker() *schema.Resource {
 			"user": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Set:      resourceUserHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"console_access": {
