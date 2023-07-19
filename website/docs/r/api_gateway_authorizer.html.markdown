@@ -108,8 +108,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import AWS API Gateway Authorizer using the `REST-API-ID/AUTHORIZER-ID`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import AWS API Gateway Authorizer using the `REST-API-ID/AUTHORIZER-ID`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_authorizer.authorizer
+  id = "12345abcde/example"
+}
 ```
-$ terraform import aws_api_gateway_authorizer.authorizer 12345abcde/example
+
+Using `terraform import`, import AWS API Gateway Authorizer using the `REST-API-ID/AUTHORIZER-ID`. For example:
+
+```console
+% terraform import aws_api_gateway_authorizer.authorizer 12345abcde/example
 ```
