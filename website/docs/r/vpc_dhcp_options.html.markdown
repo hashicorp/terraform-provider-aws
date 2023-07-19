@@ -69,7 +69,7 @@ official [AWS User Guide](https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import VPC DHCP Options using the DHCP Options `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC DHCP Options using the DHCP Options `id`. For example:
 
 ```terraform
 import {
