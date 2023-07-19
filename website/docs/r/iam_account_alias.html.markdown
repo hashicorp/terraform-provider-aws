@@ -32,7 +32,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import the current Account Alias using the `account_alias`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the current Account Alias using the `account_alias`. For example:
 
 ```terraform
 import {
