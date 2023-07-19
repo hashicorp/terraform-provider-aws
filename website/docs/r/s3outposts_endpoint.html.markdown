@@ -43,7 +43,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import S3 Outposts Endpoints using Amazon Resource Name (ARN), EC2 Security Group identifier, and EC2 Subnet identifier, separated by commas (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Outposts Endpoints using Amazon Resource Name (ARN), EC2 Security Group identifier, and EC2 Subnet identifier, separated by commas (`,`). For example:
 
 ```terraform
 import {
