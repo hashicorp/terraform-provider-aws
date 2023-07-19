@@ -93,7 +93,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Kendra Experience using the unique identifiers of the experience and index separated by a slash (`/`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kendra Experience using the unique identifiers of the experience and index separated by a slash (`/`). For example:
 
 ```terraform
 import {
