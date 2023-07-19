@@ -336,8 +336,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import ECS Task Definitions using their ARNs. For example:
+In Terraform v1.5.0 and later, use an `import` block to import ECS Task Definitions using their ARNs. For example:
 
+```terraform
+import {
+  to = aws_ecs_task_definition.example
+  id = "arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123"
+}
 ```
-$ terraform import aws_ecs_task_definition.example arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123
+
+Using `terraform import`, import ECS Task Definitions using their ARNs. For example:
+
+```console
+% terraform import aws_ecs_task_definition.example arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123
 ```

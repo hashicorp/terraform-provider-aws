@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_ecs_tag` using the ECS resource identifier and key, separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_ecs_tag` using the ECS resource identifier and key, separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_ecs_tag.example
+  id = "arn:aws:ecs:us-east-1:123456789012:cluster/example,Name"
+}
 ```
-$ terraform import aws_ecs_tag.example arn:aws:ecs:us-east-1:123456789012:cluster/example,Name
+
+Using `terraform import`, import `aws_ecs_tag` using the ECS resource identifier and key, separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_ecs_tag.example arn:aws:ecs:us-east-1:123456789012:cluster/example,Name
 ```

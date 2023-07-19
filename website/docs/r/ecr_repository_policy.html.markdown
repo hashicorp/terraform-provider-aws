@@ -70,8 +70,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import ECR Repository Policy using the repository name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import ECR Repository Policy using the repository name. For example:
 
+```terraform
+import {
+  to = aws_ecr_repository_policy.example
+  id = "example"
+}
 ```
-$ terraform import aws_ecr_repository_policy.example example
+
+Using `terraform import`, import ECR Repository Policy using the repository name. For example:
+
+```console
+% terraform import aws_ecr_repository_policy.example example
 ```

@@ -293,8 +293,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import ECS services using the `name` together with ecs cluster `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import ECS services using the `name` together with ecs cluster `name`. For example:
 
+```terraform
+import {
+  to = aws_ecs_service.imported
+  id = "cluster-name/service-name"
+}
 ```
-$ terraform import aws_ecs_service.imported cluster-name/service-name
+
+Using `terraform import`, import ECS services using the `name` together with ecs cluster `name`. For example:
+
+```console
+% terraform import aws_ecs_service.imported cluster-name/service-name
 ```
