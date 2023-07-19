@@ -52,7 +52,7 @@ func main() {
 			continue
 		}
 
-		if l[names.ColNoClient] != "" {
+		if l[names.ColNotImplemented] != "" {
 			continue
 		}
 

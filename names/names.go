@@ -112,7 +112,7 @@ func readCSVIntoServiceData() error {
 			continue
 		}
 
-		if l[ColNoClient] != "" {
+		if l[ColNotImplemented] != "" {
 			continue
 		}
 

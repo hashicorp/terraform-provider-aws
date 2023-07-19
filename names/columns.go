@@ -24,7 +24,7 @@ const (
 	ColHumanFriendly           = 17
 	ColBrand                   = 18
 	ColExclude                 = 19 // If set, the service is completely ignored
-	ColNoClient                = 20 // If set, the service will be included in, e.g. labels, but not have a service client
+	ColNotImplemented          = 20 // If set, the service will be included in, e.g. labels, but not have a service client
 	ColAllowedSubcategory      = 21
 	ColDeprecatedEnvVar        = 22
 	ColEnvVar                  = 23
