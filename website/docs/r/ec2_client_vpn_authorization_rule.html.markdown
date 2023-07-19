@@ -44,12 +44,21 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import AWS Client VPN authorization rules using the endpoint ID and target network CIDR. If there is a specific group name that is included as well. All values are separated by a `,`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import AWS Client VPN authorization rules using the endpoint ID and target network CIDR. If there is a specific group name that is included as well. All values are separated by a `,`. For example:
 
-```
-$ terraform import aws_ec2_client_vpn_authorization_rule.example cvpn-endpoint-0ac3a1abbccddd666,10.1.0.0/24
+```terraform
+import {
+  to = aws_ec2_client_vpn_authorization_rule.example
+  id = "cvpn-endpoint-0ac3a1abbccddd666,10.1.0.0/24"
+}
 ```
 
+Using `terraform import`, import AWS Client VPN authorization rules using the endpoint ID and target network CIDR. If there is a specific group name that is included as well. All values are separated by a `,`. For example:
+
+```console
+% terraform import aws_ec2_client_vpn_authorization_rule.example cvpn-endpoint-0ac3a1abbccddd666,10.1.0.0/24
 ```
-$ terraform import aws_ec2_client_vpn_authorization_rule.example cvpn-endpoint-0ac3a1abbccddd666,10.1.0.0/24,team-a
+
+```console
+% terraform import aws_ec2_client_vpn_authorization_rule.example cvpn-endpoint-0ac3a1abbccddd666,10.1.0.0/24,team-a
 ```
