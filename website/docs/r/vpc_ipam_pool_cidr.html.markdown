@@ -93,7 +93,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import IPAMs using the `<cidr>_<ipam-pool-id>`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IPAMs using the `<cidr>_<ipam-pool-id>`. For example:
 
 **NOTE:** Do not use the IPAM Pool Cidr ID as this was introduced after the resource already existed.
 
