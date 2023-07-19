@@ -122,10 +122,19 @@ The permissions mapping supports the following:
 
 ## Import
 
-Import SSM Documents using the name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import SSM Documents using the name. For example:
 
+```terraform
+import {
+  to = aws_ssm_document.example
+  id = "example"
+}
 ```
-$ terraform import aws_ssm_document.example example
+
+Using `terraform import`, import SSM Documents using the name. For example:
+
+```console
+% terraform import aws_ssm_document.example example
 ```
 
 The `attachments_source` argument does not have an SSM API method for reading the attachment information detail after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
