@@ -60,8 +60,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import MQ Configurations using the configuration ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import MQ Configurations using the configuration ID. For example:
 
+```terraform
+import {
+  to = aws_mq_configuration.example
+  id = "c-0187d1eb-88c8-475a-9b79-16ef5a10c94f"
+}
 ```
-$ terraform import aws_mq_configuration.example c-0187d1eb-88c8-475a-9b79-16ef5a10c94f
+
+Using `terraform import`, import MQ Configurations using the configuration ID. For example:
+
+```console
+% terraform import aws_mq_configuration.example c-0187d1eb-88c8-475a-9b79-16ef5a10c94f
 ```
