@@ -43,8 +43,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Redshift usage limits using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Redshift usage limits using the `id`. For example:
 
+```terraform
+import {
+  to = aws_redshift_usage_limit.example
+  id = "example-id"
+}
 ```
-$ terraform import aws_redshift_usage_limit.example example-id
+
+Using `terraform import`, import Redshift usage limits using the `id`. For example:
+
+```console
+% terraform import aws_redshift_usage_limit.example example-id
 ```
