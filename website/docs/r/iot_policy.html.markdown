@@ -51,8 +51,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IoT policies using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import IoT policies using the `name`. For example:
 
+```terraform
+import {
+  to = aws_iot_policy.pubsub
+  id = "PubSubToAnyTopic"
+}
 ```
-$ terraform import aws_iot_policy.pubsub PubSubToAnyTopic
+
+Using `terraform import`, import IoT policies using the `name`. For example:
+
+```console
+% terraform import aws_iot_policy.pubsub PubSubToAnyTopic
 ```
