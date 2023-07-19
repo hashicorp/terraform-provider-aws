@@ -55,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Use the `name` to import a subnet group. For example:
+Import a subnet group using its `name`. For example:
 
 ```
 $ terraform import aws_memorydb_subnet_group.example my-subnet-group

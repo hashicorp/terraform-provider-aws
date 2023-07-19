@@ -188,7 +188,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-To import WAFv2 Web ACL Logging Configurations, use the ARN of the WAFv2 Web ACL. For example:
+Import WAFv2 Web ACL Logging Configurations using the ARN of the WAFv2 Web ACL. For example:
 
 ```
 $ terraform import aws_wafv2_web_acl_logging_configuration.example arn:aws:wafv2:us-west-2:123456789012:regional/webacl/test-logs/a1b2c3d4-5678-90ab-cdef

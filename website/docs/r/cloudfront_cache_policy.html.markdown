@@ -89,7 +89,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-To import CloudFront cache policies, use the `id` of the cache policy. For example:
+Import CloudFront cache policies using the `id` of the cache policy. For example:
 
 ```
 $ terraform import aws_cloudfront_cache_policy.policy 658327ea-f89d-4fab-a63d-7e88639e58f6

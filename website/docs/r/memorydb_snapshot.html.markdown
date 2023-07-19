@@ -63,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Use the `name` to import a snapshot. For example:
+Import a snapshot using the `name`. For example:
 
 ```
 $ terraform import aws_memorydb_snapshot.example my-snapshot

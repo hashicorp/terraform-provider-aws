@@ -47,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Use the `name` to import a keyspace. For example:
+Import a keyspace using the `name`. For example:
 
 ```
 $ terraform import aws_keyspaces_keyspace.example my_keyspace

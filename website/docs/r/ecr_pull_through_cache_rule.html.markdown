@@ -37,7 +37,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Use the `ecr_repository_prefix` to import a Pull Through Cache Rule. For example:
+Import a pull-through cache rule using the `ecr_repository_prefix`. For example:
 
 ```
 $ terraform import aws_ecr_pull_through_cache_rule.example ecr-public

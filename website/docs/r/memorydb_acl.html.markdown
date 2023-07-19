@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Use the `name` to import an ACL. For example:
+Import an ACL using the `name`. For example:
 
 ```
 $ terraform import aws_memorydb_acl.example my-acl

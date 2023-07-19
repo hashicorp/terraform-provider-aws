@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Use the `alarm_name` to import a CloudWatch Composite Alarm. For example:
+Import a CloudWatch Composite Alarm using the `alarm_name`. For example:
 
 ```
 $ terraform import aws_cloudwatch_composite_alarm.test my-alarm

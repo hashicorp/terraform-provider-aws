@@ -38,7 +38,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-To import the Pinpoint SMS Channel, use the `application_id`. For example:
+Import the Pinpoint SMS Channel using the `application_id`. For example:
 
 ```
 $ terraform import aws_pinpoint_sms_channel.sms application-id

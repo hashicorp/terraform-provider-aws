@@ -63,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Use the `user_name` to import a user. For example:
+Import a user using the `user_name`. For example:
 
 ```
 $ terraform import aws_memorydb_user.example my-user

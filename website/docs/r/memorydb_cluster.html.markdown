@@ -91,7 +91,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Use the `name` to import a cluster. For example:
+Import a cluster using the `name`. For example:
 
 ```
 $ terraform import aws_memorydb_cluster.example my-cluster

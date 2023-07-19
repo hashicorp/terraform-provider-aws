@@ -52,7 +52,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-To import Prefix List Entries, use the `prefix_list_id` and `cidr`. Separate them with a comma (`,`). For example:
+Import prefix list entries using `prefix_list_id` and `cidr` separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_ec2_managed_prefix_list_entry.default pl-0570a1d2d725c16be,10.0.3.0/24

@@ -55,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Use the `name` to import a parameter group. For example:
+Import a parameter group using the `name`. For example:
 
 ```
 $ terraform import aws_memorydb_parameter_group.example my-parameter-group

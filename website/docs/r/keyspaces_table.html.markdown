@@ -120,7 +120,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Use the `keyspace_name` and `table_name` separated by `/` to import a table. For example:
+Import a table using the `keyspace_name` and `table_name` separated by `/`. For example:
 
 ```
 $ terraform import aws_keyspaces_table.example my_keyspace/my_table
