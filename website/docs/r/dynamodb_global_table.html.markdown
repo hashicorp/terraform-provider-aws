@@ -100,8 +100,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import DynamoDB Global Tables using the global table name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import DynamoDB Global Tables using the global table name. For example:
 
+```terraform
+import {
+  to = aws_dynamodb_global_table.MyTable
+  id = "MyTable"
+}
 ```
-$ terraform import aws_dynamodb_global_table.MyTable MyTable
+
+Using `terraform import`, import DynamoDB Global Tables using the global table name. For example:
+
+```console
+% terraform import aws_dynamodb_global_table.MyTable MyTable
 ```

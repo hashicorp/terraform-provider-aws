@@ -264,8 +264,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import DynamoDB tables using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import DynamoDB tables using the `name`. For example:
 
+```terraform
+import {
+  to = aws_dynamodb_table.basic-dynamodb-table
+  id = "GameScores"
+}
 ```
-$ terraform import aws_dynamodb_table.basic-dynamodb-table GameScores
+
+Using `terraform import`, import DynamoDB tables using the `name`. For example:
+
+```console
+% terraform import aws_dynamodb_table.basic-dynamodb-table GameScores
 ```
