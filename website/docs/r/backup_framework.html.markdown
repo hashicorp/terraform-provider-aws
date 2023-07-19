@@ -164,7 +164,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Backup Framework using the `id` which corresponds to the name of the Backup Framework. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup Framework using the `id` which corresponds to the name of the Backup Framework. For example:
 
 ```terraform
 import {
