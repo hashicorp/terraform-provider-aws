@@ -126,8 +126,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Glue Jobs using `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Glue Jobs using `name`. For example:
 
+```terraform
+import {
+  to = aws_glue_job.MyJob
+  id = "MyJob"
+}
 ```
-$ terraform import aws_glue_job.MyJob MyJob
+
+Using `terraform import`, import Glue Jobs using `name`. For example:
+
+```console
+% terraform import aws_glue_job.MyJob MyJob
 ```

@@ -172,8 +172,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Glue ML Transforms using `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Glue ML Transforms using `id`. For example:
 
+```terraform
+import {
+  to = aws_glue_ml_transform.example
+  id = "tfm-c2cafbe83b1c575f49eaca9939220e2fcd58e2d5"
+}
 ```
-$ terraform import aws_glue_ml_transform.example tfm-c2cafbe83b1c575f49eaca9939220e2fcd58e2d5
+
+Using `terraform import`, import Glue ML Transforms using `id`. For example:
+
+```console
+% terraform import aws_glue_ml_transform.example tfm-c2cafbe83b1c575f49eaca9939220e2fcd58e2d5
 ```

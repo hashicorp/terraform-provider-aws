@@ -80,8 +80,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import a Glue Development Endpoint using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import a Glue Development Endpoint using the `name`. For example:
 
+```terraform
+import {
+  to = aws_glue_dev_endpoint.example
+  id = "foo"
+}
 ```
-$ terraform import aws_glue_dev_endpoint.example foo
+
+Using `terraform import`, import a Glue Development Endpoint using the `name`. For example:
+
+```console
+% terraform import aws_glue_dev_endpoint.example foo
 ```
