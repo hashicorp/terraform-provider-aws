@@ -296,7 +296,7 @@ Note that the `update` timeout is used separately for both `version` and `vpc_co
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import EKS Clusters using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS Clusters using the `name`. For example:
 
 ```terraform
 import {
