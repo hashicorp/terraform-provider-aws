@@ -247,16 +247,16 @@ func resourceTrafficMirrorFilterRuleUpdate(ctx context.Context, d *schema.Resour
 		}
 	}
 
-	if d.HasChange("source_cidr_block") {
-		input.SourceCidrBlock = aws.String(d.Get("source_cidr_block").(string))
-	}
-
 	if d.HasChange("rule_action") {
 		input.RuleAction = aws.String(d.Get("rule_action").(string))
 	}
 
 	if d.HasChange("rule_number") {
-		input.RuleNumber = aws.Int64(int64(d.Get("rule_action").(int)))
+		input.RuleNumber = aws.Int64(int64(d.Get("rule_number").(int)))
+	}
+
+	if d.HasChange("source_cidr_block") {
+		input.SourceCidrBlock = aws.String(d.Get("source_cidr_block").(string))
 	}
 
 	if d.HasChange("source_port_range") {
