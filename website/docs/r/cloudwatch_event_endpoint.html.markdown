@@ -89,8 +89,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EventBridge Global Endpoints using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import EventBridge Global Endpoints using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_event_endpoint.imported_endpoint
+  id = "example-endpoint"
+}
 ```
-$ terraform import aws_cloudwatch_event_endpoint.imported_endpoint example-endpoint
+
+Using `terraform import`, import EventBridge Global Endpoints using the `name`. For example:
+
+```console
+% terraform import aws_cloudwatch_event_endpoint.imported_endpoint example-endpoint
 ```
