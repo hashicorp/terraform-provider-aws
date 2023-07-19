@@ -83,14 +83,14 @@ resource "aws_wafv2_web_acl_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) of the resource to associate with the web ACL. This must be an ARN of an Application Load Balancer, an Amazon API Gateway stage, or an Amazon Cognito User Pool.
 * `web_acl_arn` - (Required) The Amazon Resource Name (ARN) of the Web ACL that you want to associate with the resource.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Timeouts
 
@@ -100,7 +100,7 @@ No additional attributes are exported.
 
 ## Import
 
-WAFv2 Web ACL Association can be imported using `WEB_ACL_ARN,RESOURCE_ARN` e.g.,
+Import WAFv2 Web ACL Association using `WEB_ACL_ARN,RESOURCE_ARN`. For example:
 
 ```
 $ terraform import aws_wafv2_web_acl_association.example arn:aws:wafv2:...7ce849ea,arn:aws:apigateway:...ages/name

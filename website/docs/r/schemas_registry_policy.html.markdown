@@ -46,9 +46,9 @@ The following arguments are required:
 * `registry_name` - (Required) Name of EventBridge Schema Registry
 * `policy` - (Required) Resource Policy for EventBridge Schema Registry
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Timeouts
 
@@ -60,7 +60,7 @@ No additional attributes are exported.
 
 ## Import
 
-EventBridge Schema Registry Policy can be imported using the `registry_name`, e.g.,
+Import EventBridge Schema Registry Policy using the `registry_name`. For example:
 
 ```
 $ terraform import aws_schemas_registry_policy.example example

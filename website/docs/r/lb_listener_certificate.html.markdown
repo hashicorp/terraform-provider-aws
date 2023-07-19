@@ -37,20 +37,20 @@ resource "aws_lb_listener_certificate" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `listener_arn` - (Required, Forces New Resource) The ARN of the listener to which to attach the certificate.
 * `certificate_arn` - (Required, Forces New Resource) The ARN of the certificate to attach to the listener.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `listener_arn` and `certificate_arn` separated by a `_`.
 
 ## Import
 
-Listener Certificates can be imported by using the listener arn and certificate arn, separated by an underscore (`_`), e.g.,
+Import Listener Certificates using the listener arn and certificate arn, separated by an underscore (`_`). For example:
 
 ```
 $ terraform import aws_lb_listener_certificate.example arn:aws:elasticloadbalancing:us-west-2:123456789012:listener/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b_arn:aws:iam::123456789012:server-certificate/tf-acc-test-6453083910015726063

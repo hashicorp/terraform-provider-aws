@@ -235,9 +235,9 @@ The following arguments are required in the `software_token_mfa_configuration` c
 * `email_subject_by_link` - (Optional) Subject line for the email message template for sending a confirmation link to the user.
 * `sms_message` - (Optional) SMS message template. Must contain the `{####}` placeholder. Conflicts with `sms_verification_message` argument.
   
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the user pool.
 * `creation_date` - Date the user pool was created.
@@ -251,7 +251,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cognito User Pools can be imported using the `id`, e.g.,
+Import Cognito User Pools using the `id`. For example:
 
 ```
 $ terraform import aws_cognito_user_pool.pool us-west-2_abc123

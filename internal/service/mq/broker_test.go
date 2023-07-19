@@ -120,19 +120,21 @@ func TestDiffUsers(t *testing.T) {
 			OldUsers: []interface{}{},
 			NewUsers: []interface{}{
 				map[string]interface{}{
-					"console_access": false,
-					"username":       "second",
-					"password":       "TestTest2222",
-					"groups":         schema.NewSet(schema.HashString, []interface{}{"admin"}),
+					"console_access":   false,
+					"username":         "second",
+					"password":         "TestTest2222",
+					"groups":           schema.NewSet(schema.HashString, []interface{}{"admin"}),
+					"replication_user": false,
 				},
 			},
 			Creations: []*mq.CreateUserRequest{
 				{
-					BrokerId:      aws.String("test"),
-					ConsoleAccess: aws.Bool(false),
-					Username:      aws.String("second"),
-					Password:      aws.String("TestTest2222"),
-					Groups:        aws.StringSlice([]string{"admin"}),
+					BrokerId:        aws.String("test"),
+					ConsoleAccess:   aws.Bool(false),
+					Username:        aws.String("second"),
+					Password:        aws.String("TestTest2222"),
+					Groups:          aws.StringSlice([]string{"admin"}),
+					ReplicationUser: aws.Bool(false),
 				},
 			},
 			Deletions: []*mq.DeleteUserInput{},
@@ -141,24 +143,27 @@ func TestDiffUsers(t *testing.T) {
 		{
 			OldUsers: []interface{}{
 				map[string]interface{}{
-					"console_access": true,
-					"username":       "first",
-					"password":       "TestTest1111",
+					"console_access":   true,
+					"username":         "first",
+					"password":         "TestTest1111",
+					"replication_user": false,
 				},
 			},
 			NewUsers: []interface{}{
 				map[string]interface{}{
-					"console_access": false,
-					"username":       "second",
-					"password":       "TestTest2222",
+					"console_access":   false,
+					"username":         "second",
+					"password":         "TestTest2222",
+					"replication_user": false,
 				},
 			},
 			Creations: []*mq.CreateUserRequest{
 				{
-					BrokerId:      aws.String("test"),
-					ConsoleAccess: aws.Bool(false),
-					Username:      aws.String("second"),
-					Password:      aws.String("TestTest2222"),
+					BrokerId:        aws.String("test"),
+					ConsoleAccess:   aws.Bool(false),
+					Username:        aws.String("second"),
+					Password:        aws.String("TestTest2222"),
+					ReplicationUser: aws.Bool(false),
 				},
 			},
 			Deletions: []*mq.DeleteUserInput{
@@ -169,22 +174,25 @@ func TestDiffUsers(t *testing.T) {
 		{
 			OldUsers: []interface{}{
 				map[string]interface{}{
-					"console_access": true,
-					"username":       "first",
-					"password":       "TestTest1111updated",
+					"console_access":   true,
+					"username":         "first",
+					"password":         "TestTest1111updated",
+					"replication_user": false,
 				},
 				map[string]interface{}{
-					"console_access": false,
-					"username":       "second",
-					"password":       "TestTest2222",
+					"console_access":   false,
+					"username":         "second",
+					"password":         "TestTest2222",
+					"replication_user": false,
 				},
 			},
 			NewUsers: []interface{}{
 				map[string]interface{}{
-					"console_access": false,
-					"username":       "second",
-					"password":       "TestTest2222",
-					"groups":         schema.NewSet(schema.HashString, []interface{}{"admin"}),
+					"console_access":   false,
+					"username":         "second",
+					"password":         "TestTest2222",
+					"groups":           schema.NewSet(schema.HashString, []interface{}{"admin"}),
+					"replication_user": false,
 				},
 			},
 			Creations: []*mq.CreateUserRequest{},
@@ -193,11 +201,12 @@ func TestDiffUsers(t *testing.T) {
 			},
 			Updates: []*mq.UpdateUserRequest{
 				{
-					BrokerId:      aws.String("test"),
-					ConsoleAccess: aws.Bool(false),
-					Username:      aws.String("second"),
-					Password:      aws.String("TestTest2222"),
-					Groups:        aws.StringSlice([]string{"admin"}),
+					BrokerId:        aws.String("test"),
+					ConsoleAccess:   aws.Bool(false),
+					Username:        aws.String("second"),
+					Password:        aws.String("TestTest2222"),
+					Groups:          aws.StringSlice([]string{"admin"}),
+					ReplicationUser: aws.Bool(false),
 				},
 			},
 		},

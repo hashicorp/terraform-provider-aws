@@ -60,16 +60,16 @@ The following arguments are optional:
 
 * `description` - (Optional) A description of what the topic is about, which the contact will see.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `created_timestamp` - A timestamp noting when the contact list was created in ISO 8601 format.
 * `last_updated_timestamp` - A timestamp noting the last time the contact list was updated in ISO 8601 format.
 
 ## Import
 
-SESv2 (Simple Email V2) Contact List can be imported using the `example_id_arg`, e.g.,
+Import SESv2 (Simple Email V2) Contact List using the `example_id_arg`. For example:
 
 ```
 $ terraform import aws_sesv2_contact_list.example example

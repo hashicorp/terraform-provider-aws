@@ -40,9 +40,9 @@ The following arguments are optional:
 * `tags` - (Optional) A map of tags to assign to the VocabularyFilter. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `words` - (Optional) - A list of terms to include in the vocabulary. Conflicts with `vocabulary_filter_file_uri` argument.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - VocabularyFilter name.
 * `arn` - ARN of the VocabularyFilter.
@@ -50,7 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Transcribe VocabularyFilter can be imported using the `vocabulary_filter_name`, e.g.,
+Import Transcribe VocabularyFilter using the `vocabulary_filter_name`. For example:
 
 ```
 $ terraform import aws_transcribe_vocabulary_filter.example example-name

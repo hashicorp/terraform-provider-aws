@@ -30,7 +30,7 @@ resource "aws_waf_geo_match_set" "geo_match_set" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name or description of the GeoMatchSet.
 * `geo_match_constraint` - (Optional) The GeoMatchConstraint objects which contain the country that you want AWS WAF to search for.
@@ -48,16 +48,16 @@ The following arguments are supported:
 
 ## Remarks
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF GeoMatchSet.
 * `arn` - Amazon Resource Name (ARN)
 
 ## Import
 
-WAF Geo Match Set can be imported using their ID, e.g.,
+Import WAF Geo Match Set using their ID. For example:
 
 ```
 $ terraform import aws_waf_geo_match_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

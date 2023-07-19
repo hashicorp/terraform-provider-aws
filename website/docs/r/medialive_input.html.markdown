@@ -77,9 +77,9 @@ The following arguments are optional:
 * `subnet_ids` - A list of 2 VPC subnet IDs from the same VPC.
 * `security_group_ids` - A list of up to 5 EC2 VPC security group IDs to attach to the Input.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Input.
 * `attached_channels` - Channels attached to Input.
@@ -97,7 +97,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MediaLive Input can be imported using the `id`, e.g.,
+Import MediaLive Input using the `id`. For example:
 
 ```
 $ terraform import aws_medialive_input.example 12345678

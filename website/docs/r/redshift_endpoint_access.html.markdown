@@ -22,7 +22,7 @@ resource "aws_redshift_endpoint_access" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_identifier` - (Required) The cluster identifier of the cluster to access.
 * `endpoint_name` - (Required) The Redshift-managed VPC endpoint name.
@@ -30,9 +30,9 @@ The following arguments are supported:
 * `subnet_group_name` - (Required) The subnet group from which Amazon Redshift chooses the subnet to deploy the endpoint.
 * `vpc_security_group_ids` - (Optional) The security group that defines the ports, protocols, and sources for inbound traffic that you are authorizing into your endpoint.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `address` - The DNS address of the endpoint.
 * `id` - The Redshift-managed VPC endpoint name.
@@ -54,7 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift endpoint access can be imported using the `name`, e.g.,
+Import Redshift endpoint access using the `name`. For example:
 
 ```
 $ terraform import aws_redshift_endpoint_access.example example

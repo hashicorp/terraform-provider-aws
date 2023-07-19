@@ -48,6 +48,13 @@ func TestAccKMSKey_basic(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
 			},
+			{
+				// Set deletion window to 7 days
+				Config: testAccKeyConfig_basicDeletionWindow(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+				),
+			},
 		},
 	})
 }
@@ -604,6 +611,14 @@ resource "aws_kms_key" "test" {}
 `
 }
 
+func testAccKeyConfig_basicDeletionWindow() string {
+	return `
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+}
+`
+}
+
 func testAccKeyConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
@@ -1044,7 +1059,8 @@ resource "aws_kms_key" "test" {
 func testAccKeyConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 
   tags = {
     %[2]q = %[3]q
@@ -1056,7 +1072,8 @@ resource "aws_kms_key" "test" {
 func testAccKeyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 
   tags = {
     %[2]q = %[3]q
@@ -1069,7 +1086,8 @@ resource "aws_kms_key" "test" {
 func testAccKeyConfig_tags0(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 `, rName)
 }

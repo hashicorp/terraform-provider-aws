@@ -22,13 +22,13 @@ data "aws_msk_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cluster_name` - (Required) Name of the cluster.
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the MSK cluster.
 * `bootstrap_brokers` - Comma separated list of one or more hostname:port pairs of kafka brokers suitable to bootstrap connectivity to the kafka cluster. Contains a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `PLAINTEXT` or `TLS_PLAINTEXT`. The resource sorts values alphabetically. AWS may not always return all endpoints so this value is not guaranteed to be stable across applies.

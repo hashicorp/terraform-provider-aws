@@ -82,21 +82,21 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `repository` - (Required) Name of the repository to apply the policy.
 * `policy` - (Required) The policy document. This is a JSON formatted string. See more details about [Policy Parameters](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html#lifecycle_policy_parameters) in the official AWS docs.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `repository` - The name of the repository.
 * `registry_id` - The registry ID where the repository was created.
 
 ## Import
 
-ECR Lifecycle Policy can be imported using the name of the repository, e.g.,
+Import ECR Lifecycle Policy using the name of the repository. For example:
 
 ```
 $ terraform import aws_ecr_lifecycle_policy.example tf-example

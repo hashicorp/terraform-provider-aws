@@ -23,20 +23,20 @@ resource "aws_networkmanager_transit_gateway_connect_peer_association" "example"
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `device_id` - (Required) The ID of the device.
 * `global_network_id` - (Required) The ID of the global network.
 * `link_id` - (Optional) The ID of the link.
 * `transit_gateway_connect_peer_arn` - (Required) The Amazon Resource Name (ARN) of the Connect peer.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-`aws_networkmanager_transit_gateway_connect_peer_association` can be imported using the global network ID and customer gateway ARN, e.g.
+Import `aws_networkmanager_transit_gateway_connect_peer_association` using the global network ID and customer gateway ARN. For example:
 
 ```
 $ terraform import aws_networkmanager_transit_gateway_connect_peer_association.example global-network-0d47f6t230mz46dy4,arn:aws:ec2:us-west-2:123456789012:transit-gateway-connect-peer/tgw-connect-peer-12345678

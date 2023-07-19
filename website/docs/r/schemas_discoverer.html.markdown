@@ -27,15 +27,15 @@ resource "aws_schemas_discoverer" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `source_arn` - (Required) The ARN of the event bus to discover event schemas on.
 * `description` - (Optional) The description of the discoverer. Maximum of 256 characters.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the discoverer.
 * `id` - The ID of the discoverer.
@@ -43,7 +43,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EventBridge discoverers can be imported using the `id`, e.g.,
+Import EventBridge discoverers using the `id`. For example:
 
 ```console
 $ terraform import aws_schemas_discoverer.test 123

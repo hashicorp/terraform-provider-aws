@@ -813,9 +813,9 @@ This argument is processed in [attribute-as-blocks mode](https://www.terraform.i
 * `instance_role` - (Required) Role of the instance in the cluster. Valid Values: `MASTER`, `CORE`, `TASK`.
 * `placement_strategy` - (Optional) EC2 Placement Group strategy associated with instance role. Valid Values: `SPREAD`, `PARTITION`, `CLUSTER`, `NONE`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `applications` - Applications installed on this cluster.
 * `arn`- ARN of the cluster.
@@ -835,7 +835,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EMR clusters can be imported using the `id`, e.g.,
+Import EMR clusters using the `id`. For example:
 
 ```
 $ terraform import aws_emr_cluster.cluster j-123456ABCDEF

@@ -116,9 +116,9 @@ The following arguments are optional:
 * `security_group_ids` - (Required) List of security group IDs.
 * `subnets` - (Required) List of VPC subnets.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Document Classifier version.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
@@ -133,7 +133,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Comprehend Document Classifier can be imported using the ARN, e.g.,
+Import Comprehend Document Classifier using the ARN. For example:
 
 ```
 $ terraform import aws_comprehend_document_classifier.example arn:aws:comprehend:us-west-2:123456789012:document_classifier/example

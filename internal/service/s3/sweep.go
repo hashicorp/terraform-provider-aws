@@ -95,7 +95,7 @@ func sweepObjects(region string) error {
 		})
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping DynamoDB Backups for %s: %w", region, err))
 	}
 
@@ -166,7 +166,7 @@ func sweepBuckets(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping S3 Buckets for %s: %w", region, err))
 	}
 

@@ -42,15 +42,15 @@ The following arguments are required:
 * `bucket` - (Required) Amazon Resource Name (ARN) of the bucket.
 * `policy` - (Required) JSON string of the resource policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the bucket.
 
 ## Import
 
-S3 Control Bucket Policies can be imported using the Amazon Resource Name (ARN), e.g.,
+Import S3 Control Bucket Policies using the Amazon Resource Name (ARN). For example:
 
 ```
 $ terraform import aws_s3control_bucket_policy.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example

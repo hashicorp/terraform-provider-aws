@@ -88,9 +88,9 @@ One of the following target arguments must be supplied:
 
 Note that the default route, mapping the VPC's CIDR block to "local", is created implicitly and cannot be specified.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the route table.
 * `arn` - The ARN of the route table.
@@ -107,7 +107,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Default VPC route tables can be imported using the `vpc_id`, e.g.,
+Import Default VPC route tables using the `vpc_id`. For example:
 
 ```
 $ terraform import aws_default_route_table.example vpc-33cc44dd

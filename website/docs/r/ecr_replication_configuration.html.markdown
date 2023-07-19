@@ -79,7 +79,7 @@ resource "aws_ecr_replication_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `replication_configuration` - (Required) Replication configuration for a registry. See [Replication Configuration](#replication-configuration).
 
@@ -102,15 +102,15 @@ The following arguments are supported:
 * `filter` - (Required) The repository filter details.
 * `filter_type` - (Required) The repository filter type. The only supported value is `PREFIX_MATCH`, which is a repository name prefix specified with the filter parameter.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `registry_id` - The registry ID where the replication configuration was created.
 
 ## Import
 
-ECR Replication Configuration can be imported using the `registry_id`, e.g.,
+Import ECR Replication Configuration using the `registry_id`. For example:
 
 ```
 $ terraform import aws_ecr_replication_configuration.service 012345678912

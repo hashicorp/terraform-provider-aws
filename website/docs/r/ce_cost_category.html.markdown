@@ -115,9 +115,9 @@ The following arguments are optional:
 * `type` - (Optional) Parameter type.
 * `values` - (Optional) Parameter values.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the cost category.
 * `effective_end` - Effective end data of your Cost Category.
@@ -126,7 +126,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_ce_cost_category` can be imported using the id, e.g.
+Import `aws_ce_cost_category` using the id. For example:
 
 ```
 $ terraform import aws_ce_cost_category.example costCategoryARN

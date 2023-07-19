@@ -39,18 +39,18 @@ resource "aws_glue_resource_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `policy` – (Required) The policy to be applied to the aws glue data catalog.
 * `enable_hybrid` - (Optional) Indicates that you are using both methods to grant cross-account. Valid values are `TRUE` and `FALSE`. Note the terraform will not perform drift detetction on this field as its not return on read.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-Glue Resource Policy can be imported using the account ID:
+Import Glue Resource Policy using the account ID. For example:
 
 ```
 $ terraform import aws_glue_resource_policy.Test 12356789012

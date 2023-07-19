@@ -25,22 +25,22 @@ resource "aws_apigatewayv2_api_mapping" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `domain_name` - (Required) Domain name. Use the [`aws_apigatewayv2_domain_name`](/docs/providers/aws/r/apigatewayv2_domain_name.html) resource to configure a domain name.
 * `stage` - (Required) API stage. Use the [`aws_apigatewayv2_stage`](/docs/providers/aws/r/apigatewayv2_stage.html) resource to configure an API stage.
 * `api_mapping_key` - (Optional) The API mapping key. Refer to [REST API](https://docs.aws.amazon.com/apigateway/latest/developerguide/rest-api-mappings.html), [HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-mappings.html) or [WebSocket API](https://docs.aws.amazon.com/apigateway/latest/developerguide/websocket-api-mappings.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - API mapping identifier.
 
 ## Import
 
-`aws_apigatewayv2_api_mapping` can be imported by using the API mapping identifier and domain name, e.g.,
+Import `aws_apigatewayv2_api_mapping` using the API mapping identifier and domain name. For example:
 
 ```
 $ terraform import aws_apigatewayv2_api_mapping.example 1122334/ws-api.example.com

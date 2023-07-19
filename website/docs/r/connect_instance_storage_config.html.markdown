@@ -108,7 +108,7 @@ resource "aws_connect_instance_storage_config" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
 * `resource_type` - (Required) A valid resource type. Valid Values: `AGENT_EVENTS` | `ATTACHMENTS` | `CALL_RECORDINGS` | `CHAT_TRANSCRIPTS` | `CONTACT_EVALUATIONS` | `CONTACT_TRACE_RECORDS` | `MEDIA_STREAMS` | `REAL_TIME_CONTACT_ANALYSIS_SEGMENTS` | `SCHEDULED_REPORTS`.
@@ -159,16 +159,16 @@ The `encryption_config` configuration block supports the following arguments:
 * `encryption_type` - (Required) The type of encryption. Valid Values: `KMS`.
 * `key_id` - (Required) The full ARN of the encryption key. Be sure to provide the full ARN of the encryption key, not just the ID.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `association_id` - The existing association identifier that uniquely identifies the resource type and storage config for the given instance ID.
 * `id` - The identifier of the hosting Amazon Connect Instance, `association_id`, and `resource_type` separated by a colon (`:`).
 
 ## Import
 
-Amazon Connect Instance Storage Configs can be imported using the `instance_id`, `association_id`, and `resource_type` separated by a colon (`:`), e.g.,
+Import Amazon Connect Instance Storage Configs using the `instance_id`, `association_id`, and `resource_type` separated by a colon (`:`). For example:
 
 ```
 $ terraform import aws_connect_instance_storage_config.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5:CHAT_TRANSCRIPTS

@@ -59,9 +59,9 @@ The following arguments are optional:
 * `file_key` - (Required) The file key for an object in an S3 bucket.
 * `object_version` - (Optional) The version of an object in an S3 bucket.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - the Amazon Resource Name (ARN) of the custom plugin.
 * `latest_revision` - an ID of the latest successfully created revision of the custom plugin.
@@ -76,7 +76,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MSK Connect Custom Plugin can be imported using the plugin's `arn`, e.g.,
+Import MSK Connect Custom Plugin using the plugin's `arn`. For example:
 
 ```
 $ terraform import aws_mskconnect_custom_plugin.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:custom-plugin/debezium-example/abcdefgh-1234-5678-9abc-defghijklmno-4'

@@ -34,9 +34,9 @@ The following arguments are optional:
 
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Sink.
 * `sink_id` - ID string that AWS generated as part of the sink ARN.
@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch Observability Access Manager Sink can be imported using the `arn`, e.g.,
+Import CloudWatch Observability Access Manager Sink using the `arn`. For example:
 
 ```
 $ terraform import aws_oam_sink.example arn:aws:oam:us-west-2:123456789012:sink/sink-id

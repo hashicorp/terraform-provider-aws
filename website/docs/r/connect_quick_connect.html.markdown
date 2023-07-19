@@ -35,7 +35,7 @@ resource "aws_connect_quick_connect" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Specifies the description of the Quick Connect.
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
@@ -64,9 +64,9 @@ A `user_config` block supports the following arguments:
 * `contact_flow_id` - (Required) Specifies the identifier of the contact flow.
 * `user_id` - (Required) Specifies the identifier for the user.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Quick Connect.
 * `quick_connect_id` - The identifier for the Quick Connect.
@@ -75,7 +75,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Amazon Connect Quick Connects can be imported using the `instance_id` and `quick_connect_id` separated by a colon (`:`), e.g.,
+Import Amazon Connect Quick Connects using the `instance_id` and `quick_connect_id` separated by a colon (`:`). For example:
 
 ```
 $ terraform import aws_connect_quick_connect.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
