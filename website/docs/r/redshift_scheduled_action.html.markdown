@@ -132,8 +132,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Redshift Scheduled Action using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Redshift Scheduled Action using the `name`. For example:
 
+```terraform
+import {
+  to = aws_redshift_scheduled_action.example
+  id = "tf-redshift-scheduled-action"
+}
 ```
-$ terraform import aws_redshift_scheduled_action.example tf-redshift-scheduled-action
+
+Using `terraform import`, import Redshift Scheduled Action using the `name`. For example:
+
+```console
+% terraform import aws_redshift_scheduled_action.example tf-redshift-scheduled-action
 ```

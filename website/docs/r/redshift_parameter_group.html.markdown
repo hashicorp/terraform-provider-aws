@@ -61,8 +61,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Redshift Parameter Groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Redshift Parameter Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_redshift_parameter_group.paramgroup1
+  id = "parameter-group-test-terraform"
+}
 ```
-$ terraform import aws_redshift_parameter_group.paramgroup1 parameter-group-test-terraform
+
+Using `terraform import`, import Redshift Parameter Groups using the `name`. For example:
+
+```console
+% terraform import aws_redshift_parameter_group.paramgroup1 parameter-group-test-terraform
 ```
