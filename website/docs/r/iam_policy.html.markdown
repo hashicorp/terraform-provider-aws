@@ -62,8 +62,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IAM Policies using the `arn`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import IAM Policies using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_iam_policy.administrator
+  id = "arn:aws:iam::123456789012:policy/UsersManageOwnCredentials"
+}
 ```
-$ terraform import aws_iam_policy.administrator arn:aws:iam::123456789012:policy/UsersManageOwnCredentials
+
+Using `terraform import`, import IAM Policies using the `arn`. For example:
+
+```console
+% terraform import aws_iam_policy.administrator arn:aws:iam::123456789012:policy/UsersManageOwnCredentials
 ```
