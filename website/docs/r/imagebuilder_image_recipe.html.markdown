@@ -116,8 +116,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_imagebuilder_image_recipe` resources using the Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_imagebuilder_image_recipe` resources using the Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_imagebuilder_image_recipe.example
+  id = "arn:aws:imagebuilder:us-east-1:123456789012:image-recipe/example/1.0.0"
+}
 ```
-$ terraform import aws_imagebuilder_image_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:image-recipe/example/1.0.0
+
+Using `terraform import`, import `aws_imagebuilder_image_recipe` resources using the Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_imagebuilder_image_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:image-recipe/example/1.0.0
 ```
