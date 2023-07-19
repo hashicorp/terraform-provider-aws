@@ -34,8 +34,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import CIDR collections using their ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import CIDR collections using their ID. For example:
 
+```terraform
+import {
+  to = aws_route53_cidr_collection.example
+  id = "9ac32814-3e67-0932-6048-8d779cc6f511"
+}
 ```
-$ terraform import aws_route53_cidr_collection.example 9ac32814-3e67-0932-6048-8d779cc6f511
+
+Using `terraform import`, import CIDR collections using their ID. For example:
+
+```console
+% terraform import aws_route53_cidr_collection.example 9ac32814-3e67-0932-6048-8d779cc6f511
 ```
