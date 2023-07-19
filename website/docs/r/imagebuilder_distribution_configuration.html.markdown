@@ -130,8 +130,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_imagebuilder_distribution_configurations` resources using the Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_imagebuilder_distribution_configurations` resources using the Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_imagebuilder_distribution_configuration.example
+  id = "arn:aws:imagebuilder:us-east-1:123456789012:distribution-configuration/example"
+}
 ```
-$ terraform import aws_imagebuilder_distribution_configuration.example arn:aws:imagebuilder:us-east-1:123456789012:distribution-configuration/example
+
+Using `terraform import`, import `aws_imagebuilder_distribution_configurations` resources using the Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_imagebuilder_distribution_configuration.example arn:aws:imagebuilder:us-east-1:123456789012:distribution-configuration/example
 ```
