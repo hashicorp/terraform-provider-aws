@@ -85,8 +85,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import Transfer SSH Public Key using the `server_id` and `user_name` and `ssh_public_key_id` separated by `/`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Transfer SSH Public Key using the `server_id` and `user_name` and `ssh_public_key_id` separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_transfer_ssh_key.bar
+  id = "s-12345678/test-username/key-12345"
+}
 ```
-$ terraform import aws_transfer_ssh_key.bar s-12345678/test-username/key-12345
+
+Using `terraform import`, import Transfer SSH Public Key using the `server_id` and `user_name` and `ssh_public_key_id` separated by `/`. For example:
+
+```console
+% terraform import aws_transfer_ssh_key.bar s-12345678/test-username/key-12345
 ```

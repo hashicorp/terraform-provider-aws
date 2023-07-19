@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Transfer AS2 Agreement using the `server_id/agreement_id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Transfer AS2 Agreement using the `server_id/agreement_id`. For example:
 
+```terraform
+import {
+  to = aws_transfer_agreement.example
+  id = "s-4221a88afd5f4362a/a-4221a88afd5f4362a"
+}
 ```
-$ terraform import aws_transfer_agreement.example s-4221a88afd5f4362a/a-4221a88afd5f4362a
+
+Using `terraform import`, import Transfer AS2 Agreement using the `server_id/agreement_id`. For example:
+
+```console
+% terraform import aws_transfer_agreement.example s-4221a88afd5f4362a/a-4221a88afd5f4362a
 ```

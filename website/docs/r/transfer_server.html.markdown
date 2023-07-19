@@ -150,10 +150,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Transfer Servers using the `server id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Transfer Servers using the `server id`. For example:
 
+```terraform
+import {
+  to = aws_transfer_server.example
+  id = "s-12345678"
+}
 ```
-$ terraform import aws_transfer_server.example s-12345678
+
+Using `terraform import`, import Transfer Servers using the `server id`. For example:
+
+```console
+% terraform import aws_transfer_server.example s-12345678
 ```
 
 Certain resource arguments, such as `host_key`, cannot be read via the API and imported into Terraform. Terraform will display a difference for these arguments the first run after import if declared in the Terraform configuration for an imported resource.

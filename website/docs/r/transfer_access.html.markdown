@@ -70,8 +70,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Transfer Accesses using the `server_id` and `external_id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Transfer Accesses using the `server_id` and `external_id`. For example:
 
+```terraform
+import {
+  to = aws_transfer_access.example
+  id = "s-12345678/S-1-1-12-1234567890-123456789-1234567890-1234"
+}
 ```
-$ terraform import aws_transfer_access.example s-12345678/S-1-1-12-1234567890-123456789-1234567890-1234
+
+Using `terraform import`, import Transfer Accesses using the `server_id` and `external_id`. For example:
+
+```console
+% terraform import aws_transfer_access.example s-12345678/S-1-1-12-1234567890-123456789-1234567890-1234
 ```

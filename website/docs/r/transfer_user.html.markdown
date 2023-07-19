@@ -116,8 +116,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Transfer Users using the `server_id` and `user_name` separated by `/`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Transfer Users using the `server_id` and `user_name` separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_transfer_user.bar
+  id = "s-12345678/test-username"
+}
 ```
-$ terraform import aws_transfer_user.bar s-12345678/test-username
+
+Using `terraform import`, import Transfer Users using the `server_id` and `user_name` separated by `/`. For example:
+
+```console
+% terraform import aws_transfer_user.bar s-12345678/test-username
 ```
