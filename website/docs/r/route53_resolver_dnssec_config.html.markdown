@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import  Route 53 Resolver DNSSEC configs using the Route 53 Resolver DNSSEC config ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import  Route 53 Resolver DNSSEC configs using the Route 53 Resolver DNSSEC config ID. For example:
 
 ```terraform
 import {

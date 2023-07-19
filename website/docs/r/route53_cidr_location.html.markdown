@@ -40,7 +40,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import CIDR locations using their the CIDR collection ID and location name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CIDR locations using their the CIDR collection ID and location name. For example:
 
 ```terraform
 import {

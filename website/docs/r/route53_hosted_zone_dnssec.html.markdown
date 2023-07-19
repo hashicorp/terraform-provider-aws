@@ -91,7 +91,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import `aws_route53_hosted_zone_dnssec` resources using the Route 53 Hosted Zone identifier. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_route53_hosted_zone_dnssec` resources using the Route 53 Hosted Zone identifier. For example:
 
 ```terraform
 import {
