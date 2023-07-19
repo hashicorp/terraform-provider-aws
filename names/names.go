@@ -112,6 +112,10 @@ func readCSVIntoServiceData() error {
 			continue
 		}
 
+		if l[ColNoClient] != "" {
+			continue
+		}
+
 		if l[ColProviderPackageActual] == "" && l[ColProviderPackageCorrect] == "" {
 			continue
 		}
