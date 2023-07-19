@@ -108,8 +108,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Synthetics Canaries using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Synthetics Canaries using the `name`. For example:
 
+```terraform
+import {
+  to = aws_synthetics_canary.some
+  id = "some-canary"
+}
 ```
-$ terraform import aws_synthetics_canary.some some-canary
+
+Using `terraform import`, import Synthetics Canaries using the `name`. For example:
+
+```console
+% terraform import aws_synthetics_canary.some some-canary
 ```
