@@ -48,8 +48,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import AppStream Stack Fleet Association using the `fleet_name` and `stack_name` separated by a slash (`/`). For example:
+In Terraform v1.5.0 and later, use an `import` block to import AppStream Stack Fleet Association using the `fleet_name` and `stack_name` separated by a slash (`/`). For example:
 
+```terraform
+import {
+  to = aws_appstream_fleet_stack_association.example
+  id = "fleetName/stackName"
+}
 ```
-$ terraform import aws_appstream_fleet_stack_association.example fleetName/stackName
+
+Using `terraform import`, import AppStream Stack Fleet Association using the `fleet_name` and `stack_name` separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_appstream_fleet_stack_association.example fleetName/stackName
 ```

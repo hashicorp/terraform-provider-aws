@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_appstream_user` using the `user_name` and `authentication_type` separated by a slash (`/`). For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_appstream_user` using the `user_name` and `authentication_type` separated by a slash (`/`). For example:
 
+```terraform
+import {
+  to = aws_appstream_user.example
+  id = "UserName/AuthenticationType"
+}
 ```
-$ terraform import aws_appstream_user.example UserName/AuthenticationType
+
+Using `terraform import`, import `aws_appstream_user` using the `user_name` and `authentication_type` separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_appstream_user.example UserName/AuthenticationType
 ```
