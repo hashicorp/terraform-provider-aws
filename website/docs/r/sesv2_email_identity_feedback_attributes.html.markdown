@@ -38,7 +38,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import SESv2 (Simple Email V2) Email Identity Feedback Attributes using the `email_identity`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SESv2 (Simple Email V2) Email Identity Feedback Attributes using the `email_identity`. For example:
 
 ```terraform
 import {
