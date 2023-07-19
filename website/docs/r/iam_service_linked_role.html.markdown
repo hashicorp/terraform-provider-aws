@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IAM service-linked roles using role ARN. For example:
+In Terraform v1.5.0 and later, use an `import` block to import IAM service-linked roles using role ARN. For example:
 
+```terraform
+import {
+  to = aws_iam_service_linked_role.elasticbeanstalk
+  id = "arn:aws:iam::123456789012:role/aws-service-role/elasticbeanstalk.amazonaws.com/AWSServiceRoleForElasticBeanstalk"
+}
 ```
-$ terraform import aws_iam_service_linked_role.elasticbeanstalk arn:aws:iam::123456789012:role/aws-service-role/elasticbeanstalk.amazonaws.com/AWSServiceRoleForElasticBeanstalk
+
+Using `terraform import`, import IAM service-linked roles using role ARN. For example:
+
+```console
+% terraform import aws_iam_service_linked_role.elasticbeanstalk arn:aws:iam::123456789012:role/aws-service-role/elasticbeanstalk.amazonaws.com/AWSServiceRoleForElasticBeanstalk
 ```
