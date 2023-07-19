@@ -76,8 +76,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Cognito Identity Pool using its ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Cognito Identity Pool using its ID. For example:
 
+```terraform
+import {
+  to = aws_cognito_identity_pool.mypool
+  id = "us-west-2:1a234567-8901-234b-5cde-f6789g01h2i3"
+}
 ```
-$ terraform import aws_cognito_identity_pool.mypool us-west-2:1a234567-8901-234b-5cde-f6789g01h2i3
+
+Using `terraform import`, import Cognito Identity Pool using its ID. For example:
+
+```console
+% terraform import aws_cognito_identity_pool.mypool us-west-2:1a234567-8901-234b-5cde-f6789g01h2i3
 ```

@@ -54,8 +54,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import `aws_cognito_identity_provider` resources using their User Pool ID and Provider Name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_cognito_identity_provider` resources using their User Pool ID and Provider Name. For example:
 
+```terraform
+import {
+  to = aws_cognito_identity_provider.example
+  id = "us-west-2_abc123:CorpAD"
+}
 ```
-$ terraform import aws_cognito_identity_provider.example us-west-2_abc123:CorpAD
+
+Using `terraform import`, import `aws_cognito_identity_provider` resources using their User Pool ID and Provider Name. For example:
+
+```console
+% terraform import aws_cognito_identity_provider.example us-west-2_abc123:CorpAD
 ```
