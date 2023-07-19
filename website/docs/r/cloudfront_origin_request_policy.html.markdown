@@ -76,8 +76,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Cloudfront Origin Request Policies using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Cloudfront Origin Request Policies using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_origin_request_policy.policy
+  id = "ccca32ef-dce3-4df3-80df-1bd3000bc4d3"
+}
 ```
-$ terraform import aws_cloudfront_origin_request_policy.policy ccca32ef-dce3-4df3-80df-1bd3000bc4d3
+
+Using `terraform import`, import Cloudfront Origin Request Policies using the `id`. For example:
+
+```console
+% terraform import aws_cloudfront_origin_request_policy.policy ccca32ef-dce3-4df3-80df-1bd3000bc4d3
 ```

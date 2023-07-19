@@ -104,8 +104,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import CloudSearch Domains using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import CloudSearch Domains using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudsearch_domain.example
+  id = "example-domain"
+}
 ```
-$ terraform import aws_cloudsearch_domain.example example-domain
+
+Using `terraform import`, import CloudSearch Domains using the `name`. For example:
+
+```console
+% terraform import aws_cloudsearch_domain.example example-domain
 ```

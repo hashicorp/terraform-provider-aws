@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import HSM modules using their HSM ID. For example:
+In Terraform v1.5.0 and later, use an `import` block to import HSM modules using their HSM ID. For example:
 
+```terraform
+import {
+  to = aws_cloudhsm_v2_hsm.bar
+  id = "hsm-quo8dahtaca"
+}
 ```
-$ terraform import aws_cloudhsm_v2_hsm.bar hsm-quo8dahtaca
+
+Using `terraform import`, import HSM modules using their HSM ID. For example:
+
+```console
+% terraform import aws_cloudhsm_v2_hsm.bar hsm-quo8dahtaca
 ```
