@@ -68,7 +68,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Shield protection health check association resources using specifying the `shield_protection_id` and `health_check_arn`. For example:
+Import Shield protection health check association resources using the `shield_protection_id` and `health_check_arn`. For example:
 
 ```
 $ terraform import aws_shield_protection_health_check_association.example ff9592dc-22f3-4e88-afa1-7b29fde9669a+arn:aws:route53:::healthcheck/3742b175-edb9-46bc-9359-f53e3b794b1b
