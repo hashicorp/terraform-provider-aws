@@ -418,7 +418,7 @@ any cleanup task during the destroying process.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import RDS Clusters using the `cluster_identifier`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS Clusters using the `cluster_identifier`. For example:
 
 ```terraform
 import {
