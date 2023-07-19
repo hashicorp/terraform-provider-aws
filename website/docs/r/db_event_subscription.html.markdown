@@ -83,8 +83,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import DB Event Subscriptions using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import DB Event Subscriptions using the `name`. For example:
 
+```terraform
+import {
+  to = aws_db_event_subscription.default
+  id = "rds-event-sub"
+}
 ```
-$ terraform import aws_db_event_subscription.default rds-event-sub
+
+Using `terraform import`, import DB Event Subscriptions using the `name`. For example:
+
+```console
+% terraform import aws_db_event_subscription.default rds-event-sub
 ```
