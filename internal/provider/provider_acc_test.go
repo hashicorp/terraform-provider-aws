@@ -776,11 +776,21 @@ func testAccCheckEndpoints(_ context.Context, p **schema.Provider) resource.Test
 		providerClient := (*p).Meta().(*conns.AWSClient)
 
 		for _, serviceKey := range names.ProviderPackages() {
-			method := reflect.ValueOf(providerClient).MethodByName(serviceConn(serviceKey))
+			methodName := serviceConn(serviceKey)
+			method := reflect.ValueOf(providerClient).MethodByName(methodName)
 			if !method.IsValid() {
 				continue
 			}
-			result := method.Call([]reflect.Value{})
+			if method.Kind() != reflect.Func {
+				return fmt.Errorf("value %q is not a function", methodName)
+			}
+			if !funcHasConnFuncSignature(method) {
+				return fmt.Errorf("function %q does not match expected signature", methodName)
+			}
+
+			result := method.Call([]reflect.Value{
+				reflect.ValueOf(context.Background()),
+			})
 			if l := len(result); l != 1 {
 				return fmt.Errorf("expected 1 result, got %d", l)
 			}
@@ -788,6 +798,11 @@ func testAccCheckEndpoints(_ context.Context, p **schema.Provider) resource.Test
 
 			if !providerClientField.IsValid() {
 				return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", serviceKey)
+			}
+
+			if providerClientField.IsNil() {
+				t.Errorf("No match for service %q", serviceKey)
+				continue
 			}
 
 			if !reflect.Indirect(providerClientField).FieldByName("Config").IsValid() {
@@ -814,7 +829,18 @@ func testAccCheckUnusualEndpoints(_ context.Context, p **schema.Provider, unusua
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
 
-		result := reflect.ValueOf(providerClient).MethodByName(serviceConn(unusual.thing)).Call([]reflect.Value{})
+		methodName := serviceConn(unusual.thing)
+		method := reflect.ValueOf(providerClient).MethodByName(methodName)
+		if method.Kind() != reflect.Func {
+			return fmt.Errorf("value %q is not a function", methodName)
+		}
+		if !funcHasConnFuncSignature(method) {
+			return fmt.Errorf("function %q does not match expected signature", methodName)
+		}
+
+		result := method.Call([]reflect.Value{
+			reflect.ValueOf(context.Background()),
+		})
 		if l := len(result); l != 1 {
 			return fmt.Errorf("expected 1 result, got %d", l)
 		}
@@ -833,6 +859,22 @@ func testAccCheckUnusualEndpoints(_ context.Context, p **schema.Provider, unusua
 
 		return nil
 	}
+}
+
+func funcHasConnFuncSignature(method reflect.Value) bool {
+	typ := method.Type()
+	if typ.NumIn() != 1 {
+		return false
+	}
+
+	fn := func(ctx context.Context) {}
+	ftyp := reflect.TypeOf(fn)
+
+	in := typ.In(0)
+	if in != ftyp.In(0) {
+		return false
+	}
+	return true
 }
 
 func serviceConn(key string) string {
