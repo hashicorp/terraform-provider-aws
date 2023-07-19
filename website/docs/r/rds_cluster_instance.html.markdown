@@ -116,8 +116,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import RDS Cluster Instances using the `identifier`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import RDS Cluster Instances using the `identifier`. For example:
 
+```terraform
+import {
+  to = aws_rds_cluster_instance.prod_instance_1
+  id = "aurora-cluster-instance-1"
+}
 ```
-$ terraform import aws_rds_cluster_instance.prod_instance_1 aurora-cluster-instance-1
+
+Using `terraform import`, import RDS Cluster Instances using the `identifier`. For example:
+
+```console
+% terraform import aws_rds_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```

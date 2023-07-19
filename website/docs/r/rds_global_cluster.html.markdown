@@ -232,10 +232,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_rds_global_cluster` using the RDS Global Cluster identifier. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_rds_global_cluster` using the RDS Global Cluster identifier. For example:
 
+```terraform
+import {
+  to = aws_rds_global_cluster.example
+  id = "example"
+}
 ```
-$ terraform import aws_rds_global_cluster.example example
+
+Using `terraform import`, import `aws_rds_global_cluster` using the RDS Global Cluster identifier. For example:
+
+```console
+% terraform import aws_rds_global_cluster.example example
 ```
 
 Certain resource arguments, like `force_destroy`, only exist within Terraform. If the argument is set in the Terraform configuration on an imported resource, Terraform will show a difference on the first plan after import to update the state value. This change is safe to apply immediately so the state matches the desired configuration.
