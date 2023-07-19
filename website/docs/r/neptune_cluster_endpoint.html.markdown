@@ -42,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_neptune_cluster_endpoint` can be imported by using the `cluster-identifier:endpoint-identfier`, e.g.,
+Import `aws_neptune_cluster_endpoint` using the `cluster-identifier:endpoint-identfier`. For example:
 
 ```
 $ terraform import aws_neptune_cluster_endpoint.example my-cluster:my-endpoint

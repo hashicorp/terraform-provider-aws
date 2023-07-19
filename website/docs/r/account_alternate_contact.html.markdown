@@ -55,7 +55,7 @@ Import the Alternate Contact for the current account using the `alternate_contac
 $ terraform import aws_account_alternate_contact.operations OPERATIONS
 ```
 
-If you provide an account ID, the Alternate Contact can be imported using the `account_id` and `alternate_contact_type` separated by a forward slash (`/`) e.g.,
+If you provide an account ID, import the Alternate Contact using the `account_id` and `alternate_contact_type` separated by a forward slash (`/`). For example:
 
 ```
 $ terraform import aws_account_alternate_contact.operations 1234567890/OPERATIONS

@@ -73,7 +73,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_storagegateway_stored_iscsi_volume` can be imported by using the volume Amazon Resource Name (ARN), e.g.,
+Import `aws_storagegateway_stored_iscsi_volume` using the volume Amazon Resource Name (ARN). For example:
 
 ```
 $ terraform import aws_storagegateway_stored_iscsi_volume.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678/volume/vol-12345678

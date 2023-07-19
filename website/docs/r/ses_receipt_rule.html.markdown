@@ -110,7 +110,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SES receipt rules using the ruleset name and rule name separated by `:`.
+Import SES receipt rules using the ruleset name and rule name separated by `:`. For example:
 
 ```
 $ terraform import aws_ses_receipt_rule.my_rule my_rule_set:my_rule

@@ -40,7 +40,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_apigatewayv2_api_mapping` can be imported by using the API mapping identifier and domain name, e.g.,
+Import `aws_apigatewayv2_api_mapping` using the API mapping identifier and domain name. For example:
 
 ```
 $ terraform import aws_apigatewayv2_api_mapping.example 1122334/ws-api.example.com

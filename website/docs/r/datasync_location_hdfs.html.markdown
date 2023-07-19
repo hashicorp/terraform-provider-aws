@@ -64,7 +64,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_datasync_location_hdfs` can be imported by using the Amazon Resource Name (ARN), e.g.,
+Import `aws_datasync_location_hdfs` using the Amazon Resource Name (ARN). For example:
 
 ```
 $ terraform import aws_datasync_location_hdfs.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567

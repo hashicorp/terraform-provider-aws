@@ -47,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Media Convert Queue can be imported via the queue name, e.g.,
+Import Media Convert Queue using the queue name. For example:
 
 ```
 $ terraform import aws_media_convert_queue.test tf-test-queue

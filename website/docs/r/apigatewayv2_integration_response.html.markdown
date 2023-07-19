@@ -42,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_apigatewayv2_integration_response` can be imported by using the API identifier, integration identifier and integration response identifier, e.g.,
+Import `aws_apigatewayv2_integration_response` using the API identifier, integration identifier and integration response identifier. For example:
 
 ```
 $ terraform import aws_apigatewayv2_integration_response.example aabbccddee/1122334/998877

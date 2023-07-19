@@ -357,7 +357,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CodeDeploy Deployment Groups can be imported by their `app_name`, a colon, and `deployment_group_name`, e.g.,
+Import CodeDeploy Deployment Groups using `app_name`, a colon, and `deployment_group_name`. For example:
 
 ```
 $ terraform import aws_codedeploy_deployment_group.example my-application:my-deployment-group

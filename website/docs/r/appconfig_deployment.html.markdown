@@ -51,7 +51,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AppConfig Deployments can be imported by using the application ID, environment ID, and deployment number separated by a slash (`/`), e.g.,
+Import AppConfig Deployments using the application ID, environment ID, and deployment number separated by a slash (`/`). For example:
 
 ```
 $ terraform import aws_appconfig_deployment.example 71abcde/11xxxxx/1

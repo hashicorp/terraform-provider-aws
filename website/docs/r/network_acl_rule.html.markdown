@@ -67,7 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import individual rules using `NETWORK_ACL_ID:RULE_NUMBER:PROTOCOL:EGRESS`, where `PROTOCOL` can be a decimal (e.g., 6) or string (e.g., tcp) value. For example:
+Import individual rules using `NETWORK_ACL_ID:RULE_NUMBER:PROTOCOL:EGRESS`, where `PROTOCOL` can be a decimal (such as "6") or string (such as "tcp") value. For example:
 
 **NOTE:** If importing a rule previously provisioned by Terraform, the `PROTOCOL` must be the input value used at creation time. For more information on protocol numbers and keywords, see here: https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml.
 

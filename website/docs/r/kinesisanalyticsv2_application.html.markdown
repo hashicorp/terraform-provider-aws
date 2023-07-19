@@ -493,7 +493,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_kinesisanalyticsv2_application` can be imported by using the application ARN, e.g.,
+Import `aws_kinesisanalyticsv2_application` using the application ARN. For example:
 
 ```
 $ terraform import aws_kinesisanalyticsv2_application.example arn:aws:kinesisanalytics:us-west-2:123456789012:application/example-sql-application

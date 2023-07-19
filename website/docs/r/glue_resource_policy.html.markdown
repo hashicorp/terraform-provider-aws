@@ -50,7 +50,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import Glue Resource Policy using the account ID:
+Import Glue Resource Policy using the account ID. For example:
 
 ```
 $ terraform import aws_glue_resource_policy.Test 12356789012

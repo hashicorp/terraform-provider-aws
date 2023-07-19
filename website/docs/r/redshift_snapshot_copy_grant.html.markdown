@@ -45,7 +45,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Snapshot Copy Grants support import by name, e.g.,
+Import Redshift Snapshot Copy Grants by name. For example:
 
 ```console
 $ terraform import aws_redshift_snapshot_copy_grant.test my-grant

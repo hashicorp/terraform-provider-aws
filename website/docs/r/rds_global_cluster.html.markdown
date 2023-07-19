@@ -232,7 +232,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_rds_global_cluster` can be imported by using the RDS Global Cluster identifier, e.g.,
+Import `aws_rds_global_cluster` using the RDS Global Cluster identifier. For example:
 
 ```
 $ terraform import aws_rds_global_cluster.example example

@@ -39,7 +39,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EMR studio session mappings using the `id`. For example: `studio-id:identity-type:identity-id`
+Import EMR studio session mappings using `studio-id:identity-type:identity-id`. For example:
 
 ```
 $ terraform import aws_emr_studio_session_mapping.example es-xxxxx:USER:xxxxx-xxx-xxx

@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_apigatewayv2_vpc_link` can be imported by using the VPC Link identifier, e.g.,
+Import `aws_apigatewayv2_vpc_link` using the VPC Link identifier. For example:
 
 ```
 $ terraform import aws_apigatewayv2_vpc_link.example aabbccddee

@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_lightsail_lb_certificate` can be imported by using the id attribute, e.g.,
+Import `aws_lightsail_lb_certificate` using the id attribute. For example:
 
 ```
 $ terraform import aws_lightsail_lb_certificate.test example-load-balancer,example-load-balancer-certificate

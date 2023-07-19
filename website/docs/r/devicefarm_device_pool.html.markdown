@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DeviceFarm Device Pools can be imported by their arn:
+Import DeviceFarm Device Pools using their ARN. For example:
 
 ```
 $ terraform import aws_devicefarm_device_pool.example arn:aws:devicefarm:us-west-2:123456789012:devicepool:4fa784c7-ccb4-4dbf-ba4f-02198320daa1/4fa784c7-ccb4-4dbf-ba4f-02198320daa1

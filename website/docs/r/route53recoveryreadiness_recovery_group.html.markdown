@@ -44,7 +44,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Route53 Recovery Readiness recovery groups can be imported via the recovery group name, e.g.,
+Import Route53 Recovery Readiness recovery groups using the recovery group name. For example:
 
 ```
 $ terraform import aws_route53recoveryreadiness_recovery_group.my-high-availability-app my-high-availability-app

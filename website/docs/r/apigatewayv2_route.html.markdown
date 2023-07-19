@@ -85,7 +85,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_apigatewayv2_route` can be imported by using the API identifier and route identifier, e.g.,
+Import `aws_apigatewayv2_route` using the API identifier and route identifier. For example:
 
 ```
 $ terraform import aws_apigatewayv2_route.example aabbccddee/1122334
