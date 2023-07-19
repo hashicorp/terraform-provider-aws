@@ -18,7 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -30,6 +32,7 @@ func ResourceKeyPair() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyPairCreate,
 		ReadWithoutTimeout:   resourceKeyPairRead,
+		UpdateWithoutTimeout: schema.NoopContext,
 		DeleteWithoutTimeout: resourceKeyPairDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -85,6 +88,8 @@ func ResourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -112,6 +117,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 		// creating new key
 		resp, err := conn.CreateKeyPair(ctx, &lightsail.CreateKeyPairInput{
 			KeyPairName: aws.String(kName),
+			Tags:        getTagsIn(ctx),
 		})
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating Lightsail Key Pair (%s): %s", kName, err)
@@ -160,6 +166,10 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 		d.SetId(kName)
 
 		op = resp.Operation
+
+		if err := createTags(ctx, conn, kName, getTagsIn(ctx)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating Lightsail Key Pair (%s): %s", kName, err)
+		}
 	}
 
 	diag := expandOperations(ctx, conn, []types.Operation{*op}, "CreateKeyPair", ResKeyPair, kName)
