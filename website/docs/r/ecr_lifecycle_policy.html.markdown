@@ -96,8 +96,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import ECR Lifecycle Policy using the name of the repository. For example:
+In Terraform v1.5.0 and later, use an `import` block to import ECR Lifecycle Policy using the name of the repository. For example:
 
+```terraform
+import {
+  to = aws_ecr_lifecycle_policy.example
+  id = "tf-example"
+}
 ```
-$ terraform import aws_ecr_lifecycle_policy.example tf-example
+
+Using `terraform import`, import ECR Lifecycle Policy using the name of the repository. For example:
+
+```console
+% terraform import aws_ecr_lifecycle_policy.example tf-example
 ```
