@@ -55,8 +55,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_networkmanager_device` using the device ARN. For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_networkmanager_device` using the device ARN. For example:
 
+```terraform
+import {
+  to = aws_networkmanager_device.example
+  id = "arn:aws:networkmanager::123456789012:device/global-network-0d47f6t230mz46dy4/device-07f6fd08867abc123"
+}
 ```
-$ terraform import aws_networkmanager_device.example arn:aws:networkmanager::123456789012:device/global-network-0d47f6t230mz46dy4/device-07f6fd08867abc123
+
+Using `terraform import`, import `aws_networkmanager_device` using the device ARN. For example:
+
+```console
+% terraform import aws_networkmanager_device.example arn:aws:networkmanager::123456789012:device/global-network-0d47f6t230mz46dy4/device-07f6fd08867abc123
 ```
