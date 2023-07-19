@@ -37,7 +37,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import a pull-through cache rule using the `ecr_repository_prefix`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a pull-through cache rule using the `ecr_repository_prefix`. For example:
 
 ```terraform
 import {
