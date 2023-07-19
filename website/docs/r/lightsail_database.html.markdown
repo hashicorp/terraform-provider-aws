@@ -186,8 +186,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Lightsail Databases using their name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Lightsail Databases using their name. For example:
 
+```terraform
+import {
+  to = aws_lightsail_database.foo
+  id = "'bar'"
+}
 ```
-$ terraform import aws_lightsail_database.foo 'bar'
+
+Using `terraform import`, import Lightsail Databases using their name. For example:
+
+```console
+% terraform import aws_lightsail_database.foo 'bar'
 ```
