@@ -103,7 +103,7 @@ consisting of a DNS name and a port number
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import DAX Clusters using the `cluster_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DAX Clusters using the `cluster_name`. For example:
 
 ```terraform
 import {

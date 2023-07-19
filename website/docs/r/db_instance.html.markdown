@@ -443,7 +443,7 @@ The `master_user_secret` configuration block supports the following attributes:
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import DB Instances using the `identifier`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Instances using the `identifier`. For example:
 
 ```terraform
 import {
