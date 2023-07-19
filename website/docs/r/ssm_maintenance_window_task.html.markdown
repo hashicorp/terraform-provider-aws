@@ -208,8 +208,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import AWS Maintenance Window Task using the `window_id` and `window_task_id` separated by `/`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import AWS Maintenance Window Task using the `window_id` and `window_task_id` separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_ssm_maintenance_window_task.task
+  id = "<window_id>/<window_task_id>"
+}
 ```
-$ terraform import aws_ssm_maintenance_window_task.task <window_id>/<window_task_id>
+
+Using `terraform import`, import AWS Maintenance Window Task using the `window_id` and `window_task_id` separated by `/`. For example:
+
+```console
+% terraform import aws_ssm_maintenance_window_task.task <window_id>/<window_task_id>
 ```

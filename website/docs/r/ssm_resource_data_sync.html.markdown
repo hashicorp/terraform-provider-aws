@@ -89,8 +89,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import SSM resource data sync using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import SSM resource data sync using the `name`. For example:
 
+```terraform
+import {
+  to = aws_ssm_resource_data_sync.example
+  id = "example-name"
+}
 ```
-$ terraform import aws_ssm_resource_data_sync.example example-name
+
+Using `terraform import`, import SSM resource data sync using the `name`. For example:
+
+```console
+% terraform import aws_ssm_resource_data_sync.example example-name
 ```
