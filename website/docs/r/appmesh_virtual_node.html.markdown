@@ -458,10 +458,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import App Mesh virtual nodes using `mesh_name` together with the virtual node's `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import App Mesh virtual nodes using `mesh_name` together with the virtual node's `name`. For example:
 
+```terraform
+import {
+  to = aws_appmesh_virtual_node.serviceb1
+  id = "simpleapp/serviceBv1"
+}
 ```
-$ terraform import aws_appmesh_virtual_node.serviceb1 simpleapp/serviceBv1
+
+Using `terraform import`, import App Mesh virtual nodes using `mesh_name` together with the virtual node's `name`. For example:
+
+```console
+% terraform import aws_appmesh_virtual_node.serviceb1 simpleapp/serviceBv1
 ```
 
 [1]: /docs/providers/aws/index.html

@@ -274,10 +274,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import App Mesh virtual gateway using `mesh_name` together with the virtual gateway's `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import App Mesh virtual gateway using `mesh_name` together with the virtual gateway's `name`. For example:
 
+```terraform
+import {
+  to = aws_appmesh_virtual_gateway.example
+  id = "mesh/gw1"
+}
 ```
-$ terraform import aws_appmesh_virtual_gateway.example mesh/gw1
+
+Using `terraform import`, import App Mesh virtual gateway using `mesh_name` together with the virtual gateway's `name`. For example:
+
+```console
+% terraform import aws_appmesh_virtual_gateway.example mesh/gw1
 ```
 
 [1]: /docs/providers/aws/index.html
