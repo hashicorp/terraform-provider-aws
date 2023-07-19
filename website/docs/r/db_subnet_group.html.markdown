@@ -47,8 +47,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import DB Subnet groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import DB Subnet groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_db_subnet_group.default
+  id = "production-subnet-group"
+}
 ```
-$ terraform import aws_db_subnet_group.default production-subnet-group
+
+Using `terraform import`, import DB Subnet groups using the `name`. For example:
+
+```console
+% terraform import aws_db_subnet_group.default production-subnet-group
 ```
