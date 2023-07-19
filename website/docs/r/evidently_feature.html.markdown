@@ -166,8 +166,17 @@ The `evaluation_rules` block supports the following attributes:
 
 ## Import
 
-Import CloudWatch Evidently Feature using the feature `name` and `name` or `arn` of the hosting CloudWatch Evidently Project separated by a `:`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import CloudWatch Evidently Feature using the feature `name` and `name` or `arn` of the hosting CloudWatch Evidently Project separated by a `:`. For example:
 
+```terraform
+import {
+  to = aws_evidently_feature.example
+  id = "exampleFeatureName:arn:aws:evidently:us-east-1:123456789012:project/example"
+}
 ```
-$ terraform import aws_evidently_feature.example exampleFeatureName:arn:aws:evidently:us-east-1:123456789012:project/example
+
+Using `terraform import`, import CloudWatch Evidently Feature using the feature `name` and `name` or `arn` of the hosting CloudWatch Evidently Project separated by a `:`. For example:
+
+```console
+% terraform import aws_evidently_feature.example exampleFeatureName:arn:aws:evidently:us-east-1:123456789012:project/example
 ```

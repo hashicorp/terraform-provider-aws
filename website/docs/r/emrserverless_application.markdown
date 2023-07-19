@@ -125,8 +125,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EMR Severless applications using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import EMR Severless applications using the `id`. For example:
 
+```terraform
+import {
+  to = aws_emrserverless_application.example
+  id = "id"
+}
 ```
-$ terraform import aws_emrserverless_application.example id
+
+Using `terraform import`, import EMR Severless applications using the `id`. For example:
+
+```console
+% terraform import aws_emrserverless_application.example id
 ```

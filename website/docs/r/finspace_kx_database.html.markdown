@@ -64,8 +64,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import an AWS FinSpace Kx Database using the `id` (environment ID and database name, comma-delimited). For example:
+In Terraform v1.5.0 and later, use an `import` block to import an AWS FinSpace Kx Database using the `id` (environment ID and database name, comma-delimited). For example:
 
+```terraform
+import {
+  to = aws_finspace_kx_database.example
+  id = "n3ceo7wqxoxcti5tujqwzs,my-tf-kx-database"
+}
 ```
-$ terraform import aws_finspace_kx_database.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-database
+
+Using `terraform import`, import an AWS FinSpace Kx Database using the `id` (environment ID and database name, comma-delimited). For example:
+
+```console
+% terraform import aws_finspace_kx_database.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-database
 ```

@@ -342,14 +342,23 @@ The `execution` block supports the following attributes:
 
 ## Import
 
-Import CloudWatch Evidently Launch using the `name` of the launch and `name` or `arn` of the hosting CloudWatch Evidently Project separated by a `:`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import CloudWatch Evidently Launch using the `name` of the launch and `name` or `arn` of the hosting CloudWatch Evidently Project separated by a `:`. For example:
 
+```terraform
+import {
+  to = aws_evidently_launch.example
+  id = "exampleLaunchName:arn:aws:evidently:us-east-1:123456789012:project/exampleProjectName"
+}
 ```
-$ terraform import aws_evidently_launch.example exampleLaunchName:arn:aws:evidently:us-east-1:123456789012:project/exampleProjectName
+
+Using `terraform import`, import CloudWatch Evidently Launch using the `name` of the launch and `name` or `arn` of the hosting CloudWatch Evidently Project separated by a `:`. For example:
+
+```console
+% terraform import aws_evidently_launch.example exampleLaunchName:arn:aws:evidently:us-east-1:123456789012:project/exampleProjectName
 ```
 
 Using the `name` of the launch and `name` of the project:
 
-```
-$ terraform import aws_evidently_launch.example exampleLaunchName:exampleProjectName
+```console
+% terraform import aws_evidently_launch.example exampleLaunchName:exampleProjectName
 ```
