@@ -90,7 +90,7 @@ not included as an argument because the resource will add it automatically when 
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Slot types using their name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Slot types using their name. For example:
 
 ```terraform
 import {

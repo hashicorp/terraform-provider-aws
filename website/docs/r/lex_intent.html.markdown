@@ -261,7 +261,7 @@ included as an argument because the resource will add it automatically when upda
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Intents using their name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Intents using their name. For example:
 
 ```terraform
 import {
