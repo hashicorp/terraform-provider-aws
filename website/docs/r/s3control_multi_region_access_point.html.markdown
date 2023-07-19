@@ -109,8 +109,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Multi-Region Access Points using the `account_id` and `name` of the Multi-Region Access Point separated by a colon (`:`). For example:
+In Terraform v1.5.0 and later, use an `import` block to import Multi-Region Access Points using the `account_id` and `name` of the Multi-Region Access Point separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_s3control_multi_region_access_point.example
+  id = "123456789012:example"
+}
 ```
-$ terraform import aws_s3control_multi_region_access_point.example 123456789012:example
+
+Using `terraform import`, import Multi-Region Access Points using the `account_id` and `name` of the Multi-Region Access Point separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_s3control_multi_region_access_point.example 123456789012:example
 ```
