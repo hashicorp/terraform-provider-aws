@@ -237,6 +237,10 @@ func DataSourceBroker() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Computed: true,
 						},
+						"replication_user": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"username": {
 							Type:     schema.TypeString,
 							Computed: true,
