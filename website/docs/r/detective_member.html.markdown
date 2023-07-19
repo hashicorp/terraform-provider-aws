@@ -47,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import `aws_detective_member` using the ARN of the graph followed by the account ID of the member account. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_detective_member` using the ARN of the graph followed by the account ID of the member account. For example:
 
 ```terraform
 import {
