@@ -86,8 +86,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Athena Workgroups using their name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import Athena Workgroups using their name. For example:
 
+```terraform
+import {
+  to = aws_athena_workgroup.example
+  id = "example"
+}
 ```
-$ terraform import aws_athena_workgroup.example example
+
+Using `terraform import`, import Athena Workgroups using their name. For example:
+
+```console
+% terraform import aws_athena_workgroup.example example
 ```

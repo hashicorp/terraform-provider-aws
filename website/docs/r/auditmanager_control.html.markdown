@@ -74,8 +74,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import an Audit Manager Control using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import an Audit Manager Control using the `id`. For example:
 
+```terraform
+import {
+  to = aws_auditmanager_control.example
+  id = "abc123-de45"
+}
 ```
-$ terraform import aws_auditmanager_control.example abc123-de45
+
+Using `terraform import`, import an Audit Manager Control using the `id`. For example:
+
+```console
+% terraform import aws_auditmanager_control.example abc123-de45
 ```
