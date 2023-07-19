@@ -443,7 +443,7 @@ For `instance_market_options`, in addition to the arguments above, the following
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Instances using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Instances using the `id`. For example:
 
 ```terraform
 import {
