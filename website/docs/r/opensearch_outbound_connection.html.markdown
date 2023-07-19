@@ -63,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AWS Opensearch Outbound Connections can be imported by using the Outbound Connection ID, e.g.,
+Import AWS Opensearch Outbound Connections using the Outbound Connection ID. For example:
 
 ```
 $ terraform import aws_opensearch_outbound_connection.foo connection-id

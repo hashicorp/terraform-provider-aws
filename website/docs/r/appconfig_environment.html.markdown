@@ -68,7 +68,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AppConfig Environments can be imported by using the environment ID and application ID separated by a colon (`:`), e.g.,
+Import AppConfig Environments using the environment ID and application ID separated by a colon (`:`). For example:
 
 ```
 $ terraform import aws_appconfig_environment.example 71abcde:11xxxxx

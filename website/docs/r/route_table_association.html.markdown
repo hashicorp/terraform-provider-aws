@@ -53,14 +53,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-~> **NOTE:** Attempting to associate a route table with a subnet or gateway, where either
-is already associated, will result in an error (e.g.,
-`Resource.AlreadyAssociated: the specified association for route table
-rtb-4176657279 conflicts with an existing association`) unless you first
-import the original association.
+Import EC2 Route Table Associations using the associated resource ID and Route Table ID separated by a forward slash (`/`). For example:
 
-EC2 Route Table Associations can be imported using the associated resource ID and Route Table ID
-separated by a forward slash (`/`).
+~> **NOTE:** Attempting to associate a route table with a subnet or gateway, where either is already associated, will result in an error (e.g., `Resource.AlreadyAssociated: the specified association for route table rtb-4176657279 conflicts with an existing association`) unless you first import the original association.
 
 For example with EC2 Subnets:
 

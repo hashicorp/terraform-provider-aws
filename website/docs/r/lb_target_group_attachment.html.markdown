@@ -80,4 +80,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Target Group Attachments cannot be imported.
+You cannot import Target Group Attachments.

@@ -121,7 +121,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_neptune_cluster` can be imported by using the cluster identifier, e.g.,
+Import `aws_neptune_cluster` using the cluster identifier. For example:
 
 ```
 $ terraform import aws_neptune_cluster.example my-cluster

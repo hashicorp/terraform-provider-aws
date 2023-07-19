@@ -64,7 +64,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-GameLift Game Session Queues can be imported by their `name`, e.g.,
+Import GameLift Game Session Queues using their `name`. For example:
 
 ```
 $ terraform import aws_gamelift_game_session_queue.example example

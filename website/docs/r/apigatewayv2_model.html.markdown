@@ -52,7 +52,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_apigatewayv2_model` can be imported by using the API identifier and model identifier, e.g.,
+Import `aws_apigatewayv2_model` using the API identifier and model identifier. For example:
 
 ```
 $ terraform import aws_apigatewayv2_model.example aabbccddee/1122334

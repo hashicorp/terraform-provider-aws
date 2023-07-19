@@ -51,7 +51,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AppConfig Deployment Strategies can be imported by using their deployment strategy ID, e.g.,
+Import AppConfig Deployment Strategies using their deployment strategy ID. For example:
 
 ```
 $ terraform import aws_appconfig_deployment_strategy.example 11xxxxx

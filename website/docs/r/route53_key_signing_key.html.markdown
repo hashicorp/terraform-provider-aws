@@ -122,7 +122,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_route53_key_signing_key` resources can be imported by using the Route 53 Hosted Zone identifier and KMS Key identifier, separated by a comma (`,`), e.g.,
+Import `aws_route53_key_signing_key` resources using the Route 53 Hosted Zone identifier and KMS Key identifier, separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_route53_key_signing_key.example Z1D633PJN98FT9,example

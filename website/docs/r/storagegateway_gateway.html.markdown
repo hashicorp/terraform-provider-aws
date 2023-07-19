@@ -169,7 +169,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_storagegateway_gateway` can be imported by using the gateway Amazon Resource Name (ARN), e.g.,
+Import `aws_storagegateway_gateway` using the gateway Amazon Resource Name (ARN). For example:
 
 ```
 $ terraform import aws_storagegateway_gateway.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678

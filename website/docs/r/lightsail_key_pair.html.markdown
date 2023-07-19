@@ -76,5 +76,4 @@ private key
 
 ## Import
 
-Lightsail Key Pairs cannot be imported, because the private and public key are
-only available on initial creation.
+You cannot import Lightsail Key Pairs because the private and public key are only available on initial creation.

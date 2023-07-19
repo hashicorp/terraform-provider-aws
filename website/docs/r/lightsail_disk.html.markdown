@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_lightsail_disk` can be imported by using the name attribute, e.g.,
+Import `aws_lightsail_disk` using the name attribute. For example:
 
 ```shell
 $ terraform import aws_lightsail_disk.test test
