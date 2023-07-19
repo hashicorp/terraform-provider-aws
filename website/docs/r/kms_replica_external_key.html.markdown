@@ -75,8 +75,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import KMS multi-Region replica keys using the `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import KMS multi-Region replica keys using the `id`. For example:
 
+```terraform
+import {
+  to = aws_kms_replica_external_key.example
+  id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+}
 ```
-$ terraform import aws_kms_replica_external_key.example 1234abcd-12ab-34cd-56ef-1234567890ab
+
+Using `terraform import`, import KMS multi-Region replica keys using the `id`. For example:
+
+```console
+% terraform import aws_kms_replica_external_key.example 1234abcd-12ab-34cd-56ef-1234567890ab
 ```

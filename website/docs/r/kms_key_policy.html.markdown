@@ -57,8 +57,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import KMS Key Policies using the `key_id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import KMS Key Policies using the `key_id`. For example:
 
+```terraform
+import {
+  to = aws_kms_key_policy.a
+  id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+}
 ```
-$ terraform import aws_kms_key_policy.a 1234abcd-12ab-34cd-56ef-1234567890ab
+
+Using `terraform import`, import KMS Key Policies using the `key_id`. For example:
+
+```console
+% terraform import aws_kms_key_policy.a 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
