@@ -38,8 +38,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import DeviceFarm Instance Profiles using their ARN. For example:
+In Terraform v1.5.0 and later, use an `import` block to import DeviceFarm Instance Profiles using their ARN. For example:
 
+```terraform
+import {
+  to = aws_devicefarm_instance_profile.example
+  id = "arn:aws:devicefarm:us-west-2:123456789012:instanceprofile:4fa784c7-ccb4-4dbf-ba4f-02198320daa1"
+}
 ```
-$ terraform import aws_devicefarm_instance_profile.example arn:aws:devicefarm:us-west-2:123456789012:instanceprofile:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
+
+Using `terraform import`, import DeviceFarm Instance Profiles using their ARN. For example:
+
+```console
+% terraform import aws_devicefarm_instance_profile.example arn:aws:devicefarm:us-west-2:123456789012:instanceprofile:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```

@@ -174,8 +174,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import DirectoryService directories using the directory `id`. For example:
+In Terraform v1.5.0 and later, use an `import` block to import DirectoryService directories using the directory `id`. For example:
 
+```terraform
+import {
+  to = aws_directory_service_directory.sample
+  id = "d-926724cf57"
+}
 ```
-$ terraform import aws_directory_service_directory.sample d-926724cf57
+
+Using `terraform import`, import DirectoryService directories using the directory `id`. For example:
+
+```console
+% terraform import aws_directory_service_directory.sample d-926724cf57
 ```
