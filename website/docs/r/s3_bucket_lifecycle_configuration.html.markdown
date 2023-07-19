@@ -462,8 +462,11 @@ In Terraform v1.5.0 and later, use an `import` block to import S3 bucket lifecyc
 
 If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
 
-```console
-% terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name
+```terraform
+import {
+  to = aws_s3_bucket_lifecycle_configuration.example
+  id = "bucket-name"
+}
 ```
 
 If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
@@ -475,7 +478,7 @@ import {
 }
 ```
 
-Using `terraform import`, import S3 bucket lifecycle configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
+**Using `terraform import` to import** S3 bucket lifecycle configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
 
 If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
 

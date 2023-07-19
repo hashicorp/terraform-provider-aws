@@ -124,7 +124,14 @@ import {
 }
 ```
 
-Using `terraform import`, import S3 bucket Object Lock configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
+If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
+
+import {
+  to = aws_s3_bucket_object_lock_configuration.example
+  id = "bucket-name,123456789012"
+}
+
+**Using `terraform import` to import** S3 bucket Object Lock configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
 
 If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
 
