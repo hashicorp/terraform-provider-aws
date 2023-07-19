@@ -37,7 +37,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import a Spot Datafeed Subscription using the word `spot-datafeed-subscription`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Spot Datafeed Subscription using the word `spot-datafeed-subscription`. For example:
 
 ```terraform
 import {

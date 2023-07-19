@@ -417,7 +417,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Spot Fleet Requests using `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Spot Fleet Requests using `id`. For example:
 
 ```terraform
 import {
