@@ -56,8 +56,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_datasync_location_efs` using the DataSync Task Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an `import` block to import `aws_datasync_location_efs` using the DataSync Task Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_datasync_location_efs.example
+  id = "arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567"
+}
 ```
-$ terraform import aws_datasync_location_efs.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
+
+Using `terraform import`, import `aws_datasync_location_efs` using the DataSync Task Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_datasync_location_efs.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
