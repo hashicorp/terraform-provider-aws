@@ -53,10 +53,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IAM User Login Profiles without password information via the IAM User name. For example:
+In Terraform v1.5.0 and later, use an `import` block to import IAM User Login Profiles without password information via the IAM User name. For example:
 
+```terraform
+import {
+  to = aws_iam_user_login_profile.example
+  id = "myusername"
+}
 ```
-$ terraform import aws_iam_user_login_profile.example myusername
+
+Using `terraform import`, import IAM User Login Profiles without password information via the IAM User name. For example:
+
+```console
+% terraform import aws_iam_user_login_profile.example myusername
 ```
 
 Since Terraform has no method to read the PGP or password information during import, use the [Terraform resource `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to ignore them unless password recreation is desiredE.g.,
