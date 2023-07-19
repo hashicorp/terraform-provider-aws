@@ -198,7 +198,7 @@ A `production_branch` block supports the following attributes:
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Amplify App using Amplify App ID (appId). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amplify App using Amplify App ID (appId). For example:
 
 ```terraform
 import {

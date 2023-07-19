@@ -76,7 +76,7 @@ The `sub_domain` configuration block exports the following attributes:
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import Amplify domain association using `app_id` and `domain_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amplify domain association using `app_id` and `domain_name`. For example:
 
 ```terraform
 import {
