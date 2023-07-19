@@ -342,7 +342,7 @@ The `execution` block supports the following attributes:
 
 ## Import
 
-In Terraform v1.5.0 and later, use an `import` block to import CloudWatch Evidently Launch using the `name` of the launch and `name` or `arn` of the hosting CloudWatch Evidently Project separated by a `:`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Evidently Launch using the `name` of the launch and `name` or `arn` of the hosting CloudWatch Evidently Project separated by a `:`. For example:
 
 ```terraform
 import {
