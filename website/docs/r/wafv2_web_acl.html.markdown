@@ -349,7 +349,7 @@ resource "aws_wafv2_web_acl" "test" {
 
 This resource supports the following arguments:
 
-* `association_config` - (Optional) Specifies custom configurations for the associations between the web ACL and protected resources. See [`association_config`](#association_config) below for details.
+* `association_config` - (Optional) Specifies custom configurations for the associations between the web ACL and protected resources. See [`association_config`](#association_config-block) below for details.
 * `custom_response_body` - (Optional) Defines custom response bodies that can be referenced by `custom_response` actions. See [`custom_response_body`](#custom_response_body-block) below for details.
 * `default_action` - (Required) Action to perform if none of the `rules` contained in the WebACL match. See [`default_action`](#default_action-block) below for details.
 * `description` - (Optional) Friendly description of the WebACL.
@@ -364,7 +364,7 @@ This resource supports the following arguments:
 
 The `association_config` block supports the following arguments:
 
-* `request_body` - (Optional) Customizes the request body that your protected resource forward to AWS WAF for inspection. See [`request_body`](#request_body) below for details.
+* `request_body` - (Optional) Customizes the request body that your protected resource forward to AWS WAF for inspection. See [`request_body`](#request_body-block) below for details.
 
 ### `custom_response_body` Block
 
@@ -848,7 +848,7 @@ The `immunity_time_property` block supports the following arguments:
 
 The `request_body` block supports the following arguments:
 
-* `cloudfront` - (Optional) Customizes the request body that your protected CloudFront distributions forward to AWS WAF for inspection. See [`cloudfront`](#cloudfront) below for details.
+* `cloudfront` - (Optional) Customizes the request body that your protected CloudFront distributions forward to AWS WAF for inspection. See [`cloudfront`](#cloudfront-block) below for details.
 
 ### `cloudfront` Block
 
