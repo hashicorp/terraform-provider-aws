@@ -1,3 +1,11 @@
 ```release-note:bug
-resource/aws_cloudformation_stack_set_instance: Refactor to better support deployment targets.
+resource/aws_cloudformation_stack_set_instance: Refactor to better support organizational unit deployment targets.
+```
+
+```release-note:enhancement
+resource/aws_cloudformation_stack_set_instance: Changes to `deployment_targets` now force a new resource.
+```
+
+```release-note:enhancement
+resource/aws_cloudformation_stack_set_instance: Added the `stack_instance_summaries` attribute to track all stack IDs for deployments to organizational units.
 ```
