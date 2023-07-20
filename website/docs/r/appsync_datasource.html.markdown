@@ -79,7 +79,7 @@ This resource supports the following arguments:
 
 * `api_id` - (Required) API ID for the GraphQL API for the data source.
 * `name` - (Required) User-supplied name for the data source.
-* `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`, `AMAZON_EVENTBRIDGE`.
+* `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`, `AMAZON_EVENTBRIDGE`, `AMAZON_OPENSEARCH_SERVICE`.
 * `description` - (Optional) Description of the data source.
 * `dynamodb_config` - (Optional) DynamoDB settings. See [DynamoDB Config](#dynamodb-config)
 * `elasticsearch_config` - (Optional) Amazon Elasticsearch settings. See [ElasticSearch Config](#elasticsearch-config)
