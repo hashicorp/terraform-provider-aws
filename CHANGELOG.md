@@ -1,5 +1,9 @@
 ## 5.9.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_workspaces_connection_alias` ([#32482](https://github.com/hashicorp/terraform-provider-aws/issues/32482))
+
 ENHANCEMENTS:
 
 * data-source/aws_appmesh_gateway_route: Add `path` to the `spec.http_route.action.rewrite` and `spec.http2_route.action.rewrite` configuration blocks ([#32449](https://github.com/hashicorp/terraform-provider-aws/issues/32449))
