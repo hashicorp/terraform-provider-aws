@@ -10072,7 +10072,7 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_Outpost(rName string) string {
+func testAccInstanceConfig_baseOutpost(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClass("mysql", "general-public-license", "standard", outpostPreferredInstanceClasses),
 		fmt.Sprintf(`
@@ -10123,7 +10123,7 @@ resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
 
 func testAccInstanceConfig_Outpost_coIPEnabled(rName string, coipEnabled bool, backupRetentionPeriod int) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_Outpost(rName),
+		testAccInstanceConfig_baseOutpost(rName),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier                = %[1]q
@@ -10184,7 +10184,7 @@ resource "aws_db_instance" "restore" {
 
 func testAccInstanceConfig_Outpost_BackupTarget(rName string, backupTarget string, backupRetentionPeriod int) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_Outpost(rName),
+		testAccInstanceConfig_baseOutpost(rName),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier              = %[1]q
