@@ -181,7 +181,7 @@ func ResourceStackSetInstance() *schema.Resource {
 }
 
 var (
-	awsAccountRegexp = regexp.MustCompile(`^\d{12}$`)
+	accountIDRegexp = regexp.MustCompile(`^\d{12}$`)
 )
 
 func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -311,7 +311,7 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 	callAs := d.Get("call_as").(string)
 
-	if awsAccountRegexp.MatchString(accountOrOrgID) {
+	if accountIDRegexp.MatchString(accountOrOrgID) {
 		// Stack instances deployed by account ID
 		stackInstance, err := FindStackInstanceByName(ctx, conn, stackSetName, accountOrOrgID, region, callAs)
 		if !d.IsNewResource() && tfresource.NotFound(err) {
