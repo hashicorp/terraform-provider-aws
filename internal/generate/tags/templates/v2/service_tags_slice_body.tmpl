@@ -254,7 +254,7 @@ func {{ .SetTagsOutFunc }}(ctx context.Context, tags []awstypes.{{ .TagType }}) 
 
 {{- if ne .CreateTagsFunc "" }}
 // {{ .CreateTagsFunc }} creates {{ .ServicePackage }} service tags for new resources.
-func {{ .CreateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, tags []*{{ .TagPackage }}.{{ .TagType }}) error {
+func {{ .CreateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, tags []awstypes.{{ .TagType }}) error {
 	if len(tags) == 0 {
 		return nil
 	}
