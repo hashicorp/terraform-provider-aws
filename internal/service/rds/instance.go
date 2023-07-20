@@ -145,6 +145,16 @@ func ResourceInstance() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(0, 35),
 			},
+			"backup_target": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"region",
+					"outposts",
+				}, false),
+			},
 			"backup_window": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -852,6 +862,9 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if _, ok := d.GetOk("timezone"); ok {
 			diags = sdkdiag.AppendErrorf(diags, `"timezone" doesn't work with restores"`)
 		}
+		if _, ok := d.GetOk("backup_target"); ok {
+			diags = sdkdiag.AppendErrorf(diags, `"backup_target" doesn't work with restores"`)
+		}
 		if diags.HasError() {
 			return diags
 		}
@@ -1047,6 +1060,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if v, ok := d.GetOkExists("backup_retention_period"); ok {
 			modifyDbInstanceInput.BackupRetentionPeriod = aws.Int64(int64(v.(int)))
 			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("backup_target"); ok {
+			input.BackupTarget = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("backup_window"); ok {
@@ -1262,6 +1279,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.AvailabilityZone = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("backup_target"); ok {
+			input.BackupTarget = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
 			input.CustomIamInstanceProfile = aws.String(v.(string))
 		}
@@ -1405,6 +1426,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("availability_zone"); ok {
 			input.AvailabilityZone = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("backup_target"); ok {
+			input.BackupTarget = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("backup_window"); ok {
@@ -1626,6 +1651,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("auto_minor_version_upgrade", v.AutoMinorVersionUpgrade)
 	d.Set("availability_zone", v.AvailabilityZone)
 	d.Set("backup_retention_period", v.BackupRetentionPeriod)
+	d.Set("backup_target", v.BackupTarget)
 	d.Set("backup_window", v.PreferredBackupWindow)
 	d.Set("ca_cert_identifier", v.CACertificateIdentifier)
 	d.Set("character_set_name", v.CharacterSetName)
