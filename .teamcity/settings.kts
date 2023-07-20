@@ -447,6 +447,16 @@ object Sweeper : BuildType({
         }
     }
 
+    failureConditions {
+        failOnText {
+            conditionType = BuildFailureOnText.ConditionType.REGEXP
+            pattern = """Sweeper Tests for region \(([-a-z0-9]+)\) ran unsuccessfully"""
+            failureMessage = """Sweeper failure for region "${'$'}1""""
+            reverse = false
+            reportOnlyFirstMatch = false
+        }
+    }
+
     features {
         feature {
             type = "JetBrains.SharedResources"
