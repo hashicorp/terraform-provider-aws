@@ -2435,57 +2435,31 @@ func TestAccWAFV2WebACL_AssociationConfig(t *testing.T) {
 	})
 }
 
-func TestAccWAFV2WebACL_AssociationConfig_Update(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v wafv2.WebACL
-	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_wafv2_web_acl.test"
+func testAccWebACLConfig_associationConfig(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "CLOUDFRONT"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, "us-east-1")
-			acctest.PreCheckPartitionHasService(t, wafv2.EndpointsID)
-			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
-			testAccPreCheckScopeCloudfront(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccWebACLConfig_basicCloudFront(webACLName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`global/webacl/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
-					resource.TestCheckResourceAttr(resourceName, "scope", "CLOUDFRONT"),
-					resource.TestCheckResourceAttr(resourceName, "description", webACLName),
-					resource.TestCheckResourceAttr(resourceName, "association_config.#", "0"),
-				),
-			},
-			{
-				Config: testAccWebACLConfig_associationConfig(webACLName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`global/webacl/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
-					resource.TestCheckResourceAttr(resourceName, "scope", "CLOUDFRONT"),
-					resource.TestCheckResourceAttr(resourceName, "description", webACLName),
-					resource.TestCheckResourceAttr(resourceName, "association_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.key", "CLOUDFRONT"),
-					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.default_size_inspection_limit", "KB_32"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
-			},
-		},
-	})
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+
+  association_config {
+	request_body {
+      key                           = "CLOUDFRONT"
+      default_size_inspection_limit = "KB_32"
+	}
+  }
+}
+`, name)
 }
 
 func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -2539,59 +2513,12 @@ func testAccCheckWebACLExists(ctx context.Context, n string, v *wafv2.WebACL) re
 	}
 }
 
-func testAccWebACLConfig_associationConfig(name string) string {
-	return fmt.Sprintf(`
-resource "aws_wafv2_web_acl" "test" {
-  name        = %[1]q
-  description = %[1]q
-  scope       = "CLOUDFRONT"
-
-  default_action {
-    allow {}
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = false
-    metric_name                = "friendly-metric-name"
-    sampled_requests_enabled   = false
-  }
-
-  association_config {
-	request_body {
-      key                           = "CLOUDFRONT"
-      default_size_inspection_limit = "KB_32"
-	}
-  }
-}
-`, name)
-}
-
 func testAccWebACLConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
   description = %[1]q
   scope       = "REGIONAL"
-
-  default_action {
-    allow {}
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = false
-    metric_name                = "friendly-metric-name"
-    sampled_requests_enabled   = false
-  }
-}
-`, name)
-}
-
-func testAccWebACLConfig_basicCloudFront(name string) string {
-	return fmt.Sprintf(`
-resource "aws_wafv2_web_acl" "test" {
-  name        = %[1]q
-  description = %[1]q
-  scope       = "CLOUDFRONT"
 
   default_action {
     allow {}

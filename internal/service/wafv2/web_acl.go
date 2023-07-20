@@ -278,8 +278,8 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 		}
 
-		if v, ok := d.GetOk("association_config"); ok {
-			input.AssociationConfig = expandAssociationConfig(v.([]interface{}))
+		if v, ok := d.GetOk("association_config"); ok && v.(*schema.Set).Len() > 0 {
+			input.AssociationConfig = expandAssociationConfig(v.(*schema.Set).List())
 		}
 
 		if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
