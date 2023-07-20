@@ -18,8 +18,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/aws/smithy-go"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -1923,12 +1923,11 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				},
 				func(err error) (bool, error) {
 					// Retry for IAM eventual consistency.
-					apiErr, ok := errs.As[smithy.APIError](err)
-					if ok && apiErr.ErrorCode() == errCodeInvalidParameterValue && strings.Contains(apiErr.ErrorMessage(), "IAM role ARN value is invalid or does not include the required permissions") {
+					if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
 						return true, err
 					}
 
-					if ok && apiErr.ErrorCode() == errCodeInvalidParameterCombination && strings.Contains(apiErr.ErrorMessage(), "disable deletion pro") {
+					if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
 						return true, err
 					}
 
@@ -2208,8 +2207,7 @@ func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, resourceID st
 		},
 		func(err error) (bool, error) {
 			// Retry for IAM eventual consistency.
-			apiErr, ok := errs.As[smithy.APIError](err)
-			if ok && apiErr.ErrorCode() == errCodeInvalidParameterValue && strings.Contains(apiErr.ErrorMessage(), "IAM role ARN value is invalid or does not include the required permissions") {
+			if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
 				return true, err
 			}
 
