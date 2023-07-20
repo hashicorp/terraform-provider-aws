@@ -29,7 +29,7 @@ The following arguments are required:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier of the connection alias.
 * `owner_account_id` - The identifier of the Amazon Web Services account that owns the connection alias.
@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WorkSpaces Connection Alias can be imported using the `id`, e.g.,
+Import WorkSpaces Connection Alias using the connection alias ID. For example:
 
 ```
 $ terraform import aws_workspaces_connection_alias.example rft-8012925589
