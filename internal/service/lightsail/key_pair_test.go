@@ -27,7 +27,11 @@ func TestAccLightsailKeyPair_basic(t *testing.T) {
 	resourceName := "aws_lightsail_key_pair.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
@@ -58,7 +62,11 @@ func TestAccLightsailKeyPair_publicKey(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
@@ -86,7 +94,11 @@ func TestAccLightsailKeyPair_encrypted(t *testing.T) {
 	resourceName := "aws_lightsail_key_pair.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
@@ -110,7 +122,11 @@ func TestAccLightsailKeyPair_encrypted(t *testing.T) {
 func TestAccLightsailKeyPair_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
@@ -135,7 +151,11 @@ func TestAccLightsailKeyPair_tags(t *testing.T) {
 	resourceName := "aws_lightsail_key_pair.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
@@ -164,6 +184,34 @@ func TestAccLightsailKeyPair_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLightsailKeyPair_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_lightsail_key_pair.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyPairConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKeyPairExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceKeyPair(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
