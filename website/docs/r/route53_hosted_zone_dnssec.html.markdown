@@ -83,15 +83,15 @@ The following arguments are optional:
 
 * `signing_status` - (Optional) Hosted Zone signing status. Valid values: `SIGNING`, `NOT_SIGNING`. Defaults to `SIGNING`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Route 53 Hosted Zone identifier.
 
 ## Import
 
-`aws_route53_hosted_zone_dnssec` resources can be imported by using the Route 53 Hosted Zone identifier, e.g.,
+Import `aws_route53_hosted_zone_dnssec` resources using the Route 53 Hosted Zone identifier. For example:
 
 ```
 $ terraform import aws_route53_hosted_zone_dnssec.example Z1D633PJN98FT9

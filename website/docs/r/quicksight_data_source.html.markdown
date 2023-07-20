@@ -208,16 +208,16 @@ To specify data source connection parameters, exactly one of the following sub-o
 * `max_rows` - (Required) The maximum number of rows to query.
 * `query` - (Required) The Twitter query to retrieve the data.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the data source
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-A QuickSight data source can be imported using the AWS account ID, and data source ID separated by a slash (`/`) e.g.,
+Import a QuickSight data source using the AWS account ID, and data source ID separated by a slash (`/`). For example:
 
 ```
 $ terraform import aws_quicksight_data_source.example 123456789123/my-data-source-id

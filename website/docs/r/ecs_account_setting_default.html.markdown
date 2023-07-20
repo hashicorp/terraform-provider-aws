@@ -25,21 +25,21 @@ resource "aws_ecs_account_setting_default" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the account setting to set. Valid values are `serviceLongArnFormat`, `taskLongArnFormat`, `containerInstanceLongArnFormat`, `awsvpcTrunking` and `containerInsights`.
 * `value` - (Required) State of the setting. Valid values are `enabled` and `disabled`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ARN that identifies the account setting.
 * `prinicpal_arn` - ARN that identifies the account setting.
 
 ## Import
 
-ECS Account Setting defaults can be imported using the `name`, e.g.,
+Import ECS Account Setting defaults using the `name`. For example:
 
 ```
 $ terraform import aws_ecs_account_setting_default.example taskLongArnFormat

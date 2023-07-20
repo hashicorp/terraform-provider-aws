@@ -60,18 +60,18 @@ resource "aws_cloudwatch_log_data_protection_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `log_group_name` - (Required) The name of the log group under which the log stream is to be created.
 * `policy_document` - (Required) Specifies the data protection policy in JSON. Read more at [Data protection policy syntax](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/mask-sensitive-log-data-start.html#mask-sensitive-log-data-policysyntax).
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-This resource can be imported using the `log_group_name`. For example:
+Import This resource using the `log_group_name`. For example:
 
 ```
 $ terraform import aws_cloudwatch_log_data_protection_policy.example my-log-group

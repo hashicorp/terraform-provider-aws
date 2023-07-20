@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -46,7 +47,7 @@ func sweepServices(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) || skipSweepErr(err) {
 			log.Printf("[WARN] Skipping VPC Lattice Service sweep for %s: %s", region, err)
 			return nil
 		}
@@ -87,7 +88,7 @@ func sweepServiceNetworks(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) || skipSweepErr(err) {
 			log.Printf("[WARN] Skipping VPC Lattice Service Network sweep for %s: %s", region, err)
 			return nil
 		}
@@ -112,4 +113,8 @@ func sweepServiceNetworks(region string) error {
 	}
 
 	return nil
+}
+
+func skipSweepErr(err error) bool {
+	return tfawserr.ErrCodeEquals(err, "AccessDeniedException")
 }

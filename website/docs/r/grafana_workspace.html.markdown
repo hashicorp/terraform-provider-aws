@@ -74,9 +74,9 @@ The following arguments are optional:
 * `security_group_ids` - (Required) - The list of Amazon EC2 security group IDs attached to the Amazon VPC for your Grafana workspace to connect.
 * `subnet_ids` - (Required) - The list of Amazon EC2 subnet IDs created in the Amazon VPC for your Grafana workspace to connect.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Grafana workspace.
 * `endpoint` - The endpoint of the Grafana workspace.
@@ -85,7 +85,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Grafana Workspace can be imported using the workspace's `id`, e.g.,
+Import Grafana Workspace using the workspace's `id`. For example:
 
 ```
 $ terraform import aws_grafana_workspace.example g-2054c75a02

@@ -516,9 +516,9 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 
 * `invocation_type` - (Optional) Specify whether to invoke the function synchronously or asynchronously. Valid Values: REQUEST_RESPONSE, FIRE_AND_FORGET.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of this pipe.
 * `id` - Same as `name`.
@@ -534,7 +534,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Pipes can be imported using the `name`. For example:
+Import Pipes using the `name`. For example:
 
 ```
 $ terraform import aws_pipes_pipe.example my-pipe

@@ -33,20 +33,20 @@ resource "aws_lightsail_bucket_resource_access" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket_name` - (Required) The name of the bucket to grant access to.
 * `resource_name` - (Required) The name of the resource to be granted bucket access.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A combination of attributes separated by a `,` to create a unique id: `bucket_name`,`resource_name`
 
 ## Import
 
-`aws_lightsail_bucket_resource_access` can be imported by using the `id` attribute, e.g.,
+Import `aws_lightsail_bucket_resource_access` using the `id` attribute. For example:
 
 ```
 $ terraform import aws_lightsail_bucket_resource_access.test example-bucket,example-instance

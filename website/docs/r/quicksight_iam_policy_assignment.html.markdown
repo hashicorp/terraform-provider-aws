@@ -44,16 +44,16 @@ The following arguments are optional:
 * `groups` - (Optional) Array of Quicksight group names to assign the policy to.
 * `user` - (Optional) Array of Quicksight user names to assign the policy to.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `assignment_id` - Assignment ID.
 * `id` - A comma-delimited string joining AWS account ID, namespace, and assignment name.
 
 ## Import
 
-QuickSight IAM Policy Assignment can be imported using the AWS account ID, namespace, and assignment name separated by commas (`,`) e.g.,
+Import QuickSight IAM Policy Assignment using the AWS account ID, namespace, and assignment name separated by commas (`,`). For example:
 
 ```
 $ terraform import aws_quicksight_iam_policy_assignment.example 123456789012,default,example

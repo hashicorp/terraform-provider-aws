@@ -20,7 +20,7 @@ data "aws_neptune_engine_version" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `engine` - (Optional) DB engine. (Default: `neptune`)
 * `parameter_group_family` - (Optional) Name of a specific DB parameter group family. An example parameter group family is `neptune1`.
@@ -29,7 +29,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `engine_description` - Description of the database engine.
 * `exportable_log_types` - Set of log types that the database engine has available for export to CloudWatch Logs.

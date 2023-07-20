@@ -25,21 +25,21 @@ resource "aws_securityhub_action_target" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The description for the custom action target.
 * `identifier` - (Required) The ID for the custom action target.
 * `description` - (Required) The name of the custom action target.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Security Hub custom action target.
 
 ## Import
 
-Security Hub custom action can be imported using the action target ARN e.g.,
+Import Security Hub custom action using the action target ARN. For example:
 
 ```sh
 $ terraform import aws_securityhub_action_target.example arn:aws:securityhub:eu-west-1:312940875350:action/custom/a

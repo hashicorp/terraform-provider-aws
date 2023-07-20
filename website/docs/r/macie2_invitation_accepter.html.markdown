@@ -36,20 +36,20 @@ resource "aws_macie2_invitation_accepter" "member" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `administrator_account_id` - (Required) The AWS account ID for the account that sent the invitation.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the macie invitation accepter.
 * `invitation_id` - The unique identifier for the invitation.
 
 ## Import
 
-`aws_macie2_invitation_accepter` can be imported using the admin account ID, e.g.,
+Import `aws_macie2_invitation_accepter` using the admin account ID. For example:
 
 ```
 $ terraform import aws_macie2_invitation_accepter.example 123456789012

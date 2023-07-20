@@ -78,18 +78,18 @@ resource "aws_iam_role_policy" "p" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the recorder
 * `is_enabled` - (Required) Whether the configuration recorder should be enabled or disabled.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-Configuration Recorder Status can be imported using the name of the Configuration Recorder, e.g.,
+Import Configuration Recorder Status using the name of the Configuration Recorder. For example:
 
 ```
 $ terraform import aws_config_configuration_recorder_status.foo example

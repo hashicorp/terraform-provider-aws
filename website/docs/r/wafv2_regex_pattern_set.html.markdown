@@ -35,7 +35,7 @@ resource "aws_wafv2_regex_pattern_set" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A friendly name of the regular expression pattern set.
 * `description` - (Optional) A friendly description of the regular expression pattern set.
@@ -47,9 +47,9 @@ The following arguments are supported:
 
 * `regex_string` - (Required) The string representing the regular expression, see the AWS WAF [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-regex-pattern-set-creating.html) for more information.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A unique identifier for the set.
 * `arn` - The Amazon Resource Name (ARN) that identifies the cluster.
@@ -57,7 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAFv2 Regex Pattern Sets can be imported using `ID/name/scope` e.g.,
+Import WAFv2 Regex Pattern Sets using `ID/name/scope`. For example:
 
 ```
 $ terraform import aws_wafv2_regex_pattern_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL

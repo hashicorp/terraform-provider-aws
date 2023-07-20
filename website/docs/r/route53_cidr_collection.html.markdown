@@ -20,13 +20,13 @@ resource "aws_route53_cidr_collection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Unique name for the CIDR collection.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the CIDR collection.
 * `id` - The CIDR collection ID.
@@ -34,7 +34,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CIDR collections can be imported using their ID, e.g.,
+Import CIDR collections using their ID. For example:
 
 ```
 $ terraform import aws_route53_cidr_collection.example 9ac32814-3e67-0932-6048-8d779cc6f511

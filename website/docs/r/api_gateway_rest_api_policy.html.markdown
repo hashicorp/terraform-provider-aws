@@ -48,20 +48,20 @@ resource "aws_api_gateway_rest_api_policy" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) ID of the REST API.
 * `policy` - (Required) JSON formatted policy document that controls access to the API Gateway. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the REST API
 
 ## Import
 
-`aws_api_gateway_rest_api_policy` can be imported by using the REST API ID, e.g.,
+Import `aws_api_gateway_rest_api_policy` using the REST API ID. For example:
 
 ```
 $ terraform import aws_api_gateway_rest_api_policy.example 12345abcde

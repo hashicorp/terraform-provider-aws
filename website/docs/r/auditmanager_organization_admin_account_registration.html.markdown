@@ -26,16 +26,16 @@ The following arguments are required:
 
 * `admin_account_id` - (Required) Identifier for the organization administrator account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier for the organization administrator account.
 * `organization_id` - Identifier for the organization.
 
 ## Import
 
-Audit Manager Organization Admin Account Registration can be imported using the `id`, e.g.,
+Import Audit Manager Organization Admin Account Registration using the `id`. For example:
 
 ```
 $ terraform import aws_auditmanager_organization_admin_account_registration.example 012345678901 

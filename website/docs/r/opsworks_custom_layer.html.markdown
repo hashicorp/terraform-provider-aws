@@ -22,7 +22,7 @@ resource "aws_opsworks_custom_layer" "custlayer" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A human-readable name for the layer.
 * `short_name` - (Required) A short, machine-readable name for the layer, which will be used to identify it in the Chef node JSON.
@@ -101,9 +101,9 @@ Though the three thresholds are optional, at least one threshold must be set whe
 * `memory_threshold` - (Optional) The memory utilization threshold, as a percent of the available memory. A value of -1 disables the threshold.
 * `thresholds_wait_time` - (Optional) The amount of time, in minutes, that the load must exceed a threshold before more instances are added or removed.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The id of the layer.
 * `arn` - The Amazon Resource Name(ARN) of the layer.
@@ -111,7 +111,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-OpsWorks Custom Layers can be imported using the `id`, e.g.,
+Import OpsWorks Custom Layers using the `id`. For example:
 
 ```
 $ terraform import aws_opsworks_custom_layer.bar 00000000-0000-0000-0000-000000000000

@@ -22,13 +22,13 @@ data "aws_ec2_instance_type" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This data source supports the following arguments:
 
 * `instance_type` - (Required) Instance
 
 ## Attribute Reference
 
-In addition to the argument above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 ~> **NOTE:** Not all attributes are set for every instance type.
 

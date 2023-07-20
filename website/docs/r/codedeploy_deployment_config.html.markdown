@@ -91,7 +91,7 @@ resource "aws_codedeploy_deployment_group" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `deployment_config_name` - (Required) The name of the deployment config.
 * `compute_platform` - (Optional) The compute platform can be `Server`, `Lambda`, or `ECS`. Default is `Server`.
@@ -122,16 +122,16 @@ The `time_based_linear` block supports the following:
 * `interval` - (Optional) The number of minutes between each incremental traffic shift of a `TimeBasedLinear` deployment.
 * `percentage` - (Optional) The percentage of traffic that is shifted at the start of each increment of a `TimeBasedLinear` deployment.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The deployment group's config name.
 * `deployment_config_id` - The AWS Assigned deployment config id
 
 ## Import
 
-CodeDeploy Deployment Configurations can be imported using the `deployment_config_name`, e.g.,
+Import CodeDeploy Deployment Configurations using the `deployment_config_name`. For example:
 
 ```
 $ terraform import aws_codedeploy_deployment_config.example my-deployment-config

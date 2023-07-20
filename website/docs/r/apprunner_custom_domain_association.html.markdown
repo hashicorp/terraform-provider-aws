@@ -29,9 +29,9 @@ The following arguments supported:
 * `enable_www_subdomain` (Optional) Whether to associate the subdomain with the App Runner service in addition to the base domain. Defaults to `true`.
 * `service_arn` - (Required) ARN of the App Runner service.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `domain_name` and `service_arn` separated by a comma (`,`).
 * `certificate_validation_records` - A set of certificate CNAME records used for this domain name. See [Certificate Validation Records](#certificate-validation-records) below for more details.
@@ -48,7 +48,7 @@ The configuration block consists of the following arguments:
 
 ## Import
 
-App Runner Custom Domain Associations can be imported by using the `domain_name` and `service_arn` separated by a comma (`,`), e.g.,
+Import App Runner Custom Domain Associations using the `domain_name` and `service_arn` separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_apprunner_custom_domain_association.example example.com,arn:aws:apprunner:us-east-1:123456789012:service/example-

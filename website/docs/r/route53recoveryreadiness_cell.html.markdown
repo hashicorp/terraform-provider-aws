@@ -29,9 +29,9 @@ The following arguments are optional:
 * `cells` - (Optional) List of cell arns to add as nested fault domains within this cell.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the cell
 * `parent_readiness_scopes` - List of readiness scopes (recovery groups or cells) that contain this cell.
@@ -45,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Recovery Readiness cells can be imported via the cell name, e.g.,
+Import Route53 Recovery Readiness cells using the cell name. For example:
 
 ```
 $ terraform import aws_route53recoveryreadiness_cell.us-west-2-failover-cell us-west-2-failover-cell

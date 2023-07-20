@@ -41,20 +41,20 @@ resource "aws_api_gateway_base_path_mapping" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) Already-registered domain name to connect the API to.
 * `api_id` - (Required) ID of the API to connect.
 * `stage_name` - (Optional) Name of a specific deployment stage to expose at the given path. If omitted, callers may select any stage by including its name as a path element after the base path.
 * `base_path` - (Optional) Path segment that must be prepended to the path when accessing the API via this mapping. If omitted, the API is exposed at the root of the given domain.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-`aws_api_gateway_base_path_mapping` can be imported by using the domain name and base path, e.g.,
+Import `aws_api_gateway_base_path_mapping` using the domain name and base path. For example:
 
 For empty `base_path` (e.g., root path (`/`)):
 

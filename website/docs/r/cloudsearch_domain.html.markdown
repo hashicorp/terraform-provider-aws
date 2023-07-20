@@ -47,7 +47,7 @@ resource "aws_cloudsearch_domain" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `endpoint_options` - (Optional) Domain endpoint options. Documented below.
 * `index_field` - (Optional) The index fields for documents added to the domain. Documented below.
@@ -85,9 +85,9 @@ This configuration block supports the following attributes:
 * `sort` - (Optional) You can enable the property to be sortable.
 * `source_fields` - (Optional) A comma-separated list of source fields to map to the field. Specifying a source field copies data from one field to another, enabling you to use the same source data in different ways by configuring different options for the fields.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The domain's ARN.
 * `document_service_endpoint` - The service endpoint for updating documents in a search domain.
@@ -104,7 +104,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudSearch Domains can be imported using the `name`, e.g.,
+Import CloudSearch Domains using the `name`. For example:
 
 ```
 $ terraform import aws_cloudsearch_domain.example example-domain

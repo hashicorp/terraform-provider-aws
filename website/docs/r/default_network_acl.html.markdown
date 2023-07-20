@@ -149,9 +149,9 @@ The following arguments are optional:
 
 -> For more information on ICMP types and codes, see [Internet Control Message Protocol (ICMP) Parameters](https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Default Network ACL
 * `id` - ID of the Default Network ACL
@@ -163,7 +163,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Default Network ACLs can be imported using the `id`, e.g.,
+Import Default Network ACLs using the `id`. For example:
 
 ```
 $ terraform import aws_default_network_acl.sample acl-7aaabd18

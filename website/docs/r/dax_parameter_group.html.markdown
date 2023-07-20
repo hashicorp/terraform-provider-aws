@@ -30,7 +30,7 @@ resource "aws_dax_parameter_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` – (Required) The name of the parameter group.
 
@@ -45,15 +45,15 @@ The following arguments are supported:
 * `name` - (Required) The name of the parameter.
 * `value` - (Required) The value for the parameter.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the parameter group.
 
 ## Import
 
-DAX Parameter Group can be imported using the `name`, e.g.,
+Import DAX Parameter Group using the `name`. For example:
 
 ```
 $ terraform import aws_dax_parameter_group.example my_dax_pg

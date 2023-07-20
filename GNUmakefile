@@ -1,4 +1,4 @@
-SWEEP               ?= us-west-2,us-east-1,us-east-2
+SWEEP               ?= us-west-2,us-east-1,us-east-2,us-west-1
 TEST                ?= ./...
 SWEEP_DIR           ?= ./internal/sweep
 PKG_NAME            ?= internal
@@ -188,6 +188,8 @@ importlint:
 	@impi --local . --scheme stdThirdPartyLocal ./internal/...
 
 lint: golangci-lint providerlint importlint
+
+lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix
 
 providerlint:
 	@echo "==> Checking source code with providerlint..."
@@ -429,6 +431,7 @@ yamllint:
 	golangci-lint \
 	importlint \
 	lint \
+	lint-fix \
 	providerlint \
 	sane \
 	sanity \

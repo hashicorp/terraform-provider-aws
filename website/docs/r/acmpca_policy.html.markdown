@@ -64,17 +64,19 @@ resource "aws_acmpca_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_arn` - (Required) ARN of the private CA to associate with the policy.
 * `policy` - (Required) JSON-formatted IAM policy to attach to the specified private CA resource.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-`aws_acmpca_policy` can be imported using the `resource_arn` value.
+Import `aws_acmpca_policy` using the `resource_arn` value. For example:
 
+```
 $ terraform import aws_acmpca_policy.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
+```

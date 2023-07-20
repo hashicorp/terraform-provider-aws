@@ -32,7 +32,7 @@ resource "aws_cloudwatch_log_group" "dada" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name for the metric filter.
 * `pattern` - (Required) A valid [CloudWatch Logs filter pattern](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/FilterAndPatternSyntax.html)
@@ -49,15 +49,15 @@ The `metric_transformation` block supports the following arguments:
 * `dimensions` - (Optional) Map of fields to use as dimensions for the metric. Up to 3 dimensions are allowed. Conflicts with `default_value`.
 * `unit` - (Optional) The unit to assign to the metric. If you omit this, the unit is set as `None`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the metric filter.
 
 ## Import
 
-CloudWatch Log Metric Filter can be imported using the `log_group_name:name`, e.g.,
+Import CloudWatch Log Metric Filter using the `log_group_name:name`. For example:
 
 ```
 $ terraform import aws_cloudwatch_log_metric_filter.test /aws/lambda/function:test
