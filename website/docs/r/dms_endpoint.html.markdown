@@ -208,7 +208,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Endpoints using the `endpoint_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import endpoints using the `endpoint_id`. For example:
 
 ```terraform
 import {
@@ -217,7 +217,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Endpoints using the `endpoint_id`. For example:
+Using `terraform import`, import endpoints using the `endpoint_id`. For example:
 
 ```console
 % terraform import aws_dms_endpoint.test test-dms-endpoint-tf

@@ -57,7 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security group egress rules using the `security_group_rule_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import security group egress rules using the `security_group_rule_id`. For example:
 
 ```terraform
 import {
@@ -66,7 +66,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Security group egress rules using the `security_group_rule_id`. For example:
+Using `terraform import`, import security group egress rules using the `security_group_rule_id`. For example:
 
 ```console
 % terraform import aws_vpc_security_group_egress_rule.example sgr-02108b27edd666983

@@ -36,7 +36,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Activities using the `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import activities using the `arn`. For example:
 
 ```terraform
 import {
@@ -45,7 +45,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Activities using the `arn`. For example:
+Using `terraform import`, import activities using the `arn`. For example:
 
 ```console
 % terraform import aws_sfn_activity.foo arn:aws:states:eu-west-1:123456789098:activity:bar

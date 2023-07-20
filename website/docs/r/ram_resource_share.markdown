@@ -42,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Resource shares using the `arn` of the resource share. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import resource shares using the `arn` of the resource share. For example:
 
 ```terraform
 import {
@@ -51,7 +51,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Resource shares using the `arn` of the resource share. For example:
+Using `terraform import`, import resource shares using the `arn` of the resource share. For example:
 
 ```console
 % terraform import aws_ram_resource_share.example arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12

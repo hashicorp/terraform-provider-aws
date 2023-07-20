@@ -57,7 +57,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ~> **NOTE:** Attempting to associate a route table with a subnet or gateway, where either is already associated, will result in an error (e.g., `Resource.AlreadyAssociated: the specified association for route table rtb-4176657279 conflicts with an existing association`) unless you first import the original association.
 
-For example with EC2 Subnets:
+With EC2 Subnets:
 
 ```terraform
 import {
@@ -66,17 +66,24 @@ import {
 }
 ```
 
-Using `terraform import`, import EC2 Route Table Associations using the associated resource ID and Route Table ID separated by a forward slash (`/`). For example:
+With EC2 Internet Gateways:
 
-~> **NOTE:** Attempting to associate a route table with a subnet or gateway, where either is already associated, will result in an error (e.g., `Resource.AlreadyAssociated: the specified association for route table rtb-4176657279 conflicts with an existing association`) unless you first import the original association.
+```terraform
+import {
+  to = aws_route_table_association.assoc
+  id = "igw-01b3a60780f8d034a/rtb-656c65616e6f72"
+}
+```
 
-For example with EC2 Subnets:
+**Using `terraform import` to import** EC2 Route Table Associations using the associated resource ID and Route Table ID separated by a forward slash (`/`). For example:
+
+With EC2 Subnets:
 
 ```console
 % terraform import aws_route_table_association.assoc subnet-6777656e646f6c796e/rtb-656c65616e6f72
 ```
 
-For example with EC2 Internet Gateways:
+With EC2 Internet Gateways:
 
 ```console
 % terraform import aws_route_table_association.assoc igw-01b3a60780f8d034a/rtb-656c65616e6f72

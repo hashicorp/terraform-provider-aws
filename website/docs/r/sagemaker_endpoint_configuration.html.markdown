@@ -120,7 +120,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Endpoint configurations using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import endpoint configurations using the `name`. For example:
 
 ```terraform
 import {
@@ -129,7 +129,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Endpoint configurations using the `name`. For example:
+Using `terraform import`, import endpoint configurations using the `name`. For example:
 
 ```console
 % terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo

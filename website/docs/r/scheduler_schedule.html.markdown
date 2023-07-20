@@ -189,7 +189,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Schedules using the combination `group_name/name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import schedules using the combination `group_name/name`. For example:
 
 ```terraform
 import {
@@ -198,7 +198,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Schedules using the combination `group_name/name`. For example:
+Using `terraform import`, import schedules using the combination `group_name/name`. For example:
 
 ```console
 % terraform import aws_scheduler_schedule.example my-schedule-group/my-schedule

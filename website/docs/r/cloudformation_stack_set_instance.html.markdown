@@ -145,13 +145,22 @@ import {
 }
 ```
 
-Using `terraform import`, import CloudFormation StackSet Instances that target an AWS Account ID using the StackSet name, target AWS account ID, and target AWS region separated by commas (`,`). For example:
+Import CloudFormation StackSet Instances that target AWS Organizational Units using the StackSet name, a slash (`/`) separated list of organizational unit IDs, and target AWS region separated by commas (`,`):
+
+```terraform
+import {
+  to = aws_cloudformation_stack_set_instance.example
+  id = "example,ou-sdas-123123123/ou-sdas-789789789,us-east-1"
+}
+```
+
+**Using `terraform import` to import** CloudFormation StackSet Instances that target an AWS Account ID using the StackSet name, target AWS account ID, and target AWS region separated by commas (`,`). For example:
 
 ```console
 % terraform import aws_cloudformation_stack_set_instance.example example,123456789012,us-east-1
 ```
 
-Import CloudFormation StackSet Instances that target AWS organizational units using the stack set name, a slash (`/`) separated list of organizational unit IDs, and region separated by commas (`,`). For example:
+Import CloudFormation StackSet Instances that target AWS Organizational Units using the StackSet name, a slash (`/`) separated list of organizational unit IDs, and target AWS region separated by commas (`,`):
 
 ```console
 % terraform import aws_cloudformation_stack_set_instance.example example,ou-sdas-123123123/ou-sdas-789789789,us-east-1

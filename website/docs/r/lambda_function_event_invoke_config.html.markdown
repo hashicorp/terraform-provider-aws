@@ -128,7 +128,34 @@ import {
 }
 ```
 
-Using `terraform import`, import Lambda Function Event Invoke Configs using the fully qualified Function name or Amazon Resource Name (ARN). For example:
+ARN with qualifier:
+
+```terraform
+import {
+  to = aws_lambda_function_event_invoke_config.example
+  id = "arn:aws:us-east-1:123456789012:function:my_function:production"
+}
+```
+
+Name without qualifier (all versions and aliases):
+
+```terraform
+import {
+  to = aws_lambda_function_event_invoke_config.example
+  id = "my_function"
+}
+```
+
+Name with qualifier:
+
+```terraform
+import {
+  to = aws_lambda_function_event_invoke_config.example
+  id = "my_function:production"
+}
+```
+
+**Using `terraform import` to import** Lambda Function Event Invoke Configs using the fully qualified Function name or Amazon Resource Name (ARN). For example:
 
 ARN without qualifier (all versions and aliases):
 

@@ -261,7 +261,7 @@ included as an argument because the resource will add it automatically when upda
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Intents using their name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import intents using their name. For example:
 
 ```terraform
 import {
@@ -270,7 +270,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Intents using their name. For example:
+Using `terraform import`, import intents using their name. For example:
 
 ```console
 % terraform import aws_lex_intent.order_flowers_intent OrderFlowers

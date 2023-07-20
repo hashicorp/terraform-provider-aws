@@ -67,7 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import License configurations using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import license configurations using the `id`. For example:
 
 ```terraform
 import {
@@ -76,7 +76,7 @@ import {
 }
 ```
 
-Using `terraform import`, import License configurations using the `id`. For example:
+Using `terraform import`, import license configurations using the `id`. For example:
 
 ```console
 % terraform import aws_licensemanager_license_configuration.example arn:aws:license-manager:eu-west-1:123456789012:license-configuration:lic-0123456789abcdef0123456789abcdef

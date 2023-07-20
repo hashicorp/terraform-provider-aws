@@ -68,7 +68,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bot aliases using an ID with the format `bot_name:bot_alias_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import bot aliases using an ID with the format `bot_name:bot_alias_name`. For example:
 
 ```terraform
 import {
@@ -77,7 +77,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Bot aliases using an ID with the format `bot_name:bot_alias_name`. For example:
+Using `terraform import`, import bot aliases using an ID with the format `bot_name:bot_alias_name`. For example:
 
 ```console
 % terraform import aws_lex_bot_alias.order_flowers_prod OrderFlowers:OrderFlowersProd

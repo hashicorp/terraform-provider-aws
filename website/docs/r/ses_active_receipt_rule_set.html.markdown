@@ -33,7 +33,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Active SES receipt rule sets using the rule set name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import active SES receipt rule sets using the rule set name. For example:
 
 ```terraform
 import {
@@ -42,7 +42,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Active SES receipt rule sets using the rule set name. For example:
+Using `terraform import`, import active SES receipt rule sets using the rule set name. For example:
 
 ```console
 % terraform import aws_ses_active_receipt_rule_set.my_rule_set my_rule_set_name

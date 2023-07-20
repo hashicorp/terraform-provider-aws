@@ -91,7 +91,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Models using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import models using the `name`. For example:
 
 ```terraform
 import {
@@ -100,7 +100,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Models using the `name`. For example:
+Using `terraform import`, import models using the `name`. For example:
 
 ```console
 % terraform import aws_sagemaker_model.test_model model-foo

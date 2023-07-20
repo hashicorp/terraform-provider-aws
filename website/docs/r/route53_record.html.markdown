@@ -190,13 +190,18 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Records using ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Records using the ID of the record, record name, record type, and set identifier. For example:
 
-```console
-$ terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev.example.com_NS
+Using the ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`):
+
+```terraform
+import {
+  to = aws_route53_record.myrecord
+  id = "Z4KAPRWWNC7JR_dev.example.com_NS"
+}
 ```
 
-If the record also contains a set identifier, it should be appended:
+If the record also contains a set identifier, append it:
 
 ```terraform
 import {
@@ -205,13 +210,15 @@ import {
 }
 ```
 
-Using `terraform import`, import Route53 Records using ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`). For example:
+**Using `terraform import` to import** Route53 Records using the ID of the record, record name, record type, and set identifier. For example:
+
+Using the ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`):
 
 ```console
 $ terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev.example.com_NS
 ```
 
-If the record also contains a set identifier, it should be appended:
+If the record also contains a set identifier, append it:
 
 ```console
 % terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev.example.com_NS_dev

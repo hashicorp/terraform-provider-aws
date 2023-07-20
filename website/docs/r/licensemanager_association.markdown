@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import License configurations using `resource_arn,license_configuration_arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import license configurations using `resource_arn,license_configuration_arn`. For example:
 
 ```terraform
 import {
@@ -65,7 +65,7 @@ import {
 }
 ```
 
-Using `terraform import`, import License configurations using `resource_arn,license_configuration_arn`. For example:
+Using `terraform import`, import license configurations using `resource_arn,license_configuration_arn`. For example:
 
 ```console
 % terraform import aws_licensemanager_association.example arn:aws:ec2:eu-west-1:123456789012:image/ami-123456789abcdef01,arn:aws:license-manager:eu-west-1:123456789012:license-configuration:lic-0123456789abcdef0123456789abcdef

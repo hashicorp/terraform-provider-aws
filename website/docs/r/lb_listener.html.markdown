@@ -360,7 +360,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Listeners using their ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import listeners using their ARN. For example:
 
 ```terraform
 import {
@@ -369,7 +369,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Listeners using their ARN. For example:
+Using `terraform import`, import listeners using their ARN. For example:
 
 ```console
 % terraform import aws_lb_listener.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener/app/front-end-alb/8e4497da625e2d8a/9ab28ade35828f96

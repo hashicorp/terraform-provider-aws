@@ -40,7 +40,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Traffic mirror filter using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import traffic mirror filter using the `id`. For example:
 
 ```terraform
 import {
@@ -49,7 +49,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Traffic mirror filter using the `id`. For example:
+Using `terraform import`, import traffic mirror filter using the `id`. For example:
 
 ```console
 % terraform import aws_ec2_traffic_mirror_filter.foo tmf-0fbb93ddf38198f64

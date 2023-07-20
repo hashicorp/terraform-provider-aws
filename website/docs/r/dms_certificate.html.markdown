@@ -49,7 +49,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Certificates using the `certificate_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import certificates using the `certificate_id`. For example:
 
 ```terraform
 import {
@@ -58,7 +58,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Certificates using the `certificate_id`. For example:
+Using `terraform import`, import certificates using the `certificate_id`. For example:
 
 ```console
 % terraform import aws_dms_certificate.test test-dms-certificate-tf

@@ -47,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Hosts using the host `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import hosts using the host `id`. For example:
 
 ```terraform
 import {
@@ -56,7 +56,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Hosts using the host `id`. For example:
+Using `terraform import`, import hosts using the host `id`. For example:
 
 ```console
 % terraform import aws_ec2_host.example h-0385a99d0e4b20cbb
