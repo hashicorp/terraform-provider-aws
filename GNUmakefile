@@ -94,6 +94,9 @@ cleango:
 
 clean: cleango build tools
 
+copyright:
+	@copywrite headers
+
 depscheck:
 	@echo "==> Checking source code with go mod tidy..."
 	@$(GO_VER) mod tidy
@@ -372,6 +375,7 @@ tools:
 	cd .ci/tools && $(GO_VER) install github.com/terraform-linters/tflint
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd .ci/tools && $(GO_VER) install github.com/hashicorp/copywrite
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 

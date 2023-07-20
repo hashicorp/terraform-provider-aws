@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package names provides constants for AWS service names that are used as keys
 // for the endpoints slice in internal/conns/conns.go. The package also exposes
 // access to data found in the names_data.csv file, which provides additional
@@ -33,14 +36,17 @@ const (
 	GlacierEndpointID                    = "glacier"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
+	InternetMonitorEndpointID            = "internetmonitor"
 	IVSChatEndpointID                    = "ivschat"
 	KendraEndpointID                     = "kendra"
+	KeyspacesEndpointID                  = "keyspaces"
 	LambdaEndpointID                     = "lambda"
 	MediaLiveEndpointID                  = "medialive"
 	ObservabilityAccessManagerEndpointID = "oam"
 	OpenSearchServerlessEndpointID       = "aoss"
 	PipesEndpointID                      = "pipes"
 	PricingEndpointID                    = "pricing"
+	QLDBEndpointID                       = "qldb"
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
 	RolesAnywhereEndpointID              = "rolesanywhere"
 	Route53DomainsEndpointID             = "route53domains"
@@ -50,6 +56,7 @@ const (
 	SSMContactsEndpointID                = "ssm-contacts"
 	SSMIncidentsEndpointID               = "ssm-incidents"
 	SWFEndpointID                        = "swf"
+	TimestreamWriteEndpointID            = "ingest.timestream"
 	TranscribeEndpointID                 = "transcribe"
 	VPCLatticeEndpointID                 = "vpc-lattice"
 	XRayEndpointID                       = "xray"

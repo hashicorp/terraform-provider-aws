@@ -372,6 +372,7 @@ provider "aws" {
   <li><code>transcribestreaming</code> (or <code>transcribestreamingservice</code>)</li>
   <li><code>transfer</code></li>
   <li><code>translate</code></li>
+  <li><code>verifiedpermissions</code></li>
   <li><code>voiceid</code></li>
   <li><code>vpclattice</code></li>
   <li><code>waf</code></li>
